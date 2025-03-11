@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In - {{.OrganizationName}}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">
+    <style>
+        .auth-card {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .auth-input {
+            transition: border-color 0.15s ease-in-out;
+        }
+        .auth-input:focus {
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+        .auth-btn {
+            transition: all 0.2s ease;
+        }
+        .auth-btn:hover {
+            transform: translateY(-1px);
+        }
+        .social-btn {
+            transition: all 0.2s ease;
+        }
+        .social-btn:hover {
+            background-color: #f3f4f6;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+<div class="max-w-md w-full space-y-8">
+    <div class="text-center">
+        <img class="mx-auto h-12 w-auto" src="{{.LogoURL}}" alt="{{.OrganizationName}} Logo">
+        <h2 class="mt-6 text-3xl font-extrabold text-gray-900">
+            Sign in to your account
+        </h2>
+        <p class="mt-2 text-sm text-gray-600">
+            {{if .AllowSignup}}
+            Or <a href="{{.SignupURL}}" class="font-medium text-indigo-600 hover:text-indigo-500">create a new account</a>
+            {{end}}
+        </p>
+    </div>
+
+    {{if .ErrorMessage}}
+    <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                </svg>
+            </div>
+            <div class="ml-3">
+                <p class="text-sm text-red-700">
+                    {{.ErrorMessage}}
+                </p>
+            </div>
+        </div>
+    </div>
+    {{end}}
+
+    <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 auth-card">
+        <form class="space-y-6" action="{{.LoginSubmitURL}}" method="POST">
+            <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+            <input type="hidden" name="redirect_uri" value="{{.RedirectURI}}">
+
+            <div>
+                <label for="email" class="block text-sm font-medium text-gray-700">
+                    Email address
+                </label>
+                <div class="mt-1">
+                    <input id="email" name="email" type="email" autocomplete="email" required
+                           class="auth-input appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+            </div>
+
+            <div>
+                <label for="password" class="block text-sm font-medium text-gray-700">
+                    Password
+                </label>
+                <div class="mt-1">
+                    <input id="password" name="password" type="password" autocomplete="current-password" required
+                           class="auth-input appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <input id="remember_me" name="remember_me" type="checkbox"
+                           class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                    <label for="remember_me" class="ml-2 block text-sm text-gray-900">
+                        Remember me
+                    </label>
+                </div>
+
+                <div class="text-sm">
+                    <a href="{{.ForgotPasswordURL}}" class="font-medium text-indigo-600 hover:text-indigo-500">
+                        Forgot your password?
+                    </a>
+                </div>
+            </div>
+
+            <div>
+                <button type="submit" class="auth-btn w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Sign in
+                </button>
+            </div>
+        </form>
+
+        {{if .EnablePasswordless}}
+        <div class="mt-6">
+            <div class="relative">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-gray-300"></div>
+                </div>
+                <div class="relative flex justify-center text-sm">
+                        <span class="px-2 bg-white text-gray-500">
+                            Or continue with
+                        </span>
+                </div>
+            </div>
+
+            <div class="mt-6">
+                <a href="{{.PasswordlessURL}}" class="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <span>Sign in with Email Link</span>
+                </a>
+            </div>
+        </div>
+        {{end}}
+
+        {{if .EnableSocialLogin}}
+        <div class="mt-6">
+            <div class="relative">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-gray-300"></div>
+                </div>
+                <div class="relative flex justify-center text-sm">
+                        <span class="px-2 bg-white text-gray-500">
+                            Or sign in with
+                        </span>
+                </div>
+            </div>
+
+            <div class="mt-6 grid grid-cols-2 gap-3">
+                {{range .SocialProviders}}
+                <div>
+                    <a href="{{.URL}}" class="social-btn w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <img class="h-5 w-5" src="{{.IconURL}}" alt="{{.Name}}">
+                        <span class="ml-2">{{.Name}}</span>
+                    </a>
+                </div>
+                {{end}}
+            </div>
+        </div>
+        {{end}}
+
+        {{if .EnablePasskeys}}
+        <div class="mt-6">
+            <div class="relative">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-gray-300"></div>
+                </div>
+                <div class="relative flex justify-center text-sm">
+                        <span class="px-2 bg-white text-gray-500">
+                            Or use a passkey
+                        </span>
+                </div>
+            </div>
+
+            <div class="mt-6">
+                <button id="passkey-button" type="button" class="social-btn w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                    </svg>
+                    <span class="ml-2">Sign in with Passkey</span>
+                </button>
+            </div>
+        </div>
+        {{end}}
+    </div>
+
+    <div class="text-center mt-4">
+        <p class="text-xs text-gray-500">
+            &copy; {{.CurrentYear}} {{.OrganizationName}}. All rights reserved.
+        </p>
+    </div>
+</div>
+
+{{if .EnablePasskeys}}
+<script>
+    document.getElementById('passkey-button').addEventListener('click', async () => {
+        try {
+            // Fetch challenge from server
+            const response = await fetch('{{.PasskeyAuthURL}}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({})
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to get passkey challenge');
+            }
+
+            const data = await response.json();
+
+            // Parse the options
+            const credentialRequestOptions = JSON.parse(data.options);
+
+            // Convert base64url-encoded values to ArrayBuffer
+            credentialRequestOptions.challenge = Uint8Array.from(
+                atob(credentialRequestOptions.challenge.replace(/-/g, '+').replace(/_/g, '/')),
+                c => c.charCodeAt(0)
+            ).buffer;
+
+            if (credentialRequestOptions.allowCredentials) {
+                for (let i = 0; i < credentialRequestOptions.allowCredentials.length; i++) {
+                    const id = credentialRequestOptions.allowCredentials[i].id;
+                    credentialRequestOptions.allowCredentials[i].id = Uint8Array.from(
+                        atob(id.replace(/-/g, '+').replace(/_/g, '/')),
+                        c => c.charCodeAt(0)
+                    ).buffer;
+                }
+            }
+
+            // Request the credential
+            const credential = await navigator.credentials.get({
+                publicKey: credentialRequestOptions
+            });
+
+            // Prepare credential for sending to server
+            const credentialResponse = {
+                id: credential.id,
+                rawId: btoa(String.fromCharCode(...new Uint8Array(credential.rawId))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, ''),
+                type: credential.type,
+                response: {
+                    clientDataJSON: btoa(String.fromCharCode(...new Uint8Array(credential.response.clientDataJSON))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, ''),
+                    authenticatorData: btoa(String.fromCharCode(...new Uint8Array(credential.response.authenticatorData))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, ''),
+                    signature: btoa(String.fromCharCode(...new Uint8Array(credential.response.signature))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, ''),
+                    userHandle: credential.response.userHandle ? btoa(String.fromCharCode(...new Uint8Array(credential.response.userHandle))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '') : null
+                }
+            };
+
+            // Send the credential to the server to complete authentication
+            const verifyResponse = await fetch('{{.PasskeyCompleteURL}}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    session_id: data.session_id,
+                    response: JSON.stringify(credentialResponse)
+                })
+            });
+
+            if (!verifyResponse.ok) {
+                throw new Error('Failed to verify passkey');
+            }
+
+            const result = await verifyResponse.json();
+
+            if (result.authenticated) {
+                // Redirect to the destination URL
+                window.location.href = '{{.RedirectURI}}';
+            } else {
+                alert('Authentication failed');
+            }
+        } catch (err) {
+            console.error('Passkey error:', err);
+            alert('Passkey authentication failed: ' + err.message);
+        }
+    });
+</script>
+{{end}}
+</body>
+</html>

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Your Email Address</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            max-width: 120px;
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .verification-button {
+            display: block;
+            width: 200px;
+            background-color: #4f46e5;
+            color: white;
+            text-align: center;
+            padding: 14px 20px;
+            margin: 30px auto;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .verification-button:hover {
+            background-color: #4338ca;
+        }
+        .verification-code {
+            text-align: center;
+            font-size: 24px;
+            letter-spacing: 2px;
+            font-weight: 600;
+            margin: 30px 0;
+            padding: 10px;
+            background-color: #eef2ff;
+            border-radius: 4px;
+        }
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 12px;
+            color: #6b7280;
+        }
+        .help-text {
+            font-size: 14px;
+            color: #6b7280;
+            margin: 20px 0;
+        }
+        .expiry-notice {
+            font-size: 14px;
+            color: #ef4444;
+            margin-top: 20px;
+        }
+        @media only screen and (max-width: 550px) {
+            .container {
+                padding: 20px;
+            }
+            h1 {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <img src="{{.LogoURL}}" alt="{{.OrganizationName}} Logo" class="logo">
+        <h1>Verify Your Email Address</h1>
+    </div>
+
+    <p>Hello {{.FirstName}},</p>
+
+    <p>Thank you for signing up! Please verify your email address to complete your registration with {{.OrganizationName}}.</p>
+
+    <a href="{{.VerificationURL}}" class="verification-button">Verify Email</a>
+
+    <p class="help-text">If the button above doesn't work, you can also verify your email by entering this code on the verification page:</p>
+
+    <div class="verification-code">{{.VerificationCode}}</div>
+
+    <p class="expiry-notice">This verification link and code will expire in {{.ExpiryTime}}.</p>
+
+    <p>If you did not sign up for an account with {{.OrganizationName}}, please disregard this email.</p>
+
+    <div class="footer">
+        <p>&copy; {{.CurrentYear}} {{.OrganizationName}}. All rights reserved.</p>
+        <p>{{.OrganizationAddress}}</p>
+    </div>
+</div>
+</body>
+</html>

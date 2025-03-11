@@ -1,0 +1,115 @@
+run:
+  # Timeout for running linters, default is 1m
+  timeout: 5m
+  # Include test files
+  tests: true
+  # Skip directories
+  skip-dirs:
+    - bin
+    - vendor
+    - third_party
+    - testdata
+    - examples
+    - tools
+  # Skip files
+  skip-files:
+    - ".*\\_test\\.go$"
+    - "\\.\\test\\.go$"
+
+# Output configuration
+output:
+  # Format: colored-line-number|line-number|json|tab|checkstyle|code-climate, default is "colored-line-number"
+  format: colored-line-number
+  # Print lines of code with issue, default is true
+  print-issued-lines: true
+  # Print linter name in the end of issue text, default is true
+  print-linter-name: true
+
+# Configure specific linters
+linters:
+  disable-all: true
+  enable:
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - typecheck
+    - unused
+    - gosec
+    - revive
+    - gofmt
+    - goimports
+    - misspell
+    - dupl
+    - unconvert
+    - goconst
+    - prealloc
+    - gocyclo
+    - unparam
+    - rowserrcheck
+    - gocritic
+
+linters-settings:
+  gocyclo:
+    # Minimal code complexity to report, 30 by default
+    min-complexity: 15
+  dupl:
+    # Tokens count to trigger issue, 150 by default
+    threshold: 100
+  goconst:
+    # Minimal length of string constant, 3 by default
+    min-len: 3
+    # Minimal occurrences count to trigger, 3 by default
+    min-occurrences: 3
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - experimental
+      - opinionated
+      - performance
+      - style
+  revive:
+    # see https://github.com/mgechev/revive#available-rules for details.
+    rules:
+      - name: blank-imports
+      - name: context-as-argument
+      - name: context-keys-type
+      - name: dot-imports
+      - name: error-return
+      - name: error-strings
+      - name: error-naming
+      - name: exported
+      - name: if-return
+      - name: increment-decrement
+      - name: var-naming
+      - name: var-declaration
+      - name: package-comments
+      - name: range
+      - name: receiver-naming
+      - name: time-naming
+      - name: unexported-return
+      - name: indent-error-flow
+      - name: errorf
+      - name: empty-block
+      - name: superfluous-else
+      - name: unused-parameter
+      - name: unreachable-code
+      - name: redefines-builtin-id
+
+issues:
+  # Maximum count of issues with the same text, 3 by default
+  max-same-issues: 10
+
+  # Fix found issues
+  fix: false
+
+  exclude-rules:
+    # Exclude some linters from running on tests files
+    - path: _test\.go
+      linters:
+        - dupl
+        - gosec
+        - goconst
+        - errcheck
+        - unparam

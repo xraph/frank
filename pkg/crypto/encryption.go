@@ -1,0 +1,198 @@
+package crypto
+
+import (
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/rand"
+	"crypto/sha256"
+	"errors"
+	"hash"
+	"io"
+
+	"golang.org/x/crypto/pbkdf2"
+)
+
+// Encrypt encrypts plaintext using AES-GCM with the provided key and IV
+// The key should be 16, 24, or 32 bytes to select AES-128, AES-192, or AES-256
+// IV should be 12 bytes for optimal security with GCM
+func Encrypt(plaintext, key, iv []byte) ([]byte, error) {
+	// Create a new cipher block from the key
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create GCM mode
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, err
+	}
+
+	// Use provided IV (nonce)
+	// For GCM, the nonce should be 12 bytes
+	if len(iv) != gcm.NonceSize() {
+		return nil, errors.New("invalid nonce size")
+	}
+
+	// Encrypt and authenticate data
+	ciphertext := gcm.Seal(nil, iv, plaintext, nil)
+	return ciphertext, nil
+}
+
+// Decrypt decrypts ciphertext using AES-GCM with the provided key and IV
+func Decrypt(ciphertext, key, iv []byte) ([]byte, error) {
+	// Create a new cipher block from the key
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create GCM mode
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check IV (nonce) size
+	if len(iv) != gcm.NonceSize() {
+		return nil, errors.New("invalid nonce size")
+	}
+
+	// Decrypt and verify data
+	plaintext, err := gcm.Open(nil, iv, ciphertext, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return plaintext, nil
+}
+
+// EncryptWithRandomIV encrypts data using a randomly generated IV
+// Returns the ciphertext with the IV prepended
+func EncryptWithRandomIV(plaintext, key []byte) ([]byte, error) {
+	// Create a new cipher block from the key
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create GCM mode
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, err
+	}
+
+	// Generate a random nonce
+	nonce := make([]byte, gcm.NonceSize())
+	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
+		return nil, err
+	}
+
+	// Encrypt and authenticate data
+	ciphertext := gcm.Seal(nil, nonce, plaintext, nil)
+
+	// Prepend the nonce to the ciphertext
+	result := make([]byte, len(nonce)+len(ciphertext))
+	copy(result, nonce)
+	copy(result[len(nonce):], ciphertext)
+
+	return result, nil
+}
+
+// DecryptWithPrependedIV decrypts data that has the IV prepended
+func DecryptWithPrependedIV(data, key []byte) ([]byte, error) {
+	// Create a new cipher block from the key
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create GCM mode
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check if data is too short
+	nonceSize := gcm.NonceSize()
+	if len(data) < nonceSize {
+		return nil, errors.New("ciphertext too short")
+	}
+
+	// Extract nonce and ciphertext
+	nonce, ciphertext := data[:nonceSize], data[nonceSize:]
+
+	// Decrypt and verify data
+	plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return plaintext, nil
+}
+
+// PadKey ensures the key is of valid length for AES (16, 24, or 32 bytes)
+// This is useful when working with keys derived from passwords or phrases
+func PadKey(key []byte) []byte {
+	switch {
+	case len(key) <= 16:
+		return padOrTruncate(key, 16)
+	case len(key) <= 24:
+		return padOrTruncate(key, 24)
+	default:
+		return padOrTruncate(key, 32)
+	}
+}
+
+// padOrTruncate either pads the key with zeros or truncates it to reach the target length
+func padOrTruncate(key []byte, targetLen int) []byte {
+	if len(key) == targetLen {
+		return key
+	}
+
+	result := make([]byte, targetLen)
+	if len(key) > targetLen {
+		// Truncate
+		copy(result, key[:targetLen])
+	} else {
+		// Pad with zeros
+		copy(result, key)
+	}
+
+	return result
+}
+
+// DeriveKeyFromPassword creates an encryption key from a password and salt
+// This can be used instead of directly using a password as a key
+func DeriveKeyFromPassword(password, salt []byte, keyLength int) ([]byte, error) {
+	// Use PBKDF2 for key derivation
+	return PBKDF2Key(password, salt, 10000, keyLength, nil), nil
+}
+
+// GenerateEncryptionKey generates a random key of the specified length
+// Valid lengths for AES are 16, 24, or 32 bytes
+func GenerateEncryptionKey(length int) ([]byte, error) {
+	// Validate key length
+	if length != 16 && length != 24 && length != 32 {
+		return nil, errors.New("invalid key length, must be 16, 24, or 32 bytes")
+	}
+
+	// Generate random key
+	key := make([]byte, length)
+	_, err := rand.Read(key)
+	if err != nil {
+		return nil, err
+	}
+
+	return key, nil
+}
+
+// PBKDF2Key derives a key from a password using PBKDF2
+// iterations should be at least 10,000 for security
+// If h is nil, SHA-256 will be used
+func PBKDF2Key(password, salt []byte, iterations, keyLen int, h func() hash.Hash) []byte {
+	if h == nil {
+		h = sha256.New
+	}
+	return pbkdf2.Key(password, salt, iterations, keyLen, h)
+}

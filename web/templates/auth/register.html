@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account - {{.OrganizationName}}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">
+    <style>
+        .auth-card {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .auth-input {
+            transition: border-color 0.15s ease-in-out;
+        }
+        .auth-input:focus {
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+        .auth-btn {
+            transition: all 0.2s ease;
+        }
+        .auth-btn:hover {
+            transform: translateY(-1px);
+        }
+        .social-btn {
+            transition: all 0.2s ease;
+        }
+        .social-btn:hover {
+            background-color: #f3f4f6;
+        }
+        .password-strength {
+            height: 5px;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+<div class="max-w-md w-full space-y-8">
+    <div class="text-center">
+        <img class="mx-auto h-12 w-auto" src="{{.LogoURL}}" alt="{{.OrganizationName}} Logo">
+        <h2 class="mt-6 text-3xl font-extrabold text-gray-900">
+            Create your account
+        </h2>
+        <p class="mt-2 text-sm text-gray-600">
+            Already have an account? <a href="{{.LoginURL}}" class="font-medium text-indigo-600 hover:text-indigo-500">Sign in</a>
+        </p>
+    </div>
+
+    {{if .ErrorMessage}}
+    <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                </svg>
+            </div>
+            <div class="ml-3">
+                <p class="text-sm text-red-700">
+                    {{.ErrorMessage}}
+                </p>
+            </div>
+        </div>
+    </div>
+    {{end}}
+
+    <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 auth-card">
+        <form class="space-y-6" action="{{.RegisterSubmitURL}}" method="POST">
+            <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+            <input type="hidden" name="redirect_uri" value="{{.RedirectURI}}">
+            {{if .InviteToken}}
+            <input type="hidden" name="invite_token" value="{{.InviteToken}}">
+            {{end}}
+
+            <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                <div class="sm:col-span-3">
+                    <label for="first_name" class="block text-sm font-medium text-gray-700">
+                        First name
+                    </label>
+                    <div class="mt-1">
+                        <input type="text" name="first_name" id="first_name" autocomplete="given-name"
+                               class="auth-input shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                    </div>
+                </div>
+
+                <div class="sm:col-span-3">
+                    <label for="last_name" class="block text-sm font-medium text-gray-700">
+                        Last name
+                    </label>
+                    <div class="mt-1">
+                        <input type="text" name="last_name" id="last_name" autocomplete="family-name"
+                               class="auth-input shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <label for="email" class="block text-sm font-medium text-gray-700">
+                    Email address
+                </label>
+                <div class="mt-1">
+                    <input id="email" name="email" type="email" autocomplete="email" required
+                           value="{{.PrefilledEmail}}" {{if .EmailReadonly}}readonly{{end}}
+                           class="auth-input appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+            </div>
+
+            <div>
+                <label for="password" class="block text-sm font-medium text-gray-700">
+                    Password
+                </label>
+                <div class="mt-1">
+                    <input id="password" name="password" type="password" autocomplete="new-password" required
+                           class="auth-input appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+                <div class="mt-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div id="password-strength-meter" class="password-strength bg-red-500" style="width: 0%"></div>
+                </div>
+                <p id="password-strength-text" class="mt-1 text-xs text-gray-500">
+                    Password must be at least 8 characters and include a mix of letters, numbers, and symbols.
+                </p>
+            </div>
+
+            {{if .EnableTerms}}
+            <div class="flex items-start">
+                <div class="flex items-center h-5">
+                    <input id="terms" name="terms" type="checkbox" required
+                           class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded">
+                </div>
+                <div class="ml-3 text-sm">
+                    <label for="terms" class="font-medium text-gray-700">
+                        I agree to the <a href="{{.TermsURL}}" target="_blank" class="text-indigo-600 hover:text-indigo-500">Terms of Service</a> and <a href="{{.PrivacyURL}}" target="_blank" class="text-indigo-600 hover:text-indigo-500">Privacy Policy</a>
+                    </label>
+                </div>
+            </div>
+            {{end}}
+
+            <div>
+                <button type="submit" class="auth-btn w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Create account
+                </button>
+            </div>
+        </form>
+
+        {{if .EnableSocialLogin}}
+        <div class="mt-6">
+            <div class="relative">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-gray-300"></div>
+                </div>
+                <div class="relative flex justify-center text-sm">
+                        <span class="px-2 bg-white text-gray-500">
+                            Or sign up with
+                        </span>
+                </div>
+            </div>
+
+            <div class="mt-6 grid grid-cols-2 gap-3">
+                {{range .SocialProviders}}
+                <div>
+                    <a href="{{.URL}}" class="social-btn w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <img class="h-5 w-5" src="{{.IconURL}}" alt="{{.Name}}">
+                        <span class="ml-2">{{.Name}}</span>
+                    </a>
+                </div>
+                {{end}}
+            </div>
+        </div>
+        {{end}}
+    </div>
+
+    <div class="text-center mt-4">
+        <p class="text-xs text-gray-500">
+            &copy; {{.CurrentYear}} {{.OrganizationName}}. All rights reserved.
+        </p>
+    </div>
+</div>
+
+<script>
+    // Simple password strength checker
+    const passwordInput = document.getElementById('password');
+    const strengthMeter = document.getElementById('password-strength-meter');
+    const strengthText = document.getElementById('password-strength-text');
+
+    passwordInput.addEventListener('input', function() {
+        const password = passwordInput.value;
+        let strength = 0;
+        let feedback = 'Password must be at least 8 characters and include a mix of letters, numbers, and symbols.';
+
+        if (password.length >= 8) strength += 25;
+        if (password.match(/[A-Z]/)) strength += 25;
+        if (password.match(/[0-9]/)) strength += 25;
+        if (password.match(/[^A-Za-z0-9]/)) strength += 25;
+
+        let strengthColor = 'bg-red-500';
+        if (strength >= 100) {
+            strengthColor = 'bg-green-500';
+            feedback = 'Strong password!';
+        } else if (strength >= 75) {
+            strengthColor = 'bg-yellow-500';
+            feedback = 'Good password. Consider adding more variety.';
+        } else if (strength >= 50) {
+            strengthColor = 'bg-orange-500';
+            feedback = 'Medium strength password. Try adding numbers or symbols.';
+        } else if (strength >= 25) {
+            feedback = 'Weak password. Make it longer with mixed characters.';
+        }
+
+        strengthMeter.className = `password-strength ${strengthColor}`;
+        strengthMeter.style.width = `${strength}%`;
+        strengthText.textContent = feedback;
+    });
+</script>
+</body>
+</html>

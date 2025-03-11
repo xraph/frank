@@ -1,0 +1,285 @@
+syntax = "proto3";
+
+package organization;
+
+option go_package = "github.com/juicycleff/frank/internal/pb/organization";
+
+import "google/protobuf/timestamp.proto";
+import "user.proto";
+
+// OrganizationService handles organization management operations
+service OrganizationService {
+  // GetOrganization retrieves an organization by ID
+  rpc GetOrganization(GetOrganizationRequest) returns (GetOrganizationResponse);
+
+  // GetOrganizationBySlug retrieves an organization by slug
+  rpc GetOrganizationBySlug(GetOrganizationBySlugRequest) returns (GetOrganizationResponse);
+
+  // ListOrganizations retrieves a list of organizations with pagination
+  rpc ListOrganizations(ListOrganizationsRequest) returns (ListOrganizationsResponse);
+
+  // CreateOrganization creates a new organization
+  rpc CreateOrganization(CreateOrganizationRequest) returns (CreateOrganizationResponse);
+
+  // UpdateOrganization updates an existing organization
+  rpc UpdateOrganization(UpdateOrganizationRequest) returns (UpdateOrganizationResponse);
+
+  // DeleteOrganization deletes an organization
+  rpc DeleteOrganization(DeleteOrganizationRequest) returns (DeleteOrganizationResponse);
+
+  // GetOrganizationMembers retrieves members of an organization
+  rpc GetOrganizationMembers(GetOrganizationMembersRequest) returns (GetOrganizationMembersResponse);
+
+  // AddOrganizationMember adds a user to an organization
+  rpc AddOrganizationMember(AddOrganizationMemberRequest) returns (AddOrganizationMemberResponse);
+
+  // RemoveOrganizationMember removes a user from an organization
+  rpc RemoveOrganizationMember(RemoveOrganizationMemberRequest) returns (RemoveOrganizationMemberResponse);
+
+  // UpdateOrganizationMember updates a member's roles in an organization
+  rpc UpdateOrganizationMember(UpdateOrganizationMemberRequest) returns (UpdateOrganizationMemberResponse);
+
+  // GetOrganizationFeatures retrieves features enabled for an organization
+  rpc GetOrganizationFeatures(GetOrganizationFeaturesRequest) returns (GetOrganizationFeaturesResponse);
+
+  // EnableOrganizationFeature enables a feature for an organization
+  rpc EnableOrganizationFeature(EnableOrganizationFeatureRequest) returns (EnableOrganizationFeatureResponse);
+
+  // DisableOrganizationFeature disables a feature for an organization
+  rpc DisableOrganizationFeature(DisableOrganizationFeatureRequest) returns (DisableOrganizationFeatureResponse);
+
+  // GetOrganizationIdentityProviders retrieves identity providers for an organization
+  rpc GetOrganizationIdentityProviders(GetOrganizationIdentityProvidersRequest) returns (GetOrganizationIdentityProvidersResponse);
+
+  // GetOrganizationWebhooks retrieves webhooks for an organization
+  rpc GetOrganizationWebhooks(GetOrganizationWebhooksRequest) returns (GetOrganizationWebhooksResponse);
+
+  // GetOrganizationAPIKeys retrieves API keys for an organization
+  rpc GetOrganizationAPIKeys(GetOrganizationAPIKeysRequest) returns (GetOrganizationAPIKeysResponse);
+}
+
+// Organization represents an organization in the system
+message Organization {
+  string id = 1;
+  string name = 2;
+  string slug = 3;
+  string domain = 4;
+  string logo_url = 5;
+  string plan = 6;
+  bool active = 7;
+  google.protobuf.Timestamp trial_ends_at = 8;
+  map<string, string> metadata = 9;
+  google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp updated_at = 11;
+  string owner_id = 12;
+  int32 member_count = 13;
+}
+
+message GetOrganizationRequest {
+  string id = 1;
+}
+
+message GetOrganizationBySlugRequest {
+  string slug = 1;
+}
+
+message GetOrganizationResponse {
+  Organization organization = 1;
+}
+
+message ListOrganizationsRequest {
+  int32 offset = 1;
+  int32 limit = 2;
+  string search = 3;
+}
+
+message ListOrganizationsResponse {
+  repeated Organization organizations = 1;
+  int32 total = 2;
+}
+
+message CreateOrganizationRequest {
+  string name = 1;
+  string slug = 2;
+  string domain = 3;
+  string logo_url = 4;
+  string plan = 5;
+  map<string, string> metadata = 6;
+  int32 trial_days = 7;
+  repeated string features = 8;
+  string owner_id = 9;
+}
+
+message CreateOrganizationResponse {
+  Organization organization = 1;
+}
+
+message UpdateOrganizationRequest {
+  string id = 1;
+  optional string name = 2;
+  optional string domain = 3;
+  optional string logo_url = 4;
+  optional string plan = 5;
+  optional bool active = 6;
+  map<string, string> metadata = 7;
+}
+
+message UpdateOrganizationResponse {
+  Organization organization = 1;
+}
+
+message DeleteOrganizationRequest {
+  string id = 1;
+}
+
+message DeleteOrganizationResponse {
+  bool success = 1;
+}
+
+message OrganizationMember {
+  user.User user = 1;
+  repeated string roles = 2;
+  google.protobuf.Timestamp joined_at = 3;
+}
+
+message GetOrganizationMembersRequest {
+  string organization_id = 1;
+  int32 offset = 2;
+  int32 limit = 3;
+  string search = 4;
+}
+
+message GetOrganizationMembersResponse {
+  repeated OrganizationMember members = 1;
+  int32 total = 2;
+}
+
+message AddOrganizationMemberRequest {
+  string organization_id = 1;
+  string user_id = 2;
+  repeated string roles = 3;
+}
+
+message AddOrganizationMemberResponse {
+  bool success = 1;
+}
+
+message RemoveOrganizationMemberRequest {
+  string organization_id = 1;
+  string user_id = 2;
+}
+
+message RemoveOrganizationMemberResponse {
+  bool success = 1;
+}
+
+message UpdateOrganizationMemberRequest {
+  string organization_id = 1;
+  string user_id = 2;
+  repeated string roles = 3;
+}
+
+message UpdateOrganizationMemberResponse {
+  bool success = 1;
+}
+
+message Feature {
+  string key = 1;
+  string name = 2;
+  string description = 3;
+  bool active = 4;
+  map<string, string> settings = 5;
+  google.protobuf.Timestamp activated_at = 6;
+}
+
+message GetOrganizationFeaturesRequest {
+  string organization_id = 1;
+}
+
+message GetOrganizationFeaturesResponse {
+  repeated Feature features = 1;
+}
+
+message EnableOrganizationFeatureRequest {
+  string organization_id = 1;
+  string feature_key = 2;
+  map<string, string> settings = 3;
+}
+
+message EnableOrganizationFeatureResponse {
+  bool success = 1;
+  Feature feature = 2;
+}
+
+message DisableOrganizationFeatureRequest {
+  string organization_id = 1;
+  string feature_key = 2;
+}
+
+message DisableOrganizationFeatureResponse {
+  bool success = 1;
+}
+
+message IdentityProvider {
+  string id = 1;
+  string name = 2;
+  string display_name = 3;
+  string provider_type = 4;
+  bool active = 5;
+  repeated string domains = 6;
+  google.protobuf.Timestamp created_at = 7;
+}
+
+message GetOrganizationIdentityProvidersRequest {
+  string organization_id = 1;
+}
+
+message GetOrganizationIdentityProvidersResponse {
+  repeated IdentityProvider providers = 1;
+}
+
+message Webhook {
+  string id = 1;
+  string name = 2;
+  string url = 3;
+  repeated string event_types = 4;
+  bool active = 5;
+  int32 retry_count = 6;
+  int32 timeout_ms = 7;
+  string format = 8;
+  google.protobuf.Timestamp created_at = 9;
+}
+
+message GetOrganizationWebhooksRequest {
+  string organization_id = 1;
+  int32 offset = 2;
+  int32 limit = 3;
+}
+
+message GetOrganizationWebhooksResponse {
+  repeated Webhook webhooks = 1;
+  int32 total = 2;
+}
+
+message APIKey {
+  string id = 1;
+  string name = 2;
+  string type = 3;
+  repeated string permissions = 4;
+  repeated string scopes = 5;
+  bool active = 6;
+  google.protobuf.Timestamp expires_at = 7;
+  google.protobuf.Timestamp last_used = 8;
+  google.protobuf.Timestamp created_at = 9;
+}
+
+message GetOrganizationAPIKeysRequest {
+  string organization_id = 1;
+  int32 offset = 2;
+  int32 limit = 3;
+}
+
+message GetOrganizationAPIKeysResponse {
+  repeated APIKey api_keys = 1;
+  int32 total = 2;
+}

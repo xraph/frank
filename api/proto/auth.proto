@@ -1,0 +1,404 @@
+syntax = "proto3";
+
+package auth;
+
+option go_package = "github.com/juicycleff/frank/internal/pb/auth";
+
+import "google/protobuf/timestamp.proto";
+import "user.proto";
+
+// AuthService handles authentication and related operations
+service AuthService {
+  // Login authenticates a user and returns session information
+  rpc Login(LoginRequest) returns (LoginResponse);
+
+  // Register creates a new user account
+  rpc Register(RegisterRequest) returns (RegisterResponse);
+
+  // Logout ends the current user session
+  rpc Logout(LogoutRequest) returns (LogoutResponse);
+
+  // RefreshToken refreshes an access token using a refresh token
+  rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
+
+  // ForgotPassword initiates the password reset process
+  rpc ForgotPassword(ForgotPasswordRequest) returns (ForgotPasswordResponse);
+
+  // ResetPassword resets a user's password using a token
+  rpc ResetPassword(ResetPasswordRequest) returns (ResetPasswordResponse);
+
+  // VerifyEmail verifies a user's email address
+  rpc VerifyEmail(VerifyEmailRequest) returns (VerifyEmailResponse);
+
+  // MFAEnroll enrolls a user in multi-factor authentication
+  rpc MFAEnroll(MFAEnrollRequest) returns (MFAEnrollResponse);
+
+  // MFAVerify verifies a multi-factor authentication code
+  rpc MFAVerify(MFAVerifyRequest) returns (MFAVerifyResponse);
+
+  // GetMFAMethods gets the MFA methods enabled for a user
+  rpc GetMFAMethods(GetMFAMethodsRequest) returns (GetMFAMethodsResponse);
+
+  // SendMFACode sends a code for MFA verification
+  rpc SendMFACode(SendMFACodeRequest) returns (SendMFACodeResponse);
+
+  // PasswordlessLogin initiates a passwordless login
+  rpc PasswordlessLogin(PasswordlessLoginRequest) returns (PasswordlessLoginResponse);
+
+  // VerifyPasswordlessLogin verifies a passwordless login
+  rpc VerifyPasswordlessLogin(VerifyPasswordlessLoginRequest) returns (VerifyPasswordlessLoginResponse);
+
+  // RegisterPasskey registers a new passkey for the user
+  rpc RegisterPasskey(RegisterPasskeyRequest) returns (RegisterPasskeyResponse);
+
+  // AuthenticateWithPasskey authenticates a user with a passkey
+  rpc AuthenticateWithPasskey(AuthenticateWithPasskeyRequest) returns (AuthenticateWithPasskeyResponse);
+}
+
+// OAuth2Service handles OAuth2 operations
+service OAuth2Service {
+  // Authorize initiates an OAuth2 authorization flow
+  rpc Authorize(AuthorizeRequest) returns (AuthorizeResponse);
+
+  // Token exchanges an authorization code for tokens
+  rpc Token(TokenRequest) returns (TokenResponse);
+
+  // IntrospectToken provides information about a token
+  rpc IntrospectToken(IntrospectTokenRequest) returns (IntrospectTokenResponse);
+
+  // RevokeToken revokes an access or refresh token
+  rpc RevokeToken(RevokeTokenRequest) returns (RevokeTokenResponse);
+
+  // GetUserInfo provides user information using a token
+  rpc GetUserInfo(GetUserInfoRequest) returns (GetUserInfoResponse);
+}
+
+// SSOService handles Single Sign-On operations
+service SSOService {
+  // GetProviders gets available SSO providers
+  rpc GetProviders(GetProvidersRequest) returns (GetProvidersResponse);
+
+  // InitiateSSO initiates an SSO authentication flow
+  rpc InitiateSSO(InitiateSSORequest) returns (InitiateSSOResponse);
+
+  // CompleteSSO handles the callback from an SSO provider
+  rpc CompleteSSO(CompleteSSORequest) returns (CompleteSSOResponse);
+}
+
+// Types for AuthService
+
+message LoginRequest {
+  string email = 1;
+  string password = 2;
+  string organization_id = 3;
+  bool remember_me = 4;
+  string captcha_response = 5;
+}
+
+message LoginResponse {
+  user.User user = 1;
+  string token = 2;
+  string refresh_token = 3;
+  int64 expires_at = 4;
+  bool mfa_required = 5;
+  repeated string mfa_types = 6;
+}
+
+message RegisterRequest {
+  string email = 1;
+  string password = 2;
+  string first_name = 3;
+  string last_name = 4;
+  string organization_id = 5;
+  map<string, string> metadata = 6;
+}
+
+message RegisterResponse {
+  user.User user = 1;
+  string token = 2;
+  string refresh_token = 3;
+  int64 expires_at = 4;
+}
+
+message LogoutRequest {
+  string token = 1;
+}
+
+message LogoutResponse {
+  bool success = 1;
+}
+
+message RefreshTokenRequest {
+  string refresh_token = 1;
+}
+
+message RefreshTokenResponse {
+  string token = 1;
+  string refresh_token = 2;
+  int64 expires_at = 3;
+}
+
+message ForgotPasswordRequest {
+  string email = 1;
+}
+
+message ForgotPasswordResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message ResetPasswordRequest {
+  string token = 1;
+  string new_password = 2;
+}
+
+message ResetPasswordResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message VerifyEmailRequest {
+  string token = 1;
+}
+
+message VerifyEmailResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message MFAEnrollRequest {
+  string method = 1;
+  string email = 2;
+  string phone_number = 3;
+}
+
+message MFAEnrollResponse {
+  bool success = 1;
+
+  oneof method_data {
+    TOTPMethodData totp_data = 2;
+    SMSMethodData sms_data = 3;
+    EmailMethodData email_data = 4;
+    BackupCodesData backup_codes_data = 5;
+  }
+}
+
+message TOTPMethodData {
+  string secret = 1;
+  string url = 2;
+  bytes qr_code = 3;
+}
+
+message SMSMethodData {
+  string message = 1;
+}
+
+message EmailMethodData {
+  string message = 1;
+}
+
+message BackupCodesData {
+  repeated string backup_codes = 1;
+}
+
+message MFAVerifyRequest {
+  string method = 1;
+  string code = 2;
+  string phone_number = 3;
+}
+
+message MFAVerifyResponse {
+  bool verified = 1;
+  string message = 2;
+}
+
+message GetMFAMethodsRequest {
+  string user_id = 1;
+}
+
+message GetMFAMethodsResponse {
+  repeated string methods = 1;
+}
+
+message SendMFACodeRequest {
+  string method = 1;
+  string user_id = 2;
+}
+
+message SendMFACodeResponse {
+  bool success = 1;
+  int64 expires_at = 2;
+  string message = 3;
+}
+
+message PasswordlessLoginRequest {
+  string email = 1;
+  string phone_number = 2;
+  string redirect_url = 3;
+  string auth_type = 4;
+}
+
+message PasswordlessLoginResponse {
+  bool success = 1;
+  string verification_id = 2;
+  string message = 3;
+}
+
+message VerifyPasswordlessLoginRequest {
+  string token = 1;
+  string phone_number = 2;
+  string code = 3;
+  string auth_type = 4;
+}
+
+message VerifyPasswordlessLoginResponse {
+  bool success = 1;
+  string user_id = 2;
+  string email = 3;
+  user.User user = 4;
+}
+
+message RegisterPasskeyRequest {
+  string session_id = 1;
+  bytes response = 2;
+  string device_name = 3;
+  string device_type = 4;
+}
+
+message RegisterPasskeyResponse {
+  string id = 1;
+  string name = 2;
+  string device_type = 3;
+  google.protobuf.Timestamp registered_at = 4;
+}
+
+message AuthenticateWithPasskeyRequest {
+  string session_id = 1;
+  bytes response = 2;
+}
+
+message AuthenticateWithPasskeyResponse {
+  bool authenticated = 1;
+  string user_id = 2;
+}
+
+// Types for OAuth2Service
+
+message AuthorizeRequest {
+  string client_id = 1;
+  string redirect_uri = 2;
+  string response_type = 3;
+  string scope = 4;
+  string state = 5;
+  string code_challenge = 6;
+  string code_challenge_method = 7;
+}
+
+message AuthorizeResponse {
+  string redirect_url = 1;
+}
+
+message TokenRequest {
+  string grant_type = 1;
+  string code = 2;
+  string redirect_uri = 3;
+  string client_id = 4;
+  string client_secret = 5;
+  string refresh_token = 6;
+  string code_verifier = 7;
+  string scope = 8;
+}
+
+message TokenResponse {
+  string access_token = 1;
+  string token_type = 2;
+  int32 expires_in = 3;
+  string refresh_token = 4;
+  string scope = 5;
+  string id_token = 6;
+}
+
+message IntrospectTokenRequest {
+  string token = 1;
+  string token_type_hint = 2;
+  string client_id = 3;
+  string client_secret = 4;
+}
+
+message IntrospectTokenResponse {
+  bool active = 1;
+  string client_id = 2;
+  int64 exp = 3;
+  int64 iat = 4;
+  string scope = 5;
+  string token_type = 6;
+  string sub = 7;
+  string organization_id = 8;
+}
+
+message RevokeTokenRequest {
+  string token = 1;
+  string token_type_hint = 2;
+  string client_id = 3;
+  string client_secret = 4;
+}
+
+message RevokeTokenResponse {
+  bool success = 1;
+}
+
+message GetUserInfoRequest {
+  string access_token = 1;
+}
+
+message GetUserInfoResponse {
+  string sub = 1;
+  string email = 2;
+  bool email_verified = 3;
+  string name = 4;
+  string given_name = 5;
+  string family_name = 6;
+  string picture = 7;
+  string locale = 8;
+}
+
+// Types for SSOService
+
+message GetProvidersRequest {
+  string organization_id = 1;
+}
+
+message GetProvidersResponse {
+  repeated SSOProvider providers = 1;
+}
+
+message SSOProvider {
+  string id = 1;
+  string name = 2;
+  string type = 3;
+  string logo_url = 4;
+  bool organization_specific = 5;
+}
+
+message InitiateSSORequest {
+  string provider_id = 1;
+  string redirect_uri = 2;
+  map<string, string> options = 3;
+}
+
+message InitiateSSOResponse {
+  string auth_url = 1;
+}
+
+message CompleteSSORequest {
+  string provider_id = 1;
+  string state = 2;
+  string code = 3;
+}
+
+message CompleteSSOResponse {
+  user.User user = 1;
+  string token = 2;
+  string refresh_token = 3;
+  string organization_id = 4;
+}

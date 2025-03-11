@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: frank-auth-server
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=frank
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - ENVIRONMENT=development
+      - LOG_LEVEL=debug
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./config:/app/config
+    restart: unless-stopped
+    networks:
+      - frank-network
+
+  postgres:
+    image: postgres:14-alpine
+    container_name: frank-postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=frank
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - frank-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: frank-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    networks:
+      - frank-network
+
+  mailhog:
+    image: mailhog/mailhog
+    container_name: frank-mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    restart: unless-stopped
+    networks:
+      - frank-network
+
+networks:
+  frank-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Sign-In Link</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            max-width: 120px;
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .magic-link-button {
+            display: block;
+            width: 200px;
+            background-color: #4f46e5;
+            color: white;
+            text-align: center;
+            padding: 14px 20px;
+            margin: 30px auto;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .magic-link-button:hover {
+            background-color: #4338ca;
+        }
+        .security-notice {
+            margin-top: 30px;
+            padding: 15px;
+            background-color: #f3f4f6;
+            border-left: 4px solid #4f46e5;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 12px;
+            color: #6b7280;
+        }
+        .device-info {
+            background-color: #eef2ff;
+            padding: 10px 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        .expiry-notice {
+            font-size: 14px;
+            color: #ef4444;
+            margin-top: 20px;
+        }
+        @media only screen and (max-width: 550px) {
+            .container {
+                padding: 20px;
+            }
+            h1 {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <img src="{{.LogoURL}}" alt="{{.OrganizationName}} Logo" class="logo">
+        <h1>Your Sign-In Link</h1>
+    </div>
+
+    <p>Hello {{.FirstName}},</p>
+
+    <p>You requested a magic link to sign in to your {{.OrganizationName}} account. Click the button below to securely sign in:</p>
+
+    <a href="{{.MagicLinkURL}}" class="magic-link-button">Sign In</a>
+
+    <div class="device-info">
+        <p><strong>Request Details:</strong></p>
+        <p>Device: {{.DeviceInfo}}</p>
+        <p>Location: {{.LocationInfo}}</p>
+        <p>Time: {{.RequestTime}}</p>
+    </div>
+
+    <p class="expiry-notice">This sign-in link will expire in {{.ExpiryTime}}.</p>
+
+    <div class="security-notice">
+        <p><strong>Security Notice:</strong> If you did not request this link, please ignore this email or contact support if you have concerns about your account security.</p>
+    </div>
+
+    <div class="footer">
+        <p>&copy; {{.CurrentYear}} {{.OrganizationName}}. All rights reserved.</p>
+        <p>{{.OrganizationAddress}}</p>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,219 @@
+syntax = "proto3";
+
+package user;
+
+option go_package = "github.com/juicycleff/frank/internal/pb/user";
+
+import "google/protobuf/timestamp.proto";
+
+// UserService handles user management operations
+service UserService {
+  // GetUser retrieves a user by ID
+  rpc GetUser(GetUserRequest) returns (GetUserResponse);
+
+  // GetUserByEmail retrieves a user by email address
+  rpc GetUserByEmail(GetUserByEmailRequest) returns (GetUserResponse);
+
+  // ListUsers retrieves a list of users with pagination
+  rpc ListUsers(ListUsersRequest) returns (ListUsersResponse);
+
+  // CreateUser creates a new user
+  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
+
+  // UpdateUser updates an existing user
+  rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse);
+
+  // DeleteUser deletes a user
+  rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse);
+
+  // UpdatePassword updates a user's password
+  rpc UpdatePassword(UpdatePasswordRequest) returns (UpdatePasswordResponse);
+
+  // GetUserSessions gets a user's active sessions
+  rpc GetUserSessions(GetUserSessionsRequest) returns (GetUserSessionsResponse);
+
+  // RevokeUserSession revokes a specific user session
+  rpc RevokeUserSession(RevokeUserSessionRequest) returns (RevokeUserSessionResponse);
+
+  // RevokeAllUserSessions revokes all sessions for a user
+  rpc RevokeAllUserSessions(RevokeAllUserSessionsRequest) returns (RevokeAllUserSessionsResponse);
+
+  // GetUserAPIKeys gets a user's API keys
+  rpc GetUserAPIKeys(GetUserAPIKeysRequest) returns (GetUserAPIKeysResponse);
+
+  // GetUserPasskeys gets a user's registered passkeys
+  rpc GetUserPasskeys(GetUserPasskeysRequest) returns (GetUserPasskeysResponse);
+}
+
+// User represents a user in the system
+message User {
+  string id = 1;
+  string email = 2;
+  string first_name = 3;
+  string last_name = 4;
+  string phone_number = 5;
+  string profile_image_url = 6;
+  bool email_verified = 7;
+  bool phone_verified = 8;
+  bool active = 9;
+  string locale = 10;
+  map<string, string> metadata = 11;
+  google.protobuf.Timestamp created_at = 12;
+  google.protobuf.Timestamp updated_at = 13;
+  repeated string roles = 14;
+  string primary_organization_id = 15;
+}
+
+message GetUserRequest {
+  string id = 1;
+}
+
+message GetUserByEmailRequest {
+  string email = 1;
+}
+
+message GetUserResponse {
+  User user = 1;
+}
+
+message ListUsersRequest {
+  int32 offset = 1;
+  int32 limit = 2;
+  string search = 3;
+  string organization_id = 4;
+}
+
+message ListUsersResponse {
+  repeated User users = 1;
+  int32 total = 2;
+}
+
+message CreateUserRequest {
+  string email = 1;
+  string password = 2;
+  string first_name = 3;
+  string last_name = 4;
+  string phone_number = 5;
+  string profile_image_url = 6;
+  bool email_verified = 7;
+  bool phone_verified = 8;
+  bool active = 9;
+  string locale = 10;
+  map<string, string> metadata = 11;
+  string organization_id = 12;
+}
+
+message CreateUserResponse {
+  User user = 1;
+}
+
+message UpdateUserRequest {
+  string id = 1;
+  optional string first_name = 2;
+  optional string last_name = 3;
+  optional string phone_number = 4;
+  optional string profile_image_url = 5;
+  optional string locale = 6;
+  map<string, string> metadata = 7;
+}
+
+message UpdateUserResponse {
+  User user = 1;
+}
+
+message DeleteUserRequest {
+  string id = 1;
+}
+
+message DeleteUserResponse {
+  bool success = 1;
+}
+
+message UpdatePasswordRequest {
+  string id = 1;
+  string current_password = 2;
+  string new_password = 3;
+}
+
+message UpdatePasswordResponse {
+  bool success = 1;
+}
+
+message Session {
+  string id = 1;
+  string user_id = 2;
+  string ip_address = 3;
+  string user_agent = 4;
+  string device_id = 5;
+  string location = 6;
+  string organization_id = 7;
+  google.protobuf.Timestamp last_active_at = 8;
+  google.protobuf.Timestamp expires_at = 9;
+  google.protobuf.Timestamp created_at = 10;
+  bool is_current = 11;
+}
+
+message GetUserSessionsRequest {
+  string user_id = 1;
+}
+
+message GetUserSessionsResponse {
+  repeated Session sessions = 1;
+}
+
+message RevokeUserSessionRequest {
+  string user_id = 1;
+  string session_id = 2;
+}
+
+message RevokeUserSessionResponse {
+  bool success = 1;
+}
+
+message RevokeAllUserSessionsRequest {
+  string user_id = 1;
+}
+
+message RevokeAllUserSessionsResponse {
+  bool success = 1;
+  int32 revoked_count = 2;
+}
+
+message APIKey {
+  string id = 1;
+  string name = 2;
+  string type = 3;
+  repeated string permissions = 4;
+  repeated string scopes = 5;
+  bool active = 6;
+  google.protobuf.Timestamp expires_at = 7;
+  google.protobuf.Timestamp last_used = 8;
+  google.protobuf.Timestamp created_at = 9;
+}
+
+message GetUserAPIKeysRequest {
+  string user_id = 1;
+  int32 offset = 2;
+  int32 limit = 3;
+}
+
+message GetUserAPIKeysResponse {
+  repeated APIKey api_keys = 1;
+  int32 total = 2;
+}
+
+message Passkey {
+  string id = 1;
+  string name = 2;
+  string device_type = 3;
+  google.protobuf.Timestamp registered_at = 4;
+  google.protobuf.Timestamp last_used = 5;
+}
+
+message GetUserPasskeysRequest {
+  string user_id = 1;
+}
+
+message GetUserPasskeysResponse {
+  repeated Passkey passkeys = 1;
+}
