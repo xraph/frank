@@ -4,10 +4,9 @@
 // 	protoc        v5.28.2
 // source: auth.proto
 
-package auth
+package pb
 
 import (
-	user "github.com/juicycleff/frank/internal/pb/user"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
@@ -106,12 +105,12 @@ type LoginResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	User         *user.User `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
-	Token        string     `protobuf:"bytes,2,opt,name=token,proto3" json:"token,omitempty"`
-	RefreshToken string     `protobuf:"bytes,3,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
-	ExpiresAt    int64      `protobuf:"varint,4,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
-	MfaRequired  bool       `protobuf:"varint,5,opt,name=mfa_required,json=mfaRequired,proto3" json:"mfa_required,omitempty"`
-	MfaTypes     []string   `protobuf:"bytes,6,rep,name=mfa_types,json=mfaTypes,proto3" json:"mfa_types,omitempty"`
+	User         *User    `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
+	Token        string   `protobuf:"bytes,2,opt,name=token,proto3" json:"token,omitempty"`
+	RefreshToken string   `protobuf:"bytes,3,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
+	ExpiresAt    int64    `protobuf:"varint,4,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	MfaRequired  bool     `protobuf:"varint,5,opt,name=mfa_required,json=mfaRequired,proto3" json:"mfa_required,omitempty"`
+	MfaTypes     []string `protobuf:"bytes,6,rep,name=mfa_types,json=mfaTypes,proto3" json:"mfa_types,omitempty"`
 }
 
 func (x *LoginResponse) Reset() {
@@ -146,7 +145,7 @@ func (*LoginResponse) Descriptor() ([]byte, []int) {
 	return file_auth_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *LoginResponse) GetUser() *user.User {
+func (x *LoginResponse) GetUser() *User {
 	if x != nil {
 		return x.User
 	}
@@ -280,10 +279,10 @@ type RegisterResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	User         *user.User `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
-	Token        string     `protobuf:"bytes,2,opt,name=token,proto3" json:"token,omitempty"`
-	RefreshToken string     `protobuf:"bytes,3,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
-	ExpiresAt    int64      `protobuf:"varint,4,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	User         *User  `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
+	Token        string `protobuf:"bytes,2,opt,name=token,proto3" json:"token,omitempty"`
+	RefreshToken string `protobuf:"bytes,3,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
+	ExpiresAt    int64  `protobuf:"varint,4,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
 }
 
 func (x *RegisterResponse) Reset() {
@@ -318,7 +317,7 @@ func (*RegisterResponse) Descriptor() ([]byte, []int) {
 	return file_auth_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *RegisterResponse) GetUser() *user.User {
+func (x *RegisterResponse) GetUser() *User {
 	if x != nil {
 		return x.User
 	}
@@ -1788,10 +1787,10 @@ type VerifyPasswordlessLoginResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Success bool       `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
-	UserId  string     `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	Email   string     `protobuf:"bytes,3,opt,name=email,proto3" json:"email,omitempty"`
-	User    *user.User `protobuf:"bytes,4,opt,name=user,proto3" json:"user,omitempty"`
+	Success bool   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	UserId  string `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Email   string `protobuf:"bytes,3,opt,name=email,proto3" json:"email,omitempty"`
+	User    *User  `protobuf:"bytes,4,opt,name=user,proto3" json:"user,omitempty"`
 }
 
 func (x *VerifyPasswordlessLoginResponse) Reset() {
@@ -1847,7 +1846,7 @@ func (x *VerifyPasswordlessLoginResponse) GetEmail() string {
 	return ""
 }
 
-func (x *VerifyPasswordlessLoginResponse) GetUser() *user.User {
+func (x *VerifyPasswordlessLoginResponse) GetUser() *User {
 	if x != nil {
 		return x.User
 	}
@@ -3231,10 +3230,10 @@ type CompleteSSOResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	User           *user.User `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
-	Token          string     `protobuf:"bytes,2,opt,name=token,proto3" json:"token,omitempty"`
-	RefreshToken   string     `protobuf:"bytes,3,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
-	OrganizationId string     `protobuf:"bytes,4,opt,name=organization_id,json=organizationId,proto3" json:"organization_id,omitempty"`
+	User           *User  `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
+	Token          string `protobuf:"bytes,2,opt,name=token,proto3" json:"token,omitempty"`
+	RefreshToken   string `protobuf:"bytes,3,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
+	OrganizationId string `protobuf:"bytes,4,opt,name=organization_id,json=organizationId,proto3" json:"organization_id,omitempty"`
 }
 
 func (x *CompleteSSOResponse) Reset() {
@@ -3269,7 +3268,7 @@ func (*CompleteSSOResponse) Descriptor() ([]byte, []int) {
 	return file_auth_proto_rawDescGZIP(), []int{50}
 }
 
-func (x *CompleteSSOResponse) GetUser() *user.User {
+func (x *CompleteSSOResponse) GetUser() *User {
 	if x != nil {
 		return x.User
 	}
@@ -3788,11 +3787,10 @@ var file_auth_proto_rawDesc = []byte{
 	0x6c, 0x65, 0x74, 0x65, 0x53, 0x53, 0x4f, 0x12, 0x18, 0x2e, 0x61, 0x75, 0x74, 0x68, 0x2e, 0x43,
 	0x6f, 0x6d, 0x70, 0x6c, 0x65, 0x74, 0x65, 0x53, 0x53, 0x4f, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
 	0x74, 0x1a, 0x19, 0x2e, 0x61, 0x75, 0x74, 0x68, 0x2e, 0x43, 0x6f, 0x6d, 0x70, 0x6c, 0x65, 0x74,
-	0x65, 0x53, 0x53, 0x4f, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0x2e, 0x5a, 0x2c,
+	0x65, 0x53, 0x53, 0x4f, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0x29, 0x5a, 0x27,
 	0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x6a, 0x75, 0x69, 0x63, 0x79,
 	0x63, 0x6c, 0x65, 0x66, 0x66, 0x2f, 0x66, 0x72, 0x61, 0x6e, 0x6b, 0x2f, 0x69, 0x6e, 0x74, 0x65,
-	0x72, 0x6e, 0x61, 0x6c, 0x2f, 0x70, 0x62, 0x2f, 0x61, 0x75, 0x74, 0x68, 0x62, 0x06, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x33,
+	0x72, 0x6e, 0x61, 0x6c, 0x2f, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -3862,7 +3860,7 @@ var file_auth_proto_goTypes = []any{
 	(*CompleteSSOResponse)(nil),             // 50: auth.CompleteSSOResponse
 	nil,                                     // 51: auth.RegisterRequest.MetadataEntry
 	nil,                                     // 52: auth.InitiateSSORequest.OptionsEntry
-	(*user.User)(nil),                       // 53: user.User
+	(*User)(nil),                            // 53: user.User
 	(*timestamppb.Timestamp)(nil),           // 54: google.protobuf.Timestamp
 }
 var file_auth_proto_depIdxs = []int32{
@@ -3936,6 +3934,7 @@ func file_auth_proto_init() {
 	if File_auth_proto != nil {
 		return
 	}
+	file_user_proto_init()
 	if !protoimpl.UnsafeEnabled {
 		file_auth_proto_msgTypes[0].Exporter = func(v any, i int) any {
 			switch v := v.(*LoginRequest); i {

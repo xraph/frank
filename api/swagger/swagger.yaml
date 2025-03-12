@@ -1,0 +1,1514 @@
+basePath: /api/v1
+definitions:
+  ent.ApiKey:
+    properties:
+      active:
+        description: Active holds the value of the "active" field.
+        type: boolean
+      created_at:
+        description: CreatedAt holds the value of the "created_at" field.
+        type: string
+      edges:
+        allOf:
+        - $ref: '#/definitions/ent.ApiKeyEdges'
+        description: |-
+          Edges holds the relations/edges for other nodes in the graph.
+          The values are being populated by the ApiKeyQuery when eager-loading is set.
+      expires_at:
+        description: ExpiresAt holds the value of the "expires_at" field.
+        type: string
+      hashed_key:
+        description: HashedKey holds the value of the "hashed_key" field.
+        type: string
+      id:
+        description: ID of the ent.
+        type: string
+      last_used:
+        description: LastUsed holds the value of the "last_used" field.
+        type: string
+      metadata:
+        additionalProperties: true
+        description: Metadata holds the value of the "metadata" field.
+        type: object
+      name:
+        description: Name holds the value of the "name" field.
+        type: string
+      organization_id:
+        description: OrganizationID holds the value of the "organization_id" field.
+        type: string
+      permissions:
+        description: Permissions holds the value of the "permissions" field.
+        items:
+          type: string
+        type: array
+      scopes:
+        description: Scopes holds the value of the "scopes" field.
+        items:
+          type: string
+        type: array
+      type:
+        description: Type holds the value of the "type" field.
+        type: string
+      updated_at:
+        description: UpdatedAt holds the value of the "updated_at" field.
+        type: string
+      user_id:
+        description: UserID holds the value of the "user_id" field.
+        type: string
+    type: object
+  ent.ApiKeyEdges:
+    properties:
+      organization:
+        allOf:
+        - $ref: '#/definitions/ent.Organization'
+        description: Organization holds the value of the organization edge.
+      user:
+        allOf:
+        - $ref: '#/definitions/ent.User'
+        description: User holds the value of the user edge.
+    type: object
+  ent.FeatureFlag:
+    properties:
+      component:
+        allOf:
+        - $ref: '#/definitions/featureflag.Component'
+        description: Which component of the auth system this feature belongs to
+      created_at:
+        description: CreatedAt holds the value of the "created_at" field.
+        type: string
+      description:
+        description: Description holds the value of the "description" field.
+        type: string
+      edges:
+        allOf:
+        - $ref: '#/definitions/ent.FeatureFlagEdges'
+        description: |-
+          Edges holds the relations/edges for other nodes in the graph.
+          The values are being populated by the FeatureFlagQuery when eager-loading is set.
+      enabled:
+        description: Enabled holds the value of the "enabled" field.
+        type: boolean
+      id:
+        description: ID of the ent.
+        type: string
+      is_premium:
+        description: Whether this feature is only available for premium plans
+        type: boolean
+      key:
+        description: Key holds the value of the "key" field.
+        type: string
+      name:
+        description: Name holds the value of the "name" field.
+        type: string
+      updated_at:
+        description: UpdatedAt holds the value of the "updated_at" field.
+        type: string
+    type: object
+  ent.FeatureFlagEdges:
+    properties:
+      organizations:
+        description: Organizations holds the value of the organizations edge.
+        items:
+          $ref: '#/definitions/ent.OrganizationFeature'
+        type: array
+    type: object
+  ent.IdentityProvider:
+    properties:
+      active:
+        description: Active holds the value of the "active" field.
+        type: boolean
+      attributes_mapping:
+        additionalProperties:
+          type: string
+        description: AttributesMapping holds the value of the "attributes_mapping"
+          field.
+        type: object
+      authorization_endpoint:
+        description: AuthorizationEndpoint holds the value of the "authorization_endpoint"
+          field.
+        type: string
+      client_id:
+        description: ClientID holds the value of the "client_id" field.
+        type: string
+      created_at:
+        description: CreatedAt holds the value of the "created_at" field.
+        type: string
+      domains:
+        description: Domains holds the value of the "domains" field.
+        items:
+          type: string
+        type: array
+      edges:
+        allOf:
+        - $ref: '#/definitions/ent.IdentityProviderEdges'
+        description: |-
+          Edges holds the relations/edges for other nodes in the graph.
+          The values are being populated by the IdentityProviderQuery when eager-loading is set.
+      id:
+        description: ID of the ent.
+        type: string
+      issuer:
+        description: Issuer holds the value of the "issuer" field.
+        type: string
+      jwks_uri:
+        description: JwksURI holds the value of the "jwks_uri" field.
+        type: string
+      metadata:
+        additionalProperties: true
+        description: Metadata holds the value of the "metadata" field.
+        type: object
+      metadata_url:
+        description: MetadataURL holds the value of the "metadata_url" field.
+        type: string
+      name:
+        description: Name holds the value of the "name" field.
+        type: string
+      organization_id:
+        description: OrganizationID holds the value of the "organization_id" field.
+        type: string
+      primary:
+        description: Primary holds the value of the "primary" field.
+        type: boolean
+      provider_type:
+        description: 'Type of IdP: ''oauth2'', ''oidc'', ''saml'''
+        type: string
+      redirect_uri:
+        description: RedirectURI holds the value of the "redirect_uri" field.
+        type: string
+      token_endpoint:
+        description: TokenEndpoint holds the value of the "token_endpoint" field.
+        type: string
+      updated_at:
+        description: UpdatedAt holds the value of the "updated_at" field.
+        type: string
+      userinfo_endpoint:
+        description: UserinfoEndpoint holds the value of the "userinfo_endpoint" field.
+        type: string
+    type: object
+  ent.IdentityProviderEdges:
+    properties:
+      organization:
+        allOf:
+        - $ref: '#/definitions/ent.Organization'
+        description: Organization holds the value of the organization edge.
+    type: object
+  ent.MFA:
+    properties:
+      active:
+        description: Active holds the value of the "active" field.
+        type: boolean
+      backup_codes:
+        description: BackupCodes holds the value of the "backup_codes" field.
+        items:
+          type: string
+        type: array
+      created_at:
+        description: CreatedAt holds the value of the "created_at" field.
+        type: string
+      edges:
+        allOf:
+        - $ref: '#/definitions/ent.MFAEdges'
+        description: |-
+          Edges holds the relations/edges for other nodes in the graph.
+          The values are being populated by the MFAQuery when eager-loading is set.
+      email:
+        description: Email holds the value of the "email" field.
+        type: string
+      id:
+        description: ID of the ent.
+        type: string
+      last_used:
+        description: LastUsed holds the value of the "last_used" field.
+        type: string
+      metadata:
+        additionalProperties: true
+        description: Metadata holds the value of the "metadata" field.
+        type: object
+      method:
+        description: 'The MFA method type: ''totp'', ''sms'', ''email'', ''backup_codes'''
+        type: string
+      phone_number:
+        description: PhoneNumber holds the value of the "phone_number" field.
+        type: string
+      updated_at:
+        description: UpdatedAt holds the value of the "updated_at" field.
+        type: string
+      user_id:
+        description: UserID holds the value of the "user_id" field.
+        type: string
+      verified:
+        description: Verified holds the value of the "verified" field.
+        type: boolean
+    type: object
+  ent.MFAEdges:
+    properties:
+      user:
+        allOf:
+        - $ref: '#/definitions/ent.User'
+        description: User holds the value of the user edge.
+    type: object
+  ent.OAuthAuthorization:
+    properties:
+      client_id:
+        description: ClientID holds the value of the "client_id" field.
+        type: string
+      code_challenge:
+        description: CodeChallenge holds the value of the "code_challenge" field.
+        type: string
+      code_challenge_method:
+        description: CodeChallengeMethod holds the value of the "code_challenge_method"
+          field.
+        type: string
+      created_at:
+        description: CreatedAt holds the value of the "created_at" field.
+        type: string
+      edges:
+        allOf:
+        - $ref: '#/definitions/ent.OAuthAuthorizationEdges'
+        description: |-
+          Edges holds the relations/edges for other nodes in the graph.
+          The values are being populated by the OAuthAuthorizationQuery when eager-loading is set.
+      expires_at:
+        description: ExpiresAt holds the value of the "expires_at" field.
+        type: string
+      id:
+        description: ID of the ent.
+        type: string
+      nonce:
+        description: Nonce holds the value of the "nonce" field.
+        type: string
+      organization_id:
+        description: OrganizationID holds the value of the "organization_id" field.
+        type: string
+      redirect_uri:
+        description: RedirectURI holds the value of the "redirect_uri" field.
+        type: string
+      scope_names:
+        description: Scope names as strings for quick access
+        items:
+          type: string
+        type: array
+      state:
+        description: State holds the value of the "state" field.
+        type: string
+      updated_at:
+        description: UpdatedAt holds the value of the "updated_at" field.
+        type: string
+      used:
+        description: Used holds the value of the "used" field.
+        type: boolean
+      used_at:
+        description: UsedAt holds the value of the "used_at" field.
+        type: string
+      user_id:
+        description: UserID holds the value of the "user_id" field.
+        type: string
+    type: object
+  ent.OAuthAuthorizationEdges:
+    properties:
+      client:
+        allOf:
+        - $ref: '#/definitions/ent.OAuthClient'
+        description: Client holds the value of the client edge.
+      scopes:
+        description: Scopes holds the value of the scopes edge.
+        items:
+          $ref: '#/definitions/ent.OAuthScope'
+        type: array
+      user:
+        allOf:
+        - $ref: '#/definitions/ent.User'
+        description: User holds the value of the user edge.
+    type: object
+  ent.OAuthClient:
+    properties:
+      active:
+        description: Active holds the value of the "active" field.
+        type: boolean
+      allowed_cors_origins:
+        description: AllowedCorsOrigins holds the value of the "allowed_cors_origins"
+          field.
+        items:
+          type: string
+        type: array
+      allowed_grant_types:
+        description: AllowedGrantTypes holds the value of the "allowed_grant_types"
+          field.
+        items:
+          type: string
+        type: array
+      auth_code_expiry_seconds:
+        description: AuthCodeExpirySeconds holds the value of the "auth_code_expiry_seconds"
+          field.
+        type: integer
+      client_description:
+        description: ClientDescription holds the value of the "client_description"
+          field.
+        type: string
+      client_id:
+        description: ClientID holds the value of the "client_id" field.
+        type: string
+      client_name:
+        description: ClientName holds the value of the "client_name" field.
+        type: string
+      client_uri:
+        description: ClientURI holds the value of the "client_uri" field.
+        type: string
+      created_at:
+        description: CreatedAt holds the value of the "created_at" field.
+        type: string
+      edges:
+        allOf:
+        - $ref: '#/definitions/ent.OAuthClientEdges'
+        description: |-
+          Edges holds the relations/edges for other nodes in the graph.
+          The values are being populated by the OAuthClientQuery when eager-loading is set.
+      id:
+        description: ID of the ent.
+        type: string
+      logo_uri:
+        description: LogoURI holds the value of the "logo_uri" field.
+        type: string
+      organization_id:
+        description: OrganizationID holds the value of the "organization_id" field.
+        type: string
+      post_logout_redirect_uris:
+        description: PostLogoutRedirectUris holds the value of the "post_logout_redirect_uris"
+          field.
+        items:
+          type: string
+        type: array
+      public:
+        description: Public clients operate without a client secret
+        type: boolean
+      redirect_uris:
+        description: RedirectUris holds the value of the "redirect_uris" field.
+        items:
+          type: string
+        type: array
+      refresh_token_expiry_seconds:
+        description: RefreshTokenExpirySeconds holds the value of the "refresh_token_expiry_seconds"
+          field.
+        type: integer
+      requires_consent:
+        description: Require user consent before authorization
+        type: boolean
+      requires_pkce:
+        description: Enforce PKCE (Proof Key for Code Exchange)
+        type: boolean
+      token_expiry_seconds:
+        description: TokenExpirySeconds holds the value of the "token_expiry_seconds"
+          field.
+        type: integer
+      updated_at:
+        description: UpdatedAt holds the value of the "updated_at" field.
+        type: string
+    type: object
+  ent.OAuthClientEdges:
+    properties:
+      authorizations:
+        description: Authorizations holds the value of the authorizations edge.
+        items:
+          $ref: '#/definitions/ent.OAuthAuthorization'
+        type: array
+      organization:
+        allOf:
+        - $ref: '#/definitions/ent.Organization'
+        description: Organization holds the value of the organization edge.
+      scopes:
+        description: Scopes holds the value of the scopes edge.
+        items:
+          $ref: '#/definitions/ent.OAuthScope'
+        type: array
+      tokens:
+        description: Tokens holds the value of the tokens edge.
+        items:
+          $ref: '#/definitions/ent.OAuthToken'
+        type: array
+    type: object
+  ent.OAuthScope:
+    properties:
+      created_at:
+        description: CreatedAt holds the value of the "created_at" field.
+        type: string
+      default_scope:
+        description: Whether this scope is included by default
+        type: boolean
+      description:
+        description: Description holds the value of the "description" field.
+        type: string
+      edges:
+        allOf:
+        - $ref: '#/definitions/ent.OAuthScopeEdges'
+        description: |-
+          Edges holds the relations/edges for other nodes in the graph.
+          The values are being populated by the OAuthScopeQuery when eager-loading is set.
+      id:
+        description: ID of the ent.
+        type: string
+      name:
+        description: Name holds the value of the "name" field.
+        type: string
+      public:
+        description: Whether this scope can be requested by any client
+        type: boolean
+      updated_at:
+        description: UpdatedAt holds the value of the "updated_at" field.
+        type: string
+    type: object
+  ent.OAuthScopeEdges:
+    properties:
+      authorizations:
+        description: Authorizations holds the value of the authorizations edge.
+        items:
+          $ref: '#/definitions/ent.OAuthAuthorization'
+        type: array
+      clients:
+        description: Clients holds the value of the clients edge.
+        items:
+          $ref: '#/definitions/ent.OAuthClient'
+        type: array
+      tokens:
+        description: Tokens holds the value of the tokens edge.
+        items:
+          $ref: '#/definitions/ent.OAuthToken'
+        type: array
+    type: object
+  ent.OAuthToken:
+    properties:
+      client_id:
+        description: ClientID holds the value of the "client_id" field.
+        type: string
+      created_at:
+        description: CreatedAt holds the value of the "created_at" field.
+        type: string
+      edges:
+        allOf:
+        - $ref: '#/definitions/ent.OAuthTokenEdges'
+        description: |-
+          Edges holds the relations/edges for other nodes in the graph.
+          The values are being populated by the OAuthTokenQuery when eager-loading is set.
+      expires_at:
+        description: ExpiresAt holds the value of the "expires_at" field.
+        type: string
+      expires_in:
+        description: ExpiresIn holds the value of the "expires_in" field.
+        type: integer
+      id:
+        description: ID of the ent.
+        type: string
+      ip_address:
+        description: IPAddress holds the value of the "ip_address" field.
+        type: string
+      organization_id:
+        description: OrganizationID holds the value of the "organization_id" field.
+        type: string
+      refresh_token_expires_at:
+        description: RefreshTokenExpiresAt holds the value of the "refresh_token_expires_at"
+          field.
+        type: string
+      revoked:
+        description: Revoked holds the value of the "revoked" field.
+        type: boolean
+      revoked_at:
+        description: RevokedAt holds the value of the "revoked_at" field.
+        type: string
+      scope_names:
+        description: Scope names as strings for quick access
+        items:
+          type: string
+        type: array
+      token_type:
+        description: TokenType holds the value of the "token_type" field.
+        type: string
+      updated_at:
+        description: UpdatedAt holds the value of the "updated_at" field.
+        type: string
+      user_agent:
+        description: UserAgent holds the value of the "user_agent" field.
+        type: string
+      user_id:
+        description: UserID holds the value of the "user_id" field.
+        type: string
+    type: object
+  ent.OAuthTokenEdges:
+    properties:
+      client:
+        allOf:
+        - $ref: '#/definitions/ent.OAuthClient'
+        description: Client holds the value of the client edge.
+      scopes:
+        description: Scopes holds the value of the scopes edge.
+        items:
+          $ref: '#/definitions/ent.OAuthScope'
+        type: array
+      user:
+        allOf:
+        - $ref: '#/definitions/ent.User'
+        description: User holds the value of the user edge.
+    type: object
+  ent.Organization:
+    properties:
+      active:
+        description: Active holds the value of the "active" field.
+        type: boolean
+      created_at:
+        description: CreatedAt holds the value of the "created_at" field.
+        type: string
+      domain:
+        description: Domain holds the value of the "domain" field.
+        type: string
+      edges:
+        allOf:
+        - $ref: '#/definitions/ent.OrganizationEdges'
+        description: |-
+          Edges holds the relations/edges for other nodes in the graph.
+          The values are being populated by the OrganizationQuery when eager-loading is set.
+      id:
+        description: ID of the ent.
+        type: string
+      logo_url:
+        description: LogoURL holds the value of the "logo_url" field.
+        type: string
+      metadata:
+        additionalProperties: true
+        description: Metadata holds the value of the "metadata" field.
+        type: object
+      name:
+        description: Name holds the value of the "name" field.
+        type: string
+      plan:
+        description: Plan holds the value of the "plan" field.
+        type: string
+      slug:
+        description: Slug holds the value of the "slug" field.
+        type: string
+      trial_ends_at:
+        description: TrialEndsAt holds the value of the "trial_ends_at" field.
+        type: string
+      trial_used:
+        description: TrialUsed holds the value of the "trial_used" field.
+        type: boolean
+      updated_at:
+        description: UpdatedAt holds the value of the "updated_at" field.
+        type: string
+    type: object
+  ent.OrganizationEdges:
+    properties:
+      api_keys:
+        description: APIKeys holds the value of the api_keys edge.
+        items:
+          $ref: '#/definitions/ent.ApiKey'
+        type: array
+      feature_flags:
+        description: FeatureFlags holds the value of the feature_flags edge.
+        items:
+          $ref: '#/definitions/ent.OrganizationFeature'
+        type: array
+      identity_providers:
+        description: IdentityProviders holds the value of the identity_providers edge.
+        items:
+          $ref: '#/definitions/ent.IdentityProvider'
+        type: array
+      oauth_clients:
+        description: OauthClients holds the value of the oauth_clients edge.
+        items:
+          $ref: '#/definitions/ent.OAuthClient'
+        type: array
+      users:
+        description: Users holds the value of the users edge.
+        items:
+          $ref: '#/definitions/ent.User'
+        type: array
+      webhooks:
+        description: Webhooks holds the value of the webhooks edge.
+        items:
+          $ref: '#/definitions/ent.Webhook'
+        type: array
+    type: object
+  ent.OrganizationFeature:
+    properties:
+      created_at:
+        description: CreatedAt holds the value of the "created_at" field.
+        type: string
+      edges:
+        allOf:
+        - $ref: '#/definitions/ent.OrganizationFeatureEdges'
+        description: |-
+          Edges holds the relations/edges for other nodes in the graph.
+          The values are being populated by the OrganizationFeatureQuery when eager-loading is set.
+      enabled:
+        description: Enabled holds the value of the "enabled" field.
+        type: boolean
+      feature_id:
+        description: FeatureID holds the value of the "feature_id" field.
+        type: string
+      id:
+        description: ID of the ent.
+        type: string
+      organization_id:
+        description: OrganizationID holds the value of the "organization_id" field.
+        type: string
+      settings:
+        additionalProperties: true
+        description: Custom settings for this feature in this organization
+        type: object
+      updated_at:
+        description: UpdatedAt holds the value of the "updated_at" field.
+        type: string
+    type: object
+  ent.OrganizationFeatureEdges:
+    properties:
+      feature:
+        allOf:
+        - $ref: '#/definitions/ent.FeatureFlag'
+        description: Feature holds the value of the feature edge.
+      organization:
+        allOf:
+        - $ref: '#/definitions/ent.Organization'
+        description: Organization holds the value of the organization edge.
+    type: object
+  ent.Passkey:
+    properties:
+      aaguid:
+        description: Aaguid holds the value of the "aaguid" field.
+        type: string
+      active:
+        description: Active holds the value of the "active" field.
+        type: boolean
+      attestation:
+        additionalProperties: true
+        description: Attestation holds the value of the "attestation" field.
+        type: object
+      created_at:
+        description: CreatedAt holds the value of the "created_at" field.
+        type: string
+      credential_id:
+        description: CredentialID holds the value of the "credential_id" field.
+        type: string
+      device_type:
+        description: DeviceType holds the value of the "device_type" field.
+        type: string
+      edges:
+        allOf:
+        - $ref: '#/definitions/ent.PasskeyEdges'
+        description: |-
+          Edges holds the relations/edges for other nodes in the graph.
+          The values are being populated by the PasskeyQuery when eager-loading is set.
+      id:
+        description: ID of the ent.
+        type: string
+      last_used:
+        description: LastUsed holds the value of the "last_used" field.
+        type: string
+      name:
+        description: Name holds the value of the "name" field.
+        type: string
+      public_key:
+        description: PublicKey holds the value of the "public_key" field.
+        items:
+          type: integer
+        type: array
+      sign_count:
+        description: SignCount holds the value of the "sign_count" field.
+        type: integer
+      transports:
+        description: Transports holds the value of the "transports" field.
+        items:
+          type: string
+        type: array
+      updated_at:
+        description: UpdatedAt holds the value of the "updated_at" field.
+        type: string
+      user_id:
+        description: UserID holds the value of the "user_id" field.
+        type: string
+    type: object
+  ent.PasskeyEdges:
+    properties:
+      user:
+        allOf:
+        - $ref: '#/definitions/ent.User'
+        description: User holds the value of the user edge.
+    type: object
+  ent.Permission:
+    properties:
+      action:
+        description: The action this permission allows (create, read, update, delete,
+          etc.)
+        type: string
+      conditions:
+        description: JSON expression for conditional access
+        type: string
+      created_at:
+        description: CreatedAt holds the value of the "created_at" field.
+        type: string
+      description:
+        description: Description holds the value of the "description" field.
+        type: string
+      edges:
+        allOf:
+        - $ref: '#/definitions/ent.PermissionEdges'
+        description: |-
+          Edges holds the relations/edges for other nodes in the graph.
+          The values are being populated by the PermissionQuery when eager-loading is set.
+      id:
+        description: ID of the ent.
+        type: string
+      name:
+        description: Name holds the value of the "name" field.
+        type: string
+      resource:
+        description: The resource this permission applies to
+        type: string
+      system:
+        description: System permissions cannot be modified
+        type: boolean
+      updated_at:
+        description: UpdatedAt holds the value of the "updated_at" field.
+        type: string
+    type: object
+  ent.PermissionEdges:
+    properties:
+      roles:
+        description: Roles holds the value of the roles edge.
+        items:
+          $ref: '#/definitions/ent.Role'
+        type: array
+    type: object
+  ent.Role:
+    properties:
+      created_at:
+        description: CreatedAt holds the value of the "created_at" field.
+        type: string
+      description:
+        description: Description holds the value of the "description" field.
+        type: string
+      edges:
+        allOf:
+        - $ref: '#/definitions/ent.RoleEdges'
+        description: |-
+          Edges holds the relations/edges for other nodes in the graph.
+          The values are being populated by the RoleQuery when eager-loading is set.
+      id:
+        description: ID of the ent.
+        type: string
+      is_default:
+        description: Default role assigned to new users
+        type: boolean
+      name:
+        description: Name holds the value of the "name" field.
+        type: string
+      organization_id:
+        description: OrganizationID holds the value of the "organization_id" field.
+        type: string
+      system:
+        description: System roles cannot be modified
+        type: boolean
+      updated_at:
+        description: UpdatedAt holds the value of the "updated_at" field.
+        type: string
+    type: object
+  ent.RoleEdges:
+    properties:
+      permissions:
+        description: Permissions holds the value of the permissions edge.
+        items:
+          $ref: '#/definitions/ent.Permission'
+        type: array
+      users:
+        description: Users holds the value of the users edge.
+        items:
+          $ref: '#/definitions/ent.User'
+        type: array
+    type: object
+  ent.Session:
+    properties:
+      active:
+        description: Active holds the value of the "active" field.
+        type: boolean
+      created_at:
+        description: CreatedAt holds the value of the "created_at" field.
+        type: string
+      device_id:
+        description: DeviceID holds the value of the "device_id" field.
+        type: string
+      edges:
+        allOf:
+        - $ref: '#/definitions/ent.SessionEdges'
+        description: |-
+          Edges holds the relations/edges for other nodes in the graph.
+          The values are being populated by the SessionQuery when eager-loading is set.
+      expires_at:
+        description: ExpiresAt holds the value of the "expires_at" field.
+        type: string
+      id:
+        description: ID of the ent.
+        type: string
+      ip_address:
+        description: IPAddress holds the value of the "ip_address" field.
+        type: string
+      last_active_at:
+        description: LastActiveAt holds the value of the "last_active_at" field.
+        type: string
+      location:
+        description: Location holds the value of the "location" field.
+        type: string
+      organization_id:
+        description: OrganizationID holds the value of the "organization_id" field.
+        type: string
+      updated_at:
+        description: UpdatedAt holds the value of the "updated_at" field.
+        type: string
+      user_agent:
+        description: UserAgent holds the value of the "user_agent" field.
+        type: string
+      user_id:
+        description: UserID holds the value of the "user_id" field.
+        type: string
+    type: object
+  ent.SessionEdges:
+    properties:
+      user:
+        allOf:
+        - $ref: '#/definitions/ent.User'
+        description: User holds the value of the user edge.
+    type: object
+  ent.User:
+    properties:
+      active:
+        description: Active holds the value of the "active" field.
+        type: boolean
+      created_at:
+        description: CreatedAt holds the value of the "created_at" field.
+        type: string
+      edges:
+        allOf:
+        - $ref: '#/definitions/ent.UserEdges'
+        description: |-
+          Edges holds the relations/edges for other nodes in the graph.
+          The values are being populated by the UserQuery when eager-loading is set.
+      email:
+        description: Email holds the value of the "email" field.
+        type: string
+      email_verified:
+        description: EmailVerified holds the value of the "email_verified" field.
+        type: boolean
+      first_name:
+        description: FirstName holds the value of the "first_name" field.
+        type: string
+      id:
+        description: ID of the ent.
+        type: string
+      last_login:
+        description: LastLogin holds the value of the "last_login" field.
+        type: string
+      last_name:
+        description: LastName holds the value of the "last_name" field.
+        type: string
+      last_password_change:
+        description: LastPasswordChange holds the value of the "last_password_change"
+          field.
+        type: string
+      locale:
+        description: Locale holds the value of the "locale" field.
+        type: string
+      metadata:
+        additionalProperties: true
+        description: Metadata holds the value of the "metadata" field.
+        type: object
+      phone_number:
+        description: PhoneNumber holds the value of the "phone_number" field.
+        type: string
+      phone_verified:
+        description: PhoneVerified holds the value of the "phone_verified" field.
+        type: boolean
+      primary_organization_id:
+        description: PrimaryOrganizationID holds the value of the "primary_organization_id"
+          field.
+        type: string
+      profile_image_url:
+        description: ProfileImageURL holds the value of the "profile_image_url" field.
+        type: string
+      updated_at:
+        description: UpdatedAt holds the value of the "updated_at" field.
+        type: string
+    type: object
+  ent.UserEdges:
+    properties:
+      api_keys:
+        description: APIKeys holds the value of the api_keys edge.
+        items:
+          $ref: '#/definitions/ent.ApiKey'
+        type: array
+      mfa_methods:
+        description: MfaMethods holds the value of the mfa_methods edge.
+        items:
+          $ref: '#/definitions/ent.MFA'
+        type: array
+      oauth_authorizations:
+        description: OauthAuthorizations holds the value of the oauth_authorizations
+          edge.
+        items:
+          $ref: '#/definitions/ent.OAuthAuthorization'
+        type: array
+      oauth_tokens:
+        description: OauthTokens holds the value of the oauth_tokens edge.
+        items:
+          $ref: '#/definitions/ent.OAuthToken'
+        type: array
+      organizations:
+        description: Organizations holds the value of the organizations edge.
+        items:
+          $ref: '#/definitions/ent.Organization'
+        type: array
+      passkeys:
+        description: Passkeys holds the value of the passkeys edge.
+        items:
+          $ref: '#/definitions/ent.Passkey'
+        type: array
+      roles:
+        description: Roles holds the value of the roles edge.
+        items:
+          $ref: '#/definitions/ent.Role'
+        type: array
+      sessions:
+        description: Sessions holds the value of the sessions edge.
+        items:
+          $ref: '#/definitions/ent.Session'
+        type: array
+      verifications:
+        description: Verifications holds the value of the verifications edge.
+        items:
+          $ref: '#/definitions/ent.Verification'
+        type: array
+    type: object
+  ent.Verification:
+    properties:
+      attempts:
+        description: Attempts holds the value of the "attempts" field.
+        type: integer
+      created_at:
+        description: CreatedAt holds the value of the "created_at" field.
+        type: string
+      edges:
+        allOf:
+        - $ref: '#/definitions/ent.VerificationEdges'
+        description: |-
+          Edges holds the relations/edges for other nodes in the graph.
+          The values are being populated by the VerificationQuery when eager-loading is set.
+      email:
+        description: Email holds the value of the "email" field.
+        type: string
+      expires_at:
+        description: ExpiresAt holds the value of the "expires_at" field.
+        type: string
+      id:
+        description: ID of the ent.
+        type: string
+      ip_address:
+        description: IPAddress holds the value of the "ip_address" field.
+        type: string
+      metadata:
+        additionalProperties: true
+        description: Metadata holds the value of the "metadata" field.
+        type: object
+      phone_number:
+        description: PhoneNumber holds the value of the "phone_number" field.
+        type: string
+      redirect_url:
+        description: RedirectURL holds the value of the "redirect_url" field.
+        type: string
+      type:
+        description: 'Verification type: email, phone, password_reset, magic_link'
+        type: string
+      updated_at:
+        description: UpdatedAt holds the value of the "updated_at" field.
+        type: string
+      used:
+        description: Used holds the value of the "used" field.
+        type: boolean
+      used_at:
+        description: UsedAt holds the value of the "used_at" field.
+        type: string
+      user_agent:
+        description: UserAgent holds the value of the "user_agent" field.
+        type: string
+      user_id:
+        description: UserID holds the value of the "user_id" field.
+        type: string
+    type: object
+  ent.VerificationEdges:
+    properties:
+      user:
+        allOf:
+        - $ref: '#/definitions/ent.User'
+        description: User holds the value of the user edge.
+    type: object
+  ent.Webhook:
+    properties:
+      active:
+        description: Active holds the value of the "active" field.
+        type: boolean
+      created_at:
+        description: CreatedAt holds the value of the "created_at" field.
+        type: string
+      edges:
+        allOf:
+        - $ref: '#/definitions/ent.WebhookEdges'
+        description: |-
+          Edges holds the relations/edges for other nodes in the graph.
+          The values are being populated by the WebhookQuery when eager-loading is set.
+      event_types:
+        description: EventTypes holds the value of the "event_types" field.
+        items:
+          type: string
+        type: array
+      format:
+        allOf:
+        - $ref: '#/definitions/webhook.Format'
+        description: Format holds the value of the "format" field.
+      id:
+        description: ID of the ent.
+        type: string
+      metadata:
+        additionalProperties: true
+        description: Metadata holds the value of the "metadata" field.
+        type: object
+      name:
+        description: Name holds the value of the "name" field.
+        type: string
+      organization_id:
+        description: OrganizationID holds the value of the "organization_id" field.
+        type: string
+      retry_count:
+        description: RetryCount holds the value of the "retry_count" field.
+        type: integer
+      timeout_ms:
+        description: TimeoutMs holds the value of the "timeout_ms" field.
+        type: integer
+      updated_at:
+        description: UpdatedAt holds the value of the "updated_at" field.
+        type: string
+      url:
+        description: URL holds the value of the "url" field.
+        type: string
+      version:
+        description: Version holds the value of the "version" field.
+        type: string
+    type: object
+  ent.WebhookEdges:
+    properties:
+      events:
+        description: Events holds the value of the events edge.
+        items:
+          $ref: '#/definitions/ent.WebhookEvent'
+        type: array
+      organization:
+        allOf:
+        - $ref: '#/definitions/ent.Organization'
+        description: Organization holds the value of the organization edge.
+    type: object
+  ent.WebhookEvent:
+    properties:
+      attempts:
+        description: Attempts holds the value of the "attempts" field.
+        type: integer
+      created_at:
+        description: CreatedAt holds the value of the "created_at" field.
+        type: string
+      delivered:
+        description: Delivered holds the value of the "delivered" field.
+        type: boolean
+      delivered_at:
+        description: DeliveredAt holds the value of the "delivered_at" field.
+        type: string
+      edges:
+        allOf:
+        - $ref: '#/definitions/ent.WebhookEventEdges'
+        description: |-
+          Edges holds the relations/edges for other nodes in the graph.
+          The values are being populated by the WebhookEventQuery when eager-loading is set.
+      error:
+        description: Error holds the value of the "error" field.
+        type: string
+      event_type:
+        description: EventType holds the value of the "event_type" field.
+        type: string
+      headers:
+        additionalProperties:
+          type: string
+        description: Headers holds the value of the "headers" field.
+        type: object
+      id:
+        description: ID of the ent.
+        type: string
+      next_retry:
+        description: NextRetry holds the value of the "next_retry" field.
+        type: string
+      payload:
+        additionalProperties: true
+        description: Payload holds the value of the "payload" field.
+        type: object
+      response_body:
+        description: ResponseBody holds the value of the "response_body" field.
+        type: string
+      status_code:
+        description: StatusCode holds the value of the "status_code" field.
+        type: integer
+      updated_at:
+        description: UpdatedAt holds the value of the "updated_at" field.
+        type: string
+      webhook_id:
+        description: WebhookID holds the value of the "webhook_id" field.
+        type: string
+    type: object
+  ent.WebhookEventEdges:
+    properties:
+      webhook:
+        allOf:
+        - $ref: '#/definitions/ent.Webhook'
+        description: Webhook holds the value of the webhook edge.
+    type: object
+  errors.ErrorResponse:
+    properties:
+      code:
+        type: string
+      data:
+        additionalProperties: true
+        type: object
+      message:
+        type: string
+    type: object
+  featureflag.Component:
+    enum:
+    - oauth2
+    - passwordless
+    - mfa
+    - passkeys
+    - sso
+    - enterprise
+    - webhooks
+    - api_keys
+    type: string
+    x-enum-varnames:
+    - ComponentOauth2
+    - ComponentPasswordless
+    - ComponentMfa
+    - ComponentPasskeys
+    - ComponentSSO
+    - ComponentEnterprise
+    - ComponentWebhooks
+    - ComponentAPIKeys
+  handlers.ForgotPasswordInput:
+    properties:
+      email:
+        type: string
+    required:
+    - email
+    type: object
+  handlers.LoginInput:
+    properties:
+      captcha_response:
+        type: string
+      email:
+        type: string
+      organization_id:
+        type: string
+      password:
+        type: string
+      remember_me:
+        type: boolean
+    required:
+    - email
+    - password
+    type: object
+  handlers.LoginResponse:
+    properties:
+      expires_at:
+        type: integer
+      mfa_required:
+        type: boolean
+      mfa_types:
+        items:
+          type: string
+        type: array
+      refresh_token:
+        type: string
+      token:
+        type: string
+      user:
+        $ref: '#/definitions/ent.User'
+    type: object
+  handlers.RefreshTokenInput:
+    properties:
+      refresh_token:
+        type: string
+    required:
+    - refresh_token
+    type: object
+  handlers.RegisterInput:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      metadata:
+        additionalProperties: true
+        type: object
+      organization_id:
+        type: string
+      password:
+        minLength: 8
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  handlers.ResetPasswordInput:
+    properties:
+      new_password:
+        minLength: 8
+        type: string
+      token:
+        type: string
+    required:
+    - new_password
+    - token
+    type: object
+  handlers.VerifyEmailInput:
+    properties:
+      token:
+        type: string
+    required:
+    - token
+    type: object
+  webhook.Format:
+    enum:
+    - json
+    - json
+    - form
+    type: string
+    x-enum-varnames:
+    - DefaultFormat
+    - FormatJSON
+    - FormatForm
+host: localhost:8080
+info:
+  contact: {}
+  description: This is a sample server using Chi router with Swagger documentation.
+  title: Frank API with Swagger
+  version: "1.0"
+paths:
+  /api/v1/auth/forgot-password:
+    post:
+      consumes:
+      - application/json
+      description: Initiates the password reset process for a user
+      parameters:
+      - description: User email
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.ForgotPasswordInput'
+      - description: URL to redirect to after password reset
+        in: query
+        name: redirect_url
+        type: string
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Password reset initiated
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid input
+          schema:
+            $ref: '#/definitions/errors.ErrorResponse'
+      summary: Request password reset
+      tags:
+      - auth
+  /api/v1/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Logs in a user with email and password
+      parameters:
+      - description: Login credentials
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.LoginInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Login successful
+          schema:
+            $ref: '#/definitions/handlers.LoginResponse'
+        "400":
+          description: Invalid input
+          schema:
+            $ref: '#/definitions/errors.ErrorResponse'
+        "401":
+          description: Authentication failed
+          schema:
+            $ref: '#/definitions/errors.ErrorResponse'
+        "403":
+          description: Email not verified
+          schema:
+            $ref: '#/definitions/errors.ErrorResponse'
+      summary: Authenticate a user
+      tags:
+      - auth
+  /api/v1/auth/logout:
+    post:
+      description: Logs out the current user and invalidates their session
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Logout successful
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Log out a user
+      tags:
+      - auth
+  /api/v1/auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Generates a new access token using a refresh token
+      parameters:
+      - description: Refresh token
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.RefreshTokenInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Token refresh successful
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid input
+          schema:
+            $ref: '#/definitions/errors.ErrorResponse'
+        "401":
+          description: Invalid refresh token
+          schema:
+            $ref: '#/definitions/errors.ErrorResponse'
+      summary: Refresh access token
+      tags:
+      - auth
+  /api/v1/auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new user account
+      parameters:
+      - description: Registration information
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.RegisterInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Registration successful
+          schema:
+            $ref: '#/definitions/handlers.LoginResponse'
+        "400":
+          description: Invalid input
+          schema:
+            $ref: '#/definitions/errors.ErrorResponse'
+        "409":
+          description: Email already exists
+          schema:
+            $ref: '#/definitions/errors.ErrorResponse'
+      summary: Register a new user
+      tags:
+      - auth
+  /api/v1/auth/reset-password:
+    post:
+      consumes:
+      - application/json
+      description: Resets a user's password using a token received by email
+      parameters:
+      - description: Reset password information
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.ResetPasswordInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Password reset successful
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid input
+          schema:
+            $ref: '#/definitions/errors.ErrorResponse'
+        "401":
+          description: Invalid token
+          schema:
+            $ref: '#/definitions/errors.ErrorResponse'
+      summary: Reset password
+      tags:
+      - auth
+  /api/v1/auth/verify-email:
+    post:
+      consumes:
+      - application/json
+      description: Verifies a user's email address using a token
+      parameters:
+      - description: Email verification token
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.VerifyEmailInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Email verification successful
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid input
+          schema:
+            $ref: '#/definitions/errors.ErrorResponse'
+        "401":
+          description: Invalid token
+          schema:
+            $ref: '#/definitions/errors.ErrorResponse'
+      summary: Verify email
+      tags:
+      - auth
+schemes:
+- http
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

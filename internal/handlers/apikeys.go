@@ -4,9 +4,11 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/internal/apikeys"
 	"github.com/juicycleff/frank/internal/middleware"
+	"github.com/juicycleff/frank/internal/swaggergen"
 	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/juicycleff/frank/pkg/logging"
 	"github.com/juicycleff/frank/pkg/utils"
@@ -127,7 +129,7 @@ func (h *APIKeyHandler) CreateAPIKey(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Map to service input
-	createInput := apikeys.CreateAPIKeyInput{
+	createInput := apikeys.CreateAPIKeyRequest{
 		Name:           input.Name,
 		Type:           input.Type,
 		UserID:         userID,
@@ -186,7 +188,7 @@ func (h *APIKeyHandler) UpdateAPIKey(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Map to service input
-	updateInput := apikeys.UpdateAPIKeyInput{
+	updateInput := apikeys.UpdateAPIKeyRequest{
 		Name:        input.Name,
 		Active:      input.Active,
 		Permissions: input.Permissions,
@@ -251,13 +253,77 @@ func (h *APIKeyHandler) ValidateAPIKey(w http.ResponseWriter, r *http.Request) {
 }
 
 // SetupRoutes sets up the API key routes
-func (h *APIKeyHandler) SetupRoutes(router *http.ServeMux) {
-	router.HandleFunc("/api/v1/api-keys", h.ListAPIKeys)
-	router.HandleFunc("/api/v1/api-keys", h.CreateAPIKey)
-	router.HandleFunc("/api/v1/api-keys/{id}", h.GetAPIKey)
-	router.HandleFunc("/api/v1/api-keys/{id}", h.UpdateAPIKey)
-	router.HandleFunc("/api/v1/api-keys/{id}", h.DeleteAPIKey)
-	router.HandleFunc("/api/v1/api-keys/validate", h.ValidateAPIKey)
+func (h *APIKeyHandler) SetupRoutes(router chi.Router, gen *swaggergen.SwaggerGen) {
+	routes := []routeConfig{
+		{
+			h: h.ListAPIKeys,
+			methods: []string{
+				"GET",
+			},
+			pattern: "/api/v1/api-keys",
+			desc:    "List API Keys",
+		},
+		{
+			h: h.CreateAPIKey,
+			methods: []string{
+				"POST",
+			},
+			pattern: "/api/v1/api-keys",
+			desc:    "Create API Key",
+		},
+		{
+			h: h.GetAPIKey,
+			methods: []string{
+				"GET",
+			},
+			pattern: "/api/v1/api-keys/{id}",
+			desc:    "Get API key",
+		},
+		{
+			h: h.UpdateAPIKey,
+			methods: []string{
+				"PATCH",
+			},
+			pattern: "/api/v1/api-keys/{id}",
+			desc:    "Update API key",
+		},
+		{
+			h: h.DeleteAPIKey,
+			methods: []string{
+				"DELETE",
+			},
+			pattern: "/api/v1/api-keys/{id}",
+			desc:    "Delete API key",
+		},
+		{
+			h: h.ValidateAPIKey,
+			methods: []string{
+				"GET",
+			},
+			pattern: "/api/v1/api-keys/validate",
+			desc:    "Validate API key",
+		},
+	}
+	schemas := []any{
+		apikeys.CreateAPIKeyRequest{},
+		apikeys.UpdateAPIKeyRequest{},
+		apikeys.APIKeyWithKeyResponse{},
+	}
+
+	if gen != nil {
+		for _, schema := range schemas {
+			registerAPISchema(schema, gen)
+		}
+	}
+
+	for _, route := range routes {
+		for _, method := range route.methods {
+			router.Method(method, route.pattern, route.h)
+			if gen != nil {
+				_ = gen.AddPathDescription(method, route.pattern, route.desc)
+			}
+		}
+	}
 }
 
 // Static handler functions for direct router registration

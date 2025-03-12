@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/ent"
 	"github.com/juicycleff/frank/internal/auth/session"
@@ -68,6 +69,17 @@ type RegisterInput struct {
 }
 
 // Login handles user login
+// @Summary Authenticate a user
+// @Description Logs in a user with email and password
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param input body LoginInput true "Login credentials"
+// @Success 200 {object} LoginResponse "Login successful"
+// @Failure 400 {object} errors.ErrorResponse "Invalid input"
+// @Failure 401 {object} errors.ErrorResponse "Authentication failed"
+// @Failure 403 {object} errors.ErrorResponse "Email not verified"
+// @Router /api/v1/auth/login [post]
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	// Parse request
 	var input LoginInput
@@ -133,6 +145,16 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 // Register handles user registration
+// @Summary Register a new user
+// @Description Creates a new user account
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param input body RegisterInput true "Registration information"
+// @Success 201 {object} LoginResponse "Registration successful"
+// @Failure 400 {object} errors.ErrorResponse "Invalid input"
+// @Failure 409 {object} errors.ErrorResponse "Email already exists"
+// @Router /api/v1/auth/register [post]
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	// Parse request
 	var input RegisterInput
@@ -197,6 +219,12 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 }
 
 // Logout handles user logout
+// @Summary Log out a user
+// @Description Logs out the current user and invalidates their session
+// @Tags auth
+// @Produce json
+// @Success 200 {object} map[string]interface{} "Logout successful"
+// @Router /api/v1/auth/logout [post]
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	// Clear session if using sessions
 	if h.sessionManager != nil {
@@ -242,12 +270,22 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// RefreshToken handles token refresh
+// RefreshTokenInput handles token refresh
 type RefreshTokenInput struct {
 	RefreshToken string `json:"refresh_token" validate:"required"`
 }
 
 // RefreshToken refreshes an access token
+// @Summary Refresh access token
+// @Description Generates a new access token using a refresh token
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param input body RefreshTokenInput true "Refresh token"
+// @Success 200 {object} map[string]interface{} "Token refresh successful"
+// @Failure 400 {object} errors.ErrorResponse "Invalid input"
+// @Failure 401 {object} errors.ErrorResponse "Invalid refresh token"
+// @Router /api/v1/auth/refresh [post]
 func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	var input RefreshTokenInput
 	if err := utils.DecodeJSON(r, &input); err != nil {
@@ -313,12 +351,22 @@ func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// ForgotPassword handles password reset requests
+// ForgotPasswordInput handles password reset requests
 type ForgotPasswordInput struct {
 	Email string `json:"email" validate:"required,email"`
 }
 
 // ForgotPassword initiates the password reset process
+// @Summary Request password reset
+// @Description Initiates the password reset process for a user
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param input body ForgotPasswordInput true "User email"
+// @Param redirect_url query string false "URL to redirect to after password reset"
+// @Success 202 {object} map[string]interface{} "Password reset initiated"
+// @Failure 400 {object} errors.ErrorResponse "Invalid input"
+// @Router /api/v1/auth/forgot-password [post]
 func (h *AuthHandler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 	var input ForgotPasswordInput
 	if err := utils.DecodeJSON(r, &input); err != nil {
@@ -369,6 +417,16 @@ type ResetPasswordInput struct {
 }
 
 // ResetPassword resets a user's password using a token
+// @Summary Reset password
+// @Description Resets a user's password using a token received by email
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param input body ResetPasswordInput true "Reset password information"
+// @Success 200 {object} map[string]interface{} "Password reset successful"
+// @Failure 400 {object} errors.ErrorResponse "Invalid input"
+// @Failure 401 {object} errors.ErrorResponse "Invalid token"
+// @Router /api/v1/auth/reset-password [post]
 func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 	var input ResetPasswordInput
 	if err := utils.DecodeJSON(r, &input); err != nil {
@@ -408,6 +466,16 @@ type VerifyEmailInput struct {
 }
 
 // VerifyEmail verifies a user's email address
+// @Summary Verify email
+// @Description Verifies a user's email address using a token
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param input body VerifyEmailInput true "Email verification token"
+// @Success 200 {object} map[string]interface{} "Email verification successful"
+// @Failure 400 {object} errors.ErrorResponse "Invalid input"
+// @Failure 401 {object} errors.ErrorResponse "Invalid token"
+// @Router /api/v1/auth/verify-email [post]
 func (h *AuthHandler) VerifyEmail(w http.ResponseWriter, r *http.Request) {
 	var input VerifyEmailInput
 	if err := utils.DecodeJSON(r, &input); err != nil {
@@ -575,7 +643,7 @@ func (h *AuthHandler) GetCurrentUser(w http.ResponseWriter, r *http.Request) {
 }
 
 // SetupRoutes sets up the auth routes
-func (h *AuthHandler) SetupRoutes(router *http.ServeMux) {
+func (h *AuthHandler) SetupRoutes(router chi.Router) {
 	router.HandleFunc("/api/v1/auth/login", h.Login)
 	router.HandleFunc("/api/v1/auth/register", h.Register)
 	router.HandleFunc("/api/v1/auth/logout", h.Logout)

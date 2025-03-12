@@ -5,6 +5,7 @@ import (
 
 	"github.com/juicycleff/frank/ent"
 	"github.com/juicycleff/frank/pkg/errors"
+	"github.com/juicycleff/frank/pkg/logging"
 )
 
 // Service provides role-based access control operations
@@ -57,6 +58,11 @@ type CreateRoleInput struct {
 	IsDefault      bool   `json:"is_default"`
 }
 
+// AddRolePermissionInput represents the input structure for adding a permission to a role.
+type AddRolePermissionInput struct {
+	PermissionID string `json:"permissionId" validate:"required"`
+}
+
 // UpdateRoleInput represents input for updating a role
 type UpdateRoleInput struct {
 	Name        *string `json:"name,omitempty"`
@@ -100,13 +106,15 @@ type ListPermissionsParams struct {
 type service struct {
 	repo     Repository
 	enforcer Enforcer
+	logger   logging.Logger
 }
 
 // NewService creates a new RBAC service
-func NewService(repo Repository, enforcer Enforcer) Service {
+func NewService(repo Repository, enforcer Enforcer, logger logging.Logger) Service {
 	return &service{
 		repo:     repo,
 		enforcer: enforcer,
+		logger:   logger,
 	}
 }
 

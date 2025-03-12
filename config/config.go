@@ -1,6 +1,8 @@
 package config
 
 import (
+	"crypto/rand"
+	"encoding/base64"
 	"fmt"
 	"os"
 	"sync"
@@ -16,22 +18,23 @@ var (
 
 // Config represents the application configuration
 type Config struct {
-	Environment string           `json:"environment" yaml:"environment" mapstructure:"environment" env:"ENVIRONMENT" envDefault:"development"`
-	Version     string           `json:"version" yaml:"version" mapstructure:"version" env:"VERSION" envDefault:"0.0.0"`
-	Server      ServerConfig     `json:"server" yaml:"server" mapstructure:"server"`
-	Database    DatabaseConfig   `json:"database" yaml:"database" mapstructure:"database"`
-	Auth        AuthConfig       `json:"auth" yaml:"auth" mapstructure:"auth"`
-	Email       EmailConfig      `json:"email" yaml:"email" mapstructure:"email"`
-	SMS         SMSConfig        `json:"sms" yaml:"sms" mapstructure:"sms"` // Redis configuration
-	Redis       RedisConfig      `json:"redis" yaml:"redis" mapstructure:"redis"`
-	OAuth       OAuthConfig      `json:"oauth" yaml:"oauth" mapstructure:"oauth"`
-	Passkeys    PasskeysConfig   `json:"passkeys" yaml:"passkeys" mapstructure:"passkeys"`
-	Webhooks    WebhooksConfig   `json:"webhooks" yaml:"webhooks" mapstructure:"webhooks"`
-	Security    SecurityConfig   `json:"security" yaml:"security" mapstructure:"security"`
-	Logging     LoggingConfig    `json:"logging" yaml:"logging" mapstructure:"logging"`
-	Features    FeaturesConfig   `json:"features" yaml:"features" mapstructure:"features"`
-	Templates   TemplatesConfig  `json:"templates" yaml:"templates" mapstructure:"templates"`
-	Monitoring  MonitoringConfig `json:"monitoring" yaml:"monitoring" mapstructure:"monitoring"`
+	Environment     string           `json:"environment" yaml:"environment" mapstructure:"environment" env:"ENVIRONMENT" envDefault:"development"`
+	Version         string           `json:"version" yaml:"version" mapstructure:"version" env:"VERSION" envDefault:"0.0.0"`
+	GenerateSwagger bool             `json:"generate_swagger" yaml:"generate_swagger" mapstructure:"generate_swagger" env:"GENERATE_SWAGGER" envDefault:"false"`
+	Server          ServerConfig     `json:"server" yaml:"server" mapstructure:"server"`
+	Database        DatabaseConfig   `json:"database" yaml:"database" mapstructure:"database"`
+	Auth            AuthConfig       `json:"auth" yaml:"auth" mapstructure:"auth"`
+	Email           EmailConfig      `json:"email" yaml:"email" mapstructure:"email"`
+	SMS             SMSConfig        `json:"sms" yaml:"sms" mapstructure:"sms"` // Redis configuration
+	Redis           RedisConfig      `json:"redis" yaml:"redis" mapstructure:"redis"`
+	OAuth           OAuthConfig      `json:"oauth" yaml:"oauth" mapstructure:"oauth"`
+	Passkeys        PasskeysConfig   `json:"passkeys" yaml:"passkeys" mapstructure:"passkeys"`
+	Webhooks        WebhooksConfig   `json:"webhooks" yaml:"webhooks" mapstructure:"webhooks"`
+	Security        SecurityConfig   `json:"security" yaml:"security" mapstructure:"security"`
+	Logging         LoggingConfig    `json:"logging" yaml:"logging" mapstructure:"logging"`
+	Features        FeaturesConfig   `json:"features" yaml:"features" mapstructure:"features"`
+	Templates       TemplatesConfig  `json:"templates" yaml:"templates" mapstructure:"templates"`
+	Monitoring      MonitoringConfig `json:"monitoring" yaml:"monitoring" mapstructure:"monitoring"`
 }
 
 // ServerConfig represents server-specific configuration
@@ -65,21 +68,21 @@ type TLSConfig struct {
 
 // DatabaseConfig represents database-specific configuration
 type DatabaseConfig struct {
-	Driver        string        `json:"driver" yaml:"driver" mapstructure:"driver" env:"DB_DRIVER" envDefault:"postgres"`
+	Driver        string        `json:"driver" yaml:"driver" mapstructure:"driver" env:"DATABASE_DRIVER" envDefault:"postgres"`
 	URL           string        `json:"url" yaml:"url" mapstructure:"url" env:"DATABASE_URL"`
-	Host          string        `json:"host" yaml:"host" mapstructure:"host" env:"DB_HOST" envDefault:"localhost"`
-	Port          int           `json:"port" yaml:"port" mapstructure:"port" env:"DB_PORT" envDefault:"5432"`
-	User          string        `json:"user" yaml:"username" mapstructure:"user" env:"DB_USER" envDefault:"postgres"`
-	Password      string        `json:"password" yaml:"password" mapstructure:"password" env:"DB_PASSWORD" envDefault:"postgres"`
-	Database      string        `json:"database" yaml:"database" mapstructure:"database" env:"DB_NAME" envDefault:"frank"`
-	SSLMode       string        `json:"ssl_mode" yaml:"ssl_mode" mapstructure:"ssl_mode" env:"DB_SSL_MODE" envDefault:"disable"`
-	MaxOpenConns  int           `json:"max_open_conns" yaml:"max_open_conns" mapstructure:"max_open_conns" env:"DB_MAX_OPEN_CONNS" envDefault:"25"`
-	MaxIdleConns  int           `json:"max_idle_conns" yaml:"max_idle_conns" mapstructure:"max_idle_conns" env:"DB_MAX_IDLE_CONNS" envDefault:"25"`
-	ConnMaxLife   time.Duration `json:"conn_max_life" yaml:"conn_max_life" mapstructure:"conn_max_life" env:"DB_CONN_MAX_LIFE" envDefault:"5m"`
-	DSN           string        `json:"dsn" yaml:"-" mapstructure:"dsn" env:"DB_DSN"`
-	AutoMigrate   bool          `json:"auto_migrate" yaml:"auto_migrate" mapstructure:"auto_migrate" env:"DB_AUTO_MIGRATE" envDefault:"true"`
-	LogSQL        bool          `json:"log_sql" yaml:"log_sql" mapstructure:"log_sql" env:"DB_LOG_SQL" envDefault:"false"`
-	MigrationsDir string        `json:"migrations_dir" yaml:"migrations_dir" mapstructure:"migrations_dir" env:"DB_MIGRATIONS_DIR" envDefault:"./migrations"`
+	Host          string        `json:"host" yaml:"host" mapstructure:"host" env:"DATABASE_HOST" envDefault:"localhost"`
+	Port          int           `json:"port" yaml:"port" mapstructure:"port" env:"DATABASE_PORT" envDefault:"5432"`
+	User          string        `json:"user" yaml:"username" mapstructure:"user" env:"DATABASE_USER" envDefault:"postgres"`
+	Password      string        `json:"password" yaml:"password" mapstructure:"password" env:"DATABASE_PASSWORD" envDefault:"postgres"`
+	Database      string        `json:"database" yaml:"database" mapstructure:"database" env:"DATABASE_NAME" envDefault:"frank"`
+	SSLMode       string        `json:"ssl_mode" yaml:"ssl_mode" mapstructure:"ssl_mode" env:"DATABASE_SSL_MODE" envDefault:"disable"`
+	MaxOpenConns  int           `json:"max_open_conns" yaml:"max_open_conns" mapstructure:"max_open_conns" env:"DATABASE_MAX_OPEN_CONNS" envDefault:"25"`
+	MaxIdleConns  int           `json:"max_idle_conns" yaml:"max_idle_conns" mapstructure:"max_idle_conns" env:"DATABASE_MAX_IDLE_CONNS" envDefault:"25"`
+	ConnMaxLife   time.Duration `json:"conn_max_life" yaml:"conn_max_life" mapstructure:"conn_max_life" env:"DATABASE_CONN_MAX_LIFE" envDefault:"5m"`
+	DSN           string        `json:"dsn" yaml:"-" mapstructure:"dsn" env:"DATABASE_DSN"`
+	AutoMigrate   bool          `json:"auto_migrate" yaml:"auto_migrate" mapstructure:"auto_migrate" env:"DATABASE_AUTO_MIGRATE" envDefault:"true"`
+	LogSQL        bool          `json:"log_sql" yaml:"log_sql" mapstructure:"log_sql" env:"DATABASE_LOG_SQL" envDefault:"false"`
+	MigrationsDir string        `json:"migrations_dir" yaml:"migrations_dir" mapstructure:"migrations_dir" env:"DATABASE_MIGRATIONS_DIR" envDefault:"./migrations"`
 }
 
 // AuthConfig represents authentication-specific configuration
@@ -140,7 +143,7 @@ type PasswordPolicy struct {
 
 // EmailConfig represents email-specific configuration
 type EmailConfig struct {
-	Provider      string            `json:"provider" yaml:"provider" mapstructure:"smtp" env:"EMAIL_PROVIDER" envDefault:"smtp"`
+	Provider      string            `json:"provider" yaml:"provider" mapstructure:"provider" env:"EMAIL_PROVIDER" envDefault:"provider"`
 	FromEmail     string            `json:"from_email" yaml:"from_email" mapstructure:"from_email" env:"EMAIL_FROM_EMAIL" envDefault:"no-reply@example.com"`
 	FromName      string            `json:"from_name" yaml:"from_name" mapstructure:"from_name" env:"EMAIL_FROM_NAME" envDefault:"Frank Auth"`
 	CustomHeaders map[string]string `json:"custom_headers" yaml:"custom_headers" mapstructure:"custom_headers"`
@@ -414,9 +417,10 @@ type SecurityConfig struct {
 	CSRFProtectionEnabled    bool              `json:"csrf_protection_enabled" yaml:"csrf_protection_enabled" mapstructure:"csrf_protection_enabled" env:"SECURITY_CSRF_PROTECTION_ENABLED" envDefault:"true"`
 	CSRFAllowedHosts         []string          `json:"csrf_allowed_hosts" yaml:"csrf_allowed_hosts" mapstructure:"csrf_allowed_hosts"`
 	IPGeoLocationEnabled     bool              `json:"ip_geolocation_enabled" yaml:"ip_geolocation_enabled" mapstructure:"ip_geolocation_enabled" env:"SECURITY_IP_GEOLOCATION_ENABLED" envDefault:"false"`
-	MaxmindGeoLiteDBPath     string            `json:"maxmind_geolite_db_path" yaml:"maxmind_geolite_db_path" mapstructure:"maxmind_geolite_db_path" env:"SECURITY_MAXMIND_GEOLITE_DB_PATH"`
+	MaxmindGeoLiteDBPath     string            `json:"maxmind_geolite_db_path" yaml:"maxmind_geolite_db_path" mapstructure:"maxmind_geolite_db_path" env:"SECURITY_MAXMIND_GEOLITE_DATABASE_PATH"`
 	MaxmindGeoLiteAccountID  string            `json:"maxmind_geolite_account_id" yaml:"maxmind_geolite_account_id" mapstructure:"maxmind_geolite_account_id" env:"SECURITY_MAXMIND_GEOLITE_ACCOUNT_ID"`
 	MaxmindGeoLiteLicenseKey string            `json:"maxmind_geolite_license_key" yaml:"maxmind_geolite_license_key" mapstructure:"maxmind_geolite_license_key" env:"SECURITY_MAXMIND_GEOLITE_LICENSE_KEY"`
+	PublicPaths              []string          `json:"public_paths" yaml:"public_paths" mapstructure:"public_paths"`
 }
 
 // LoggingConfig represents logging-specific configuration
@@ -560,11 +564,24 @@ func validateConfig(config *Config) error {
 	}
 
 	if config.Auth.SessionSecretKey == "" {
-		return fmt.Errorf("session secret key is required")
+		// Generate a random secret if requested
+		secret, err := generateRandomSecret(32)
+		if err != nil {
+			fmt.Printf("Error generating secret: %v\n", err)
+			return fmt.Errorf("session secret key is required")
+		}
+		config.Auth.SessionSecretKey = secret
+		fmt.Printf("Generated Secret Key: %s\n", secret)
 	}
 
 	if config.Auth.TokenSecretKey == "" {
-		return fmt.Errorf("JWT secret key is required")
+		secret, err := generateRandomSecret(32)
+		if err != nil {
+			fmt.Printf("Error generating secret: %v\n", err)
+			return fmt.Errorf("JWT secret key is required")
+		}
+		config.Auth.SessionSecretKey = secret
+		fmt.Printf("Generated JWT Secret Key: %s\n", secret)
 	}
 
 	// Validate database configuration if auto-migrate is enabled
@@ -609,4 +626,19 @@ func IsProduction() bool {
 // IsTesting returns true if the application is running in test mode
 func IsTesting() bool {
 	return os.Getenv("GO_ENV") == "testing"
+}
+
+func generateRandomSecret(length int) (string, error) {
+	if length == 0 {
+		length = 32
+	}
+
+	bytes := make([]byte, length)
+	_, err := rand.Read(bytes)
+	if err != nil {
+		return "", err
+	}
+
+	// Use URL-safe base64 encoding without padding
+	return base64.RawURLEncoding.EncodeToString(bytes), nil
 }

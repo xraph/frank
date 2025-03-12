@@ -10,6 +10,7 @@ import (
 	"github.com/juicycleff/frank/internal/auth/session"
 	"github.com/juicycleff/frank/internal/email"
 	"github.com/juicycleff/frank/internal/organization"
+	"github.com/juicycleff/frank/internal/rbac"
 	"github.com/juicycleff/frank/internal/user"
 	"github.com/juicycleff/frank/internal/webhook"
 	"github.com/juicycleff/frank/pkg/logging"
@@ -24,6 +25,7 @@ type Repo struct {
 	Template     email.TemplateRepository
 	Passkeys     passkeys.Repository
 	WebhookEvent webhook.EventRepository
+	RBAC         rbac.Repository
 	Session      session.Store
 }
 
@@ -35,6 +37,7 @@ func New(cfg *config.Config, client *ent.Client, logger logging.Logger) *Repo {
 	webhookEventRepo := webhook.NewEventRepository(client)
 	sessStore := session.NewInMemoryStore(logger, time.Hour*24)
 	templateRepo := email.NewTemplateRepository(client)
+	rbacRepo := rbac.NewRepository(client)
 	// templateRepo := passkeys.New(client)
 
 	// Determine repository type from config
@@ -52,6 +55,7 @@ func New(cfg *config.Config, client *ent.Client, logger logging.Logger) *Repo {
 		Session:      sessStore,
 		Template:     templateRepo,
 		WebhookEvent: webhookEventRepo,
+		RBAC:         rbacRepo,
 	}
 
 	repos.Passkeys = passkeys.CreateRepository(repoPassKeyType, client, logger)

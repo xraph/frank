@@ -11,13 +11,14 @@ import (
 	"github.com/juicycleff/frank/internal/auth/passwordless"
 	"github.com/juicycleff/frank/internal/auth/session"
 	"github.com/juicycleff/frank/internal/auth/sso"
-	"github.com/juicycleff/frank/internal/data"
 	"github.com/juicycleff/frank/internal/email"
 	"github.com/juicycleff/frank/internal/organization"
+	"github.com/juicycleff/frank/internal/rbac"
 	"github.com/juicycleff/frank/internal/repo"
 	"github.com/juicycleff/frank/internal/sms"
 	"github.com/juicycleff/frank/internal/user"
 	"github.com/juicycleff/frank/internal/webhook"
+	"github.com/juicycleff/frank/pkg/data"
 	"github.com/juicycleff/frank/pkg/logging"
 )
 
@@ -34,6 +35,7 @@ type Services struct {
 	Passwordless        passwordless.Service
 	OAuth               *OAuthServices
 	SSO                 sso.Service
+	RBAC                rbac.Service
 	CookieHandler       *session.CookieHandler
 	PassKey             passkeys.Service
 	PasskeySessionStore passkeys.SessionStore
@@ -51,6 +53,9 @@ func New(repos *repo.Repo, cfg *config.Config, client *data.Clients, logger logg
 	orgService := organization.NewService(repos.Organization, logger)
 	pwdVerifyManger := user.NewVerificationManager(client.DB)
 	pwdManger := user.NewPasswordManager(cfg, client.DB, pwdVerifyManger)
+
+	enforce := rbac.NewEnforcer(repos.RBAC, logger)
+	rbacService := rbac.NewService(repos.RBAC, enforce, logger)
 	userService := user.NewService(repos.User, pwdManger, pwdVerifyManger, orgService, logger)
 
 	// Initialize auth services
@@ -81,6 +86,7 @@ func New(repos *repo.Repo, cfg *config.Config, client *data.Clients, logger logg
 		CookieHandler: cookieHandler,
 		Email:         emailService,
 		SMS:           smsService,
+		RBAC:          rbacService,
 	}
 
 	if cfg.Features.EnableMFA {

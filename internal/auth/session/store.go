@@ -276,7 +276,7 @@ func NewInMemoryStore(logger logging.Logger, cleanupInterval time.Duration) *InM
 	}
 
 	// Start background cleanup
-	go store.startCleanup()
+	// go store.startCleanup()
 
 	return store
 }

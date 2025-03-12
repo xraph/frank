@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"reflect"
 
+	"github.com/juicycleff/frank/internal/swaggergen"
 	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/juicycleff/frank/pkg/utils"
 )
@@ -21,6 +23,11 @@ type Handlers struct {
 	Passkey      *PasskeyHandler
 	SSO          *SSOHandler
 	Passwordless *PasswordlessHandler
+	Swagger      *SwaggerHandler
+	RBAC         *RBACHandler
+	Email        *EmailHandler
+	Health       *HealthChecker
+	WebUI        *WebUIHandler
 }
 
 // ContextKey is a type for context keys
@@ -50,20 +57,6 @@ func HandlerContextMiddleware(handlers *Handlers) func(http.Handler) http.Handle
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
-}
-
-// HealthCheck handles the health check endpoint
-func HealthCheck(w http.ResponseWriter, r *http.Request) {
-	utils.RespondJSON(w, http.StatusOK, map[string]interface{}{
-		"status": "healthy",
-	})
-}
-
-// ReadyCheck handles the readiness check endpoint
-func ReadyCheck(w http.ResponseWriter, r *http.Request) {
-	utils.RespondJSON(w, http.StatusOK, map[string]interface{}{
-		"status": "ready",
-	})
 }
 
 // NotFound handles 404 errors
@@ -100,4 +93,25 @@ func SAMLMetadata(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.RespondError(w, errors.New(errors.CodeNotImplemented, "SAML metadata endpoint not implemented"))
+}
+
+type routeConfig struct {
+	pattern string
+	methods []string
+	desc    string
+	h       http.HandlerFunc
+}
+
+func registerAPISchema(schema any, gen *swaggergen.SwaggerGen) {
+	gen.AddSchema(getTypeName(schema), schema)
+}
+
+// getTypeName extracts the underlying type name via reflection.
+func getTypeName(v interface{}) string {
+	t := reflect.TypeOf(v)
+	// If it's a pointer, get the element type.
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
+	return t.Name()
 }

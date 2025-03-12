@@ -109,7 +109,7 @@ github.com/juicycleff/frank/
 │   │   └── sender.go
 │   ├── server/
 │   │   ├── http.go
-│   │   ├── router.go
+│   │   ├── r.go
 │   │   └── health.go
 │   └── rbac/
 │       ├── service.go
@@ -163,6 +163,87 @@ github.com/juicycleff/frank/
 │   └── views/
 │       ├── components/
 │       └── layouts/
+├── web/
+│   ├── client/
+│   │   ├── public/
+│   │   │   ├── favicon.ico
+│   │   │   └── images/
+│   │   │       └── logo.svg
+│   │   ├── src/
+│   │   │   ├── assets/
+│   │   │   │   └── index.css
+│   │   │   ├── components/
+│   │   │   │   ├── ui/
+│   │   │   │   │   ├── button.tsx
+│   │   │   │   │   ├── card.tsx
+│   │   │   │   │   ├── input.tsx
+│   │   │   │   │   └── toast.tsx
+│   │   │   │   ├── auth/
+│   │   │   │   │   ├── login-form.tsx
+│   │   │   │   │   ├── register-form.tsx
+│   │   │   │   │   ├── mfa-form.tsx
+│   │   │   │   │   ├── oauth-buttons.tsx
+│   │   │   │   │   └── passwordless-form.tsx
+│   │   │   │   ├── layout/
+│   │   │   │   │   ├── app-shell.tsx
+│   │   │   │   │   ├── header.tsx
+│   │   │   │   │   └── sidebar.tsx
+│   │   │   │   └── dashboard/
+│   │   │   │       ├── api-keys-table.tsx
+│   │   │   │       ├── organization-settings.tsx
+│   │   │   │       └── user-settings.tsx
+│   │   │   ├── hooks/
+│   │   │   │   ├── use-auth.ts
+│   │   │   │   └── use-organizations.ts
+│   │   │   ├── lib/
+│   │   │   │   ├── api.ts
+│   │   │   │   └── utils.ts
+│   │   │   ├── providers/
+│   │   │   │   └── auth-provider.tsx
+│   │   │   ├── routes/
+│   │   │   │   ├── index.tsx
+│   │   │   │   ├── auth/
+│   │   │   │   │   ├── login.tsx
+│   │   │   │   │   ├── register.tsx
+│   │   │   │   │   ├── magic-link.tsx
+│   │   │   │   │   ├── reset-password.tsx
+│   │   │   │   │   ├── sso.tsx
+│   │   │   │   │   ├── mfa.tsx
+│   │   │   │   │   ├── passkeys.tsx
+│   │   │   │   │   └── verify-email.tsx
+│   │   │   │   ├── dashboard/
+│   │   │   │   │   ├── index.tsx
+│   │   │   │   │   ├── api-keys.tsx
+│   │   │   │   │   ├── organizations.tsx
+│   │   │   │   │   ├── profile.tsx
+│   │   │   │   │   └── security.tsx
+│   │   │   │   └── admin/
+│   │   │   │       ├── index.tsx
+│   │   │   │       ├── users.tsx
+│   │   │   │       └── webhooks.tsx
+│   │   │   ├── types/
+│   │   │   │   └── index.ts
+│   │   │   ├── App.tsx
+│   │   │   ├── main.tsx
+│   │   │   └── router.tsx
+│   │   ├── .eslintrc.json
+│   │   ├── index.html
+│   │   ├── package.json
+│   │   ├── tailwind.config.js
+│   │   ├── tsconfig.json
+│   │   └── vite.config.ts
+│   └── templates/
+│       ├── email/
+│       │   ├── verification.html
+│       │   ├── magic_link.html
+│       │   └── password_reset.html
+│       └── sms/
+│           ├── verification.txt
+│           └── otp.txt
+│   │   └── auth/
+│   │       ├── login.html
+│   │       ├── register.html
+│   │       └── mfa.html
 ├── tests/
 │   ├── integration/
 │   │   ├── auth_test.go

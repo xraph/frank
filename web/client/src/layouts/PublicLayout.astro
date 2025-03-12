@@ -1,0 +1,15 @@
+---
+import DefaultLayout from './DefaultLayout.astro';
+import Header from "../components/astro/Header.astro";
+---
+
+<DefaultLayout>
+    <div class="flex flex-col min-h-dvh">
+        <Header />
+        <main class="flex-1 flex bg-background h-full items-center justify-center">
+            <div class="container">
+                <slot />
+            </div>
+        </main>
+    </div>
+</DefaultLayout>

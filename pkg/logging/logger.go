@@ -79,13 +79,41 @@ func Init(level string, environment string) {
 		config.Level = zap.NewAtomicLevelAt(logLevel)
 		zapLogger, _ = config.Build(zap.AddCallerSkip(1))
 	} else {
-		config := zap.NewDevelopmentConfig()
-		config.Level = zap.NewAtomicLevelAt(logLevel)
-		config.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
-		zapLogger, _ = config.Build(zap.AddCallerSkip(1))
+		// config := zap.NewDevelopmentConfig()
+		// config.Level = zap.NewAtomicLevelAt(logLevel)
+		// config.EncoderConfig.EncodeLevel = CustomColorLevelEncoder
+		// config.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
+		// zapLogger, _ = config.Build(zap.AddCallerSkip(1))
+		zapLogger = devTheme(logLevel)
 	}
 
 	globalLogger = &logger{zap: zapLogger}
+}
+
+// CustomColorLevelEncoder defines custom colors for log levels
+func CustomColorLevelEncoder(l zapcore.Level, enc zapcore.PrimitiveArrayEncoder) {
+	var levelColor string
+
+	switch l {
+	case zapcore.DebugLevel:
+		levelColor = "\033[36m" // Cyan
+	case zapcore.InfoLevel:
+		levelColor = "\033[32m" // Green
+	case zapcore.WarnLevel:
+		levelColor = "\033[33m" // Yellow
+	case zapcore.ErrorLevel:
+		levelColor = "\033[31m" // Red
+	case zapcore.DPanicLevel, zapcore.PanicLevel, zapcore.FatalLevel:
+		levelColor = "\033[35m" // Magenta
+	default:
+		levelColor = "\033[37m" // White
+	}
+
+	reset := "\033[0m"
+	levelStr := l.CapitalString() // Get capitalized level name like "DEBUG", "INFO", etc.
+	coloredLevel := levelColor + levelStr + reset
+
+	enc.AppendString(coloredLevel)
 }
 
 // GetLogger returns the global logger

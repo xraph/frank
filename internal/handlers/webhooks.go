@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/internal/middleware"
 	"github.com/juicycleff/frank/internal/webhook"
@@ -392,7 +393,7 @@ func (h *WebhookHandler) ReceiveWebhook(w http.ResponseWriter, r *http.Request) 
 }
 
 // SetupRoutes sets up the webhook routes
-func (h *WebhookHandler) SetupRoutes(router *http.ServeMux) {
+func (h *WebhookHandler) SetupRoutes(router chi.Router) {
 	router.HandleFunc("/api/v1/webhooks", h.ListWebhooks)
 	router.HandleFunc("/api/v1/webhooks", h.CreateWebhook)
 	router.HandleFunc("/api/v1/webhooks/{id}", h.GetWebhook)
@@ -402,6 +403,24 @@ func (h *WebhookHandler) SetupRoutes(router *http.ServeMux) {
 	router.HandleFunc("/api/v1/webhooks/{id}/events/{eventId}/replay", h.ReplayWebhookEvent)
 	router.HandleFunc("/api/v1/webhooks/trigger", h.TriggerWebhookEvent)
 	router.HandleFunc("/webhooks/{id}", h.ReceiveWebhook)
+}
+
+// RegisterOrganizationRoutes registers organization-specific webhook routes
+func (h *WebhookHandler) RegisterOrganizationRoutes(router chi.Router) {
+	router.Route("/api/v1/webhooks", func(router chi.Router) {
+		router.Post("/", h.CreateWebhook)
+		router.Get("/", h.ListWebhooks)
+		router.Post("/trigger", h.TriggerWebhookEvent)
+
+		router.Route("/{id}", func(router chi.Router) {
+			router.Get("/", h.GetWebhook)
+			router.Put("/", h.UpdateWebhook)
+			router.Delete("/", h.DeleteWebhook)
+
+			router.Get("/events", h.ListWebhookEvents)
+			router.Post("/events/{eventId}/replay", h.ReplayWebhookEvent)
+		})
+	})
 }
 
 // Static handler functions for direct router registration

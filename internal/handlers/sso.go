@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/internal/auth/sso"
 	"github.com/juicycleff/frank/internal/middleware"
@@ -13,14 +14,14 @@ import (
 
 // SSOHandler handles Single Sign-On operations
 type SSOHandler struct {
-	ssoService *sso.Service
+	ssoService sso.Service
 	config     *config.Config
 	logger     logging.Logger
 }
 
 // NewSSOHandler creates a new SSO handler
 func NewSSOHandler(
-	ssoService *sso.Service,
+	ssoService sso.Service,
 	config *config.Config,
 	logger logging.Logger,
 ) *SSOHandler {
@@ -207,7 +208,7 @@ func (h *SSOHandler) SSOProviderCallback(w http.ResponseWriter, r *http.Request)
 }
 
 // SetupRoutes sets up the SSO routes
-func (h *SSOHandler) SetupRoutes(router *http.ServeMux) {
+func (h *SSOHandler) SetupRoutes(router chi.Router) {
 	router.HandleFunc("/api/v1/auth/sso/providers", h.SSOProvidersList)
 	router.HandleFunc("/api/v1/auth/sso/providers/{provider}", h.SSOProviderAuth)
 	router.HandleFunc("/api/v1/auth/sso/callback/{provider}", h.SSOProviderCallback)

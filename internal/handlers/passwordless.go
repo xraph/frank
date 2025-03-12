@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/internal/auth/passwordless"
 	"github.com/juicycleff/frank/internal/user"
@@ -14,7 +15,7 @@ import (
 
 // PasswordlessHandler handles passwordless authentication operations
 type PasswordlessHandler struct {
-	passwordlessService *passwordless.Service
+	passwordlessService passwordless.Service
 	userService         user.Service
 	config              *config.Config
 	logger              logging.Logger
@@ -22,7 +23,7 @@ type PasswordlessHandler struct {
 
 // NewPasswordlessHandler creates a new passwordless handler
 func NewPasswordlessHandler(
-	passwordlessService *passwordless.Service,
+	passwordlessService passwordless.Service,
 	userService user.Service,
 	config *config.Config,
 	logger logging.Logger,
@@ -260,7 +261,7 @@ func (h *PasswordlessHandler) GenerateMagicLink(w http.ResponseWriter, r *http.R
 }
 
 // SetupRoutes sets up the passwordless routes
-func (h *PasswordlessHandler) SetupRoutes(router *http.ServeMux) {
+func (h *PasswordlessHandler) SetupRoutes(router chi.Router) {
 	router.HandleFunc("/api/v1/auth/passwordless/email", h.PasswordlessEmail)
 	router.HandleFunc("/api/v1/auth/passwordless/sms", h.PasswordlessSMS)
 	router.HandleFunc("/api/v1/auth/passwordless/verify", h.PasswordlessVerify)

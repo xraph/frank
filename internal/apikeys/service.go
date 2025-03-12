@@ -13,7 +13,7 @@ import (
 // Service provides API key operations
 type Service interface {
 	// Create creates a new API key
-	Create(ctx context.Context, input CreateAPIKeyInput) (*APIKeyWithKey, error)
+	Create(ctx context.Context, input CreateAPIKeyRequest) (*APIKeyWithKeyResponse, error)
 
 	// Get retrieves an API key by ID
 	Get(ctx context.Context, id string) (*ent.ApiKey, error)
@@ -22,7 +22,7 @@ type Service interface {
 	List(ctx context.Context, params ListParams) ([]*ent.ApiKey, int, error)
 
 	// Update updates an API key
-	Update(ctx context.Context, id string, input UpdateAPIKeyInput) (*ent.ApiKey, error)
+	Update(ctx context.Context, id string, input UpdateAPIKeyRequest) (*ent.ApiKey, error)
 
 	// Delete deletes an API key
 	Delete(ctx context.Context, id string) error
@@ -34,8 +34,8 @@ type Service interface {
 	UpdateLastUsed(ctx context.Context, id string) error
 }
 
-// CreateAPIKeyInput represents input for creating an API key
-type CreateAPIKeyInput struct {
+// CreateAPIKeyRequest represents input for creating an API key
+type CreateAPIKeyRequest struct {
 	Name           string                 `json:"name" validate:"required"`
 	Type           string                 `json:"type,omitempty"`
 	UserID         string                 `json:"user_id,omitempty"`
@@ -46,8 +46,8 @@ type CreateAPIKeyInput struct {
 	ExpiresIn      *time.Duration         `json:"expires_in,omitempty"`
 }
 
-// UpdateAPIKeyInput represents input for updating an API key
-type UpdateAPIKeyInput struct {
+// UpdateAPIKeyRequest represents input for updating an API key
+type UpdateAPIKeyRequest struct {
 	Name        *string                `json:"name,omitempty"`
 	Active      *bool                  `json:"active,omitempty"`
 	Permissions []string               `json:"permissions,omitempty"`
@@ -65,8 +65,8 @@ type ListParams struct {
 	Type           string `json:"type" query:"type"`
 }
 
-// APIKeyWithKey represents an API key with its plaintext key
-type APIKeyWithKey struct {
+// APIKeyWithKeyResponse represents an API key with its plaintext key
+type APIKeyWithKeyResponse struct {
 	APIKey *ent.ApiKey `json:"api_key"`
 	Key    string      `json:"key"`
 }
@@ -87,7 +87,7 @@ func NewService(repo Repository, validator Validator, cfg *config.Config) Servic
 }
 
 // Create creates a new API key
-func (s *service) Create(ctx context.Context, input CreateAPIKeyInput) (*APIKeyWithKey, error) {
+func (s *service) Create(ctx context.Context, input CreateAPIKeyRequest) (*APIKeyWithKeyResponse, error) {
 	// Validate input
 	if input.UserID == "" && input.OrganizationID == "" {
 		return nil, errors.New(errors.CodeInvalidInput, "either user_id or organization_id must be provided")
@@ -129,7 +129,7 @@ func (s *service) Create(ctx context.Context, input CreateAPIKeyInput) (*APIKeyW
 		return nil, err
 	}
 
-	return &APIKeyWithKey{
+	return &APIKeyWithKeyResponse{
 		APIKey: apiKey,
 		Key:    key,
 	}, nil
@@ -160,7 +160,7 @@ func (s *service) List(ctx context.Context, params ListParams) ([]*ent.ApiKey, i
 }
 
 // Update updates an API key
-func (s *service) Update(ctx context.Context, id string, input UpdateAPIKeyInput) (*ent.ApiKey, error) {
+func (s *service) Update(ctx context.Context, id string, input UpdateAPIKeyRequest) (*ent.ApiKey, error) {
 	// Map service input to repository input
 	repoInput := RepositoryUpdateInput{}
 

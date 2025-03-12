@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/internal/middleware"
 	"github.com/juicycleff/frank/internal/user"
@@ -241,7 +242,7 @@ func (h *UserHandler) DeleteUserSession(w http.ResponseWriter, r *http.Request) 
 }
 
 // SetupRoutes sets up the user routes
-func (h *UserHandler) SetupRoutes(router *http.ServeMux) {
+func (h *UserHandler) SetupRoutes(router chi.Router) {
 	router.HandleFunc("/api/v1/users/me", h.UpdateCurrentUser)
 	router.HandleFunc("/api/v1/users/me/sessions", h.GetUserSessions)
 	router.HandleFunc("/api/v1/users/me/sessions/{id}", h.DeleteUserSession)

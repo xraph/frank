@@ -2,13 +2,18 @@ package server
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/juicycleff/frank/config"
+	"github.com/juicycleff/frank/frank"
+	"github.com/juicycleff/frank/internal/routes"
+	"github.com/juicycleff/frank/pkg/data"
 	"github.com/juicycleff/frank/pkg/logging"
 	"github.com/juicycleff/frank/pkg/utils"
 )
@@ -18,17 +23,21 @@ type Server struct {
 	server *http.Server
 	config *config.Config
 	logger logging.Logger
-	router *Router
+	router *routes.Router
 }
 
 // NewServer creates a new HTTP server
-func NewServer(cfg *config.Config, logger logging.Logger) *Server {
-	router := NewRouter(cfg, logger)
+func NewServer(clients *data.Clients, cfg *config.Config, logger logging.Logger) *Server {
+	// Init routes
+	frk, err := frank.New(clients, cfg, logger)
+	if err != nil {
+		log.Fatalf("%w", err)
+	}
 
 	// Create HTTP server
 	server := &http.Server{
 		Addr:         fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port),
-		Handler:      router.Handler(),
+		Handler:      frk.Router.Handler(),
 		ReadTimeout:  cfg.Server.ReadTimeout,
 		WriteTimeout: cfg.Server.WriteTimeout,
 		IdleTimeout:  cfg.Server.IdleTimeout,
@@ -38,17 +47,19 @@ func NewServer(cfg *config.Config, logger logging.Logger) *Server {
 		server: server,
 		config: cfg,
 		logger: logger,
-		router: router,
+		router: frk.Router,
 	}
 }
 
 // Start starts the HTTP server
-func (s *Server) Start() error {
+func (s *Server) Start() chan error {
 	// Initialize session store
 	utils.InitSessionStore(s.config)
 
 	// Register routes
 	s.router.RegisterRoutes()
+
+	serverErrors := make(chan error, 1)
 
 	// Start server in a goroutine
 	go func() {
@@ -67,12 +78,14 @@ func (s *Server) Start() error {
 			err = s.server.ListenAndServe()
 		}
 
-		if err != http.ErrServerClosed {
+		if !errors.Is(err, http.ErrServerClosed) {
 			s.logger.Fatal("HTTP server error", logging.Error(err))
 		}
+
+		serverErrors <- err
 	}()
 
-	return nil
+	return serverErrors
 }
 
 // Stop gracefully stops the HTTP server
@@ -83,9 +96,15 @@ func (s *Server) Stop() error {
 	ctx, cancel := context.WithTimeout(context.Background(), s.config.Server.ShutdownTimeout)
 	defer cancel()
 
-	// Shutdown server
-	if err := s.server.Shutdown(ctx); err != nil {
-		return fmt.Errorf("server shutdown error: %w", err)
+	// Attempt graceful shutdown
+	if s.config.Server.GracefulShutdown {
+		s.logger.Info("Attempting graceful shutdown")
+		if err := s.server.Shutdown(ctx); err != nil {
+			s.logger.Error("Server shutdown failed", logging.Error(err))
+			if err := s.server.Close(); err != nil {
+				s.logger.Error("Server close failed", logging.Error(err))
+			}
+		}
 	}
 
 	s.logger.Info("HTTP server stopped")
@@ -93,22 +112,28 @@ func (s *Server) Stop() error {
 }
 
 // WaitForSignal waits for termination signals
-func (s *Server) WaitForSignal() {
+func (s *Server) WaitForSignal(serverErrors chan error) {
 	// Create signal channel
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
 	// Wait for signal
 	sig := <-sigChan
-	s.logger.Info("Received signal", logging.String("signal", sig.String()))
 
-	// Stop server
-	if err := s.Stop(); err != nil {
-		s.logger.Error("Error stopping server", logging.Error(err))
+	// Block until a signal is received or server fails
+	select {
+	case err := <-serverErrors:
+		log.Fatalf("Server error: %v", err)
+	case sig = <-sigChan:
+		s.logger.Info("Received signal", logging.String("signal", sig.String()))
+		// Stop server
+		if err := s.Stop(); err != nil {
+			s.logger.Error("Error stopping server", logging.Error(err))
+		}
 	}
 }
 
 // Router returns the router
-func (s *Server) Router() *Router {
+func (s *Server) Router() *routes.Router {
 	return s.router
 }

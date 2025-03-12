@@ -5,6 +5,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/joho/godotenv"
+
 	"github.com/spf13/viper"
 )
 
@@ -16,6 +18,12 @@ func LoadEnvironment(v *viper.Viper) {
 	// Use environment variables with prefix
 	v.SetEnvPrefix(envPrefix)
 
+	// First try to load .env file
+	if err := loadDotEnvFile(); err != nil {
+		// Log the error but continue, as .env file might be optional
+		fmt.Printf("Warning: Error loading .env file: %v\n", err)
+	}
+
 	// Replace dots with underscores in env names
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
@@ -24,6 +32,35 @@ func LoadEnvironment(v *viper.Viper) {
 
 	// Load specific environment variables
 	loadSpecificEnvVars(v)
+}
+
+// loadDotEnvFile attempts to load variables from .env file
+func loadDotEnvFile() error {
+	// First try loading from the current directory
+	err := godotenv.Load()
+	if err == nil {
+		fmt.Println("Loaded configuration from .env file")
+		return nil
+	}
+
+	// If that fails, try looking in common locations
+	locations := []string{
+		"./.env",
+		"../.env",
+		"../../.env",
+		"../config/.env",
+		"./config/.env",
+	}
+
+	for _, location := range locations {
+		err = godotenv.Load(location)
+		if err == nil {
+			fmt.Printf("Loaded configuration from %s\n", location)
+			return nil
+		}
+	}
+
+	return fmt.Errorf("no .env file found")
 }
 
 // loadEnvironmentSpecificConfig loads configuration based on the current environment

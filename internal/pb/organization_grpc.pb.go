@@ -4,7 +4,7 @@
 // - protoc             v5.28.2
 // source: organization.proto
 
-package organization
+package pb
 
 import (
 	context "context"

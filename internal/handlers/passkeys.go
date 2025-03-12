@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/internal/auth/passkeys"
 	"github.com/juicycleff/frank/internal/middleware"
@@ -14,14 +15,14 @@ import (
 
 // PasskeyHandler handles passkey operations
 type PasskeyHandler struct {
-	passkeyService *passkeys.Service
+	passkeyService passkeys.Service
 	config         *config.Config
 	logger         logging.Logger
 }
 
 // NewPasskeyHandler creates a new passkey handler
 func NewPasskeyHandler(
-	passkeyService *passkeys.Service,
+	passkeyService passkeys.Service,
 	config *config.Config,
 	logger logging.Logger,
 ) *PasskeyHandler {
@@ -275,7 +276,7 @@ func (h *PasskeyHandler) DeletePasskey(w http.ResponseWriter, r *http.Request) {
 }
 
 // SetupRoutes sets up the passkey routes
-func (h *PasskeyHandler) SetupRoutes(router *http.ServeMux) {
+func (h *PasskeyHandler) SetupRoutes(router chi.Router) {
 	router.HandleFunc("/api/v1/auth/passkeys/register/begin", h.PasskeyRegisterBegin)
 	router.HandleFunc("/api/v1/auth/passkeys/register/complete", h.PasskeyRegisterComplete)
 	router.HandleFunc("/api/v1/auth/passkeys/login/begin", h.PasskeyLoginBegin)

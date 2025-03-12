@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/internal/auth/mfa"
 	"github.com/juicycleff/frank/internal/middleware"
@@ -15,7 +16,7 @@ import (
 
 // MFAHandler handles multi-factor authentication operations
 type MFAHandler struct {
-	mfaService  *mfa.Service
+	mfaService  mfa.Service
 	userService user.Service
 	config      *config.Config
 	logger      logging.Logger
@@ -23,7 +24,7 @@ type MFAHandler struct {
 
 // NewMFAHandler creates a new MFA handler
 func NewMFAHandler(
-	mfaService *mfa.Service,
+	mfaService mfa.Service,
 	userService user.Service,
 	config *config.Config,
 	logger logging.Logger,
@@ -358,7 +359,7 @@ func (h *MFAHandler) SendMFACode(w http.ResponseWriter, r *http.Request) {
 }
 
 // SetupRoutes sets up the MFA routes
-func (h *MFAHandler) SetupRoutes(router *http.ServeMux) {
+func (h *MFAHandler) SetupRoutes(router chi.Router) {
 	router.HandleFunc("/api/v1/auth/mfa/enroll", h.MFAEnroll)
 	router.HandleFunc("/api/v1/auth/mfa/verify", h.MFAVerify)
 	router.HandleFunc("/api/v1/auth/mfa/unenroll", h.MFAUnenroll)

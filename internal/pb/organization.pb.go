@@ -4,10 +4,9 @@
 // 	protoc        v5.28.2
 // source: organization.proto
 
-package organization
+package pb
 
 import (
-	user "github.com/juicycleff/frank/internal/pb/user"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
@@ -824,7 +823,7 @@ type OrganizationMember struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	User     *user.User             `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
+	User     *User                  `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
 	Roles    []string               `protobuf:"bytes,2,rep,name=roles,proto3" json:"roles,omitempty"`
 	JoinedAt *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=joined_at,json=joinedAt,proto3" json:"joined_at,omitempty"`
 }
@@ -861,7 +860,7 @@ func (*OrganizationMember) Descriptor() ([]byte, []int) {
 	return file_organization_proto_rawDescGZIP(), []int{12}
 }
 
-func (x *OrganizationMember) GetUser() *user.User {
+func (x *OrganizationMember) GetUser() *User {
 	if x != nil {
 		return x.User
 	}
@@ -2840,11 +2839,10 @@ var file_organization_proto_rawDesc = []byte{
 	0x65, 0x79, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2c, 0x2e, 0x6f, 0x72, 0x67,
 	0x61, 0x6e, 0x69, 0x7a, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x47, 0x65, 0x74, 0x4f, 0x72, 0x67,
 	0x61, 0x6e, 0x69, 0x7a, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x41, 0x50, 0x49, 0x4b, 0x65, 0x79, 0x73,
-	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0x36, 0x5a, 0x34, 0x67, 0x69, 0x74, 0x68,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0x29, 0x5a, 0x27, 0x67, 0x69, 0x74, 0x68,
 	0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x6a, 0x75, 0x69, 0x63, 0x79, 0x63, 0x6c, 0x65, 0x66,
 	0x66, 0x2f, 0x66, 0x72, 0x61, 0x6e, 0x6b, 0x2f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c,
-	0x2f, 0x70, 0x62, 0x2f, 0x6f, 0x72, 0x67, 0x61, 0x6e, 0x69, 0x7a, 0x61, 0x74, 0x69, 0x6f, 0x6e,
-	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x2f, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -2904,7 +2902,7 @@ var file_organization_proto_goTypes = []any{
 	nil,                                              // 40: organization.Feature.SettingsEntry
 	nil,                                              // 41: organization.EnableOrganizationFeatureRequest.SettingsEntry
 	(*timestamppb.Timestamp)(nil),                    // 42: google.protobuf.Timestamp
-	(*user.User)(nil),                                // 43: user.User
+	(*User)(nil),                                     // 43: user.User
 }
 var file_organization_proto_depIdxs = []int32{
 	42, // 0: organization.Organization.trial_ends_at:type_name -> google.protobuf.Timestamp
@@ -2977,6 +2975,7 @@ func file_organization_proto_init() {
 	if File_organization_proto != nil {
 		return
 	}
+	file_user_proto_init()
 	if !protoimpl.UnsafeEnabled {
 		file_organization_proto_msgTypes[0].Exporter = func(v any, i int) any {
 			switch v := v.(*Organization); i {

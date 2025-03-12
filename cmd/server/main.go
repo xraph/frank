@@ -5,29 +5,34 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
-	"os/signal"
+	"os/exec"
+	"path/filepath"
 	"strings"
-	"syscall"
 
 	"github.com/go-redis/redis/v8"
+	_ "github.com/jackc/pgx/v4/stdlib" // PostgreSQL driver (alternative)
+	_ "github.com/juicycleff/frank/api/swagger"
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/ent"
-	"github.com/juicycleff/frank/internal/auth/session"
-	"github.com/juicycleff/frank/internal/data"
-	"github.com/juicycleff/frank/internal/handlers"
-	"github.com/juicycleff/frank/internal/middleware"
-	"github.com/juicycleff/frank/internal/repo"
-	"github.com/juicycleff/frank/internal/services"
+	"github.com/juicycleff/frank/internal/server"
+	"github.com/juicycleff/frank/pkg/data"
 	"github.com/juicycleff/frank/pkg/logging"
-	"github.com/juicycleff/frank/pkg/utils"
-
-	_ "github.com/jackc/pgx/v4/stdlib" // PostgreSQL driver (alternative)
-	_ "github.com/lib/pq"              // PostgreSQL driver
-	_ "github.com/mattn/go-sqlite3"    // SQLite driver
+	_ "github.com/lib/pq"           // PostgreSQL driver
+	_ "github.com/mattn/go-sqlite3" // SQLite driver
 )
 
+// @title       Frank API with Swagger
+// @version      1.0
+// @description  This is a sample server using Chi router with Swagger documentation.
+// @host         localhost:8080
+// @BasePath     /api/v1
+// @output       docs
+// @schemes      http
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
+// @openapi 3.0.0
 func main() {
 	// Parse command line flags
 	configPath := flag.String("config", "config.yaml", "path to config file")
@@ -99,97 +104,56 @@ func main() {
 		logger.Info("Database schema migrations completed")
 	}
 
-	// Initialize session store
-	utils.InitSessionStore(cfg)
-
-	// Auth related services
-	sessionManager := session.NewManager(entClient, cfg, logger, nil)
-
-	// Init repos
-	repos := repo.New(cfg, entClient, logger)
-
-	// Initialize services
-	svcs, err := services.New(repos, cfg, dataClients, logger)
-	if err != nil {
-		log.Fatalf("Failed to initialize user service: %v", err)
+	// Build web client if in development mode and --skip-client-build is not specified
+	skipClientBuild := flag.Lookup("skip-client-build") != nil && flag.Lookup("skip-client-build").Value.(flag.Getter).Get().(bool)
+	if os.Getenv("APP_ENV") == "development" && !skipClientBuild {
+		buildWebClient(logger)
 	}
 
-	// Initialize handlers
-	routeHandlers := handlers.New(svcs, dataClients, cfg, logger)
-
-	// Initialize middleware
-	authMiddleware := middleware.Auth(cfg, logger, sessionManager, svcs.APIKey)
-	corsMiddleware := middleware.CORS(cfg)
-	recoveryMiddleware := middleware.Recovery(logger)
-	loggingMiddleware := middleware.Logging(logger)
-	rateLimiterMiddleware := middleware.RateLimiter(cfg.Security.RateLimitPerSecond, cfg.Security.RateLimitBurst)
-	errorMiddleware := middleware.ErrorHandler(logger)
-
-	// Create router
-	router := http.NewServeMux()
-
-	// Register routes
-	routeHandlers.RegisterRoutes(router)
-
-	// Create global middleware chain
-	handler := errorMiddleware(
-		loggingMiddleware(
-			recoveryMiddleware(
-				corsMiddleware(
-					rateLimiterMiddleware(
-						authMiddleware(router),
-					),
-				),
-			),
-		),
-	)
-
-	// Create and start server
-	server := &http.Server{
-		Addr:         fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port),
-		Handler:      handler,
-		ReadTimeout:  cfg.Server.ReadTimeout,
-		WriteTimeout: cfg.Server.WriteTimeout,
-		IdleTimeout:  cfg.Server.IdleTimeout,
-	}
+	frankServer := server.NewServer(dataClients, cfg, logger)
 
 	// Start server in a goroutine
-	serverErrors := make(chan error, 1)
-	go func() {
-		logger.Info("Starting server",
-			logging.String("address", server.Addr),
-		)
-		serverErrors <- server.ListenAndServe()
-	}()
+	serverErrors := frankServer.Start()
 
 	// Listen for shutdown signals
-	shutdown := make(chan os.Signal, 1)
-	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
+	frankServer.WaitForSignal(serverErrors)
+}
 
-	// Block until a signal is received or server fails
-	select {
-	case err := <-serverErrors:
-		log.Fatalf("Server error: %v", err)
-	case sig := <-shutdown:
-		logger.Info("Shutdown signal received",
-			logging.String("signal", sig.String()),
-		)
+// buildWebClient builds the web client
+func buildWebClient(logger logging.Logger) {
+	logger.Info("Building web client...")
 
-		// Create context with timeout for graceful shutdown
-		ctx, cancel := context.WithTimeout(context.Background(), cfg.Server.ShutdownTimeout)
-		defer cancel()
-
-		// Attempt graceful shutdown
-		if cfg.Server.GracefulShutdown {
-			logger.Info("Attempting graceful shutdown")
-			if err := server.Shutdown(ctx); err != nil {
-				logger.Error("Server shutdown failed", logging.Error(err))
-				if err := server.Close(); err != nil {
-					logger.Error("Server close failed", logging.Error(err))
-				}
-			}
-		}
-
-		logger.Info("Server shutdown complete")
+	// Get the directory of the current executable
+	execPath, err := os.Executable()
+	if err != nil {
+		logger.Error("Failed to get executable path", logging.Error(err))
+		return
 	}
+
+	execDir := filepath.Dir(execPath)
+	scriptPath := filepath.Join(execDir, "..", "web", "build.sh")
+
+	// Make sure the script exists
+	if _, err := os.Stat(scriptPath); os.IsNotExist(err) {
+		logger.Error("Web client build script not found", logging.String("path", scriptPath))
+		return
+	}
+
+	// Make the script executable
+	if err := os.Chmod(scriptPath, 0755); err != nil {
+		logger.Error("Failed to make build script executable", logging.Error(err))
+		return
+	}
+
+	// Run the build script
+	cmd := exec.Command(scriptPath)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	if err := cmd.Run(); err != nil {
+		logger.Error("Failed to build web client", logging.Error(err))
+		return
+	}
+
+	logger.Info("Web client built successfully")
 }

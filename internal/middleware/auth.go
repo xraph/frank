@@ -2,9 +2,11 @@ package middleware
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/internal/apikeys"
 	"github.com/juicycleff/frank/internal/auth/session"
@@ -95,6 +97,20 @@ func AuthWithOptions(cfg *config.Config, logger logging.Logger, options AuthOpti
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
 			authenticated := false
+
+			// Get the route pattern from Chi's context
+			routePattern := chi.RouteContext(r.Context()).RoutePattern()
+			routePatterns := chi.RouteContext(r.Context()).RoutePatterns
+
+			fmt.Println(routePatterns)
+
+			// Skip authentication for public routes (modify this based on your requirements)
+			for _, path := range cfg.Security.PublicPaths {
+				if routePattern == path {
+					next.ServeHTTP(w, r)
+					return
+				}
+			}
 
 			// Try to authenticate using various methods
 			if options.AllowBearerToken {

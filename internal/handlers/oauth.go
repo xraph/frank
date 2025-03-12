@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/ent"
 	"github.com/juicycleff/frank/internal/auth/oauth2"
@@ -367,6 +368,18 @@ func (h *OAuthHandler) OAuthRevoke(w http.ResponseWriter, r *http.Request) {
 	h.oauthHandlers.HandleRevoke(w, r)
 }
 
+// HandleConsent handles the OAuth2 token revocation endpoint
+func (h *OAuthHandler) HandleConsent(w http.ResponseWriter, r *http.Request) {
+	// Only POST method is allowed
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Acting as a provider
+	h.oauthHandlers.HandleConsent(w, r)
+}
+
 // OAuthUserInfo handles the OAuth2 userinfo endpoint
 func (h *OAuthHandler) OAuthUserInfo(w http.ResponseWriter, r *http.Request) {
 	// Extract token from Authorization header
@@ -486,7 +499,7 @@ func (h *OAuthHandler) OAuthJWKS(w http.ResponseWriter, r *http.Request) {
 }
 
 // SetupRoutes sets up the OAuth routes
-func (h *OAuthHandler) SetupRoutes(router *http.ServeMux) {
+func (h *OAuthHandler) SetupRoutes(router chi.Router) {
 	// Provider endpoints
 	router.HandleFunc("/oauth/authorize", h.OAuthAuthorize)
 	router.HandleFunc("/oauth/token", h.OAuthToken)
@@ -550,4 +563,9 @@ func OAuthProviderAuth(w http.ResponseWriter, r *http.Request) {
 // OAuthProviderCallback handles OAuth provider callback
 func OAuthProviderCallback(w http.ResponseWriter, r *http.Request) {
 	HandlerFromContext(r.Context()).OAuth.OAuthProviderCallback(w, r)
+}
+
+// OAuthConsent handles OAuth provider callback
+func OAuthConsent(w http.ResponseWriter, r *http.Request) {
+	HandlerFromContext(r.Context()).OAuth.HandleConsent(w, r)
 }

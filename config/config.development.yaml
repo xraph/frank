@@ -1,0 +1,240 @@
+environment: development
+version: 0.1.0
+
+server:
+  host: localhost
+  name: Wakflo
+  port: 8080
+  base_url: http://localhost:8080
+  read_timeout: 5s
+  write_timeout: 10s
+  idle_timeout: 120s
+  shutdown_timeout: 30s
+  graceful_shutdown: true
+  shutdown_delay: 5s
+  debug_mode: true
+  log_format: json
+  log_level: debug
+  log_output: stdout
+  log_sql: true
+  log_sql_file: sql.log
+  tls:
+    enabled: false
+    cert_file: ./certs/server.crt
+    key_file: ./certs/server.key
+
+database:
+  driver: postgres
+  host: localhost
+  port: 5432
+  user: postgres
+  password: postgres
+  database: frank_dev
+  ssl_mode: disable
+  max_open_conns: 25
+  max_idle_conns: 25
+  conn_max_life: 5m
+  auto_migrate: true
+  log_sql: true
+  migrations_dir: ./migrations
+
+auth:
+  token_signing_method: HS256
+  access_token_duration: 15m
+  refresh_token_duration: 720h
+  token_issuer: frank-dev
+  remember_me_duration: 720h
+  verification_token_duration: 15m
+  magic_link_duration: 15m
+  session_duration: 24h
+  cookie_domain: localhost
+  cookie_secure: false
+  cookie_http_only: true
+  cookie_same_site: lax
+  require_email_verification: true
+  email_verification_expiry: 24h
+  default_user_role: user
+  default_admin_role: admin
+  default_super_role: super
+  auto_register_users: true
+  max_login_attempts: 5
+  login_lockout_duration: 15m
+  password_policy:
+    password_min_length: 8
+    password_max_length: 100
+    password_require_uppercase: true
+    password_require_lowercase: true
+    password_require_digit: true
+    password_require_special: false
+    password_max_reused_passwords: 3
+    password_prevent_reuse: true
+    password_expiry_days: 90
+  enable_captcha: false
+
+email:
+  provider: smtp
+  from_email: no-reply@example.com
+  from_name: Frank Auth Dev
+  templates_dir: ./templates/email
+  default_language: en
+  smtp:
+    host: localhost
+    port: 1025
+    username: ""
+    password: ""
+    use_tls: false
+
+sms:
+  provider: mock
+  from_phone: "+15555555555"
+  verification_template: "Your verification code is: {{code}}"
+  verification_code_length: 6
+  verification_code_expiry: 10m
+
+redis:
+  host: localhost
+  port: 6379
+  password: ""
+  database: 0
+  max_retries: 3
+  min_retry_backoff: 8ms
+  max_retry_backoff: 512ms
+  dial_timeout: 5s
+  read_timeout: 3s
+  write_timeout: 3s
+  pool_size: 10
+  min_idle_conns: 5
+  max_idle_conns: 10
+  conn_max_idle_time: 5m
+  conn_max_lifetime: 1h
+
+oauth:
+  default_scopes: ["openid", "profile", "email"]
+  auth_code_lifetime: 10m
+  refresh_lifetime: 720h
+  access_lifetime: 1h
+  enforce_pkce: true
+  require_consent: true
+  jwt_signing_method: HS256
+  enable_pkce: true
+  require_pkce: false
+  enable_oidc: true
+  jwks_path: ./certs/jwks.json
+  providers:
+    google:
+      client_id: "replace-with-google-client-id"
+      client_secret: "replace-with-google-client-secret"
+      redirect_uri: "http://localhost:8080/oauth/callback/google"
+      scopes: ["email", "profile"]
+      auth_url: "https://accounts.google.com/o/oauth2/auth"
+      token_url: "https://oauth2.googleapis.com/token"
+      user_info_url: "https://www.googleapis.com/oauth2/v3/userinfo"
+      field_mapping:
+        id: "sub"
+        email: "email"
+        name: "name"
+        picture: "picture"
+
+passkeys:
+  relying_party_name: "Frank Auth Dev"
+  relying_party_id: "localhost"
+  relying_party_origins: ["http://localhost:8080"]
+  rp_display_name: "Frank Auth Dev"
+  rp_id: "localhost"
+  rp_origins: ["http://localhost:8080"]
+  attestation_timeout: 60000
+  assertion_timeout: 60000
+  conveyance_preference: "direct"
+  authenticator_attachment: ""
+  user_verification: "preferred"
+  use_inmemory_repository: true
+  use_redis_session_store: false
+
+webhooks:
+  retry_backoff_factor: 2.0
+  event_types: ["user.created", "user.updated", "user.deleted", "user.login"]
+  queue_size: 100
+  worker_count: 4
+  default_retries: 3
+  default_timeout: 5s
+  max_payload_size: 1048576
+  max_retry_delay: 5s
+  max_concurrency: 10
+  enable_async: true
+
+security:
+  max_login_attempts: 5
+  lockout_duration: 15m
+  csrf_enabled: true
+  csrf_token_expiry: 2h
+  csrf_cookie_name: csrf_token
+  csrf_header_name: X-CSRF-Token
+  content_type_options: nosniff
+  referrer_policy: no-referrer
+  allowed_origins: ["http://localhost:3000", "http://localhost:8080"]
+  allowed_methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"]
+  allowed_headers: ["Accept", "Authorization", "Content-Type", "X-CSRF-Token"]
+  exposed_headers: ["X-CSRF-Token"]
+  allow_credentials: true
+  rate_limit_enabled: true
+  rate_limit_per_second: 20
+  rate_limit_burst: 50
+  sec_headers_enabled: true
+  xss_protection: "1; mode=block"
+  content_type_nosniff: nosniff
+  x_frame_options: SAMEORIGIN
+  hsts_max_age: 31536000
+  hsts_include_subdomains: true
+  content_security_policy: "default-src 'self'; connect-src 'self'; img-src 'self' data:; script-src 'self'; style-src 'self' 'unsafe-inline';"
+  csrf_protection_enabled: true
+  csrf_allowed_hosts: ["localhost"]
+  ip_geolocation_enabled: false
+
+logging:
+  level: debug
+  format: json
+  output: stdout
+  file_path: ./logs/frank.log
+  max_size: 100
+  max_backups: 3
+  max_age: 28
+  compress: true
+  request_logs: true
+
+features:
+  enable_oauth2: true
+  enable_sso: true
+  enable_enterprise_sso: false
+  enable_rbac: true
+  enable_organizations: true
+  enable_user_api: true
+  enable_organization_api: true
+  enable_mfa: true
+  enable_webhooks: true
+  enable_passwordless: true
+  enable_passkeys: true
+  enable_api_keys: true
+  enable_audit_logs: true
+  enable_user_lockout: true
+  enable_user_impersonation: true
+  enable_feature_flags: true
+
+templates:
+  path: ./templates
+  email_path: ./templates/email
+  auth_path: ./templates/auth
+  enable_file_watcher: true
+
+monitoring:
+  enabled: true
+  prometheus: true
+  prometheus_path: /metrics
+  statsd_enabled: false
+  statsd_host: localhost
+  statsd_port: 8125
+  statsd_prefix: frank-dev
+  tracing_enabled: true
+  tracing_provider: jaeger
+  tracing_endpoint: http://localhost:14268/api/traces
+  health_check_path: /health
+  readiness_path: /ready

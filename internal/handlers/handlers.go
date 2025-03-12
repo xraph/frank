@@ -1,11 +1,9 @@
 package handlers
 
 import (
-	"net/http"
-
 	"github.com/juicycleff/frank/config"
-	"github.com/juicycleff/frank/internal/data"
 	"github.com/juicycleff/frank/internal/services"
+	"github.com/juicycleff/frank/pkg/data"
 	"github.com/juicycleff/frank/pkg/logging"
 )
 
@@ -33,21 +31,11 @@ func New(
 		MFA:          NewMFAHandler(svcs.MFA, svcs.User, cfg, logger),
 		Passkey:      NewPasskeyHandler(svcs.PassKey, cfg, logger),
 		SSO:          NewSSOHandler(svcs.SSO, cfg, logger),
+		RBAC:         NewRBACHandler(svcs.RBAC, cfg, logger),
 		Passwordless: NewPasswordlessHandler(svcs.Passwordless, svcs.User, cfg, logger),
+		Swagger:      NewSwaggerHandler(cfg),
+		Email:        NewEmailHandler(svcs.Email, cfg, logger),
+		Health:       NewHealthChecker(clients, cfg),
+		WebUI:        NewWebUIHandler(logger),
 	}
-}
-
-// RegisterRoutes sets up all routes
-func (h *Handlers) RegisterRoutes(router *http.ServeMux) {
-	h.Auth.SetupRoutes(router)
-	h.User.SetupRoutes(router)
-	h.Organization.SetupRoutes(router)
-	h.OAuth.SetupRoutes(router)
-	h.Passwordless.SetupRoutes(router)
-	h.MFA.SetupRoutes(router)
-	h.Passkey.SetupRoutes(router)
-	h.SSO.SetupRoutes(router)
-	h.Webhook.SetupRoutes(router)
-	h.APIKey.SetupRoutes(router)
-	// h.SMS.SetupRoutes(router) // Setup SMS routes
 }

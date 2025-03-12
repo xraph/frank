@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/internal/middleware"
 	"github.com/juicycleff/frank/internal/organization"
@@ -431,7 +432,7 @@ func (h *OrganizationHandler) DisableOrganizationFeature(w http.ResponseWriter, 
 }
 
 // SetupRoutes sets up the organization routes
-func (h *OrganizationHandler) SetupRoutes(router *http.ServeMux) {
+func (h *OrganizationHandler) SetupRoutes(router chi.Router) {
 	router.HandleFunc("/api/v1/organizations", h.ListOrganizations)
 	router.HandleFunc("/api/v1/organizations", h.CreateOrganization)
 	router.HandleFunc("/api/v1/organizations/{id}", h.GetOrganization)

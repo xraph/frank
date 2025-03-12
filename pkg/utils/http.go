@@ -31,6 +31,30 @@ type Response struct {
 	Error   interface{} `json:"error,omitempty"`
 }
 
+// PageInfo represents pagination metadata including total items, current page, items per page, and total pages.
+type PageInfo struct {
+	TotalCount int `json:"totalCount"`
+	PageNumber int `json:"pageNumber"`
+	PageSize   int `json:"pageSize"`
+	TotalPages int `json:"totalPages"`
+}
+
+// PagedResponse represents a paginated response containing a list of items and associated pagination metadata.
+type PagedResponse struct {
+	Items    interface{} `json:"items,omitempty"`
+	PageInfo PageInfo    `json:"pageInfo,omitempty"`
+}
+
+// RespondPagedJSON sends a JSON response
+func RespondPagedJSON(w http.ResponseWriter, status int, data PagedResponse) {
+	response := Response{
+		Success: status >= 200 && status < 400,
+		Data:    data,
+	}
+
+	RespondWithJSON(w, status, response)
+}
+
 // RespondJSON sends a JSON response
 func RespondJSON(w http.ResponseWriter, status int, data interface{}) {
 	response := Response{
