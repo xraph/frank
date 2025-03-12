@@ -1,4 +1,4 @@
-import * as React from 'react'
+import * as React from "react";
 
 /**
  * Composes two event handlers into a single handler by calling both in order.
@@ -7,38 +7,38 @@ import * as React from 'react'
  * @see https://github.com/radix-ui/primitives/blob/main/packages/core/primitive/src/primitive.tsx
  */
 function composeEventHandlers<E>(
-  originalEventHandler?: (event: E) => void,
-  ourEventHandler?: (event: E) => void,
-  { checkForDefaultPrevented = true } = {},
+	originalEventHandler?: (event: E) => void,
+	ourEventHandler?: (event: E) => void,
+	{ checkForDefaultPrevented = true } = {},
 ) {
-  return function handleEvent(event: E) {
-    originalEventHandler?.(event)
+	return function handleEvent(event: E) {
+		originalEventHandler?.(event);
 
-    if (
-      checkForDefaultPrevented === false ||
-      !(event as unknown as Event).defaultPrevented
-    ) {
-      return ourEventHandler?.(event)
-    }
-  }
+		if (
+			checkForDefaultPrevented === false ||
+			!(event as unknown as Event).defaultPrevented
+		) {
+			return ourEventHandler?.(event);
+		}
+	};
 }
 
 /**
  * @see https://github.com/radix-ui/primitives/blob/main/packages/react/compose-refs/src/composeRefs.tsx
  */
 
-type PossibleRef<T> = React.Ref<T> | undefined
+type PossibleRef<T> = React.Ref<T> | undefined;
 
 /**
  * Set a given ref to a given value.
  * This utility takes care of different types of refs: callback refs and RefObject(s).
  */
 function setRef<T>(ref: PossibleRef<T>, value: T) {
-  if (typeof ref === 'function') {
-    ref(value)
-  } else if (ref !== null && ref !== undefined) {
-    ;(ref as React.MutableRefObject<T>).current = value
-  }
+	if (typeof ref === "function") {
+		ref(value);
+	} else if (ref !== null && ref !== undefined) {
+		(ref as React.MutableRefObject<T>).current = value;
+	}
 }
 
 /**
@@ -46,11 +46,11 @@ function setRef<T>(ref: PossibleRef<T>, value: T) {
  * Accepts callback refs and RefObject(s).
  */
 function composeRefs<T>(...refs: PossibleRef<T>[]) {
-  return (node: T) => {
-    for (const ref of refs) {
-      setRef(ref, node)
-    }
-  }
+	return (node: T) => {
+		for (const ref of refs) {
+			setRef(ref, node);
+		}
+	};
 }
 
 /**
@@ -58,8 +58,8 @@ function composeRefs<T>(...refs: PossibleRef<T>[]) {
  * Accepts callback refs and RefObject(s).
  */
 function useComposedRefs<T>(...refs: PossibleRef<T>[]) {
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  return React.useCallback(composeRefs(...refs), refs)
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	return React.useCallback(composeRefs(...refs), refs);
 }
 
-export { composeEventHandlers, composeRefs, useComposedRefs }
+export { composeEventHandlers, composeRefs, useComposedRefs };

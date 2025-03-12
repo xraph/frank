@@ -123,6 +123,13 @@ func (h *HealthChecker) CheckHealth() HealthResponse {
 }
 
 // HealthCheckHandler handles the health check endpoint
+// @Summary      Perform health check
+// @Description  Returns the health status of the application and its services
+// @Tags         Health
+// @Produce      json
+// @Success      200 {object} HealthResponse "Healthy status"
+// @Failure      503 {object} HealthResponse "Unhealthy status"
+// @Router       /__health [get]
 func (h *HealthChecker) HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
 	response := h.CheckHealth()
 
@@ -136,6 +143,12 @@ func (h *HealthChecker) HealthCheckHandler(w http.ResponseWriter, r *http.Reques
 }
 
 // ReadyCheckHandler handles the readiness check endpoint
+// @Summary      Perform readiness check
+// @Description  Indicates if the application is ready to receive traffic
+// @Tags         Readiness
+// @Produce      json
+// @Success      200 {object} HealthResponse "Ready status"
+// @Router       /__ready [post]
 func (h *HealthChecker) ReadyCheckHandler(w http.ResponseWriter, r *http.Request) {
 	// Simple readiness check that just checks if the server is up
 	response := HealthResponse{

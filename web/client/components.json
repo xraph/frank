@@ -1,21 +1,21 @@
 {
-  "$schema": "https://ui.shadcn.com/schema.json",
-  "style": "new-york",
-  "rsc": false,
-  "tsx": true,
-  "tailwind": {
-    "config": "",
-    "css": "src/styles/global.css",
-    "baseColor": "zinc",
-    "cssVariables": true,
-    "prefix": ""
-  },
-  "aliases": {
-    "components": "@/components/react",
-    "utils": "@/lib/react/utils",
-    "ui": "@/components/react/ui",
-    "lib": "@/lib/react",
-    "hooks": "@/hooks"
-  },
-  "iconLibrary": "lucide"
+	"$schema": "https://ui.shadcn.com/schema.json",
+	"style": "new-york",
+	"rsc": false,
+	"tsx": true,
+	"tailwind": {
+		"config": "",
+		"css": "src/styles/global.css",
+		"baseColor": "zinc",
+		"cssVariables": true,
+		"prefix": ""
+	},
+	"aliases": {
+		"components": "@/components/react",
+		"utils": "@/lib/react/utils",
+		"ui": "@/components/react/ui",
+		"lib": "@/lib/react",
+		"hooks": "@/hooks"
+	},
+	"iconLibrary": "lucide"
 }
