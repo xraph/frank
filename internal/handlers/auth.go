@@ -14,6 +14,7 @@ import (
 	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/juicycleff/frank/pkg/logging"
 	"github.com/juicycleff/frank/pkg/utils"
+	"github.com/juicycleff/frank/pkg/validator"
 )
 
 // AuthHandler handles authentication operations
@@ -71,7 +72,7 @@ type RegisterInput struct {
 // Login handles user login
 // @Summary Authenticate a user
 // @Description Logs in a user with email and password
-// @Tags auth
+// @Tags Auth
 // @Accept json
 // @Produce json
 // @Param input body LoginInput true "Login credentials"
@@ -83,7 +84,7 @@ type RegisterInput struct {
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	// Parse request
 	var input LoginInput
-	if err := utils.DecodeJSON(r, &input); err != nil {
+	if err := validator.ValidateDecodeJSON(r, &input); err != nil {
 		utils.RespondError(w, err)
 		return
 	}
@@ -147,7 +148,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 // Register handles user registration
 // @Summary Register a new user
 // @Description Creates a new user account
-// @Tags auth
+// @Tags Auth
 // @Accept json
 // @Produce json
 // @Param input body RegisterInput true "Registration information"
@@ -158,7 +159,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	// Parse request
 	var input RegisterInput
-	if err := utils.DecodeJSON(r, &input); err != nil {
+	if err := validator.ValidateDecodeJSON(r, &input); err != nil {
 		utils.RespondError(w, err)
 		return
 	}
@@ -221,7 +222,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 // Logout handles user logout
 // @Summary Log out a user
 // @Description Logs out the current user and invalidates their session
-// @Tags auth
+// @Tags Auth
 // @Produce json
 // @Success 200 {object} map[string]interface{} "Logout successful"
 // @Router /api/v1/auth/logout [post]
@@ -278,7 +279,7 @@ type RefreshTokenInput struct {
 // RefreshToken refreshes an access token
 // @Summary Refresh access token
 // @Description Generates a new access token using a refresh token
-// @Tags auth
+// @Tags Auth
 // @Accept json
 // @Produce json
 // @Param input body RefreshTokenInput true "Refresh token"
@@ -359,7 +360,7 @@ type ForgotPasswordInput struct {
 // ForgotPassword initiates the password reset process
 // @Summary Request password reset
 // @Description Initiates the password reset process for a user
-// @Tags auth
+// @Tags Auth
 // @Accept json
 // @Produce json
 // @Param input body ForgotPasswordInput true "User email"
@@ -419,7 +420,7 @@ type ResetPasswordInput struct {
 // ResetPassword resets a user's password using a token
 // @Summary Reset password
 // @Description Resets a user's password using a token received by email
-// @Tags auth
+// @Tags Auth
 // @Accept json
 // @Produce json
 // @Param input body ResetPasswordInput true "Reset password information"
@@ -468,7 +469,7 @@ type VerifyEmailInput struct {
 // VerifyEmail verifies a user's email address
 // @Summary Verify email
 // @Description Verifies a user's email address using a token
-// @Tags auth
+// @Tags Auth
 // @Accept json
 // @Produce json
 // @Param input body VerifyEmailInput true "Email verification token"

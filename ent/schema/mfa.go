@@ -7,6 +7,7 @@ import (
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
+	"github.com/juicycleff/frank/pkg/entity"
 )
 
 // MFA holds the schema definition for the MFA entity.
@@ -40,8 +41,7 @@ func (MFA) Fields() []ent.Field {
 		field.Time("last_used").
 			Optional().
 			Nillable(),
-		field.JSON("metadata", map[string]interface{}{}).
-			Optional(),
+		entity.JSONMapField("metadata", true),
 		field.Time("created_at").
 			Default(time.Now).
 			Immutable(),

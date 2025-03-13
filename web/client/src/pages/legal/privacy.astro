@@ -1,10 +1,10 @@
 ---
-import { getEntry, render, getEntries } from 'astro:content';
+import { getEntry, render, getEntries } from "astro:content";
 import LegalLayout from "@/layouts/LegalLayout.astro";
 
-const entry = await getEntry('legal', 'privacy');
+const entry = await getEntry("legal", "privacy");
 if (!entry) {
-    throw new Error('Could not find legal docs');
+	throw new Error("Could not find legal docs");
 }
 
 const { Content, headings } = await render(entry);

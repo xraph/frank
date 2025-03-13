@@ -5,10 +5,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/ent"
 	"github.com/juicycleff/frank/internal/organization"
 	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/juicycleff/frank/pkg/logging"
+	"github.com/juicycleff/frank/pkg/validator"
 )
 
 // Service provides user management operations
@@ -103,6 +105,7 @@ type service struct {
 	pwdManager    PasswordManager
 	orgService    organization.Service
 	verifyManager VerificationManager
+	cfg           *config.Config
 	logger        logging.Logger
 }
 
@@ -112,6 +115,7 @@ func NewService(
 	pwdManager PasswordManager,
 	verifyManager VerificationManager,
 	orgService organization.Service,
+	cfg *config.Config,
 	logger logging.Logger,
 ) Service {
 	return &service{
@@ -119,6 +123,7 @@ func NewService(
 		pwdManager:    pwdManager,
 		orgService:    orgService,
 		verifyManager: verifyManager,
+		cfg:           cfg,
 		logger:        logger,
 	}
 }
@@ -127,6 +132,11 @@ func NewService(
 func (s *service) Create(ctx context.Context, input CreateUserInput) (*ent.User, error) {
 	// Normalize email
 	input.Email = normalizeEmail(input.Email)
+
+	err := validator.Validate(&input)
+	if err != nil {
+		return nil, err
+	}
 
 	// Check if user with this email already exists
 	existingUser, err := s.repo.GetByEmail(ctx, input.Email)

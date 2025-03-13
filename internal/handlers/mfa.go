@@ -88,7 +88,23 @@ type MFAVerifyRequest struct {
 	PhoneNumber string `json:"phone_number,omitempty"`
 }
 
+type MFAUnEnrollInput struct {
+	Method string `json:"method" validate:"required"`
+}
+
 // MFAEnroll handles enrolling in MFA
+// @Summary Enroll in MFA
+// @Description Enrolls the user in the specified MFA method
+// @Tags Auth, MFA
+// @Accept json
+// @Produce json
+// @Param input body MFAEnrollRequest true "MFAEnrollRequest"
+// @Success 200 {object} EnableTOTPResponse "Response for enabling TOTP (if applicable)"
+// @Success 200 {object} map[string]interface{} "Response for enabling SMS/Email/Backup Codes"
+// @Failure 400 {object} errors.ErrorResponse
+// @Failure 401 {object} errors.ErrorResponse
+// @Failure 500 {object} errors.ErrorResponse
+// @Router /api/v1/auth/mfa/enroll [post]
 func (h *MFAHandler) MFAEnroll(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context
 	userID, ok := middleware.GetUserID(r)
@@ -189,6 +205,17 @@ func (h *MFAHandler) MFAEnroll(w http.ResponseWriter, r *http.Request) {
 }
 
 // MFAVerify handles verifying MFA
+// @Summary Verify MFA
+// @Description Verifies a MFA code for the user using the specified method
+// @Tags Auth, MFA
+// @Accept json
+// @Produce json
+// @Param input body MFAVerifyRequest true "MFAVerifyRequest"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} errors.ErrorResponse
+// @Failure 401 {object} errors.ErrorResponse
+// @Failure 500 {object} errors.ErrorResponse
+// @Router /api/v1/auth/mfa/verify [post]
 func (h *MFAHandler) MFAVerify(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context
 	userID, ok := middleware.GetUserID(r)
@@ -238,6 +265,17 @@ func (h *MFAHandler) MFAVerify(w http.ResponseWriter, r *http.Request) {
 }
 
 // MFAUnenroll handles unenrolling from MFA
+// @Summary Unenroll from MFA
+// @Description Disables a specific MFA method or all methods for the user
+// @Tags Auth, MFA
+// @Accept json
+// @Produce json
+// @Param input body MFAUnEnrollInput true "Input for disabled MFA method"
+// @Success 200 {object} map[string]interface{} "Success response with message"
+// @Failure 400 {object} errors.ErrorResponse "Invalid input or missing required field"
+// @Failure 401 {object} errors.ErrorResponse "Unauthorized access"
+// @Failure 500 {object} errors.ErrorResponse "Internal server error"
+// @Router /api/v1/auth/mfa/unenroll [post]
 func (h *MFAHandler) MFAUnenroll(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context
 	userID, ok := middleware.GetUserID(r)
@@ -247,9 +285,7 @@ func (h *MFAHandler) MFAUnenroll(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Parse input
-	var input struct {
-		Method string `json:"method" validate:"required"`
-	}
+	var input MFAUnEnrollInput
 	if err := utils.DecodeJSON(r, &input); err != nil {
 		utils.RespondError(w, err)
 		return
@@ -291,6 +327,16 @@ func (h *MFAHandler) MFAUnenroll(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetMFAMethods handles retrieving enabled MFA methods
+// @Summary Retrieve enabled MFA methods
+// @Description Retrieves a list of enabled multi-factor authentication methods for the authenticated user
+// @Tags Auth, MFA
+// @Accept json
+// @Produce json
+// @Success 200 {object} map[string]interface{} "Enabled MFA methods"
+// @Failure 400 {object} errors.ErrorResponse "Invalid input or missing required field"
+// @Failure 401 {object} errors.ErrorResponse "Unauthorized access"
+// @Failure 500 {object} errors.ErrorResponse "Internal server error"
+// @Router /api/v1/auth/mfa/methods [get]
 func (h *MFAHandler) GetMFAMethods(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context
 	userID, ok := middleware.GetUserID(r)
@@ -313,6 +359,17 @@ func (h *MFAHandler) GetMFAMethods(w http.ResponseWriter, r *http.Request) {
 }
 
 // SendMFACode handles sending MFA verification code
+// @Summary Send MFA Verification Code
+// @Description Sends a verification code to the user for the specified MFA method
+// @Tags Auth, MFA
+// @Accept json
+// @Produce json
+// @Param input body MFAUnEnrollInput true "Input for specifying MFA method"
+// @Success 200 {object} map[string]interface{} "Success message and expiration time"
+// @Failure 400 {object} errors.ErrorResponse "Invalid input or missing required field"
+// @Failure 401 {object} errors.ErrorResponse "Unauthorized access"
+// @Failure 500 {object} errors.ErrorResponse "Internal server error"
+// @Router /api/v1/auth/mfa/send-code [post]
 func (h *MFAHandler) SendMFACode(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context
 	userID, ok := middleware.GetUserID(r)

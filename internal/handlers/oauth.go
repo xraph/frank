@@ -50,6 +50,17 @@ func NewOAuthHandler(
 }
 
 // OAuthAuthorize handles the OAuth2 authorization endpoint
+// @Summary OAuth2 Authorization
+// @Description This endpoint handles OAuth2 authorization. It can act as both a provider (to authorize third-party clients) or as a client (to redirect users to third-party providers).
+// @Tags OAuth2
+// @Accept json
+// @Produce json
+// @Param provider query string false "OAuth Provider" example("google")
+// @Param redirect_uri query string false "Redirect URI" example("https://your-app.com/oauth/callback")
+// @Success 200 {string} string "Successfully handled OAuth2 authorization"
+// @Failure 400 {object} map[string]interface{} "Invalid request"
+// @Failure 500 {object} map[string]interface{} "Internal server error"
+// @Router /oauth/authorize [get]
 func (h *OAuthHandler) OAuthAuthorize(w http.ResponseWriter, r *http.Request) {
 	// This can be used as both provider and client
 	if r.URL.Path == "/oauth/authorize" {
@@ -131,6 +142,12 @@ func (h *OAuthHandler) handleClientAuthorize(w http.ResponseWriter, r *http.Requ
 }
 
 // OAuthProvidersList lists available OAuth providers
+// @Summary List OAuth2 Providers
+// @Description This endpoint lists the available OAuth2 providers.
+// @Tags OAuth2
+// @Produce json
+// @Success 200 {object} map[string]interface{} "List of configured providers"
+// @Router /oauth/providers [get]
 func (h *OAuthHandler) OAuthProvidersList(w http.ResponseWriter, r *http.Request) {
 	// This should return a list of configured providers
 	// For now, return a hardcoded list
@@ -146,6 +163,17 @@ func (h *OAuthHandler) OAuthProvidersList(w http.ResponseWriter, r *http.Request
 }
 
 // OAuthProviderAuth initiates OAuth authentication with a provider
+// @Summary Initiate OAuth Authentication
+// @Description This endpoint initiates OAuth authentication with a configured provider.
+// @Tags OAuth2
+// @Accept json
+// @Produce json
+// @Param provider path string true "OAuth Provider" example("google")
+// @Param redirect_uri query string false "Redirect URI" example("https://your-app.com/oauth/callback")
+// @Success 302 {string} string "Redirects to the provider login"
+// @Failure 400 {object} map[string]interface{} "Invalid Request"
+// @Failure 500 {object} map[string]interface{} "Internal Server Error"
+// @Router /oauth/auth/{provider} [get]
 func (h *OAuthHandler) OAuthProviderAuth(w http.ResponseWriter, r *http.Request) {
 	// Get provider from path
 	provider := utils.GetPathVar(r, "provider")
@@ -194,6 +222,18 @@ func (h *OAuthHandler) OAuthProviderAuth(w http.ResponseWriter, r *http.Request)
 }
 
 // OAuthProviderCallback handles OAuth callback from a provider
+// @Summary Handle OAuth Callback
+// @Description Handles the callback from the OAuth provider after user authentication.
+// @Tags OAuth2
+// @Accept json
+// @Produce json
+// @Param provider path string true "OAuth Provider" example("google")
+// @Param code query string true "Authorization Code" example("12345")
+// @Param state query string true "OAuth State" example("state_token")
+// @Success 302 {string} string "Redirects to the client application"
+// @Failure 400 {object} map[string]interface{} "Invalid Request"
+// @Failure 500 {object} map[string]interface{} "Server Error"
+// @Router /oauth/callback/{provider} [get]
 func (h *OAuthHandler) OAuthProviderCallback(w http.ResponseWriter, r *http.Request) {
 	// Get provider from path
 	provider := utils.GetPathVar(r, "provider")
@@ -333,6 +373,22 @@ func (h *OAuthHandler) OAuthProviderCallback(w http.ResponseWriter, r *http.Requ
 }
 
 // OAuthToken handles the OAuth2 token endpoint
+// @Summary OAuth2 Token
+// @Description Handles the OAuth2 token endpoint for token exchange.
+// @Tags OAuth2
+// @Accept application/x-www-form-urlencoded
+// @Produce json
+// @Param grant_type formData string true "Grant type" Enums("authorization_code", "client_credentials", "refresh_token", "password")
+// @Param client_id formData string false "Client ID"
+// @Param client_secret formData string false "Client Secret"
+// @Param code formData string false "Authorization code (required for authorization_code grant type)"
+// @Param refresh_token formData string false "Refresh token (required for refresh_token grant type)"
+// @Param redirect_uri formData string false "Redirect URI"
+// @Success 200 {object} map[string]interface{} "Token response"
+// @Failure 400 {object} map[string]interface{} "Invalid request"
+// @Failure 401 {object} map[string]interface{} "Unauthorized request"
+// @Failure 500 {object} map[string]interface{} "Internal server error"
+// @Router /oauth/token [post]
 func (h *OAuthHandler) OAuthToken(w http.ResponseWriter, r *http.Request) {
 	// Only POST method is allowed
 	if r.Method != http.MethodPost {
@@ -345,6 +401,17 @@ func (h *OAuthHandler) OAuthToken(w http.ResponseWriter, r *http.Request) {
 }
 
 // OAuthIntrospect handles the OAuth2 token introspection endpoint
+// @Summary OAuth2 Token Introspection
+// @Description Handles the OAuth2 token introspection endpoint to validate and retrieve metadata about an access token.
+// @Tags OAuth2
+// @Accept application/x-www-form-urlencoded
+// @Produce json
+// @Param token formData string true "Access Token to introspect"
+// @Success 200 {object} map[string]interface{} "Token introspection result"
+// @Failure 400 {object} map[string]interface{} "Invalid request"
+// @Failure 401 {object} map[string]interface{} "Unauthorized request"
+// @Failure 500 {object} map[string]interface{} "Internal server error"
+// @Router /oauth/introspect [post]
 func (h *OAuthHandler) OAuthIntrospect(w http.ResponseWriter, r *http.Request) {
 	// Only POST method is allowed
 	if r.Method != http.MethodPost {
@@ -357,6 +424,17 @@ func (h *OAuthHandler) OAuthIntrospect(w http.ResponseWriter, r *http.Request) {
 }
 
 // OAuthRevoke handles the OAuth2 token revocation endpoint
+// @Summary OAuth2 Token Revocation
+// @Description Handles the OAuth2 token revocation endpoint to revoke an access token.
+// @Tags OAuth2
+// @Accept application/x-www-form-urlencoded
+// @Produce json
+// @Param token formData string true "Access Token to revoke"
+// @Success 200 {object} map[string]interface{} "Token revocation successful"
+// @Failure 400 {object} map[string]interface{} "Invalid request"
+// @Failure 401 {object} map[string]interface{} "Unauthorized request"
+// @Failure 500 {object} map[string]interface{} "Internal server error"
+// @Router /oauth/revoke [post]
 func (h *OAuthHandler) OAuthRevoke(w http.ResponseWriter, r *http.Request) {
 	// Only POST method is allowed
 	if r.Method != http.MethodPost {
@@ -368,7 +446,21 @@ func (h *OAuthHandler) OAuthRevoke(w http.ResponseWriter, r *http.Request) {
 	h.oauthHandlers.HandleRevoke(w, r)
 }
 
-// HandleConsent handles the OAuth2 token revocation endpoint
+// HandleConsent handles the OAuth2 consent endpoint
+// @Summary Handle OAuth2 Consent
+// @Description Handles user consent for OAuth2 authorization.
+// @Tags OAuth2
+// @Accept json
+// @Produce json
+// @Param client_id formData string true "Client ID of the requesting application"
+// @Param scope formData string true "Scopes being requested, separated by spaces"
+// @Param state formData string false "State parameter to maintain state between request and callback"
+// @Param redirect_uri formData string true "Redirect URI to redirect the user after consent"
+// @Success 200 {object} map[string]interface{} "Consent granted"
+// @Failure 400 {object} map[string]interface{} "Invalid request"
+// @Failure 401 {object} map[string]interface{} "Unauthorized"
+// @Failure 500 {object} map[string]interface{} "Internal server error"
+// @Router /oauth/consent [post]
 func (h *OAuthHandler) HandleConsent(w http.ResponseWriter, r *http.Request) {
 	// Only POST method is allowed
 	if r.Method != http.MethodPost {
@@ -381,6 +473,17 @@ func (h *OAuthHandler) HandleConsent(w http.ResponseWriter, r *http.Request) {
 }
 
 // OAuthUserInfo handles the OAuth2 userinfo endpoint
+// @Summary OAuth2 UserInfo
+// @Description Retrieves user information based on the provided access token.
+// @Tags OAuth2
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer {access_token}"
+// @Success 200 {object} map[string]interface{} "Userinfo response"
+// @Failure 400 {object} map[string]interface{} "Invalid request"
+// @Failure 401 {object} map[string]interface{} "Unauthorized request"
+// @Failure 500 {object} map[string]interface{} "Internal server error"
+// @Router /oauth/userinfo [get]
 func (h *OAuthHandler) OAuthUserInfo(w http.ResponseWriter, r *http.Request) {
 	// Extract token from Authorization header
 	authHeader := r.Header.Get("Authorization")
@@ -438,6 +541,14 @@ func (h *OAuthHandler) OAuthUserInfo(w http.ResponseWriter, r *http.Request) {
 }
 
 // OAuthConfiguration handles the OpenID Connect configuration endpoint
+// @Summary OpenID Connect Configuration
+// @Description Provides the OpenID Connect well-known configuration.
+// @Tags OAuth2
+// @Accept json
+// @Produce json
+// @Success 200 {object} map[string]interface{} "OpenID Connect configuration"
+// @Failure 500 {object} map[string]interface{} "Internal Server Error"
+// @Router /.well-known/openid-configuration [get]
 func (h *OAuthHandler) OAuthConfiguration(w http.ResponseWriter, r *http.Request) {
 	baseURL := h.config.Server.BaseURL
 
@@ -488,6 +599,13 @@ func (h *OAuthHandler) OAuthConfiguration(w http.ResponseWriter, r *http.Request
 }
 
 // OAuthJWKS handles the JWKS endpoint for OpenID Connect
+// @Summary JWKS Endpoint
+// @Description Returns the JSON Web Key Set (JWKS) for token verification.
+// @Tags OAuth2
+// @Produce json
+// @Success 200 {object} map[string]interface{} "JWKS response"
+// @Failure 500 {object} map[string]interface{} "Internal Server Error"
+// @Router /.well-known/jwks.json [get]
 func (h *OAuthHandler) OAuthJWKS(w http.ResponseWriter, r *http.Request) {
 	// For now, return a minimal JWKS
 	// In production, this would return the actual JWKs used for token signing

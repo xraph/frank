@@ -7,6 +7,7 @@ import (
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
+	"github.com/juicycleff/frank/pkg/entity"
 )
 
 // Organization holds the schema definition for the Organization entity.
@@ -32,8 +33,7 @@ func (Organization) Fields() []ent.Field {
 			Default("free"),
 		field.Bool("active").
 			Default(true),
-		field.JSON("metadata", map[string]interface{}{}).
-			Optional(),
+		entity.JSONMapField("metadata", true),
 		field.Time("trial_ends_at").
 			Optional().
 			Nillable(),

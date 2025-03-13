@@ -7,6 +7,7 @@ import (
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
+	"github.com/juicycleff/frank/pkg/entity"
 )
 
 // WebhookEvent holds the schema definition for the WebhookEvent entity.
@@ -23,9 +24,8 @@ func (WebhookEvent) Fields() []ent.Field {
 			NotEmpty(),
 		field.String("event_type").
 			NotEmpty(),
-		field.JSON("payload", map[string]interface{}{}),
-		field.JSON("headers", map[string]string{}).
-			Optional(),
+		entity.JSONMapStringField("headers", true),
+		entity.JSONMapField("payload", true),
 		field.Bool("delivered").
 			Default(false),
 		field.Time("delivered_at").

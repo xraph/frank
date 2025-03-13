@@ -6,6 +6,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
+	"github.com/juicycleff/frank/pkg/entity"
 )
 
 // EmailTemplate holds the schema definition for the EmailTemplate entity.
@@ -38,8 +39,7 @@ func (EmailTemplate) Fields() []ent.Field {
 			Comment("System templates can be overridden but not deleted"),
 		field.String("locale").
 			Default("en"),
-		field.JSON("metadata", map[string]interface{}{}).
-			Optional(),
+		entity.JSONMapField("metadata", true),
 		field.Time("created_at").
 			Default(time.Now).
 			Immutable(),

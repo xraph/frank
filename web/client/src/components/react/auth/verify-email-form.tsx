@@ -12,7 +12,12 @@ import {
 	AlertDescription,
 	AlertTitle,
 } from "@/components/react/ui/alert";
-import {InputOTP, InputOTPSeparator, InputOTPGroup, InputOTPSlot} from "@/components/react/ui/input-otp.tsx";
+import {
+	InputOTP,
+	InputOTPSeparator,
+	InputOTPGroup,
+	InputOTPSlot,
+} from "@/components/react/ui/input-otp.tsx";
 
 const inputClass = "h-12 w-12 text-center text-lg";
 
@@ -20,7 +25,7 @@ export function VerifyEmailForm() {
 	const [isLoading, setIsLoading] = useState(false);
 	const [isVerified, setIsVerified] = useState(false);
 	const [error, setError] = useState("");
-	const [code, setCode] = useState('');
+	const [code, setCode] = useState("");
 
 	function handleCodeChange(value: string) {
 		setCode(value);
@@ -69,27 +74,30 @@ export function VerifyEmailForm() {
 				</Alert>
 			)}
 
-			<form onSubmit={onSubmit} className="space-y-4 justify-center flex flex-col items-center">
+			<form
+				onSubmit={onSubmit}
+				className="space-y-4 justify-center flex flex-col items-center"
+			>
 				<div className="space-y-2">
 					<Label htmlFor="code-0">Verification code</Label>
 					<InputOTP
-					maxLength={6}
-					value={code}
-					onChange={handleCodeChange}
-					disabled={isLoading}
-				>
-					<InputOTPGroup>
-						<InputOTPSlot className={inputClass} index={0} />
-						<InputOTPSlot className={inputClass} index={1} />
-						<InputOTPSlot className={inputClass} index={2} />
-					</InputOTPGroup>
-					<InputOTPSeparator />
-					<InputOTPGroup>
-						<InputOTPSlot className={inputClass} index={3} />
-						<InputOTPSlot className={inputClass} index={4} />
-						<InputOTPSlot className={inputClass} index={5} />
-					</InputOTPGroup>
-				</InputOTP>
+						maxLength={6}
+						value={code}
+						onChange={handleCodeChange}
+						disabled={isLoading}
+					>
+						<InputOTPGroup>
+							<InputOTPSlot className={inputClass} index={0} />
+							<InputOTPSlot className={inputClass} index={1} />
+							<InputOTPSlot className={inputClass} index={2} />
+						</InputOTPGroup>
+						<InputOTPSeparator />
+						<InputOTPGroup>
+							<InputOTPSlot className={inputClass} index={3} />
+							<InputOTPSlot className={inputClass} index={4} />
+							<InputOTPSlot className={inputClass} index={5} />
+						</InputOTPGroup>
+					</InputOTP>
 				</div>
 				<Button
 					type="submit"

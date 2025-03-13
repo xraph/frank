@@ -12,14 +12,19 @@ import {
 	AlertDescription,
 	AlertTitle,
 } from "@/components/react/ui/alert";
-import {InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot} from "@/components/react/ui/input-otp.tsx";
+import {
+	InputOTP,
+	InputOTPGroup,
+	InputOTPSeparator,
+	InputOTPSlot,
+} from "@/components/react/ui/input-otp.tsx";
 
 const inputClass = "h-12 w-12 text-center text-lg";
 
 export function TwoFactorForm() {
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState("");
-	const [code, setCode] = useState('');
+	const [code, setCode] = useState("");
 
 	function handleCodeChange(value: string) {
 		setCode(value);
@@ -47,7 +52,10 @@ export function TwoFactorForm() {
 				</Alert>
 			)}
 
-			<form onSubmit={onSubmit} className="space-y-4 justify-center flex flex-col items-center">
+			<form
+				onSubmit={onSubmit}
+				className="space-y-4 justify-center flex flex-col items-center"
+			>
 				<div className="space-y-2">
 					<Label htmlFor="2fa-0">Authentication code</Label>
 					<InputOTP

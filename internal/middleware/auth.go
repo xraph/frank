@@ -40,6 +40,9 @@ const (
 
 	// SessionKey is the key for session information in the request context
 	SessionKey contextKey = "session"
+
+	// SubdomainKey is the key for subdomain information in the request context
+	SubdomainKey contextKey = "subdomain"
 )
 
 // AuthOptions configures how the Auth middleware behaves

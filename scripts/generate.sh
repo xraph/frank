@@ -48,55 +48,48 @@ if ! command -v protoc &> /dev/null; then
     go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 fi
 
-# Check and install Swagger Codegen if needed
-if ! command -v swagger-codegen &> /dev/null; then
-    echo "⚠️ swagger-codegen not found. Installing Swagger Codegen..."
+# Check and install OpenAPI Generator if needed
+if ! command -v openapi-generator &> /dev/null; then
+    echo "⚠️ openapi-generator not found. Installing OpenAPI Generator..."
 
     # Check OS
     OS=$(uname -s)
 
     if [ "$OS" = "Linux" ]; then
         echo "🐧 Linux detected..."
-        # Check if apt is available (Debian/Ubuntu)
-        if command -v apt &> /dev/null; then
-            sudo apt-get update
-            sudo apt-get install -y swagger-codegen
-        # Check if dnf is available (Fedora/RHEL)
-        elif command -v dnf &> /dev/null; then
-            sudo dnf install -y swagger-codegen
-        # Check if yum is available (older RHEL/CentOS)
-        elif command -v yum &> /dev/null; then
-            sudo yum install -y swagger-codegen
+        # Check if npm is available
+        if command -v npm &> /dev/null; then
+            npm install @openapitools/openapi-generator-cli -g
         else
             # Manual installation using Java
             if command -v java &> /dev/null; then
                 echo "Installing via JAR download..."
                 mkdir -p "$HOME/bin"
-                curl -L "https://repo1.maven.org/maven2/io/swagger/codegen/v3/swagger-codegen-cli/3.0.36/swagger-codegen-cli-3.0.36.jar" -o "$HOME/bin/swagger-codegen-cli.jar"
-                echo '#!/bin/bash' > "$HOME/bin/swagger-codegen"
-                echo 'java -jar "'$HOME'/bin/swagger-codegen-cli.jar" "$@"' >> "$HOME/bin/swagger-codegen"
-                chmod +x "$HOME/bin/swagger-codegen"
+                curl -L "https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/6.6.0/openapi-generator-cli-6.6.0.jar" -o "$HOME/bin/openapi-generator-cli.jar"
+                echo '#!/bin/bash' > "$HOME/bin/openapi-generator"
+                echo 'java -jar "'$HOME'/bin/openapi-generator-cli.jar" "$@"' >> "$HOME/bin/openapi-generator"
+                chmod +x "$HOME/bin/openapi-generator"
                 export PATH="$HOME/bin:$PATH"
                 echo "Please add $HOME/bin to your PATH permanently in your shell profile."
             else
-                echo "❌ Java not found. Please install Java and Swagger Codegen manually."
-                echo "You can download Swagger Codegen from https://github.com/swagger-api/swagger-codegen"
+                echo "❌ Java not found. Please install Java and OpenAPI Generator manually."
+                echo "You can download OpenAPI Generator from https://github.com/OpenAPITools/openapi-generator"
             fi
         fi
     elif [ "$OS" = "Darwin" ]; then
         echo "🍎 macOS detected..."
-        brew install swagger-codegen
+        brew install openapi-generator
     else
-        echo "❌ Unsupported OS for automatic Swagger Codegen installation. Please install manually."
-        echo "You can download Swagger Codegen from https://github.com/swagger-api/swagger-codegen"
+        echo "❌ Unsupported OS for automatic OpenAPI Generator installation. Please install manually."
+        echo "You can download OpenAPI Generator from https://github.com/OpenAPITools/openapi-generator"
     fi
 
     # Verify installation
-    if ! command -v swagger-codegen &> /dev/null; then
-        echo "⚠️ Swagger Codegen installation may have failed. Continuing without it."
-        echo "Please install manually from https://github.com/swagger-api/swagger-codegen"
+    if ! command -v openapi-generator &> /dev/null; then
+        echo "⚠️ OpenAPI Generator installation may have failed. Continuing without it."
+        echo "Please install manually from https://github.com/OpenAPITools/openapi-generator"
     else
-        echo "✅ Swagger Codegen installed successfully!"
+        echo "✅ OpenAPI Generator installed successfully!"
     fi
 fi
 
@@ -114,11 +107,198 @@ for proto_file in api/proto/*.proto; do
 done
 
 # Generate OpenAPI code
-if command -v swagger-codegen &> /dev/null; then
-    echo "📚 Generating OpenAPI client code..."
-    swagger-codegen generate -i api/swagger/openapi.yaml -l go -o internal/api/client
+if command -v openapi-generator &> /dev/null; then
+    echo "📚 Generating OpenAPI GO client code..."
+    openapi-generator generate -i api/swagger/swagger.yaml -g go -o client \
+        --package-name client \
+        --skip-validate-spec \
+        --additional-properties=removeOperationIdPrefix=true
+
+    echo "📚 Generating OpenAPI TypeScript client code..."
+    # Create a config file for TypeScript generator
+    cat > scripts/openapi-ts-config.json << EOF
+{
+  "supportsES6": true,
+  "npmName": "frank-client",
+  "npmVersion": "1.0.0",
+  "withInterfaces": true,
+  "modelPropertyNaming": "camelCase",
+  "enumPropertyNaming": "camelCase",
+  "removeOperationIdPrefix": true
+}
+EOF
+    
+    # Generate TypeScript client with prefix removal for models and operation IDs
+    openapi-generator generate -i api/swagger/swagger.yaml -g typescript-fetch -o web/js-sdk \
+        -c scripts/openapi-ts-config.json \
+        --skip-validate-spec \
+        --global-property models,apis,supportingFiles \
+        --global-property modelNamePrefix= \
+        --global-property fileNaming=kebab-case \
+        --additional-properties=removeOperationIdPrefix=true
+    
+    # Optional: Find and replace "Ent" prefix in generated TypeScript files (in case the global property doesn't work)
+    if command -v find &> /dev/null && command -v sed &> /dev/null; then
+        echo "Removing 'Ent' prefix from model names in generated TypeScript files..."
+
+        # Check if the necessary directories exist
+        if [ ! -d "web/js-sdk/src/models" ]; then
+            echo "⚠️ Directory web/js-sdk/src/models does not exist. Skipping TypeScript modifications."
+        else
+            # Use temporary files instead of in-place editing for compatibility
+            if [ "$OS" = "Darwin" ]; then
+                echo "Using macOS compatible commands..."
+
+                # Replace in model files
+                echo "Processing model interface definitions..."
+                for file in web/js-sdk/src/models/*.ts; do
+                    if [ -f "$file" ]; then
+                        # Use temporary file to avoid in-place editing issues
+                        sed 's/export interface Ent\([A-Z][a-zA-Z0-9]*\)/export interface \1/g' "$file" > "$file.tmp"
+                        mv "$file.tmp" "$file"
+
+                        sed 's/export class Ent\([A-Z][a-zA-Z0-9]*\)/export class \1/g' "$file" > "$file.tmp"
+                        mv "$file.tmp" "$file"
+
+                        sed 's/export type Ent\([A-Z][a-zA-Z0-9]*\)/export type \1/g' "$file" > "$file.tmp"
+                        mv "$file.tmp" "$file"
+
+                        sed 's/export function Ent\([A-Z][a-zA-Z0-9]*\)FromJSON/export function \1FromJSON/g' "$file" > "$file.tmp"
+                        mv "$file.tmp" "$file"
+
+                        sed 's/export function Ent\([A-Z][a-zA-Z0-9]*\)FromJSONTyped/export function \1FromJSONTyped/g' "$file" > "$file.tmp"
+                        mv "$file.tmp" "$file"
+
+                        sed 's/export function Ent\([A-Z][a-zA-Z0-9]*\)ToJSON/export function \1ToJSON/g' "$file" > "$file.tmp"
+                        mv "$file.tmp" "$file"
+                    fi
+                done
+
+                # Process source files for imports and references
+                echo "Processing import statements and references..."
+                for file in web/js-sdk/src/*.ts; do
+                    if [ -f "$file" ]; then
+                        sed 's/from "\.\/Ent\([A-Z][a-zA-Z0-9]*\)"/from "\.\/\1"/g' "$file" > "$file.tmp"
+                        mv "$file.tmp" "$file"
+
+                        sed 's/import type { Ent\([A-Z][a-zA-Z0-9]*\) } from/import type { \1 } from/g' "$file" > "$file.tmp"
+                        mv "$file.tmp" "$file"
+
+                        sed 's/Ent\([A-Z][a-zA-Z0-9]*\)FromJSON/\1FromJSON/g' "$file" > "$file.tmp"
+                        mv "$file.tmp" "$file"
+
+                        sed 's/Ent\([A-Z][a-zA-Z0-9]*\)FromJSONTyped/\1FromJSONTyped/g' "$file" > "$file.tmp"
+                        mv "$file.tmp" "$file"
+
+                        sed 's/Ent\([A-Z][a-zA-Z0-9]*\)ToJSON/\1ToJSON/g' "$file" > "$file.tmp"
+                        mv "$file.tmp" "$file"
+
+                        sed 's/Ent\([A-Z][a-zA-Z0-9]*\)ToJSONTyped/\1ToJSONTyped/g' "$file" > "$file.tmp"
+                        mv "$file.tmp" "$file"
+                    fi
+                done
+
+                # Recursively process all TypeScript files in subdirectories
+                echo "Processing TypeScript files in subdirectories..."
+                find web/js-sdk/src -type f -name "*.ts" | while read file; do
+                    if [ -f "$file" ]; then
+                        sed 's/Ent\([A-Z][a-zA-Z0-9]*\)FromJSON/\1FromJSON/g' "$file" > "$file.tmp"
+                        mv "$file.tmp" "$file"
+
+                        sed 's/Ent\([A-Z][a-zA-Z0-9]*\)ToJSON/\1ToJSON/g' "$file" > "$file.tmp"
+                        mv "$file.tmp" "$file"
+                    fi
+                done
+
+                # Rename files from EntXxx.ts to Xxx.ts
+                echo "Renaming Ent* files..."
+                for file in web/js-sdk/src/models/Ent*.ts; do
+                    if [ -f "$file" ]; then
+                        newname=$(echo "$file" | sed 's/Ent//')
+                        echo "Renaming $file to $newname"
+                        mv "$file" "$newname"
+                    fi
+                done
+
+            else
+                # For Linux and other systems
+                echo "Using Linux compatible commands..."
+
+                # Replace in model files
+                echo "Processing model interface definitions..."
+                for file in web/js-sdk/src/models/*.ts; do
+                    if [ -f "$file" ]; then
+                        # Create a temp file for each transformation to avoid stdin issues
+                        sed 's/export interface Ent\([A-Z][a-zA-Z0-9]*\)/export interface \1/g' "$file" > "$file.tmp"
+                        mv "$file.tmp" "$file"
+
+                        sed 's/export class Ent\([A-Z][a-zA-Z0-9]*\)/export class \1/g' "$file" > "$file.tmp"
+                        mv "$file.tmp" "$file"
+
+                        sed 's/export type Ent\([A-Z][a-zA-Z0-9]*\)/export type \1/g' "$file" > "$file.tmp"
+                        mv "$file.tmp" "$file"
+
+                        sed 's/export function Ent\([A-Z][a-zA-Z0-9]*\)FromJSON/export function \1FromJSON/g' "$file" > "$file.tmp"
+                        mv "$file.tmp" "$file"
+
+                        sed 's/export function Ent\([A-Z][a-zA-Z0-9]*\)FromJSONTyped/export function \1FromJSONTyped/g' "$file" > "$file.tmp"
+                        mv "$file.tmp" "$file"
+
+                        sed 's/export function Ent\([A-Z][a-zA-Z0-9]*\)ToJSON/export function \1ToJSON/g' "$file" > "$file.tmp"
+                        mv "$file.tmp" "$file"
+                    fi
+                done
+
+                # Process source files for imports and references
+                echo "Processing import statements and references..."
+                for file in web/js-sdk/src/*.ts; do
+                    if [ -f "$file" ]; then
+                        sed 's/from "\.\/Ent\([A-Z][a-zA-Z0-9]*\)"/from "\.\/\1"/g' "$file" > "$file.tmp"
+                        mv "$file.tmp" "$file"
+
+                        sed 's/import type { Ent\([A-Z][a-zA-Z0-9]*\) } from/import type { \1 } from/g' "$file" > "$file.tmp"
+                        mv "$file.tmp" "$file"
+
+                        sed 's/Ent\([A-Z][a-zA-Z0-9]*\)FromJSON/\1FromJSON/g' "$file" > "$file.tmp"
+                        mv "$file.tmp" "$file"
+
+                        sed 's/Ent\([A-Z][a-zA-Z0-9]*\)FromJSONTyped/\1FromJSONTyped/g' "$file" > "$file.tmp"
+                        mv "$file.tmp" "$file"
+
+                        sed 's/Ent\([A-Z][a-zA-Z0-9]*\)ToJSON/\1ToJSON/g' "$file" > "$file.tmp"
+                        mv "$file.tmp" "$file"
+
+                        sed 's/Ent\([A-Z][a-zA-Z0-9]*\)ToJSONTyped/\1ToJSONTyped/g' "$file" > "$file.tmp"
+                        mv "$file.tmp" "$file"
+                    fi
+                done
+
+                # Recursively process all TypeScript files in subdirectories
+                echo "Processing TypeScript files in subdirectories..."
+                find web/js-sdk/src -type f -name "*.ts" | while read file; do
+                    if [ -f "$file" ]; then
+                        sed 's/Ent\([A-Z][a-zA-Z0-9]*\)FromJSON/\1FromJSON/g' "$file" > "$file.tmp"
+                        mv "$file.tmp" "$file"
+
+                        sed 's/Ent\([A-Z][a-zA-Z0-9]*\)ToJSON/\1ToJSON/g' "$file" > "$file.tmp"
+                        mv "$file.tmp" "$file"
+                    fi
+                done
+
+                # Rename files from EntXxx.ts to Xxx.ts
+                echo "Renaming Ent* files..."
+                for file in web/js-sdk/src/models/Ent*.ts; do
+                    if [ -f "$file" ]; then
+                        newname=$(echo "$file" | sed 's/Ent//')
+                        echo "Renaming $file to $newname"
+                        mv "$file" "$newname"
+                    fi
+                done
+            fi
+        fi
+    fi
 else
-    echo "⚠️ swagger-codegen still not found. Skipping OpenAPI client generation."
+    echo "⚠️ openapi-generator still not found. Skipping OpenAPI client generation."
 fi
 
 # Generate mock files for testing
@@ -163,9 +343,7 @@ for interface in "${INTERFACES_TO_MOCK[@]}"; do
     echo "Generating mock for $INTF with mock name Mock${PKG_NAME_CAP}${INTF}..."
 
     # Generate mocks with mock name prefixed by package name
-    # This changes the interface name within the mock code (e.g., MockService → MockUserService)
-    mockgen -destination internal/mocks/${INTF}_mock.go -package mocks -mock_names "${INTF}=Mock${PKG_NAME_CAP}${INTF}" github.com/juicycleff/frank/$PKG $INTF
-    mockgen -destination tests/mocks/${INTF}_mock.go -package mocks -mock_names "${INTF}=Mock${PKG_NAME_CAP}${INTF}" github.com/juicycleff/frank/$PKG $INTF
+    mockgen -destination tests/mocks/${PKG_NAME_CAP}${INTF}_mock.go -package mocks -mock_names "${INTF}=Mock${PKG_NAME_CAP}${INTF}" github.com/juicycleff/frank/$PKG $INTF
 done
 
 echo "✅ Code generation complete!"

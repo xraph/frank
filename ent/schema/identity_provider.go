@@ -7,6 +7,7 @@ import (
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
+	"github.com/juicycleff/frank/pkg/entity"
 )
 
 // IdentityProvider holds the schema definition for the IdentityProvider entity.
@@ -57,10 +58,8 @@ func (IdentityProvider) Fields() []ent.Field {
 			Default(false),
 		field.Strings("domains").
 			Optional(),
-		field.JSON("attributes_mapping", map[string]string{}).
-			Optional(),
-		field.JSON("metadata", map[string]interface{}{}).
-			Optional(),
+		entity.JSONMapStringField("attributes_mapping", true),
+		entity.JSONMapField("metadata", true),
 		field.Time("created_at").
 			Default(time.Now).
 			Immutable(),

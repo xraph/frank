@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/juicycleff/frank/config"
+	"github.com/juicycleff/frank/ent"
 	"github.com/juicycleff/frank/internal/middleware"
 	"github.com/juicycleff/frank/internal/organization"
 	"github.com/juicycleff/frank/pkg/errors"
@@ -32,6 +33,8 @@ func NewOrganizationHandler(
 	}
 }
 
+type Organization = ent.Organization
+
 // CreateOrganizationRequest represents the input for creating an organization
 type CreateOrganizationRequest struct {
 	Name      string                 `json:"name" validate:"required"`
@@ -55,27 +58,35 @@ type UpdateOrganizationRequest struct {
 }
 
 // ListOrganizations handles listing organizations with pagination
+// @Summary List organizations
+// @Description Get a paginated list of organizations with optional search
+// @Tags organizations
+// @Accept json
+// @Produce json
+// @Param offset query int false "Pagination offset" default(0)
+// @Param limit query int false "Pagination limit" default(20)
+// @Param search query string false "Search term"
+// @Success 200 {object} map[string]interface{} "Returns organizations with pagination"
+// @Failure 400 {object} map[string]interface{} "Invalid input"
+// @Failure 500 {object} map[string]interface{} "Internal server error"
+// @Router /api/v1/organizations [get]
 func (h *OrganizationHandler) ListOrganizations(w http.ResponseWriter, r *http.Request) {
-	// Parse query parameters
 	offset := utils.ParseQueryInt(r, "offset", 0)
 	limit := utils.ParseQueryInt(r, "limit", 20)
 	search := r.URL.Query().Get("search")
 
-	// Create list params
 	params := organization.ListParams{
 		Offset: offset,
 		Limit:  limit,
 		Search: search,
 	}
 
-	// List organizations
 	organizations, total, err := h.orgService.List(r.Context(), params)
 	if err != nil {
 		utils.RespondError(w, err)
 		return
 	}
 
-	// Return response with pagination
 	utils.RespondJSON(w, http.StatusOK, map[string]interface{}{
 		"data":  organizations,
 		"total": total,
@@ -88,22 +99,30 @@ func (h *OrganizationHandler) ListOrganizations(w http.ResponseWriter, r *http.R
 }
 
 // CreateOrganization handles creating a new organization
+// @Summary Create an organization
+// @Description Create a new organization with the provided details
+// @Tags organizations
+// @Accept json
+// @Produce json
+// @Param body body CreateOrganizationRequest true "Create organization payload"
+// @Success 201 {object} Organization "Returns the created organization"
+// @Failure 400 {object} map[string]interface{} "Invalid input"
+// @Failure 401 {object} map[string]interface{} "Unauthorized"
+// @Failure 500 {object} map[string]interface{} "Internal server error"
+// @Router /api/v1/organizations [post]
 func (h *OrganizationHandler) CreateOrganization(w http.ResponseWriter, r *http.Request) {
-	// Get user ID from context
 	userID, ok := middleware.GetUserID(r)
 	if !ok {
 		utils.RespondError(w, errors.New(errors.CodeUnauthorized, "not authenticated"))
 		return
 	}
 
-	// Parse input
 	var input CreateOrganizationRequest
 	if err := utils.DecodeJSON(r, &input); err != nil {
 		utils.RespondError(w, err)
 		return
 	}
 
-	// Map to service input
 	createInput := organization.CreateOrganizationInput{
 		Name:      input.Name,
 		Slug:      input.Slug,
@@ -116,38 +135,56 @@ func (h *OrganizationHandler) CreateOrganization(w http.ResponseWriter, r *http.
 		Features:  input.Features,
 	}
 
-	// Create organization
 	newOrg, err := h.orgService.Create(r.Context(), createInput)
 	if err != nil {
 		utils.RespondError(w, err)
 		return
 	}
 
-	// Return created organization
 	utils.RespondJSON(w, http.StatusCreated, newOrg)
 }
 
 // GetOrganization handles retrieving an organization by ID
+// @Summary Get an organization
+// @Description Retrieve an organization by its ID
+// @Tags organizations
+// @Accept json
+// @Produce json
+// @Param id path string true "Organization ID"
+// @Success 200 {object} Organization "Returns the organization"
+// @Failure 400 {object} map[string]interface{} "Invalid organization ID"
+// @Failure 404 {object} map[string]interface{} "Organization not found"
+// @Failure 500 {object} map[string]interface{} "Internal server error"
+// @Router /api/v1/organizations/{id} [get]
 func (h *OrganizationHandler) GetOrganization(w http.ResponseWriter, r *http.Request) {
-	// Get organization ID from path
 	orgID := utils.GetPathVar(r, "id")
 	if orgID == "" {
 		utils.RespondError(w, errors.New(errors.CodeInvalidInput, "organization ID is required"))
 		return
 	}
 
-	// Get organization
 	org, err := h.orgService.Get(r.Context(), orgID)
 	if err != nil {
 		utils.RespondError(w, err)
 		return
 	}
 
-	// Return organization
 	utils.RespondJSON(w, http.StatusOK, org)
 }
 
 // UpdateOrganization handles updating an organization
+// @Summary Update an organization
+// @Description Update an organization's details
+// @Tags organizations
+// @Accept json
+// @Produce json
+// @Param id path string true "Organization ID"
+// @Param body body UpdateOrganizationRequest true "Update organization payload"
+// @Success 200 {object} Organization "Returns the updated organization"
+// @Failure 400 {object} map[string]interface{} "Invalid input"
+// @Failure 404 {object} map[string]interface{} "Organization not found"
+// @Failure 500 {object} map[string]interface{} "Internal server error"
+// @Router /api/v1/organizations/{id} [put]
 func (h *OrganizationHandler) UpdateOrganization(w http.ResponseWriter, r *http.Request) {
 	// Get organization ID from path
 	orgID := utils.GetPathVar(r, "id")
@@ -185,6 +222,17 @@ func (h *OrganizationHandler) UpdateOrganization(w http.ResponseWriter, r *http.
 }
 
 // DeleteOrganization handles deleting an organization
+// @Summary Delete an organization
+// @Description Delete an organization by its ID
+// @Tags organizations
+// @Accept json
+// @Produce json
+// @Param id path string true "Organization ID"
+// @Success 204 "No Content"
+// @Failure 400 {object} map[string]interface{} "Invalid organization ID"
+// @Failure 404 {object} map[string]interface{} "Organization not found"
+// @Failure 500 {object} map[string]interface{} "Internal server error"
+// @Router /api/v1/organizations/{id} [delete]
 func (h *OrganizationHandler) DeleteOrganization(w http.ResponseWriter, r *http.Request) {
 	// Get organization ID from path
 	orgID := utils.GetPathVar(r, "id")
@@ -205,6 +253,20 @@ func (h *OrganizationHandler) DeleteOrganization(w http.ResponseWriter, r *http.
 }
 
 // ListOrganizationMembers handles listing members of an organization
+// @Summary List organization members
+// @Description Get a list of members for a specific organization
+// @Tags organizations
+// @Accept json
+// @Produce json
+// @Param id path string true "Organization ID"
+// @Param offset query int false "Pagination offset" default(0)
+// @Param limit query int false "Pagination limit" default(20)
+// @Param search query string false "Search term"
+// @Success 200 {object} map[string]interface{} "Returns the list of members with pagination"
+// @Failure 400 {object} map[string]interface{} "Invalid organization ID"
+// @Failure 404 {object} map[string]interface{} "Organization not found"
+// @Failure 500 {object} map[string]interface{} "Internal server error"
+// @Router /api/v1/organizations/{id}/members [get]
 func (h *OrganizationHandler) ListOrganizationMembers(w http.ResponseWriter, r *http.Request) {
 	// Get organization ID from path
 	orgID := utils.GetPathVar(r, "id")

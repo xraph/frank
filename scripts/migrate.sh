@@ -13,7 +13,15 @@ cd "$PROJECT_ROOT"
 # Load environment variables if .env exists
 if [ -f .env ]; then
     echo "📝 Loading environment variables from .env file..."
-    export $(grep -v '^#' .env | xargs)
+    # Fix: Use a more secure approach to load environment variables that handles comments and special characters
+    while IFS= read -r line || [[ -n "$line" ]]; do
+        # Skip empty lines and comments
+        [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
+        # Export valid variable assignments
+        if [[ "$line" =~ ^[[:alpha:]][[:alnum:]_]*= ]]; then
+            export "$line"
+        fi
+    done < .env
 fi
 
 # Check if migration tool exists
@@ -413,14 +421,23 @@ DROP EXTENSION IF EXISTS "uuid-ossp";
 EOF
 fi
 
-# Check if DATABASE_URL is set
-if [ -z "$DATABASE_URL" ]; then
-    echo "❌ DATABASE_URL is not set. Please set it in your .env file or environment."
+# Check for database connection string - support multiple variable names
+DB_CONNECTION=""
+if [ -n "$DATABASE_URL" ]; then
+    DB_CONNECTION="$DATABASE_URL"
+elif [ -n "$DATABASE_DSN" ]; then
+    DB_CONNECTION="$DATABASE_DSN"
+elif [ -n "$FRANK_DATABASE_DSN" ]; then
+    DB_CONNECTION="$FRANK_DATABASE_DSN"
+fi
+
+if [ -z "$DB_CONNECTION" ]; then
+    echo "❌ No database connection string found. Please set DATABASE_URL, DATABASE_DSN, or FRANK_DATABASE_DSN in your .env file or environment."
     exit 1
 fi
 
 # Run migrations
 echo "🔄 Running migrations..."
-migrate -database "$DATABASE_URL" -path migrations up
+migrate -database "$DB_CONNECTION" -path migrations up
 
 echo "✅ Database migrations completed successfully!"

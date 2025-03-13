@@ -33,7 +33,7 @@ func NewHealthRoutes(
 // RegisterPublicRoutes registers public Permission routes
 func (r *HealthRoutes) RegisterPublicRoutes(router chi.Router) {
 	router.Group(func(router chi.Router) {
-		router.Get("/__health", r.handler.HealthCheckHandler)
-		router.Post("/__ready", r.handler.ReadyCheckHandler)
+		router.Get("/__health", r.handler.HealthCheck)
+		router.Post("/__ready", r.handler.ReadyCheck)
 	})
 }

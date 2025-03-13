@@ -7,6 +7,7 @@ import (
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
+	"github.com/juicycleff/frank/pkg/entity"
 )
 
 // Passkey holds the schema definition for the Passkey entity.
@@ -41,8 +42,7 @@ func (Passkey) Fields() []ent.Field {
 			Nillable(),
 		field.JSON("transports", []string{}).
 			Optional(),
-		field.JSON("attestation", map[string]interface{}{}).
-			Optional(),
+		entity.JSONMapField("attestation", true),
 		field.Time("created_at").
 			Default(time.Now).
 			Immutable(),

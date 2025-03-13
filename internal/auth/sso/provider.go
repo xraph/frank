@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/juicycleff/frank/ent"
+	"github.com/juicycleff/frank/pkg/entity"
 )
 
 // IdentityProvider defines the common interface for all SSO identity providers
@@ -60,9 +61,9 @@ type ProviderConfig struct {
 	JWKSURL           string
 	Issuer            string
 	AllowedDomains    []string
-	AttributeMappings map[string]string
+	AttributeMappings entity.JSONMapString
 	OrganizationID    string
-	Metadata          map[string]interface{}
+	Metadata          entity.JSONMap
 }
 
 // ProviderFactory creates a new identity provider

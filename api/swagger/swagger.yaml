@@ -1,5 +1,15 @@
-basePath: /api/v1
+basePath: /
 definitions:
+  FrankError:
+    properties:
+      code:
+        type: string
+      data:
+        additionalProperties: true
+        type: object
+      message:
+        type: string
+    type: object
   ent.ApiKey:
     properties:
       active:
@@ -71,7 +81,7 @@ definitions:
     properties:
       component:
         allOf:
-        - $ref: '#/definitions/featureflag.Component'
+        - $ref: '#/definitions/github_com_juicycleff_frank_ent_featureflag.Component'
         description: Which component of the auth system this feature belongs to
       created_at:
         description: CreatedAt holds the value of the "created_at" field.
@@ -1066,7 +1076,7 @@ definitions:
         type: array
       format:
         allOf:
-        - $ref: '#/definitions/webhook.Format'
+        - $ref: '#/definitions/github_com_juicycleff_frank_ent_webhook.Format'
         description: Format holds the value of the "format" field.
       id:
         description: ID of the ent.
@@ -1170,17 +1180,7 @@ definitions:
         - $ref: '#/definitions/ent.Webhook'
         description: Webhook holds the value of the webhook edge.
     type: object
-  errors.ErrorResponse:
-    properties:
-      code:
-        type: string
-      data:
-        additionalProperties: true
-        type: object
-      message:
-        type: string
-    type: object
-  featureflag.Component:
+  github_com_juicycleff_frank_ent_featureflag.Component:
     enum:
     - oauth2
     - passwordless
@@ -1200,14 +1200,77 @@ definitions:
     - ComponentEnterprise
     - ComponentWebhooks
     - ComponentAPIKeys
-  handlers.ForgotPasswordInput:
+  github_com_juicycleff_frank_ent_webhook.Format:
+    enum:
+    - json
+    - json
+    - form
+    type: string
+    x-enum-varnames:
+    - DefaultFormat
+    - FormatJSON
+    - FormatForm
+  internal_handlers.CreateOrganizationRequest:
+    properties:
+      domain:
+        type: string
+      features:
+        items:
+          type: string
+        type: array
+      logo_url:
+        type: string
+      metadata:
+        additionalProperties: true
+        type: object
+      name:
+        type: string
+      plan:
+        type: string
+      slug:
+        type: string
+      trial_days:
+        type: integer
+    required:
+    - name
+    type: object
+  internal_handlers.EnableTOTPResponse:
+    properties:
+      qr_code_data:
+        type: string
+      secret:
+        type: string
+      uri:
+        type: string
+    type: object
+  internal_handlers.ForgotPasswordInput:
     properties:
       email:
         type: string
     required:
     - email
     type: object
-  handlers.LoginInput:
+  internal_handlers.HealthResponse:
+    properties:
+      services:
+        items:
+          $ref: '#/definitions/internal_handlers.HealthStatus'
+        type: array
+      status:
+        type: string
+      timestamp:
+        type: string
+    type: object
+  internal_handlers.HealthStatus:
+    properties:
+      message:
+        type: string
+      service:
+        type: string
+      status:
+        type: string
+    type: object
+  internal_handlers.LoginInput:
     properties:
       captcha_response:
         type: string
@@ -1223,7 +1286,7 @@ definitions:
     - email
     - password
     type: object
-  handlers.LoginResponse:
+  internal_handlers.LoginResponse:
     properties:
       expires_at:
         type: integer
@@ -1240,14 +1303,90 @@ definitions:
       user:
         $ref: '#/definitions/ent.User'
     type: object
-  handlers.RefreshTokenInput:
+  internal_handlers.MFAEnrollRequest:
+    properties:
+      email:
+        type: string
+      method:
+        type: string
+      phone_number:
+        type: string
+    required:
+    - method
+    type: object
+  internal_handlers.MFAUnEnrollInput:
+    properties:
+      method:
+        type: string
+    required:
+    - method
+    type: object
+  internal_handlers.MFAVerifyRequest:
+    properties:
+      code:
+        type: string
+      method:
+        type: string
+      phone_number:
+        type: string
+    required:
+    - code
+    - method
+    type: object
+  internal_handlers.Organization:
+    properties:
+      active:
+        description: Active holds the value of the "active" field.
+        type: boolean
+      created_at:
+        description: CreatedAt holds the value of the "created_at" field.
+        type: string
+      domain:
+        description: Domain holds the value of the "domain" field.
+        type: string
+      edges:
+        allOf:
+        - $ref: '#/definitions/ent.OrganizationEdges'
+        description: |-
+          Edges holds the relations/edges for other nodes in the graph.
+          The values are being populated by the OrganizationQuery when eager-loading is set.
+      id:
+        description: ID of the ent.
+        type: string
+      logo_url:
+        description: LogoURL holds the value of the "logo_url" field.
+        type: string
+      metadata:
+        additionalProperties: true
+        description: Metadata holds the value of the "metadata" field.
+        type: object
+      name:
+        description: Name holds the value of the "name" field.
+        type: string
+      plan:
+        description: Plan holds the value of the "plan" field.
+        type: string
+      slug:
+        description: Slug holds the value of the "slug" field.
+        type: string
+      trial_ends_at:
+        description: TrialEndsAt holds the value of the "trial_ends_at" field.
+        type: string
+      trial_used:
+        description: TrialUsed holds the value of the "trial_used" field.
+        type: boolean
+      updated_at:
+        description: UpdatedAt holds the value of the "updated_at" field.
+        type: string
+    type: object
+  internal_handlers.RefreshTokenInput:
     properties:
       refresh_token:
         type: string
     required:
     - refresh_token
     type: object
-  handlers.RegisterInput:
+  internal_handlers.RegisterInput:
     properties:
       email:
         type: string
@@ -1267,7 +1406,7 @@ definitions:
     - email
     - password
     type: object
-  handlers.ResetPasswordInput:
+  internal_handlers.ResetPasswordInput:
     properties:
       new_password:
         minLength: 8
@@ -1278,23 +1417,29 @@ definitions:
     - new_password
     - token
     type: object
-  handlers.VerifyEmailInput:
+  internal_handlers.UpdateOrganizationRequest:
+    properties:
+      active:
+        type: boolean
+      domain:
+        type: string
+      logo_url:
+        type: string
+      metadata:
+        additionalProperties: true
+        type: object
+      name:
+        type: string
+      plan:
+        type: string
+    type: object
+  internal_handlers.VerifyEmailInput:
     properties:
       token:
         type: string
     required:
     - token
     type: object
-  webhook.Format:
-    enum:
-    - json
-    - json
-    - form
-    type: string
-    x-enum-varnames:
-    - DefaultFormat
-    - FormatJSON
-    - FormatForm
 host: localhost:8080
 info:
   contact: {}
@@ -1302,6 +1447,76 @@ info:
   title: Frank API with Swagger
   version: "1.0"
 paths:
+  /.well-known/jwks.json:
+    get:
+      description: Returns the JSON Web Key Set (JWKS) for token verification.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: JWKS response
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: JWKS Endpoint
+      tags:
+      - OAuth2
+  /.well-known/openid-configuration:
+    get:
+      consumes:
+      - application/json
+      description: Provides the OpenID Connect well-known configuration.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OpenID Connect configuration
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: OpenID Connect Configuration
+      tags:
+      - OAuth2
+  /__health:
+    get:
+      description: Returns the health status of the application and its services
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Healthy status
+          schema:
+            $ref: '#/definitions/internal_handlers.HealthResponse'
+        "503":
+          description: Unhealthy status
+          schema:
+            $ref: '#/definitions/internal_handlers.HealthResponse'
+      summary: Perform health check
+      tags:
+      - Health
+  /__ready:
+    post:
+      description: Indicates if the application is ready to receive traffic
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Ready status
+          schema:
+            $ref: '#/definitions/internal_handlers.HealthResponse'
+      summary: Perform readiness check
+      tags:
+      - Readiness
   /api/v1/auth/forgot-password:
     post:
       consumes:
@@ -1313,7 +1528,7 @@ paths:
         name: input
         required: true
         schema:
-          $ref: '#/definitions/handlers.ForgotPasswordInput'
+          $ref: '#/definitions/internal_handlers.ForgotPasswordInput'
       - description: URL to redirect to after password reset
         in: query
         name: redirect_url
@@ -1329,10 +1544,10 @@ paths:
         "400":
           description: Invalid input
           schema:
-            $ref: '#/definitions/errors.ErrorResponse'
+            $ref: '#/definitions/FrankError'
       summary: Request password reset
       tags:
-      - auth
+      - Auth
   /api/v1/auth/login:
     post:
       consumes:
@@ -1344,29 +1559,29 @@ paths:
         name: input
         required: true
         schema:
-          $ref: '#/definitions/handlers.LoginInput'
+          $ref: '#/definitions/internal_handlers.LoginInput'
       produces:
       - application/json
       responses:
         "200":
           description: Login successful
           schema:
-            $ref: '#/definitions/handlers.LoginResponse'
+            $ref: '#/definitions/internal_handlers.LoginResponse'
         "400":
           description: Invalid input
           schema:
-            $ref: '#/definitions/errors.ErrorResponse'
+            $ref: '#/definitions/FrankError'
         "401":
           description: Authentication failed
           schema:
-            $ref: '#/definitions/errors.ErrorResponse'
+            $ref: '#/definitions/FrankError'
         "403":
           description: Email not verified
           schema:
-            $ref: '#/definitions/errors.ErrorResponse'
+            $ref: '#/definitions/FrankError'
       summary: Authenticate a user
       tags:
-      - auth
+      - Auth
   /api/v1/auth/logout:
     post:
       description: Logs out the current user and invalidates their session
@@ -1380,7 +1595,181 @@ paths:
             type: object
       summary: Log out a user
       tags:
-      - auth
+      - Auth
+  /api/v1/auth/mfa/enroll:
+    post:
+      consumes:
+      - application/json
+      description: Enrolls the user in the specified MFA method
+      parameters:
+      - description: MFAEnrollRequest
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handlers.MFAEnrollRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Response for enabling SMS/Email/Backup Codes
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/FrankError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/FrankError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/FrankError'
+      summary: Enroll in MFA
+      tags:
+      - Auth
+      - MFA
+  /api/v1/auth/mfa/methods:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a list of enabled multi-factor authentication methods
+        for the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Enabled MFA methods
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid input or missing required field
+          schema:
+            $ref: '#/definitions/FrankError'
+        "401":
+          description: Unauthorized access
+          schema:
+            $ref: '#/definitions/FrankError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/FrankError'
+      summary: Retrieve enabled MFA methods
+      tags:
+      - Auth
+      - MFA
+  /api/v1/auth/mfa/send-code:
+    post:
+      consumes:
+      - application/json
+      description: Sends a verification code to the user for the specified MFA method
+      parameters:
+      - description: Input for specifying MFA method
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handlers.MFAUnEnrollInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success message and expiration time
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid input or missing required field
+          schema:
+            $ref: '#/definitions/FrankError'
+        "401":
+          description: Unauthorized access
+          schema:
+            $ref: '#/definitions/FrankError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/FrankError'
+      summary: Send MFA Verification Code
+      tags:
+      - Auth
+      - MFA
+  /api/v1/auth/mfa/unenroll:
+    post:
+      consumes:
+      - application/json
+      description: Disables a specific MFA method or all methods for the user
+      parameters:
+      - description: Input for disabled MFA method
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handlers.MFAUnEnrollInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success response with message
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid input or missing required field
+          schema:
+            $ref: '#/definitions/FrankError'
+        "401":
+          description: Unauthorized access
+          schema:
+            $ref: '#/definitions/FrankError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/FrankError'
+      summary: Unenroll from MFA
+      tags:
+      - Auth
+      - MFA
+  /api/v1/auth/mfa/verify:
+    post:
+      consumes:
+      - application/json
+      description: Verifies a MFA code for the user using the specified method
+      parameters:
+      - description: MFAVerifyRequest
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handlers.MFAVerifyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/FrankError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/FrankError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/FrankError'
+      summary: Verify MFA
+      tags:
+      - Auth
+      - MFA
   /api/v1/auth/refresh:
     post:
       consumes:
@@ -1392,7 +1781,7 @@ paths:
         name: input
         required: true
         schema:
-          $ref: '#/definitions/handlers.RefreshTokenInput'
+          $ref: '#/definitions/internal_handlers.RefreshTokenInput'
       produces:
       - application/json
       responses:
@@ -1404,14 +1793,14 @@ paths:
         "400":
           description: Invalid input
           schema:
-            $ref: '#/definitions/errors.ErrorResponse'
+            $ref: '#/definitions/FrankError'
         "401":
           description: Invalid refresh token
           schema:
-            $ref: '#/definitions/errors.ErrorResponse'
+            $ref: '#/definitions/FrankError'
       summary: Refresh access token
       tags:
-      - auth
+      - Auth
   /api/v1/auth/register:
     post:
       consumes:
@@ -1423,25 +1812,25 @@ paths:
         name: input
         required: true
         schema:
-          $ref: '#/definitions/handlers.RegisterInput'
+          $ref: '#/definitions/internal_handlers.RegisterInput'
       produces:
       - application/json
       responses:
         "201":
           description: Registration successful
           schema:
-            $ref: '#/definitions/handlers.LoginResponse'
+            $ref: '#/definitions/internal_handlers.LoginResponse'
         "400":
           description: Invalid input
           schema:
-            $ref: '#/definitions/errors.ErrorResponse'
+            $ref: '#/definitions/FrankError'
         "409":
           description: Email already exists
           schema:
-            $ref: '#/definitions/errors.ErrorResponse'
+            $ref: '#/definitions/FrankError'
       summary: Register a new user
       tags:
-      - auth
+      - Auth
   /api/v1/auth/reset-password:
     post:
       consumes:
@@ -1453,7 +1842,7 @@ paths:
         name: input
         required: true
         schema:
-          $ref: '#/definitions/handlers.ResetPasswordInput'
+          $ref: '#/definitions/internal_handlers.ResetPasswordInput'
       produces:
       - application/json
       responses:
@@ -1465,14 +1854,14 @@ paths:
         "400":
           description: Invalid input
           schema:
-            $ref: '#/definitions/errors.ErrorResponse'
+            $ref: '#/definitions/FrankError'
         "401":
           description: Invalid token
           schema:
-            $ref: '#/definitions/errors.ErrorResponse'
+            $ref: '#/definitions/FrankError'
       summary: Reset password
       tags:
-      - auth
+      - Auth
   /api/v1/auth/verify-email:
     post:
       consumes:
@@ -1484,7 +1873,7 @@ paths:
         name: input
         required: true
         schema:
-          $ref: '#/definitions/handlers.VerifyEmailInput'
+          $ref: '#/definitions/internal_handlers.VerifyEmailInput'
       produces:
       - application/json
       responses:
@@ -1496,14 +1885,612 @@ paths:
         "400":
           description: Invalid input
           schema:
-            $ref: '#/definitions/errors.ErrorResponse'
+            $ref: '#/definitions/FrankError'
         "401":
           description: Invalid token
           schema:
-            $ref: '#/definitions/errors.ErrorResponse'
+            $ref: '#/definitions/FrankError'
       summary: Verify email
       tags:
-      - auth
+      - Auth
+  /api/v1/organizations:
+    get:
+      consumes:
+      - application/json
+      description: Get a paginated list of organizations with optional search
+      parameters:
+      - default: 0
+        description: Pagination offset
+        in: query
+        name: offset
+        type: integer
+      - default: 20
+        description: Pagination limit
+        in: query
+        name: limit
+        type: integer
+      - description: Search term
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Returns organizations with pagination
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid input
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: List organizations
+      tags:
+      - organizations
+    post:
+      consumes:
+      - application/json
+      description: Create a new organization with the provided details
+      parameters:
+      - description: Create organization payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handlers.CreateOrganizationRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Returns the created organization
+          schema:
+            $ref: '#/definitions/internal_handlers.Organization'
+        "400":
+          description: Invalid input
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Create an organization
+      tags:
+      - organizations
+  /api/v1/organizations/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete an organization by its ID
+      parameters:
+      - description: Organization ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Invalid organization ID
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Organization not found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Delete an organization
+      tags:
+      - organizations
+    get:
+      consumes:
+      - application/json
+      description: Retrieve an organization by its ID
+      parameters:
+      - description: Organization ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Returns the organization
+          schema:
+            $ref: '#/definitions/internal_handlers.Organization'
+        "400":
+          description: Invalid organization ID
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Organization not found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get an organization
+      tags:
+      - organizations
+    put:
+      consumes:
+      - application/json
+      description: Update an organization's details
+      parameters:
+      - description: Organization ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update organization payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handlers.UpdateOrganizationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Returns the updated organization
+          schema:
+            $ref: '#/definitions/internal_handlers.Organization'
+        "400":
+          description: Invalid input
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Organization not found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Update an organization
+      tags:
+      - organizations
+  /api/v1/organizations/{id}/members:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of members for a specific organization
+      parameters:
+      - description: Organization ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - default: 0
+        description: Pagination offset
+        in: query
+        name: offset
+        type: integer
+      - default: 20
+        description: Pagination limit
+        in: query
+        name: limit
+        type: integer
+      - description: Search term
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Returns the list of members with pagination
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid organization ID
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Organization not found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: List organization members
+      tags:
+      - organizations
+  /oauth/auth/{provider}:
+    get:
+      consumes:
+      - application/json
+      description: This endpoint initiates OAuth authentication with a configured
+        provider.
+      parameters:
+      - description: OAuth Provider
+        example: '"google"'
+        in: path
+        name: provider
+        required: true
+        type: string
+      - description: Redirect URI
+        example: '"https://your-app.com/oauth/callback"'
+        in: query
+        name: redirect_uri
+        type: string
+      produces:
+      - application/json
+      responses:
+        "302":
+          description: Redirects to the provider login
+          schema:
+            type: string
+        "400":
+          description: Invalid Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Initiate OAuth Authentication
+      tags:
+      - OAuth2
+  /oauth/authorize:
+    get:
+      consumes:
+      - application/json
+      description: This endpoint handles OAuth2 authorization. It can act as both
+        a provider (to authorize third-party clients) or as a client (to redirect
+        users to third-party providers).
+      parameters:
+      - description: OAuth Provider
+        example: '"google"'
+        in: query
+        name: provider
+        type: string
+      - description: Redirect URI
+        example: '"https://your-app.com/oauth/callback"'
+        in: query
+        name: redirect_uri
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully handled OAuth2 authorization
+          schema:
+            type: string
+        "400":
+          description: Invalid request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: OAuth2 Authorization
+      tags:
+      - OAuth2
+  /oauth/callback/{provider}:
+    get:
+      consumes:
+      - application/json
+      description: Handles the callback from the OAuth provider after user authentication.
+      parameters:
+      - description: OAuth Provider
+        example: '"google"'
+        in: path
+        name: provider
+        required: true
+        type: string
+      - description: Authorization Code
+        example: '"12345"'
+        in: query
+        name: code
+        required: true
+        type: string
+      - description: OAuth State
+        example: '"state_token"'
+        in: query
+        name: state
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "302":
+          description: Redirects to the client application
+          schema:
+            type: string
+        "400":
+          description: Invalid Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Handle OAuth Callback
+      tags:
+      - OAuth2
+  /oauth/consent:
+    post:
+      consumes:
+      - application/json
+      description: Handles user consent for OAuth2 authorization.
+      parameters:
+      - description: Client ID of the requesting application
+        in: formData
+        name: client_id
+        required: true
+        type: string
+      - description: Scopes being requested, separated by spaces
+        in: formData
+        name: scope
+        required: true
+        type: string
+      - description: State parameter to maintain state between request and callback
+        in: formData
+        name: state
+        type: string
+      - description: Redirect URI to redirect the user after consent
+        in: formData
+        name: redirect_uri
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Consent granted
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Handle OAuth2 Consent
+      tags:
+      - OAuth2
+  /oauth/introspect:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: Handles the OAuth2 token introspection endpoint to validate and
+        retrieve metadata about an access token.
+      parameters:
+      - description: Access Token to introspect
+        in: formData
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Token introspection result
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: OAuth2 Token Introspection
+      tags:
+      - OAuth2
+  /oauth/providers:
+    get:
+      description: This endpoint lists the available OAuth2 providers.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of configured providers
+          schema:
+            additionalProperties: true
+            type: object
+      summary: List OAuth2 Providers
+      tags:
+      - OAuth2
+  /oauth/revoke:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: Handles the OAuth2 token revocation endpoint to revoke an access
+        token.
+      parameters:
+      - description: Access Token to revoke
+        in: formData
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Token revocation successful
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: OAuth2 Token Revocation
+      tags:
+      - OAuth2
+  /oauth/token:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: Handles the OAuth2 token endpoint for token exchange.
+      parameters:
+      - description: Grant type
+        enum:
+        - '"authorization_code"'
+        - '"client_credentials"'
+        - '"refresh_token"'
+        - '"password"'
+        in: formData
+        name: grant_type
+        required: true
+        type: string
+      - description: Client ID
+        in: formData
+        name: client_id
+        type: string
+      - description: Client Secret
+        in: formData
+        name: client_secret
+        type: string
+      - description: Authorization code (required for authorization_code grant type)
+        in: formData
+        name: code
+        type: string
+      - description: Refresh token (required for refresh_token grant type)
+        in: formData
+        name: refresh_token
+        type: string
+      - description: Redirect URI
+        in: formData
+        name: redirect_uri
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Token response
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: OAuth2 Token
+      tags:
+      - OAuth2
+  /oauth/userinfo:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves user information based on the provided access token.
+      parameters:
+      - description: Bearer {access_token}
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Userinfo response
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: OAuth2 UserInfo
+      tags:
+      - OAuth2
 schemes:
 - http
 securityDefinitions:

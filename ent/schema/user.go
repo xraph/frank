@@ -8,6 +8,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 	"entgo.io/ent/schema/mixin"
+	"github.com/juicycleff/frank/pkg/entity"
 )
 
 // TimeMixin implements the ent.Mixin for sharing
@@ -62,8 +63,7 @@ func (User) Fields() []ent.Field {
 		field.Time("last_password_change").
 			Optional().
 			Nillable(),
-		field.JSON("metadata", map[string]interface{}{}).
-			Optional(),
+		entity.JSONMapField("metadata", true),
 		field.String("profile_image_url").
 			Optional(),
 		field.String("primary_organization_id").

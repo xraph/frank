@@ -1,19 +1,20 @@
 package validator
 
 import (
+	"context"
+	errs2 "errors"
+	"fmt"
 	"net/url"
 	"reflect"
 	"regexp"
 	"strings"
+	"unicode"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/juicycleff/frank/pkg/errors"
 )
 
 var (
-	// validate is the global validator instance
-	validate *validator.Validate
-
 	// emailRegex is the regular expression for validating email addresses
 	emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
 
@@ -28,30 +29,20 @@ var (
 
 	// hexRegex is the regular expression for validating hexadecimal strings
 	hexRegex = regexp.MustCompile(`^[a-fA-F0-9]+$`)
+
+	// apiKeyRegex validates API key format (prefix_base64urlstring)
+	apiKeyRegex = regexp.MustCompile(`^[a-z0-9]+_[A-Za-z0-9\-_]+$`)
+
+	// sessionTokenRegex validates session token format
+	sessionTokenRegex = regexp.MustCompile(`^[A-Za-z0-9\-_]{32,}$`)
+
+	// otpRegex validates one-time passwords (typically 6 numeric digits)
+	otpRegex = regexp.MustCompile(`^[0-9]{4,8}$`)
 )
-
-// Init initializes the validator
-func Init() {
-	validate = validator.New()
-
-	// Register custom validators
-	_ = validate.RegisterValidation("email", validateEmail)
-	_ = validate.RegisterValidation("password", validatePassword)
-	_ = validate.RegisterValidation("phone", validatePhone)
-	_ = validate.RegisterValidation("url", validateURL)
-	_ = validate.RegisterValidation("slug", validateSlug)
-	_ = validate.RegisterValidation("hex", validateHex)
-	_ = validate.RegisterValidation("redirect_uri", validateRedirectURI)
-	_ = validate.RegisterValidation("webhook_url", validateWebhookURL)
-}
 
 // Validate validates a struct or field
 func Validate(v interface{}) error {
-	if validate == nil {
-		Init()
-	}
-
-	err := validate.Struct(v)
+	err := GetInstance().Validate(v)
 	if err == nil {
 		return nil
 	}
@@ -88,40 +79,6 @@ func toSnakeCase(s string) string {
 	return strings.ToLower(result.String())
 }
 
-// getErrorMessage returns a human-readable error message for a validation error
-func getErrorMessage(e validator.FieldError) string {
-	switch e.Tag() {
-	case "required":
-		return "This field is required"
-	case "email":
-		return "Invalid email address"
-	case "password":
-		return "Password must be at least 8 characters"
-	case "phone":
-		return "Invalid phone number, must be in E.164 format"
-	case "url":
-		return "Invalid URL"
-	case "slug":
-		return "Invalid slug format"
-	case "hex":
-		return "Invalid hexadecimal string"
-	case "redirect_uri":
-		return "Invalid redirect URI"
-	case "webhook_url":
-		return "Invalid webhook URL"
-	case "min":
-		return "Value is less than minimum allowed"
-	case "max":
-		return "Value is greater than maximum allowed"
-	case "len":
-		return "Length is invalid"
-	case "oneof":
-		return "Must be one of the allowed values"
-	default:
-		return "Invalid value"
-	}
-}
-
 // validateEmail validates an email address
 func validateEmail(fl validator.FieldLevel) bool {
 	return emailRegex.MatchString(fl.Field().String())
@@ -156,68 +113,6 @@ func validateSlug(fl validator.FieldLevel) bool {
 // validateHex validates a hexadecimal string
 func validateHex(fl validator.FieldLevel) bool {
 	return hexRegex.MatchString(fl.Field().String())
-}
-
-// validateRedirectURI validates a redirect URI for OAuth2
-func validateRedirectURI(fl validator.FieldLevel) bool {
-	urlStr := fl.Field().String()
-	if urlStr == "" {
-		return true
-	}
-
-	// Parse URL
-	u, err := url.Parse(urlStr)
-	if err != nil {
-		return false
-	}
-
-	// Verify scheme is http or https
-	if u.Scheme != "http" && u.Scheme != "https" {
-		return false
-	}
-
-	// Verify host is present
-	if u.Host == "" {
-		return false
-	}
-
-	// Disallow credentials in URL
-	if u.User != nil {
-		return false
-	}
-
-	return true
-}
-
-// validateWebhookURL validates a webhook URL
-func validateWebhookURL(fl validator.FieldLevel) bool {
-	urlStr := fl.Field().String()
-	if urlStr == "" {
-		return true
-	}
-
-	// Parse URL
-	u, err := url.Parse(urlStr)
-	if err != nil {
-		return false
-	}
-
-	// Verify scheme is https
-	if u.Scheme != "https" {
-		return false
-	}
-
-	// Verify host is present
-	if u.Host == "" {
-		return false
-	}
-
-	// Disallow credentials in URL
-	if u.User != nil {
-		return false
-	}
-
-	return true
 }
 
 // IsValidEmail checks if an email address is valid
@@ -271,4 +166,274 @@ func IsEmpty(value interface{}) bool {
 	}
 
 	return false
+}
+
+// validateAPIKey validates an API key format
+func validateAPIKey(fl validator.FieldLevel) bool {
+	apiKey := fl.Field().String()
+	if apiKey == "" {
+		return true // Allow empty for optional fields
+	}
+	return apiKeyRegex.MatchString(apiKey)
+}
+
+// validateSessionToken validates a session token format
+func validateSessionToken(fl validator.FieldLevel) bool {
+	token := fl.Field().String()
+	if token == "" {
+		return true // Allow empty for optional fields
+	}
+	return sessionTokenRegex.MatchString(token)
+}
+
+// validateOTP validates a one-time password format
+func validateOTP(fl validator.FieldLevel) bool {
+	otp := fl.Field().String()
+	if otp == "" {
+		return true // Allow empty for optional fields
+	}
+	return otpRegex.MatchString(otp)
+}
+
+// validatePasswordStrength validates that a password meets strength requirements
+func validatePasswordStrength(fl validator.FieldLevel) bool {
+	password := fl.Field().String()
+
+	// Skip validation if password is empty (for optional fields)
+	if password == "" {
+		return true
+	}
+
+	// Password must be at least 8 characters
+	if len(password) < 8 {
+		return false
+	}
+
+	// Check for various character classes
+	var hasUpper, hasLower, hasDigit, hasSpecial bool
+
+	for _, char := range password {
+		switch {
+		case unicode.IsUpper(char):
+			hasUpper = true
+		case unicode.IsLower(char):
+			hasLower = true
+		case unicode.IsDigit(char):
+			hasDigit = true
+		case unicode.IsPunct(char) || unicode.IsSymbol(char):
+			hasSpecial = true
+		}
+	}
+
+	// Require at least 3 character types
+	score := 0
+	if hasUpper {
+		score++
+	}
+	if hasLower {
+		score++
+	}
+	if hasDigit {
+		score++
+	}
+	if hasSpecial {
+		score++
+	}
+
+	return score >= 3
+}
+
+// validateRedirectURI validates an OAuth2 redirect URI
+func validateRedirectURI(fl validator.FieldLevel) bool {
+	uri := fl.Field().String()
+	if uri == "" {
+		return true // Allow empty for optional fields
+	}
+
+	// Parse the URI
+	parsedURI, err := url.Parse(uri)
+	if err != nil {
+		return false
+	}
+
+	// Validate scheme (must be http or https)
+	if parsedURI.Scheme != "http" && parsedURI.Scheme != "https" {
+		return false
+	}
+
+	// Must have a host
+	if parsedURI.Host == "" {
+		return false
+	}
+
+	// Cannot have user info
+	if parsedURI.User != nil {
+		return false
+	}
+
+	return true
+}
+
+// validateWebhookURL validates a webhook URL
+// Webhooks require HTTPS for security
+func validateWebhookURL(fl validator.FieldLevel) bool {
+	uri := fl.Field().String()
+	if uri == "" {
+		return true // Allow empty for optional fields
+	}
+
+	// Parse the URI
+	parsedURI, err := url.Parse(uri)
+	if err != nil {
+		return false
+	}
+
+	// Validate scheme (must be https)
+	if parsedURI.Scheme != "https" {
+		return false
+	}
+
+	// Must have a host
+	if parsedURI.Host == "" {
+		return false
+	}
+
+	// Cannot have user info
+	if parsedURI.User != nil {
+		return false
+	}
+
+	return true
+}
+
+// validateCSRFToken validates a CSRF token format
+func validateCSRFToken(fl validator.FieldLevel) bool {
+	token := fl.Field().String()
+	if token == "" {
+		return true // Allow empty for optional fields
+	}
+
+	// CSRF tokens should be at least 32 characters with no spaces
+	return len(token) >= 32 && !strings.Contains(token, " ")
+}
+
+// validateAuthCode validates an OAuth2 authorization code format
+func validateAuthCode(fl validator.FieldLevel) bool {
+	code := fl.Field().String()
+	if code == "" {
+		return true // Allow empty for optional fields
+	}
+
+	// Authorization codes should be at least 20 characters
+	return len(code) >= 20 && !strings.Contains(code, " ")
+}
+
+// Validate validates a struct and returns structured validation errors
+func (v *FrankValidator) Validate(s interface{}) error {
+	if err := v.validator.Struct(s); err != nil {
+		validationErrors, ok := err.(validator.ValidationErrors)
+		if !ok {
+			fmt.Println("validationErrors", validationErrors, ok)
+			return errors.New(errors.CodeInvalidInput, "Invalid input format")
+		}
+
+		// Build structured error map
+		fieldErrors := make(map[string]string)
+		for _, e := range validationErrors {
+			fieldName := e.Field()
+			fieldErrors[fieldName] = getErrorMessage(e)
+		}
+
+		return errors.New(errors.CodeInvalidInput, "Validation failed").
+			WithMetadata("fields", fieldErrors)
+	}
+
+	return nil
+}
+
+// ValidateWithContext validates a struct with context
+func (v *FrankValidator) ValidateWithContext(ctx context.Context, s interface{}) error {
+	if err := v.validator.StructCtx(ctx, s); err != nil {
+		var validationErrors validator.ValidationErrors
+		ok := errs2.As(err, &validationErrors)
+		if !ok {
+			return errors.New(errors.CodeInvalidInput, "Invalid input format")
+		}
+
+		// Build structured error map
+		fieldErrors := make(map[string]string)
+		for _, e := range validationErrors {
+			fieldName := e.Field()
+			fieldErrors[fieldName] = getErrorMessage(e)
+		}
+
+		return errors.New(errors.CodeInvalidInput, "Validation failed").
+			WithMetadata("fields", fieldErrors)
+	}
+
+	return nil
+}
+
+// ValidateVar validates a single variable
+func (v *FrankValidator) ValidateVar(field interface{}, tag string) error {
+	if err := v.validator.Var(field, tag); err != nil {
+		validationErrors, ok := err.(validator.ValidationErrors)
+		if !ok || len(validationErrors) == 0 {
+			return errors.New(errors.CodeInvalidInput, "Invalid input")
+		}
+
+		return errors.New(errors.CodeInvalidInput, getErrorMessage(validationErrors[0]))
+	}
+
+	return nil
+}
+
+// getErrorMessage returns a human-readable message for validation errors
+func getErrorMessage(e validator.FieldError) string {
+	switch e.Tag() {
+	case "required":
+		return "This field is required"
+	case "email":
+		return "Must be a valid email address"
+	case "min":
+		return "Must be at least " + e.Param() + " characters"
+	case "max":
+		return "Must be no more than " + e.Param() + " characters"
+	case "api_key":
+		return "Invalid API key format"
+	case "session_token":
+		return "Invalid session token"
+	case "otp":
+		return "Must be a numeric code (4-8 digits)"
+	case "password_strength":
+		return "Password must be at least 8 characters and contain 3 of: uppercase, lowercase, numbers, and special characters"
+	case "redirect_uri":
+		return "Must be a valid http or https URL"
+	case "webhook_url":
+		return "Must be a valid https URL"
+	case "csrf_token":
+		return "Invalid CSRF token format"
+	case "auth_code":
+		return "Invalid authorization code format"
+	case "url":
+		return "Must be a valid URL"
+	case "uuid":
+		return "Must be a valid UUID"
+	case "alphanum":
+		return "Must contain only letters and numbers"
+	case "oneof":
+		return "Must be one of: " + e.Param()
+	case "password":
+		return "Password must be at least 8 characters"
+	case "phone":
+		return "Invalid phone number, must be in E.164 format"
+	case "slug":
+		return "Invalid slug format"
+	case "hex":
+		return "Invalid hexadecimal string"
+	case "len":
+		return "Length is invalid"
+	default:
+		return "Invalid value for field"
+	}
 }

@@ -1,4 +1,4 @@
-.PHONY: build run test lint generate migrate clean
+.PHONY: build run test lint generate migrate clean ngrok
 
 # Go parameters
 GOCMD=go
@@ -23,8 +23,8 @@ test:
 lint:
 	golangci-lint run
 
-generate:
-	go run -mod=mod entgo.io/ent/cmd/ent generate ./ent/schema
+generate-db:
+	go run -mod=mod ent/entc.go
 
 swag:
 	swag init --output api/swagger -g cmd/server/main.go --parseDependency --overridesFile .swaggo --generatedTime --parseInternal
@@ -35,6 +35,9 @@ migrate:
 clean:
 	rm -f ./bin/$(BINARY_NAME)
 	rm -rf web/client/dist
+
+ngrok:
+	sh scripts/start-ngrok.sh
 
 # Run the web client development server
 dev-client:
@@ -47,6 +50,16 @@ dev-all:
 # Development target with file watching
 dev:
 	air -c .air.toml
+
+setup:
+	sh scripts/setup.sh
+
+generate:
+	sh scripts/generate.sh
+
+setup-client:
+	cd web/js-sdk && pnpm i && cd ../..
+	cd web/client && pnpm i && cd ../..
 
 # Install development dependencies
 dev-deps:
@@ -62,20 +75,20 @@ deps:
 # Default target
 help:
 	@echo "Available targets:"
-	@echo "  make generate-openapi    - Generate OpenAPI specification"
-	@echo "  make generate-docs       - Generate OpenAPI spec and Swagger UI"
-	@echo "  make install-tools       - Install required tools"
+	@echo "  make generate-openapi	- Generate OpenAPI specification"
+	@echo "  make generate-docs	   - Generate OpenAPI spec and Swagger UI"
+	@echo "  make install-tools	   - Install required tools"
 
-	@echo "  build       - Build the application with the web client"
-	@echo "  run         - Run the built application in production mode"
-	@echo "  dev         - Run the application in development mode"
+	@echo "  build	   - Build the application with the web client"
+	@echo "  run		 - Run the built application in production mode"
+	@echo "  dev		 - Run the application in development mode"
 	@echo "  dev-client  - Run the web client development server"
-	@echo "  dev-all     - Run both backend and frontend in development mode"
+	@echo "  dev-all	 - Run both backend and frontend in development mode"
 	@echo "  gen-client  - Generate (build) the web client"
-	@echo "  clean       - Clean build artifacts"
-	@echo "  test        - Run tests"
-	@echo "  setup       - Setup project (download dependencies)"
-	@echo "  gen-ent     - Generate Ent models"
+	@echo "  clean	   - Clean build artifacts"
+	@echo "  test		- Run tests"
+	@echo "  setup	   - Setup project (download dependencies)"
+	@echo "  gen-ent	 - Generate Ent models"
 
 # Install required tools
 install-tools:

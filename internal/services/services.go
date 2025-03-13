@@ -56,7 +56,7 @@ func New(repos *repo.Repo, cfg *config.Config, client *data.Clients, logger logg
 
 	enforce := rbac.NewEnforcer(repos.RBAC, logger)
 	rbacService := rbac.NewService(repos.RBAC, enforce, logger)
-	userService := user.NewService(repos.User, pwdManger, pwdVerifyManger, orgService, logger)
+	userService := user.NewService(repos.User, pwdManger, pwdVerifyManger, orgService, cfg, logger)
 
 	// Initialize auth services
 	cookieHandler := session.NewCookieHandler(cfg, logger)

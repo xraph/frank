@@ -26,7 +26,7 @@ import (
 // @version      1.0
 // @description  This is a sample server using Chi router with Swagger documentation.
 // @host         localhost:8080
-// @BasePath     /api/v1
+// @BasePath     /
 // @output       docs
 // @schemes      http
 // @securityDefinitions.apikey ApiKeyAuth
@@ -74,11 +74,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer entClient.Close()
 
-	dataClients := &data.Clients{
-		DB: entClient,
-	}
+	dataClients := data.NewClients(entClient, nil, cfg, logger)
 
 	if cfg.Redis.Enabled {
 		redisClient := redis.NewUniversalClient(&redis.UniversalOptions{
@@ -93,8 +90,9 @@ func main() {
 			WriteTimeout:    cfg.Redis.WriteTimeout,
 		})
 		dataClients.Redis = redisClient
-		defer redisClient.Close()
 	}
+
+	defer dataClients.Close()
 
 	// Run auto migrations in development mode
 	if cfg.Environment == "development" {

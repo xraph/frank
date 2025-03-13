@@ -122,7 +122,7 @@ func (h *HealthChecker) CheckHealth() HealthResponse {
 	return response
 }
 
-// HealthCheckHandler handles the health check endpoint
+// HealthCheck handles the health check endpoint
 // @Summary      Perform health check
 // @Description  Returns the health status of the application and its services
 // @Tags         Health
@@ -130,7 +130,7 @@ func (h *HealthChecker) CheckHealth() HealthResponse {
 // @Success      200 {object} HealthResponse "Healthy status"
 // @Failure      503 {object} HealthResponse "Unhealthy status"
 // @Router       /__health [get]
-func (h *HealthChecker) HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
+func (h *HealthChecker) HealthCheck(w http.ResponseWriter, r *http.Request) {
 	response := h.CheckHealth()
 
 	// Set status code based on health
@@ -142,14 +142,14 @@ func (h *HealthChecker) HealthCheckHandler(w http.ResponseWriter, r *http.Reques
 	utils.RespondWithJSON(w, statusCode, response)
 }
 
-// ReadyCheckHandler handles the readiness check endpoint
+// ReadyCheck handles the readiness check endpoint
 // @Summary      Perform readiness check
 // @Description  Indicates if the application is ready to receive traffic
 // @Tags         Readiness
 // @Produce      json
 // @Success      200 {object} HealthResponse "Ready status"
 // @Router       /__ready [post]
-func (h *HealthChecker) ReadyCheckHandler(w http.ResponseWriter, r *http.Request) {
+func (h *HealthChecker) ReadyCheck(w http.ResponseWriter, r *http.Request) {
 	// Simple readiness check that just checks if the server is up
 	response := HealthResponse{
 		Status:    "ready",
@@ -161,10 +161,10 @@ func (h *HealthChecker) ReadyCheckHandler(w http.ResponseWriter, r *http.Request
 
 // HealthCheck handles the health check HTTP request by delegating to the HealthCheckHandler of the HealthChecker instance.
 func HealthCheck(w http.ResponseWriter, r *http.Request) {
-	HandlerFromContext(r.Context()).Health.HealthCheckHandler(w, r)
+	HandlerFromContext(r.Context()).Health.HealthCheck(w, r)
 }
 
 // ReadyCheck handles the readiness check endpoint by delegating to the ReadyCheckHandler within the health checker.
 func ReadyCheck(w http.ResponseWriter, r *http.Request) {
-	HandlerFromContext(r.Context()).Health.ReadyCheckHandler(w, r)
+	HandlerFromContext(r.Context()).Health.ReadyCheck(w, r)
 }

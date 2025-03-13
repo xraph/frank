@@ -7,6 +7,7 @@ import (
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
+	"github.com/juicycleff/frank/pkg/entity"
 )
 
 // OrganizationFeature holds the schema definition for the OrganizationFeature entity.
@@ -25,9 +26,7 @@ func (OrganizationFeature) Fields() []ent.Field {
 			NotEmpty(),
 		field.Bool("enabled").
 			Default(true),
-		field.JSON("settings", map[string]interface{}{}).
-			Optional().
-			Comment("Custom settings for this feature in this organization"),
+		entity.JSONMapField("settings", true),
 		field.Time("created_at").
 			Default(time.Now).
 			Immutable(),

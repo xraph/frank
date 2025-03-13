@@ -2,6 +2,7 @@ package logging
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"time"
 
@@ -15,6 +16,7 @@ type Logger interface {
 	Info(msg string, fields ...Field)
 	Warn(msg string, fields ...Field)
 	Error(msg string, fields ...Field)
+	Errorf(msg string, fields ...any)
 	Fatal(msg string, fields ...Field)
 	With(fields ...Field) Logger
 	WithContext(ctx context.Context) Logger
@@ -175,6 +177,11 @@ func (l *logger) Warn(msg string, fields ...Field) {
 // Error logs an error message
 func (l *logger) Error(msg string, fields ...Field) {
 	l.zap.Error(msg, fields...)
+}
+
+// Errorf logs an error message
+func (l *logger) Errorf(msg string, fields ...any) {
+	l.zap.Error(fmt.Sprintf(msg, fields...))
 }
 
 // Fatal logs a fatal message then calls os.Exit(1)

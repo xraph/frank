@@ -7,6 +7,7 @@ import (
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
+	"github.com/juicycleff/frank/pkg/entity"
 )
 
 // ApiKey holds the schema definition for the ApiKey entity.
@@ -39,8 +40,7 @@ func (ApiKey) Fields() []ent.Field {
 			Optional(),
 		field.JSON("scopes", []string{}).
 			Optional(),
-		field.JSON("metadata", map[string]interface{}{}).
-			Optional(),
+		entity.JSONMapField("metadata", true),
 		field.Time("last_used").
 			Optional().
 			Nillable(),

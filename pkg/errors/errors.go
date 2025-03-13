@@ -122,7 +122,7 @@ type ErrorResponse struct {
 	Code    string                 `json:"code"`
 	Message string                 `json:"message"`
 	Data    map[string]interface{} `json:"data,omitempty"`
-}
+} // @name FrankError
 
 // NewErrorResponse creates a new error response from an error
 func NewErrorResponse(err error) *ErrorResponse {

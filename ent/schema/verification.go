@@ -7,6 +7,7 @@ import (
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
+	"github.com/juicycleff/frank/pkg/entity"
 )
 
 // Verification holds the schema definition for the Verification entity.
@@ -46,8 +47,7 @@ func (Verification) Fields() []ent.Field {
 			Optional(),
 		field.String("user_agent").
 			Optional(),
-		field.JSON("metadata", map[string]interface{}{}).
-			Optional(),
+		entity.JSONMapField("attestation", true),
 		field.Time("created_at").
 			Default(time.Now).
 			Immutable(),

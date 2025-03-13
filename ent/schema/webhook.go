@@ -7,6 +7,7 @@ import (
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
+	"github.com/juicycleff/frank/pkg/entity"
 )
 
 // Webhook holds the schema definition for the Webhook entity.
@@ -40,8 +41,7 @@ func (Webhook) Fields() []ent.Field {
 		field.Enum("format").
 			Values("json", "form").
 			Default("json"),
-		field.JSON("metadata", map[string]interface{}{}).
-			Optional(),
+		entity.JSONMapField("metadata", true),
 		field.Time("created_at").
 			Default(time.Now).
 			Immutable(),
