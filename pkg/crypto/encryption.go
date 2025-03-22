@@ -5,7 +5,9 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"crypto/sha256"
+	"encoding/base64"
 	"errors"
+	"fmt"
 	"hash"
 	"io"
 
@@ -187,6 +189,50 @@ func GenerateEncryptionKey(length int) ([]byte, error) {
 	return key, nil
 }
 
+// GenerateEncryptionAESKey generates a random key of the specified length
+// Valid lengths for AES are keyString bytes
+func GenerateEncryptionAESKey(keyString string) ([]byte, error) {
+	// Convert the base64 key string back to raw bytes
+	key, err := base64.RawURLEncoding.DecodeString(keyString)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode key: %w", err)
+	}
+
+	// Ensure the key is the right size for AES
+	// AES-128 (16 bytes), AES-192 (24 bytes), or AES-256 (32 bytes)
+	var aesKey []byte
+	switch {
+	case len(key) >= 32:
+		aesKey = key[:32] // Use first 32 bytes for AES-256
+	case len(key) >= 24:
+		aesKey = key[:24] // Use first 24 bytes for AES-192
+	case len(key) >= 16:
+		aesKey = key[:16] // Use first 16 bytes for AES-128
+	default:
+		return nil, fmt.Errorf("key too short, need at least 16 bytes, got %d", len(key))
+	}
+
+	// Create a new AES cipher block
+	block, err := aes.NewCipher(aesKey)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create a new GCM mode cipher
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create a nonce
+	nonce := make([]byte, gcm.NonceSize())
+	if _, err = io.ReadFull(rand.Reader, nonce); err != nil {
+		return nil, err
+	}
+
+	return nonce, nil
+}
+
 // PBKDF2Key derives a key from a password using PBKDF2
 // iterations should be at least 10,000 for security
 // If h is nil, SHA-256 will be used
@@ -195,4 +241,105 @@ func PBKDF2Key(password, salt []byte, iterations, keyLen int, h func() hash.Hash
 		h = sha256.New
 	}
 	return pbkdf2.Key(password, salt, iterations, keyLen, h)
+}
+
+// EncryptAES data using AES-GCM
+func EncryptAES(plaintext []byte, keyString string, iv []byte) ([]byte, error) {
+	// Convert the base64 key string back to raw bytes
+	key, err := base64.RawURLEncoding.DecodeString(keyString)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode key: %w", err)
+	}
+
+	// Ensure the key is the right size for AES
+	// AES-128 (16 bytes), AES-192 (24 bytes), or AES-256 (32 bytes)
+	var aesKey []byte
+	switch {
+	case len(key) >= 32:
+		aesKey = key[:32] // Use first 32 bytes for AES-256
+	case len(key) >= 24:
+		aesKey = key[:24] // Use first 24 bytes for AES-192
+	case len(key) >= 16:
+		aesKey = key[:16] // Use first 16 bytes for AES-128
+	default:
+		return nil, fmt.Errorf("key too short, need at least 16 bytes, got %d", len(key))
+	}
+
+	// Create a new AES cipher block
+	block, err := aes.NewCipher(aesKey)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create a new GCM mode cipher
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, err
+	}
+
+	nonce := iv
+	if iv == nil {
+		// Create a nonce
+		nonce = make([]byte, gcm.NonceSize())
+		if _, err = io.ReadFull(rand.Reader, nonce); err != nil {
+			return nil, err
+		}
+	}
+
+	// Encrypt and seal the data
+	ciphertext := gcm.Seal(nonce, nonce, plaintext, nil)
+	return ciphertext, nil
+}
+
+// DecryptAES data using AES-GCM
+func DecryptAES(ciphertext []byte, keyString string, iv []byte) ([]byte, error) {
+	// Convert the base64 key string back to raw bytes
+	key, err := base64.RawURLEncoding.DecodeString(keyString)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode key: %w", err)
+	}
+
+	// Ensure the key is the right size for AES
+	var aesKey []byte
+	switch {
+	case len(key) >= 32:
+		aesKey = key[:32]
+	case len(key) >= 24:
+		aesKey = key[:24]
+	case len(key) >= 16:
+		aesKey = key[:16]
+	default:
+		return nil, fmt.Errorf("key too short, need at least 16 bytes, got %d", len(key))
+	}
+
+	// Create a new AES cipher block
+	block, err := aes.NewCipher(aesKey)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create a new GCM mode cipher
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, err
+	}
+
+	// Ensure the ciphertext is valid
+	if len(ciphertext) < gcm.NonceSize() {
+		return nil, fmt.Errorf("ciphertext too short")
+	}
+
+	// Extract the nonce and actual ciphertext
+	nonce := iv
+	if iv == nil {
+		nonce, ciphertext = ciphertext[:gcm.NonceSize()], ciphertext[gcm.NonceSize():]
+	}
+
+	// Decrypt the data
+	plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return plaintext, nil
 }

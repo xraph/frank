@@ -3,28 +3,44 @@ package data
 import (
 	"context"
 
+	entsql "entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/schema"
 	"github.com/go-redis/redis/v8"
+	// _ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/ent"
 	"github.com/juicycleff/frank/ent/migrate"
 	"github.com/juicycleff/frank/pkg/logging"
+	_ "github.com/lib/pq"           // PostgreSQL driver
+	_ "github.com/mattn/go-sqlite3" // SQLite driver
 )
 
 type Clients struct {
-	DB    *ent.Client
-	Redis redis.UniversalClient
-	cfg   *config.Config
-	log   logging.Logger
+	dbDriver *entsql.Driver
+	DB       *ent.Client
+	Redis    redis.UniversalClient
+	cfg      *config.Config
+	log      logging.Logger
+
+	DBPinger *DatabasePinger
 }
 
 func NewClients(
-	db *ent.Client,
-	redis redis.UniversalClient,
 	cfg *config.Config,
 	log logging.Logger,
+	drv *entsql.Driver,
+	redis redis.UniversalClient,
 ) *Clients {
-	return &Clients{DB: db, Redis: redis, cfg: cfg, log: log}
+	db, drv := newSqlServer(drv, cfg)
+
+	return &Clients{
+		DB:       db,
+		Redis:    redis,
+		cfg:      cfg,
+		log:      log,
+		dbDriver: drv,
+		DBPinger: NewDatabasePinger(db, drv),
+	}
 }
 
 func (c *Clients) Close() error {
@@ -43,7 +59,7 @@ func (c *Clients) Close() error {
 	return nil
 }
 
-func (c *Clients) Ping() error {
+func (c *Clients) PingDB() error {
 	return nil
 }
 

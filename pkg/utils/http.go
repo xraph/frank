@@ -22,7 +22,7 @@ import (
 )
 
 // SessionStore is a shared session store for the application
-var SessionStore *sessions.CookieStore
+var SessionStore sessions.Store
 
 // Response represents a standardized API response
 type Response struct {
@@ -261,16 +261,12 @@ func BuildURL(baseURL string, queryParams map[string]string) string {
 func InitSessionStore(cfg *config.Config) {
 	// Use the session secret key from config
 	SessionStore = sessions.NewCookieStore([]byte(cfg.Auth.SessionSecretKey))
+}
 
-	// Configure session cookie options
-	SessionStore.Options = &sessions.Options{
-		Path:     "/",
-		Domain:   cfg.Auth.CookieDomain,
-		MaxAge:   int(cfg.Auth.SessionDuration.Seconds()),
-		Secure:   cfg.Auth.CookieSecure,
-		HttpOnly: cfg.Auth.CookieHTTPOnly,
-		SameSite: parseSameSite(cfg.Auth.CookieSameSite),
-	}
+// InitSessionStoreWithStore initializes the session store with the provided secret
+func InitSessionStoreWithStore(store sessions.Store) {
+	// Use the session secret key from config
+	SessionStore = store
 }
 
 // GetSession retrieves the current session or creates a new one
@@ -284,14 +280,14 @@ func GetSession(r *http.Request, cfg *config.Config) (*sessions.Session, error) 
 	const sessionName = "frank_session"
 
 	// Get the session
-	session, err := SessionStore.Get(r, sessionName)
+	sess, err := SessionStore.Get(r, sessionName)
 	if err != nil {
 		// If there's an error (like session decoding fails),
 		// create a new empty session
-		session, _ = SessionStore.New(r, sessionName)
+		sess, _ = SessionStore.New(r, sessionName)
 	}
 
-	return session, nil
+	return sess, nil
 }
 
 // GetSessionValue gets a typed value from the session

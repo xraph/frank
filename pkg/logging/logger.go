@@ -20,6 +20,26 @@ type Logger interface {
 	Fatal(msg string, fields ...Field)
 	With(fields ...Field) Logger
 	WithContext(ctx context.Context) Logger
+
+	// New methods for Zap-like interface
+	Named(name string) Logger
+	Sugar() SugaredLogger
+	Sync() error
+}
+
+// SugaredLogger provides a more flexible API compared to the Logger
+type SugaredLogger interface {
+	Debugf(template string, args ...interface{})
+	Infof(template string, args ...interface{})
+	Warnf(template string, args ...interface{})
+	Errorf(template string, args ...interface{})
+	Fatalf(template string, args ...interface{})
+	Debugw(msg string, keysAndValues ...interface{})
+	Infow(msg string, keysAndValues ...interface{})
+	Warnw(msg string, keysAndValues ...interface{})
+	Errorw(msg string, keysAndValues ...interface{})
+	Fatalw(msg string, keysAndValues ...interface{})
+	With(args ...interface{}) SugaredLogger
 }
 
 // Field is a log field
@@ -28,6 +48,11 @@ type Field = zapcore.Field
 // logger implements the Logger interface
 type logger struct {
 	zap *zap.Logger
+}
+
+// sugaredLogger implements the SugaredLogger interface
+type sugaredLogger struct {
+	sugar *zap.SugaredLogger
 }
 
 var (
@@ -45,6 +70,20 @@ var (
 	Duration = zap.Duration
 	Stringer = zap.Stringer
 	Any      = zap.Any
+
+	// Additional field constructors
+	Namespace  = zap.Namespace
+	Binary     = zap.Binary
+	ByteString = zap.ByteString
+	Uint       = zap.Uint
+	Uint32     = zap.Uint32
+	Uint64     = zap.Uint64
+	Float32    = zap.Float32
+	Reflect    = zap.Reflect
+	Complex64  = zap.Complex64
+	Complex128 = zap.Complex128
+	Object     = zap.Object
+	Array      = zap.Array
 )
 
 // contextKey is a private type for context keys
@@ -81,11 +120,6 @@ func Init(level string, environment string) {
 		config.Level = zap.NewAtomicLevelAt(logLevel)
 		zapLogger, _ = config.Build(zap.AddCallerSkip(1))
 	} else {
-		// config := zap.NewDevelopmentConfig()
-		// config.Level = zap.NewAtomicLevelAt(logLevel)
-		// config.EncoderConfig.EncodeLevel = CustomColorLevelEncoder
-		// config.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
-		// zapLogger, _ = config.Build(zap.AddCallerSkip(1))
 		zapLogger = devTheme(logLevel)
 	}
 
@@ -128,6 +162,42 @@ func GetLogger() Logger {
 		globalLogger = &logger{zap: zapLogger}
 	}
 	return globalLogger
+}
+
+// NewLogger creates a new logger with the given configuration
+func NewLogger(cfg *LoggerConfig) Logger {
+	var zapLogger *zap.Logger
+
+	if cfg == nil {
+		cfg = &LoggerConfig{
+			Level:       "info",
+			Environment: "development",
+		}
+	}
+
+	// Determine log level
+	logLevel := zapcore.InfoLevel
+	switch cfg.Level {
+	case "debug":
+		logLevel = zapcore.DebugLevel
+	case "info":
+		logLevel = zapcore.InfoLevel
+	case "warn":
+		logLevel = zapcore.WarnLevel
+	case "error":
+		logLevel = zapcore.ErrorLevel
+	}
+
+	// Configure logger based on environment
+	if cfg.Environment == "production" {
+		config := zap.NewProductionConfig()
+		config.Level = zap.NewAtomicLevelAt(logLevel)
+		zapLogger, _ = config.Build(zap.AddCallerSkip(1))
+	} else {
+		zapLogger = devTheme(logLevel)
+	}
+
+	return &logger{zap: zapLogger}
 }
 
 // FromContext extracts a logger from the context
@@ -195,6 +265,21 @@ func (l *logger) With(fields ...Field) Logger {
 	return &logger{zap: l.zap.With(fields...)}
 }
 
+// Named adds a sub-scope to the logger's name
+func (l *logger) Named(name string) Logger {
+	return &logger{zap: l.zap.Named(name)}
+}
+
+// Sugar converts the logger to a SugaredLogger
+func (l *logger) Sugar() SugaredLogger {
+	return &sugaredLogger{sugar: l.zap.Sugar()}
+}
+
+// Sync flushes any buffered log entries
+func (l *logger) Sync() error {
+	return l.zap.Sync()
+}
+
 // WithContext creates a logger with context-specific fields
 func (l *logger) WithContext(ctx context.Context) Logger {
 	if ctx == nil {
@@ -207,6 +292,63 @@ func (l *logger) WithContext(ctx context.Context) Logger {
 	}
 
 	return l
+}
+
+// SugaredLogger implementation
+
+// Debugf logs a debug message with formatting
+func (s *sugaredLogger) Debugf(template string, args ...interface{}) {
+	s.sugar.Debugf(template, args...)
+}
+
+// Infof logs an info message with formatting
+func (s *sugaredLogger) Infof(template string, args ...interface{}) {
+	s.sugar.Infof(template, args...)
+}
+
+// Warnf logs a warning message with formatting
+func (s *sugaredLogger) Warnf(template string, args ...interface{}) {
+	s.sugar.Warnf(template, args...)
+}
+
+// Errorf logs an error message with formatting
+func (s *sugaredLogger) Errorf(template string, args ...interface{}) {
+	s.sugar.Errorf(template, args...)
+}
+
+// Fatalf logs a fatal message with formatting
+func (s *sugaredLogger) Fatalf(template string, args ...interface{}) {
+	s.sugar.Fatalf(template, args...)
+}
+
+// Debugw logs a debug message with key-value pairs
+func (s *sugaredLogger) Debugw(msg string, keysAndValues ...interface{}) {
+	s.sugar.Debugw(msg, keysAndValues...)
+}
+
+// Infow logs an info message with key-value pairs
+func (s *sugaredLogger) Infow(msg string, keysAndValues ...interface{}) {
+	s.sugar.Infow(msg, keysAndValues...)
+}
+
+// Warnw logs a warning message with key-value pairs
+func (s *sugaredLogger) Warnw(msg string, keysAndValues ...interface{}) {
+	s.sugar.Warnw(msg, keysAndValues...)
+}
+
+// Errorw logs an error message with key-value pairs
+func (s *sugaredLogger) Errorw(msg string, keysAndValues ...interface{}) {
+	s.sugar.Errorw(msg, keysAndValues...)
+}
+
+// Fatalw logs a fatal message with key-value pairs
+func (s *sugaredLogger) Fatalw(msg string, keysAndValues ...interface{}) {
+	s.sugar.Fatalw(msg, keysAndValues...)
+}
+
+// With creates a new sugared logger with additional fields
+func (s *sugaredLogger) With(args ...interface{}) SugaredLogger {
+	return &sugaredLogger{sugar: s.sugar.With(args...)}
 }
 
 // LoggerConfig contains configuration for the logger
