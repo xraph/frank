@@ -37,9 +37,9 @@ Thumbs.db
 logs/
 
 # Generated Ent files
-ent/*
-!ent/schema/
-!ent/generate.go
+#ent/*
+#!ent/schema/
+#!ent/generate.go
 
 # SQLite database files
 *.db

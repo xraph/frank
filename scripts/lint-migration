@@ -1,0 +1,7 @@
+#!/bin/bash
+set -eu
+MIGRATION_NAME=${1:-}
+
+
+# Push migration
+atlas migrate lint
