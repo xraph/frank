@@ -1,4 +1,4 @@
-package server
+package frank
 
 import (
 	"context"
@@ -11,7 +11,6 @@ import (
 	"syscall"
 
 	"github.com/juicycleff/frank/config"
-	"github.com/juicycleff/frank/frank"
 	"github.com/juicycleff/frank/internal/router"
 	"github.com/juicycleff/frank/pkg/astro_fs"
 	"github.com/juicycleff/frank/pkg/data"
@@ -29,7 +28,7 @@ type Server struct {
 // NewServer creates a new HTTP server
 func NewServer(clients *data.Clients, cfg *config.Config, logger logging.Logger) *Server {
 	// Init routes
-	frk, err := frank.New(clients, cfg, logger)
+	frk, err := New(clients, cfg, logger)
 	if err != nil {
 		log.Fatalf("%v", err)
 	}

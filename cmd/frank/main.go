@@ -11,9 +11,9 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/juicycleff/frank"
 	_ "github.com/juicycleff/frank/api/swagger"
 	"github.com/juicycleff/frank/config"
-	"github.com/juicycleff/frank/internal/server"
 	"github.com/juicycleff/frank/pkg/data"
 	"github.com/juicycleff/frank/pkg/logging"
 )
@@ -98,7 +98,7 @@ func main() {
 		buildWebClient(logger)
 	}
 
-	frankServer := server.NewServer(dataClients, cfg, logger)
+	frankServer := frank.NewServer(dataClients, cfg, logger)
 
 	// Start server in a goroutine
 	serverErrors := frankServer.Start()
