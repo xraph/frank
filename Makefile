@@ -20,7 +20,7 @@ build:
 	$(GOBUILD) $(COMMIT_FLAGS) -o ./bin/$(BINARY_NAME) $(MAIN_PATH)
 
 build-prod:
-	make generate-db & $(GOBUILD) $(COMMIT_FLAGS) -o ./bin/$(BINARY_NAME) $(MAIN_PATH)
+	make generate-db & $(GOBUILD) -a -installsuffix cgo $(COMMIT_FLAGS) -o ./bin/$(BINARY_NAME) $(MAIN_PATH)
 
 #build-cli:
 #	$(GOBUILD) -o ./bin/$(CLI_BINARY_NAME) $(CLI_MAIN_PATH)

@@ -555,13 +555,6 @@ func Load(configPaths ...string) (*Config, error) {
 
 	once.Do(func() {
 		config = &Config{}
-
-		// Parse environment variables into the struct
-		if err := env.Parse(config); err != nil {
-			loadErr = fmt.Errorf("error passring config env: %w", err)
-			return
-		}
-
 		v := viper.New()
 
 		// Set configuration defaults
@@ -594,6 +587,12 @@ func Load(configPaths ...string) (*Config, error) {
 
 		if err := v.Unmarshal(config); err != nil {
 			loadErr = fmt.Errorf("error unmarshaling config: %w", err)
+			return
+		}
+
+		// Parse environment variables into the struct
+		if err := env.Parse(config); err != nil {
+			loadErr = fmt.Errorf("error passring config env: %w", err)
 			return
 		}
 

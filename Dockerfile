@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.21-alpine AS builder
+FROM golang:1.24-alpine AS builder
 
 WORKDIR /app
 
@@ -12,11 +12,8 @@ RUN go mod download
 # Copy source code
 COPY . .
 
-# Generate Ent code
-RUN go run -mod=mod entgo.io/ent/cmd/ent generate ./ent/schema
-
 # Build the application
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o frank ./cmd/frank
+RUN CGO_ENABLED=0 GOOS=linux && make build-prod
 
 # Final stage
 FROM alpine:latest
@@ -34,7 +31,7 @@ COPY --from=builder /app/migrations ./migrations
 ENV GIN_MODE=release
 
 # Expose port
-EXPOSE 8080
+EXPOSE 8998
 
 # Run the binary
-CMD ["./frank"]
+CMD ["./bin/frank"]
