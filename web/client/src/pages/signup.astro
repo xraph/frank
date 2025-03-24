@@ -1,0 +1,13 @@
+---
+import AuthLayout from "../layouts/AuthLayout.astro";
+import { RegisterForm } from "../components/react/auth/register-form";
+---
+<AuthLayout title="Signup">
+    <div class="space-y-6">
+        <div class="space-y-2 text-center">
+            <h1 class="text-3xl font-bold">Create an account</h1>
+            <p class="text-muted-foreground">Enter your information to get started</p>
+        </div>
+        <RegisterForm client:load />
+    </div>
+</AuthLayout>

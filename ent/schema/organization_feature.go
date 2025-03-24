@@ -1,8 +1,6 @@
 package schema
 
 import (
-	"time"
-
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
@@ -18,8 +16,6 @@ type OrganizationFeature struct {
 // Fields of the OrganizationFeature.
 func (OrganizationFeature) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("id").
-			Unique(),
 		field.String("organization_id").
 			NotEmpty(),
 		field.String("feature_id").
@@ -27,12 +23,6 @@ func (OrganizationFeature) Fields() []ent.Field {
 		field.Bool("enabled").
 			Default(true),
 		entity.JSONMapField("settings", true),
-		field.Time("created_at").
-			Default(time.Now).
-			Immutable(),
-		field.Time("updated_at").
-			Default(time.Now).
-			UpdateDefault(time.Now),
 	}
 }
 
@@ -58,5 +48,12 @@ func (OrganizationFeature) Indexes() []ent.Index {
 		index.Fields("feature_id"),
 		index.Fields("organization_id", "feature_id").
 			Unique(),
+	}
+}
+
+// Mixin of the OrganizationFeature.
+func (OrganizationFeature) Mixin() []ent.Mixin {
+	return []ent.Mixin{
+		ModelBaseMixin{},
 	}
 }

@@ -84,7 +84,7 @@ func (s *PostmarkSender) Send(ctx context.Context, email Email) error {
 				"Value": value,
 			})
 		}
-		payload["Headers"] = headers
+		payload["Header"] = headers
 	}
 
 	// Handle attachments if any

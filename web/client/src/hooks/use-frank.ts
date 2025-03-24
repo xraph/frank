@@ -1,10 +1,7 @@
-import {useRef} from "react";
-import {FrankAPI} from "@/client/api.ts";
+import { useRef } from "react";
+import { frankApi } from "@/client/api.ts";
 
 export function useFrank() {
-    const api = useRef(new FrankAPI({
-        accessToken: '',
-        apiKey: '',
-    }))
-    return api.current;
+	const api = useRef(frankApi);
+	return api.current;
 }

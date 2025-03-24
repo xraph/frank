@@ -100,7 +100,7 @@ func BuildCreatePermissionPayload(rbacCreatePermissionBody string, rbacCreatePer
 	{
 		err = json.Unmarshal([]byte(rbacCreatePermissionBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"permission\": {\n         \"action\": \"read\",\n         \"conditions\": \"Et et.\",\n         \"description\": \"Allows reading user information\",\n         \"name\": \"users:read\",\n         \"resource\": \"users\"\n      }\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"permission\": {\n         \"action\": \"read\",\n         \"conditions\": \"Molestias hic aut accusamus aut omnis vel.\",\n         \"description\": \"Allows reading user information\",\n         \"name\": \"users:read\",\n         \"resource\": \"users\"\n      }\n   }'")
 		}
 		if body.Permission == nil {
 			err = goa.MergeErrors(err, goa.MissingFieldError("permission", "body"))
@@ -152,7 +152,7 @@ func BuildUpdatePermissionPayload(rbacUpdatePermissionBody string, rbacUpdatePer
 	{
 		err = json.Unmarshal([]byte(rbacUpdatePermissionBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"permission\": {\n         \"conditions\": \"Natus nesciunt labore occaecati.\",\n         \"description\": \"Ut quia aut sunt ducimus ipsam cum.\",\n         \"name\": \"Magni architecto dolorem.\"\n      }\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"permission\": {\n         \"conditions\": \"Quia architecto tenetur voluptatum.\",\n         \"description\": \"Incidunt corporis id voluptas itaque nihil aliquid.\",\n         \"name\": \"Sit ut ipsa rem ad libero voluptatem.\"\n      }\n   }'")
 		}
 		if body.Permission == nil {
 			err = goa.MergeErrors(err, goa.MissingFieldError("permission", "body"))
@@ -278,7 +278,7 @@ func BuildCreateRolePayload(rbacCreateRoleBody string, rbacCreateRoleJWT string)
 	{
 		err = json.Unmarshal([]byte(rbacCreateRoleBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"role\": {\n         \"description\": \"Administrator role with full access\",\n         \"is_default\": false,\n         \"name\": \"Admin\",\n         \"organization_id\": \"Facere beatae.\"\n      }\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"role\": {\n         \"description\": \"Administrator role with full access\",\n         \"is_default\": false,\n         \"name\": \"Admin\",\n         \"organization_id\": \"Enim id itaque est deleniti laudantium.\"\n      }\n   }'")
 		}
 		if body.Role == nil {
 			err = goa.MergeErrors(err, goa.MissingFieldError("role", "body"))
@@ -330,7 +330,7 @@ func BuildUpdateRolePayload(rbacUpdateRoleBody string, rbacUpdateRoleID string, 
 	{
 		err = json.Unmarshal([]byte(rbacUpdateRoleBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"role\": {\n         \"description\": \"Deleniti iure.\",\n         \"is_default\": true,\n         \"name\": \"Debitis incidunt beatae accusantium sint molestiae animi.\"\n      }\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"role\": {\n         \"description\": \"Eum consequatur eius sed.\",\n         \"is_default\": true,\n         \"name\": \"Cumque eaque.\"\n      }\n   }'")
 		}
 		if body.Role == nil {
 			err = goa.MergeErrors(err, goa.MissingFieldError("role", "body"))
@@ -407,7 +407,7 @@ func BuildAddRolePermissionPayload(rbacAddRolePermissionBody string, rbacAddRole
 	{
 		err = json.Unmarshal([]byte(rbacAddRolePermissionBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"permission\": {\n         \"permission_id\": \"Sunt eos quo tempora excepturi.\"\n      }\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"permission\": {\n         \"permission_id\": \"Non asperiores iusto enim.\"\n      }\n   }'")
 		}
 		if body.Permission == nil {
 			err = goa.MergeErrors(err, goa.MissingFieldError("permission", "body"))

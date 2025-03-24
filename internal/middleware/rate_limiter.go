@@ -142,7 +142,7 @@ func RateLimiterWithConfig(config RateLimiterConfig) func(http.Handler) http.Han
 			} else {
 				// Try different identification methods based on configuration
 				if config.UserRateLimiting {
-					userID, ok := GetUserID(r)
+					userID, ok := GetUserIDReq(r)
 					if ok && userID != "" {
 						key = "user:" + userID
 					}
@@ -212,7 +212,7 @@ func APIPathRateLimiter(cfg *config.Config) func(http.Handler) http.Handler {
 		identity := ""
 
 		// Try to get user ID first
-		if userID, ok := GetUserID(r); ok && userID != "" {
+		if userID, ok := GetUserIDReq(r); ok && userID != "" {
 			identity = "user:" + userID
 		} else {
 			// Try to get API key

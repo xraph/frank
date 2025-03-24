@@ -10,6 +10,7 @@ package users
 import (
 	"context"
 
+	designtypes "github.com/juicycleff/frank/gen/designtypes"
 	goa "goa.design/goa/v3/pkg"
 )
 
@@ -70,13 +71,13 @@ func (c *Client) List(ctx context.Context, p *ListPayload) (res *ListResult, err
 //   - "not_found" (type *NotFoundError)
 //   - "internal_error" (type *InternalServerError)
 //   - error: internal error
-func (c *Client) Create(ctx context.Context, p *CreatePayload) (res *User, err error) {
+func (c *Client) Create(ctx context.Context, p *CreatePayload) (res *designtypes.User, err error) {
 	var ires any
 	ires, err = c.CreateEndpoint(ctx, p)
 	if err != nil {
 		return
 	}
-	return ires.(*User), nil
+	return ires.(*designtypes.User), nil
 }
 
 // Get calls the "get" endpoint of the "users" service.
@@ -88,13 +89,13 @@ func (c *Client) Create(ctx context.Context, p *CreatePayload) (res *User, err e
 //   - "conflict" (type *ConflictError)
 //   - "internal_error" (type *InternalServerError)
 //   - error: internal error
-func (c *Client) Get(ctx context.Context, p *GetPayload) (res *User, err error) {
+func (c *Client) Get(ctx context.Context, p *GetPayload) (res *designtypes.User, err error) {
 	var ires any
 	ires, err = c.GetEndpoint(ctx, p)
 	if err != nil {
 		return
 	}
-	return ires.(*User), nil
+	return ires.(*designtypes.User), nil
 }
 
 // Update calls the "update" endpoint of the "users" service.
@@ -106,13 +107,13 @@ func (c *Client) Get(ctx context.Context, p *GetPayload) (res *User, err error) 
 //   - "conflict" (type *ConflictError)
 //   - "internal_error" (type *InternalServerError)
 //   - error: internal error
-func (c *Client) Update(ctx context.Context, p *UpdatePayload) (res *User, err error) {
+func (c *Client) Update(ctx context.Context, p *UpdatePayload) (res *designtypes.User, err error) {
 	var ires any
 	ires, err = c.UpdateEndpoint(ctx, p)
 	if err != nil {
 		return
 	}
-	return ires.(*User), nil
+	return ires.(*designtypes.User), nil
 }
 
 // Delete calls the "delete" endpoint of the "users" service.
@@ -138,13 +139,13 @@ func (c *Client) Delete(ctx context.Context, p *DeletePayload) (err error) {
 //   - "conflict" (type *ConflictError)
 //   - "internal_error" (type *InternalServerError)
 //   - error: internal error
-func (c *Client) UpdateMe(ctx context.Context, p *UpdateMePayload) (res *User, err error) {
+func (c *Client) UpdateMe(ctx context.Context, p *UpdateMePayload) (res *designtypes.User, err error) {
 	var ires any
 	ires, err = c.UpdateMeEndpoint(ctx, p)
 	if err != nil {
 		return
 	}
-	return ires.(*User), nil
+	return ires.(*designtypes.User), nil
 }
 
 // UpdatePassword calls the "update_password" endpoint of the "users" service.
@@ -174,13 +175,13 @@ func (c *Client) UpdatePassword(ctx context.Context, p *UpdatePasswordPayload) (
 //   - "conflict" (type *ConflictError)
 //   - "internal_error" (type *InternalServerError)
 //   - error: internal error
-func (c *Client) GetSessions(ctx context.Context, p *GetSessionsPayload) (res *GetSessionsResult, err error) {
+func (c *Client) GetSessions(ctx context.Context, p *GetSessionsPayload) (res *GetUserSessionResponse, err error) {
 	var ires any
 	ires, err = c.GetSessionsEndpoint(ctx, p)
 	if err != nil {
 		return
 	}
-	return ires.(*GetSessionsResult), nil
+	return ires.(*GetUserSessionResponse), nil
 }
 
 // DeleteSession calls the "delete_session" endpoint of the "users" service.

@@ -31,7 +31,7 @@ type CORSConfig struct {
 // DefaultCORSConfig returns a default CORS configuration
 func DefaultCORSConfig() CORSConfig {
 	return CORSConfig{
-		AllowedOrigins:   []string{"*"},
+		AllowedOrigins:   []string{"*", "localhost:4321"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"},
 		AllowedHeaders:   []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With", "X-API-Key"},
 		ExposedHeaders:   []string{"Content-Length", "Content-Type", "X-Request-ID"},

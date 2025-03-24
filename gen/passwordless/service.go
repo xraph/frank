@@ -10,6 +10,7 @@ package passwordless
 import (
 	"context"
 
+	designtypes "github.com/juicycleff/frank/gen/designtypes"
 	goa "goa.design/goa/v3/pkg"
 	"goa.design/goa/v3/security"
 )
@@ -200,36 +201,6 @@ type UnauthorizedError struct {
 	ID *string
 }
 
-// User information
-type User struct {
-	// User ID
-	ID string
-	// User email
-	Email string
-	// User first name
-	FirstName *string
-	// User last name
-	LastName *string
-	// Whether email is verified
-	EmailVerified bool
-	// User phone number
-	PhoneNumber *string
-	// Whether phone is verified
-	PhoneVerified *bool
-	// URL to user's profile image
-	ProfileImageURL *string
-	// User's locale preference
-	Locale *string
-	// User metadata
-	Metadata map[string]any
-	// Whether account is active
-	Active bool
-	// Account creation timestamp
-	CreatedAt string
-	// Account last update timestamp
-	UpdatedAt string
-}
-
 // VerifyPayload is the payload type of the passwordless service verify method.
 type VerifyPayload struct {
 	// OAuth2 access token
@@ -257,7 +228,7 @@ type VerifyResult struct {
 	// User email
 	Email *string
 	// User data if authentication successful
-	User *User
+	User *designtypes.User
 }
 
 // Error returns an error description.

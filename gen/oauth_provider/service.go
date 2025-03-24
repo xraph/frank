@@ -321,7 +321,7 @@ type ListClientsPayload struct {
 // list_clients method.
 type ListClientsResult struct {
 	Data       []*OAuthClientResponse
-	Pagination *designtypes.PaginationResponse
+	Pagination *designtypes.Pagination
 }
 
 // ListScopesPayload is the payload type of the oauth_provider service
@@ -338,7 +338,7 @@ type ListScopesPayload struct {
 // list_scopes method.
 type ListScopesResult struct {
 	Data       []*OAuthScopeResponse
-	Pagination *designtypes.PaginationResponse
+	Pagination *designtypes.Pagination
 }
 
 // Not found response

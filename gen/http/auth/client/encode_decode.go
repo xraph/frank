@@ -16,6 +16,7 @@ import (
 	"strings"
 
 	auth "github.com/juicycleff/frank/gen/auth"
+	designtypes "github.com/juicycleff/frank/gen/designtypes"
 	goahttp "goa.design/goa/v3/http"
 )
 
@@ -1635,22 +1636,21 @@ func DecodeCsrfResponse(decoder func(*http.Response) goahttp.Decoder, restoreBod
 	}
 }
 
-// unmarshalUserResponseBodyToAuthUser builds a value of type *auth.User from a
-// value of type *UserResponseBody.
-func unmarshalUserResponseBodyToAuthUser(v *UserResponseBody) *auth.User {
-	res := &auth.User{
-		ID:              *v.ID,
-		Email:           *v.Email,
-		FirstName:       v.FirstName,
-		LastName:        v.LastName,
+// unmarshalUserResponseBodyToDesigntypesUser builds a value of type
+// *designtypes.User from a value of type *UserResponseBody.
+func unmarshalUserResponseBodyToDesigntypesUser(v *UserResponseBody) *designtypes.User {
+	res := &designtypes.User{
+		Active:          *v.Active,
 		EmailVerified:   *v.EmailVerified,
-		PhoneNumber:     v.PhoneNumber,
 		PhoneVerified:   v.PhoneVerified,
 		ProfileImageURL: v.ProfileImageURL,
-		Locale:          v.Locale,
-		Active:          *v.Active,
-		CreatedAt:       *v.CreatedAt,
-		UpdatedAt:       *v.UpdatedAt,
+		FirstName:       v.FirstName,
+		LastName:        v.LastName,
+		PhoneNumber:     v.PhoneNumber,
+		Email:           *v.Email,
+	}
+	if v.Locale != nil {
+		res.Locale = *v.Locale
 	}
 	if v.Metadata != nil {
 		res.Metadata = make(map[string]any, len(v.Metadata))
@@ -1659,6 +1659,9 @@ func unmarshalUserResponseBodyToAuthUser(v *UserResponseBody) *auth.User {
 			tv := val
 			res.Metadata[tk] = tv
 		}
+	}
+	if v.Locale == nil {
+		res.Locale = "en"
 	}
 
 	return res

@@ -48,7 +48,7 @@ if ! command -v protoc &> /dev/null; then
     go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 fi
 
-# Check and install OpenAPI Generator if needed
+# Check and install OpenAPI Generator if needed (for Go client)
 if ! command -v openapi-generator &> /dev/null; then
     echo "⚠️ openapi-generator not found. Installing OpenAPI Generator..."
 
@@ -106,199 +106,192 @@ for proto_file in api/proto/*.proto; do
            "$proto_file"
 done
 
-# Generate OpenAPI code
+# Generate OpenAPI Go client code
 if command -v openapi-generator &> /dev/null; then
     echo "📚 Generating OpenAPI GO client code..."
-    openapi-generator generate -i api/swagger/swagger.yaml -g go -o client \
-        --package-name client \
-        --skip-validate-spec \
-        --additional-properties=removeOperationIdPrefix=true
+    echo "⚠️ openapi-generator found. Skipping OpenAPI Go client generation."
+#    openapi-generator generate -i gen/http/openapi3.json -g go -o client \
+#        --package-name client \
+#        --skip-validate-spec \
+#        --additional-properties=removeOperationIdPrefix=true,usePromises=true,returnExceptionBody=true
+else
+    echo "⚠️ openapi-generator not found. Skipping OpenAPI Go client generation."
+fi
 
-    echo "📚 Generating OpenAPI TypeScript client code..."
-    # Create a config file for TypeScript generator
-    cat > scripts/openapi-ts-config.json << EOF
+# Generate TypeScript client using Orval
+echo "📚 Generating TypeScript client using Orval..."
+
+# Check if npm is installed
+if ! command -v npm &> /dev/null; then
+    echo "❌ npm not found. Please install Node.js and npm to use Orval."
+    echo "Skipping TypeScript client generation."
+else
+    # Check if Orval is installed
+#    if ! npm list -g | grep -q orval; then
+#        echo "⚠️ Orval not found. Installing Orval..."
+#        pnpm install -g orval
+#    fi
+
+    # Create Orval config file
+    echo "Creating Orval configuration..."
+    mkdir -p web/js-sdk
+
+    cat > orval.config.js << EOF
+module.exports = {
+  frankClient: {
+    input: {
+      target: './gen/http/openapi3.json',
+    },
+    output: {
+      mode: 'tags-split',
+      target: './web/js-sdk/src',
+      schemas: './web/js-sdk/src/model',
+      client: 'react-query',
+      mock: true,
+      override: {
+        mutator: {
+          path: './web/js-sdk/src/api/mutator/custom-instance.ts',
+          name: 'customInstance',
+        },
+        operations: {},
+        query: {
+          useQuery: true,
+          useInfinite: true,
+          useInfiniteQueryParam: 'pageParam',
+          useMutation: true,
+        },
+      },
+      prettier: true,
+      clean: true,
+    },
+  },
+};
+EOF
+
+    # Create custom instance file for fetching
+    mkdir -p web/js-sdk/src/api/mutator
+    cat > web/js-sdk/src/api/mutator/custom-instance.ts << EOF
+import axios from 'axios';
+
+export const customInstance = axios.create({
+  baseURL: '',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+export default customInstance;
+EOF
+
+    # Create package.json for the JS SDK
+    cat > web/js-sdk/package.json << EOF
 {
-  "supportsES6": true,
-  "npmName": "frank-client",
-  "npmVersion": "1.0.0",
-  "withInterfaces": true,
-  "modelPropertyNaming": "camelCase",
-  "enumPropertyNaming": "camelCase",
-  "removeOperationIdPrefix": true
+  "name": "frank-client",
+  "version": "1.0.0",
+  "description": "Frank Authentication TypeScript Client",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "generate": "orval"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "react-query": "^3.39.3"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "orval": "^6.17.0",
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.0.0"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0"
+  }
 }
 EOF
-    
-    # Generate TypeScript client with prefix removal for models and operation IDs
-    openapi-generator generate -i api/swagger/swagger.yaml -g typescript-fetch -o web/js-sdk \
-        -c scripts/openapi-ts-config.json \
-        --skip-validate-spec \
-        --global-property models,apis,supportingFiles \
-        --global-property modelNamePrefix= \
-        --global-property fileNaming=kebab-case \
-        --additional-properties=removeOperationIdPrefix=true
-    
-    # Optional: Find and replace "Ent" prefix in generated TypeScript files (in case the global property doesn't work)
-    if command -v find &> /dev/null && command -v sed &> /dev/null; then
-        echo "Removing 'Ent' prefix from model names in generated TypeScript files..."
 
-        # Check if the necessary directories exist
-        if [ ! -d "web/js-sdk/src/models" ]; then
-            echo "⚠️ Directory web/js-sdk/src/models does not exist. Skipping TypeScript modifications."
-        else
-            # Use temporary files instead of in-place editing for compatibility
-            if [ "$OS" = "Darwin" ]; then
-                echo "Using macOS compatible commands..."
+    # Create tsconfig.json for the JS SDK
+    cat > web/js-sdk/tsconfig.json << EOF
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "module": "commonjs",
+    "declaration": true,
+    "outDir": "./dist",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}
+EOF
 
-                # Replace in model files
-                echo "Processing model interface definitions..."
-                for file in web/js-sdk/src/models/*.ts; do
-                    if [ -f "$file" ]; then
-                        # Use temporary file to avoid in-place editing issues
-                        sed 's/export interface Ent\([A-Z][a-zA-Z0-9]*\)/export interface \1/g' "$file" > "$file.tmp"
-                        mv "$file.tmp" "$file"
+    # Create index.ts file to export all generated APIs
+    cat > web/js-sdk/src/index.ts << EOF
+// This file will be populated with exports from generated API clients
+export * from './api/mutator/custom-instance';
+// NOTE: After generation, you'll need to add exports for all generated APIs
+EOF
 
-                        sed 's/export class Ent\([A-Z][a-zA-Z0-9]*\)/export class \1/g' "$file" > "$file.tmp"
-                        mv "$file.tmp" "$file"
+    # Run Orval to generate the TypeScript client
+    echo "Running Orval to generate TypeScript client..."
+    npx orval --config ./orval.config.js
 
-                        sed 's/export type Ent\([A-Z][a-zA-Z0-9]*\)/export type \1/g' "$file" > "$file.tmp"
-                        mv "$file.tmp" "$file"
+    echo "✅ TypeScript client generation with Orval complete!"
 
-                        sed 's/export function Ent\([A-Z][a-zA-Z0-9]*\)FromJSON/export function \1FromJSON/g' "$file" > "$file.tmp"
-                        mv "$file.tmp" "$file"
+    # Add README to explain how to use the generated client
+    cat > web/js-sdk/README.md << EOF
+# Frank Authentication TypeScript Client
 
-                        sed 's/export function Ent\([A-Z][a-zA-Z0-9]*\)FromJSONTyped/export function \1FromJSONTyped/g' "$file" > "$file.tmp"
-                        mv "$file.tmp" "$file"
+This TypeScript client for the Frank Authentication Server is generated using Orval.
 
-                        sed 's/export function Ent\([A-Z][a-zA-Z0-9]*\)ToJSON/export function \1ToJSON/g' "$file" > "$file.tmp"
-                        mv "$file.tmp" "$file"
-                    fi
-                done
+## Installation
 
-                # Process source files for imports and references
-                echo "Processing import statements and references..."
-                for file in web/js-sdk/src/*.ts; do
-                    if [ -f "$file" ]; then
-                        sed 's/from "\.\/Ent\([A-Z][a-zA-Z0-9]*\)"/from "\.\/\1"/g' "$file" > "$file.tmp"
-                        mv "$file.tmp" "$file"
+\`\`\`
+npm install frank-client
+\`\`\`
 
-                        sed 's/import type { Ent\([A-Z][a-zA-Z0-9]*\) } from/import type { \1 } from/g' "$file" > "$file.tmp"
-                        mv "$file.tmp" "$file"
+## Usage
 
-                        sed 's/Ent\([A-Z][a-zA-Z0-9]*\)FromJSON/\1FromJSON/g' "$file" > "$file.tmp"
-                        mv "$file.tmp" "$file"
+\`\`\`typescript
+import { useLogin, useGetUser } from 'frank-client';
+import { customInstance } from 'frank-client';
 
-                        sed 's/Ent\([A-Z][a-zA-Z0-9]*\)FromJSONTyped/\1FromJSONTyped/g' "$file" > "$file.tmp"
-                        mv "$file.tmp" "$file"
+// Configure the client
+customInstance.defaults.baseURL = 'https://your-frank-server.com/api';
 
-                        sed 's/Ent\([A-Z][a-zA-Z0-9]*\)ToJSON/\1ToJSON/g' "$file" > "$file.tmp"
-                        mv "$file.tmp" "$file"
+// Set auth token
+const setAuthToken = (token) => {
+  customInstance.defaults.headers.common['Authorization'] = \`Bearer \${token}\`;
+};
 
-                        sed 's/Ent\([A-Z][a-zA-Z0-9]*\)ToJSONTyped/\1ToJSONTyped/g' "$file" > "$file.tmp"
-                        mv "$file.tmp" "$file"
-                    fi
-                done
+// Use the generated hooks
+function MyComponent() {
+  const { mutate: login } = useLogin();
+  const { data: user } = useGetUser();
 
-                # Recursively process all TypeScript files in subdirectories
-                echo "Processing TypeScript files in subdirectories..."
-                find web/js-sdk/src -type f -name "*.ts" | while read file; do
-                    if [ -f "$file" ]; then
-                        sed 's/Ent\([A-Z][a-zA-Z0-9]*\)FromJSON/\1FromJSON/g' "$file" > "$file.tmp"
-                        mv "$file.tmp" "$file"
+  const handleLogin = () => {
+    login({
+      email: 'user@example.com',
+      password: 'password123'
+    }, {
+      onSuccess: (data) => {
+        setAuthToken(data.token);
+      }
+    });
+  };
 
-                        sed 's/Ent\([A-Z][a-zA-Z0-9]*\)ToJSON/\1ToJSON/g' "$file" > "$file.tmp"
-                        mv "$file.tmp" "$file"
-                    fi
-                done
-
-                # Rename files from EntXxx.ts to Xxx.ts
-                echo "Renaming Ent* files..."
-                for file in web/js-sdk/src/models/Ent*.ts; do
-                    if [ -f "$file" ]; then
-                        newname=$(echo "$file" | sed 's/Ent//')
-                        echo "Renaming $file to $newname"
-                        mv "$file" "$newname"
-                    fi
-                done
-
-            else
-                # For Linux and other systems
-                echo "Using Linux compatible commands..."
-
-                # Replace in model files
-                echo "Processing model interface definitions..."
-                for file in web/js-sdk/src/models/*.ts; do
-                    if [ -f "$file" ]; then
-                        # Create a temp file for each transformation to avoid stdin issues
-                        sed 's/export interface Ent\([A-Z][a-zA-Z0-9]*\)/export interface \1/g' "$file" > "$file.tmp"
-                        mv "$file.tmp" "$file"
-
-                        sed 's/export class Ent\([A-Z][a-zA-Z0-9]*\)/export class \1/g' "$file" > "$file.tmp"
-                        mv "$file.tmp" "$file"
-
-                        sed 's/export type Ent\([A-Z][a-zA-Z0-9]*\)/export type \1/g' "$file" > "$file.tmp"
-                        mv "$file.tmp" "$file"
-
-                        sed 's/export function Ent\([A-Z][a-zA-Z0-9]*\)FromJSON/export function \1FromJSON/g' "$file" > "$file.tmp"
-                        mv "$file.tmp" "$file"
-
-                        sed 's/export function Ent\([A-Z][a-zA-Z0-9]*\)FromJSONTyped/export function \1FromJSONTyped/g' "$file" > "$file.tmp"
-                        mv "$file.tmp" "$file"
-
-                        sed 's/export function Ent\([A-Z][a-zA-Z0-9]*\)ToJSON/export function \1ToJSON/g' "$file" > "$file.tmp"
-                        mv "$file.tmp" "$file"
-                    fi
-                done
-
-                # Process source files for imports and references
-                echo "Processing import statements and references..."
-                for file in web/js-sdk/src/*.ts; do
-                    if [ -f "$file" ]; then
-                        sed 's/from "\.\/Ent\([A-Z][a-zA-Z0-9]*\)"/from "\.\/\1"/g' "$file" > "$file.tmp"
-                        mv "$file.tmp" "$file"
-
-                        sed 's/import type { Ent\([A-Z][a-zA-Z0-9]*\) } from/import type { \1 } from/g' "$file" > "$file.tmp"
-                        mv "$file.tmp" "$file"
-
-                        sed 's/Ent\([A-Z][a-zA-Z0-9]*\)FromJSON/\1FromJSON/g' "$file" > "$file.tmp"
-                        mv "$file.tmp" "$file"
-
-                        sed 's/Ent\([A-Z][a-zA-Z0-9]*\)FromJSONTyped/\1FromJSONTyped/g' "$file" > "$file.tmp"
-                        mv "$file.tmp" "$file"
-
-                        sed 's/Ent\([A-Z][a-zA-Z0-9]*\)ToJSON/\1ToJSON/g' "$file" > "$file.tmp"
-                        mv "$file.tmp" "$file"
-
-                        sed 's/Ent\([A-Z][a-zA-Z0-9]*\)ToJSONTyped/\1ToJSONTyped/g' "$file" > "$file.tmp"
-                        mv "$file.tmp" "$file"
-                    fi
-                done
-
-                # Recursively process all TypeScript files in subdirectories
-                echo "Processing TypeScript files in subdirectories..."
-                find web/js-sdk/src -type f -name "*.ts" | while read file; do
-                    if [ -f "$file" ]; then
-                        sed 's/Ent\([A-Z][a-zA-Z0-9]*\)FromJSON/\1FromJSON/g' "$file" > "$file.tmp"
-                        mv "$file.tmp" "$file"
-
-                        sed 's/Ent\([A-Z][a-zA-Z0-9]*\)ToJSON/\1ToJSON/g' "$file" > "$file.tmp"
-                        mv "$file.tmp" "$file"
-                    fi
-                done
-
-                # Rename files from EntXxx.ts to Xxx.ts
-                echo "Renaming Ent* files..."
-                for file in web/js-sdk/src/models/Ent*.ts; do
-                    if [ -f "$file" ]; then
-                        newname=$(echo "$file" | sed 's/Ent//')
-                        echo "Renaming $file to $newname"
-                        mv "$file" "$newname"
-                    fi
-                done
-            fi
-        fi
-    fi
-else
-    echo "⚠️ openapi-generator still not found. Skipping OpenAPI client generation."
+  return (
+    <div>
+      {user ? <p>Welcome, {user.name}</p> : <button onClick={handleLogin}>Login</button>}
+    </div>
+  );
+}
+\`\`\`
+EOF
 fi
 
 # Generate mock files for testing

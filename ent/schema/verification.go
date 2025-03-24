@@ -1,8 +1,6 @@
 package schema
 
 import (
-	"time"
-
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
@@ -18,8 +16,6 @@ type Verification struct {
 // Fields of the Verification.
 func (Verification) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("id").
-			Unique(),
 		field.String("user_id").
 			NotEmpty(),
 		field.String("type").
@@ -48,12 +44,6 @@ func (Verification) Fields() []ent.Field {
 		field.String("user_agent").
 			Optional(),
 		entity.JSONMapField("attestation", true),
-		field.Time("created_at").
-			Default(time.Now).
-			Immutable(),
-		field.Time("updated_at").
-			Default(time.Now).
-			UpdateDefault(time.Now),
 	}
 }
 
@@ -76,5 +66,12 @@ func (Verification) Indexes() []ent.Index {
 		index.Fields("email"),
 		index.Fields("phone_number"),
 		index.Fields("expires_at"),
+	}
+}
+
+// Mixin of the Verification.
+func (Verification) Mixin() []ent.Mixin {
+	return []ent.Mixin{
+		ModelBaseMixin{},
 	}
 }

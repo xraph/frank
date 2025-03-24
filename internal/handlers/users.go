@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -46,7 +45,7 @@ type UpdateUserInput struct {
 // UpdateCurrentUser handles updating the current user
 func (h *UserHandler) UpdateCurrentUser(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context
-	userID, ok := middleware.GetUserID(r)
+	userID, ok := middleware.GetUserIDReq(r)
 	if !ok {
 		utils.RespondError(w, errors.New(errors.CodeUnauthorized, "not authenticated"))
 		return
@@ -205,12 +204,11 @@ func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 // GetUserSessions handles retrieving a user's sessions
 func (h *UserHandler) GetUserSessions(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context
-	userID, ok := middleware.GetUserID(r)
+	_, ok := middleware.GetUserIDReq(r)
 	if !ok {
 		utils.RespondError(w, errors.New(errors.CodeUnauthorized, "not authenticated"))
 		return
 	}
-	fmt.Println(userID)
 
 	// Get sessions (implementation depends on session manager)
 	// For now, return empty array
@@ -222,12 +220,11 @@ func (h *UserHandler) GetUserSessions(w http.ResponseWriter, r *http.Request) {
 // DeleteUserSession handles deleting a user's session
 func (h *UserHandler) DeleteUserSession(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context
-	userID, ok := middleware.GetUserID(r)
+	_, ok := middleware.GetUserIDReq(r)
 	if !ok {
 		utils.RespondError(w, errors.New(errors.CodeUnauthorized, "not authenticated"))
 		return
 	}
-	fmt.Println(userID)
 
 	// Get session ID from path
 	sessionID := utils.GetPathVar(r, "id")

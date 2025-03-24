@@ -20,19 +20,19 @@ type Service interface {
 	// List users
 	List(context.Context, *ListPayload) (res *ListResult, err error)
 	// Create a new user
-	Create(context.Context, *CreatePayload) (res *User, err error)
+	Create(context.Context, *CreatePayload) (res *designtypes.User, err error)
 	// Get user by ID
-	Get(context.Context, *GetPayload) (res *User, err error)
+	Get(context.Context, *GetPayload) (res *designtypes.User, err error)
 	// Update user
-	Update(context.Context, *UpdatePayload) (res *User, err error)
+	Update(context.Context, *UpdatePayload) (res *designtypes.User, err error)
 	// Delete user
 	Delete(context.Context, *DeletePayload) (err error)
 	// Update current user
-	UpdateMe(context.Context, *UpdateMePayload) (res *User, err error)
+	UpdateMe(context.Context, *UpdateMePayload) (res *designtypes.User, err error)
 	// Update current user password
 	UpdatePassword(context.Context, *UpdatePasswordPayload) (res *UpdatePasswordResult, err error)
 	// Get current user sessions
-	GetSessions(context.Context, *GetSessionsPayload) (res *GetSessionsResult, err error)
+	GetSessions(context.Context, *GetSessionsPayload) (res *GetUserSessionResponse, err error)
 	// Delete user session
 	DeleteSession(context.Context, *DeleteSessionPayload) (err error)
 	// Get user organizations
@@ -88,24 +88,24 @@ type ConflictError struct {
 // CreatePayload is the payload type of the users service create method.
 type CreatePayload struct {
 	JWT *string
-	// User email
-	Email string
 	// User password
 	Password *string
-	// User phone number
-	PhoneNumber *string
-	// User first name
-	FirstName *string
-	// User last name
-	LastName *string
-	// User metadata
-	Metadata map[string]any
-	// Profile image URL
-	ProfileImageURL *string
-	// User locale
-	Locale string
 	// Organization ID to add user to
 	OrganizationID *string
+	// User first name
+	FirstName *string `json:"first_name,firstName"`
+	// User last name
+	LastName *string `json:"last_name,lastName"`
+	// User phone number
+	PhoneNumber *string `json:"phone_number,phoneNumber"`
+	// URL to user's profile image
+	ProfileImageURL *string `json:"profile_image_url,profileImageUrl"`
+	// User metadata
+	Metadata map[string]any `json:"metadata"`
+	// User locale
+	Locale string `json:"locale"`
+	// Email address
+	Email string `json:"email"`
 }
 
 // DeletePayload is the payload type of the users service delete method.
@@ -162,10 +162,13 @@ type GetSessionsPayload struct {
 	JWT *string
 }
 
-// GetSessionsResult is the result type of the users service get_sessions
+// GetUserSessionResponse is the result type of the users service get_sessions
 // method.
-type GetSessionsResult struct {
-	Sessions []*designtypes.UserSessionResponse
+type GetUserSessionResponse struct {
+	// User sessions
+	Data []*designtypes.Session
+	// Pagination params
+	Pagination *designtypes.Pagination `json:"pagination"`
 }
 
 // Internal server error response
@@ -195,8 +198,8 @@ type ListPayload struct {
 
 // ListResult is the result type of the users service list method.
 type ListResult struct {
-	Data       []*User
-	Pagination *designtypes.PaginationResponse
+	Data       []*designtypes.User
+	Pagination *designtypes.Pagination
 }
 
 // Not found response
@@ -295,36 +298,6 @@ type UpdatePayload struct {
 	// User ID
 	ID   string
 	User *designtypes.UpdateUserRequest
-}
-
-// User is the result type of the users service create method.
-type User struct {
-	// User ID
-	ID string
-	// User email
-	Email string
-	// User first name
-	FirstName *string
-	// User last name
-	LastName *string
-	// Whether email is verified
-	EmailVerified bool
-	// User phone number
-	PhoneNumber *string
-	// Whether phone is verified
-	PhoneVerified *bool
-	// URL to user's profile image
-	ProfileImageURL *string
-	// User's locale preference
-	Locale *string
-	// User metadata
-	Metadata map[string]any
-	// Whether account is active
-	Active bool
-	// Account creation timestamp
-	CreatedAt string
-	// Account last update timestamp
-	UpdatedAt string
 }
 
 // Error returns an error description.

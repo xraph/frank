@@ -10,6 +10,7 @@ package auth
 import (
 	"context"
 
+	designtypes "github.com/juicycleff/frank/gen/designtypes"
 	goa "goa.design/goa/v3/pkg"
 )
 
@@ -184,13 +185,13 @@ func (c *Client) VerifyEmail(ctx context.Context, p *VerifyEmailPayload) (res *V
 //   - "internal_error" (type *InternalServerError)
 //   - "invalid_credentials" (type *InternalServerError)
 //   - error: internal error
-func (c *Client) Me(ctx context.Context, p *MePayload) (res *User, err error) {
+func (c *Client) Me(ctx context.Context, p *MePayload) (res *designtypes.User, err error) {
 	var ires any
 	ires, err = c.MeEndpoint(ctx, p)
 	if err != nil {
 		return
 	}
-	return ires.(*User), nil
+	return ires.(*designtypes.User), nil
 }
 
 // Csrf calls the "csrf" endpoint of the "auth" service.

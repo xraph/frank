@@ -107,7 +107,7 @@ type MFAUnEnrollInput struct {
 // @Router /api/v1/auth/mfa/enroll [post]
 func (h *MFAHandler) MFAEnroll(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context
-	userID, ok := middleware.GetUserID(r)
+	userID, ok := middleware.GetUserIDReq(r)
 	if !ok {
 		utils.RespondError(w, errors.New(errors.CodeUnauthorized, "not authenticated"))
 		return
@@ -218,7 +218,7 @@ func (h *MFAHandler) MFAEnroll(w http.ResponseWriter, r *http.Request) {
 // @Router /api/v1/auth/mfa/verify [post]
 func (h *MFAHandler) MFAVerify(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context
-	userID, ok := middleware.GetUserID(r)
+	userID, ok := middleware.GetUserIDReq(r)
 	if !ok {
 		utils.RespondError(w, errors.New(errors.CodeUnauthorized, "not authenticated"))
 		return
@@ -278,7 +278,7 @@ func (h *MFAHandler) MFAVerify(w http.ResponseWriter, r *http.Request) {
 // @Router /api/v1/auth/mfa/unenroll [post]
 func (h *MFAHandler) MFAUnenroll(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context
-	userID, ok := middleware.GetUserID(r)
+	userID, ok := middleware.GetUserIDReq(r)
 	if !ok {
 		utils.RespondError(w, errors.New(errors.CodeUnauthorized, "not authenticated"))
 		return
@@ -339,7 +339,7 @@ func (h *MFAHandler) MFAUnenroll(w http.ResponseWriter, r *http.Request) {
 // @Router /api/v1/auth/mfa/methods [get]
 func (h *MFAHandler) GetMFAMethods(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context
-	userID, ok := middleware.GetUserID(r)
+	userID, ok := middleware.GetUserIDReq(r)
 	if !ok {
 		utils.RespondError(w, errors.New(errors.CodeUnauthorized, "not authenticated"))
 		return
@@ -372,7 +372,7 @@ func (h *MFAHandler) GetMFAMethods(w http.ResponseWriter, r *http.Request) {
 // @Router /api/v1/auth/mfa/send-code [post]
 func (h *MFAHandler) SendMFACode(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context
-	userID, ok := middleware.GetUserID(r)
+	userID, ok := middleware.GetUserIDReq(r)
 	if !ok {
 		utils.RespondError(w, errors.New(errors.CodeUnauthorized, "not authenticated"))
 		return

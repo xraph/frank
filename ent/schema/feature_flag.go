@@ -1,8 +1,6 @@
 package schema
 
 import (
-	"time"
-
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
@@ -17,8 +15,6 @@ type FeatureFlag struct {
 // Fields of the FeatureFlag.
 func (FeatureFlag) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("id").
-			Unique(),
 		field.String("name").
 			Unique().
 			NotEmpty(),
@@ -44,12 +40,6 @@ func (FeatureFlag) Fields() []ent.Field {
 				"api_keys",
 			).
 			Comment("Which component of the auth system this feature belongs to"),
-		field.Time("created_at").
-			Default(time.Now).
-			Immutable(),
-		field.Time("updated_at").
-			Default(time.Now).
-			UpdateDefault(time.Now),
 	}
 }
 
@@ -66,5 +56,12 @@ func (FeatureFlag) Indexes() []ent.Index {
 	return []ent.Index{
 		index.Fields("key"),
 		index.Fields("component"),
+	}
+}
+
+// Mixin of the FeatureFlag.
+func (FeatureFlag) Mixin() []ent.Mixin {
+	return []ent.Mixin{
+		ModelBaseMixin{},
 	}
 }

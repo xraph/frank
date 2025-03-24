@@ -60,7 +60,7 @@ type PasskeyLoginCompleteRequest struct {
 // PasskeyRegisterBegin handles beginning passkey registration
 func (h *PasskeyHandler) PasskeyRegisterBegin(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context
-	userID, ok := middleware.GetUserID(r)
+	userID, ok := middleware.GetUserIDReq(r)
 	if !ok {
 		utils.RespondError(w, errors.New(errors.CodeUnauthorized, "not authenticated"))
 		return
@@ -93,7 +93,7 @@ func (h *PasskeyHandler) PasskeyRegisterBegin(w http.ResponseWriter, r *http.Req
 // PasskeyRegisterComplete handles completing passkey registration
 func (h *PasskeyHandler) PasskeyRegisterComplete(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context
-	userID, ok := middleware.GetUserID(r)
+	userID, ok := middleware.GetUserIDReq(r)
 	if !ok {
 		utils.RespondError(w, errors.New(errors.CodeUnauthorized, "not authenticated"))
 		return
@@ -133,7 +133,7 @@ func (h *PasskeyHandler) PasskeyLoginBegin(w http.ResponseWriter, r *http.Reques
 	}
 
 	// Get user ID from request if available
-	userID, _ := middleware.GetUserID(r)
+	userID, _ := middleware.GetUserIDReq(r)
 
 	// Begin authentication
 	options := passkeys.AuthenticationOptions{
@@ -191,7 +191,7 @@ func (h *PasskeyHandler) PasskeyLoginComplete(w http.ResponseWriter, r *http.Req
 // GetUserPasskeys handles retrieving a user's passkeys
 func (h *PasskeyHandler) GetUserPasskeys(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context
-	userID, ok := middleware.GetUserID(r)
+	userID, ok := middleware.GetUserIDReq(r)
 	if !ok {
 		utils.RespondError(w, errors.New(errors.CodeUnauthorized, "not authenticated"))
 		return
@@ -213,7 +213,7 @@ func (h *PasskeyHandler) GetUserPasskeys(w http.ResponseWriter, r *http.Request)
 // UpdatePasskey handles updating a passkey
 func (h *PasskeyHandler) UpdatePasskey(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context
-	userID, ok := middleware.GetUserID(r)
+	userID, ok := middleware.GetUserIDReq(r)
 	if !ok {
 		utils.RespondError(w, errors.New(errors.CodeUnauthorized, "not authenticated"))
 		return
@@ -251,7 +251,7 @@ func (h *PasskeyHandler) UpdatePasskey(w http.ResponseWriter, r *http.Request) {
 // DeletePasskey handles deleting a passkey
 func (h *PasskeyHandler) DeletePasskey(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context
-	userID, ok := middleware.GetUserID(r)
+	userID, ok := middleware.GetUserIDReq(r)
 	if !ok {
 		utils.RespondError(w, errors.New(errors.CodeUnauthorized, "not authenticated"))
 		return

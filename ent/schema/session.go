@@ -7,6 +7,7 @@ import (
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
+	"github.com/juicycleff/frank/pkg/entity"
 )
 
 // Session holds the schema definition for the Session entity.
@@ -17,8 +18,6 @@ type Session struct {
 // Fields of the Session.
 func (Session) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("id").
-			Unique(),
 		field.String("user_id").
 			NotEmpty(),
 		field.String("token").
@@ -40,12 +39,7 @@ func (Session) Fields() []ent.Field {
 		field.Time("last_active_at").
 			Default(time.Now).
 			UpdateDefault(time.Now),
-		field.Time("created_at").
-			Default(time.Now).
-			Immutable(),
-		field.Time("updated_at").
-			Default(time.Now).
-			UpdateDefault(time.Now),
+		entity.JSONMapField("metadata", true),
 	}
 }
 
@@ -67,5 +61,12 @@ func (Session) Indexes() []ent.Index {
 		index.Fields("organization_id"),
 		index.Fields("token"),
 		index.Fields("expires_at"),
+	}
+}
+
+// Mixin of the Session.
+func (Session) Mixin() []ent.Mixin {
+	return []ent.Mixin{
+		ModelBaseMixin{},
 	}
 }

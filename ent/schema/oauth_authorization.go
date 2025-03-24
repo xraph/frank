@@ -1,8 +1,6 @@
 package schema
 
 import (
-	"time"
-
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
@@ -17,8 +15,6 @@ type OAuthAuthorization struct {
 // Fields of the OAuthAuthorization.
 func (OAuthAuthorization) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("id").
-			Unique(),
 		field.String("client_id").
 			NotEmpty(),
 		field.String("user_id").
@@ -46,12 +42,6 @@ func (OAuthAuthorization) Fields() []ent.Field {
 			Optional(),
 		field.String("nonce").
 			Optional(),
-		field.Time("created_at").
-			Default(time.Now).
-			Immutable(),
-		field.Time("updated_at").
-			Default(time.Now).
-			UpdateDefault(time.Now),
 	}
 }
 
@@ -80,5 +70,12 @@ func (OAuthAuthorization) Indexes() []ent.Index {
 		index.Fields("user_id"),
 		index.Fields("organization_id"),
 		index.Fields("expires_at"),
+	}
+}
+
+// Mixin of the OAuthAuthorization.
+func (OAuthAuthorization) Mixin() []ent.Mixin {
+	return []ent.Mixin{
+		ModelBaseMixin{},
 	}
 }

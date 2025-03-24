@@ -114,7 +114,7 @@ Frank is a modern, feature-rich authentication and authorization server written 
                                           └───────────────┘
 ```
 
-## Data Flow
+## Details Flow
 
 1. **Authentication Flow**
     - User initiates authentication
@@ -157,7 +157,7 @@ Frank is a modern, feature-rich authentication and authorization server written 
     - Principle of least privilege
     - Regular security audits
 
-2. **Secure Data Handling**
+2. **Secure Details Handling**
     - Encryption at rest and in transit
     - Secure credential storage
     - PII data protection

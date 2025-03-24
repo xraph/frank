@@ -4,15 +4,14 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	_ "github.com/juicycleff/frank/api/swagger"
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/internal/handlers"
 	customMiddleware "github.com/juicycleff/frank/internal/middleware"
+	"github.com/juicycleff/frank/internal/router"
 	"github.com/juicycleff/frank/internal/services"
-	"github.com/juicycleff/frank/internal/swaggergen"
 	"github.com/juicycleff/frank/pkg/data"
 	"github.com/juicycleff/frank/pkg/logging"
 	httpSwagger "github.com/swaggo/http-swagger"
@@ -29,7 +28,7 @@ type Router struct {
 }
 
 // NewRouter creates a new router
-func NewRouter(clients *data.Clients, svcs *services.Services, cfg *config.Config, logger logging.Logger) *Router {
+func NewRouter(clients *data.Clients, svcs *services.Services, cfg *config.Config, logger logging.Logger) router.FrankRouter {
 	// Create Chi r
 	r := chi.NewRouter()
 
@@ -78,21 +77,21 @@ func NewRouter(clients *data.Clients, svcs *services.Services, cfg *config.Confi
 }
 
 // RegisterRoutes registers all API routes
-func (r *Router) RegisterRoutes() {
-	faktory := r.faktory
+func (rt *Router) RegisterRoutes() {
+	faktory := rt.faktory
 
 	// Health check routes
-	faktory.Health.RegisterPublicRoutes(r.router)
+	faktory.Health.RegisterPublicRoutes(rt.router)
 
 	// Apply Auth middleware - you might need to modify your Auth middleware to work with Chi
 	// Since Chi uses middleware differently, the Auth middleware should be adapted
-	authMw := customMiddleware.Auth(r.config, r.logger, r.svcs.Session, r.svcs.APIKey)
+	authMw := customMiddleware.Auth(rt.config, rt.logger, rt.svcs.Session, rt.svcs.APIKey, true)
 
 	// Organization middleware (for routes that need organization context)
-	orgMiddleware := customMiddleware.NewOrganizationMiddleware(r.config, r.svcs.Organization, r.logger)
+	orgMiddleware := customMiddleware.NewOrganizationMiddleware(rt.config, rt.svcs.Organization, rt.logger)
 
 	// API routes
-	r.router.Route("/api", func(r chi.Router) {
+	rt.router.Route("/api", func(r chi.Router) {
 		// Version-specific routes
 		r.Route("/v1", func(r chi.Router) {
 			// Public routes (no auth required)
@@ -185,7 +184,7 @@ func (r *Router) RegisterRoutes() {
 	})
 
 	// OAuth provider endpoints
-	r.router.Route("/oauth", func(r chi.Router) {
+	rt.router.Route("/oauth", func(r chi.Router) {
 		r.Get("/authorize", handlers.OAuthAuthorize)
 		r.Post("/token", handlers.OAuthToken)
 		r.Get("/userinfo", handlers.OAuthUserInfo)
@@ -194,87 +193,59 @@ func (r *Router) RegisterRoutes() {
 	})
 
 	// SAML endpoints
-	r.router.Route("/saml", func(r chi.Router) {
+	rt.router.Route("/saml", func(r chi.Router) {
 		r.Post("/acs", handlers.SAMLAssertionConsumerService)
 		r.Get("/metadata", handlers.SAMLMetadata)
 	})
 
 	// Swagger endpoint
-	r.router.Get("/docs/*", httpSwagger.WrapHandler)
+	rt.router.Get("/docs/*", httpSwagger.WrapHandler)
 
 	// OIDC discovery endpoints
-	r.router.Get("/.well-known/openid-configuration", faktory.OAuth.OAuthConfiguration)
-	r.router.Get("/.well-known/jwks.json", faktory.OAuth.OAuthJWKS)
+	rt.router.Get("/.well-known/openid-configuration", faktory.OAuth.OAuthConfiguration)
+	rt.router.Get("/.well-known/jwks.json", faktory.OAuth.OAuthJWKS)
 
 	// Webhook endpoints (for receiving notifications)
-	r.router.Post("/webhooks/{id}", handlers.ReceiveWebhook)
+	rt.router.Post("/webhooks/{id}", handlers.ReceiveWebhook)
 
 	// Static assets (if needed)
 	fileServer := http.FileServer(http.Dir("./web/static"))
-	r.router.Handle("/static/*", http.StripPrefix("/static", fileServer))
+	rt.router.Handle("/static/*", http.StripPrefix("/static", fileServer))
 
-	r.router.Handle("/*", handlers.FileServer("./web/client/dist", r.router))
-
-	// Create a new Swagger generator
-	info := &openapi3.Info{
-		Title:       "User API",
-		Description: "API for managing users",
-		Version:     "1.0.0",
-		Contact: &openapi3.Contact{
-			Name:  "API Support",
-			Email: "support@example.com",
-		},
-	}
-	swaggerGen := swaggergen.NewSwaggerGen(r.router, info)
-
-	if r.config.GenerateSwagger {
-		// Extract all routes
-		if err := swaggerGen.ExtractRoutes(); err != nil {
-			panic(err)
-		}
-
-		// Save the OpenAPI specification
-		if err := swaggerGen.SaveJSON("api/swagger/openapi.json"); err != nil {
-			panic(err)
-		}
-
-		// if err := swaggerGen.SaveYAML("../../api/swagger/openapi.yaml"); err != nil {
-		// 	panic(err)
-		// }
-	}
+	rt.router.Handle("/*", handlers.FileServer("./web/client/dist", rt.router))
 }
 
 // Handler returns the HTTP handler
-func (r *Router) Handler() http.Handler {
-	return r.router
+func (rt *Router) Handler() http.Handler {
+	return rt.router
 }
 
 // Group adds a new route group
-func (r *Router) Group(fn func(r chi.Router)) {
-	r.router.Group(fn)
+func (rt *Router) Group(fn func(r chi.Router)) {
+	rt.router.Group(fn)
 }
 
 // Route adds a new route group with a pattern
-func (r *Router) Route(pattern string, fn func(r chi.Router)) {
-	r.router.Route(pattern, fn)
+func (rt *Router) Route(pattern string, fn func(r chi.Router)) {
+	rt.router.Route(pattern, fn)
 }
 
 // Use appends a middleware to the chain
-func (r *Router) Use(middleware ...func(http.Handler) http.Handler) {
-	r.router.Use(middleware...)
+func (rt *Router) Use(middleware ...func(http.Handler) http.Handler) {
+	rt.router.Use(middleware...)
 }
 
 // Method adds a method-specific route
-func (r *Router) Method(method, pattern string, handler http.HandlerFunc) {
-	r.router.Method(method, pattern, handler)
+func (rt *Router) Method(method, pattern string, handler http.HandlerFunc) {
+	rt.router.Method(method, pattern, handler)
 }
 
 // NotFound sets the not found handler
-func (r *Router) NotFound(handler http.HandlerFunc) {
-	r.router.NotFound(handler)
+func (rt *Router) NotFound(handler http.HandlerFunc) {
+	rt.router.NotFound(handler)
 }
 
 // MethodNotAllowed sets the method not allowed handler
-func (r *Router) MethodNotAllowed(handler http.HandlerFunc) {
-	r.router.MethodNotAllowed(handler)
+func (rt *Router) MethodNotAllowed(handler http.HandlerFunc) {
+	rt.router.MethodNotAllowed(handler)
 }

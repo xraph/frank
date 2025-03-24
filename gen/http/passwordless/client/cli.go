@@ -23,7 +23,7 @@ func BuildEmailPayload(passwordlessEmailBody string, passwordlessEmailOauth2 str
 	{
 		err = json.Unmarshal([]byte(passwordlessEmailBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"email\": \"user@example.com\",\n      \"redirect_url\": \"Rerum nesciunt qui.\"\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"email\": \"user@example.com\",\n      \"redirect_url\": \"Labore rem ab dolorem nemo facere tempora.\"\n   }'")
 		}
 		err = goa.MergeErrors(err, goa.ValidateFormat("body.email", body.Email, goa.FormatEmail))
 		if err != nil {
@@ -67,7 +67,7 @@ func BuildSmsPayload(passwordlessSmsBody string, passwordlessSmsOauth2 string, p
 	{
 		err = json.Unmarshal([]byte(passwordlessSmsBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"phone_number\": \"+12345678901\",\n      \"redirect_url\": \"Veniam suscipit est esse ut omnis est.\"\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"phone_number\": \"+12345678901\",\n      \"redirect_url\": \"Facere quidem iusto deleniti enim neque consequuntur.\"\n   }'")
 		}
 	}
 	var oauth2 *string
@@ -107,7 +107,7 @@ func BuildVerifyPayload(passwordlessVerifyBody string, passwordlessVerifyOauth2 
 	{
 		err = json.Unmarshal([]byte(passwordlessVerifyBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"auth_type\": \"email\",\n      \"code\": \"Dolorum sequi consequuntur rerum corrupti aliquid.\",\n      \"phone_number\": \"Voluptate et qui itaque enim quo aut.\",\n      \"token\": \"Voluptatibus esse.\"\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"auth_type\": \"email\",\n      \"code\": \"Quas deleniti.\",\n      \"phone_number\": \"Expedita nesciunt totam et itaque.\",\n      \"token\": \"Quae eos ratione aspernatur sunt perferendis soluta.\"\n   }'")
 		}
 		if !(body.AuthType == "email" || body.AuthType == "sms") {
 			err = goa.MergeErrors(err, goa.InvalidEnumValueError("body.auth_type", body.AuthType, []any{"email", "sms"}))
@@ -184,7 +184,7 @@ func BuildMagicLinkPayload(passwordlessMagicLinkBody string, passwordlessMagicLi
 	{
 		err = json.Unmarshal([]byte(passwordlessMagicLinkBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"email\": \"user@example.com\",\n      \"expires_in\": 316998,\n      \"redirect_url\": \"https://example.com/dashboard\",\n      \"user_id\": \"usr_123456789\"\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"email\": \"user@example.com\",\n      \"expires_in\": 58770,\n      \"redirect_url\": \"https://example.com/dashboard\",\n      \"user_id\": \"usr_123456789\"\n   }'")
 		}
 		err = goa.MergeErrors(err, goa.ValidateFormat("body.email", body.Email, goa.FormatEmail))
 		if body.ExpiresIn < 60 {

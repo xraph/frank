@@ -96,7 +96,7 @@ func RequestLogging(next http.Handler) http.Handler {
 		)
 
 		// Extract authentication information if available
-		userID, hasUserID := GetUserID(r)
+		userID, hasUserID := GetUserIDReq(r)
 		orgID, hasOrgID := GetOrganizationID(r)
 
 		if hasUserID {

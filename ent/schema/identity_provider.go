@@ -1,8 +1,6 @@
 package schema
 
 import (
-	"time"
-
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
@@ -18,8 +16,6 @@ type IdentityProvider struct {
 // Fields of the IdentityProvider.
 func (IdentityProvider) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("id").
-			Unique(),
 		field.String("name").
 			NotEmpty(),
 		field.String("organization_id").
@@ -60,12 +56,6 @@ func (IdentityProvider) Fields() []ent.Field {
 			Optional(),
 		entity.JSONMapStringField("attributes_mapping", true),
 		entity.JSONMapField("metadata", true),
-		field.Time("created_at").
-			Default(time.Now).
-			Immutable(),
-		field.Time("updated_at").
-			Default(time.Now).
-			UpdateDefault(time.Now),
 	}
 }
 
@@ -85,5 +75,12 @@ func (IdentityProvider) Indexes() []ent.Index {
 	return []ent.Index{
 		index.Fields("organization_id"),
 		index.Fields("provider_type"),
+	}
+}
+
+// Mixin of the IdentityProvider.
+func (IdentityProvider) Mixin() []ent.Mixin {
+	return []ent.Mixin{
+		ModelBaseMixin{},
 	}
 }

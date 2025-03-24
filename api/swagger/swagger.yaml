@@ -1,16 +1,6 @@
 basePath: /
 definitions:
-  FrankError:
-    properties:
-      code:
-        type: string
-      data:
-        additionalProperties: true
-        type: object
-      message:
-        type: string
-    type: object
-  ent.ApiKey:
+  ApiKey:
     properties:
       active:
         description: Active holds the value of the "active" field.
@@ -66,18 +56,7 @@ definitions:
         description: UserID holds the value of the "user_id" field.
         type: string
     type: object
-  ent.ApiKeyEdges:
-    properties:
-      organization:
-        allOf:
-        - $ref: '#/definitions/ent.Organization'
-        description: Organization holds the value of the organization edge.
-      user:
-        allOf:
-        - $ref: '#/definitions/ent.User'
-        description: User holds the value of the user edge.
-    type: object
-  ent.FeatureFlag:
+  FeatureFlag:
     properties:
       component:
         allOf:
@@ -114,15 +93,17 @@ definitions:
         description: UpdatedAt holds the value of the "updated_at" field.
         type: string
     type: object
-  ent.FeatureFlagEdges:
+  FrankError:
     properties:
-      organizations:
-        description: Organizations holds the value of the organizations edge.
-        items:
-          $ref: '#/definitions/ent.OrganizationFeature'
-        type: array
+      code:
+        type: string
+      data:
+        additionalProperties: true
+        type: object
+      message:
+        type: string
     type: object
-  ent.IdentityProvider:
+  IdentityProvider:
     properties:
       active:
         description: Active holds the value of the "active" field.
@@ -195,14 +176,24 @@ definitions:
         description: UserinfoEndpoint holds the value of the "userinfo_endpoint" field.
         type: string
     type: object
-  ent.IdentityProviderEdges:
+  LoginResponse:
     properties:
-      organization:
-        allOf:
-        - $ref: '#/definitions/ent.Organization'
-        description: Organization holds the value of the organization edge.
+      expires_at:
+        type: integer
+      mfa_required:
+        type: boolean
+      mfa_types:
+        items:
+          type: string
+        type: array
+      refresh_token:
+        type: string
+      token:
+        type: string
+      user:
+        $ref: '#/definitions/User'
     type: object
-  ent.MFA:
+  MFA:
     properties:
       active:
         description: Active holds the value of the "active" field.
@@ -250,14 +241,7 @@ definitions:
         description: Verified holds the value of the "verified" field.
         type: boolean
     type: object
-  ent.MFAEdges:
-    properties:
-      user:
-        allOf:
-        - $ref: '#/definitions/ent.User'
-        description: User holds the value of the user edge.
-    type: object
-  ent.OAuthAuthorization:
+  OAuthAuthorization:
     properties:
       client_id:
         description: ClientID holds the value of the "client_id" field.
@@ -314,23 +298,7 @@ definitions:
         description: UserID holds the value of the "user_id" field.
         type: string
     type: object
-  ent.OAuthAuthorizationEdges:
-    properties:
-      client:
-        allOf:
-        - $ref: '#/definitions/ent.OAuthClient'
-        description: Client holds the value of the client edge.
-      scopes:
-        description: Scopes holds the value of the scopes edge.
-        items:
-          $ref: '#/definitions/ent.OAuthScope'
-        type: array
-      user:
-        allOf:
-        - $ref: '#/definitions/ent.User'
-        description: User holds the value of the user edge.
-    type: object
-  ent.OAuthClient:
+  OAuthClient:
     properties:
       active:
         description: Active holds the value of the "active" field.
@@ -414,29 +382,7 @@ definitions:
         description: UpdatedAt holds the value of the "updated_at" field.
         type: string
     type: object
-  ent.OAuthClientEdges:
-    properties:
-      authorizations:
-        description: Authorizations holds the value of the authorizations edge.
-        items:
-          $ref: '#/definitions/ent.OAuthAuthorization'
-        type: array
-      organization:
-        allOf:
-        - $ref: '#/definitions/ent.Organization'
-        description: Organization holds the value of the organization edge.
-      scopes:
-        description: Scopes holds the value of the scopes edge.
-        items:
-          $ref: '#/definitions/ent.OAuthScope'
-        type: array
-      tokens:
-        description: Tokens holds the value of the tokens edge.
-        items:
-          $ref: '#/definitions/ent.OAuthToken'
-        type: array
-    type: object
-  ent.OAuthScope:
+  OAuthScope:
     properties:
       created_at:
         description: CreatedAt holds the value of the "created_at" field.
@@ -466,25 +412,7 @@ definitions:
         description: UpdatedAt holds the value of the "updated_at" field.
         type: string
     type: object
-  ent.OAuthScopeEdges:
-    properties:
-      authorizations:
-        description: Authorizations holds the value of the authorizations edge.
-        items:
-          $ref: '#/definitions/ent.OAuthAuthorization'
-        type: array
-      clients:
-        description: Clients holds the value of the clients edge.
-        items:
-          $ref: '#/definitions/ent.OAuthClient'
-        type: array
-      tokens:
-        description: Tokens holds the value of the tokens edge.
-        items:
-          $ref: '#/definitions/ent.OAuthToken'
-        type: array
-    type: object
-  ent.OAuthToken:
+  OAuthToken:
     properties:
       client_id:
         description: ClientID holds the value of the "client_id" field.
@@ -541,23 +469,7 @@ definitions:
         description: UserID holds the value of the "user_id" field.
         type: string
     type: object
-  ent.OAuthTokenEdges:
-    properties:
-      client:
-        allOf:
-        - $ref: '#/definitions/ent.OAuthClient'
-        description: Client holds the value of the client edge.
-      scopes:
-        description: Scopes holds the value of the scopes edge.
-        items:
-          $ref: '#/definitions/ent.OAuthScope'
-        type: array
-      user:
-        allOf:
-        - $ref: '#/definitions/ent.User'
-        description: User holds the value of the user edge.
-    type: object
-  ent.Organization:
+  Organization:
     properties:
       active:
         description: Active holds the value of the "active" field.
@@ -603,40 +515,7 @@ definitions:
         description: UpdatedAt holds the value of the "updated_at" field.
         type: string
     type: object
-  ent.OrganizationEdges:
-    properties:
-      api_keys:
-        description: APIKeys holds the value of the api_keys edge.
-        items:
-          $ref: '#/definitions/ent.ApiKey'
-        type: array
-      feature_flags:
-        description: FeatureFlags holds the value of the feature_flags edge.
-        items:
-          $ref: '#/definitions/ent.OrganizationFeature'
-        type: array
-      identity_providers:
-        description: IdentityProviders holds the value of the identity_providers edge.
-        items:
-          $ref: '#/definitions/ent.IdentityProvider'
-        type: array
-      oauth_clients:
-        description: OauthClients holds the value of the oauth_clients edge.
-        items:
-          $ref: '#/definitions/ent.OAuthClient'
-        type: array
-      users:
-        description: Users holds the value of the users edge.
-        items:
-          $ref: '#/definitions/ent.User'
-        type: array
-      webhooks:
-        description: Webhooks holds the value of the webhooks edge.
-        items:
-          $ref: '#/definitions/ent.Webhook'
-        type: array
-    type: object
-  ent.OrganizationFeature:
+  OrganizationFeature:
     properties:
       created_at:
         description: CreatedAt holds the value of the "created_at" field.
@@ -661,24 +540,13 @@ definitions:
         type: string
       settings:
         additionalProperties: true
-        description: Custom settings for this feature in this organization
+        description: Settings holds the value of the "settings" field.
         type: object
       updated_at:
         description: UpdatedAt holds the value of the "updated_at" field.
         type: string
     type: object
-  ent.OrganizationFeatureEdges:
-    properties:
-      feature:
-        allOf:
-        - $ref: '#/definitions/ent.FeatureFlag'
-        description: Feature holds the value of the feature edge.
-      organization:
-        allOf:
-        - $ref: '#/definitions/ent.Organization'
-        description: Organization holds the value of the organization edge.
-    type: object
-  ent.Passkey:
+  Passkey:
     properties:
       aaguid:
         description: Aaguid holds the value of the "aaguid" field.
@@ -734,14 +602,7 @@ definitions:
         description: UserID holds the value of the "user_id" field.
         type: string
     type: object
-  ent.PasskeyEdges:
-    properties:
-      user:
-        allOf:
-        - $ref: '#/definitions/ent.User'
-        description: User holds the value of the user edge.
-    type: object
-  ent.Permission:
+  Permission:
     properties:
       action:
         description: The action this permission allows (create, read, update, delete,
@@ -778,15 +639,7 @@ definitions:
         description: UpdatedAt holds the value of the "updated_at" field.
         type: string
     type: object
-  ent.PermissionEdges:
-    properties:
-      roles:
-        description: Roles holds the value of the roles edge.
-        items:
-          $ref: '#/definitions/ent.Role'
-        type: array
-    type: object
-  ent.Role:
+  Role:
     properties:
       created_at:
         description: CreatedAt holds the value of the "created_at" field.
@@ -819,20 +672,7 @@ definitions:
         description: UpdatedAt holds the value of the "updated_at" field.
         type: string
     type: object
-  ent.RoleEdges:
-    properties:
-      permissions:
-        description: Permissions holds the value of the permissions edge.
-        items:
-          $ref: '#/definitions/ent.Permission'
-        type: array
-      users:
-        description: Users holds the value of the users edge.
-        items:
-          $ref: '#/definitions/ent.User'
-        type: array
-    type: object
-  ent.Session:
+  Session:
     properties:
       active:
         description: Active holds the value of the "active" field.
@@ -877,14 +717,7 @@ definitions:
         description: UserID holds the value of the "user_id" field.
         type: string
     type: object
-  ent.SessionEdges:
-    properties:
-      user:
-        allOf:
-        - $ref: '#/definitions/ent.User'
-        description: User holds the value of the user edge.
-    type: object
-  ent.User:
+  User:
     properties:
       active:
         description: Active holds the value of the "active" field.
@@ -944,60 +777,15 @@ definitions:
         description: UpdatedAt holds the value of the "updated_at" field.
         type: string
     type: object
-  ent.UserEdges:
-    properties:
-      api_keys:
-        description: APIKeys holds the value of the api_keys edge.
-        items:
-          $ref: '#/definitions/ent.ApiKey'
-        type: array
-      mfa_methods:
-        description: MfaMethods holds the value of the mfa_methods edge.
-        items:
-          $ref: '#/definitions/ent.MFA'
-        type: array
-      oauth_authorizations:
-        description: OauthAuthorizations holds the value of the oauth_authorizations
-          edge.
-        items:
-          $ref: '#/definitions/ent.OAuthAuthorization'
-        type: array
-      oauth_tokens:
-        description: OauthTokens holds the value of the oauth_tokens edge.
-        items:
-          $ref: '#/definitions/ent.OAuthToken'
-        type: array
-      organizations:
-        description: Organizations holds the value of the organizations edge.
-        items:
-          $ref: '#/definitions/ent.Organization'
-        type: array
-      passkeys:
-        description: Passkeys holds the value of the passkeys edge.
-        items:
-          $ref: '#/definitions/ent.Passkey'
-        type: array
-      roles:
-        description: Roles holds the value of the roles edge.
-        items:
-          $ref: '#/definitions/ent.Role'
-        type: array
-      sessions:
-        description: Sessions holds the value of the sessions edge.
-        items:
-          $ref: '#/definitions/ent.Session'
-        type: array
-      verifications:
-        description: Verifications holds the value of the verifications edge.
-        items:
-          $ref: '#/definitions/ent.Verification'
-        type: array
-    type: object
-  ent.Verification:
+  Verification:
     properties:
       attempts:
         description: Attempts holds the value of the "attempts" field.
         type: integer
+      attestation:
+        additionalProperties: true
+        description: Attestation holds the value of the "attestation" field.
+        type: object
       created_at:
         description: CreatedAt holds the value of the "created_at" field.
         type: string
@@ -1019,10 +807,6 @@ definitions:
       ip_address:
         description: IPAddress holds the value of the "ip_address" field.
         type: string
-      metadata:
-        additionalProperties: true
-        description: Metadata holds the value of the "metadata" field.
-        type: object
       phone_number:
         description: PhoneNumber holds the value of the "phone_number" field.
         type: string
@@ -1048,14 +832,7 @@ definitions:
         description: UserID holds the value of the "user_id" field.
         type: string
     type: object
-  ent.VerificationEdges:
-    properties:
-      user:
-        allOf:
-        - $ref: '#/definitions/ent.User'
-        description: User holds the value of the user edge.
-    type: object
-  ent.Webhook:
+  Webhook:
     properties:
       active:
         description: Active holds the value of the "active" field.
@@ -1107,19 +884,7 @@ definitions:
         description: Version holds the value of the "version" field.
         type: string
     type: object
-  ent.WebhookEdges:
-    properties:
-      events:
-        description: Events holds the value of the events edge.
-        items:
-          $ref: '#/definitions/ent.WebhookEvent'
-        type: array
-      organization:
-        allOf:
-        - $ref: '#/definitions/ent.Organization'
-        description: Organization holds the value of the organization edge.
-    type: object
-  ent.WebhookEvent:
+  WebhookEvent:
     properties:
       attempts:
         description: Attempts holds the value of the "attempts" field.
@@ -1173,11 +938,263 @@ definitions:
         description: WebhookID holds the value of the "webhook_id" field.
         type: string
     type: object
+  ent.ApiKeyEdges:
+    properties:
+      organization:
+        allOf:
+        - $ref: '#/definitions/Organization'
+        description: Organization holds the value of the organization edge.
+      user:
+        allOf:
+        - $ref: '#/definitions/User'
+        description: User holds the value of the user edge.
+    type: object
+  ent.FeatureFlagEdges:
+    properties:
+      organizations:
+        description: Organizations holds the value of the organizations edge.
+        items:
+          $ref: '#/definitions/OrganizationFeature'
+        type: array
+    type: object
+  ent.IdentityProviderEdges:
+    properties:
+      organization:
+        allOf:
+        - $ref: '#/definitions/Organization'
+        description: Organization holds the value of the organization edge.
+    type: object
+  ent.MFAEdges:
+    properties:
+      user:
+        allOf:
+        - $ref: '#/definitions/User'
+        description: User holds the value of the user edge.
+    type: object
+  ent.OAuthAuthorizationEdges:
+    properties:
+      client:
+        allOf:
+        - $ref: '#/definitions/OAuthClient'
+        description: Client holds the value of the client edge.
+      scopes:
+        description: Scopes holds the value of the scopes edge.
+        items:
+          $ref: '#/definitions/OAuthScope'
+        type: array
+      user:
+        allOf:
+        - $ref: '#/definitions/User'
+        description: User holds the value of the user edge.
+    type: object
+  ent.OAuthClientEdges:
+    properties:
+      authorizations:
+        description: Authorizations holds the value of the authorizations edge.
+        items:
+          $ref: '#/definitions/OAuthAuthorization'
+        type: array
+      organization:
+        allOf:
+        - $ref: '#/definitions/Organization'
+        description: Organization holds the value of the organization edge.
+      scopes:
+        description: Scopes holds the value of the scopes edge.
+        items:
+          $ref: '#/definitions/OAuthScope'
+        type: array
+      tokens:
+        description: Tokens holds the value of the tokens edge.
+        items:
+          $ref: '#/definitions/OAuthToken'
+        type: array
+    type: object
+  ent.OAuthScopeEdges:
+    properties:
+      authorizations:
+        description: Authorizations holds the value of the authorizations edge.
+        items:
+          $ref: '#/definitions/OAuthAuthorization'
+        type: array
+      clients:
+        description: Clients holds the value of the clients edge.
+        items:
+          $ref: '#/definitions/OAuthClient'
+        type: array
+      tokens:
+        description: Tokens holds the value of the tokens edge.
+        items:
+          $ref: '#/definitions/OAuthToken'
+        type: array
+    type: object
+  ent.OAuthTokenEdges:
+    properties:
+      client:
+        allOf:
+        - $ref: '#/definitions/OAuthClient'
+        description: Client holds the value of the client edge.
+      scopes:
+        description: Scopes holds the value of the scopes edge.
+        items:
+          $ref: '#/definitions/OAuthScope'
+        type: array
+      user:
+        allOf:
+        - $ref: '#/definitions/User'
+        description: User holds the value of the user edge.
+    type: object
+  ent.OrganizationEdges:
+    properties:
+      api_keys:
+        description: APIKeys holds the value of the api_keys edge.
+        items:
+          $ref: '#/definitions/ApiKey'
+        type: array
+      feature_flags:
+        description: FeatureFlags holds the value of the feature_flags edge.
+        items:
+          $ref: '#/definitions/OrganizationFeature'
+        type: array
+      identity_providers:
+        description: IdentityProviders holds the value of the identity_providers edge.
+        items:
+          $ref: '#/definitions/IdentityProvider'
+        type: array
+      oauth_clients:
+        description: OauthClients holds the value of the oauth_clients edge.
+        items:
+          $ref: '#/definitions/OAuthClient'
+        type: array
+      users:
+        description: Users holds the value of the users edge.
+        items:
+          $ref: '#/definitions/User'
+        type: array
+      webhooks:
+        description: Webhooks holds the value of the webhooks edge.
+        items:
+          $ref: '#/definitions/Webhook'
+        type: array
+    type: object
+  ent.OrganizationFeatureEdges:
+    properties:
+      feature:
+        allOf:
+        - $ref: '#/definitions/FeatureFlag'
+        description: Feature holds the value of the feature edge.
+      organization:
+        allOf:
+        - $ref: '#/definitions/Organization'
+        description: Organization holds the value of the organization edge.
+    type: object
+  ent.PasskeyEdges:
+    properties:
+      user:
+        allOf:
+        - $ref: '#/definitions/User'
+        description: User holds the value of the user edge.
+    type: object
+  ent.PermissionEdges:
+    properties:
+      roles:
+        description: Roles holds the value of the roles edge.
+        items:
+          $ref: '#/definitions/Role'
+        type: array
+    type: object
+  ent.RoleEdges:
+    properties:
+      permissions:
+        description: Permissions holds the value of the permissions edge.
+        items:
+          $ref: '#/definitions/Permission'
+        type: array
+      users:
+        description: Users holds the value of the users edge.
+        items:
+          $ref: '#/definitions/User'
+        type: array
+    type: object
+  ent.SessionEdges:
+    properties:
+      user:
+        allOf:
+        - $ref: '#/definitions/User'
+        description: User holds the value of the user edge.
+    type: object
+  ent.UserEdges:
+    properties:
+      api_keys:
+        description: APIKeys holds the value of the api_keys edge.
+        items:
+          $ref: '#/definitions/ApiKey'
+        type: array
+      mfa_methods:
+        description: MfaMethods holds the value of the mfa_methods edge.
+        items:
+          $ref: '#/definitions/MFA'
+        type: array
+      oauth_authorizations:
+        description: OauthAuthorizations holds the value of the oauth_authorizations
+          edge.
+        items:
+          $ref: '#/definitions/OAuthAuthorization'
+        type: array
+      oauth_tokens:
+        description: OauthTokens holds the value of the oauth_tokens edge.
+        items:
+          $ref: '#/definitions/OAuthToken'
+        type: array
+      organizations:
+        description: Organizations holds the value of the organizations edge.
+        items:
+          $ref: '#/definitions/Organization'
+        type: array
+      passkeys:
+        description: Passkeys holds the value of the passkeys edge.
+        items:
+          $ref: '#/definitions/Passkey'
+        type: array
+      roles:
+        description: Roles holds the value of the roles edge.
+        items:
+          $ref: '#/definitions/Role'
+        type: array
+      sessions:
+        description: Sessions holds the value of the sessions edge.
+        items:
+          $ref: '#/definitions/Session'
+        type: array
+      verifications:
+        description: Verifications holds the value of the verifications edge.
+        items:
+          $ref: '#/definitions/Verification'
+        type: array
+    type: object
+  ent.VerificationEdges:
+    properties:
+      user:
+        allOf:
+        - $ref: '#/definitions/User'
+        description: User holds the value of the user edge.
+    type: object
+  ent.WebhookEdges:
+    properties:
+      events:
+        description: Events holds the value of the events edge.
+        items:
+          $ref: '#/definitions/WebhookEvent'
+        type: array
+      organization:
+        allOf:
+        - $ref: '#/definitions/Organization'
+        description: Organization holds the value of the organization edge.
+    type: object
   ent.WebhookEventEdges:
     properties:
       webhook:
         allOf:
-        - $ref: '#/definitions/ent.Webhook'
+        - $ref: '#/definitions/Webhook'
         description: Webhook holds the value of the webhook edge.
     type: object
   github_com_juicycleff_frank_ent_featureflag.Component:
@@ -1286,23 +1303,6 @@ definitions:
     - email
     - password
     type: object
-  internal_handlers.LoginResponse:
-    properties:
-      expires_at:
-        type: integer
-      mfa_required:
-        type: boolean
-      mfa_types:
-        items:
-          type: string
-        type: array
-      refresh_token:
-        type: string
-      token:
-        type: string
-      user:
-        $ref: '#/definitions/ent.User'
-    type: object
   internal_handlers.MFAEnrollRequest:
     properties:
       email:
@@ -1332,52 +1332,6 @@ definitions:
     required:
     - code
     - method
-    type: object
-  internal_handlers.Organization:
-    properties:
-      active:
-        description: Active holds the value of the "active" field.
-        type: boolean
-      created_at:
-        description: CreatedAt holds the value of the "created_at" field.
-        type: string
-      domain:
-        description: Domain holds the value of the "domain" field.
-        type: string
-      edges:
-        allOf:
-        - $ref: '#/definitions/ent.OrganizationEdges'
-        description: |-
-          Edges holds the relations/edges for other nodes in the graph.
-          The values are being populated by the OrganizationQuery when eager-loading is set.
-      id:
-        description: ID of the ent.
-        type: string
-      logo_url:
-        description: LogoURL holds the value of the "logo_url" field.
-        type: string
-      metadata:
-        additionalProperties: true
-        description: Metadata holds the value of the "metadata" field.
-        type: object
-      name:
-        description: Name holds the value of the "name" field.
-        type: string
-      plan:
-        description: Plan holds the value of the "plan" field.
-        type: string
-      slug:
-        description: Slug holds the value of the "slug" field.
-        type: string
-      trial_ends_at:
-        description: TrialEndsAt holds the value of the "trial_ends_at" field.
-        type: string
-      trial_used:
-        description: TrialUsed holds the value of the "trial_used" field.
-        type: boolean
-      updated_at:
-        description: UpdatedAt holds the value of the "updated_at" field.
-        type: string
     type: object
   internal_handlers.RefreshTokenInput:
     properties:
@@ -1566,7 +1520,7 @@ paths:
         "200":
           description: Login successful
           schema:
-            $ref: '#/definitions/internal_handlers.LoginResponse'
+            $ref: '#/definitions/LoginResponse'
         "400":
           description: Invalid input
           schema:
@@ -1819,7 +1773,7 @@ paths:
         "201":
           description: Registration successful
           schema:
-            $ref: '#/definitions/internal_handlers.LoginResponse'
+            $ref: '#/definitions/LoginResponse'
         "400":
           description: Invalid input
           schema:
@@ -1951,7 +1905,7 @@ paths:
         "201":
           description: Returns the created organization
           schema:
-            $ref: '#/definitions/internal_handlers.Organization'
+            $ref: '#/definitions/Organization'
         "400":
           description: Invalid input
           schema:
@@ -2020,7 +1974,7 @@ paths:
         "200":
           description: Returns the organization
           schema:
-            $ref: '#/definitions/internal_handlers.Organization'
+            $ref: '#/definitions/Organization'
         "400":
           description: Invalid organization ID
           schema:
@@ -2061,7 +2015,7 @@ paths:
         "200":
           description: Returns the updated organization
           schema:
-            $ref: '#/definitions/internal_handlers.Organization'
+            $ref: '#/definitions/Organization'
         "400":
           description: Invalid input
           schema:

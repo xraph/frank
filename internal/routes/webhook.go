@@ -38,7 +38,7 @@ func NewWebhookRoutes(
 func (r *WebhookRoutes) RegisterRoutes(router chi.Router) {
 	router.Get("/webhooks", r.handler.ListWebhooks)
 	router.Post("/webhooks/trigger", r.handler.TriggerWebhookEvent)
-	// router.Route("/webhooks", func(router chi.Router) {
+	// router.Route("/webhooks", func(router chi.HumaRouter) {
 	// })
 }
 

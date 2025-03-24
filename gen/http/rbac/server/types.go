@@ -47,7 +47,7 @@ type AddRolePermissionRequestBody struct {
 // "list_permissions" endpoint HTTP response body.
 type ListPermissionsResponseBody struct {
 	Data       []*PermissionResponseResponseBody `form:"data" json:"data" xml:"data"`
-	Pagination *PaginationResponseResponseBody   `form:"pagination" json:"pagination" xml:"pagination"`
+	Pagination *PaginationResponseBody           `form:"pagination" json:"pagination" xml:"pagination"`
 }
 
 // CreatePermissionResponseBody is the type of the "rbac" service
@@ -122,8 +122,8 @@ type UpdatePermissionResponseBody struct {
 // ListRolesResponseBody is the type of the "rbac" service "list_roles"
 // endpoint HTTP response body.
 type ListRolesResponseBody struct {
-	Data       []*RoleResponseResponseBody     `form:"data" json:"data" xml:"data"`
-	Pagination *PaginationResponseResponseBody `form:"pagination" json:"pagination" xml:"pagination"`
+	Data       []*RoleResponseResponseBody `form:"data" json:"data" xml:"data"`
+	Pagination *PaginationResponseBody     `form:"pagination" json:"pagination" xml:"pagination"`
 }
 
 // CreateRoleResponseBody is the type of the "rbac" service "create_role"
@@ -1434,15 +1434,22 @@ type PermissionResponseResponseBody struct {
 	UpdatedAt *string `form:"updated_at,omitempty" json:"updated_at,omitempty" xml:"updated_at,omitempty"`
 }
 
-// PaginationResponseResponseBody is used to define fields on response body
-// types.
-type PaginationResponseResponseBody struct {
+// PaginationResponseBody is used to define fields on response body types.
+type PaginationResponseBody struct {
+	// Offset
+	Offset int `json:"offset"`
+	// Limit
+	Limit int `json:"limit"`
 	// Total number of items
-	Total int `form:"total" json:"total" xml:"total"`
-	// Current offset
-	Offset int `form:"offset" json:"offset" xml:"offset"`
-	// Current limit
-	Limit int `form:"limit" json:"limit" xml:"limit"`
+	Total int `json:"total"`
+	// Total number of pages
+	TotalPages int `json:"total_pages,totalPages"`
+	// Current page number
+	CurrentPage int `json:"current_page,currentPage"`
+	// Has next page
+	HasNext bool `json:"has_next,hasNext"`
+	// Has previous page
+	HasPrevious bool `json:"has_previous,hasPrevious"`
 }
 
 // RoleResponseResponseBody is used to define fields on response body types.
@@ -1535,7 +1542,7 @@ func NewListPermissionsResponseBody(res *rbac.ListPermissionsResponse) *ListPerm
 		body.Data = []*PermissionResponseResponseBody{}
 	}
 	if res.Pagination != nil {
-		body.Pagination = marshalDesigntypesPaginationResponseToPaginationResponseResponseBody(res.Pagination)
+		body.Pagination = marshalDesigntypesPaginationToPaginationResponseBody(res.Pagination)
 	}
 	return body
 }
@@ -1604,7 +1611,7 @@ func NewListRolesResponseBody(res *rbac.ListRolesResult) *ListRolesResponseBody 
 		body.Data = []*RoleResponseResponseBody{}
 	}
 	if res.Pagination != nil {
-		body.Pagination = marshalDesigntypesPaginationResponseToPaginationResponseResponseBody(res.Pagination)
+		body.Pagination = marshalDesigntypesPaginationToPaginationResponseBody(res.Pagination)
 	}
 	return body
 }

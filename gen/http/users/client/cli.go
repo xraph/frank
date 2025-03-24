@@ -94,14 +94,14 @@ func BuildCreatePayload(usersCreateBody string, usersCreateJWT string) (*users.C
 	{
 		err = json.Unmarshal([]byte(usersCreateBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"email\": \"user@example.com\",\n      \"first_name\": \"John\",\n      \"last_name\": \"Doe\",\n      \"locale\": \"At nemo deleniti fugit quas rerum quis.\",\n      \"metadata\": {\n         \"Rerum ducimus.\": \"Harum asperiores.\",\n         \"Velit est non aut cumque dicta.\": \"Totam et et voluptate porro consequuntur nobis.\"\n      },\n      \"organization_id\": \"Sapiente in consequatur id.\",\n      \"password\": \"securepassword\",\n      \"phone_number\": \"Qui nihil debitis nihil voluptatem assumenda.\",\n      \"profile_image_url\": \"Necessitatibus aperiam ut in iure.\"\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"email\": \"user@example.com\",\n      \"first_name\": \"Quia nam officiis magni sint sed.\",\n      \"last_name\": \"Vel doloribus aut.\",\n      \"locale\": \"Optio adipisci voluptatem.\",\n      \"metadata\": {\n         \"Consequatur inventore voluptatibus.\": \"Eos magnam fugiat praesentium laudantium et architecto.\",\n         \"Itaque culpa fugit magni fugiat ut.\": \"Sit tempore ea omnis.\",\n         \"Sunt voluptatem commodi aut.\": \"Ut et eos.\"\n      },\n      \"organization_id\": \"Aliquid enim sed eveniet debitis.\",\n      \"password\": \"securepassword\",\n      \"phone_number\": \"Expedita voluptas nihil laudantium consectetur velit id.\",\n      \"profile_image_url\": \"Facere laboriosam optio perferendis.\"\n   }'")
 		}
-		err = goa.MergeErrors(err, goa.ValidateFormat("body.email", body.Email, goa.FormatEmail))
 		if body.Password != nil {
 			if utf8.RuneCountInString(*body.Password) < 8 {
 				err = goa.MergeErrors(err, goa.InvalidLengthError("body.password", *body.Password, utf8.RuneCountInString(*body.Password), 8, true))
 			}
 		}
+		err = goa.MergeErrors(err, goa.ValidateFormat("body.email", body.Email, goa.FormatEmail))
 		if err != nil {
 			return nil, err
 		}
@@ -113,14 +113,14 @@ func BuildCreatePayload(usersCreateBody string, usersCreateJWT string) (*users.C
 		}
 	}
 	v := &users.CreatePayload{
-		Email:           body.Email,
 		Password:        body.Password,
-		PhoneNumber:     body.PhoneNumber,
+		OrganizationID:  body.OrganizationID,
 		FirstName:       body.FirstName,
 		LastName:        body.LastName,
+		PhoneNumber:     body.PhoneNumber,
 		ProfileImageURL: body.ProfileImageURL,
 		Locale:          body.Locale,
-		OrganizationID:  body.OrganizationID,
+		Email:           body.Email,
 	}
 	if body.Metadata != nil {
 		v.Metadata = make(map[string]any, len(body.Metadata))
@@ -168,7 +168,7 @@ func BuildUpdatePayload(usersUpdateBody string, usersUpdateID string, usersUpdat
 	{
 		err = json.Unmarshal([]byte(usersUpdateBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"user\": {\n         \"active\": true,\n         \"first_name\": \"Ab nihil itaque quidem.\",\n         \"last_name\": \"Aspernatur qui qui est.\",\n         \"locale\": \"Unde vel sit nihil consequatur aliquam.\",\n         \"metadata\": {\n            \"Eum aspernatur quisquam.\": \"Sint assumenda.\",\n            \"Perspiciatis consequuntur eos voluptas accusantium aliquam.\": \"In odio suscipit corrupti aut sed ipsum.\"\n         },\n         \"phone_number\": \"In fuga.\",\n         \"primary_organization_id\": \"Repudiandae est inventore fuga neque corrupti sit.\",\n         \"profile_image_url\": \"Eum unde omnis est praesentium quaerat.\"\n      }\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"user\": {\n         \"active\": false,\n         \"first_name\": \"Cumque qui ducimus quos quia.\",\n         \"last_name\": \"Ipsam qui odit.\",\n         \"locale\": \"Qui libero et.\",\n         \"metadata\": {\n            \"Excepturi illum.\": \"Aspernatur non quos et repudiandae.\",\n            \"Illum sit eum quo enim autem aspernatur.\": \"Non laboriosam numquam.\"\n         },\n         \"phone_number\": \"Cumque est itaque rem iste est.\",\n         \"primary_organization_id\": \"Temporibus et quos et quas animi.\",\n         \"profile_image_url\": \"Repellat incidunt.\"\n      }\n   }'")
 		}
 		if body.User == nil {
 			err = goa.MergeErrors(err, goa.MissingFieldError("user", "body"))
@@ -225,7 +225,7 @@ func BuildUpdateMePayload(usersUpdateMeBody string, usersUpdateMeJWT string) (*u
 	{
 		err = json.Unmarshal([]byte(usersUpdateMeBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"active\": false,\n      \"first_name\": \"Totam voluptatem.\",\n      \"last_name\": \"Consequatur perferendis.\",\n      \"locale\": \"Magni aut aperiam enim dolorem.\",\n      \"metadata\": {\n         \"Asperiores aut dignissimos repellat.\": \"Eveniet hic voluptas minus.\",\n         \"Facere labore nobis.\": \"Minima omnis voluptas distinctio veniam enim mollitia.\"\n      },\n      \"phone_number\": \"Doloremque unde numquam pariatur officia molestiae corporis.\",\n      \"primary_organization_id\": \"Aut reiciendis sit.\",\n      \"profile_image_url\": \"Dolores rerum numquam.\"\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"active\": true,\n      \"first_name\": \"Aut et quia.\",\n      \"last_name\": \"Perferendis totam.\",\n      \"locale\": \"Minus nihil repellendus consequatur laborum.\",\n      \"metadata\": {\n         \"Ullam consectetur at provident.\": \"Animi aut sit minus voluptatem voluptate.\"\n      },\n      \"phone_number\": \"Culpa quaerat.\",\n      \"primary_organization_id\": \"Ea ipsum delectus hic.\",\n      \"profile_image_url\": \"Quia voluptate.\"\n   }'")
 		}
 	}
 	var jwt *string

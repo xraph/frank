@@ -101,14 +101,12 @@ type SendTemplateRequestBody struct {
 // "list_templates" endpoint HTTP response body.
 type ListTemplatesResponseBody struct {
 	Data       []*EmailTemplateResponseResponseBody `form:"data,omitempty" json:"data,omitempty" xml:"data,omitempty"`
-	Pagination *PaginationResponseResponseBody      `form:"pagination,omitempty" json:"pagination,omitempty" xml:"pagination,omitempty"`
+	Pagination *PaginationResponseBody              `form:"pagination,omitempty" json:"pagination,omitempty" xml:"pagination,omitempty"`
 }
 
 // CreateTemplateResponseBody is the type of the "email" service
 // "create_template" endpoint HTTP response body.
 type CreateTemplateResponseBody struct {
-	// Template ID
-	ID *string `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
 	// Template name
 	Name *string `form:"name,omitempty" json:"name,omitempty" xml:"name,omitempty"`
 	// Email subject
@@ -129,17 +127,17 @@ type CreateTemplateResponseBody struct {
 	Locale *string `form:"locale,omitempty" json:"locale,omitempty" xml:"locale,omitempty"`
 	// Template metadata
 	Metadata map[string]any `form:"metadata,omitempty" json:"metadata,omitempty" xml:"metadata,omitempty"`
-	// Creation timestamp
-	CreatedAt *string `form:"created_at,omitempty" json:"created_at,omitempty" xml:"created_at,omitempty"`
-	// Last update timestamp
-	UpdatedAt *string `form:"updated_at,omitempty" json:"updated_at,omitempty" xml:"updated_at,omitempty"`
+	// Created At
+	ID *string `json:"id"`
+	// Created At
+	CreatedAt *string `json:"created_at,createdAt"`
+	// Updated At
+	UpdatedAt *string `json:"updated_at,updatedAt"`
 }
 
 // GetTemplateResponseBody is the type of the "email" service "get_template"
 // endpoint HTTP response body.
 type GetTemplateResponseBody struct {
-	// Template ID
-	ID *string `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
 	// Template name
 	Name *string `form:"name,omitempty" json:"name,omitempty" xml:"name,omitempty"`
 	// Email subject
@@ -160,17 +158,17 @@ type GetTemplateResponseBody struct {
 	Locale *string `form:"locale,omitempty" json:"locale,omitempty" xml:"locale,omitempty"`
 	// Template metadata
 	Metadata map[string]any `form:"metadata,omitempty" json:"metadata,omitempty" xml:"metadata,omitempty"`
-	// Creation timestamp
-	CreatedAt *string `form:"created_at,omitempty" json:"created_at,omitempty" xml:"created_at,omitempty"`
-	// Last update timestamp
-	UpdatedAt *string `form:"updated_at,omitempty" json:"updated_at,omitempty" xml:"updated_at,omitempty"`
+	// Created At
+	ID *string `json:"id"`
+	// Created At
+	CreatedAt *string `json:"created_at,createdAt"`
+	// Updated At
+	UpdatedAt *string `json:"updated_at,updatedAt"`
 }
 
 // GetTemplateByTypeResponseBody is the type of the "email" service
 // "get_template_by_type" endpoint HTTP response body.
 type GetTemplateByTypeResponseBody struct {
-	// Template ID
-	ID *string `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
 	// Template name
 	Name *string `form:"name,omitempty" json:"name,omitempty" xml:"name,omitempty"`
 	// Email subject
@@ -191,17 +189,17 @@ type GetTemplateByTypeResponseBody struct {
 	Locale *string `form:"locale,omitempty" json:"locale,omitempty" xml:"locale,omitempty"`
 	// Template metadata
 	Metadata map[string]any `form:"metadata,omitempty" json:"metadata,omitempty" xml:"metadata,omitempty"`
-	// Creation timestamp
-	CreatedAt *string `form:"created_at,omitempty" json:"created_at,omitempty" xml:"created_at,omitempty"`
-	// Last update timestamp
-	UpdatedAt *string `form:"updated_at,omitempty" json:"updated_at,omitempty" xml:"updated_at,omitempty"`
+	// Created At
+	ID *string `json:"id"`
+	// Created At
+	CreatedAt *string `json:"created_at,createdAt"`
+	// Updated At
+	UpdatedAt *string `json:"updated_at,updatedAt"`
 }
 
 // UpdateTemplateResponseBody is the type of the "email" service
 // "update_template" endpoint HTTP response body.
 type UpdateTemplateResponseBody struct {
-	// Template ID
-	ID *string `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
 	// Template name
 	Name *string `form:"name,omitempty" json:"name,omitempty" xml:"name,omitempty"`
 	// Email subject
@@ -222,10 +220,12 @@ type UpdateTemplateResponseBody struct {
 	Locale *string `form:"locale,omitempty" json:"locale,omitempty" xml:"locale,omitempty"`
 	// Template metadata
 	Metadata map[string]any `form:"metadata,omitempty" json:"metadata,omitempty" xml:"metadata,omitempty"`
-	// Creation timestamp
-	CreatedAt *string `form:"created_at,omitempty" json:"created_at,omitempty" xml:"created_at,omitempty"`
-	// Last update timestamp
-	UpdatedAt *string `form:"updated_at,omitempty" json:"updated_at,omitempty" xml:"updated_at,omitempty"`
+	// Created At
+	ID *string `json:"id"`
+	// Created At
+	CreatedAt *string `json:"created_at,createdAt"`
+	// Updated At
+	UpdatedAt *string `json:"updated_at,updatedAt"`
 }
 
 // SendResponseBody is the type of the "email" service "send" endpoint HTTP
@@ -768,8 +768,6 @@ type SendTemplateUnauthorizedResponseBody struct {
 // EmailTemplateResponseResponseBody is used to define fields on response body
 // types.
 type EmailTemplateResponseResponseBody struct {
-	// Template ID
-	ID *string `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
 	// Template name
 	Name *string `form:"name,omitempty" json:"name,omitempty" xml:"name,omitempty"`
 	// Email subject
@@ -790,21 +788,30 @@ type EmailTemplateResponseResponseBody struct {
 	Locale *string `form:"locale,omitempty" json:"locale,omitempty" xml:"locale,omitempty"`
 	// Template metadata
 	Metadata map[string]any `form:"metadata,omitempty" json:"metadata,omitempty" xml:"metadata,omitempty"`
-	// Creation timestamp
-	CreatedAt *string `form:"created_at,omitempty" json:"created_at,omitempty" xml:"created_at,omitempty"`
-	// Last update timestamp
-	UpdatedAt *string `form:"updated_at,omitempty" json:"updated_at,omitempty" xml:"updated_at,omitempty"`
+	// Created At
+	ID *string `json:"id"`
+	// Created At
+	CreatedAt *string `json:"created_at,createdAt"`
+	// Updated At
+	UpdatedAt *string `json:"updated_at,updatedAt"`
 }
 
-// PaginationResponseResponseBody is used to define fields on response body
-// types.
-type PaginationResponseResponseBody struct {
+// PaginationResponseBody is used to define fields on response body types.
+type PaginationResponseBody struct {
+	// Offset
+	Offset *int `json:"offset"`
+	// Limit
+	Limit *int `json:"limit"`
 	// Total number of items
-	Total *int `form:"total,omitempty" json:"total,omitempty" xml:"total,omitempty"`
-	// Current offset
-	Offset *int `form:"offset,omitempty" json:"offset,omitempty" xml:"offset,omitempty"`
-	// Current limit
-	Limit *int `form:"limit,omitempty" json:"limit,omitempty" xml:"limit,omitempty"`
+	Total *int `json:"total"`
+	// Total number of pages
+	TotalPages *int `json:"total_pages,totalPages"`
+	// Current page number
+	CurrentPage *int `json:"current_page,currentPage"`
+	// Has next page
+	HasNext *bool `json:"has_next,hasNext"`
+	// Has previous page
+	HasPrevious *bool `json:"has_previous,hasPrevious"`
 }
 
 // UpdateEmailTemplateRequestRequestBody is used to define fields on request
@@ -1000,7 +1007,7 @@ func NewListTemplatesResultOK(body *ListTemplatesResponseBody) *email.ListTempla
 	for i, val := range body.Data {
 		v.Data[i] = unmarshalEmailTemplateResponseResponseBodyToEmailEmailTemplateResponse(val)
 	}
-	v.Pagination = unmarshalPaginationResponseResponseBodyToDesigntypesPaginationResponse(body.Pagination)
+	v.Pagination = unmarshalPaginationResponseBodyToDesigntypesPagination(body.Pagination)
 
 	return v
 }
@@ -1074,7 +1081,6 @@ func NewListTemplatesUnauthorized(body *ListTemplatesUnauthorizedResponseBody) *
 // "create_template" endpoint result from a HTTP "Created" response.
 func NewCreateTemplateEmailTemplateResponseCreated(body *CreateTemplateResponseBody) *email.EmailTemplateResponse {
 	v := &email.EmailTemplateResponse{
-		ID:             *body.ID,
 		Name:           *body.Name,
 		Subject:        *body.Subject,
 		Type:           *body.Type,
@@ -1084,8 +1090,9 @@ func NewCreateTemplateEmailTemplateResponseCreated(body *CreateTemplateResponseB
 		Active:         *body.Active,
 		System:         *body.System,
 		Locale:         *body.Locale,
+		ID:             *body.ID,
 		CreatedAt:      *body.CreatedAt,
-		UpdatedAt:      body.UpdatedAt,
+		UpdatedAt:      *body.UpdatedAt,
 	}
 	if body.Metadata != nil {
 		v.Metadata = make(map[string]any, len(body.Metadata))
@@ -1168,7 +1175,6 @@ func NewCreateTemplateUnauthorized(body *CreateTemplateUnauthorizedResponseBody)
 // "get_template" endpoint result from a HTTP "OK" response.
 func NewGetTemplateEmailTemplateResponseOK(body *GetTemplateResponseBody) *email.EmailTemplateResponse {
 	v := &email.EmailTemplateResponse{
-		ID:             *body.ID,
 		Name:           *body.Name,
 		Subject:        *body.Subject,
 		Type:           *body.Type,
@@ -1178,8 +1184,9 @@ func NewGetTemplateEmailTemplateResponseOK(body *GetTemplateResponseBody) *email
 		Active:         *body.Active,
 		System:         *body.System,
 		Locale:         *body.Locale,
+		ID:             *body.ID,
 		CreatedAt:      *body.CreatedAt,
-		UpdatedAt:      body.UpdatedAt,
+		UpdatedAt:      *body.UpdatedAt,
 	}
 	if body.Metadata != nil {
 		v.Metadata = make(map[string]any, len(body.Metadata))
@@ -1262,7 +1269,6 @@ func NewGetTemplateUnauthorized(body *GetTemplateUnauthorizedResponseBody) *emai
 // "get_template_by_type" endpoint result from a HTTP "OK" response.
 func NewGetTemplateByTypeEmailTemplateResponseOK(body *GetTemplateByTypeResponseBody) *email.EmailTemplateResponse {
 	v := &email.EmailTemplateResponse{
-		ID:             *body.ID,
 		Name:           *body.Name,
 		Subject:        *body.Subject,
 		Type:           *body.Type,
@@ -1272,8 +1278,9 @@ func NewGetTemplateByTypeEmailTemplateResponseOK(body *GetTemplateByTypeResponse
 		Active:         *body.Active,
 		System:         *body.System,
 		Locale:         *body.Locale,
+		ID:             *body.ID,
 		CreatedAt:      *body.CreatedAt,
-		UpdatedAt:      body.UpdatedAt,
+		UpdatedAt:      *body.UpdatedAt,
 	}
 	if body.Metadata != nil {
 		v.Metadata = make(map[string]any, len(body.Metadata))
@@ -1356,7 +1363,6 @@ func NewGetTemplateByTypeUnauthorized(body *GetTemplateByTypeUnauthorizedRespons
 // "update_template" endpoint result from a HTTP "OK" response.
 func NewUpdateTemplateEmailTemplateResponseOK(body *UpdateTemplateResponseBody) *email.EmailTemplateResponse {
 	v := &email.EmailTemplateResponse{
-		ID:             *body.ID,
 		Name:           *body.Name,
 		Subject:        *body.Subject,
 		Type:           *body.Type,
@@ -1366,8 +1372,9 @@ func NewUpdateTemplateEmailTemplateResponseOK(body *UpdateTemplateResponseBody) 
 		Active:         *body.Active,
 		System:         *body.System,
 		Locale:         *body.Locale,
+		ID:             *body.ID,
 		CreatedAt:      *body.CreatedAt,
-		UpdatedAt:      body.UpdatedAt,
+		UpdatedAt:      *body.UpdatedAt,
 	}
 	if body.Metadata != nil {
 		v.Metadata = make(map[string]any, len(body.Metadata))
@@ -1674,7 +1681,7 @@ func ValidateListTemplatesResponseBody(body *ListTemplatesResponseBody) (err err
 		}
 	}
 	if body.Pagination != nil {
-		if err2 := ValidatePaginationResponseResponseBody(body.Pagination); err2 != nil {
+		if err2 := ValidatePaginationResponseBody(body.Pagination); err2 != nil {
 			err = goa.MergeErrors(err, err2)
 		}
 	}
@@ -1711,6 +1718,15 @@ func ValidateCreateTemplateResponseBody(body *CreateTemplateResponseBody) (err e
 	if body.CreatedAt == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("created_at", "body"))
 	}
+	if body.UpdatedAt == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("updated_at", "body"))
+	}
+	if body.CreatedAt != nil {
+		err = goa.MergeErrors(err, goa.ValidateFormat("body.created_at", *body.CreatedAt, goa.FormatDateTime))
+	}
+	if body.UpdatedAt != nil {
+		err = goa.MergeErrors(err, goa.ValidateFormat("body.updated_at", *body.UpdatedAt, goa.FormatDateTime))
+	}
 	return
 }
 
@@ -1743,6 +1759,15 @@ func ValidateGetTemplateResponseBody(body *GetTemplateResponseBody) (err error) 
 	}
 	if body.CreatedAt == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("created_at", "body"))
+	}
+	if body.UpdatedAt == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("updated_at", "body"))
+	}
+	if body.CreatedAt != nil {
+		err = goa.MergeErrors(err, goa.ValidateFormat("body.created_at", *body.CreatedAt, goa.FormatDateTime))
+	}
+	if body.UpdatedAt != nil {
+		err = goa.MergeErrors(err, goa.ValidateFormat("body.updated_at", *body.UpdatedAt, goa.FormatDateTime))
 	}
 	return
 }
@@ -1777,6 +1802,15 @@ func ValidateGetTemplateByTypeResponseBody(body *GetTemplateByTypeResponseBody) 
 	if body.CreatedAt == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("created_at", "body"))
 	}
+	if body.UpdatedAt == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("updated_at", "body"))
+	}
+	if body.CreatedAt != nil {
+		err = goa.MergeErrors(err, goa.ValidateFormat("body.created_at", *body.CreatedAt, goa.FormatDateTime))
+	}
+	if body.UpdatedAt != nil {
+		err = goa.MergeErrors(err, goa.ValidateFormat("body.updated_at", *body.UpdatedAt, goa.FormatDateTime))
+	}
 	return
 }
 
@@ -1809,6 +1843,15 @@ func ValidateUpdateTemplateResponseBody(body *UpdateTemplateResponseBody) (err e
 	}
 	if body.CreatedAt == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("created_at", "body"))
+	}
+	if body.UpdatedAt == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("updated_at", "body"))
+	}
+	if body.CreatedAt != nil {
+		err = goa.MergeErrors(err, goa.ValidateFormat("body.created_at", *body.CreatedAt, goa.FormatDateTime))
+	}
+	if body.UpdatedAt != nil {
+		err = goa.MergeErrors(err, goa.ValidateFormat("body.updated_at", *body.UpdatedAt, goa.FormatDateTime))
 	}
 	return
 }
@@ -2340,12 +2383,21 @@ func ValidateEmailTemplateResponseResponseBody(body *EmailTemplateResponseRespon
 	if body.CreatedAt == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("created_at", "body"))
 	}
+	if body.UpdatedAt == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("updated_at", "body"))
+	}
+	if body.CreatedAt != nil {
+		err = goa.MergeErrors(err, goa.ValidateFormat("body.created_at", *body.CreatedAt, goa.FormatDateTime))
+	}
+	if body.UpdatedAt != nil {
+		err = goa.MergeErrors(err, goa.ValidateFormat("body.updated_at", *body.UpdatedAt, goa.FormatDateTime))
+	}
 	return
 }
 
-// ValidatePaginationResponseResponseBody runs the validations defined on
-// PaginationResponseResponseBody
-func ValidatePaginationResponseResponseBody(body *PaginationResponseResponseBody) (err error) {
+// ValidatePaginationResponseBody runs the validations defined on
+// PaginationResponseBody
+func ValidatePaginationResponseBody(body *PaginationResponseBody) (err error) {
 	if body.Total == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("total", "body"))
 	}
@@ -2354,6 +2406,33 @@ func ValidatePaginationResponseResponseBody(body *PaginationResponseResponseBody
 	}
 	if body.Limit == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("limit", "body"))
+	}
+	if body.TotalPages == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("total_pages", "body"))
+	}
+	if body.CurrentPage == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("current_page", "body"))
+	}
+	if body.HasNext == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("has_next", "body"))
+	}
+	if body.HasPrevious == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("has_previous", "body"))
+	}
+	if body.Offset != nil {
+		if *body.Offset < 0 {
+			err = goa.MergeErrors(err, goa.InvalidRangeError("body.offset", *body.Offset, 0, true))
+		}
+	}
+	if body.Limit != nil {
+		if *body.Limit < 1 {
+			err = goa.MergeErrors(err, goa.InvalidRangeError("body.limit", *body.Limit, 1, true))
+		}
+	}
+	if body.Limit != nil {
+		if *body.Limit > 100 {
+			err = goa.MergeErrors(err, goa.InvalidRangeError("body.limit", *body.Limit, 100, false))
+		}
 	}
 	return
 }

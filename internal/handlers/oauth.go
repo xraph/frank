@@ -94,13 +94,11 @@ func (h *OAuthHandler) handleClientAuthorize(w http.ResponseWriter, r *http.Requ
 	}
 
 	// Check if we have this provider configured
-	loginURL, err := h.oauthClient.GetLoginURL(provider, "", nil)
+	_, err := h.oauthClient.GetLoginURL(provider, "", nil)
 	if err != nil {
 		utils.RespondError(w, errors.Wrap(errors.CodeProviderNotFound, err, "provider not found or not configured"))
 		return
 	}
-
-	fmt.Println(loginURL)
 
 	// Generate state parameter for CSRF protection
 	state, err := utils.GenerateStateToken()

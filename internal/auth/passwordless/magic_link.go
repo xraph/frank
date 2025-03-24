@@ -52,8 +52,7 @@ func (p *MagicLinkProvider) GenerateMagicLink(
 	if expiresIn == 0 {
 		expiresIn = p.config.Auth.MagicLinkDuration
 	}
-	expiresAt := time.Now().Add(expiresIn)
-	fmt.Println(expiresAt)
+	// expiresAt := time.Now().Add(expiresIn)
 
 	// Build the magic link
 	baseURL := p.config.Server.BaseURL

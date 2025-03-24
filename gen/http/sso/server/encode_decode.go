@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"strings"
 
+	designtypes "github.com/juicycleff/frank/gen/designtypes"
 	sso "github.com/juicycleff/frank/gen/sso"
 	goahttp "goa.design/goa/v3/http"
 	goa "goa.design/goa/v3/pkg"
@@ -1475,25 +1476,22 @@ func marshalSsoSSOProviderToSSOProviderResponseBody(v *sso.SSOProvider) *SSOProv
 	return res
 }
 
-// marshalSsoUserToUserResponseBody builds a value of type *UserResponseBody
-// from a value of type *sso.User.
-func marshalSsoUserToUserResponseBody(v *sso.User) *UserResponseBody {
+// marshalDesigntypesUserToUserResponseBody builds a value of type
+// *UserResponseBody from a value of type *designtypes.User.
+func marshalDesigntypesUserToUserResponseBody(v *designtypes.User) *UserResponseBody {
 	if v == nil {
 		return nil
 	}
 	res := &UserResponseBody{
-		ID:              v.ID,
-		Email:           v.Email,
-		FirstName:       v.FirstName,
-		LastName:        v.LastName,
+		Active:          v.Active,
 		EmailVerified:   v.EmailVerified,
-		PhoneNumber:     v.PhoneNumber,
 		PhoneVerified:   v.PhoneVerified,
 		ProfileImageURL: v.ProfileImageURL,
+		FirstName:       v.FirstName,
+		LastName:        v.LastName,
+		PhoneNumber:     v.PhoneNumber,
 		Locale:          v.Locale,
-		Active:          v.Active,
-		CreatedAt:       v.CreatedAt,
-		UpdatedAt:       v.UpdatedAt,
+		Email:           v.Email,
 	}
 	if v.Metadata != nil {
 		res.Metadata = make(map[string]any, len(v.Metadata))
@@ -1501,6 +1499,12 @@ func marshalSsoUserToUserResponseBody(v *sso.User) *UserResponseBody {
 			tk := key
 			tv := val
 			res.Metadata[tk] = tv
+		}
+	}
+	{
+		var zero string
+		if res.Locale == zero {
+			res.Locale = "en"
 		}
 	}
 

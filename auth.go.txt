@@ -1,0 +1,142 @@
+package frank
+
+import (
+	"context"
+	"fmt"
+
+	auth "github.com/juicycleff/frank/gen/auth"
+	"goa.design/clue/log"
+	"goa.design/goa/v3/security"
+)
+
+// auth service example implementation.
+// The example methods log the requests and return zero values.
+type authsrvc struct{}
+
+// NewAuth returns the auth service implementation.
+func NewAuth() auth.Service {
+	return &authsrvc{}
+}
+
+// JWTAuth implements the authorization logic for service "auth" for the "jwt"
+// security scheme.
+func (s *authsrvc) JWTAuth(ctx context.Context, token string, scheme *security.JWTScheme) (context.Context, error) {
+	//
+	// TBD: add authorization logic.
+	//
+	// In case of authorization failure this function should return
+	// one of the generated error structs, e.g.:
+	//
+	//    return ctx, myservice.MakeUnauthorizedError("invalid token")
+	//
+	// Alternatively this function may return an instance of
+	// goa.ServiceError with a Name field value that matches one of
+	// the design error names, e.g:
+	//
+	//    return ctx, goa.PermanentError("unauthorized", "invalid token")
+	//
+	return ctx, fmt.Errorf("not implemented")
+}
+
+// OAuth2Auth implements the authorization logic for service "auth" for the
+// "oauth2" security scheme.
+func (s *authsrvc) OAuth2Auth(ctx context.Context, token string, scheme *security.OAuth2Scheme) (context.Context, error) {
+	//
+	// TBD: add authorization logic.
+	//
+	// In case of authorization failure this function should return
+	// one of the generated error structs, e.g.:
+	//
+	//    return ctx, myservice.MakeUnauthorizedError("invalid token")
+	//
+	// Alternatively this function may return an instance of
+	// goa.ServiceError with a Name field value that matches one of
+	// the design error names, e.g:
+	//
+	//    return ctx, goa.PermanentError("unauthorized", "invalid token")
+	//
+	return ctx, fmt.Errorf("not implemented")
+}
+
+// APIKeyAuth implements the authorization logic for service "auth" for the
+// "api_key" security scheme.
+func (s *authsrvc) APIKeyAuth(ctx context.Context, key string, scheme *security.APIKeyScheme) (context.Context, error) {
+	//
+	// TBD: add authorization logic.
+	//
+	// In case of authorization failure this function should return
+	// one of the generated error structs, e.g.:
+	//
+	//    return ctx, myservice.MakeUnauthorizedError("invalid token")
+	//
+	// Alternatively this function may return an instance of
+	// goa.ServiceError with a Name field value that matches one of
+	// the design error names, e.g:
+	//
+	//    return ctx, goa.PermanentError("unauthorized", "invalid token")
+	//
+	return ctx, fmt.Errorf("not implemented")
+}
+
+// Authenticate user with email and password
+func (s *authsrvc) Login(ctx context.Context, p *auth.LoginPayload) (res *auth.LoginResponse, err error) {
+	res = &auth.LoginResponse{}
+	log.Printf(ctx, "auth.login")
+	return
+}
+
+// Register a new user
+func (s *authsrvc) Register(ctx context.Context, p *auth.RegisterPayload) (res *auth.LoginResponse, err error) {
+	res = &auth.LoginResponse{}
+	log.Printf(ctx, "auth.register")
+	return
+}
+
+// Log out the current user
+func (s *authsrvc) Logout(ctx context.Context, p *auth.LogoutPayload) (res *auth.LogoutResult, err error) {
+	res = &auth.LogoutResult{}
+	log.Printf(ctx, "auth.logout")
+	return
+}
+
+// Refresh an access token
+func (s *authsrvc) RefreshToken(ctx context.Context, p *auth.RefreshTokenPayload) (res *auth.RefreshTokenResponse, err error) {
+	res = &auth.RefreshTokenResponse{}
+	log.Printf(ctx, "auth.refresh_token")
+	return
+}
+
+// Initiate password reset process
+func (s *authsrvc) ForgotPassword(ctx context.Context, p *auth.ForgotPasswordPayload) (res *auth.ForgotPasswordResult, err error) {
+	res = &auth.ForgotPasswordResult{}
+	log.Printf(ctx, "auth.forgot_password")
+	return
+}
+
+// Reset password using token
+func (s *authsrvc) ResetPassword(ctx context.Context, p *auth.ResetPasswordPayload) (res *auth.ResetPasswordResult, err error) {
+	res = &auth.ResetPasswordResult{}
+	log.Printf(ctx, "auth.reset_password")
+	return
+}
+
+// Verify email using token
+func (s *authsrvc) VerifyEmail(ctx context.Context, p *auth.VerifyEmailPayload) (res *auth.VerifyEmailResult, err error) {
+	res = &auth.VerifyEmailResult{}
+	log.Printf(ctx, "auth.verify_email")
+	return
+}
+
+// Get current user info
+func (s *authsrvc) Me(ctx context.Context, p *auth.MePayload) (res *auth.User, err error) {
+	res = &auth.User{}
+	log.Printf(ctx, "auth.me")
+	return
+}
+
+// Generates a CSRF token
+func (s *authsrvc) Csrf(ctx context.Context, p *auth.CsrfPayload) (res *auth.CSRFTokenResponse, err error) {
+	res = &auth.CSRFTokenResponse{}
+	log.Printf(ctx, "auth.csrf")
+	return
+}

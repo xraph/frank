@@ -1,23 +1,13 @@
 "use client";
 
 import type React from "react";
-
-import { useState } from "react";
-import { Link } from "./link";
-import { Button } from "@/components/react/ui/button";
-import { Label } from "@/components/react/ui/label";
-import { AlertCircle, ArrowLeft } from "lucide-react";
-import {
-	Alert,
-	AlertDescription,
-	AlertTitle,
-} from "@/components/react/ui/alert";
-import {
-	InputOTP,
-	InputOTPGroup,
-	InputOTPSeparator,
-	InputOTPSlot,
-} from "@/components/react/ui/input-otp.tsx";
+import {useState} from "react";
+import {Link} from "../link.tsx";
+import {Button} from "@/components/react/ui/button";
+import {Label} from "@/components/react/ui/label";
+import {AlertCircle, ArrowLeft} from "lucide-react";
+import {Alert, AlertDescription, AlertTitle,} from "@/components/react/ui/alert";
+import {InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot,} from "@/components/react/ui/input-otp.tsx";
 
 const inputClass = "h-12 w-12 text-center text-lg";
 

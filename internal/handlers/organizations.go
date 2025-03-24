@@ -111,7 +111,7 @@ func (h *OrganizationHandler) ListOrganizations(w http.ResponseWriter, r *http.R
 // @Failure 500 {object} map[string]interface{} "Internal server error"
 // @Router /api/v1/organizations [post]
 func (h *OrganizationHandler) CreateOrganization(w http.ResponseWriter, r *http.Request) {
-	userID, ok := middleware.GetUserID(r)
+	userID, ok := middleware.GetUserIDReq(r)
 	if !ok {
 		utils.RespondError(w, errors.New(errors.CodeUnauthorized, "not authenticated"))
 		return

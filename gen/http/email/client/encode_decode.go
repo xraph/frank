@@ -1304,7 +1304,6 @@ func DecodeSendTemplateResponse(decoder func(*http.Response) goahttp.Decoder, re
 // *EmailTemplateResponseResponseBody.
 func unmarshalEmailTemplateResponseResponseBodyToEmailEmailTemplateResponse(v *EmailTemplateResponseResponseBody) *email.EmailTemplateResponse {
 	res := &email.EmailTemplateResponse{
-		ID:             *v.ID,
 		Name:           *v.Name,
 		Subject:        *v.Subject,
 		Type:           *v.Type,
@@ -1314,8 +1313,9 @@ func unmarshalEmailTemplateResponseResponseBodyToEmailEmailTemplateResponse(v *E
 		Active:         *v.Active,
 		System:         *v.System,
 		Locale:         *v.Locale,
+		ID:             *v.ID,
 		CreatedAt:      *v.CreatedAt,
-		UpdatedAt:      v.UpdatedAt,
+		UpdatedAt:      *v.UpdatedAt,
 	}
 	if v.Metadata != nil {
 		res.Metadata = make(map[string]any, len(v.Metadata))
@@ -1329,14 +1329,17 @@ func unmarshalEmailTemplateResponseResponseBodyToEmailEmailTemplateResponse(v *E
 	return res
 }
 
-// unmarshalPaginationResponseResponseBodyToDesigntypesPaginationResponse
-// builds a value of type *designtypes.PaginationResponse from a value of type
-// *PaginationResponseResponseBody.
-func unmarshalPaginationResponseResponseBodyToDesigntypesPaginationResponse(v *PaginationResponseResponseBody) *designtypes.PaginationResponse {
-	res := &designtypes.PaginationResponse{
-		Total:  *v.Total,
-		Offset: *v.Offset,
-		Limit:  *v.Limit,
+// unmarshalPaginationResponseBodyToDesigntypesPagination builds a value of
+// type *designtypes.Pagination from a value of type *PaginationResponseBody.
+func unmarshalPaginationResponseBodyToDesigntypesPagination(v *PaginationResponseBody) *designtypes.Pagination {
+	res := &designtypes.Pagination{
+		Offset:      *v.Offset,
+		Limit:       *v.Limit,
+		Total:       *v.Total,
+		TotalPages:  *v.TotalPages,
+		CurrentPage: *v.CurrentPage,
+		HasNext:     *v.HasNext,
+		HasPrevious: *v.HasPrevious,
 	}
 
 	return res

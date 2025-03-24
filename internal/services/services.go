@@ -3,6 +3,7 @@ package services
 import (
 	"fmt"
 
+	"github.com/gorilla/sessions"
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/internal/apikeys"
 	"github.com/juicycleff/frank/internal/auth/mfa"
@@ -20,6 +21,7 @@ import (
 	"github.com/juicycleff/frank/internal/webhook"
 	"github.com/juicycleff/frank/pkg/data"
 	"github.com/juicycleff/frank/pkg/logging"
+	"github.com/juicycleff/frank/pkg/utils"
 )
 
 // Services contains all the service dependencies
@@ -31,6 +33,7 @@ type Services struct {
 	Email               email.Service
 	SMS                 sms.Service
 	Session             *session.Manager
+	SessionStore        sessions.Store
 	MFA                 mfa.Service
 	Passwordless        passwordless.Service
 	OAuth               *OAuthServices
@@ -69,7 +72,11 @@ func New(repos *repo.Repo, cfg *config.Config, client *data.Clients, logger logg
 		cfg.Auth.SessionSecretKey,
 		logger,
 	)
+
+	// Initialize session store
 	sessionManager := session.NewManager(client.DB, cfg, logger, cookieStore)
+	sessionStore := session.NewManagerStore(sessionManager, cookieHandler, cfg)
+	utils.InitSessionStoreWithStore(sessionStore)
 
 	sender := email.SenderFactory(cfg, logger)
 	emailTemplateManager := email.NewTemplateManager(cfg, logger)
@@ -87,6 +94,7 @@ func New(repos *repo.Repo, cfg *config.Config, client *data.Clients, logger logg
 		Email:         emailService,
 		SMS:           smsService,
 		RBAC:          rbacService,
+		SessionStore:  sessionStore,
 	}
 
 	if cfg.Features.EnableMFA {

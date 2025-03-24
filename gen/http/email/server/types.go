@@ -101,14 +101,12 @@ type SendTemplateRequestBody struct {
 // "list_templates" endpoint HTTP response body.
 type ListTemplatesResponseBody struct {
 	Data       []*EmailTemplateResponseResponseBody `form:"data" json:"data" xml:"data"`
-	Pagination *PaginationResponseResponseBody      `form:"pagination" json:"pagination" xml:"pagination"`
+	Pagination *PaginationResponseBody              `form:"pagination" json:"pagination" xml:"pagination"`
 }
 
 // CreateTemplateResponseBody is the type of the "email" service
 // "create_template" endpoint HTTP response body.
 type CreateTemplateResponseBody struct {
-	// Template ID
-	ID string `form:"id" json:"id" xml:"id"`
 	// Template name
 	Name string `form:"name" json:"name" xml:"name"`
 	// Email subject
@@ -129,17 +127,17 @@ type CreateTemplateResponseBody struct {
 	Locale string `form:"locale" json:"locale" xml:"locale"`
 	// Template metadata
 	Metadata map[string]any `form:"metadata,omitempty" json:"metadata,omitempty" xml:"metadata,omitempty"`
-	// Creation timestamp
-	CreatedAt string `form:"created_at" json:"created_at" xml:"created_at"`
-	// Last update timestamp
-	UpdatedAt *string `form:"updated_at,omitempty" json:"updated_at,omitempty" xml:"updated_at,omitempty"`
+	// Created At
+	ID string `json:"id"`
+	// Created At
+	CreatedAt string `json:"created_at,createdAt"`
+	// Updated At
+	UpdatedAt string `json:"updated_at,updatedAt"`
 }
 
 // GetTemplateResponseBody is the type of the "email" service "get_template"
 // endpoint HTTP response body.
 type GetTemplateResponseBody struct {
-	// Template ID
-	ID string `form:"id" json:"id" xml:"id"`
 	// Template name
 	Name string `form:"name" json:"name" xml:"name"`
 	// Email subject
@@ -160,17 +158,17 @@ type GetTemplateResponseBody struct {
 	Locale string `form:"locale" json:"locale" xml:"locale"`
 	// Template metadata
 	Metadata map[string]any `form:"metadata,omitempty" json:"metadata,omitempty" xml:"metadata,omitempty"`
-	// Creation timestamp
-	CreatedAt string `form:"created_at" json:"created_at" xml:"created_at"`
-	// Last update timestamp
-	UpdatedAt *string `form:"updated_at,omitempty" json:"updated_at,omitempty" xml:"updated_at,omitempty"`
+	// Created At
+	ID string `json:"id"`
+	// Created At
+	CreatedAt string `json:"created_at,createdAt"`
+	// Updated At
+	UpdatedAt string `json:"updated_at,updatedAt"`
 }
 
 // GetTemplateByTypeResponseBody is the type of the "email" service
 // "get_template_by_type" endpoint HTTP response body.
 type GetTemplateByTypeResponseBody struct {
-	// Template ID
-	ID string `form:"id" json:"id" xml:"id"`
 	// Template name
 	Name string `form:"name" json:"name" xml:"name"`
 	// Email subject
@@ -191,17 +189,17 @@ type GetTemplateByTypeResponseBody struct {
 	Locale string `form:"locale" json:"locale" xml:"locale"`
 	// Template metadata
 	Metadata map[string]any `form:"metadata,omitempty" json:"metadata,omitempty" xml:"metadata,omitempty"`
-	// Creation timestamp
-	CreatedAt string `form:"created_at" json:"created_at" xml:"created_at"`
-	// Last update timestamp
-	UpdatedAt *string `form:"updated_at,omitempty" json:"updated_at,omitempty" xml:"updated_at,omitempty"`
+	// Created At
+	ID string `json:"id"`
+	// Created At
+	CreatedAt string `json:"created_at,createdAt"`
+	// Updated At
+	UpdatedAt string `json:"updated_at,updatedAt"`
 }
 
 // UpdateTemplateResponseBody is the type of the "email" service
 // "update_template" endpoint HTTP response body.
 type UpdateTemplateResponseBody struct {
-	// Template ID
-	ID string `form:"id" json:"id" xml:"id"`
 	// Template name
 	Name string `form:"name" json:"name" xml:"name"`
 	// Email subject
@@ -222,10 +220,12 @@ type UpdateTemplateResponseBody struct {
 	Locale string `form:"locale" json:"locale" xml:"locale"`
 	// Template metadata
 	Metadata map[string]any `form:"metadata,omitempty" json:"metadata,omitempty" xml:"metadata,omitempty"`
-	// Creation timestamp
-	CreatedAt string `form:"created_at" json:"created_at" xml:"created_at"`
-	// Last update timestamp
-	UpdatedAt *string `form:"updated_at,omitempty" json:"updated_at,omitempty" xml:"updated_at,omitempty"`
+	// Created At
+	ID string `json:"id"`
+	// Created At
+	CreatedAt string `json:"created_at,createdAt"`
+	// Updated At
+	UpdatedAt string `json:"updated_at,updatedAt"`
 }
 
 // SendResponseBody is the type of the "email" service "send" endpoint HTTP
@@ -768,8 +768,6 @@ type SendTemplateUnauthorizedResponseBody struct {
 // EmailTemplateResponseResponseBody is used to define fields on response body
 // types.
 type EmailTemplateResponseResponseBody struct {
-	// Template ID
-	ID string `form:"id" json:"id" xml:"id"`
 	// Template name
 	Name string `form:"name" json:"name" xml:"name"`
 	// Email subject
@@ -790,21 +788,30 @@ type EmailTemplateResponseResponseBody struct {
 	Locale string `form:"locale" json:"locale" xml:"locale"`
 	// Template metadata
 	Metadata map[string]any `form:"metadata,omitempty" json:"metadata,omitempty" xml:"metadata,omitempty"`
-	// Creation timestamp
-	CreatedAt string `form:"created_at" json:"created_at" xml:"created_at"`
-	// Last update timestamp
-	UpdatedAt *string `form:"updated_at,omitempty" json:"updated_at,omitempty" xml:"updated_at,omitempty"`
+	// Created At
+	ID string `json:"id"`
+	// Created At
+	CreatedAt string `json:"created_at,createdAt"`
+	// Updated At
+	UpdatedAt string `json:"updated_at,updatedAt"`
 }
 
-// PaginationResponseResponseBody is used to define fields on response body
-// types.
-type PaginationResponseResponseBody struct {
+// PaginationResponseBody is used to define fields on response body types.
+type PaginationResponseBody struct {
+	// Offset
+	Offset int `json:"offset"`
+	// Limit
+	Limit int `json:"limit"`
 	// Total number of items
-	Total int `form:"total" json:"total" xml:"total"`
-	// Current offset
-	Offset int `form:"offset" json:"offset" xml:"offset"`
-	// Current limit
-	Limit int `form:"limit" json:"limit" xml:"limit"`
+	Total int `json:"total"`
+	// Total number of pages
+	TotalPages int `json:"total_pages,totalPages"`
+	// Current page number
+	CurrentPage int `json:"current_page,currentPage"`
+	// Has next page
+	HasNext bool `json:"has_next,hasNext"`
+	// Has previous page
+	HasPrevious bool `json:"has_previous,hasPrevious"`
 }
 
 // UpdateEmailTemplateRequestRequestBody is used to define fields on request
@@ -839,7 +846,7 @@ func NewListTemplatesResponseBody(res *email.ListTemplatesResult) *ListTemplates
 		body.Data = []*EmailTemplateResponseResponseBody{}
 	}
 	if res.Pagination != nil {
-		body.Pagination = marshalDesigntypesPaginationResponseToPaginationResponseResponseBody(res.Pagination)
+		body.Pagination = marshalDesigntypesPaginationToPaginationResponseBody(res.Pagination)
 	}
 	return body
 }
@@ -848,7 +855,6 @@ func NewListTemplatesResponseBody(res *email.ListTemplatesResult) *ListTemplates
 // of the "create_template" endpoint of the "email" service.
 func NewCreateTemplateResponseBody(res *email.EmailTemplateResponse) *CreateTemplateResponseBody {
 	body := &CreateTemplateResponseBody{
-		ID:             res.ID,
 		Name:           res.Name,
 		Subject:        res.Subject,
 		Type:           res.Type,
@@ -858,6 +864,7 @@ func NewCreateTemplateResponseBody(res *email.EmailTemplateResponse) *CreateTemp
 		Active:         res.Active,
 		System:         res.System,
 		Locale:         res.Locale,
+		ID:             res.ID,
 		CreatedAt:      res.CreatedAt,
 		UpdatedAt:      res.UpdatedAt,
 	}
@@ -876,7 +883,6 @@ func NewCreateTemplateResponseBody(res *email.EmailTemplateResponse) *CreateTemp
 // the "get_template" endpoint of the "email" service.
 func NewGetTemplateResponseBody(res *email.EmailTemplateResponse) *GetTemplateResponseBody {
 	body := &GetTemplateResponseBody{
-		ID:             res.ID,
 		Name:           res.Name,
 		Subject:        res.Subject,
 		Type:           res.Type,
@@ -886,6 +892,7 @@ func NewGetTemplateResponseBody(res *email.EmailTemplateResponse) *GetTemplateRe
 		Active:         res.Active,
 		System:         res.System,
 		Locale:         res.Locale,
+		ID:             res.ID,
 		CreatedAt:      res.CreatedAt,
 		UpdatedAt:      res.UpdatedAt,
 	}
@@ -904,7 +911,6 @@ func NewGetTemplateResponseBody(res *email.EmailTemplateResponse) *GetTemplateRe
 // result of the "get_template_by_type" endpoint of the "email" service.
 func NewGetTemplateByTypeResponseBody(res *email.EmailTemplateResponse) *GetTemplateByTypeResponseBody {
 	body := &GetTemplateByTypeResponseBody{
-		ID:             res.ID,
 		Name:           res.Name,
 		Subject:        res.Subject,
 		Type:           res.Type,
@@ -914,6 +920,7 @@ func NewGetTemplateByTypeResponseBody(res *email.EmailTemplateResponse) *GetTemp
 		Active:         res.Active,
 		System:         res.System,
 		Locale:         res.Locale,
+		ID:             res.ID,
 		CreatedAt:      res.CreatedAt,
 		UpdatedAt:      res.UpdatedAt,
 	}
@@ -932,7 +939,6 @@ func NewGetTemplateByTypeResponseBody(res *email.EmailTemplateResponse) *GetTemp
 // of the "update_template" endpoint of the "email" service.
 func NewUpdateTemplateResponseBody(res *email.EmailTemplateResponse) *UpdateTemplateResponseBody {
 	body := &UpdateTemplateResponseBody{
-		ID:             res.ID,
 		Name:           res.Name,
 		Subject:        res.Subject,
 		Type:           res.Type,
@@ -942,6 +948,7 @@ func NewUpdateTemplateResponseBody(res *email.EmailTemplateResponse) *UpdateTemp
 		Active:         res.Active,
 		System:         res.System,
 		Locale:         res.Locale,
+		ID:             res.ID,
 		CreatedAt:      res.CreatedAt,
 		UpdatedAt:      res.UpdatedAt,
 	}

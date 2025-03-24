@@ -15,6 +15,7 @@ import (
 	"net/url"
 	"strings"
 
+	designtypes "github.com/juicycleff/frank/gen/designtypes"
 	oauthclient "github.com/juicycleff/frank/gen/oauth_client"
 	goahttp "goa.design/goa/v3/http"
 )
@@ -556,25 +557,24 @@ func unmarshalSSOProviderResponseBodyToOauthclientSSOProvider(v *SSOProviderResp
 	return res
 }
 
-// unmarshalUserResponseBodyToOauthclientUser builds a value of type
-// *oauthclient.User from a value of type *UserResponseBody.
-func unmarshalUserResponseBodyToOauthclientUser(v *UserResponseBody) *oauthclient.User {
+// unmarshalUserResponseBodyToDesigntypesUser builds a value of type
+// *designtypes.User from a value of type *UserResponseBody.
+func unmarshalUserResponseBodyToDesigntypesUser(v *UserResponseBody) *designtypes.User {
 	if v == nil {
 		return nil
 	}
-	res := &oauthclient.User{
-		ID:              *v.ID,
-		Email:           *v.Email,
-		FirstName:       v.FirstName,
-		LastName:        v.LastName,
+	res := &designtypes.User{
+		Active:          *v.Active,
 		EmailVerified:   *v.EmailVerified,
-		PhoneNumber:     v.PhoneNumber,
 		PhoneVerified:   v.PhoneVerified,
 		ProfileImageURL: v.ProfileImageURL,
-		Locale:          v.Locale,
-		Active:          *v.Active,
-		CreatedAt:       *v.CreatedAt,
-		UpdatedAt:       *v.UpdatedAt,
+		FirstName:       v.FirstName,
+		LastName:        v.LastName,
+		PhoneNumber:     v.PhoneNumber,
+		Email:           *v.Email,
+	}
+	if v.Locale != nil {
+		res.Locale = *v.Locale
 	}
 	if v.Metadata != nil {
 		res.Metadata = make(map[string]any, len(v.Metadata))
@@ -583,6 +583,9 @@ func unmarshalUserResponseBodyToOauthclientUser(v *UserResponseBody) *oauthclien
 			tv := val
 			res.Metadata[tk] = tv
 		}
+	}
+	if v.Locale == nil {
+		res.Locale = "en"
 	}
 
 	return res

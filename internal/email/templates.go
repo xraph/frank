@@ -13,12 +13,12 @@ import (
 	"sync"
 	texttemplate "text/template"
 
-	"github.com/google/uuid"
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/ent"
 	"github.com/juicycleff/frank/ent/emailtemplate"
 	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/juicycleff/frank/pkg/logging"
+	"github.com/juicycleff/frank/pkg/utils"
 )
 
 // TemplateManager manages email templates
@@ -239,10 +239,7 @@ func NewTemplateRepository(client *ent.Client) TemplateRepository {
 // Create creates a new email template
 func (r *templateRepository) Create(ctx context.Context, input TemplateRepositoryCreateInput) (*ent.EmailTemplate, error) {
 	// Generate UUID
-	id, err := uuid.NewRandom()
-	if err != nil {
-		return nil, errors.Wrap(errors.CodeInternalServer, err, "failed to generate uuid")
-	}
+	id := utils.NewID()
 
 	// Check if a template with the same type, organization and locale already exists
 	if input.OrganizationID != "" {

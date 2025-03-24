@@ -1,0 +1,16 @@
+---
+import ProfileLayout from "../../layouts/ProfileLayout.astro";
+import {ProfileIndexLayout} from "../../components/react/profile/profile-index-layout";
+
+const { user } = Astro.props;
+---
+
+<ProfileLayout title="Profile | Frank">
+    <div class="space-y-6">
+        <div>
+            <h3 class="text-lg font-medium">Profile</h3>
+            <p class="text-sm text-muted-foreground">This is how others will see you on the platform.</p>
+        </div>
+        <ProfileIndexLayout client:load user={user} />
+    </div>
+</ProfileLayout>

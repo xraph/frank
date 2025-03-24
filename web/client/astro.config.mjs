@@ -15,6 +15,9 @@ export default defineConfig({
 		sitemap(),
 	],
 	vite: {
+		ssr: {
+			noExternal: ["webcoreui"],
+		},
 		plugins: [tailwindcss()],
 	},
 	experimental: {

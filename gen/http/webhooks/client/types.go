@@ -37,8 +37,8 @@ type TriggerEventRequestBody struct {
 // ListResponseBody is the type of the "webhooks" service "list" endpoint HTTP
 // response body.
 type ListResponseBody struct {
-	Data       []*WebhookResponseResponseBody  `form:"data,omitempty" json:"data,omitempty" xml:"data,omitempty"`
-	Pagination *PaginationResponseResponseBody `form:"pagination,omitempty" json:"pagination,omitempty" xml:"pagination,omitempty"`
+	Data       []*WebhookResponseResponseBody `form:"data,omitempty" json:"data,omitempty" xml:"data,omitempty"`
+	Pagination *PaginationResponseBody        `form:"pagination,omitempty" json:"pagination,omitempty" xml:"pagination,omitempty"`
 }
 
 // CreateResponseBody is the type of the "webhooks" service "create" endpoint
@@ -173,7 +173,7 @@ type TriggerEventResponseBody struct {
 // endpoint HTTP response body.
 type ListEventsResponseBody struct {
 	Data       []*WebhookEventResponseResponseBody `form:"data,omitempty" json:"data,omitempty" xml:"data,omitempty"`
-	Pagination *PaginationResponseResponseBody     `form:"pagination,omitempty" json:"pagination,omitempty" xml:"pagination,omitempty"`
+	Pagination *PaginationResponseBody             `form:"pagination,omitempty" json:"pagination,omitempty" xml:"pagination,omitempty"`
 }
 
 // ReplayEventResponseBody is the type of the "webhooks" service "replay_event"
@@ -831,15 +831,22 @@ type WebhookResponseResponseBody struct {
 	UpdatedAt *string `form:"updated_at,omitempty" json:"updated_at,omitempty" xml:"updated_at,omitempty"`
 }
 
-// PaginationResponseResponseBody is used to define fields on response body
-// types.
-type PaginationResponseResponseBody struct {
+// PaginationResponseBody is used to define fields on response body types.
+type PaginationResponseBody struct {
+	// Offset
+	Offset *int `json:"offset"`
+	// Limit
+	Limit *int `json:"limit"`
 	// Total number of items
-	Total *int `form:"total,omitempty" json:"total,omitempty" xml:"total,omitempty"`
-	// Current offset
-	Offset *int `form:"offset,omitempty" json:"offset,omitempty" xml:"offset,omitempty"`
-	// Current limit
-	Limit *int `form:"limit,omitempty" json:"limit,omitempty" xml:"limit,omitempty"`
+	Total *int `json:"total"`
+	// Total number of pages
+	TotalPages *int `json:"total_pages,totalPages"`
+	// Current page number
+	CurrentPage *int `json:"current_page,currentPage"`
+	// Has next page
+	HasNext *bool `json:"has_next,hasNext"`
+	// Has previous page
+	HasPrevious *bool `json:"has_previous,hasPrevious"`
 }
 
 // CreateWebhookRequestRequestBody is used to define fields on request body
@@ -968,7 +975,7 @@ func NewListResultOK(body *ListResponseBody) *webhooks.ListResult {
 	for i, val := range body.Data {
 		v.Data[i] = unmarshalWebhookResponseResponseBodyToWebhooksWebhookResponse(val)
 	}
-	v.Pagination = unmarshalPaginationResponseResponseBodyToDesigntypesPaginationResponse(body.Pagination)
+	v.Pagination = unmarshalPaginationResponseBodyToDesigntypesPagination(body.Pagination)
 
 	return v
 }
@@ -1485,7 +1492,7 @@ func NewListEventsResultOK(body *ListEventsResponseBody) *webhooks.ListEventsRes
 	for i, val := range body.Data {
 		v.Data[i] = unmarshalWebhookEventResponseResponseBodyToWebhooksWebhookEventResponse(val)
 	}
-	v.Pagination = unmarshalPaginationResponseResponseBodyToDesigntypesPaginationResponse(body.Pagination)
+	v.Pagination = unmarshalPaginationResponseBodyToDesigntypesPagination(body.Pagination)
 
 	return v
 }
@@ -1741,7 +1748,7 @@ func ValidateListResponseBody(body *ListResponseBody) (err error) {
 		}
 	}
 	if body.Pagination != nil {
-		if err2 := ValidatePaginationResponseResponseBody(body.Pagination); err2 != nil {
+		if err2 := ValidatePaginationResponseBody(body.Pagination); err2 != nil {
 			err = goa.MergeErrors(err, err2)
 		}
 	}
@@ -1870,7 +1877,7 @@ func ValidateListEventsResponseBody(body *ListEventsResponseBody) (err error) {
 		}
 	}
 	if body.Pagination != nil {
-		if err2 := ValidatePaginationResponseResponseBody(body.Pagination); err2 != nil {
+		if err2 := ValidatePaginationResponseBody(body.Pagination); err2 != nil {
 			err = goa.MergeErrors(err, err2)
 		}
 	}
@@ -2477,9 +2484,9 @@ func ValidateWebhookResponseResponseBody(body *WebhookResponseResponseBody) (err
 	return
 }
 
-// ValidatePaginationResponseResponseBody runs the validations defined on
-// PaginationResponseResponseBody
-func ValidatePaginationResponseResponseBody(body *PaginationResponseResponseBody) (err error) {
+// ValidatePaginationResponseBody runs the validations defined on
+// PaginationResponseBody
+func ValidatePaginationResponseBody(body *PaginationResponseBody) (err error) {
 	if body.Total == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("total", "body"))
 	}
@@ -2488,6 +2495,33 @@ func ValidatePaginationResponseResponseBody(body *PaginationResponseResponseBody
 	}
 	if body.Limit == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("limit", "body"))
+	}
+	if body.TotalPages == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("total_pages", "body"))
+	}
+	if body.CurrentPage == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("current_page", "body"))
+	}
+	if body.HasNext == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("has_next", "body"))
+	}
+	if body.HasPrevious == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("has_previous", "body"))
+	}
+	if body.Offset != nil {
+		if *body.Offset < 0 {
+			err = goa.MergeErrors(err, goa.InvalidRangeError("body.offset", *body.Offset, 0, true))
+		}
+	}
+	if body.Limit != nil {
+		if *body.Limit < 1 {
+			err = goa.MergeErrors(err, goa.InvalidRangeError("body.limit", *body.Limit, 1, true))
+		}
+	}
+	if body.Limit != nil {
+		if *body.Limit > 100 {
+			err = goa.MergeErrors(err, goa.InvalidRangeError("body.limit", *body.Limit, 100, false))
+		}
 	}
 	return
 }

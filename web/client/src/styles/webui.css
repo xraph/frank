@@ -1,0 +1,11 @@
+/*@use 'webcoreui/styles' as *;*/
+/*@include setup((*/
+/*    theme: 'light'*/
+/*));*/
+
+/*html body {*/
+/*    --w-sm-radius: 4px;*/
+/*    --w-md-radius: 10px;*/
+/*    --w-lg-radius: 20px;*/
+/*    --w-xl-radius: 30px;*/
+/*}*/

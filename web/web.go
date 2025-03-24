@@ -4,5 +4,5 @@ import (
 	"embed"
 )
 
-//go:embed client/dist
+//go:embed client/dist/**
 var WebUI embed.FS

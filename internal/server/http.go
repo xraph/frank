@@ -12,10 +12,10 @@ import (
 
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/frank"
-	"github.com/juicycleff/frank/internal/routes"
+	"github.com/juicycleff/frank/internal/router"
+	"github.com/juicycleff/frank/pkg/astro_fs"
 	"github.com/juicycleff/frank/pkg/data"
 	"github.com/juicycleff/frank/pkg/logging"
-	"github.com/juicycleff/frank/pkg/utils"
 )
 
 // Server represents an HTTP server
@@ -23,7 +23,7 @@ type Server struct {
 	server *http.Server
 	config *config.Config
 	logger logging.Logger
-	router *routes.Router
+	router router.FrankRouter
 }
 
 // NewServer creates a new HTTP server
@@ -31,7 +31,7 @@ func NewServer(clients *data.Clients, cfg *config.Config, logger logging.Logger)
 	// Init routes
 	frk, err := frank.New(clients, cfg, logger)
 	if err != nil {
-		log.Fatalf("%w", err)
+		log.Fatalf("%v", err)
 	}
 
 	// Create HTTP server
@@ -41,6 +41,10 @@ func NewServer(clients *data.Clients, cfg *config.Config, logger logging.Logger)
 		ReadTimeout:  cfg.Server.ReadTimeout,
 		WriteTimeout: cfg.Server.WriteTimeout,
 		IdleTimeout:  cfg.Server.IdleTimeout,
+	}
+
+	if cfg.Server.EnableHTTP2 {
+		astro_fs.EnableHTTP2(server)
 	}
 
 	return &Server{
@@ -53,9 +57,6 @@ func NewServer(clients *data.Clients, cfg *config.Config, logger logging.Logger)
 
 // Start starts the HTTP server
 func (s *Server) Start() chan error {
-	// Initialize session store
-	utils.InitSessionStore(s.config)
-
 	// Register routes
 	s.router.RegisterRoutes()
 
@@ -134,6 +135,6 @@ func (s *Server) WaitForSignal(serverErrors chan error) {
 }
 
 // Router returns the router
-func (s *Server) Router() *routes.Router {
+func (s *Server) Router() router.FrankRouter {
 	return s.router
 }

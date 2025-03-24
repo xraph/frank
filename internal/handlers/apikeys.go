@@ -57,7 +57,7 @@ type UpdateAPIKeyRequest struct {
 // ListAPIKeys handles listing API keys with pagination
 func (h *APIKeyHandler) ListAPIKeys(w http.ResponseWriter, r *http.Request) {
 	// Get user and organization IDs from context
-	userID, _ := middleware.GetUserID(r)
+	userID, _ := middleware.GetUserIDReq(r)
 	orgID, _ := middleware.GetOrganizationID(r)
 
 	if userID == "" && orgID == "" {
@@ -101,7 +101,7 @@ func (h *APIKeyHandler) ListAPIKeys(w http.ResponseWriter, r *http.Request) {
 // CreateAPIKey handles creating a new API key
 func (h *APIKeyHandler) CreateAPIKey(w http.ResponseWriter, r *http.Request) {
 	// Get user and organization IDs from context
-	userID, _ := middleware.GetUserID(r)
+	userID, _ := middleware.GetUserIDReq(r)
 	orgID, _ := middleware.GetOrganizationID(r)
 
 	if userID == "" && orgID == "" {

@@ -10,6 +10,7 @@ package sso
 import (
 	"context"
 
+	designtypes "github.com/juicycleff/frank/gen/designtypes"
 	goa "goa.design/goa/v3/pkg"
 	"goa.design/goa/v3/security"
 )
@@ -303,7 +304,7 @@ type ProviderCallbackResult struct {
 	// Whether authentication was successful
 	Authenticated bool
 	// User data if authentication successful
-	User *User
+	User *designtypes.User
 }
 
 // SSO Provider information
@@ -393,36 +394,6 @@ type UpdateIdentityProviderRequest struct {
 	Domains []string
 	// Attributes mapping
 	AttributesMapping map[string]string
-}
-
-// User information
-type User struct {
-	// User ID
-	ID string
-	// User email
-	Email string
-	// User first name
-	FirstName *string
-	// User last name
-	LastName *string
-	// Whether email is verified
-	EmailVerified bool
-	// User phone number
-	PhoneNumber *string
-	// Whether phone is verified
-	PhoneVerified *bool
-	// URL to user's profile image
-	ProfileImageURL *string
-	// User's locale preference
-	Locale *string
-	// User metadata
-	Metadata map[string]any
-	// Whether account is active
-	Active bool
-	// Account creation timestamp
-	CreatedAt string
-	// Account last update timestamp
-	UpdatedAt string
 }
 
 // Error returns an error description.

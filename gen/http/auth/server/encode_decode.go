@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	auth "github.com/juicycleff/frank/gen/auth"
+	designtypes "github.com/juicycleff/frank/gen/designtypes"
 	goahttp "goa.design/goa/v3/http"
 	goa "goa.design/goa/v3/pkg"
 )
@@ -1146,7 +1147,7 @@ func EncodeVerifyEmailError(encoder func(context.Context, http.ResponseWriter) g
 // endpoint.
 func EncodeMeResponse(encoder func(context.Context, http.ResponseWriter) goahttp.Encoder) func(context.Context, http.ResponseWriter, any) error {
 	return func(ctx context.Context, w http.ResponseWriter, v any) error {
-		res, _ := v.(*auth.User)
+		res, _ := v.(*designtypes.User)
 		enc := encoder(ctx, w)
 		body := NewMeResponseBody(res)
 		w.WriteHeader(http.StatusOK)
@@ -1408,22 +1409,19 @@ func EncodeCsrfError(encoder func(context.Context, http.ResponseWriter) goahttp.
 	}
 }
 
-// marshalAuthUserToUserResponseBody builds a value of type *UserResponseBody
-// from a value of type *auth.User.
-func marshalAuthUserToUserResponseBody(v *auth.User) *UserResponseBody {
+// marshalDesigntypesUserToUserResponseBody builds a value of type
+// *UserResponseBody from a value of type *designtypes.User.
+func marshalDesigntypesUserToUserResponseBody(v *designtypes.User) *UserResponseBody {
 	res := &UserResponseBody{
-		ID:              v.ID,
-		Email:           v.Email,
-		FirstName:       v.FirstName,
-		LastName:        v.LastName,
+		Active:          v.Active,
 		EmailVerified:   v.EmailVerified,
-		PhoneNumber:     v.PhoneNumber,
 		PhoneVerified:   v.PhoneVerified,
 		ProfileImageURL: v.ProfileImageURL,
+		FirstName:       v.FirstName,
+		LastName:        v.LastName,
+		PhoneNumber:     v.PhoneNumber,
 		Locale:          v.Locale,
-		Active:          v.Active,
-		CreatedAt:       v.CreatedAt,
-		UpdatedAt:       v.UpdatedAt,
+		Email:           v.Email,
 	}
 	if v.Metadata != nil {
 		res.Metadata = make(map[string]any, len(v.Metadata))
@@ -1431,6 +1429,12 @@ func marshalAuthUserToUserResponseBody(v *auth.User) *UserResponseBody {
 			tk := key
 			tv := val
 			res.Metadata[tk] = tv
+		}
+	}
+	{
+		var zero string
+		if res.Locale == zero {
+			res.Locale = "en"
 		}
 	}
 

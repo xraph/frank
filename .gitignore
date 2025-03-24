@@ -48,6 +48,7 @@ ent/*
 # Temporary directories
 tmp/
 temp/
+gomock_*
 
 # Air configuration
 .air.toml

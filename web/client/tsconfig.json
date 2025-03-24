@@ -7,7 +7,8 @@
 		"jsx": "react-jsx",
 		"jsxImportSource": "react",
 		"paths": {
-			"@/*": ["./src/*"]
+			"@/*": ["./src/*"],
+			"frank-sdk": ["../js-sdk"]
 		}
 	}
 }

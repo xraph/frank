@@ -117,8 +117,6 @@ type DeleteTemplatePayload struct {
 // EmailTemplateResponse is the result type of the email service
 // create_template method.
 type EmailTemplateResponse struct {
-	// Template ID
-	ID string
 	// Template name
 	Name string
 	// Email subject
@@ -139,10 +137,12 @@ type EmailTemplateResponse struct {
 	Locale string
 	// Template metadata
 	Metadata map[string]any
-	// Creation timestamp
-	CreatedAt string
-	// Last update timestamp
-	UpdatedAt *string
+	// Created At
+	ID string `json:"id"`
+	// Created At
+	CreatedAt string `json:"created_at,createdAt"`
+	// Updated At
+	UpdatedAt string `json:"updated_at,updatedAt"`
 }
 
 // Forbidden response
@@ -209,7 +209,7 @@ type ListTemplatesPayload struct {
 // method.
 type ListTemplatesResult struct {
 	Data       []*EmailTemplateResponse
-	Pagination *designtypes.PaginationResponse
+	Pagination *designtypes.Pagination
 }
 
 // Not found response

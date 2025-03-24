@@ -206,7 +206,7 @@ type ListResult struct {
 	Data []*APIKeyResponse
 	// Total number of keys
 	Total      int
-	Pagination *designtypes.PaginationResponse
+	Pagination *designtypes.Pagination
 }
 
 // Not found response

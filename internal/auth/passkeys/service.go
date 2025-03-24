@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/go-webauthn/webauthn/webauthn"
-	"github.com/google/uuid"
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/ent"
 	"github.com/juicycleff/frank/ent/passkey"
@@ -267,7 +266,6 @@ func (s *serviceImpl) FinishRegistration(
 	// Create new passkey
 	newPasskey, err := s.client.Passkey.
 		Create().
-		SetID(uuid.New().String()).
 		SetUserID(opts.UserID).
 		SetName(deviceName).
 		SetDeviceType(deviceType).

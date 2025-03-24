@@ -261,7 +261,7 @@ type ListPermissionsPayload struct {
 // list_permissions method.
 type ListPermissionsResponse struct {
 	Data       []*designtypes.PermissionResponse
-	Pagination *designtypes.PaginationResponse
+	Pagination *designtypes.Pagination
 }
 
 // ListRolePermissionsPayload is the payload type of the rbac service
@@ -294,7 +294,7 @@ type ListRolesPayload struct {
 // ListRolesResult is the result type of the rbac service list_roles method.
 type ListRolesResult struct {
 	Data       []*designtypes.RoleResponse
-	Pagination *designtypes.PaginationResponse
+	Pagination *designtypes.Pagination
 }
 
 // Not found response

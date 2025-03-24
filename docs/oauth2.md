@@ -98,7 +98,7 @@ Example response:
 GET /oauth/userinfo
 ```
 
-Headers:
+Header:
 - `Authorization: Bearer {access_token}`
 
 Example response:

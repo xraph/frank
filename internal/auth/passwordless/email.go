@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/ent"
 	"github.com/juicycleff/frank/ent/user"
@@ -63,7 +62,6 @@ func (p *EmailProvider) SendVerificationEmail(
 		if p.config.Auth.AutoRegisterUsers {
 			user, err = p.client.User.Create().
 				SetEmail(email).
-				SetID(uuid.New().String()).
 				SetEmailVerified(false).
 				SetActive(true).
 				Save(ctx)
@@ -107,7 +105,6 @@ func (p *EmailProvider) SendVerificationEmail(
 	// Store the verification token
 	_, err = p.client.Verification.Create().
 		SetUserID(user.ID).
-		SetID(uuid.New().String()).
 		SetType("magic_link").
 		SetToken(token).
 		SetEmail(email).

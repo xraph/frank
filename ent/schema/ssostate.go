@@ -1,8 +1,6 @@
 package schema
 
 import (
-	"time"
-
 	"entgo.io/ent"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
@@ -27,10 +25,6 @@ func (SSOState) Fields() []ent.Field {
 
 		field.Time("expires_at").
 			Comment("When this state expires"),
-
-		field.Time("created_at").
-			Default(time.Now).
-			Immutable(),
 	}
 }
 
@@ -44,5 +38,12 @@ func (SSOState) Indexes() []ent.Index {
 	return []ent.Index{
 		// Index by expiration time to support efficient cleanup
 		index.Fields("expires_at"),
+	}
+}
+
+// Mixin of the SSOState.
+func (SSOState) Mixin() []ent.Mixin {
+	return []ent.Mixin{
+		ModelBaseMixin{},
 	}
 }

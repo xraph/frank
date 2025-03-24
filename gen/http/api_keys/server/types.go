@@ -29,8 +29,8 @@ type UpdateRequestBody struct {
 type ListResponseBody struct {
 	Data []*APIKeyResponseResponseBody `form:"data" json:"data" xml:"data"`
 	// Total number of keys
-	Total      int                             `form:"total" json:"total" xml:"total"`
-	Pagination *PaginationResponseResponseBody `form:"pagination" json:"pagination" xml:"pagination"`
+	Total      int                     `form:"total" json:"total" xml:"total"`
+	Pagination *PaginationResponseBody `form:"pagination" json:"pagination" xml:"pagination"`
 }
 
 // CreateResponseBody is the type of the "api_keys" service "create" endpoint
@@ -557,15 +557,22 @@ type APIKeyResponseResponseBody struct {
 	UpdatedAt *string `form:"updated_at,omitempty" json:"updated_at,omitempty" xml:"updated_at,omitempty"`
 }
 
-// PaginationResponseResponseBody is used to define fields on response body
-// types.
-type PaginationResponseResponseBody struct {
+// PaginationResponseBody is used to define fields on response body types.
+type PaginationResponseBody struct {
+	// Offset
+	Offset int `json:"offset"`
+	// Limit
+	Limit int `json:"limit"`
 	// Total number of items
-	Total int `form:"total" json:"total" xml:"total"`
-	// Current offset
-	Offset int `form:"offset" json:"offset" xml:"offset"`
-	// Current limit
-	Limit int `form:"limit" json:"limit" xml:"limit"`
+	Total int `json:"total"`
+	// Total number of pages
+	TotalPages int `json:"total_pages,totalPages"`
+	// Current page number
+	CurrentPage int `json:"current_page,currentPage"`
+	// Has next page
+	HasNext bool `json:"has_next,hasNext"`
+	// Has previous page
+	HasPrevious bool `json:"has_previous,hasPrevious"`
 }
 
 // CreateAPIKeyRequestRequestBody is used to define fields on request body
@@ -617,7 +624,7 @@ func NewListResponseBody(res *apikeys.ListResult) *ListResponseBody {
 		body.Data = []*APIKeyResponseResponseBody{}
 	}
 	if res.Pagination != nil {
-		body.Pagination = marshalDesigntypesPaginationResponseToPaginationResponseResponseBody(res.Pagination)
+		body.Pagination = marshalDesigntypesPaginationToPaginationResponseBody(res.Pagination)
 	}
 	return body
 }

@@ -3,13 +3,13 @@ package rbac
 import (
 	"context"
 
-	"github.com/google/uuid"
 	"github.com/juicycleff/frank/ent"
 	"github.com/juicycleff/frank/ent/permission"
 	"github.com/juicycleff/frank/ent/predicate"
 	"github.com/juicycleff/frank/ent/role"
 	"github.com/juicycleff/frank/ent/user"
 	"github.com/juicycleff/frank/pkg/errors"
+	"github.com/juicycleff/frank/pkg/utils"
 )
 
 // Repository provides access to RBAC storage
@@ -105,10 +105,7 @@ func NewRepository(client *ent.Client) Repository {
 // CreateRole creates a new role
 func (r *repository) CreateRole(ctx context.Context, input RepositoryCreateRoleInput) (*ent.Role, error) {
 	// Generate UUID
-	id, err := uuid.NewRandom()
-	if err != nil {
-		return nil, errors.Wrap(errors.CodeInternalServer, err, "failed to generate uuid")
-	}
+	id := utils.NewID()
 
 	// Check if role with the same name already exists in the organization
 	if input.OrganizationID != "" {
@@ -442,10 +439,7 @@ func (r *repository) GetRolePermissions(ctx context.Context, roleID string) ([]*
 // CreatePermission creates a new permission
 func (r *repository) CreatePermission(ctx context.Context, input RepositoryCreatePermissionInput) (*ent.Permission, error) {
 	// Generate UUID
-	id, err := uuid.NewRandom()
-	if err != nil {
-		return nil, errors.Wrap(errors.CodeInternalServer, err, "failed to generate uuid")
-	}
+	id := utils.NewID()
 
 	// Check for unique resource:action combination
 	exists, err := r.client.Permission.

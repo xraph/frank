@@ -443,7 +443,7 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -o frank ./cmd/server
+RUN CGO_ENABLED=0 GOOS=linux go build -o frank ./cmd/frank
 
 FROM alpine:3.18
 

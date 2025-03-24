@@ -155,7 +155,7 @@ type ListEventsPayload struct {
 // method.
 type ListEventsResult struct {
 	Data       []*WebhookEventResponse
-	Pagination *designtypes.PaginationResponse
+	Pagination *designtypes.Pagination
 }
 
 // ListPayload is the payload type of the webhooks service list method.
@@ -174,7 +174,7 @@ type ListPayload struct {
 // ListResult is the result type of the webhooks service list method.
 type ListResult struct {
 	Data       []*WebhookResponse
-	Pagination *designtypes.PaginationResponse
+	Pagination *designtypes.Pagination
 }
 
 // Not found response

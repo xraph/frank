@@ -186,7 +186,7 @@ type UserinfoResponseBody struct {
 // "list_clients" endpoint HTTP response body.
 type ListClientsResponseBody struct {
 	Data       []*OAuthClientResponseResponseBody `form:"data" json:"data" xml:"data"`
-	Pagination *PaginationResponseResponseBody    `form:"pagination" json:"pagination" xml:"pagination"`
+	Pagination *PaginationResponseBody            `form:"pagination" json:"pagination" xml:"pagination"`
 }
 
 // CreateClientResponseBody is the type of the "oauth_provider" service
@@ -331,7 +331,7 @@ type RotateClientSecretResponseBody struct {
 // "list_scopes" endpoint HTTP response body.
 type ListScopesResponseBody struct {
 	Data       []*OAuthScopeResponseResponseBody `form:"data" json:"data" xml:"data"`
-	Pagination *PaginationResponseResponseBody   `form:"pagination" json:"pagination" xml:"pagination"`
+	Pagination *PaginationResponseBody           `form:"pagination" json:"pagination" xml:"pagination"`
 }
 
 // CreateScopeResponseBody is the type of the "oauth_provider" service
@@ -1974,15 +1974,22 @@ type OAuthClientResponseResponseBody struct {
 	UpdatedAt *string `form:"updated_at,omitempty" json:"updated_at,omitempty" xml:"updated_at,omitempty"`
 }
 
-// PaginationResponseResponseBody is used to define fields on response body
-// types.
-type PaginationResponseResponseBody struct {
+// PaginationResponseBody is used to define fields on response body types.
+type PaginationResponseBody struct {
+	// Offset
+	Offset int `json:"offset"`
+	// Limit
+	Limit int `json:"limit"`
 	// Total number of items
-	Total int `form:"total" json:"total" xml:"total"`
-	// Current offset
-	Offset int `form:"offset" json:"offset" xml:"offset"`
-	// Current limit
-	Limit int `form:"limit" json:"limit" xml:"limit"`
+	Total int `json:"total"`
+	// Total number of pages
+	TotalPages int `json:"total_pages,totalPages"`
+	// Current page number
+	CurrentPage int `json:"current_page,currentPage"`
+	// Has next page
+	HasNext bool `json:"has_next,hasNext"`
+	// Has previous page
+	HasPrevious bool `json:"has_previous,hasPrevious"`
 }
 
 // OAuthScopeResponseResponseBody is used to define fields on response body
@@ -2115,7 +2122,7 @@ func NewListClientsResponseBody(res *oauthprovider.ListClientsResult) *ListClien
 		body.Data = []*OAuthClientResponseResponseBody{}
 	}
 	if res.Pagination != nil {
-		body.Pagination = marshalDesigntypesPaginationResponseToPaginationResponseResponseBody(res.Pagination)
+		body.Pagination = marshalDesigntypesPaginationToPaginationResponseBody(res.Pagination)
 	}
 	return body
 }
@@ -2298,7 +2305,7 @@ func NewListScopesResponseBody(res *oauthprovider.ListScopesResult) *ListScopesR
 		body.Data = []*OAuthScopeResponseResponseBody{}
 	}
 	if res.Pagination != nil {
-		body.Pagination = marshalDesigntypesPaginationResponseToPaginationResponseResponseBody(res.Pagination)
+		body.Pagination = marshalDesigntypesPaginationToPaginationResponseBody(res.Pagination)
 	}
 	return body
 }

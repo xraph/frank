@@ -68,7 +68,7 @@ func BuildListPayload(webhooksListOffset string, webhooksListLimit string, webho
 		if webhooksListEventTypes != "" {
 			err = json.Unmarshal([]byte(webhooksListEventTypes), &eventTypes)
 			if err != nil {
-				return nil, fmt.Errorf("invalid JSON for eventTypes, \nerror: %s, \nexample of valid JSON:\n%s", err, "'[\n      \"Ratione pariatur.\",\n      \"Quibusdam vel quae quisquam.\"\n   ]'")
+				return nil, fmt.Errorf("invalid JSON for eventTypes, \nerror: %s, \nexample of valid JSON:\n%s", err, "'[\n      \"Dolores labore dignissimos hic tempora non consequatur.\",\n      \"Est sit sunt.\",\n      \"In necessitatibus eos qui.\"\n   ]'")
 			}
 		}
 	}
@@ -96,7 +96,7 @@ func BuildCreatePayload(webhooksCreateBody string, webhooksCreateJWT string) (*w
 	{
 		err = json.Unmarshal([]byte(webhooksCreateBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"organization_id\": \"Ut sunt sequi totam quod.\",\n      \"webhook\": {\n         \"event_types\": [\n            \"user.created\",\n            \"user.updated\"\n         ],\n         \"format\": \"json\",\n         \"metadata\": {\n            \"Deleniti neque quisquam dolore sed.\": \"Id consectetur.\",\n            \"Nemo et delectus quia accusamus.\": \"Dolores ipsum.\"\n         },\n         \"name\": \"User Events\",\n         \"retry_count\": 4,\n         \"timeout_ms\": 4346,\n         \"url\": \"https://example.com/webhooks/receive\"\n      }\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"organization_id\": \"Consequuntur similique odit facilis odio distinctio nulla.\",\n      \"webhook\": {\n         \"event_types\": [\n            \"user.created\",\n            \"user.updated\"\n         ],\n         \"format\": \"form\",\n         \"metadata\": {\n            \"Est quos ab saepe expedita suscipit neque.\": \"Quas odit rerum et ea qui.\",\n            \"Et eaque reiciendis quae fugiat aut mollitia.\": \"Esse voluptatem laboriosam aperiam.\"\n         },\n         \"name\": \"User Events\",\n         \"retry_count\": 0,\n         \"timeout_ms\": 27144,\n         \"url\": \"https://example.com/webhooks/receive\"\n      }\n   }'")
 		}
 		if body.Webhook == nil {
 			err = goa.MergeErrors(err, goa.MissingFieldError("webhook", "body"))
@@ -155,7 +155,7 @@ func BuildUpdatePayload(webhooksUpdateBody string, webhooksUpdateID string, webh
 	{
 		err = json.Unmarshal([]byte(webhooksUpdateBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"webhook\": {\n         \"active\": false,\n         \"event_types\": [\n            \"Hic nesciunt voluptas.\",\n            \"Voluptatem sequi eos.\",\n            \"Et soluta vitae optio et et adipisci.\"\n         ],\n         \"format\": \"form\",\n         \"metadata\": {\n            \"Aut a maiores exercitationem doloremque et fugiat.\": \"Est aliquam beatae eius.\",\n            \"Eos impedit dolores ut.\": \"Est est libero est et.\",\n            \"Soluta quia cupiditate tempore rerum.\": \"Nam consectetur impedit nisi rerum accusamus voluptatem.\"\n         },\n         \"name\": \"Impedit reprehenderit odit iure.\",\n         \"retry_count\": 8,\n         \"timeout_ms\": 17955,\n         \"url\": \"http://blockkris.com/wade.padberg\"\n      }\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"webhook\": {\n         \"active\": false,\n         \"event_types\": [\n            \"Omnis autem quia reiciendis qui fugiat.\",\n            \"Aliquid ratione pariatur aperiam quibusdam.\",\n            \"Quae quisquam laboriosam.\"\n         ],\n         \"format\": \"json\",\n         \"metadata\": {\n            \"Consequatur qui voluptate et fuga est corporis.\": \"Id ducimus nulla sed.\",\n            \"Consequatur sapiente.\": \"Ipsa architecto aut asperiores ut dolorem.\",\n            \"Incidunt saepe tempora aut.\": \"Enim voluptas eos voluptas qui qui.\"\n         },\n         \"name\": \"Quam omnis et consequatur.\",\n         \"retry_count\": 9,\n         \"timeout_ms\": 17232,\n         \"url\": \"http://emmerich.com/oma_schuppe\"\n      }\n   }'")
 		}
 		if body.Webhook == nil {
 			err = goa.MergeErrors(err, goa.MissingFieldError("webhook", "body"))
@@ -217,7 +217,7 @@ func BuildTriggerEventPayload(webhooksTriggerEventBody string, webhooksTriggerEv
 	{
 		err = json.Unmarshal([]byte(webhooksTriggerEventBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"event\": {\n         \"event_type\": \"user.created\",\n         \"headers\": {\n            \"Non enim et quis vel quo.\": \"Est reprehenderit sint porro iusto accusantium doloribus.\"\n         },\n         \"payload\": {\n            \"email\": \"user@example.com\",\n            \"user_id\": \"123\"\n         }\n      },\n      \"organization_id\": \"In quo temporibus reiciendis dolores.\"\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"event\": {\n         \"event_type\": \"user.created\",\n         \"headers\": {\n            \"Minima perspiciatis officia omnis ratione aut.\": \"Nulla consequatur molestiae.\"\n         },\n         \"payload\": {\n            \"email\": \"user@example.com\",\n            \"user_id\": \"123\"\n         }\n      },\n      \"organization_id\": \"Dolores non possimus omnis.\"\n   }'")
 		}
 		if body.Event == nil {
 			err = goa.MergeErrors(err, goa.MissingFieldError("event", "body"))

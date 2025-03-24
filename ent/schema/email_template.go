@@ -1,8 +1,6 @@
 package schema
 
 import (
-	"time"
-
 	"entgo.io/ent"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
@@ -17,8 +15,6 @@ type EmailTemplate struct {
 // Fields of the EmailTemplate.
 func (EmailTemplate) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("id").
-			Unique(),
 		field.String("name").
 			NotEmpty(),
 		field.String("subject").
@@ -40,12 +36,6 @@ func (EmailTemplate) Fields() []ent.Field {
 		field.String("locale").
 			Default("en"),
 		entity.JSONMapField("metadata", true),
-		field.Time("created_at").
-			Default(time.Now).
-			Immutable(),
-		field.Time("updated_at").
-			Default(time.Now).
-			UpdateDefault(time.Now),
 	}
 }
 
@@ -61,5 +51,12 @@ func (EmailTemplate) Indexes() []ent.Index {
 		index.Fields("type"),
 		index.Fields("organization_id", "type", "locale").
 			Unique(),
+	}
+}
+
+// Mixin of the EmailTemplate.
+func (EmailTemplate) Mixin() []ent.Mixin {
+	return []ent.Mixin{
+		ModelBaseMixin{},
 	}
 }

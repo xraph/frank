@@ -1,8 +1,6 @@
 package schema
 
 import (
-	"time"
-
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
@@ -30,12 +28,6 @@ func (OAuthScope) Fields() []ent.Field {
 		field.Bool("public").
 			Default(true).
 			Comment("Whether this scope can be requested by any client"),
-		field.Time("created_at").
-			Default(time.Now).
-			Immutable(),
-		field.Time("updated_at").
-			Default(time.Now).
-			UpdateDefault(time.Now),
 	}
 }
 
@@ -55,5 +47,12 @@ func (OAuthScope) Edges() []ent.Edge {
 func (OAuthScope) Indexes() []ent.Index {
 	return []ent.Index{
 		index.Fields("name"),
+	}
+}
+
+// Mixin of the OAuthScope.
+func (OAuthScope) Mixin() []ent.Mixin {
+	return []ent.Mixin{
+		ModelBaseMixin{},
 	}
 }

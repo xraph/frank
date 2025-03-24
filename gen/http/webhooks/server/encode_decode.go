@@ -1281,14 +1281,17 @@ func marshalWebhooksWebhookResponseToWebhookResponseResponseBody(v *webhooks.Web
 	return res
 }
 
-// marshalDesigntypesPaginationResponseToPaginationResponseResponseBody builds
-// a value of type *PaginationResponseResponseBody from a value of type
-// *designtypes.PaginationResponse.
-func marshalDesigntypesPaginationResponseToPaginationResponseResponseBody(v *designtypes.PaginationResponse) *PaginationResponseResponseBody {
-	res := &PaginationResponseResponseBody{
-		Total:  v.Total,
-		Offset: v.Offset,
-		Limit:  v.Limit,
+// marshalDesigntypesPaginationToPaginationResponseBody builds a value of type
+// *PaginationResponseBody from a value of type *designtypes.Pagination.
+func marshalDesigntypesPaginationToPaginationResponseBody(v *designtypes.Pagination) *PaginationResponseBody {
+	res := &PaginationResponseBody{
+		Offset:      v.Offset,
+		Limit:       v.Limit,
+		Total:       v.Total,
+		TotalPages:  v.TotalPages,
+		CurrentPage: v.CurrentPage,
+		HasNext:     v.HasNext,
+		HasPrevious: v.HasPrevious,
 	}
 
 	return res

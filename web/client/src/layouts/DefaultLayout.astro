@@ -10,9 +10,40 @@ import "../styles/global.css";
 <body class="min-w-full min-h-svh">
     <slot /> <!-- your content is injected here -->
 </body>
-<style>
-    h1 {
-        font-size: 2rem;
-    }
+<style lang="scss">
+  /*@use 'webcoreui/styles' as *;*/
+  /*@include setup((*/
+  /*        theme: 'light',*/
+  /*        fontRegular: '/fonts/Inter-Regular.woff2',*/
+  /*        fontBold: '/fonts/Inter-Bold.woff2'*/
+  /*));*/
 </style>
+<script>
+    console.log('Debug: Page loaded at', new Date().toISOString());
+
+    // Override console methods to ensure they work
+    const originalConsoleLog = console.log;
+    console.log = function() {
+        // Call original and ensure it's visible
+        originalConsoleLog.apply(console, ['[DEBUG]', ...arguments]);
+    };
+
+    // Test log
+    window.addEventListener('DOMContentLoaded', () => {
+        console.log('DOM fully loaded and parsed');
+
+        // Create a visible debug element
+        const debugElement = document.createElement('div');
+        debugElement.style.position = 'fixed';
+        debugElement.style.bottom = '10px';
+        debugElement.style.left = '10px';
+        debugElement.style.padding = '5px';
+        debugElement.style.background = 'rgba(0,0,0,0.7)';
+        debugElement.style.color = '#fff';
+        debugElement.style.fontSize = '10px';
+        debugElement.style.zIndex = '9999';
+        debugElement.textContent = 'Debug Mode Active';
+        document.body.appendChild(debugElement);
+    });
+</script>
 </html>

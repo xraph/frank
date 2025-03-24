@@ -1,8 +1,6 @@
 package schema
 
 import (
-	"time"
-
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
@@ -18,8 +16,6 @@ type ApiKey struct {
 // Fields of the ApiKey.
 func (ApiKey) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("id").
-			Unique(),
 		field.String("name").
 			NotEmpty(),
 		field.String("key").
@@ -47,12 +43,6 @@ func (ApiKey) Fields() []ent.Field {
 		field.Time("expires_at").
 			Optional().
 			Nillable(),
-		field.Time("created_at").
-			Default(time.Now).
-			Immutable(),
-		field.Time("updated_at").
-			Default(time.Now).
-			UpdateDefault(time.Now),
 	}
 }
 
@@ -76,5 +66,12 @@ func (ApiKey) Indexes() []ent.Index {
 		index.Fields("user_id"),
 		index.Fields("organization_id"),
 		index.Fields("hashed_key"),
+	}
+}
+
+// Mixin of the ApiKey.
+func (ApiKey) Mixin() []ent.Mixin {
+	return []ent.Mixin{
+		ModelBaseMixin{},
 	}
 }

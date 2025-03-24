@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/juicycleff/frank/ent"
 	"github.com/juicycleff/frank/ent/featureflag"
 	"github.com/juicycleff/frank/ent/organization"
@@ -12,6 +11,7 @@ import (
 	"github.com/juicycleff/frank/ent/role"
 	"github.com/juicycleff/frank/ent/user"
 	"github.com/juicycleff/frank/pkg/errors"
+	"github.com/juicycleff/frank/pkg/utils"
 )
 
 // Repository provides access to organization storage
@@ -105,10 +105,7 @@ func NewRepository(client *ent.Client) Repository {
 // Create creates a new organization
 func (r *repository) Create(ctx context.Context, input RepositoryCreateInput) (*ent.Organization, error) {
 	// Generate UUID if needed
-	id, err := uuid.NewRandom()
-	if err != nil {
-		return nil, errors.Wrap(errors.CodeInternalServer, err, "failed to generate uuid")
-	}
+	id := utils.NewID()
 
 	// Check if slug is already taken
 	exists, err := r.client.Organization.
@@ -1039,11 +1036,7 @@ func (r *repository) EnableFeature(ctx context.Context, orgID string, featureKey
 			Save(ctx)
 	} else {
 		// Create new organization feature
-		id, err := uuid.NewRandom()
-		if err != nil {
-			_ = tx.Rollback()
-			return errors.Wrap(errors.CodeInternalServer, err, "failed to generate uuid")
-		}
+		id := utils.NewID()
 
 		_, err = tx.OrganizationFeature.
 			Create().
@@ -1113,10 +1106,7 @@ func (r *repository) DisableFeature(ctx context.Context, orgID string, featureKe
 	if !exists {
 		// Feature is not explicitly set for this organization
 		// Create it with enabled=false
-		id, err := uuid.NewRandom()
-		if err != nil {
-			return errors.Wrap(errors.CodeInternalServer, err, "failed to generate uuid")
-		}
+		id := utils.NewID()
 
 		_, err = r.client.OrganizationFeature.
 			Create().

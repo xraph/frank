@@ -10,6 +10,7 @@ package server
 import (
 	"unicode/utf8"
 
+	designtypes "github.com/juicycleff/frank/gen/designtypes"
 	users "github.com/juicycleff/frank/gen/users"
 	goa "goa.design/goa/v3/pkg"
 )
@@ -17,24 +18,24 @@ import (
 // CreateRequestBody is the type of the "users" service "create" endpoint HTTP
 // request body.
 type CreateRequestBody struct {
-	// User email
-	Email *string `form:"email,omitempty" json:"email,omitempty" xml:"email,omitempty"`
 	// User password
 	Password *string `form:"password,omitempty" json:"password,omitempty" xml:"password,omitempty"`
-	// User phone number
-	PhoneNumber *string `form:"phone_number,omitempty" json:"phone_number,omitempty" xml:"phone_number,omitempty"`
-	// User first name
-	FirstName *string `form:"first_name,omitempty" json:"first_name,omitempty" xml:"first_name,omitempty"`
-	// User last name
-	LastName *string `form:"last_name,omitempty" json:"last_name,omitempty" xml:"last_name,omitempty"`
-	// User metadata
-	Metadata map[string]any `form:"metadata,omitempty" json:"metadata,omitempty" xml:"metadata,omitempty"`
-	// Profile image URL
-	ProfileImageURL *string `form:"profile_image_url,omitempty" json:"profile_image_url,omitempty" xml:"profile_image_url,omitempty"`
-	// User locale
-	Locale *string `form:"locale,omitempty" json:"locale,omitempty" xml:"locale,omitempty"`
 	// Organization ID to add user to
 	OrganizationID *string `form:"organization_id,omitempty" json:"organization_id,omitempty" xml:"organization_id,omitempty"`
+	// User first name
+	FirstName *string `json:"first_name,firstName"`
+	// User last name
+	LastName *string `json:"last_name,lastName"`
+	// User phone number
+	PhoneNumber *string `json:"phone_number,phoneNumber"`
+	// URL to user's profile image
+	ProfileImageURL *string `json:"profile_image_url,profileImageUrl"`
+	// User metadata
+	Metadata map[string]any `json:"metadata"`
+	// User locale
+	Locale *string `json:"locale"`
+	// Email address
+	Email *string `json:"email"`
 }
 
 // UpdateRequestBody is the type of the "users" service "update" endpoint HTTP
@@ -76,132 +77,108 @@ type UpdatePasswordRequestBody struct {
 // ListResponseBody is the type of the "users" service "list" endpoint HTTP
 // response body.
 type ListResponseBody struct {
-	Data       []*UserResponseBody             `form:"data" json:"data" xml:"data"`
-	Pagination *PaginationResponseResponseBody `form:"pagination" json:"pagination" xml:"pagination"`
+	Data       []*UserResponseBody     `form:"data" json:"data" xml:"data"`
+	Pagination *PaginationResponseBody `form:"pagination" json:"pagination" xml:"pagination"`
 }
 
 // CreateResponseBody is the type of the "users" service "create" endpoint HTTP
 // response body.
 type CreateResponseBody struct {
-	// User ID
-	ID string `form:"id" json:"id" xml:"id"`
-	// User email
-	Email string `form:"email" json:"email" xml:"email"`
-	// User first name
-	FirstName *string `form:"first_name,omitempty" json:"first_name,omitempty" xml:"first_name,omitempty"`
-	// User last name
-	LastName *string `form:"last_name,omitempty" json:"last_name,omitempty" xml:"last_name,omitempty"`
-	// Whether email is verified
-	EmailVerified bool `form:"email_verified" json:"email_verified" xml:"email_verified"`
-	// User phone number
-	PhoneNumber *string `form:"phone_number,omitempty" json:"phone_number,omitempty" xml:"phone_number,omitempty"`
-	// Whether phone is verified
-	PhoneVerified *bool `form:"phone_verified,omitempty" json:"phone_verified,omitempty" xml:"phone_verified,omitempty"`
-	// URL to user's profile image
-	ProfileImageURL *string `form:"profile_image_url,omitempty" json:"profile_image_url,omitempty" xml:"profile_image_url,omitempty"`
-	// User's locale preference
-	Locale *string `form:"locale,omitempty" json:"locale,omitempty" xml:"locale,omitempty"`
-	// User metadata
-	Metadata map[string]any `form:"metadata,omitempty" json:"metadata,omitempty" xml:"metadata,omitempty"`
 	// Whether account is active
 	Active bool `form:"active" json:"active" xml:"active"`
-	// Account creation timestamp
-	CreatedAt string `form:"created_at" json:"created_at" xml:"created_at"`
-	// Account last update timestamp
-	UpdatedAt string `form:"updated_at" json:"updated_at" xml:"updated_at"`
+	// Whether email is verified
+	EmailVerified bool `json:"email_verified,emailVerified"`
+	// Whether phone is verified
+	PhoneVerified *bool `json:"phone_verified,phoneVerified"`
+	// URL to user's profile image
+	ProfileImageURL *string `json:"profile_image_url,profileImageUrl"`
+	// User first name
+	FirstName *string `json:"first_name,firstName"`
+	// User last name
+	LastName *string `json:"last_name,lastName"`
+	// User phone number
+	PhoneNumber *string `json:"phone_number,phoneNumber"`
+	// User metadata
+	Metadata map[string]any `json:"metadata"`
+	// User locale
+	Locale string `json:"locale"`
+	// Email address
+	Email string `json:"email"`
 }
 
 // GetResponseBody is the type of the "users" service "get" endpoint HTTP
 // response body.
 type GetResponseBody struct {
-	// User ID
-	ID string `form:"id" json:"id" xml:"id"`
-	// User email
-	Email string `form:"email" json:"email" xml:"email"`
-	// User first name
-	FirstName *string `form:"first_name,omitempty" json:"first_name,omitempty" xml:"first_name,omitempty"`
-	// User last name
-	LastName *string `form:"last_name,omitempty" json:"last_name,omitempty" xml:"last_name,omitempty"`
-	// Whether email is verified
-	EmailVerified bool `form:"email_verified" json:"email_verified" xml:"email_verified"`
-	// User phone number
-	PhoneNumber *string `form:"phone_number,omitempty" json:"phone_number,omitempty" xml:"phone_number,omitempty"`
-	// Whether phone is verified
-	PhoneVerified *bool `form:"phone_verified,omitempty" json:"phone_verified,omitempty" xml:"phone_verified,omitempty"`
-	// URL to user's profile image
-	ProfileImageURL *string `form:"profile_image_url,omitempty" json:"profile_image_url,omitempty" xml:"profile_image_url,omitempty"`
-	// User's locale preference
-	Locale *string `form:"locale,omitempty" json:"locale,omitempty" xml:"locale,omitempty"`
-	// User metadata
-	Metadata map[string]any `form:"metadata,omitempty" json:"metadata,omitempty" xml:"metadata,omitempty"`
 	// Whether account is active
 	Active bool `form:"active" json:"active" xml:"active"`
-	// Account creation timestamp
-	CreatedAt string `form:"created_at" json:"created_at" xml:"created_at"`
-	// Account last update timestamp
-	UpdatedAt string `form:"updated_at" json:"updated_at" xml:"updated_at"`
+	// Whether email is verified
+	EmailVerified bool `json:"email_verified,emailVerified"`
+	// Whether phone is verified
+	PhoneVerified *bool `json:"phone_verified,phoneVerified"`
+	// URL to user's profile image
+	ProfileImageURL *string `json:"profile_image_url,profileImageUrl"`
+	// User first name
+	FirstName *string `json:"first_name,firstName"`
+	// User last name
+	LastName *string `json:"last_name,lastName"`
+	// User phone number
+	PhoneNumber *string `json:"phone_number,phoneNumber"`
+	// User metadata
+	Metadata map[string]any `json:"metadata"`
+	// User locale
+	Locale string `json:"locale"`
+	// Email address
+	Email string `json:"email"`
 }
 
 // UpdateResponseBody is the type of the "users" service "update" endpoint HTTP
 // response body.
 type UpdateResponseBody struct {
-	// User ID
-	ID string `form:"id" json:"id" xml:"id"`
-	// User email
-	Email string `form:"email" json:"email" xml:"email"`
-	// User first name
-	FirstName *string `form:"first_name,omitempty" json:"first_name,omitempty" xml:"first_name,omitempty"`
-	// User last name
-	LastName *string `form:"last_name,omitempty" json:"last_name,omitempty" xml:"last_name,omitempty"`
-	// Whether email is verified
-	EmailVerified bool `form:"email_verified" json:"email_verified" xml:"email_verified"`
-	// User phone number
-	PhoneNumber *string `form:"phone_number,omitempty" json:"phone_number,omitempty" xml:"phone_number,omitempty"`
-	// Whether phone is verified
-	PhoneVerified *bool `form:"phone_verified,omitempty" json:"phone_verified,omitempty" xml:"phone_verified,omitempty"`
-	// URL to user's profile image
-	ProfileImageURL *string `form:"profile_image_url,omitempty" json:"profile_image_url,omitempty" xml:"profile_image_url,omitempty"`
-	// User's locale preference
-	Locale *string `form:"locale,omitempty" json:"locale,omitempty" xml:"locale,omitempty"`
-	// User metadata
-	Metadata map[string]any `form:"metadata,omitempty" json:"metadata,omitempty" xml:"metadata,omitempty"`
 	// Whether account is active
 	Active bool `form:"active" json:"active" xml:"active"`
-	// Account creation timestamp
-	CreatedAt string `form:"created_at" json:"created_at" xml:"created_at"`
-	// Account last update timestamp
-	UpdatedAt string `form:"updated_at" json:"updated_at" xml:"updated_at"`
+	// Whether email is verified
+	EmailVerified bool `json:"email_verified,emailVerified"`
+	// Whether phone is verified
+	PhoneVerified *bool `json:"phone_verified,phoneVerified"`
+	// URL to user's profile image
+	ProfileImageURL *string `json:"profile_image_url,profileImageUrl"`
+	// User first name
+	FirstName *string `json:"first_name,firstName"`
+	// User last name
+	LastName *string `json:"last_name,lastName"`
+	// User phone number
+	PhoneNumber *string `json:"phone_number,phoneNumber"`
+	// User metadata
+	Metadata map[string]any `json:"metadata"`
+	// User locale
+	Locale string `json:"locale"`
+	// Email address
+	Email string `json:"email"`
 }
 
 // UpdateMeResponseBody is the type of the "users" service "update_me" endpoint
 // HTTP response body.
 type UpdateMeResponseBody struct {
-	// User ID
-	ID string `form:"id" json:"id" xml:"id"`
-	// User email
-	Email string `form:"email" json:"email" xml:"email"`
-	// User first name
-	FirstName *string `form:"first_name,omitempty" json:"first_name,omitempty" xml:"first_name,omitempty"`
-	// User last name
-	LastName *string `form:"last_name,omitempty" json:"last_name,omitempty" xml:"last_name,omitempty"`
-	// Whether email is verified
-	EmailVerified bool `form:"email_verified" json:"email_verified" xml:"email_verified"`
-	// User phone number
-	PhoneNumber *string `form:"phone_number,omitempty" json:"phone_number,omitempty" xml:"phone_number,omitempty"`
-	// Whether phone is verified
-	PhoneVerified *bool `form:"phone_verified,omitempty" json:"phone_verified,omitempty" xml:"phone_verified,omitempty"`
-	// URL to user's profile image
-	ProfileImageURL *string `form:"profile_image_url,omitempty" json:"profile_image_url,omitempty" xml:"profile_image_url,omitempty"`
-	// User's locale preference
-	Locale *string `form:"locale,omitempty" json:"locale,omitempty" xml:"locale,omitempty"`
-	// User metadata
-	Metadata map[string]any `form:"metadata,omitempty" json:"metadata,omitempty" xml:"metadata,omitempty"`
 	// Whether account is active
 	Active bool `form:"active" json:"active" xml:"active"`
-	// Account creation timestamp
-	CreatedAt string `form:"created_at" json:"created_at" xml:"created_at"`
-	// Account last update timestamp
-	UpdatedAt string `form:"updated_at" json:"updated_at" xml:"updated_at"`
+	// Whether email is verified
+	EmailVerified bool `json:"email_verified,emailVerified"`
+	// Whether phone is verified
+	PhoneVerified *bool `json:"phone_verified,phoneVerified"`
+	// URL to user's profile image
+	ProfileImageURL *string `json:"profile_image_url,profileImageUrl"`
+	// User first name
+	FirstName *string `json:"first_name,firstName"`
+	// User last name
+	LastName *string `json:"last_name,lastName"`
+	// User phone number
+	PhoneNumber *string `json:"phone_number,phoneNumber"`
+	// User metadata
+	Metadata map[string]any `json:"metadata"`
+	// User locale
+	Locale string `json:"locale"`
+	// Email address
+	Email string `json:"email"`
 }
 
 // UpdatePasswordResponseBody is the type of the "users" service
@@ -214,7 +191,10 @@ type UpdatePasswordResponseBody struct {
 // GetSessionsResponseBody is the type of the "users" service "get_sessions"
 // endpoint HTTP response body.
 type GetSessionsResponseBody struct {
-	Sessions []*UserSessionResponseResponseBody `form:"sessions" json:"sessions" xml:"sessions"`
+	// User sessions
+	Data []*SessionResponseBody `form:"data" json:"data" xml:"data"`
+	// Pagination params
+	Pagination *PaginationResponseBody `json:"pagination"`
 }
 
 // GetOrganizationsResponseBody is the type of the "users" service
@@ -1006,62 +986,76 @@ type GetOrganizationsUnauthorizedResponseBody struct {
 
 // UserResponseBody is used to define fields on response body types.
 type UserResponseBody struct {
-	// User ID
-	ID string `form:"id" json:"id" xml:"id"`
-	// User email
-	Email string `form:"email" json:"email" xml:"email"`
-	// User first name
-	FirstName *string `form:"first_name,omitempty" json:"first_name,omitempty" xml:"first_name,omitempty"`
-	// User last name
-	LastName *string `form:"last_name,omitempty" json:"last_name,omitempty" xml:"last_name,omitempty"`
-	// Whether email is verified
-	EmailVerified bool `form:"email_verified" json:"email_verified" xml:"email_verified"`
-	// User phone number
-	PhoneNumber *string `form:"phone_number,omitempty" json:"phone_number,omitempty" xml:"phone_number,omitempty"`
-	// Whether phone is verified
-	PhoneVerified *bool `form:"phone_verified,omitempty" json:"phone_verified,omitempty" xml:"phone_verified,omitempty"`
-	// URL to user's profile image
-	ProfileImageURL *string `form:"profile_image_url,omitempty" json:"profile_image_url,omitempty" xml:"profile_image_url,omitempty"`
-	// User's locale preference
-	Locale *string `form:"locale,omitempty" json:"locale,omitempty" xml:"locale,omitempty"`
-	// User metadata
-	Metadata map[string]any `form:"metadata,omitempty" json:"metadata,omitempty" xml:"metadata,omitempty"`
 	// Whether account is active
 	Active bool `form:"active" json:"active" xml:"active"`
-	// Account creation timestamp
-	CreatedAt string `form:"created_at" json:"created_at" xml:"created_at"`
-	// Account last update timestamp
-	UpdatedAt string `form:"updated_at" json:"updated_at" xml:"updated_at"`
+	// Whether email is verified
+	EmailVerified bool `json:"email_verified,emailVerified"`
+	// Whether phone is verified
+	PhoneVerified *bool `json:"phone_verified,phoneVerified"`
+	// URL to user's profile image
+	ProfileImageURL *string `json:"profile_image_url,profileImageUrl"`
+	// User first name
+	FirstName *string `json:"first_name,firstName"`
+	// User last name
+	LastName *string `json:"last_name,lastName"`
+	// User phone number
+	PhoneNumber *string `json:"phone_number,phoneNumber"`
+	// User metadata
+	Metadata map[string]any `json:"metadata"`
+	// User locale
+	Locale string `json:"locale"`
+	// Email address
+	Email string `json:"email"`
 }
 
-// PaginationResponseResponseBody is used to define fields on response body
-// types.
-type PaginationResponseResponseBody struct {
+// PaginationResponseBody is used to define fields on response body types.
+type PaginationResponseBody struct {
+	// Offset
+	Offset int `json:"offset"`
+	// Limit
+	Limit int `json:"limit"`
 	// Total number of items
-	Total int `form:"total" json:"total" xml:"total"`
-	// Current offset
-	Offset int `form:"offset" json:"offset" xml:"offset"`
-	// Current limit
-	Limit int `form:"limit" json:"limit" xml:"limit"`
+	Total int `json:"total"`
+	// Total number of pages
+	TotalPages int `json:"total_pages,totalPages"`
+	// Current page number
+	CurrentPage int `json:"current_page,currentPage"`
+	// Has next page
+	HasNext bool `json:"has_next,hasNext"`
+	// Has previous page
+	HasPrevious bool `json:"has_previous,hasPrevious"`
 }
 
-// UserSessionResponseResponseBody is used to define fields on response body
-// types.
-type UserSessionResponseResponseBody struct {
-	// Session ID
-	ID string `form:"id" json:"id" xml:"id"`
+// SessionResponseBody is used to define fields on response body types.
+type SessionResponseBody struct {
+	// User ID
+	UserID *string `json:"user_id,userId"`
 	// Device ID
-	DeviceID *string `form:"device_id,omitempty" json:"device_id,omitempty" xml:"device_id,omitempty"`
+	DeviceID *string `json:"device_id,deviceId"`
 	// IP address
-	IPAddress *string `form:"ip_address,omitempty" json:"ip_address,omitempty" xml:"ip_address,omitempty"`
+	IPAddress *string `json:"ip_address,ipAddress"`
 	// User agent string
-	UserAgent *string `form:"user_agent,omitempty" json:"user_agent,omitempty" xml:"user_agent,omitempty"`
+	UserAgent *string `json:"user_agent,userAgent"`
 	// Location
-	Location *string `form:"location,omitempty" json:"location,omitempty" xml:"location,omitempty"`
+	Location *string `json:"location"`
+	// Session token
+	Token *string `json:"token"`
+	// Organization ID
+	OrganizationID *string `json:"organization_id,organizationId"`
+	// Session is active
+	IsActive *bool `json:"is_active,isActive"`
+	// Session metadata
+	Metadata map[string]any `json:"metadata"`
 	// Last activity timestamp
-	LastActiveAt *string `form:"last_active_at,omitempty" json:"last_active_at,omitempty" xml:"last_active_at,omitempty"`
-	// Creation timestamp
-	CreatedAt string `form:"created_at" json:"created_at" xml:"created_at"`
+	LastActiveAt *string `json:"last_active_at,lastActiveAt"`
+	// Expiry timestamp
+	ExpiresAt string `json:"expires_at,expiresAt"`
+	// Created At
+	ID string `json:"id"`
+	// Created At
+	CreatedAt string `json:"created_at,createdAt"`
+	// Updated At
+	UpdatedAt string `json:"updated_at,updatedAt"`
 }
 
 // OrganizationResponseResponseBody is used to define fields on response body
@@ -1120,33 +1114,30 @@ func NewListResponseBody(res *users.ListResult) *ListResponseBody {
 	if res.Data != nil {
 		body.Data = make([]*UserResponseBody, len(res.Data))
 		for i, val := range res.Data {
-			body.Data[i] = marshalUsersUserToUserResponseBody(val)
+			body.Data[i] = marshalDesigntypesUserToUserResponseBody(val)
 		}
 	} else {
 		body.Data = []*UserResponseBody{}
 	}
 	if res.Pagination != nil {
-		body.Pagination = marshalDesigntypesPaginationResponseToPaginationResponseResponseBody(res.Pagination)
+		body.Pagination = marshalDesigntypesPaginationToPaginationResponseBody(res.Pagination)
 	}
 	return body
 }
 
 // NewCreateResponseBody builds the HTTP response body from the result of the
 // "create" endpoint of the "users" service.
-func NewCreateResponseBody(res *users.User) *CreateResponseBody {
+func NewCreateResponseBody(res *designtypes.User) *CreateResponseBody {
 	body := &CreateResponseBody{
-		ID:              res.ID,
-		Email:           res.Email,
-		FirstName:       res.FirstName,
-		LastName:        res.LastName,
+		Active:          res.Active,
 		EmailVerified:   res.EmailVerified,
-		PhoneNumber:     res.PhoneNumber,
 		PhoneVerified:   res.PhoneVerified,
 		ProfileImageURL: res.ProfileImageURL,
+		FirstName:       res.FirstName,
+		LastName:        res.LastName,
+		PhoneNumber:     res.PhoneNumber,
 		Locale:          res.Locale,
-		Active:          res.Active,
-		CreatedAt:       res.CreatedAt,
-		UpdatedAt:       res.UpdatedAt,
+		Email:           res.Email,
 	}
 	if res.Metadata != nil {
 		body.Metadata = make(map[string]any, len(res.Metadata))
@@ -1154,6 +1145,12 @@ func NewCreateResponseBody(res *users.User) *CreateResponseBody {
 			tk := key
 			tv := val
 			body.Metadata[tk] = tv
+		}
+	}
+	{
+		var zero string
+		if body.Locale == zero {
+			body.Locale = "en"
 		}
 	}
 	return body
@@ -1161,20 +1158,17 @@ func NewCreateResponseBody(res *users.User) *CreateResponseBody {
 
 // NewGetResponseBody builds the HTTP response body from the result of the
 // "get" endpoint of the "users" service.
-func NewGetResponseBody(res *users.User) *GetResponseBody {
+func NewGetResponseBody(res *designtypes.User) *GetResponseBody {
 	body := &GetResponseBody{
-		ID:              res.ID,
-		Email:           res.Email,
-		FirstName:       res.FirstName,
-		LastName:        res.LastName,
+		Active:          res.Active,
 		EmailVerified:   res.EmailVerified,
-		PhoneNumber:     res.PhoneNumber,
 		PhoneVerified:   res.PhoneVerified,
 		ProfileImageURL: res.ProfileImageURL,
+		FirstName:       res.FirstName,
+		LastName:        res.LastName,
+		PhoneNumber:     res.PhoneNumber,
 		Locale:          res.Locale,
-		Active:          res.Active,
-		CreatedAt:       res.CreatedAt,
-		UpdatedAt:       res.UpdatedAt,
+		Email:           res.Email,
 	}
 	if res.Metadata != nil {
 		body.Metadata = make(map[string]any, len(res.Metadata))
@@ -1182,6 +1176,12 @@ func NewGetResponseBody(res *users.User) *GetResponseBody {
 			tk := key
 			tv := val
 			body.Metadata[tk] = tv
+		}
+	}
+	{
+		var zero string
+		if body.Locale == zero {
+			body.Locale = "en"
 		}
 	}
 	return body
@@ -1189,20 +1189,17 @@ func NewGetResponseBody(res *users.User) *GetResponseBody {
 
 // NewUpdateResponseBody builds the HTTP response body from the result of the
 // "update" endpoint of the "users" service.
-func NewUpdateResponseBody(res *users.User) *UpdateResponseBody {
+func NewUpdateResponseBody(res *designtypes.User) *UpdateResponseBody {
 	body := &UpdateResponseBody{
-		ID:              res.ID,
-		Email:           res.Email,
-		FirstName:       res.FirstName,
-		LastName:        res.LastName,
+		Active:          res.Active,
 		EmailVerified:   res.EmailVerified,
-		PhoneNumber:     res.PhoneNumber,
 		PhoneVerified:   res.PhoneVerified,
 		ProfileImageURL: res.ProfileImageURL,
+		FirstName:       res.FirstName,
+		LastName:        res.LastName,
+		PhoneNumber:     res.PhoneNumber,
 		Locale:          res.Locale,
-		Active:          res.Active,
-		CreatedAt:       res.CreatedAt,
-		UpdatedAt:       res.UpdatedAt,
+		Email:           res.Email,
 	}
 	if res.Metadata != nil {
 		body.Metadata = make(map[string]any, len(res.Metadata))
@@ -1212,25 +1209,28 @@ func NewUpdateResponseBody(res *users.User) *UpdateResponseBody {
 			body.Metadata[tk] = tv
 		}
 	}
+	{
+		var zero string
+		if body.Locale == zero {
+			body.Locale = "en"
+		}
+	}
 	return body
 }
 
 // NewUpdateMeResponseBody builds the HTTP response body from the result of the
 // "update_me" endpoint of the "users" service.
-func NewUpdateMeResponseBody(res *users.User) *UpdateMeResponseBody {
+func NewUpdateMeResponseBody(res *designtypes.User) *UpdateMeResponseBody {
 	body := &UpdateMeResponseBody{
-		ID:              res.ID,
-		Email:           res.Email,
-		FirstName:       res.FirstName,
-		LastName:        res.LastName,
+		Active:          res.Active,
 		EmailVerified:   res.EmailVerified,
-		PhoneNumber:     res.PhoneNumber,
 		PhoneVerified:   res.PhoneVerified,
 		ProfileImageURL: res.ProfileImageURL,
+		FirstName:       res.FirstName,
+		LastName:        res.LastName,
+		PhoneNumber:     res.PhoneNumber,
 		Locale:          res.Locale,
-		Active:          res.Active,
-		CreatedAt:       res.CreatedAt,
-		UpdatedAt:       res.UpdatedAt,
+		Email:           res.Email,
 	}
 	if res.Metadata != nil {
 		body.Metadata = make(map[string]any, len(res.Metadata))
@@ -1238,6 +1238,12 @@ func NewUpdateMeResponseBody(res *users.User) *UpdateMeResponseBody {
 			tk := key
 			tv := val
 			body.Metadata[tk] = tv
+		}
+	}
+	{
+		var zero string
+		if body.Locale == zero {
+			body.Locale = "en"
 		}
 	}
 	return body
@@ -1254,15 +1260,18 @@ func NewUpdatePasswordResponseBody(res *users.UpdatePasswordResult) *UpdatePassw
 
 // NewGetSessionsResponseBody builds the HTTP response body from the result of
 // the "get_sessions" endpoint of the "users" service.
-func NewGetSessionsResponseBody(res *users.GetSessionsResult) *GetSessionsResponseBody {
+func NewGetSessionsResponseBody(res *users.GetUserSessionResponse) *GetSessionsResponseBody {
 	body := &GetSessionsResponseBody{}
-	if res.Sessions != nil {
-		body.Sessions = make([]*UserSessionResponseResponseBody, len(res.Sessions))
-		for i, val := range res.Sessions {
-			body.Sessions[i] = marshalDesigntypesUserSessionResponseToUserSessionResponseResponseBody(val)
+	if res.Data != nil {
+		body.Data = make([]*SessionResponseBody, len(res.Data))
+		for i, val := range res.Data {
+			body.Data[i] = marshalDesigntypesSessionToSessionResponseBody(val)
 		}
 	} else {
-		body.Sessions = []*UserSessionResponseResponseBody{}
+		body.Data = []*SessionResponseBody{}
+	}
+	if res.Pagination != nil {
+		body.Pagination = marshalDesigntypesPaginationToPaginationResponseBody(res.Pagination)
 	}
 	return body
 }
@@ -2017,13 +2026,13 @@ func NewListPayload(offset int, limit int, search *string, organizationID *strin
 // NewCreatePayload builds a users service create endpoint payload.
 func NewCreatePayload(body *CreateRequestBody, jwt *string) *users.CreatePayload {
 	v := &users.CreatePayload{
-		Email:           *body.Email,
 		Password:        body.Password,
-		PhoneNumber:     body.PhoneNumber,
+		OrganizationID:  body.OrganizationID,
 		FirstName:       body.FirstName,
 		LastName:        body.LastName,
+		PhoneNumber:     body.PhoneNumber,
 		ProfileImageURL: body.ProfileImageURL,
-		OrganizationID:  body.OrganizationID,
+		Email:           *body.Email,
 	}
 	if body.Locale != nil {
 		v.Locale = *body.Locale
@@ -2141,13 +2150,13 @@ func ValidateCreateRequestBody(body *CreateRequestBody) (err error) {
 	if body.Email == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("email", "body"))
 	}
-	if body.Email != nil {
-		err = goa.MergeErrors(err, goa.ValidateFormat("body.email", *body.Email, goa.FormatEmail))
-	}
 	if body.Password != nil {
 		if utf8.RuneCountInString(*body.Password) < 8 {
 			err = goa.MergeErrors(err, goa.InvalidLengthError("body.password", *body.Password, utf8.RuneCountInString(*body.Password), 8, true))
 		}
+	}
+	if body.Email != nil {
+		err = goa.MergeErrors(err, goa.ValidateFormat("body.email", *body.Email, goa.FormatEmail))
 	}
 	return
 }

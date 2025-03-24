@@ -8,15 +8,18 @@ import (
 
 // SetDefaults sets default values for configuration
 func SetDefaults(v *viper.Viper) {
+	// Global Defaults
+	v.SetDefault("useHuma", true)
+
 	// Server defaults
 	v.SetDefault("server.host", "0.0.0.0")
-	v.SetDefault("server.port", 8080)
+	v.SetDefault("server.port", 8998)
 	v.SetDefault("server.name", "Wakflo")
 	v.SetDefault("server.read_timeout", time.Second*15)
 	v.SetDefault("server.write_timeout", time.Second*15)
 	v.SetDefault("server.idle_timeout", time.Second*60)
 	v.SetDefault("server.shutdown_timeout", time.Second*30)
-	v.SetDefault("server.base_url", "http://localhost:8080")
+	v.SetDefault("server.base_url", "http://localhost:8998")
 	v.SetDefault("server.trusted_proxies", []string{"127.0.0.1", "::1"})
 	v.SetDefault("server.debug_mode", false)
 
@@ -52,13 +55,13 @@ func SetDefaults(v *viper.Viper) {
 	v.SetDefault("auth.token_signing_method", "HS256")
 	v.SetDefault("auth.token_issuer", "frank")
 	v.SetDefault("auth.cookie_domain", "")
-	v.SetDefault("auth.cookie_secure", true)
+	v.SetDefault("auth.cookie_secure", false)
 	v.SetDefault("auth.cookie_http_only", true)
-	v.SetDefault("auth.cookie_same_site", "lax")
+	v.SetDefault("auth.cookie_same_site", "none")
 	v.SetDefault("auth.default_user_role", "user")
 	v.SetDefault("auth.default_admin_role", "admin")
 	v.SetDefault("auth.default_super_role", "super")
-	v.SetDefault("auth.require_email_verification", true)
+	v.SetDefault("auth.require_email_verification", false)
 	v.SetDefault("auth.email_verification_expiry", time.Hour*24) // 24 hours
 	v.SetDefault("auth.auto_register_users", false)
 	v.SetDefault("auth.max_login_attempts", 5)
@@ -175,12 +178,12 @@ func SetDefaults(v *viper.Viper) {
 	v.SetDefault("security.rate_limit_enabled", true)
 	v.SetDefault("security.rate_limit_per_second", 10.0)
 	v.SetDefault("security.rate_limit_burst", 30)
-	v.SetDefault("security.allowed_origins", []string{"http://localhost:3000", "http://localhost:8080"})
+	v.SetDefault("security.allowed_origins", []string{"http://localhost:3000", "http://localhost:8080", "http://localhost:4321"})
 	v.SetDefault("security.allowed_methods", []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"})
 	v.SetDefault("security.allowed_headers", []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"})
 	v.SetDefault("security.exposed_headers", []string{"X-CSRF-Token"})
 	v.SetDefault("security.allow_credentials", true)
-	v.SetDefault("security.csrf_enabled", true)
+	v.SetDefault("security.csrf_enabled", false)
 	v.SetDefault("security.csrf_token_expiry", time.Hour*2) // 2 hours
 	v.SetDefault("security.csrf_secret_key", "")
 	v.SetDefault("security.csrf_cookie_name", "csrf_token")

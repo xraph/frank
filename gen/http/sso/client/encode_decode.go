@@ -15,6 +15,7 @@ import (
 	"net/url"
 	"strings"
 
+	designtypes "github.com/juicycleff/frank/gen/designtypes"
 	sso "github.com/juicycleff/frank/gen/sso"
 	goahttp "goa.design/goa/v3/http"
 )
@@ -1789,25 +1790,24 @@ func unmarshalSSOProviderResponseBodyToSsoSSOProvider(v *SSOProviderResponseBody
 	return res
 }
 
-// unmarshalUserResponseBodyToSsoUser builds a value of type *sso.User from a
-// value of type *UserResponseBody.
-func unmarshalUserResponseBodyToSsoUser(v *UserResponseBody) *sso.User {
+// unmarshalUserResponseBodyToDesigntypesUser builds a value of type
+// *designtypes.User from a value of type *UserResponseBody.
+func unmarshalUserResponseBodyToDesigntypesUser(v *UserResponseBody) *designtypes.User {
 	if v == nil {
 		return nil
 	}
-	res := &sso.User{
-		ID:              *v.ID,
-		Email:           *v.Email,
-		FirstName:       v.FirstName,
-		LastName:        v.LastName,
+	res := &designtypes.User{
+		Active:          *v.Active,
 		EmailVerified:   *v.EmailVerified,
-		PhoneNumber:     v.PhoneNumber,
 		PhoneVerified:   v.PhoneVerified,
 		ProfileImageURL: v.ProfileImageURL,
-		Locale:          v.Locale,
-		Active:          *v.Active,
-		CreatedAt:       *v.CreatedAt,
-		UpdatedAt:       *v.UpdatedAt,
+		FirstName:       v.FirstName,
+		LastName:        v.LastName,
+		PhoneNumber:     v.PhoneNumber,
+		Email:           *v.Email,
+	}
+	if v.Locale != nil {
+		res.Locale = *v.Locale
 	}
 	if v.Metadata != nil {
 		res.Metadata = make(map[string]any, len(v.Metadata))
@@ -1816,6 +1816,9 @@ func unmarshalUserResponseBodyToSsoUser(v *UserResponseBody) *sso.User {
 			tv := val
 			res.Metadata[tk] = tv
 		}
+	}
+	if v.Locale == nil {
+		res.Locale = "en"
 	}
 
 	return res

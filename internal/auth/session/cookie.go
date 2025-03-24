@@ -30,6 +30,7 @@ func NewCookieHandler(cfg *config.Config, logger logging.Logger) *CookieHandler 
 // CookieSessionData represents session data stored in a cookie
 type CookieSessionData struct {
 	UserID         string                 `json:"user_id"`
+	Token          string                 `json:"token"`
 	OrganizationID string                 `json:"organization_id,omitempty"`
 	ExpiresAt      time.Time              `json:"expires_at"`
 	IssuedAt       time.Time              `json:"issued_at"`
@@ -37,37 +38,48 @@ type CookieSessionData struct {
 }
 
 // SetSecureSessionCookie sets a secure, encrypted session cookie
-func (h *CookieHandler) SetSecureSessionCookie(w http.ResponseWriter, data *CookieSessionData, expiry time.Duration) error {
+func (h *CookieHandler) SetSecureSessionCookie(r *http.Request, w http.ResponseWriter, data *CookieSessionData, expiry time.Duration) error {
 	// Marshal the data to JSON
 	jsonData, err := json.Marshal(data)
 	if err != nil {
-		return errors.Wrap(errors.CodeInternalServer, err, "failed to marshal session data")
+		return errors.Wrap(errors.CodeInternalServer, err, "failed to marshal cookie session data")
 	}
 
 	// Generate a random IV
-	iv, err := crypto.RandomBytes(16)
+	iv, err := crypto.GenerateEncryptionAESKey(h.config.Auth.SessionSecretKey)
 	if err != nil {
 		return errors.Wrap(errors.CodeCryptoError, err, "failed to generate IV")
 	}
 
 	// Encrypt the data
-	encrypted, err := crypto.Encrypt(jsonData, []byte(h.config.Auth.SessionSecretKey), iv)
+	encrypted, err := crypto.EncryptAES(jsonData, h.config.Auth.SessionSecretKey, iv)
 	if err != nil {
 		return errors.Wrap(errors.CodeCryptoError, err, "failed to encrypt session data")
 	}
 
 	// Combine IV and ciphertext
-	combined := append(iv, encrypted...)
+	combined := encrypted
 
 	// Encode to base64
 	cookieValue := base64.URLEncoding.EncodeToString(combined)
+
+	domain := h.config.Auth.CookieDomain
+	if domain == "" && r != nil {
+		// Extract host from request
+		host := r.Host
+		// Remove port if present
+		if colonIndex := strings.Index(host, ":"); colonIndex != -1 {
+			host = host[:colonIndex]
+		}
+		domain = host
+	}
 
 	// Set cookie
 	http.SetCookie(w, &http.Cookie{
 		Name:     h.getSessionCookieName(),
 		Value:    cookieValue,
 		Path:     "/",
-		Domain:   h.config.Auth.CookieDomain,
+		Domain:   domain,
 		Expires:  time.Now().Add(expiry),
 		MaxAge:   int(expiry.Seconds()),
 		Secure:   h.config.Auth.CookieSecure,
@@ -100,18 +112,19 @@ func (h *CookieHandler) GetSecureSessionCookie(r *http.Request) (*CookieSessionD
 		return nil, errors.New(errors.CodeInvalidToken, "invalid session cookie data")
 	}
 
-	iv := combined[:16]
-	encrypted := combined[16:]
+	// iv := combined[:16]
+	// encrypted := combined[16:]
+	encrypted := combined
 
 	// Decrypt the data
-	decrypted, err := crypto.Decrypt(encrypted, []byte(h.config.Auth.SessionSecretKey), iv)
+	decrypted, err := crypto.DecryptAES(encrypted, h.config.Auth.SessionSecretKey, nil)
 	if err != nil {
 		return nil, errors.Wrap(errors.CodeInvalidToken, err, "failed to decrypt session cookie")
 	}
 
 	// Unmarshal the JSON data
 	var data CookieSessionData
-	if err := json.Unmarshal(decrypted, &data); err != nil {
+	if err = json.Unmarshal(decrypted, &data); err != nil {
 		return nil, errors.Wrap(errors.CodeInvalidToken, err, "failed to unmarshal session data")
 	}
 

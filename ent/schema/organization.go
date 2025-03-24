@@ -1,8 +1,6 @@
 package schema
 
 import (
-	"time"
-
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
@@ -18,8 +16,6 @@ type Organization struct {
 // Fields of the Organization.
 func (Organization) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("id").
-			Unique(),
 		field.String("name").
 			NotEmpty(),
 		field.String("slug").
@@ -39,12 +35,6 @@ func (Organization) Fields() []ent.Field {
 			Nillable(),
 		field.Bool("trial_used").
 			Default(false),
-		field.Time("created_at").
-			Default(time.Now).
-			Immutable(),
-		field.Time("updated_at").
-			Default(time.Now).
-			UpdateDefault(time.Now),
 	}
 }
 
@@ -65,5 +55,12 @@ func (Organization) Indexes() []ent.Index {
 	return []ent.Index{
 		index.Fields("domain"),
 		index.Fields("slug"),
+	}
+}
+
+// Mixin of the Organization.
+func (Organization) Mixin() []ent.Mixin {
+	return []ent.Mixin{
+		ModelBaseMixin{},
 	}
 }

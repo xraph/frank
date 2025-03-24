@@ -4,12 +4,12 @@ import (
 	"context"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/juicycleff/frank/ent"
 	"github.com/juicycleff/frank/ent/organization"
 	"github.com/juicycleff/frank/ent/role"
 	"github.com/juicycleff/frank/ent/user"
 	"github.com/juicycleff/frank/pkg/errors"
+	"github.com/juicycleff/frank/pkg/utils"
 )
 
 // MembershipManager manages organization memberships
@@ -253,10 +253,7 @@ func (m *MembershipManager) CreateInvite(ctx context.Context, orgID, inviterID, 
 	}
 
 	// Generate ID for invite
-	id, err := uuid.NewRandom()
-	if err != nil {
-		return nil, errors.Wrap(errors.CodeInternalServer, err, "failed to generate uuid")
-	}
+	id := utils.NewID()
 
 	// Set expiration time
 	expiresAt := time.Now().Add(expiresIn)
@@ -409,11 +406,7 @@ func (m *MembershipManager) EnsureDefaultRoles(ctx context.Context, orgID string
 
 		if !exists {
 			// Generate ID for the role
-			id, err := uuid.NewRandom()
-			if err != nil {
-				_ = tx.Rollback()
-				return errors.Wrap(errors.CodeInternalServer, err, "failed to generate uuid")
-			}
+			id := utils.NewID()
 
 			// Create the role
 			_, err = tx.Role.

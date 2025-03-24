@@ -1,8 +1,6 @@
 package schema
 
 import (
-	"time"
-
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
@@ -17,8 +15,6 @@ type OAuthClient struct {
 // Fields of the OAuthClient.
 func (OAuthClient) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("id").
-			Unique(),
 		field.String("client_id").
 			Unique().
 			NotEmpty(),
@@ -59,12 +55,6 @@ func (OAuthClient) Fields() []ent.Field {
 		field.Bool("requires_consent").
 			Default(true).
 			Comment("Require user consent before authorization"),
-		field.Time("created_at").
-			Default(time.Now).
-			Immutable(),
-		field.Time("updated_at").
-			Default(time.Now).
-			UpdateDefault(time.Now),
 	}
 }
 
@@ -86,5 +76,12 @@ func (OAuthClient) Indexes() []ent.Index {
 	return []ent.Index{
 		index.Fields("client_id"),
 		index.Fields("organization_id"),
+	}
+}
+
+// Mixin of the OAuthClient.
+func (OAuthClient) Mixin() []ent.Mixin {
+	return []ent.Mixin{
+		ModelBaseMixin{},
 	}
 }

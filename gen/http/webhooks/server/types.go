@@ -37,8 +37,8 @@ type TriggerEventRequestBody struct {
 // ListResponseBody is the type of the "webhooks" service "list" endpoint HTTP
 // response body.
 type ListResponseBody struct {
-	Data       []*WebhookResponseResponseBody  `form:"data" json:"data" xml:"data"`
-	Pagination *PaginationResponseResponseBody `form:"pagination" json:"pagination" xml:"pagination"`
+	Data       []*WebhookResponseResponseBody `form:"data" json:"data" xml:"data"`
+	Pagination *PaginationResponseBody        `form:"pagination" json:"pagination" xml:"pagination"`
 }
 
 // CreateResponseBody is the type of the "webhooks" service "create" endpoint
@@ -173,7 +173,7 @@ type TriggerEventResponseBody struct {
 // endpoint HTTP response body.
 type ListEventsResponseBody struct {
 	Data       []*WebhookEventResponseResponseBody `form:"data" json:"data" xml:"data"`
-	Pagination *PaginationResponseResponseBody     `form:"pagination" json:"pagination" xml:"pagination"`
+	Pagination *PaginationResponseBody             `form:"pagination" json:"pagination" xml:"pagination"`
 }
 
 // ReplayEventResponseBody is the type of the "webhooks" service "replay_event"
@@ -831,15 +831,22 @@ type WebhookResponseResponseBody struct {
 	UpdatedAt *string `form:"updated_at,omitempty" json:"updated_at,omitempty" xml:"updated_at,omitempty"`
 }
 
-// PaginationResponseResponseBody is used to define fields on response body
-// types.
-type PaginationResponseResponseBody struct {
+// PaginationResponseBody is used to define fields on response body types.
+type PaginationResponseBody struct {
+	// Offset
+	Offset int `json:"offset"`
+	// Limit
+	Limit int `json:"limit"`
 	// Total number of items
-	Total int `form:"total" json:"total" xml:"total"`
-	// Current offset
-	Offset int `form:"offset" json:"offset" xml:"offset"`
-	// Current limit
-	Limit int `form:"limit" json:"limit" xml:"limit"`
+	Total int `json:"total"`
+	// Total number of pages
+	TotalPages int `json:"total_pages,totalPages"`
+	// Current page number
+	CurrentPage int `json:"current_page,currentPage"`
+	// Has next page
+	HasNext bool `json:"has_next,hasNext"`
+	// Has previous page
+	HasPrevious bool `json:"has_previous,hasPrevious"`
 }
 
 // WebhookEventResponseResponseBody is used to define fields on response body
@@ -939,7 +946,7 @@ func NewListResponseBody(res *webhooks.ListResult) *ListResponseBody {
 		body.Data = []*WebhookResponseResponseBody{}
 	}
 	if res.Pagination != nil {
-		body.Pagination = marshalDesigntypesPaginationResponseToPaginationResponseResponseBody(res.Pagination)
+		body.Pagination = marshalDesigntypesPaginationToPaginationResponseBody(res.Pagination)
 	}
 	return body
 }
@@ -1092,7 +1099,7 @@ func NewListEventsResponseBody(res *webhooks.ListEventsResult) *ListEventsRespon
 		body.Data = []*WebhookEventResponseResponseBody{}
 	}
 	if res.Pagination != nil {
-		body.Pagination = marshalDesigntypesPaginationResponseToPaginationResponseResponseBody(res.Pagination)
+		body.Pagination = marshalDesigntypesPaginationToPaginationResponseBody(res.Pagination)
 	}
 	return body
 }

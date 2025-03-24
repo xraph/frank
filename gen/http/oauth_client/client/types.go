@@ -248,32 +248,26 @@ type SSOProviderResponseBody struct {
 
 // UserResponseBody is used to define fields on response body types.
 type UserResponseBody struct {
-	// User ID
-	ID *string `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
-	// User email
-	Email *string `form:"email,omitempty" json:"email,omitempty" xml:"email,omitempty"`
-	// User first name
-	FirstName *string `form:"first_name,omitempty" json:"first_name,omitempty" xml:"first_name,omitempty"`
-	// User last name
-	LastName *string `form:"last_name,omitempty" json:"last_name,omitempty" xml:"last_name,omitempty"`
-	// Whether email is verified
-	EmailVerified *bool `form:"email_verified,omitempty" json:"email_verified,omitempty" xml:"email_verified,omitempty"`
-	// User phone number
-	PhoneNumber *string `form:"phone_number,omitempty" json:"phone_number,omitempty" xml:"phone_number,omitempty"`
-	// Whether phone is verified
-	PhoneVerified *bool `form:"phone_verified,omitempty" json:"phone_verified,omitempty" xml:"phone_verified,omitempty"`
-	// URL to user's profile image
-	ProfileImageURL *string `form:"profile_image_url,omitempty" json:"profile_image_url,omitempty" xml:"profile_image_url,omitempty"`
-	// User's locale preference
-	Locale *string `form:"locale,omitempty" json:"locale,omitempty" xml:"locale,omitempty"`
-	// User metadata
-	Metadata map[string]any `form:"metadata,omitempty" json:"metadata,omitempty" xml:"metadata,omitempty"`
 	// Whether account is active
 	Active *bool `form:"active,omitempty" json:"active,omitempty" xml:"active,omitempty"`
-	// Account creation timestamp
-	CreatedAt *string `form:"created_at,omitempty" json:"created_at,omitempty" xml:"created_at,omitempty"`
-	// Account last update timestamp
-	UpdatedAt *string `form:"updated_at,omitempty" json:"updated_at,omitempty" xml:"updated_at,omitempty"`
+	// Whether email is verified
+	EmailVerified *bool `json:"email_verified,emailVerified"`
+	// Whether phone is verified
+	PhoneVerified *bool `json:"phone_verified,phoneVerified"`
+	// URL to user's profile image
+	ProfileImageURL *string `json:"profile_image_url,profileImageUrl"`
+	// User first name
+	FirstName *string `json:"first_name,firstName"`
+	// User last name
+	LastName *string `json:"last_name,lastName"`
+	// User phone number
+	PhoneNumber *string `json:"phone_number,phoneNumber"`
+	// User metadata
+	Metadata map[string]any `json:"metadata"`
+	// User locale
+	Locale *string `json:"locale"`
+	// Email address
+	Email *string `json:"email"`
 }
 
 // NewListProvidersResultOK builds a "oauth_client" service "list_providers"
@@ -426,7 +420,7 @@ func NewProviderCallbackResultOK(body *ProviderCallbackResponseBody) *oauthclien
 		Message:       *body.Message,
 	}
 	if body.User != nil {
-		v.User = unmarshalUserResponseBodyToOauthclientUser(body.User)
+		v.User = unmarshalUserResponseBodyToDesigntypesUser(body.User)
 	}
 
 	return v
@@ -727,8 +721,8 @@ func ValidateSSOProviderResponseBody(body *SSOProviderResponseBody) (err error) 
 
 // ValidateUserResponseBody runs the validations defined on UserResponseBody
 func ValidateUserResponseBody(body *UserResponseBody) (err error) {
-	if body.ID == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("id", "body"))
+	if body.Active == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("active", "body"))
 	}
 	if body.Email == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("email", "body"))
@@ -736,14 +730,8 @@ func ValidateUserResponseBody(body *UserResponseBody) (err error) {
 	if body.EmailVerified == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("email_verified", "body"))
 	}
-	if body.Active == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("active", "body"))
-	}
-	if body.CreatedAt == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("created_at", "body"))
-	}
-	if body.UpdatedAt == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("updated_at", "body"))
+	if body.Email != nil {
+		err = goa.MergeErrors(err, goa.ValidateFormat("body.email", *body.Email, goa.FormatEmail))
 	}
 	return
 }

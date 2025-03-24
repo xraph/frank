@@ -1483,14 +1483,17 @@ func unmarshalWebhookResponseResponseBodyToWebhooksWebhookResponse(v *WebhookRes
 	return res
 }
 
-// unmarshalPaginationResponseResponseBodyToDesigntypesPaginationResponse
-// builds a value of type *designtypes.PaginationResponse from a value of type
-// *PaginationResponseResponseBody.
-func unmarshalPaginationResponseResponseBodyToDesigntypesPaginationResponse(v *PaginationResponseResponseBody) *designtypes.PaginationResponse {
-	res := &designtypes.PaginationResponse{
-		Total:  *v.Total,
-		Offset: *v.Offset,
-		Limit:  *v.Limit,
+// unmarshalPaginationResponseBodyToDesigntypesPagination builds a value of
+// type *designtypes.Pagination from a value of type *PaginationResponseBody.
+func unmarshalPaginationResponseBodyToDesigntypesPagination(v *PaginationResponseBody) *designtypes.Pagination {
+	res := &designtypes.Pagination{
+		Offset:      *v.Offset,
+		Limit:       *v.Limit,
+		Total:       *v.Total,
+		TotalPages:  *v.TotalPages,
+		CurrentPage: *v.CurrentPage,
+		HasNext:     *v.HasNext,
+		HasPrevious: *v.HasPrevious,
 	}
 
 	return res

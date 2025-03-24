@@ -225,7 +225,7 @@ github.com/juicycleff/frank/
 │   │   │   │   └── index.ts
 │   │   │   ├── App.tsx
 │   │   │   ├── main.tsx
-│   │   │   └── router.tsx
+│   │   │   └── server.tsx
 │   │   ├── .eslintrc.json
 │   │   ├── index.html
 │   │   ├── package.json

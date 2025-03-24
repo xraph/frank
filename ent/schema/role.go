@@ -1,8 +1,6 @@
 package schema
 
 import (
-	"time"
-
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
@@ -31,12 +29,6 @@ func (Role) Fields() []ent.Field {
 		field.Bool("is_default").
 			Default(false).
 			Comment("Default role assigned to new users"),
-		field.Time("created_at").
-			Default(time.Now).
-			Immutable(),
-		field.Time("updated_at").
-			Default(time.Now).
-			UpdateDefault(time.Now),
 	}
 }
 
@@ -55,5 +47,12 @@ func (Role) Indexes() []ent.Index {
 		index.Fields("organization_id"),
 		index.Fields("organization_id", "name").
 			Unique(),
+	}
+}
+
+// Mixin of the Role.
+func (Role) Mixin() []ent.Mixin {
+	return []ent.Mixin{
+		ModelBaseMixin{},
 	}
 }

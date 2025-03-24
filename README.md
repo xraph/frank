@@ -1,4 +1,4 @@
-# Frank Auth Server
+# Frank Auth Server (Incomplete DO-NOT-USE)
 
 Frank is a robust, feature-rich authentication server built with Go and EntGO that provides a comprehensive identity management solution. It combines all the best features of modern authentication providers like ClerkJS into a self-hosted solution.
 

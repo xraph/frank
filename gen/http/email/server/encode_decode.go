@@ -1121,7 +1121,6 @@ func EncodeSendTemplateError(encoder func(context.Context, http.ResponseWriter) 
 // *email.EmailTemplateResponse.
 func marshalEmailEmailTemplateResponseToEmailTemplateResponseResponseBody(v *email.EmailTemplateResponse) *EmailTemplateResponseResponseBody {
 	res := &EmailTemplateResponseResponseBody{
-		ID:             v.ID,
 		Name:           v.Name,
 		Subject:        v.Subject,
 		Type:           v.Type,
@@ -1131,6 +1130,7 @@ func marshalEmailEmailTemplateResponseToEmailTemplateResponseResponseBody(v *ema
 		Active:         v.Active,
 		System:         v.System,
 		Locale:         v.Locale,
+		ID:             v.ID,
 		CreatedAt:      v.CreatedAt,
 		UpdatedAt:      v.UpdatedAt,
 	}
@@ -1146,14 +1146,17 @@ func marshalEmailEmailTemplateResponseToEmailTemplateResponseResponseBody(v *ema
 	return res
 }
 
-// marshalDesigntypesPaginationResponseToPaginationResponseResponseBody builds
-// a value of type *PaginationResponseResponseBody from a value of type
-// *designtypes.PaginationResponse.
-func marshalDesigntypesPaginationResponseToPaginationResponseResponseBody(v *designtypes.PaginationResponse) *PaginationResponseResponseBody {
-	res := &PaginationResponseResponseBody{
-		Total:  v.Total,
-		Offset: v.Offset,
-		Limit:  v.Limit,
+// marshalDesigntypesPaginationToPaginationResponseBody builds a value of type
+// *PaginationResponseBody from a value of type *designtypes.Pagination.
+func marshalDesigntypesPaginationToPaginationResponseBody(v *designtypes.Pagination) *PaginationResponseBody {
+	res := &PaginationResponseBody{
+		Offset:      v.Offset,
+		Limit:       v.Limit,
+		Total:       v.Total,
+		TotalPages:  v.TotalPages,
+		CurrentPage: v.CurrentPage,
+		HasNext:     v.HasNext,
+		HasPrevious: v.HasPrevious,
 	}
 
 	return res

@@ -1307,7 +1307,7 @@ func DecodeGetSessionsResponse(decoder func(*http.Response) goahttp.Decoder, res
 			if err != nil {
 				return nil, goahttp.ErrValidationError("users", "get_sessions", err)
 			}
-			res := NewGetSessionsResultOK(&body)
+			res := NewGetSessionsGetUserSessionResponseOK(&body)
 			return res, nil
 		case http.StatusBadRequest:
 			var (
@@ -1741,22 +1741,21 @@ func DecodeGetOrganizationsResponse(decoder func(*http.Response) goahttp.Decoder
 	}
 }
 
-// unmarshalUserResponseBodyToUsersUser builds a value of type *users.User from
-// a value of type *UserResponseBody.
-func unmarshalUserResponseBodyToUsersUser(v *UserResponseBody) *users.User {
-	res := &users.User{
-		ID:              *v.ID,
-		Email:           *v.Email,
-		FirstName:       v.FirstName,
-		LastName:        v.LastName,
+// unmarshalUserResponseBodyToDesigntypesUser builds a value of type
+// *designtypes.User from a value of type *UserResponseBody.
+func unmarshalUserResponseBodyToDesigntypesUser(v *UserResponseBody) *designtypes.User {
+	res := &designtypes.User{
+		Active:          *v.Active,
 		EmailVerified:   *v.EmailVerified,
-		PhoneNumber:     v.PhoneNumber,
 		PhoneVerified:   v.PhoneVerified,
 		ProfileImageURL: v.ProfileImageURL,
-		Locale:          v.Locale,
-		Active:          *v.Active,
-		CreatedAt:       *v.CreatedAt,
-		UpdatedAt:       *v.UpdatedAt,
+		FirstName:       v.FirstName,
+		LastName:        v.LastName,
+		PhoneNumber:     v.PhoneNumber,
+		Email:           *v.Email,
+	}
+	if v.Locale != nil {
+		res.Locale = *v.Locale
 	}
 	if v.Metadata != nil {
 		res.Metadata = make(map[string]any, len(v.Metadata))
@@ -1766,18 +1765,24 @@ func unmarshalUserResponseBodyToUsersUser(v *UserResponseBody) *users.User {
 			res.Metadata[tk] = tv
 		}
 	}
+	if v.Locale == nil {
+		res.Locale = "en"
+	}
 
 	return res
 }
 
-// unmarshalPaginationResponseResponseBodyToDesigntypesPaginationResponse
-// builds a value of type *designtypes.PaginationResponse from a value of type
-// *PaginationResponseResponseBody.
-func unmarshalPaginationResponseResponseBodyToDesigntypesPaginationResponse(v *PaginationResponseResponseBody) *designtypes.PaginationResponse {
-	res := &designtypes.PaginationResponse{
-		Total:  *v.Total,
-		Offset: *v.Offset,
-		Limit:  *v.Limit,
+// unmarshalPaginationResponseBodyToDesigntypesPagination builds a value of
+// type *designtypes.Pagination from a value of type *PaginationResponseBody.
+func unmarshalPaginationResponseBodyToDesigntypesPagination(v *PaginationResponseBody) *designtypes.Pagination {
+	res := &designtypes.Pagination{
+		Offset:      *v.Offset,
+		Limit:       *v.Limit,
+		Total:       *v.Total,
+		TotalPages:  *v.TotalPages,
+		CurrentPage: *v.CurrentPage,
+		HasNext:     *v.HasNext,
+		HasPrevious: *v.HasPrevious,
 	}
 
 	return res
@@ -1833,18 +1838,31 @@ func marshalUpdateUserRequestRequestBodyToDesigntypesUpdateUserRequest(v *Update
 	return res
 }
 
-// unmarshalUserSessionResponseResponseBodyToDesigntypesUserSessionResponse
-// builds a value of type *designtypes.UserSessionResponse from a value of type
-// *UserSessionResponseResponseBody.
-func unmarshalUserSessionResponseResponseBodyToDesigntypesUserSessionResponse(v *UserSessionResponseResponseBody) *designtypes.UserSessionResponse {
-	res := &designtypes.UserSessionResponse{
-		ID:           *v.ID,
-		DeviceID:     v.DeviceID,
-		IPAddress:    v.IPAddress,
-		UserAgent:    v.UserAgent,
-		Location:     v.Location,
-		LastActiveAt: v.LastActiveAt,
-		CreatedAt:    *v.CreatedAt,
+// unmarshalSessionResponseBodyToDesigntypesSession builds a value of type
+// *designtypes.Session from a value of type *SessionResponseBody.
+func unmarshalSessionResponseBodyToDesigntypesSession(v *SessionResponseBody) *designtypes.Session {
+	res := &designtypes.Session{
+		UserID:         v.UserID,
+		DeviceID:       v.DeviceID,
+		IPAddress:      v.IPAddress,
+		UserAgent:      v.UserAgent,
+		Location:       v.Location,
+		Token:          v.Token,
+		OrganizationID: v.OrganizationID,
+		IsActive:       v.IsActive,
+		LastActiveAt:   v.LastActiveAt,
+		ExpiresAt:      *v.ExpiresAt,
+		ID:             *v.ID,
+		CreatedAt:      *v.CreatedAt,
+		UpdatedAt:      *v.UpdatedAt,
+	}
+	if v.Metadata != nil {
+		res.Metadata = make(map[string]any, len(v.Metadata))
+		for key, val := range v.Metadata {
+			tk := key
+			tv := val
+			res.Metadata[tk] = tv
+		}
 	}
 
 	return res

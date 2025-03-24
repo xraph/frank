@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/ent"
 	"github.com/juicycleff/frank/ent/user"
@@ -64,7 +63,6 @@ func (p *SMSProvider) SendVerificationSMS(
 		if p.config.Auth.AutoRegisterUsers {
 			user, err = p.client.User.Create().
 				SetPhoneNumber(phoneNumber).
-				SetID(uuid.New().String()).
 				SetPhoneVerified(false).
 				SetActive(true).
 				Save(ctx)
@@ -108,7 +106,6 @@ func (p *SMSProvider) SendVerificationSMS(
 	// Store the verification token
 	_, err = p.client.Verification.Create().
 		SetUserID(user.ID).
-		SetID(uuid.New().String()).
 		SetType("sms_code").
 		SetToken(code).
 		SetPhoneNumber(phoneNumber).

@@ -8,6 +8,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/caarlos0/env/v6"
+
 	"github.com/spf13/viper"
 )
 
@@ -18,23 +20,34 @@ var (
 
 // Config represents the application configuration
 type Config struct {
-	Environment     string           `json:"environment" yaml:"environment" mapstructure:"environment" env:"ENVIRONMENT" envDefault:"development"`
-	Version         string           `json:"version" yaml:"version" mapstructure:"version" env:"VERSION" envDefault:"0.0.0"`
-	GenerateSwagger bool             `json:"generate_swagger" yaml:"generate_swagger" mapstructure:"generate_swagger" env:"GENERATE_SWAGGER" envDefault:"false"`
-	Server          ServerConfig     `json:"server" yaml:"server" mapstructure:"server"`
-	Database        DatabaseConfig   `json:"database" yaml:"database" mapstructure:"database"`
-	Auth            AuthConfig       `json:"auth" yaml:"auth" mapstructure:"auth"`
-	Email           EmailConfig      `json:"email" yaml:"email" mapstructure:"email"`
-	SMS             SMSConfig        `json:"sms" yaml:"sms" mapstructure:"sms"` // Redis configuration
-	Redis           RedisConfig      `json:"redis" yaml:"redis" mapstructure:"redis"`
-	OAuth           OAuthConfig      `json:"oauth" yaml:"oauth" mapstructure:"oauth"`
-	Passkeys        PasskeysConfig   `json:"passkeys" yaml:"passkeys" mapstructure:"passkeys"`
-	Webhooks        WebhooksConfig   `json:"webhooks" yaml:"webhooks" mapstructure:"webhooks"`
-	Security        SecurityConfig   `json:"security" yaml:"security" mapstructure:"security"`
-	Logging         LoggingConfig    `json:"logging" yaml:"logging" mapstructure:"logging"`
-	Features        FeaturesConfig   `json:"features" yaml:"features" mapstructure:"features"`
-	Templates       TemplatesConfig  `json:"templates" yaml:"templates" mapstructure:"templates"`
-	Monitoring      MonitoringConfig `json:"monitoring" yaml:"monitoring" mapstructure:"monitoring"`
+	Environment     string `json:"environment" yaml:"environment" mapstructure:"environment" env:"ENVIRONMENT" envDefault:"development"`
+	Version         string `json:"version" yaml:"version" mapstructure:"version" env:"VERSION" envDefault:"0.0.0"`
+	GenerateSwagger bool   `json:"generate_swagger" yaml:"generate_swagger" mapstructure:"generate_swagger" env:"GENERATE_SWAGGER" envDefault:"false"`
+	UseHuma         bool   `json:"useHuma" yaml:"useHuma" mapstructure:"useHuma" env:"USE_HUMA" envDefault:"false"`
+	UseGoa          bool   `json:"useGoa" yaml:"useGoa" mapstructure:"useGoa" env:"USE_GOA" envDefault:"true"`
+	GitCommit       string `json:"git_commit" yaml:"git_commit" mapstructure:"git_commit" env:"GIT_COMMIT" envDefault:""`
+	GitBranch       string `json:"git_branch" yaml:"git_branch" mapstructure:"git_branch" env:"GIT_BRANCH" envDefault:""`
+	GitTag          string `json:"git_tag" yaml:"git_tag" mapstructure:"git_tag" env:"GIT_TAG" envDefault:""`
+	BuildDate       string `json:"build_date" yaml:"build_date" mapstructure:"build_date" env:"BUILD_DATE" envDefault:""`
+
+	Server     ServerConfig     `json:"server" yaml:"server" mapstructure:"server"`
+	Database   DatabaseConfig   `json:"database" yaml:"database" mapstructure:"database"`
+	Auth       AuthConfig       `json:"auth" yaml:"auth" mapstructure:"auth"`
+	Email      EmailConfig      `json:"email" yaml:"email" mapstructure:"email"`
+	SMS        SMSConfig        `json:"sms" yaml:"sms" mapstructure:"sms"` // Redis configuration
+	Redis      RedisConfig      `json:"redis" yaml:"redis" mapstructure:"redis"`
+	OAuth      OAuthConfig      `json:"oauth" yaml:"oauth" mapstructure:"oauth"`
+	Passkeys   PasskeysConfig   `json:"passkeys" yaml:"passkeys" mapstructure:"passkeys"`
+	Webhooks   WebhooksConfig   `json:"webhooks" yaml:"webhooks" mapstructure:"webhooks"`
+	Security   SecurityConfig   `json:"security" yaml:"security" mapstructure:"security"`
+	Logging    LoggingConfig    `json:"logging" yaml:"logging" mapstructure:"logging"`
+	Features   FeaturesConfig   `json:"features" yaml:"features" mapstructure:"features"`
+	Templates  TemplatesConfig  `json:"templates" yaml:"templates" mapstructure:"templates"`
+	Monitoring MonitoringConfig `json:"monitoring" yaml:"monitoring" mapstructure:"monitoring"`
+}
+
+func (c *Config) GetServerAddress() string {
+	return fmt.Sprintf("%s:%d", c.Server.Host, c.Server.Port)
 }
 
 // ServerConfig represents server-specific configuration
@@ -49,6 +62,7 @@ type ServerConfig struct {
 	ShutdownTimeout  time.Duration `json:"shutdown_timeout" yaml:"shutdown_timeout" mapstructure:"shutdown_timeout" env:"SERVER_SHUTDOWN_TIMEOUT" envDefault:"30s"`
 	TLS              TLSConfig     `json:"tls" yaml:"tls" mapstructure:"tls"`
 	GracefulShutdown bool          `json:"graceful_shutdown" yaml:"graceful_shutdown" mapstructure:"graceful_shutdown" env:"SERVER_GRACEFUL_SHUTDOWN" envDefault:"true"`
+	EnableHTTP2      bool          `json:"enable_http2" yaml:"enable_http2" mapstructure:"enable_http2" env:"SERVER_ENABLE_HTTP2" envDefault:"true"`
 	ShutdownDelay    time.Duration `json:"shutdown_delay" yaml:"shutdown_delay" mapstructure:"shutdown_delay" env:"SERVER_SHUTDOWN_DELAY" envDefault:"5s"`
 	TrustedProxies   []string      `json:"trusted_proxies" yaml:"trusted_proxies" mapstructure:"trusted_proxies" env:"SERVER_TRUSTED_PROXIES"`
 	DebugMode        bool          `json:"debug_mode" yaml:"debug_mode" mapstructure:"debug_mode" env:"SERVER_DEBUG_MODE" envDefault:"false"`
@@ -85,6 +99,30 @@ type DatabaseConfig struct {
 	MigrationsDir string        `json:"migrations_dir" yaml:"migrations_dir" mapstructure:"migrations_dir" env:"DATABASE_MIGRATIONS_DIR" envDefault:"./migrations"`
 }
 
+func (d *DatabaseConfig) GetAddress() string {
+	if d.DSN != "" {
+		return d.DSN
+	}
+
+	if d.Driver == "sqlite3" || d.Driver == "sqlite" {
+		return d.Database
+	}
+
+	return fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?sslmode=%s", d.User, d.Password, d.Host, d.Port, d.Database, d.SSLMode)
+}
+
+func (d *DatabaseConfig) GetFullAddress() string {
+	if d.DSN != "" {
+		return d.DSN
+	}
+
+	if d.Driver == "sqlite3" || d.Driver == "sqlite" {
+		return d.Database
+	}
+
+	return fmt.Sprintf("%s://%s:%s@tcp(%s:%d)/%s?sslmode=%s", d.Driver, d.User, d.Password, d.Host, d.Port, d.Database, d.SSLMode)
+}
+
 // AuthConfig represents authentication-specific configuration
 type AuthConfig struct {
 	// Token configuration
@@ -98,16 +136,25 @@ type AuthConfig struct {
 	VerificationTokenDuration time.Duration `json:"verification_token_duration" yaml:"verification_token_duration" mapstructure:"verification_token_duration" env:"AUTH_VERIFICATION_TOKEN_DURATION" envDefault:"15m"`
 	MagicLinkDuration         time.Duration `json:"magic_link_duration" yaml:"magic_link_duration" mapstructure:"magic_link_duration" env:"AUTH_MAGIC_LINK_DURATION" envDefault:"15m"`
 
+	// AllowAPIKey allows API key authentication
+	AllowAPIKey bool `json:"allow_api_key" yaml:"allow_api_key" mapstructure:"allow_api_key" env:"AUTH_ALLOW_API_KEY" envDefault:"true"`
+
+	// AllowSession allows session-based authentication
+	AllowSession bool `json:"allow_session" yaml:"allow_session" mapstructure:"allow_session" env:"AUTH_ALLOW_SESSION" envDefault:"true"`
+
+	// AllowBearerToken allows bearer token authentication
+	AllowBearerToken bool `json:"allow_bearer_token" yaml:"allow_bearer_token" mapstructure:"allow_bearer_token" env:"AUTH_ALLOW_BEARER_TOKEN" envDefault:"true"`
+
 	// Session configuration
 	SessionDuration  time.Duration `json:"session_duration" yaml:"session_duration" mapstructure:"session_duration" env:"AUTH_SESSION_DURATION" envDefault:"24h"`
 	SessionSecretKey string        `json:"session_secret_key" yaml:"session_secret_key" mapstructure:"session_secret_key" env:"AUTH_SESSION_SECRET_KEY"`
-	CookieDomain     string        `json:"cookie_domain" yaml:"cookie_domain" mapstructure:"cookie_domain" env:"AUTH_COOKIE_DOMAIN" envDefault:""`
+	CookieDomain     string        `json:"cookie_domain" yaml:"cookie_domain" mapstructure:"cookie_domain" env:"AUTH_COOKIE_DOMAIN" envDefault:"localhost"`
 	CookieSecure     bool          `json:"cookie_secure" yaml:"cookie_secure" mapstructure:"cookie_secure" env:"AUTH_COOKIE_SECURE" envDefault:"false"`
 	CookieHTTPOnly   bool          `json:"cookie_http_only" yaml:"cookie_http_only" mapstructure:"cookie_http_only" env:"AUTH_COOKIE_HTTP_ONLY" envDefault:"true"`
-	CookieSameSite   string        `json:"cookie_same_site" yaml:"cookie_same_site" mapstructure:"cookie_same_site" env:"AUTH_COOKIE_SAME_SITE" envDefault:"lax"`
+	CookieSameSite   string        `json:"cookie_same_site" yaml:"cookie_same_site" mapstructure:"cookie_same_site" env:"AUTH_COOKIE_SAME_SITE" envDefault:"none"`
 
 	// Email verification
-	RequireEmailVerification bool          `json:"require_email_verification" yaml:"require_email_verification" mapstructure:"require_email_verification" env:"AUTH_REQUIRE_EMAIL_VERIFICATION" envDefault:"true"`
+	RequireEmailVerification bool          `json:"require_email_verification" yaml:"require_email_verification" mapstructure:"require_email_verification" env:"AUTH_REQUIRE_EMAIL_VERIFICATION" envDefault:"false"`
 	EmailVerificationExpiry  time.Duration `json:"email_verification_expiry" yaml:"email_verification_expiry" mapstructure:"email_verification_expiry" env:"AUTH_EMAIL_VERIFICATION_EXPIRY" envDefault:"24h"`
 
 	// Default user role
@@ -391,7 +438,7 @@ type WebhooksConfig struct {
 type SecurityConfig struct {
 	MaxLoginAttempts         int               `mapstructure:"max_login_attempts" json:"max_login_attempts" yaml:"max_login_attempts" env:"SECURITY_MAX_LOGIN_ATTEMPTS" envDefault:"5"`
 	LockoutDuration          time.Duration     `mapstructure:"lockout_duration" json:"lockout_duration" yaml:"lockout_duration" env:"SECURITY_LOCKOUT_DURATION" envDefault:"15m"`
-	CSRFEnabled              bool              `mapstructure:"csrf_enabled" json:"csrf_enabled" yaml:"csrf_enabled" env:"SECURITY_CSRF_ENABLED" envDefault:"true"`
+	CSRFEnabled              bool              `mapstructure:"csrf_enabled" json:"csrf_enabled" yaml:"csrf_enabled" env:"SECURITY_CSRF_ENABLED" envDefault:"false"`
 	CSRFTokenExpiry          time.Duration     `mapstructure:"csrf_token_expiry" json:"csrf_token_expiry" yaml:"csrf_token_expiry" env:"SECURITY_CSRF_TOKEN_EXPIRY" envDefault:"2h"`
 	CSRFSecretKey            string            `mapstructure:"csrf_secret_key" json:"csrf_secret_key" yaml:"csrf_secret_key" env:"SECURITY_CSRF_SECRET_KEY" envDefault:"change-me"`
 	CSRFCookieName           string            `mapstructure:"csrf_cookie_name" json:"csrf_cookie_name" yaml:"csrf_cookie_name" env:"SECURITY_CSRF_COOKIE_NAME" envDefault:"csrf_token"`
@@ -507,6 +554,14 @@ func Load(configPaths ...string) (*Config, error) {
 	var loadErr error
 
 	once.Do(func() {
+		config = &Config{}
+
+		// Parse environment variables into the struct
+		if err := env.Parse(config); err != nil {
+			loadErr = fmt.Errorf("error passring config env: %w", err)
+			return
+		}
+
 		v := viper.New()
 
 		// Set configuration defaults
@@ -537,7 +592,6 @@ func Load(configPaths ...string) (*Config, error) {
 			}
 		}
 
-		config = &Config{}
 		if err := v.Unmarshal(config); err != nil {
 			loadErr = fmt.Errorf("error unmarshaling config: %w", err)
 			return

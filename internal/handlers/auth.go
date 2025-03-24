@@ -9,6 +9,7 @@ import (
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/ent"
 	"github.com/juicycleff/frank/internal/auth/session"
+	"github.com/juicycleff/frank/internal/middleware"
 	"github.com/juicycleff/frank/internal/user"
 	"github.com/juicycleff/frank/pkg/crypto"
 	"github.com/juicycleff/frank/pkg/errors"
@@ -50,6 +51,7 @@ type LoginInput struct {
 }
 
 // LoginResponse represents the response for login requests
+// @Model LoginResponse
 type LoginResponse struct {
 	User         *ent.User `json:"user"`
 	Token        string    `json:"token,omitempty"`
@@ -57,7 +59,7 @@ type LoginResponse struct {
 	ExpiresAt    int64     `json:"expires_at,omitempty"`
 	MFARequired  bool      `json:"mfa_required,omitempty"`
 	MFATypes     []string  `json:"mfa_types,omitempty"`
-}
+} // @name LoginResponse
 
 // RegisterInput represents the input for registration requests
 type RegisterInput struct {
@@ -570,7 +572,7 @@ func (h *AuthHandler) createSession(r *http.Request, w http.ResponseWriter, user
 	}
 
 	// Create options for session
-	options := []session.SessionOption{
+	options := []session.Option{
 		session.WithIPAddress(utils.GetRealIP(r)),
 		session.WithUserAgent(r.UserAgent()),
 	}
@@ -626,7 +628,7 @@ func (h *AuthHandler) checkMFA(ctx context.Context, userID string) (bool, []stri
 // GetCurrentUser returns the current authenticated user
 func (h *AuthHandler) GetCurrentUser(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from request context
-	userID, ok := r.Context().Value("user_id").(string)
+	userID, ok := middleware.GetUserIDReq(r)
 	if !ok || userID == "" {
 		utils.RespondError(w, errors.New(errors.CodeUnauthorized, "not authenticated"))
 		return
@@ -641,6 +643,31 @@ func (h *AuthHandler) GetCurrentUser(w http.ResponseWriter, r *http.Request) {
 
 	// Return user data
 	utils.RespondJSON(w, http.StatusOK, userEntity)
+}
+
+// GetCurrentUserHumaOutput represents the greeting operation response.
+type GetCurrentUserHumaOutput struct {
+	Body *ent.User
+}
+
+// GetCurrentUserHuma returns the current authenticated user
+func (h *AuthHandler) GetCurrentUserHuma(ctx context.Context, input *struct{}) (*GetCurrentUserHumaOutput, error) {
+	// Get user ID from request context
+	userID, ok := ctx.Value("user_id").(string)
+	if !ok || userID == "" {
+		return nil, errors.New(errors.CodeUnauthorized, "not authenticated")
+	}
+
+	// Get user from database
+	userEntity, err := h.userService.Get(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Return user data
+	return &GetCurrentUserHumaOutput{
+		Body: userEntity,
+	}, nil
 }
 
 // SetupRoutes sets up the auth routes

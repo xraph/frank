@@ -83,7 +83,7 @@ func (m *OrganizationMiddleware) RequireOrganizationMember(next http.Handler) ht
 		ctx := r.Context()
 
 		// Check if user is authenticated
-		userID, ok := GetUserID(r)
+		userID, ok := GetUserIDReq(r)
 		if !ok || userID == "" {
 			utils.RespondError(w, errors.New(errors.CodeUnauthorized, "authentication required"))
 			return

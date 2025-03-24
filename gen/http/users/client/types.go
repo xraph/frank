@@ -16,24 +16,24 @@ import (
 // CreateRequestBody is the type of the "users" service "create" endpoint HTTP
 // request body.
 type CreateRequestBody struct {
-	// User email
-	Email string `form:"email" json:"email" xml:"email"`
 	// User password
 	Password *string `form:"password,omitempty" json:"password,omitempty" xml:"password,omitempty"`
-	// User phone number
-	PhoneNumber *string `form:"phone_number,omitempty" json:"phone_number,omitempty" xml:"phone_number,omitempty"`
-	// User first name
-	FirstName *string `form:"first_name,omitempty" json:"first_name,omitempty" xml:"first_name,omitempty"`
-	// User last name
-	LastName *string `form:"last_name,omitempty" json:"last_name,omitempty" xml:"last_name,omitempty"`
-	// User metadata
-	Metadata map[string]any `form:"metadata,omitempty" json:"metadata,omitempty" xml:"metadata,omitempty"`
-	// Profile image URL
-	ProfileImageURL *string `form:"profile_image_url,omitempty" json:"profile_image_url,omitempty" xml:"profile_image_url,omitempty"`
-	// User locale
-	Locale string `form:"locale" json:"locale" xml:"locale"`
 	// Organization ID to add user to
 	OrganizationID *string `form:"organization_id,omitempty" json:"organization_id,omitempty" xml:"organization_id,omitempty"`
+	// User first name
+	FirstName *string `json:"first_name,firstName"`
+	// User last name
+	LastName *string `json:"last_name,lastName"`
+	// User phone number
+	PhoneNumber *string `json:"phone_number,phoneNumber"`
+	// URL to user's profile image
+	ProfileImageURL *string `json:"profile_image_url,profileImageUrl"`
+	// User metadata
+	Metadata map[string]any `json:"metadata"`
+	// User locale
+	Locale string `json:"locale"`
+	// Email address
+	Email string `json:"email"`
 }
 
 // UpdateRequestBody is the type of the "users" service "update" endpoint HTTP
@@ -75,132 +75,108 @@ type UpdatePasswordRequestBody struct {
 // ListResponseBody is the type of the "users" service "list" endpoint HTTP
 // response body.
 type ListResponseBody struct {
-	Data       []*UserResponseBody             `form:"data,omitempty" json:"data,omitempty" xml:"data,omitempty"`
-	Pagination *PaginationResponseResponseBody `form:"pagination,omitempty" json:"pagination,omitempty" xml:"pagination,omitempty"`
+	Data       []*UserResponseBody     `form:"data,omitempty" json:"data,omitempty" xml:"data,omitempty"`
+	Pagination *PaginationResponseBody `form:"pagination,omitempty" json:"pagination,omitempty" xml:"pagination,omitempty"`
 }
 
 // CreateResponseBody is the type of the "users" service "create" endpoint HTTP
 // response body.
 type CreateResponseBody struct {
-	// User ID
-	ID *string `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
-	// User email
-	Email *string `form:"email,omitempty" json:"email,omitempty" xml:"email,omitempty"`
-	// User first name
-	FirstName *string `form:"first_name,omitempty" json:"first_name,omitempty" xml:"first_name,omitempty"`
-	// User last name
-	LastName *string `form:"last_name,omitempty" json:"last_name,omitempty" xml:"last_name,omitempty"`
-	// Whether email is verified
-	EmailVerified *bool `form:"email_verified,omitempty" json:"email_verified,omitempty" xml:"email_verified,omitempty"`
-	// User phone number
-	PhoneNumber *string `form:"phone_number,omitempty" json:"phone_number,omitempty" xml:"phone_number,omitempty"`
-	// Whether phone is verified
-	PhoneVerified *bool `form:"phone_verified,omitempty" json:"phone_verified,omitempty" xml:"phone_verified,omitempty"`
-	// URL to user's profile image
-	ProfileImageURL *string `form:"profile_image_url,omitempty" json:"profile_image_url,omitempty" xml:"profile_image_url,omitempty"`
-	// User's locale preference
-	Locale *string `form:"locale,omitempty" json:"locale,omitempty" xml:"locale,omitempty"`
-	// User metadata
-	Metadata map[string]any `form:"metadata,omitempty" json:"metadata,omitempty" xml:"metadata,omitempty"`
 	// Whether account is active
 	Active *bool `form:"active,omitempty" json:"active,omitempty" xml:"active,omitempty"`
-	// Account creation timestamp
-	CreatedAt *string `form:"created_at,omitempty" json:"created_at,omitempty" xml:"created_at,omitempty"`
-	// Account last update timestamp
-	UpdatedAt *string `form:"updated_at,omitempty" json:"updated_at,omitempty" xml:"updated_at,omitempty"`
+	// Whether email is verified
+	EmailVerified *bool `json:"email_verified,emailVerified"`
+	// Whether phone is verified
+	PhoneVerified *bool `json:"phone_verified,phoneVerified"`
+	// URL to user's profile image
+	ProfileImageURL *string `json:"profile_image_url,profileImageUrl"`
+	// User first name
+	FirstName *string `json:"first_name,firstName"`
+	// User last name
+	LastName *string `json:"last_name,lastName"`
+	// User phone number
+	PhoneNumber *string `json:"phone_number,phoneNumber"`
+	// User metadata
+	Metadata map[string]any `json:"metadata"`
+	// User locale
+	Locale *string `json:"locale"`
+	// Email address
+	Email *string `json:"email"`
 }
 
 // GetResponseBody is the type of the "users" service "get" endpoint HTTP
 // response body.
 type GetResponseBody struct {
-	// User ID
-	ID *string `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
-	// User email
-	Email *string `form:"email,omitempty" json:"email,omitempty" xml:"email,omitempty"`
-	// User first name
-	FirstName *string `form:"first_name,omitempty" json:"first_name,omitempty" xml:"first_name,omitempty"`
-	// User last name
-	LastName *string `form:"last_name,omitempty" json:"last_name,omitempty" xml:"last_name,omitempty"`
-	// Whether email is verified
-	EmailVerified *bool `form:"email_verified,omitempty" json:"email_verified,omitempty" xml:"email_verified,omitempty"`
-	// User phone number
-	PhoneNumber *string `form:"phone_number,omitempty" json:"phone_number,omitempty" xml:"phone_number,omitempty"`
-	// Whether phone is verified
-	PhoneVerified *bool `form:"phone_verified,omitempty" json:"phone_verified,omitempty" xml:"phone_verified,omitempty"`
-	// URL to user's profile image
-	ProfileImageURL *string `form:"profile_image_url,omitempty" json:"profile_image_url,omitempty" xml:"profile_image_url,omitempty"`
-	// User's locale preference
-	Locale *string `form:"locale,omitempty" json:"locale,omitempty" xml:"locale,omitempty"`
-	// User metadata
-	Metadata map[string]any `form:"metadata,omitempty" json:"metadata,omitempty" xml:"metadata,omitempty"`
 	// Whether account is active
 	Active *bool `form:"active,omitempty" json:"active,omitempty" xml:"active,omitempty"`
-	// Account creation timestamp
-	CreatedAt *string `form:"created_at,omitempty" json:"created_at,omitempty" xml:"created_at,omitempty"`
-	// Account last update timestamp
-	UpdatedAt *string `form:"updated_at,omitempty" json:"updated_at,omitempty" xml:"updated_at,omitempty"`
+	// Whether email is verified
+	EmailVerified *bool `json:"email_verified,emailVerified"`
+	// Whether phone is verified
+	PhoneVerified *bool `json:"phone_verified,phoneVerified"`
+	// URL to user's profile image
+	ProfileImageURL *string `json:"profile_image_url,profileImageUrl"`
+	// User first name
+	FirstName *string `json:"first_name,firstName"`
+	// User last name
+	LastName *string `json:"last_name,lastName"`
+	// User phone number
+	PhoneNumber *string `json:"phone_number,phoneNumber"`
+	// User metadata
+	Metadata map[string]any `json:"metadata"`
+	// User locale
+	Locale *string `json:"locale"`
+	// Email address
+	Email *string `json:"email"`
 }
 
 // UpdateResponseBody is the type of the "users" service "update" endpoint HTTP
 // response body.
 type UpdateResponseBody struct {
-	// User ID
-	ID *string `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
-	// User email
-	Email *string `form:"email,omitempty" json:"email,omitempty" xml:"email,omitempty"`
-	// User first name
-	FirstName *string `form:"first_name,omitempty" json:"first_name,omitempty" xml:"first_name,omitempty"`
-	// User last name
-	LastName *string `form:"last_name,omitempty" json:"last_name,omitempty" xml:"last_name,omitempty"`
-	// Whether email is verified
-	EmailVerified *bool `form:"email_verified,omitempty" json:"email_verified,omitempty" xml:"email_verified,omitempty"`
-	// User phone number
-	PhoneNumber *string `form:"phone_number,omitempty" json:"phone_number,omitempty" xml:"phone_number,omitempty"`
-	// Whether phone is verified
-	PhoneVerified *bool `form:"phone_verified,omitempty" json:"phone_verified,omitempty" xml:"phone_verified,omitempty"`
-	// URL to user's profile image
-	ProfileImageURL *string `form:"profile_image_url,omitempty" json:"profile_image_url,omitempty" xml:"profile_image_url,omitempty"`
-	// User's locale preference
-	Locale *string `form:"locale,omitempty" json:"locale,omitempty" xml:"locale,omitempty"`
-	// User metadata
-	Metadata map[string]any `form:"metadata,omitempty" json:"metadata,omitempty" xml:"metadata,omitempty"`
 	// Whether account is active
 	Active *bool `form:"active,omitempty" json:"active,omitempty" xml:"active,omitempty"`
-	// Account creation timestamp
-	CreatedAt *string `form:"created_at,omitempty" json:"created_at,omitempty" xml:"created_at,omitempty"`
-	// Account last update timestamp
-	UpdatedAt *string `form:"updated_at,omitempty" json:"updated_at,omitempty" xml:"updated_at,omitempty"`
+	// Whether email is verified
+	EmailVerified *bool `json:"email_verified,emailVerified"`
+	// Whether phone is verified
+	PhoneVerified *bool `json:"phone_verified,phoneVerified"`
+	// URL to user's profile image
+	ProfileImageURL *string `json:"profile_image_url,profileImageUrl"`
+	// User first name
+	FirstName *string `json:"first_name,firstName"`
+	// User last name
+	LastName *string `json:"last_name,lastName"`
+	// User phone number
+	PhoneNumber *string `json:"phone_number,phoneNumber"`
+	// User metadata
+	Metadata map[string]any `json:"metadata"`
+	// User locale
+	Locale *string `json:"locale"`
+	// Email address
+	Email *string `json:"email"`
 }
 
 // UpdateMeResponseBody is the type of the "users" service "update_me" endpoint
 // HTTP response body.
 type UpdateMeResponseBody struct {
-	// User ID
-	ID *string `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
-	// User email
-	Email *string `form:"email,omitempty" json:"email,omitempty" xml:"email,omitempty"`
-	// User first name
-	FirstName *string `form:"first_name,omitempty" json:"first_name,omitempty" xml:"first_name,omitempty"`
-	// User last name
-	LastName *string `form:"last_name,omitempty" json:"last_name,omitempty" xml:"last_name,omitempty"`
-	// Whether email is verified
-	EmailVerified *bool `form:"email_verified,omitempty" json:"email_verified,omitempty" xml:"email_verified,omitempty"`
-	// User phone number
-	PhoneNumber *string `form:"phone_number,omitempty" json:"phone_number,omitempty" xml:"phone_number,omitempty"`
-	// Whether phone is verified
-	PhoneVerified *bool `form:"phone_verified,omitempty" json:"phone_verified,omitempty" xml:"phone_verified,omitempty"`
-	// URL to user's profile image
-	ProfileImageURL *string `form:"profile_image_url,omitempty" json:"profile_image_url,omitempty" xml:"profile_image_url,omitempty"`
-	// User's locale preference
-	Locale *string `form:"locale,omitempty" json:"locale,omitempty" xml:"locale,omitempty"`
-	// User metadata
-	Metadata map[string]any `form:"metadata,omitempty" json:"metadata,omitempty" xml:"metadata,omitempty"`
 	// Whether account is active
 	Active *bool `form:"active,omitempty" json:"active,omitempty" xml:"active,omitempty"`
-	// Account creation timestamp
-	CreatedAt *string `form:"created_at,omitempty" json:"created_at,omitempty" xml:"created_at,omitempty"`
-	// Account last update timestamp
-	UpdatedAt *string `form:"updated_at,omitempty" json:"updated_at,omitempty" xml:"updated_at,omitempty"`
+	// Whether email is verified
+	EmailVerified *bool `json:"email_verified,emailVerified"`
+	// Whether phone is verified
+	PhoneVerified *bool `json:"phone_verified,phoneVerified"`
+	// URL to user's profile image
+	ProfileImageURL *string `json:"profile_image_url,profileImageUrl"`
+	// User first name
+	FirstName *string `json:"first_name,firstName"`
+	// User last name
+	LastName *string `json:"last_name,lastName"`
+	// User phone number
+	PhoneNumber *string `json:"phone_number,phoneNumber"`
+	// User metadata
+	Metadata map[string]any `json:"metadata"`
+	// User locale
+	Locale *string `json:"locale"`
+	// Email address
+	Email *string `json:"email"`
 }
 
 // UpdatePasswordResponseBody is the type of the "users" service
@@ -213,7 +189,10 @@ type UpdatePasswordResponseBody struct {
 // GetSessionsResponseBody is the type of the "users" service "get_sessions"
 // endpoint HTTP response body.
 type GetSessionsResponseBody struct {
-	Sessions []*UserSessionResponseResponseBody `form:"sessions,omitempty" json:"sessions,omitempty" xml:"sessions,omitempty"`
+	// User sessions
+	Data []*SessionResponseBody `form:"data,omitempty" json:"data,omitempty" xml:"data,omitempty"`
+	// Pagination params
+	Pagination *PaginationResponseBody `json:"pagination"`
 }
 
 // GetOrganizationsResponseBody is the type of the "users" service
@@ -1005,43 +984,44 @@ type GetOrganizationsUnauthorizedResponseBody struct {
 
 // UserResponseBody is used to define fields on response body types.
 type UserResponseBody struct {
-	// User ID
-	ID *string `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
-	// User email
-	Email *string `form:"email,omitempty" json:"email,omitempty" xml:"email,omitempty"`
-	// User first name
-	FirstName *string `form:"first_name,omitempty" json:"first_name,omitempty" xml:"first_name,omitempty"`
-	// User last name
-	LastName *string `form:"last_name,omitempty" json:"last_name,omitempty" xml:"last_name,omitempty"`
-	// Whether email is verified
-	EmailVerified *bool `form:"email_verified,omitempty" json:"email_verified,omitempty" xml:"email_verified,omitempty"`
-	// User phone number
-	PhoneNumber *string `form:"phone_number,omitempty" json:"phone_number,omitempty" xml:"phone_number,omitempty"`
-	// Whether phone is verified
-	PhoneVerified *bool `form:"phone_verified,omitempty" json:"phone_verified,omitempty" xml:"phone_verified,omitempty"`
-	// URL to user's profile image
-	ProfileImageURL *string `form:"profile_image_url,omitempty" json:"profile_image_url,omitempty" xml:"profile_image_url,omitempty"`
-	// User's locale preference
-	Locale *string `form:"locale,omitempty" json:"locale,omitempty" xml:"locale,omitempty"`
-	// User metadata
-	Metadata map[string]any `form:"metadata,omitempty" json:"metadata,omitempty" xml:"metadata,omitempty"`
 	// Whether account is active
 	Active *bool `form:"active,omitempty" json:"active,omitempty" xml:"active,omitempty"`
-	// Account creation timestamp
-	CreatedAt *string `form:"created_at,omitempty" json:"created_at,omitempty" xml:"created_at,omitempty"`
-	// Account last update timestamp
-	UpdatedAt *string `form:"updated_at,omitempty" json:"updated_at,omitempty" xml:"updated_at,omitempty"`
+	// Whether email is verified
+	EmailVerified *bool `json:"email_verified,emailVerified"`
+	// Whether phone is verified
+	PhoneVerified *bool `json:"phone_verified,phoneVerified"`
+	// URL to user's profile image
+	ProfileImageURL *string `json:"profile_image_url,profileImageUrl"`
+	// User first name
+	FirstName *string `json:"first_name,firstName"`
+	// User last name
+	LastName *string `json:"last_name,lastName"`
+	// User phone number
+	PhoneNumber *string `json:"phone_number,phoneNumber"`
+	// User metadata
+	Metadata map[string]any `json:"metadata"`
+	// User locale
+	Locale *string `json:"locale"`
+	// Email address
+	Email *string `json:"email"`
 }
 
-// PaginationResponseResponseBody is used to define fields on response body
-// types.
-type PaginationResponseResponseBody struct {
+// PaginationResponseBody is used to define fields on response body types.
+type PaginationResponseBody struct {
+	// Offset
+	Offset *int `json:"offset"`
+	// Limit
+	Limit *int `json:"limit"`
 	// Total number of items
-	Total *int `form:"total,omitempty" json:"total,omitempty" xml:"total,omitempty"`
-	// Current offset
-	Offset *int `form:"offset,omitempty" json:"offset,omitempty" xml:"offset,omitempty"`
-	// Current limit
-	Limit *int `form:"limit,omitempty" json:"limit,omitempty" xml:"limit,omitempty"`
+	Total *int `json:"total"`
+	// Total number of pages
+	TotalPages *int `json:"total_pages,totalPages"`
+	// Current page number
+	CurrentPage *int `json:"current_page,currentPage"`
+	// Has next page
+	HasNext *bool `json:"has_next,hasNext"`
+	// Has previous page
+	HasPrevious *bool `json:"has_previous,hasPrevious"`
 }
 
 // UpdateUserRequestRequestBody is used to define fields on request body types.
@@ -1064,23 +1044,36 @@ type UpdateUserRequestRequestBody struct {
 	PrimaryOrganizationID *string `form:"primary_organization_id,omitempty" json:"primary_organization_id,omitempty" xml:"primary_organization_id,omitempty"`
 }
 
-// UserSessionResponseResponseBody is used to define fields on response body
-// types.
-type UserSessionResponseResponseBody struct {
-	// Session ID
-	ID *string `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
+// SessionResponseBody is used to define fields on response body types.
+type SessionResponseBody struct {
+	// User ID
+	UserID *string `json:"user_id,userId"`
 	// Device ID
-	DeviceID *string `form:"device_id,omitempty" json:"device_id,omitempty" xml:"device_id,omitempty"`
+	DeviceID *string `json:"device_id,deviceId"`
 	// IP address
-	IPAddress *string `form:"ip_address,omitempty" json:"ip_address,omitempty" xml:"ip_address,omitempty"`
+	IPAddress *string `json:"ip_address,ipAddress"`
 	// User agent string
-	UserAgent *string `form:"user_agent,omitempty" json:"user_agent,omitempty" xml:"user_agent,omitempty"`
+	UserAgent *string `json:"user_agent,userAgent"`
 	// Location
-	Location *string `form:"location,omitempty" json:"location,omitempty" xml:"location,omitempty"`
+	Location *string `json:"location"`
+	// Session token
+	Token *string `json:"token"`
+	// Organization ID
+	OrganizationID *string `json:"organization_id,organizationId"`
+	// Session is active
+	IsActive *bool `json:"is_active,isActive"`
+	// Session metadata
+	Metadata map[string]any `json:"metadata"`
 	// Last activity timestamp
-	LastActiveAt *string `form:"last_active_at,omitempty" json:"last_active_at,omitempty" xml:"last_active_at,omitempty"`
-	// Creation timestamp
-	CreatedAt *string `form:"created_at,omitempty" json:"created_at,omitempty" xml:"created_at,omitempty"`
+	LastActiveAt *string `json:"last_active_at,lastActiveAt"`
+	// Expiry timestamp
+	ExpiresAt *string `json:"expires_at,expiresAt"`
+	// Created At
+	ID *string `json:"id"`
+	// Created At
+	CreatedAt *string `json:"created_at,createdAt"`
+	// Updated At
+	UpdatedAt *string `json:"updated_at,updatedAt"`
 }
 
 // OrganizationResponseResponseBody is used to define fields on response body
@@ -1116,14 +1109,14 @@ type OrganizationResponseResponseBody struct {
 // "create" endpoint of the "users" service.
 func NewCreateRequestBody(p *users.CreatePayload) *CreateRequestBody {
 	body := &CreateRequestBody{
-		Email:           p.Email,
 		Password:        p.Password,
-		PhoneNumber:     p.PhoneNumber,
+		OrganizationID:  p.OrganizationID,
 		FirstName:       p.FirstName,
 		LastName:        p.LastName,
+		PhoneNumber:     p.PhoneNumber,
 		ProfileImageURL: p.ProfileImageURL,
 		Locale:          p.Locale,
-		OrganizationID:  p.OrganizationID,
+		Email:           p.Email,
 	}
 	if p.Metadata != nil {
 		body.Metadata = make(map[string]any, len(p.Metadata))
@@ -1189,11 +1182,11 @@ func NewUpdatePasswordRequestBody(p *users.UpdatePasswordPayload) *UpdatePasswor
 // "OK" response.
 func NewListResultOK(body *ListResponseBody) *users.ListResult {
 	v := &users.ListResult{}
-	v.Data = make([]*users.User, len(body.Data))
+	v.Data = make([]*designtypes.User, len(body.Data))
 	for i, val := range body.Data {
-		v.Data[i] = unmarshalUserResponseBodyToUsersUser(val)
+		v.Data[i] = unmarshalUserResponseBodyToDesigntypesUser(val)
 	}
-	v.Pagination = unmarshalPaginationResponseResponseBodyToDesigntypesPaginationResponse(body.Pagination)
+	v.Pagination = unmarshalPaginationResponseBodyToDesigntypesPagination(body.Pagination)
 
 	return v
 }
@@ -1273,20 +1266,19 @@ func NewListUnauthorized(body *ListUnauthorizedResponseBody) *users.Unauthorized
 
 // NewCreateUserCreated builds a "users" service "create" endpoint result from
 // a HTTP "Created" response.
-func NewCreateUserCreated(body *CreateResponseBody) *users.User {
-	v := &users.User{
-		ID:              *body.ID,
-		Email:           *body.Email,
-		FirstName:       body.FirstName,
-		LastName:        body.LastName,
+func NewCreateUserCreated(body *CreateResponseBody) *designtypes.User {
+	v := &designtypes.User{
+		Active:          *body.Active,
 		EmailVerified:   *body.EmailVerified,
-		PhoneNumber:     body.PhoneNumber,
 		PhoneVerified:   body.PhoneVerified,
 		ProfileImageURL: body.ProfileImageURL,
-		Locale:          body.Locale,
-		Active:          *body.Active,
-		CreatedAt:       *body.CreatedAt,
-		UpdatedAt:       *body.UpdatedAt,
+		FirstName:       body.FirstName,
+		LastName:        body.LastName,
+		PhoneNumber:     body.PhoneNumber,
+		Email:           *body.Email,
+	}
+	if body.Locale != nil {
+		v.Locale = *body.Locale
 	}
 	if body.Metadata != nil {
 		v.Metadata = make(map[string]any, len(body.Metadata))
@@ -1295,6 +1287,9 @@ func NewCreateUserCreated(body *CreateResponseBody) *users.User {
 			tv := val
 			v.Metadata[tk] = tv
 		}
+	}
+	if body.Locale == nil {
+		v.Locale = "en"
 	}
 
 	return v
@@ -1376,20 +1371,19 @@ func NewCreateUnauthorized(body *CreateUnauthorizedResponseBody) *users.Unauthor
 
 // NewGetUserOK builds a "users" service "get" endpoint result from a HTTP "OK"
 // response.
-func NewGetUserOK(body *GetResponseBody) *users.User {
-	v := &users.User{
-		ID:              *body.ID,
-		Email:           *body.Email,
-		FirstName:       body.FirstName,
-		LastName:        body.LastName,
+func NewGetUserOK(body *GetResponseBody) *designtypes.User {
+	v := &designtypes.User{
+		Active:          *body.Active,
 		EmailVerified:   *body.EmailVerified,
-		PhoneNumber:     body.PhoneNumber,
 		PhoneVerified:   body.PhoneVerified,
 		ProfileImageURL: body.ProfileImageURL,
-		Locale:          body.Locale,
-		Active:          *body.Active,
-		CreatedAt:       *body.CreatedAt,
-		UpdatedAt:       *body.UpdatedAt,
+		FirstName:       body.FirstName,
+		LastName:        body.LastName,
+		PhoneNumber:     body.PhoneNumber,
+		Email:           *body.Email,
+	}
+	if body.Locale != nil {
+		v.Locale = *body.Locale
 	}
 	if body.Metadata != nil {
 		v.Metadata = make(map[string]any, len(body.Metadata))
@@ -1398,6 +1392,9 @@ func NewGetUserOK(body *GetResponseBody) *users.User {
 			tv := val
 			v.Metadata[tk] = tv
 		}
+	}
+	if body.Locale == nil {
+		v.Locale = "en"
 	}
 
 	return v
@@ -1477,20 +1474,19 @@ func NewGetUnauthorized(body *GetUnauthorizedResponseBody) *users.UnauthorizedEr
 
 // NewUpdateUserOK builds a "users" service "update" endpoint result from a
 // HTTP "OK" response.
-func NewUpdateUserOK(body *UpdateResponseBody) *users.User {
-	v := &users.User{
-		ID:              *body.ID,
-		Email:           *body.Email,
-		FirstName:       body.FirstName,
-		LastName:        body.LastName,
+func NewUpdateUserOK(body *UpdateResponseBody) *designtypes.User {
+	v := &designtypes.User{
+		Active:          *body.Active,
 		EmailVerified:   *body.EmailVerified,
-		PhoneNumber:     body.PhoneNumber,
 		PhoneVerified:   body.PhoneVerified,
 		ProfileImageURL: body.ProfileImageURL,
-		Locale:          body.Locale,
-		Active:          *body.Active,
-		CreatedAt:       *body.CreatedAt,
-		UpdatedAt:       *body.UpdatedAt,
+		FirstName:       body.FirstName,
+		LastName:        body.LastName,
+		PhoneNumber:     body.PhoneNumber,
+		Email:           *body.Email,
+	}
+	if body.Locale != nil {
+		v.Locale = *body.Locale
 	}
 	if body.Metadata != nil {
 		v.Metadata = make(map[string]any, len(body.Metadata))
@@ -1499,6 +1495,9 @@ func NewUpdateUserOK(body *UpdateResponseBody) *users.User {
 			tv := val
 			v.Metadata[tk] = tv
 		}
+	}
+	if body.Locale == nil {
+		v.Locale = "en"
 	}
 
 	return v
@@ -1654,20 +1653,19 @@ func NewDeleteUnauthorized(body *DeleteUnauthorizedResponseBody) *users.Unauthor
 
 // NewUpdateMeUserOK builds a "users" service "update_me" endpoint result from
 // a HTTP "OK" response.
-func NewUpdateMeUserOK(body *UpdateMeResponseBody) *users.User {
-	v := &users.User{
-		ID:              *body.ID,
-		Email:           *body.Email,
-		FirstName:       body.FirstName,
-		LastName:        body.LastName,
+func NewUpdateMeUserOK(body *UpdateMeResponseBody) *designtypes.User {
+	v := &designtypes.User{
+		Active:          *body.Active,
 		EmailVerified:   *body.EmailVerified,
-		PhoneNumber:     body.PhoneNumber,
 		PhoneVerified:   body.PhoneVerified,
 		ProfileImageURL: body.ProfileImageURL,
-		Locale:          body.Locale,
-		Active:          *body.Active,
-		CreatedAt:       *body.CreatedAt,
-		UpdatedAt:       *body.UpdatedAt,
+		FirstName:       body.FirstName,
+		LastName:        body.LastName,
+		PhoneNumber:     body.PhoneNumber,
+		Email:           *body.Email,
+	}
+	if body.Locale != nil {
+		v.Locale = *body.Locale
 	}
 	if body.Metadata != nil {
 		v.Metadata = make(map[string]any, len(body.Metadata))
@@ -1676,6 +1674,9 @@ func NewUpdateMeUserOK(body *UpdateMeResponseBody) *users.User {
 			tv := val
 			v.Metadata[tk] = tv
 		}
+	}
+	if body.Locale == nil {
+		v.Locale = "en"
 	}
 
 	return v
@@ -1846,14 +1847,15 @@ func NewUpdatePasswordUnauthorized(body *UpdatePasswordUnauthorizedResponseBody)
 	return v
 }
 
-// NewGetSessionsResultOK builds a "users" service "get_sessions" endpoint
-// result from a HTTP "OK" response.
-func NewGetSessionsResultOK(body *GetSessionsResponseBody) *users.GetSessionsResult {
-	v := &users.GetSessionsResult{}
-	v.Sessions = make([]*designtypes.UserSessionResponse, len(body.Sessions))
-	for i, val := range body.Sessions {
-		v.Sessions[i] = unmarshalUserSessionResponseResponseBodyToDesigntypesUserSessionResponse(val)
+// NewGetSessionsGetUserSessionResponseOK builds a "users" service
+// "get_sessions" endpoint result from a HTTP "OK" response.
+func NewGetSessionsGetUserSessionResponseOK(body *GetSessionsResponseBody) *users.GetUserSessionResponse {
+	v := &users.GetUserSessionResponse{}
+	v.Data = make([]*designtypes.Session, len(body.Data))
+	for i, val := range body.Data {
+		v.Data[i] = unmarshalSessionResponseBodyToDesigntypesSession(val)
 	}
+	v.Pagination = unmarshalPaginationResponseBodyToDesigntypesPagination(body.Pagination)
 
 	return v
 }
@@ -2120,7 +2122,7 @@ func ValidateListResponseBody(body *ListResponseBody) (err error) {
 		}
 	}
 	if body.Pagination != nil {
-		if err2 := ValidatePaginationResponseResponseBody(body.Pagination); err2 != nil {
+		if err2 := ValidatePaginationResponseBody(body.Pagination); err2 != nil {
 			err = goa.MergeErrors(err, err2)
 		}
 	}
@@ -2129,8 +2131,8 @@ func ValidateListResponseBody(body *ListResponseBody) (err error) {
 
 // ValidateCreateResponseBody runs the validations defined on CreateResponseBody
 func ValidateCreateResponseBody(body *CreateResponseBody) (err error) {
-	if body.ID == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("id", "body"))
+	if body.Active == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("active", "body"))
 	}
 	if body.Email == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("email", "body"))
@@ -2138,22 +2140,16 @@ func ValidateCreateResponseBody(body *CreateResponseBody) (err error) {
 	if body.EmailVerified == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("email_verified", "body"))
 	}
-	if body.Active == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("active", "body"))
-	}
-	if body.CreatedAt == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("created_at", "body"))
-	}
-	if body.UpdatedAt == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("updated_at", "body"))
+	if body.Email != nil {
+		err = goa.MergeErrors(err, goa.ValidateFormat("body.email", *body.Email, goa.FormatEmail))
 	}
 	return
 }
 
 // ValidateGetResponseBody runs the validations defined on GetResponseBody
 func ValidateGetResponseBody(body *GetResponseBody) (err error) {
-	if body.ID == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("id", "body"))
+	if body.Active == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("active", "body"))
 	}
 	if body.Email == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("email", "body"))
@@ -2161,22 +2157,16 @@ func ValidateGetResponseBody(body *GetResponseBody) (err error) {
 	if body.EmailVerified == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("email_verified", "body"))
 	}
-	if body.Active == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("active", "body"))
-	}
-	if body.CreatedAt == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("created_at", "body"))
-	}
-	if body.UpdatedAt == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("updated_at", "body"))
+	if body.Email != nil {
+		err = goa.MergeErrors(err, goa.ValidateFormat("body.email", *body.Email, goa.FormatEmail))
 	}
 	return
 }
 
 // ValidateUpdateResponseBody runs the validations defined on UpdateResponseBody
 func ValidateUpdateResponseBody(body *UpdateResponseBody) (err error) {
-	if body.ID == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("id", "body"))
+	if body.Active == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("active", "body"))
 	}
 	if body.Email == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("email", "body"))
@@ -2184,14 +2174,8 @@ func ValidateUpdateResponseBody(body *UpdateResponseBody) (err error) {
 	if body.EmailVerified == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("email_verified", "body"))
 	}
-	if body.Active == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("active", "body"))
-	}
-	if body.CreatedAt == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("created_at", "body"))
-	}
-	if body.UpdatedAt == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("updated_at", "body"))
+	if body.Email != nil {
+		err = goa.MergeErrors(err, goa.ValidateFormat("body.email", *body.Email, goa.FormatEmail))
 	}
 	return
 }
@@ -2199,8 +2183,8 @@ func ValidateUpdateResponseBody(body *UpdateResponseBody) (err error) {
 // ValidateUpdateMeResponseBody runs the validations defined on
 // update_me_response_body
 func ValidateUpdateMeResponseBody(body *UpdateMeResponseBody) (err error) {
-	if body.ID == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("id", "body"))
+	if body.Active == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("active", "body"))
 	}
 	if body.Email == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("email", "body"))
@@ -2208,14 +2192,8 @@ func ValidateUpdateMeResponseBody(body *UpdateMeResponseBody) (err error) {
 	if body.EmailVerified == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("email_verified", "body"))
 	}
-	if body.Active == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("active", "body"))
-	}
-	if body.CreatedAt == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("created_at", "body"))
-	}
-	if body.UpdatedAt == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("updated_at", "body"))
+	if body.Email != nil {
+		err = goa.MergeErrors(err, goa.ValidateFormat("body.email", *body.Email, goa.FormatEmail))
 	}
 	return
 }
@@ -2232,14 +2210,22 @@ func ValidateUpdatePasswordResponseBody(body *UpdatePasswordResponseBody) (err e
 // ValidateGetSessionsResponseBody runs the validations defined on
 // get_sessions_response_body
 func ValidateGetSessionsResponseBody(body *GetSessionsResponseBody) (err error) {
-	if body.Sessions == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("sessions", "body"))
+	if body.Data == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("data", "body"))
 	}
-	for _, e := range body.Sessions {
+	if body.Pagination == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("pagination", "body"))
+	}
+	for _, e := range body.Data {
 		if e != nil {
-			if err2 := ValidateUserSessionResponseResponseBody(e); err2 != nil {
+			if err2 := ValidateSessionResponseBody(e); err2 != nil {
 				err = goa.MergeErrors(err, err2)
 			}
+		}
+	}
+	if body.Pagination != nil {
+		if err2 := ValidatePaginationResponseBody(body.Pagination); err2 != nil {
+			err = goa.MergeErrors(err, err2)
 		}
 	}
 	return
@@ -2983,8 +2969,8 @@ func ValidateGetOrganizationsUnauthorizedResponseBody(body *GetOrganizationsUnau
 
 // ValidateUserResponseBody runs the validations defined on UserResponseBody
 func ValidateUserResponseBody(body *UserResponseBody) (err error) {
-	if body.ID == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("id", "body"))
+	if body.Active == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("active", "body"))
 	}
 	if body.Email == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("email", "body"))
@@ -2992,21 +2978,15 @@ func ValidateUserResponseBody(body *UserResponseBody) (err error) {
 	if body.EmailVerified == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("email_verified", "body"))
 	}
-	if body.Active == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("active", "body"))
-	}
-	if body.CreatedAt == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("created_at", "body"))
-	}
-	if body.UpdatedAt == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("updated_at", "body"))
+	if body.Email != nil {
+		err = goa.MergeErrors(err, goa.ValidateFormat("body.email", *body.Email, goa.FormatEmail))
 	}
 	return
 }
 
-// ValidatePaginationResponseResponseBody runs the validations defined on
-// PaginationResponseResponseBody
-func ValidatePaginationResponseResponseBody(body *PaginationResponseResponseBody) (err error) {
+// ValidatePaginationResponseBody runs the validations defined on
+// PaginationResponseBody
+func ValidatePaginationResponseBody(body *PaginationResponseBody) (err error) {
 	if body.Total == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("total", "body"))
 	}
@@ -3016,17 +2996,62 @@ func ValidatePaginationResponseResponseBody(body *PaginationResponseResponseBody
 	if body.Limit == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("limit", "body"))
 	}
+	if body.TotalPages == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("total_pages", "body"))
+	}
+	if body.CurrentPage == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("current_page", "body"))
+	}
+	if body.HasNext == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("has_next", "body"))
+	}
+	if body.HasPrevious == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("has_previous", "body"))
+	}
+	if body.Offset != nil {
+		if *body.Offset < 0 {
+			err = goa.MergeErrors(err, goa.InvalidRangeError("body.offset", *body.Offset, 0, true))
+		}
+	}
+	if body.Limit != nil {
+		if *body.Limit < 1 {
+			err = goa.MergeErrors(err, goa.InvalidRangeError("body.limit", *body.Limit, 1, true))
+		}
+	}
+	if body.Limit != nil {
+		if *body.Limit > 100 {
+			err = goa.MergeErrors(err, goa.InvalidRangeError("body.limit", *body.Limit, 100, false))
+		}
+	}
 	return
 }
 
-// ValidateUserSessionResponseResponseBody runs the validations defined on
-// UserSessionResponseResponseBody
-func ValidateUserSessionResponseResponseBody(body *UserSessionResponseResponseBody) (err error) {
+// ValidateSessionResponseBody runs the validations defined on
+// SessionResponseBody
+func ValidateSessionResponseBody(body *SessionResponseBody) (err error) {
 	if body.ID == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("id", "body"))
 	}
 	if body.CreatedAt == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("created_at", "body"))
+	}
+	if body.ExpiresAt == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("expires_at", "body"))
+	}
+	if body.UpdatedAt == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("updated_at", "body"))
+	}
+	if body.LastActiveAt != nil {
+		err = goa.MergeErrors(err, goa.ValidateFormat("body.last_active_at", *body.LastActiveAt, goa.FormatDateTime))
+	}
+	if body.ExpiresAt != nil {
+		err = goa.MergeErrors(err, goa.ValidateFormat("body.expires_at", *body.ExpiresAt, goa.FormatDateTime))
+	}
+	if body.CreatedAt != nil {
+		err = goa.MergeErrors(err, goa.ValidateFormat("body.created_at", *body.CreatedAt, goa.FormatDateTime))
+	}
+	if body.UpdatedAt != nil {
+		err = goa.MergeErrors(err, goa.ValidateFormat("body.updated_at", *body.UpdatedAt, goa.FormatDateTime))
 	}
 	return
 }

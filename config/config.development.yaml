@@ -171,7 +171,7 @@ security:
   csrf_header_name: X-CSRF-Token
   content_type_options: nosniff
   referrer_policy: no-referrer
-  allowed_origins: ["http://localhost:3000", "http://localhost:8080"]
+  allowed_origins: ["http://localhost:3000", "http://localhost:8080", "http://localhost:4321"]
   allowed_methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"]
   allowed_headers: ["Accept", "Authorization", "Content-Type", "X-CSRF-Token"]
   exposed_headers: ["X-CSRF-Token"]

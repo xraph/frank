@@ -4,12 +4,12 @@ import (
 	"context"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/juicycleff/frank/ent"
 	"github.com/juicycleff/frank/ent/predicate"
 	"github.com/juicycleff/frank/ent/webhook"
 	"github.com/juicycleff/frank/ent/webhookevent"
 	"github.com/juicycleff/frank/pkg/errors"
+	"github.com/juicycleff/frank/pkg/utils"
 )
 
 // EventRepository provides access to webhook event storage
@@ -75,10 +75,7 @@ func NewEventRepository(client *ent.Client) EventRepository {
 // Create creates a new webhook event
 func (r *eventRepository) Create(ctx context.Context, input EventRepositoryCreateInput) (*ent.WebhookEvent, error) {
 	// Generate UUID
-	id, err := uuid.NewRandom()
-	if err != nil {
-		return nil, errors.Wrap(errors.CodeInternalServer, err, "failed to generate uuid")
-	}
+	id := utils.NewID()
 
 	// Check if webhook exists
 	exists, err := r.client.Webhook.

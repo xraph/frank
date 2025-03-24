@@ -6,10 +6,10 @@ import (
 	"encoding/hex"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/juicycleff/frank/ent"
 	"github.com/juicycleff/frank/ent/verification"
 	"github.com/juicycleff/frank/pkg/errors"
+	"github.com/juicycleff/frank/pkg/utils"
 )
 
 // VerificationManager handles verification-related operations
@@ -47,10 +47,7 @@ func NewVerificationManager(client *ent.Client) VerificationManager {
 // CreateVerification creates a new verification token
 func (v *verificationManager) CreateVerification(ctx context.Context, input CreateVerificationInput) (*ent.Verification, error) {
 	// Generate UUID
-	id, err := uuid.NewRandom()
-	if err != nil {
-		return nil, errors.Wrap(errors.CodeInternalServer, err, "failed to generate uuid")
-	}
+	id := utils.NewID()
 
 	// Generate token
 	token, err := v.GenerateToken(32)

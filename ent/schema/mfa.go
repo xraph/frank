@@ -1,8 +1,6 @@
 package schema
 
 import (
-	"time"
-
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
@@ -42,12 +40,6 @@ func (MFA) Fields() []ent.Field {
 			Optional().
 			Nillable(),
 		entity.JSONMapField("metadata", true),
-		field.Time("created_at").
-			Default(time.Now).
-			Immutable(),
-		field.Time("updated_at").
-			Default(time.Now).
-			UpdateDefault(time.Now),
 	}
 }
 
@@ -68,5 +60,12 @@ func (MFA) Indexes() []ent.Index {
 		index.Fields("user_id"),
 		index.Fields("method", "user_id").
 			Unique(),
+	}
+}
+
+// Mixin of the MFA.
+func (MFA) Mixin() []ent.Mixin {
+	return []ent.Mixin{
+		ModelBaseMixin{},
 	}
 }

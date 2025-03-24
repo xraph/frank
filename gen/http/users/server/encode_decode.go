@@ -203,7 +203,7 @@ func EncodeListError(encoder func(context.Context, http.ResponseWriter) goahttp.
 // create endpoint.
 func EncodeCreateResponse(encoder func(context.Context, http.ResponseWriter) goahttp.Encoder) func(context.Context, http.ResponseWriter, any) error {
 	return func(ctx context.Context, w http.ResponseWriter, v any) error {
-		res, _ := v.(*users.User)
+		res, _ := v.(*designtypes.User)
 		enc := encoder(ctx, w)
 		body := NewCreateResponseBody(res)
 		w.WriteHeader(http.StatusCreated)
@@ -353,7 +353,7 @@ func EncodeCreateError(encoder func(context.Context, http.ResponseWriter) goahtt
 // endpoint.
 func EncodeGetResponse(encoder func(context.Context, http.ResponseWriter) goahttp.Encoder) func(context.Context, http.ResponseWriter, any) error {
 	return func(ctx context.Context, w http.ResponseWriter, v any) error {
-		res, _ := v.(*users.User)
+		res, _ := v.(*designtypes.User)
 		enc := encoder(ctx, w)
 		body := NewGetResponseBody(res)
 		w.WriteHeader(http.StatusOK)
@@ -487,7 +487,7 @@ func EncodeGetError(encoder func(context.Context, http.ResponseWriter) goahttp.E
 // update endpoint.
 func EncodeUpdateResponse(encoder func(context.Context, http.ResponseWriter) goahttp.Encoder) func(context.Context, http.ResponseWriter, any) error {
 	return func(ctx context.Context, w http.ResponseWriter, v any) error {
-		res, _ := v.(*users.User)
+		res, _ := v.(*designtypes.User)
 		enc := encoder(ctx, w)
 		body := NewUpdateResponseBody(res)
 		w.WriteHeader(http.StatusOK)
@@ -772,7 +772,7 @@ func EncodeDeleteError(encoder func(context.Context, http.ResponseWriter) goahtt
 // users update_me endpoint.
 func EncodeUpdateMeResponse(encoder func(context.Context, http.ResponseWriter) goahttp.Encoder) func(context.Context, http.ResponseWriter, any) error {
 	return func(ctx context.Context, w http.ResponseWriter, v any) error {
-		res, _ := v.(*users.User)
+		res, _ := v.(*designtypes.User)
 		enc := encoder(ctx, w)
 		body := NewUpdateMeResponseBody(res)
 		w.WriteHeader(http.StatusOK)
@@ -1068,7 +1068,7 @@ func EncodeUpdatePasswordError(encoder func(context.Context, http.ResponseWriter
 // users get_sessions endpoint.
 func EncodeGetSessionsResponse(encoder func(context.Context, http.ResponseWriter) goahttp.Encoder) func(context.Context, http.ResponseWriter, any) error {
 	return func(ctx context.Context, w http.ResponseWriter, v any) error {
-		res, _ := v.(*users.GetSessionsResult)
+		res, _ := v.(*users.GetUserSessionResponse)
 		enc := encoder(ctx, w)
 		body := NewGetSessionsResponseBody(res)
 		w.WriteHeader(http.StatusOK)
@@ -1459,22 +1459,19 @@ func EncodeGetOrganizationsError(encoder func(context.Context, http.ResponseWrit
 	}
 }
 
-// marshalUsersUserToUserResponseBody builds a value of type *UserResponseBody
-// from a value of type *users.User.
-func marshalUsersUserToUserResponseBody(v *users.User) *UserResponseBody {
+// marshalDesigntypesUserToUserResponseBody builds a value of type
+// *UserResponseBody from a value of type *designtypes.User.
+func marshalDesigntypesUserToUserResponseBody(v *designtypes.User) *UserResponseBody {
 	res := &UserResponseBody{
-		ID:              v.ID,
-		Email:           v.Email,
-		FirstName:       v.FirstName,
-		LastName:        v.LastName,
+		Active:          v.Active,
 		EmailVerified:   v.EmailVerified,
-		PhoneNumber:     v.PhoneNumber,
 		PhoneVerified:   v.PhoneVerified,
 		ProfileImageURL: v.ProfileImageURL,
+		FirstName:       v.FirstName,
+		LastName:        v.LastName,
+		PhoneNumber:     v.PhoneNumber,
 		Locale:          v.Locale,
-		Active:          v.Active,
-		CreatedAt:       v.CreatedAt,
-		UpdatedAt:       v.UpdatedAt,
+		Email:           v.Email,
 	}
 	if v.Metadata != nil {
 		res.Metadata = make(map[string]any, len(v.Metadata))
@@ -1484,18 +1481,27 @@ func marshalUsersUserToUserResponseBody(v *users.User) *UserResponseBody {
 			res.Metadata[tk] = tv
 		}
 	}
+	{
+		var zero string
+		if res.Locale == zero {
+			res.Locale = "en"
+		}
+	}
 
 	return res
 }
 
-// marshalDesigntypesPaginationResponseToPaginationResponseResponseBody builds
-// a value of type *PaginationResponseResponseBody from a value of type
-// *designtypes.PaginationResponse.
-func marshalDesigntypesPaginationResponseToPaginationResponseResponseBody(v *designtypes.PaginationResponse) *PaginationResponseResponseBody {
-	res := &PaginationResponseResponseBody{
-		Total:  v.Total,
-		Offset: v.Offset,
-		Limit:  v.Limit,
+// marshalDesigntypesPaginationToPaginationResponseBody builds a value of type
+// *PaginationResponseBody from a value of type *designtypes.Pagination.
+func marshalDesigntypesPaginationToPaginationResponseBody(v *designtypes.Pagination) *PaginationResponseBody {
+	res := &PaginationResponseBody{
+		Offset:      v.Offset,
+		Limit:       v.Limit,
+		Total:       v.Total,
+		TotalPages:  v.TotalPages,
+		CurrentPage: v.CurrentPage,
+		HasNext:     v.HasNext,
+		HasPrevious: v.HasPrevious,
 	}
 
 	return res
@@ -1526,18 +1532,31 @@ func unmarshalUpdateUserRequestRequestBodyToDesigntypesUpdateUserRequest(v *Upda
 	return res
 }
 
-// marshalDesigntypesUserSessionResponseToUserSessionResponseResponseBody
-// builds a value of type *UserSessionResponseResponseBody from a value of type
-// *designtypes.UserSessionResponse.
-func marshalDesigntypesUserSessionResponseToUserSessionResponseResponseBody(v *designtypes.UserSessionResponse) *UserSessionResponseResponseBody {
-	res := &UserSessionResponseResponseBody{
-		ID:           v.ID,
-		DeviceID:     v.DeviceID,
-		IPAddress:    v.IPAddress,
-		UserAgent:    v.UserAgent,
-		Location:     v.Location,
-		LastActiveAt: v.LastActiveAt,
-		CreatedAt:    v.CreatedAt,
+// marshalDesigntypesSessionToSessionResponseBody builds a value of type
+// *SessionResponseBody from a value of type *designtypes.Session.
+func marshalDesigntypesSessionToSessionResponseBody(v *designtypes.Session) *SessionResponseBody {
+	res := &SessionResponseBody{
+		UserID:         v.UserID,
+		DeviceID:       v.DeviceID,
+		IPAddress:      v.IPAddress,
+		UserAgent:      v.UserAgent,
+		Location:       v.Location,
+		Token:          v.Token,
+		OrganizationID: v.OrganizationID,
+		IsActive:       v.IsActive,
+		LastActiveAt:   v.LastActiveAt,
+		ExpiresAt:      v.ExpiresAt,
+		ID:             v.ID,
+		CreatedAt:      v.CreatedAt,
+		UpdatedAt:      v.UpdatedAt,
+	}
+	if v.Metadata != nil {
+		res.Metadata = make(map[string]any, len(v.Metadata))
+		for key, val := range v.Metadata {
+			tk := key
+			tv := val
+			res.Metadata[tk] = tv
+		}
 	}
 
 	return res

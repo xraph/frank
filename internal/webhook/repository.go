@@ -3,13 +3,13 @@ package webhook
 import (
 	"context"
 
-	"github.com/google/uuid"
 	"github.com/juicycleff/frank/ent"
 	"github.com/juicycleff/frank/ent/organization"
 	"github.com/juicycleff/frank/ent/predicate"
 	"github.com/juicycleff/frank/ent/webhook"
 	"github.com/juicycleff/frank/ent/webhookevent"
 	"github.com/juicycleff/frank/pkg/errors"
+	"github.com/juicycleff/frank/pkg/utils"
 )
 
 // Repository provides access to webhook storage
@@ -80,10 +80,7 @@ func NewRepository(client *ent.Client) Repository {
 // Create creates a new webhook
 func (r *repository) Create(ctx context.Context, input RepositoryCreateInput) (*ent.Webhook, error) {
 	// Generate UUID
-	id, err := uuid.NewRandom()
-	if err != nil {
-		return nil, errors.Wrap(errors.CodeInternalServer, err, "failed to generate uuid")
-	}
+	id := utils.NewID()
 
 	// Check if organization exists
 	exists, err := r.client.Organization.

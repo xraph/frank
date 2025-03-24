@@ -10,6 +10,7 @@ package auth
 import (
 	"context"
 
+	designtypes "github.com/juicycleff/frank/gen/designtypes"
 	"goa.design/goa/v3/security"
 )
 
@@ -30,7 +31,7 @@ type Service interface {
 	// Verify email using token
 	VerifyEmail(context.Context, *VerifyEmailPayload) (res *VerifyEmailResult, err error)
 	// Get current user info
-	Me(context.Context, *MePayload) (res *User, err error)
+	Me(context.Context, *MePayload) (res *designtypes.User, err error)
 	// Generates a CSRF token
 	Csrf(context.Context, *CsrfPayload) (res *CSRFTokenResponse, err error)
 }
@@ -160,7 +161,7 @@ type LoginPayload struct {
 // LoginResponse is the result type of the auth service login method.
 type LoginResponse struct {
 	// Authenticated user
-	User *User
+	User *designtypes.User
 	// JWTAuth access token
 	Token string
 	// JWTAuth refresh token
@@ -275,36 +276,6 @@ type UnauthorizedError struct {
 	Details any
 	// Unique error ID
 	ID *string
-}
-
-// User is the result type of the auth service me method.
-type User struct {
-	// User ID
-	ID string
-	// User email
-	Email string
-	// User first name
-	FirstName *string
-	// User last name
-	LastName *string
-	// Whether email is verified
-	EmailVerified bool
-	// User phone number
-	PhoneNumber *string
-	// Whether phone is verified
-	PhoneVerified *bool
-	// URL to user's profile image
-	ProfileImageURL *string
-	// User's locale preference
-	Locale *string
-	// User metadata
-	Metadata map[string]any
-	// Whether account is active
-	Active bool
-	// Account creation timestamp
-	CreatedAt string
-	// Account last update timestamp
-	UpdatedAt string
 }
 
 // VerifyEmailPayload is the payload type of the auth service verify_email

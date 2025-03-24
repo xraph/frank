@@ -135,6 +135,16 @@ func FileServer(rootPath string, router chi.Router) http.Handler {
 			return
 		}
 
+		if len(r.URL.Path) >= 4 && r.URL.Path[:4] == "/v1" {
+			http.NotFound(w, r)
+			return
+		}
+
+		if len(r.URL.Path) >= 4 && strings.HasPrefix(r.URL.Path[:4], "/__") {
+			http.NotFound(w, r)
+			return
+		}
+
 		// Check if the path exists as a file in the dist directory
 		requestedPath := filepath.Join(rootPath, r.URL.Path)
 		if r.URL.Path != "/" && !strings.HasPrefix(r.URL.Path, "/_astro/") {

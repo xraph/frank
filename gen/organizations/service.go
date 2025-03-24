@@ -242,7 +242,7 @@ type ListMembersPayload struct {
 // list_members method.
 type ListMembersResult struct {
 	Data       []*OrganizationMemberResponse
-	Pagination *designtypes.PaginationResponse
+	Pagination *designtypes.Pagination
 }
 
 // ListPayload is the payload type of the organizations service list method.
@@ -259,7 +259,7 @@ type ListPayload struct {
 // ListResult is the result type of the organizations service list method.
 type ListResult struct {
 	Data       []*OrganizationResponse
-	Pagination *designtypes.PaginationResponse
+	Pagination *designtypes.Pagination
 }
 
 // Not found response

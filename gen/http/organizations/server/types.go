@@ -46,7 +46,7 @@ type EnableFeatureRequestBody struct {
 // HTTP response body.
 type ListResponseBody struct {
 	Data       []*OrganizationResponseResponseBody `form:"data" json:"data" xml:"data"`
-	Pagination *PaginationResponseResponseBody     `form:"pagination" json:"pagination" xml:"pagination"`
+	Pagination *PaginationResponseBody             `form:"pagination" json:"pagination" xml:"pagination"`
 }
 
 // CreateResponseBody is the type of the "organizations" service "create"
@@ -140,7 +140,7 @@ type UpdateResponseBody struct {
 // "list_members" endpoint HTTP response body.
 type ListMembersResponseBody struct {
 	Data       []*OrganizationMemberResponseResponseBody `form:"data" json:"data" xml:"data"`
-	Pagination *PaginationResponseResponseBody           `form:"pagination" json:"pagination" xml:"pagination"`
+	Pagination *PaginationResponseBody                   `form:"pagination" json:"pagination" xml:"pagination"`
 }
 
 // AddMemberResponseBody is the type of the "organizations" service
@@ -1157,15 +1157,22 @@ type OrganizationResponseResponseBody struct {
 	UpdatedAt string `form:"updated_at" json:"updated_at" xml:"updated_at"`
 }
 
-// PaginationResponseResponseBody is used to define fields on response body
-// types.
-type PaginationResponseResponseBody struct {
+// PaginationResponseBody is used to define fields on response body types.
+type PaginationResponseBody struct {
+	// Offset
+	Offset int `json:"offset"`
+	// Limit
+	Limit int `json:"limit"`
 	// Total number of items
-	Total int `form:"total" json:"total" xml:"total"`
-	// Current offset
-	Offset int `form:"offset" json:"offset" xml:"offset"`
-	// Current limit
-	Limit int `form:"limit" json:"limit" xml:"limit"`
+	Total int `json:"total"`
+	// Total number of pages
+	TotalPages int `json:"total_pages,totalPages"`
+	// Current page number
+	CurrentPage int `json:"current_page,currentPage"`
+	// Has next page
+	HasNext bool `json:"has_next,hasNext"`
+	// Has previous page
+	HasPrevious bool `json:"has_previous,hasPrevious"`
 }
 
 // OrganizationMemberResponseResponseBody is used to define fields on response
@@ -1282,7 +1289,7 @@ func NewListResponseBody(res *organizations.ListResult) *ListResponseBody {
 		body.Data = []*OrganizationResponseResponseBody{}
 	}
 	if res.Pagination != nil {
-		body.Pagination = marshalDesigntypesPaginationResponseToPaginationResponseResponseBody(res.Pagination)
+		body.Pagination = marshalDesigntypesPaginationToPaginationResponseBody(res.Pagination)
 	}
 	return body
 }
@@ -1381,7 +1388,7 @@ func NewListMembersResponseBody(res *organizations.ListMembersResult) *ListMembe
 		body.Data = []*OrganizationMemberResponseResponseBody{}
 	}
 	if res.Pagination != nil {
-		body.Pagination = marshalDesigntypesPaginationResponseToPaginationResponseResponseBody(res.Pagination)
+		body.Pagination = marshalDesigntypesPaginationToPaginationResponseBody(res.Pagination)
 	}
 	return body
 }

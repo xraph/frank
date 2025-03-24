@@ -1,8 +1,6 @@
 package schema
 
 import (
-	"time"
-
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
@@ -18,8 +16,6 @@ type Webhook struct {
 // Fields of the Webhook.
 func (Webhook) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("id").
-			Unique(),
 		field.String("name").
 			NotEmpty(),
 		field.String("url").
@@ -42,12 +38,6 @@ func (Webhook) Fields() []ent.Field {
 			Values("json", "form").
 			Default("json"),
 		entity.JSONMapField("metadata", true),
-		field.Time("created_at").
-			Default(time.Now).
-			Immutable(),
-		field.Time("updated_at").
-			Default(time.Now).
-			UpdateDefault(time.Now),
 	}
 }
 
@@ -67,5 +57,12 @@ func (Webhook) Edges() []ent.Edge {
 func (Webhook) Indexes() []ent.Index {
 	return []ent.Index{
 		index.Fields("organization_id"),
+	}
+}
+
+// Mixin of the Webhook.
+func (Webhook) Mixin() []ent.Mixin {
+	return []ent.Mixin{
+		ModelBaseMixin{},
 	}
 }

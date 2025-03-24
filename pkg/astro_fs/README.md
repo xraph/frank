@@ -1,19 +1,19 @@
-# Robust Go File Server for Astro
+# Advanced Astro File Server
 
 A high-performance, feature-rich file server specifically optimized for serving Astro builds with enhanced debugging, logging, and header support.
 
 ## Features
 
-- **Optimized for Astro builds**: Proper MIME type handling for all Astro-related file types
-- **High Performance**: File caching, ETags support, and pre-compressed content delivery
-- **Advanced Logging**: Structured logging with Zap, configurable rotation and retention policies
-- **SPA Support**: Option to serve index.html for client-side routing in Single Page Applications
-- **Security Features**: Protection against directory traversal attacks and proper header handling
-- **HTTPS Support**: Optional TLS configuration for secure connections
-- **CORS Support**: Configurable cross-origin resource sharing
-- **Debug Mode**: Directory listings and verbose logging when needed
-- **Docker Support**: Ready to deploy with the included Dockerfile
-- **Graceful Shutdown**: Properly handles termination signals
+- **Astro-Optimized**: Special handling for Astro's folder-based output structure with nested index.html files
+- **HTTP/2 Support**: Improved performance with multiplexing and header compression
+- **Advanced Compression**: Both Brotli and Gzip compression for smaller file transfers
+- **Intelligent Caching**: Content-hash detection, ETags, and optimized cache control headers
+- **Performance Metrics**: Built-in metrics endpoint for monitoring
+- **Smart Asset Preloading**: Automatic detection and preloading of critical resources
+- **Memory Management**: Configurable cache size with smart eviction policy
+- **Enhanced Directory Listings**: Beautiful, responsive directory listings in debug mode
+- **Logging**: Structured logging with rotation and retention policies
+- **Production-Ready**: Graceful shutdown, security headers, and more
 
 ## Installation
 
@@ -34,16 +34,6 @@ go build -o fileserver
 ./fileserver --dir /path/to/astro/dist --port 8080
 ```
 
-### Using Docker
-
-```bash
-# Build the Docker image
-docker build -t astro-fileserver .
-
-# Run the container
-docker run -p 8080:8080 -v /path/to/astro/dist:/app/dist astro-fileserver
-```
-
 ## Command-Line Options
 
 | Flag | Default | Description |
@@ -52,13 +42,19 @@ docker run -p 8080:8080 -v /path/to/astro/dist:/app/dist astro-fileserver
 | `--dir` | ./dist | Directory to serve files from |
 | `--cache` | 3600 | Cache TTL in seconds (0 disables cache) |
 | `--gzip` | true | Enable gzip compression |
-| `--cors` | true | Enable CORS |
+| `--brotli` | true | Enable Brotli compression |
 | `--log` | fileserver.log | Log file path (empty for stdout) |
 | `--debug` | false | Enable debug mode |
 | `--cert` | "" | SSL certificate file path |
 | `--key` | "" | SSL key file path |
 | `--spa` | true | Enable SPA mode (serve index.html for 404s) |
+| `--astro` | true | Enable special handling for Astro's output structure |
 | `--index` | index.html | Default index file name |
+| `--http2` | true | Enable HTTP/2 support |
+| `--preload` | true | Enable preloading of critical assets |
+| `--asset-prefix` | _astro | Prefix for static assets |
+| `--max-cache-size` | 100 | Maximum cache size in MB |
+| `--metrics` | true | Enable performance metrics endpoint |
 | `--log-max-size` | 10 | Maximum size of log files in MB |
 | `--log-max-backups` | 3 | Maximum number of log file backups |
 | `--log-max-age` | 28 | Maximum age of log file backups in days |
@@ -72,71 +68,56 @@ docker run -p 8080:8080 -v /path/to/astro/dist:/app/dist astro-fileserver
 ./fileserver --dir ./dist --port 3000
 ```
 
-### With HTTPS
+### Production Mode
 
 ```bash
-./fileserver --dir ./dist --port 443 --cert ./cert.pem --key ./key.pem
+./fileserver --dir ./dist --cache 86400 --max-cache-size 500 --log /var/log/fileserver.log
 ```
 
-### Debug Mode with Console Logging
+### Development Mode
 
 ```bash
-./fileserver --dir ./dist --debug --log ""
-```
-
-### Production Mode with Optimized Settings
-
-```bash
-./fileserver --dir ./dist --cache 86400 --gzip --spa --log /var/log/fileserver.log --log-max-size 100
-```
-
-## Integration with Astro
-
-This file server is designed to work seamlessly with Astro builds. After building your Astro project with `npm run build`, you can serve the generated files from the `dist` directory:
-
-```bash
-./fileserver --dir /path/to/astro/project/dist
-```
-
-## Advanced Configuration
-
-### HTTPS Setup
-
-To enable HTTPS, generate a certificate and key:
-
-```bash
-openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout key.pem -out cert.pem
-```
-
-Then run the server with the certificate and key:
-
-```bash
-./fileserver --cert ./cert.pem --key ./key.pem
-```
-
-### Docker Compose Example
-
-```yaml
-version: '3'
-services:
-  fileserver:
-    build: .
-    ports:
-      - "8080:8080"
-    volumes:
-      - ./dist:/app/dist
-      - ./logs:/logs
-    command: --dir /app/dist --log /logs/fileserver.log
+./fileserver --dir ./dist --debug --log-format console --log ""
 ```
 
 ## Performance Optimization
 
 The server implements several performance optimizations:
 
-1. **File Caching**: Files are cached in memory to reduce disk I/O
-2. **ETags**: Proper ETag handling for client-side caching
-3. **Pre-compression**: Files are pre-compressed when possible
-4. **Conditional GET**: Supports If-None-Match headers for 304 responses
+1. **Content-Hash Detection**: Automatically detects Astro's content-hashed assets and applies optimal caching
+2. **Compression**: Uses Brotli (with fallback to gzip) for more efficient compression
+3. **HTTP/2**: Modern protocol with multiplexing for faster loading
+4. **Preloading**: Automatic detection and preloading of critical assets
+5. **Memory Management**: Smart cache eviction based on access patterns
+6. **Optimized Headers**: Properly configured cache control and ETag handling
+
+## Metrics and Monitoring
+
+Access the `/metrics` endpoint to view server performance statistics:
+
+- Cache hit rates
+- Response times
+- Top requested routes
+- Compression savings
+- Memory usage
+
+## Integration with Astro
+
+This file server is designed to work seamlessly with Astro builds. It automatically detects and optimizes for Astro's output directory structure where each route has its own directory with an index.html file.
+
+```
+dist/
+├── _astro/
+│   ├── client.a1b2c3d4.js
+│   └── styles.e5f6g7h8.css
+├── index.html
+├── login/
+│   └── index.html
+├── profile/
+│   └── index.html
+└── reset-password/
+    └── index.html
+```
 
 ## License
 

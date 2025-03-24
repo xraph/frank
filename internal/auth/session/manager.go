@@ -2,7 +2,6 @@ package session
 
 import (
 	"context"
-	"net/http"
 	"time"
 
 	"github.com/juicycleff/frank/config"
@@ -11,7 +10,6 @@ import (
 	"github.com/juicycleff/frank/pkg/crypto"
 	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/juicycleff/frank/pkg/logging"
-	"github.com/juicycleff/frank/pkg/utils"
 )
 
 // Manager handles session operations
@@ -32,27 +30,10 @@ func NewManager(client *ent.Client, cfg *config.Config, logger logging.Logger, s
 	}
 }
 
-// SessionInfo contains information about a session
-type SessionInfo struct {
-	ID             string                 `json:"id"`
-	UserID         string                 `json:"user_id"`
-	Token          string                 `json:"token,omitempty"` // Only included when creating a session
-	IPAddress      string                 `json:"ip_address,omitempty"`
-	UserAgent      string                 `json:"user_agent,omitempty"`
-	DeviceID       string                 `json:"device_id,omitempty"`
-	Location       string                 `json:"location,omitempty"`
-	OrganizationID string                 `json:"organization_id,omitempty"`
-	ExpiresAt      time.Time              `json:"expires_at"`
-	CreatedAt      time.Time              `json:"created_at"`
-	LastActiveAt   time.Time              `json:"last_active_at"`
-	IsActive       bool                   `json:"is_active"`
-	Metadata       map[string]interface{} `json:"metadata,omitempty"`
-}
-
 // CreateSession creates a new session for a user
-func (m *Manager) CreateSession(ctx context.Context, userID string, options ...SessionOption) (*SessionInfo, error) {
+func (m *Manager) CreateSession(ctx context.Context, userID string, options ...Option) (*SessionInfo, error) {
 	// Create a default session with options
-	session := &SessionInfo{
+	sess := &SessionInfo{
 		UserID:    userID,
 		IsActive:  true,
 		ExpiresAt: time.Now().Add(m.config.Auth.SessionDuration),
@@ -60,7 +41,7 @@ func (m *Manager) CreateSession(ctx context.Context, userID string, options ...S
 
 	// Apply options
 	for _, option := range options {
-		option(session)
+		option(sess)
 	}
 
 	// Generate a secure token
@@ -74,15 +55,14 @@ func (m *Manager) CreateSession(ctx context.Context, userID string, options ...S
 		SetUserID(userID).
 		SetToken(token).
 		SetActive(true).
-		SetExpiresAt(session.ExpiresAt).
+		SetExpiresAt(sess.ExpiresAt).
 		SetLastActiveAt(time.Now()).
-		SetNillableIPAddress(nilString(session.IPAddress)).
-		SetNillableUserAgent(nilString(session.UserAgent)).
-		SetNillableDeviceID(nilString(session.DeviceID)).
-		SetNillableLocation(nilString(session.Location)).
-		SetNillableOrganizationID(nilString(session.OrganizationID)).
+		SetNillableIPAddress(nilString(sess.IPAddress)).
+		SetNillableUserAgent(nilString(sess.UserAgent)).
+		SetNillableDeviceID(nilString(sess.DeviceID)).
+		SetNillableLocation(nilString(sess.Location)).
+		SetNillableOrganizationID(nilString(sess.OrganizationID)).
 		Save(ctx)
-
 	if err != nil {
 		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to create session")
 	}
@@ -90,17 +70,23 @@ func (m *Manager) CreateSession(ctx context.Context, userID string, options ...S
 	// Store the session in the cache if using a cache store
 	if m.store != nil {
 		// Create a session object for the store
-		storeSession := &Session{
+		storeSession := &SessionInfo{
 			ID:             sessionEntity.ID,
 			UserID:         userID,
-			Token:          token,
-			ExpiresAt:      session.ExpiresAt,
-			OrganizationID: session.OrganizationID,
+			Token:          token, // Include token in response
+			IPAddress:      sess.IPAddress,
+			UserAgent:      sess.UserAgent,
+			DeviceID:       sess.DeviceID,
+			Location:       sess.Location,
+			OrganizationID: sess.OrganizationID,
+			ExpiresAt:      sess.ExpiresAt,
+			CreatedAt:      sessionEntity.CreatedAt,
+			LastActiveAt:   sessionEntity.LastActiveAt,
 			IsActive:       true,
 		}
 
 		// Store the session with an expiration time
-		if err := m.store.StoreSession(ctx, token, storeSession, m.config.Auth.SessionDuration); err != nil {
+		if _, err := m.store.StoreSession(ctx, token, storeSession, m.config.Auth.SessionDuration); err != nil {
 			m.logger.Error("Failed to store session in cache",
 				logging.String("session_id", sessionEntity.ID),
 				logging.Error(err),
@@ -114,12 +100,12 @@ func (m *Manager) CreateSession(ctx context.Context, userID string, options ...S
 		ID:             sessionEntity.ID,
 		UserID:         userID,
 		Token:          token, // Include token in response
-		IPAddress:      session.IPAddress,
-		UserAgent:      session.UserAgent,
-		DeviceID:       session.DeviceID,
-		Location:       session.Location,
-		OrganizationID: session.OrganizationID,
-		ExpiresAt:      session.ExpiresAt,
+		IPAddress:      sess.IPAddress,
+		UserAgent:      sess.UserAgent,
+		DeviceID:       sess.DeviceID,
+		Location:       sess.Location,
+		OrganizationID: sess.OrganizationID,
+		ExpiresAt:      sess.ExpiresAt,
 		CreatedAt:      sessionEntity.CreatedAt,
 		LastActiveAt:   sessionEntity.LastActiveAt,
 		IsActive:       true,
@@ -129,6 +115,7 @@ func (m *Manager) CreateSession(ctx context.Context, userID string, options ...S
 // GetSession retrieves a session by token
 func (m *Manager) GetSession(ctx context.Context, token string) (*SessionInfo, error) {
 	// Try to get the session from the cache first
+
 	if m.store != nil {
 		cachedSession, err := m.store.GetSession(ctx, token)
 		if err == nil && cachedSession != nil {
@@ -151,6 +138,12 @@ func (m *Manager) GetSession(ctx context.Context, token string) (*SessionInfo, e
 				ExpiresAt:      cachedSession.ExpiresAt,
 				LastActiveAt:   cachedSession.LastActiveAt,
 				IsActive:       cachedSession.IsActive,
+				Metadata:       cachedSession.Metadata,
+				IPAddress:      cachedSession.IPAddress,
+				UserAgent:      cachedSession.UserAgent,
+				DeviceID:       cachedSession.DeviceID,
+				Location:       cachedSession.Location,
+				CreatedAt:      cachedSession.CreatedAt,
 			}, nil
 		}
 	}
@@ -186,20 +179,26 @@ func (m *Manager) GetSession(ctx context.Context, token string) (*SessionInfo, e
 
 	// If using a cache store, add this session to the cache
 	if m.store != nil {
-		storeSession := &Session{
+		storeSession := &SessionInfo{
 			ID:             sessionEntity.ID,
 			UserID:         sessionEntity.UserID,
 			Token:          token,
-			ExpiresAt:      sessionEntity.ExpiresAt,
+			IPAddress:      sessionEntity.IPAddress,
+			UserAgent:      sessionEntity.UserAgent,
+			DeviceID:       sessionEntity.DeviceID,
+			Location:       sessionEntity.Location,
 			OrganizationID: sessionEntity.OrganizationID,
-			IsActive:       sessionEntity.Active,
+			ExpiresAt:      sessionEntity.ExpiresAt,
+			CreatedAt:      sessionEntity.CreatedAt,
 			LastActiveAt:   time.Now(),
+			IsActive:       sessionEntity.Active,
+			Metadata:       sessionEntity.Metadata,
 		}
 
 		// Calculate remaining expiration time
 		expiresIn := sessionEntity.ExpiresAt.Sub(time.Now())
 		if expiresIn > 0 {
-			_ = m.store.StoreSession(ctx, token, storeSession, expiresIn)
+			_, _ = m.store.StoreSession(ctx, token, storeSession, expiresIn)
 		}
 	}
 
@@ -216,6 +215,7 @@ func (m *Manager) GetSession(ctx context.Context, token string) (*SessionInfo, e
 		CreatedAt:      sessionEntity.CreatedAt,
 		LastActiveAt:   sessionEntity.LastActiveAt,
 		IsActive:       sessionEntity.Active,
+		Metadata:       sessionEntity.Metadata,
 	}, nil
 }
 
@@ -295,7 +295,10 @@ func (m *Manager) RevokeUserSessions(ctx context.Context, userID string) error {
 }
 
 // GetUserSessions gets all active sessions for a user
-func (m *Manager) GetUserSessions(ctx context.Context, userID string) ([]*SessionInfo, error) {
+func (m *Manager) GetUserSessions(
+	ctx context.Context,
+	userID string,
+) ([]*SessionInfo, error) {
 	// Get all active sessions for the user
 	sessions, err := m.client.Session.Query().
 		Where(
@@ -323,6 +326,7 @@ func (m *Manager) GetUserSessions(ctx context.Context, userID string) ([]*Sessio
 			CreatedAt:      s.CreatedAt,
 			LastActiveAt:   s.LastActiveAt,
 			IsActive:       s.Active,
+			Metadata:       s.Metadata,
 		})
 	}
 
@@ -440,122 +444,4 @@ func nilString(s string) *string {
 		return nil
 	}
 	return &s
-}
-
-// SessionOption is a function that configures a session
-type SessionOption func(*SessionInfo)
-
-// WithIPAddress sets the IP address for a session
-func WithIPAddress(ipAddress string) SessionOption {
-	return func(s *SessionInfo) {
-		s.IPAddress = ipAddress
-	}
-}
-
-// WithUserAgent sets the user agent for a session
-func WithUserAgent(userAgent string) SessionOption {
-	return func(s *SessionInfo) {
-		s.UserAgent = userAgent
-	}
-}
-
-// WithDeviceID sets the device ID for a session
-func WithDeviceID(deviceID string) SessionOption {
-	return func(s *SessionInfo) {
-		s.DeviceID = deviceID
-	}
-}
-
-// WithLocation sets the location for a session
-func WithLocation(location string) SessionOption {
-	return func(s *SessionInfo) {
-		s.Location = location
-	}
-}
-
-// WithOrganizationID sets the organization ID for a session
-func WithOrganizationID(organizationID string) SessionOption {
-	return func(s *SessionInfo) {
-		s.OrganizationID = organizationID
-	}
-}
-
-// WithExpiration sets the expiration time for a session
-func WithExpiration(duration time.Duration) SessionOption {
-	return func(s *SessionInfo) {
-		s.ExpiresAt = time.Now().Add(duration)
-	}
-}
-
-// WithMetadata sets metadata for a session
-func WithMetadata(metadata map[string]interface{}) SessionOption {
-	return func(s *SessionInfo) {
-		s.Metadata = metadata
-	}
-}
-
-// Middleware creates a middleware that validates sessions
-func (m *Manager) Middleware() func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// Extract the token from the request
-			token, err := utils.GetBearerToken(r)
-			if err != nil {
-				utils.RespondError(w, errors.New(errors.CodeUnauthorized, "missing or invalid session token"))
-				return
-			}
-
-			// Validate the session
-			session, err := m.GetSession(r.Context(), token)
-			if err != nil {
-				utils.RespondError(w, errors.New(errors.CodeUnauthorized, "invalid or expired session"))
-				return
-			}
-
-			// Add session info to context
-			ctx := context.WithValue(r.Context(), contextKey("session"), session)
-			ctx = context.WithValue(ctx, contextKey("user_id"), session.UserID)
-
-			// Add organization ID to context if present
-			if session.OrganizationID != "" {
-				ctx = context.WithValue(ctx, contextKey("organization_id"), session.OrganizationID)
-			}
-
-			// Call the next handler with the updated context
-			next.ServeHTTP(w, r.WithContext(ctx))
-		})
-	}
-}
-
-// contextKey is a type for context keys specific to the session package
-type contextKey string
-
-// Context keys
-const (
-	// SessionKey is the key for the session in the context
-	SessionKey = contextKey("session")
-
-	// UserIDKey is the key for the user ID in the context
-	UserIDKey = contextKey("user_id")
-
-	// OrganizationIDKey is the key for the organization ID in the context
-	OrganizationIDKey = contextKey("organization_id")
-)
-
-// FromContext extracts session information from the context
-func FromContext(ctx context.Context) (*SessionInfo, bool) {
-	session, ok := ctx.Value(SessionKey).(*SessionInfo)
-	return session, ok
-}
-
-// UserIDFromContext extracts the user ID from the context
-func UserIDFromContext(ctx context.Context) (string, bool) {
-	id, ok := ctx.Value(UserIDKey).(string)
-	return id, ok
-}
-
-// OrganizationIDFromContext extracts the organization ID from the context
-func OrganizationIDFromContext(ctx context.Context) (string, bool) {
-	id, ok := ctx.Value(OrganizationIDKey).(string)
-	return id, ok
 }

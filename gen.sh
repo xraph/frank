@@ -387,7 +387,7 @@ GORUN=\$(GOCMD) run
 GOTEST=\$(GOCMD) test
 GOGET=\$(GOCMD) get
 BINARY_NAME=frank
-MAIN_PATH=./cmd/server
+MAIN_PATH=./cmd/frank
 
 all: generate test lint build
 
@@ -436,7 +436,7 @@ COPY . .
 RUN go run -mod=mod entgo.io/ent/cmd/ent generate ./ent/schema
 
 # Build the application
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o frank ./cmd/server
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o frank ./cmd/frank
 
 # Final stage
 FROM alpine:latest

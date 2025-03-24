@@ -1,8 +1,6 @@
 package schema
 
 import (
-	"time"
-
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
@@ -17,8 +15,6 @@ type OAuthToken struct {
 // Fields of the OAuthToken.
 func (OAuthToken) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("id").
-			Unique(),
 		field.String("access_token").
 			Unique().
 			NotEmpty().
@@ -53,12 +49,6 @@ func (OAuthToken) Fields() []ent.Field {
 			Optional(),
 		field.String("user_agent").
 			Optional(),
-		field.Time("created_at").
-			Default(time.Now).
-			Immutable(),
-		field.Time("updated_at").
-			Default(time.Now).
-			UpdateDefault(time.Now),
 	}
 }
 
@@ -88,5 +78,12 @@ func (OAuthToken) Indexes() []ent.Index {
 		index.Fields("user_id"),
 		index.Fields("organization_id"),
 		index.Fields("expires_at"),
+	}
+}
+
+// Mixin of the OAuthToken.
+func (OAuthToken) Mixin() []ent.Mixin {
+	return []ent.Mixin{
+		ModelBaseMixin{},
 	}
 }

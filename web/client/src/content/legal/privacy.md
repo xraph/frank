@@ -58,11 +58,11 @@ You can access and update certain information about your account through your ac
 - Request deletion of your personal information (subject to certain exceptions)
 - Enable or disable certain features, such as two-factor authentication
 
-## Data Security
+## Details Security
 
 We implement appropriate technical and organizational measures to protect the security of your personal information. However, no method of transmission over the Internet or electronic storage is 100% secure, so we cannot guarantee absolute security.
 
-## International Data Transfers
+## International Details Transfers
 
 Your information may be transferred to, and processed in, countries other than the country in which you reside. These countries may have data protection laws that are different from the laws of your country.
 

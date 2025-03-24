@@ -6,16 +6,28 @@ GOBUILD=$(GOCMD) build
 GORUN=$(GOCMD) run
 GOTEST=$(GOCMD) test
 GOGET=$(GOCMD) get
+
 BINARY_NAME=frank
-MAIN_PATH=./cmd/server
+MAIN_PATH=./cmd/frank
+CLI_BINARY_NAME=frank_cli
+CLI_MAIN_PATH=./cmd/frank_cli
+
+COMMIT_FLAGS=-ldflags="-X 'github.com/juicycleff/frank/cmd/frank/main.buildDate=$(date -u +%Y%m%d%H%M%S)' -X 'github.com/juicycleff/frank/cmd/frank/main.gitCommit=$(git rev-parse --short HEAD)'"
 
 all: generate test lint build
 
 build:
+	$(GOBUILD) $(COMMIT_FLAGS) -o ./bin/$(BINARY_NAME) $(MAIN_PATH)
+
+#build-cli:
+#	$(GOBUILD) -o ./bin/$(CLI_BINARY_NAME) $(CLI_MAIN_PATH)
+
+build-all:
 	$(GOBUILD) -o ./bin/$(BINARY_NAME) $(MAIN_PATH)
+	$(GOBUILD) -o ./bin/$(CLI_BINARY_NAME) $(CLI_MAIN_PATH)
 
 run:
-	$(GORUN) $(MAIN_PATH)
+	$(GORUN) $(COMMIT_FLAGS)  -o ./tmp/frank $(MAIN_PATH)
 
 test:
 	$(GOTEST) -v ./...
@@ -24,10 +36,10 @@ lint:
 	golangci-lint run
 
 generate-db:
-	go run -mod=mod ent/entc.go
+	go generate ./ent
 
 swag:
-	swag init --output api/swagger -g cmd/server/main.go --parseDependency --overridesFile .swaggo --generatedTime --parseInternal
+	swag2op init --output api/swagger -g cmd/server/main.go --parseDependency --overridesFile .swaggo --generatedTime --parseInternal
 
 migrate:
 	./scripts/migrate.sh
@@ -56,6 +68,9 @@ setup:
 
 generate:
 	sh scripts/generate.sh
+
+generate-goa:
+	goa gen github.com/juicycleff/frank/design -o .
 
 setup-client:
 	cd web/js-sdk && pnpm i && cd ../..
@@ -99,7 +114,7 @@ install-tools:
 # Build the CLI tool
 build-cli:
 	@echo "Building OpenAPI CLI generator..."
-	go build -o bin/openapi-generator cmd/openapi-generator/main.go
+	$(GOBUILD) -o ./bin/$(CLI_BINARY_NAME) $(CLI_MAIN_PATH)
 
 # Generate OpenAPI specification
 generate-openapi: build-cli

@@ -1,33 +1,12 @@
 package schema
 
 import (
-	"time"
-
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
-	"entgo.io/ent/schema/mixin"
 	"github.com/juicycleff/frank/pkg/entity"
 )
-
-// TimeMixin implements the ent.Mixin for sharing
-// time fields with package schemas.
-type TimeMixin struct {
-	mixin.Schema
-}
-
-// Fields of the TimeMixin.
-func (TimeMixin) Fields() []ent.Field {
-	return []ent.Field{
-		field.Time("created_at").
-			Default(time.Now).
-			Immutable(),
-		field.Time("updated_at").
-			Default(time.Now).
-			UpdateDefault(time.Now),
-	}
-}
 
 // User holds the schema definition for the User entity.
 type User struct {
@@ -37,8 +16,6 @@ type User struct {
 // Fields of the User.
 func (User) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("id").
-			Unique(),
 		field.String("email").
 			NotEmpty().
 			Unique(),
@@ -70,12 +47,6 @@ func (User) Fields() []ent.Field {
 			Optional(),
 		field.String("locale").
 			Default("en"),
-		field.Time("created_at").
-			Default(time.Now).
-			Immutable(),
-		field.Time("updated_at").
-			Default(time.Now).
-			UpdateDefault(time.Now),
 	}
 }
 
@@ -101,5 +72,12 @@ func (User) Indexes() []ent.Index {
 		index.Fields("email"),
 		index.Fields("phone_number").
 			Unique(),
+	}
+}
+
+// Mixin of the User.
+func (User) Mixin() []ent.Mixin {
+	return []ent.Mixin{
+		ModelBaseMixin{},
 	}
 }
