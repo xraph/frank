@@ -9,7 +9,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/pkg/logging"
-	"github.com/juicycleff/frank/web"
 )
 
 // WebUIHandler serves the web UI
@@ -73,27 +72,27 @@ func (h *WebUIHandler) serveEmbeddedFiles(w http.ResponseWriter, r *http.Request
 
 	h.logger.Debug("Serving embedded file", logging.String("path", fsPath))
 
-	// If the path doesn't exist, serve index.html for client-side routing
-	content, err := web.WebUI.ReadFile(fsPath)
-	if err != nil {
-		// For client-side routing, serve the index.html for any unrecognized path
-		indexPath := filepath.Join("client/build/client", "index.html")
-		h.logger.Debug("File not found, serving index.html instead",
-			logging.String("requested", fsPath),
-			logging.String("serving", indexPath))
-
-		content, err = web.WebUI.ReadFile(indexPath)
-		if err != nil {
-			h.logger.Error("Failed to read index.html", logging.Error(err))
-			http.Error(w, "Not found", http.StatusNotFound)
-			return
-		}
-	}
+	// // If the path doesn't exist, serve index.html for client-side routing
+	// content, err := web.WebUI.ReadFile(fsPath)
+	// if err != nil {
+	// 	// For client-side routing, serve the index.html for any unrecognized path
+	// 	indexPath := filepath.Join("client/build/client", "index.html")
+	// 	h.logger.Debug("File not found, serving index.html instead",
+	// 		logging.String("requested", fsPath),
+	// 		logging.String("serving", indexPath))
+	//
+	// 	content, err = web.WebUI.ReadFile(indexPath)
+	// 	if err != nil {
+	// 		h.logger.Error("Failed to read index.html", logging.Error(err))
+	// 		http.Error(w, "Not found", http.StatusNotFound)
+	// 		return
+	// 	}
+	// }
 
 	// Set the content type based on the file extension
 	contentType := getContentType(path)
 	w.Header().Set("Content-Type", contentType)
-	w.Write(content)
+	// w.Write(content)
 }
 
 // getContentType determines the content type based on file extension
