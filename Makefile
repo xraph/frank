@@ -12,12 +12,15 @@ MAIN_PATH=./cmd/frank
 CLI_BINARY_NAME=frank_cli
 CLI_MAIN_PATH=./cmd/frank_cli
 
-COMMIT_FLAGS=-ldflags="-X 'github.com/juicycleff/frank/cmd/frank/main.buildDate=$(date -u +%Y%m%d%H%M%S)' -X 'github.com/juicycleff/frank/cmd/frank/main.gitCommit=$(git rev-parse --short HEAD)'"
+COMMIT_FLAGS=-ldflags="-s -w -X 'github.com/juicycleff/frank/cmd/frank/main.buildDate=$(date -u +%Y%m%d%H%M%S)' -X 'github.com/juicycleff/frank/cmd/frank/main.gitCommit=$(git rev-parse --short HEAD)'"
 
 all: generate test lint build
 
 build:
 	$(GOBUILD) $(COMMIT_FLAGS) -o ./bin/$(BINARY_NAME) $(MAIN_PATH)
+
+build-prod:
+	make generate-db & $(GOBUILD) $(COMMIT_FLAGS) -o ./bin/$(BINARY_NAME) $(MAIN_PATH)
 
 #build-cli:
 #	$(GOBUILD) -o ./bin/$(CLI_BINARY_NAME) $(CLI_MAIN_PATH)
