@@ -20,7 +20,7 @@ build:
 	$(GOBUILD) $(COMMIT_FLAGS) -o ./bin/$(BINARY_NAME) $(MAIN_PATH)
 
 build-client-prod:
-	npm install -g pnpm@latest-10 && cd web/client && pnpm i && pnpm build && cd ../..
+	npm install -g pnpm@latest-10 && cd web/sdk && pnpm i && pnpm build && cd ../client && pnpm i && pnpm build && cd ../..
 
 build-prod:
 	make generate-db & $(GOBUILD) -a -installsuffix cgo $(COMMIT_FLAGS) -o ./bin/$(BINARY_NAME) $(MAIN_PATH)
