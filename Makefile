@@ -19,6 +19,9 @@ all: generate test lint build
 build:
 	$(GOBUILD) $(COMMIT_FLAGS) -o ./bin/$(BINARY_NAME) $(MAIN_PATH)
 
+build-client-prod:
+	curl -fsSL https://get.pnpm.io/install.sh | sh - && cd web/client && pnpm i && pnpm build && cd ../..
+
 build-prod:
 	make generate-db & $(GOBUILD) -a -installsuffix cgo $(COMMIT_FLAGS) -o ./bin/$(BINARY_NAME) $(MAIN_PATH)
 
@@ -56,7 +59,7 @@ ngrok:
 
 # Run the web client development server
 dev-client:
-	cd web/client && npm run dev
+	cd web/client && pnpm run dev
 
 # Run both backend and frontend in development mode
 dev-all:

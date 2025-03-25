@@ -1,4 +1,12 @@
-import {QueryClient} from "frank-sdk/react";
+import {QueryClient} from "@tanstack/react-query";
+
+import {client} from "sdk";
+
+client.setConfig({
+    baseUrl: import.meta.env.PUBLIC_FRANK_ENDPOINT,
+    credentials: "include",
+})
+
 
 export const queryClient = new QueryClient({
     defaultOptions: {

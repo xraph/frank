@@ -1,5 +1,5 @@
 import {defineMiddleware, sequence} from "astro:middleware";
-import {frankApi} from "@/client";
+import {authMe} from "sdk";
 
 const publicRoutes = [
     "/login",
@@ -14,8 +14,8 @@ const publicRoutes = [
 const auth = defineMiddleware(async (context, next) => {
     try {
         context.locals.isLoggedIn = false
-        const user = await frankApi.auth.authMe()
-        if (user.status === 200) {
+        const user = await authMe()
+        if (user.response.ok) {
             context.locals.user = user.data
             context.locals.isLoggedIn = true
         }

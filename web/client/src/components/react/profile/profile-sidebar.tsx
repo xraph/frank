@@ -1,12 +1,20 @@
 "use client"
 
 import * as React from "react"
-import type {User} from "frank-sdk"
-import {Bell, CreditCard, Key, Lock, LogOut, Mail, Settings, Shield, UserIcon,} from "lucide-react"
+import type {User} from "sdk"
+import {Bell, Lock, Mail, Shield, UserIcon,} from "lucide-react"
 import {NavProfile} from "./nav-profile"
 // import {TeamSwitcher} from "@/components/react/team-switcher"
-import {Sidebar, SidebarContent, SidebarFooter, SidebarRail, useSidebar,} from "@/components/react/ui/sidebar"
+import {
+    Sidebar,
+    SidebarContent,
+    SidebarFooter,
+    SidebarHeader,
+    SidebarRail,
+    useSidebar,
+} from "@/components/react/ui/sidebar"
 import {NavUser} from "./nav-user"
+import {Logo} from "@/components/react/logo.tsx";
 
 // This is sample data.
 const data = {
@@ -17,14 +25,9 @@ const data = {
     },
     projects: [
         {
-            title: "Profile",
+            title: "Account",
             href: "/profile",
             icon: UserIcon,
-        },
-        {
-            title: "Account",
-            href: "/profile/account",
-            icon: Settings,
         },
         {
             title: "Security",
@@ -37,29 +40,14 @@ const data = {
             icon: Lock,
         },
         {
-            title: "API Keys",
-            href: "/profile/api-keys",
-            icon: Key,
-        },
-        {
             title: "Notifications",
             href: "/profile/notifications",
             icon: Bell,
         },
         {
-            title: "Billing",
-            href: "/profile/billing",
-            icon: CreditCard,
-        },
-        {
             title: "Email",
             href: "/profile/email",
             icon: Mail,
-        },
-        {
-            title: "Logout",
-            href: "/profile/logout",
-            icon: LogOut,
         },
     ],
 }
@@ -69,9 +57,14 @@ export function ProfileSidebar({ ...props }: React.ComponentProps<typeof Sidebar
 
     return (
         <Sidebar collapsible="icon" {...props}>
-            {/*<SidebarHeader>*/}
-            {/*    <TeamSwitcher teams={data.teams} />*/}
-            {/*</SidebarHeader>*/}
+            <SidebarHeader>
+                <div className="flex h-8 items-center space-x-3">
+                    <Logo className="h-8 w-8" />
+                    <p className="text-md font-bold text-muted-foreground">
+                        Frank Auth
+                    </p>
+                </div>
+            </SidebarHeader>
             <SidebarContent>
                 <NavProfile paths={data.projects} />
             </SidebarContent>

@@ -2,7 +2,6 @@
 
 import type React from "react"
 import {useState} from "react"
-import {useAuthMe, useUsersUpdateMe} from "frank-sdk/react"
 import {Button} from "@/components/react/ui/button"
 import {Input} from "@/components/react/ui/input"
 import {Label} from "@/components/react/ui/label"
@@ -13,14 +12,20 @@ import {AlertCircle, CheckCircle2, Upload} from "lucide-react"
 import {Alert, AlertDescription, AlertTitle} from "@/components/react/ui/alert"
 import {Switch} from "@/components/react/ui/switch"
 import {Separator} from "@/components/react/ui/separator"
+import {useMutation, useQuery} from "@tanstack/react-query";
+import {authMeOptions, usersUpdateMeMutation} from "sdk/react"
 
 export function ProfileForm() {
     const [isLoading, setIsLoading] = useState(false)
     const [success, setSuccess] = useState("")
     const [error, setError] = useState("")
 
-    const {data, isLoading: userIsLoading} = useAuthMe()
-    const updateMe = useUsersUpdateMe()
+    const {data: user, isLoading: isUserLoading} = useQuery({
+        ...authMeOptions({}),
+    })
+    const updateMe = useMutation({
+        ...usersUpdateMeMutation(),
+    })
 
     async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault()
@@ -41,15 +46,13 @@ export function ProfileForm() {
         setSuccess("")
 
         try {
-            const o = await updateMe.mutateAsync({
-                data: {
-                    ...payload,
-                }
+            await updateMe.mutateAsync({
+                body: payload,
             })
-            if (o.status === 200) {
+            if (updateMe.isSuccess) {
                 setSuccess("Your profile has been updated successfully.")
             } else {
-                setError(o.data?.message)
+                setError(updateMe.error?.message ?? '')
             }
         } catch (e) {
             setError(e?.message)
@@ -58,8 +61,13 @@ export function ProfileForm() {
     }
 
 
-    if (userIsLoading || !data?.data) {
+    if (isUserLoading) {
         return <div>Loading...</div>
+    }
+
+
+    if (!user) {
+        return <div>Error...</div>
     }
 
     return (
@@ -99,17 +107,17 @@ export function ProfileForm() {
                                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                     <div className="space-y-2">
                                         <Label htmlFor="first-name">First name</Label>
-                                        <Input id="first-name" name="first-name" defaultValue={data?.data?.first_name} disabled={isLoading} />
+                                        <Input id="first-name" name="first-name" defaultValue={user.first_name} disabled={isLoading} />
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="last-name">Last name</Label>
-                                        <Input id="last-name" name="last-name" defaultValue={data?.data?.last_name} disabled={isLoading} />
+                                        <Input id="last-name" name="last-name" defaultValue={user.last_name} disabled={isLoading} />
                                     </div>
                                 </div>
 
                                 <div className="space-y-2">
                                     <Label htmlFor="email">Email</Label>
-                                    <Input id="email" name="email" type="email" defaultValue={data?.data?.email} disabled />
+                                    <Input id="email" name="email" type="email" defaultValue={user.email} disabled />
                                     <p className="text-xs text-muted-foreground">
                                         Your email cannot be changed. Contact support for help.
                                     </p>

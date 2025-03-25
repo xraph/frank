@@ -10,8 +10,7 @@ import {Separator} from "@/components/react/ui/separator";
 import {Form, FormControl, FormField, FormItem, FormLabel,} from "@/components/react/ui/form";
 import {Checkbox} from "@/components/react/ui/checkbox";
 import {Link} from "../link.tsx";
-import {useFrank} from "@/hooks/use-frank";
-import type {BadRequestError} from "frank-sdk";
+import {authLogin} from "sdk";
 import {Alert, AlertDescription} from "@/components/react/ui/alert";
 
 export function LoginForm() {
@@ -19,7 +18,6 @@ export function LoginForm() {
 	const [error, setError] = useState<string | null>(null);
 	const form = useForm();
 	const [showPassword, setShowPassword] = useState(false);
-	const frank = useFrank();
 
 	async function onSubmit(data: {
 		email: string;
@@ -27,13 +25,15 @@ export function LoginForm() {
 		rememberMe: boolean;
 	}) {
 		try {
-			const rsp = await frank.auth.authLogin({
-				email: data.email,
-				password: data.password,
+			const rsp = await authLogin({
+				body: {
+					email: data.email,
+					password: data.password,
+				}
 			});
 
-			if (!(rsp.status >= 200 && rsp.status < 300)) {
-				setError((rsp.data as BadRequestError)?.message);
+			if (!rsp.response.ok) {
+				setError((rsp.error as any)?.message);
 				return;
 			}
 

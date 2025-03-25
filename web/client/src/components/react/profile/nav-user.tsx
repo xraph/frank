@@ -1,8 +1,8 @@
 "use client"
 
-import {BellIcon, CreditCardIcon, LogOutIcon, MoreVerticalIcon, UserCircleIcon,} from "lucide-react"
+import {BellIcon, LogOutIcon, MoreVerticalIcon, UserCircleIcon,} from "lucide-react"
 
-import type {User} from "frank-sdk"
+import type {User} from "sdk"
 import {Avatar, AvatarFallback, AvatarImage,} from "@/components/react/ui/avatar"
 import {
     DropdownMenu,
@@ -70,10 +70,10 @@ export function NavUser({
                                 <UserCircleIcon />
                                 Account
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
-                                <CreditCardIcon />
-                                Billing
-                            </DropdownMenuItem>
+                            {/*<DropdownMenuItem>*/}
+                            {/*    <CreditCardIcon />*/}
+                            {/*    Billing*/}
+                            {/*</DropdownMenuItem>*/}
                             <DropdownMenuItem>
                                 <BellIcon />
                                 Notifications

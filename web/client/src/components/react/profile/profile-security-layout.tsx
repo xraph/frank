@@ -1,13 +1,13 @@
 import {DataProviders} from "@/components/react/data-providers.tsx";
 import React from "react";
-import {ProfileForm} from "@/components/react/profile/profile-form.tsx";
+import {SecurityForm} from "@/components/react/profile/security-form.tsx";
 import {type User} from "sdk";
 
-export function ProfileIndexLayout({children}: { children?: React.ReactNode, user?: User}) {
+export function ProfileSecurityLayout({children}: { children?: React.ReactNode, user?: User}) {
     return (
         <DataProviders>
             {children}
-            <ProfileForm />
+            <SecurityForm />
         </DataProviders>
     );
 }

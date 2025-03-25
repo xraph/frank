@@ -1,5 +1,11 @@
-import {FrankAPI} from "frank-sdk";
+import {client} from "sdk";
 
-const frankApi = new FrankAPI("http://localhost:8998");
+client.setConfig({
+    baseUrl: import.meta.env.PUBLIC_FRANK_ENDPOINT,
+    credentials: "include",
+})
 
-export { FrankAPI, frankApi };
+const frankApi = client;
+
+
+export { frankApi };
