@@ -2,8 +2,8 @@ import {ProfileSidebar} from "./profile-sidebar.tsx"
 import {SidebarInset, SidebarProvider,} from "@/components/react/ui/sidebar"
 import {ProfileHeader} from "@/components/react/profile/profile-header.tsx";
 import React from "react";
-import {authMeOptions} from "sdk/react";
-import type {User} from "sdk";
+import {authMeOptions} from "frank-sdk/react";
+import type {User} from "frank-sdk";
 import {useQuery} from "@tanstack/react-query";
 
 

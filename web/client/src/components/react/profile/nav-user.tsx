@@ -2,7 +2,7 @@
 
 import {BellIcon, LogOutIcon, MoreVerticalIcon, UserCircleIcon,} from "lucide-react"
 
-import type {User} from "sdk"
+import type {User} from "frank-sdk"
 import {Avatar, AvatarFallback, AvatarImage,} from "@/components/react/ui/avatar"
 import {
     DropdownMenu,

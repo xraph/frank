@@ -1,5 +1,5 @@
 import {defineMiddleware, sequence} from "astro:middleware";
-import {authMe} from "sdk";
+import {authMe} from "frank-sdk";
 
 const publicRoutes = [
     "/login",

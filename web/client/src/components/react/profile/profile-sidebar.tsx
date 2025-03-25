@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import type {User} from "sdk"
+import type {User} from "frank-sdk"
 import {Bell, Lock, Mail, Shield, UserIcon,} from "lucide-react"
 import {NavProfile} from "./nav-profile"
 // import {TeamSwitcher} from "@/components/react/team-switcher"

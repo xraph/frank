@@ -10,10 +10,8 @@ import {Avatar, AvatarFallback, AvatarImage} from "@/components/react/ui/avatar"
 import {Card, CardContent} from "@/components/react/ui/card"
 import {AlertCircle, CheckCircle2, Upload} from "lucide-react"
 import {Alert, AlertDescription, AlertTitle} from "@/components/react/ui/alert"
-import {Switch} from "@/components/react/ui/switch"
-import {Separator} from "@/components/react/ui/separator"
 import {useMutation, useQuery} from "@tanstack/react-query";
-import {authMeOptions, usersUpdateMeMutation} from "sdk/react"
+import {authMeOptions, usersUpdateMeMutation} from "frank-sdk/react"
 
 export function ProfileForm() {
     const [isLoading, setIsLoading] = useState(false)
@@ -149,43 +147,6 @@ export function ProfileForm() {
                                 disabled={isLoading}
                             />
                             <p className="text-xs text-muted-foreground">Your bio will be shown on your public profile.</p>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardContent className="p-6 space-y-4">
-                        <div>
-                            <h4 className="text-sm font-medium">Public profile</h4>
-                            <p className="text-sm text-muted-foreground">Control what information is visible to others.</p>
-                        </div>
-
-                        <Separator />
-
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                                <div className="space-y-0.5">
-                                    <Label htmlFor="public-email">Show email on profile</Label>
-                                    <p className="text-xs text-muted-foreground">Your email will be visible to other users.</p>
-                                </div>
-                                <Switch id="public-email" defaultChecked={false} />
-                            </div>
-
-                            <div className="flex items-center justify-between">
-                                <div className="space-y-0.5">
-                                    <Label htmlFor="public-projects">Show projects on profile</Label>
-                                    <p className="text-xs text-muted-foreground">Your projects will be visible to other users.</p>
-                                </div>
-                                <Switch id="public-projects" defaultChecked={true} />
-                            </div>
-
-                            <div className="flex items-center justify-between">
-                                <div className="space-y-0.5">
-                                    <Label htmlFor="public-activity">Show activity on profile</Label>
-                                    <p className="text-xs text-muted-foreground">Your activity will be visible to other users.</p>
-                                </div>
-                                <Switch id="public-activity" defaultChecked={true} />
-                            </div>
                         </div>
                     </CardContent>
                 </Card>

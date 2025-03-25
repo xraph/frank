@@ -1,6 +1,6 @@
 import {QueryClient} from "@tanstack/react-query";
 
-import {client} from "sdk";
+import {client} from "frank-sdk";
 
 client.setConfig({
     baseUrl: import.meta.env.PUBLIC_FRANK_ENDPOINT,

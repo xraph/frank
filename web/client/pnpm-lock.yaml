@@ -80,6 +80,9 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
+      frank-sdk:
+        specifier: file:../sdk
+        version: file:../sdk(react@19.0.0)
       gray-matter:
         specifier: ^4.0.3
         version: 4.0.3
@@ -116,9 +119,6 @@ importers:
       sass:
         specifier: ^1.86.0
         version: 1.86.0
-      sdk:
-        specifier: file:../sdk
-        version: frank-sdk@file:../sdk(react@19.0.0)
       sharp:
         specifier: ^0.32.6
         version: 0.32.6

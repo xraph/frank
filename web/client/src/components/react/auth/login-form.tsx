@@ -10,7 +10,8 @@ import {Separator} from "@/components/react/ui/separator";
 import {Form, FormControl, FormField, FormItem, FormLabel,} from "@/components/react/ui/form";
 import {Checkbox} from "@/components/react/ui/checkbox";
 import {Link} from "../link.tsx";
-import {authLogin} from "sdk";
+import "@/client";
+import {authLogin} from "frank-sdk";
 import {Alert, AlertDescription} from "@/components/react/ui/alert";
 
 export function LoginForm() {

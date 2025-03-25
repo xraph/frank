@@ -1,4 +1,4 @@
-import type {User} from 'sdk'
+import type {User} from 'frank-sdk'
 
 declare namespace App {
     interface Locals {
