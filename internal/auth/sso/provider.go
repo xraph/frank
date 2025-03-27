@@ -74,9 +74,17 @@ type ProviderFactory interface {
 // AvailableProviders returns a map of available identity provider types and their factories
 func AvailableProviders() map[string]ProviderFactory {
 	return map[string]ProviderFactory{
-		"oidc": &OIDCProviderFactory{},
-		"saml": &SAMLProviderFactory{},
-		// Add other provider factories here
+		"oidc":      &OIDCProviderFactory{},
+		"saml":      &SAMLProviderFactory{},
+		"google":    &GoogleProviderFactory{},
+		"github":    &GitHubProviderFactory{},
+		"microsoft": &MicrosoftProviderFactory{},
+		"facebook":  &FacebookProviderFactory{},
+		"apple":     &AppleProviderFactory{},
+		"linkedin":  &LinkedInProviderFactory{},
+		"x":         &TwitterProviderFactory{},
+		"discord":   &DiscordProviderFactory{},
+		"slack":     &SlackProviderFactory{},
 	}
 }
 

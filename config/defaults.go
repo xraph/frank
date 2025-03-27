@@ -61,7 +61,7 @@ func SetDefaults(v *viper.Viper) {
 	v.SetDefault("auth.default_user_role", "user")
 	v.SetDefault("auth.default_admin_role", "admin")
 	v.SetDefault("auth.default_super_role", "super")
-	v.SetDefault("auth.require_email_verification", false)
+	v.SetDefault("auth.require_email_verification", true)
 	v.SetDefault("auth.email_verification_expiry", time.Hour*24) // 24 hours
 	v.SetDefault("auth.auto_register_users", false)
 	v.SetDefault("auth.max_login_attempts", 5)
@@ -202,7 +202,20 @@ func SetDefaults(v *viper.Viper) {
 	v.SetDefault("security.ip_geolocation_enabled", false)
 	v.SetDefault("security.ip_rate_limit", map[string]string{})
 	v.SetDefault("security.public_paths", []string{
-		"/swagger",
+		"/v1/auth/login",
+		"/v1/auth/register",
+		"/v1/auth/forgot-password",
+		"/v1/auth/reset-password",
+		"/v1/auth/verify-email",
+		"/v1/auth/passwordless/*",
+		"/v1/auth/passkeys/login/*",
+		"/v1/auth/sso/*",
+		"/v1/oauth/*",
+		"/__health",
+		"/__metrics",
+		"/__ready",
+		"/__version",
+		"/docs/*",
 	})
 
 	// Logging defaults

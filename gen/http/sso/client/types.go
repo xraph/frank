@@ -39,6 +39,8 @@ type ProviderCallbackResponseBody struct {
 	Authenticated *bool `form:"authenticated,omitempty" json:"authenticated,omitempty" xml:"authenticated,omitempty"`
 	// User data if authentication successful
 	User *UserResponseBody `form:"user,omitempty" json:"user,omitempty" xml:"user,omitempty"`
+	// Message to display to the user
+	Message *string `form:"message,omitempty" json:"message,omitempty" xml:"message,omitempty"`
 }
 
 // ListIdentityProvidersResponseBody is the type of the "sso" service
@@ -1335,6 +1337,7 @@ func NewProviderAuthUnauthorized(body *ProviderAuthUnauthorizedResponseBody) *ss
 func NewProviderCallbackResultOK(body *ProviderCallbackResponseBody) *sso.ProviderCallbackResult {
 	v := &sso.ProviderCallbackResult{
 		Authenticated: *body.Authenticated,
+		Message:       *body.Message,
 	}
 	if body.User != nil {
 		v.User = unmarshalUserResponseBodyToDesigntypesUser(body.User)
@@ -2125,6 +2128,9 @@ func ValidateListProvidersResponseBody(body *ListProvidersResponseBody) (err err
 func ValidateProviderCallbackResponseBody(body *ProviderCallbackResponseBody) (err error) {
 	if body.Authenticated == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("authenticated", "body"))
+	}
+	if body.Message == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("message", "body"))
 	}
 	if body.User != nil {
 		if err2 := ValidateUserResponseBody(body.User); err2 != nil {

@@ -305,6 +305,8 @@ type ProviderCallbackResult struct {
 	Authenticated bool
 	// User data if authentication successful
 	User *designtypes.User
+	// Message to display to the user
+	Message string
 }
 
 // SSO Provider information

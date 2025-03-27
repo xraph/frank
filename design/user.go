@@ -269,7 +269,7 @@ var _ = Service("users", func() {
 			Required("id")
 		})
 		Result(func() {
-			Attribute("organizations", ArrayOf(OrganizationResponse))
+			Attribute("organizations", ArrayOf(Organization))
 			Required("organizations")
 		})
 		Error("not_found")

@@ -1562,11 +1562,11 @@ func marshalDesigntypesSessionToSessionResponseBody(v *designtypes.Session) *Ses
 	return res
 }
 
-// marshalUsersOrganizationResponseToOrganizationResponseResponseBody builds a
-// value of type *OrganizationResponseResponseBody from a value of type
-// *users.OrganizationResponse.
-func marshalUsersOrganizationResponseToOrganizationResponseResponseBody(v *users.OrganizationResponse) *OrganizationResponseResponseBody {
-	res := &OrganizationResponseResponseBody{
+// marshalDesigntypesOrganizationToOrganizationResponseBody builds a value of
+// type *OrganizationResponseBody from a value of type
+// *designtypes.Organization.
+func marshalDesigntypesOrganizationToOrganizationResponseBody(v *designtypes.Organization) *OrganizationResponseBody {
+	res := &OrganizationResponseBody{
 		ID:          v.ID,
 		Name:        v.Name,
 		Slug:        v.Slug,
@@ -1585,6 +1585,154 @@ func marshalUsersOrganizationResponseToOrganizationResponseResponseBody(v *users
 			tk := key
 			tv := val
 			res.Metadata[tk] = tv
+		}
+	}
+	if v.Settings != nil {
+		res.Settings = marshalDesigntypesOrganizationSettingsToOrganizationSettingsResponseBody(v.Settings)
+	}
+
+	return res
+}
+
+// marshalDesigntypesOrganizationSettingsToOrganizationSettingsResponseBody
+// builds a value of type *OrganizationSettingsResponseBody from a value of
+// type *designtypes.OrganizationSettings.
+func marshalDesigntypesOrganizationSettingsToOrganizationSettingsResponseBody(v *designtypes.OrganizationSettings) *OrganizationSettingsResponseBody {
+	if v == nil {
+		return nil
+	}
+	res := &OrganizationSettingsResponseBody{}
+	if v.SignupFields != nil {
+		res.SignupFields = make([]*FormFieldResponseBody, len(v.SignupFields))
+		for i, val := range v.SignupFields {
+			res.SignupFields[i] = marshalDesigntypesFormFieldToFormFieldResponseBody(val)
+		}
+	}
+	if v.Verification != nil {
+		res.Verification = make([]*OrganizationVerificationConfigResponseBody, len(v.Verification))
+		for i, val := range v.Verification {
+			res.Verification[i] = marshalDesigntypesOrganizationVerificationConfigToOrganizationVerificationConfigResponseBody(val)
+		}
+	}
+
+	return res
+}
+
+// marshalDesigntypesFormFieldToFormFieldResponseBody builds a value of type
+// *FormFieldResponseBody from a value of type *designtypes.FormField.
+func marshalDesigntypesFormFieldToFormFieldResponseBody(v *designtypes.FormField) *FormFieldResponseBody {
+	if v == nil {
+		return nil
+	}
+	res := &FormFieldResponseBody{
+		Name:        v.Name,
+		Label:       v.Label,
+		Type:        v.Type,
+		Placeholder: v.Placeholder,
+		Required:    v.Required,
+		IsFirstName: v.IsFirstName,
+		IsLastName:  v.IsLastName,
+		IsEmail:     v.IsEmail,
+		Row:         v.Row,
+		Width:       v.Width,
+	}
+	{
+		var zero bool
+		if res.Required == zero {
+			res.Required = false
+		}
+	}
+	{
+		var zero bool
+		if res.IsFirstName == zero {
+			res.IsFirstName = false
+		}
+	}
+	{
+		var zero bool
+		if res.IsLastName == zero {
+			res.IsLastName = false
+		}
+	}
+	{
+		var zero bool
+		if res.IsEmail == zero {
+			res.IsEmail = false
+		}
+	}
+	if v.Options != nil {
+		res.Options = make([]*FormFieldSelectOptionResponseBody, len(v.Options))
+		for i, val := range v.Options {
+			res.Options[i] = marshalDesigntypesFormFieldSelectOptionToFormFieldSelectOptionResponseBody(val)
+		}
+	}
+	if v.Validation != nil {
+		res.Validation = marshalDesigntypesFormFieldValidationRulesToFormFieldValidationRulesResponseBody(v.Validation)
+	}
+	{
+		var zero string
+		if res.Width == zero {
+			res.Width = "full"
+		}
+	}
+
+	return res
+}
+
+// marshalDesigntypesFormFieldSelectOptionToFormFieldSelectOptionResponseBody
+// builds a value of type *FormFieldSelectOptionResponseBody from a value of
+// type *designtypes.FormFieldSelectOption.
+func marshalDesigntypesFormFieldSelectOptionToFormFieldSelectOptionResponseBody(v *designtypes.FormFieldSelectOption) *FormFieldSelectOptionResponseBody {
+	if v == nil {
+		return nil
+	}
+	res := &FormFieldSelectOptionResponseBody{
+		Value: v.Value,
+		Label: v.Label,
+	}
+
+	return res
+}
+
+// marshalDesigntypesFormFieldValidationRulesToFormFieldValidationRulesResponseBody
+// builds a value of type *FormFieldValidationRulesResponseBody from a value of
+// type *designtypes.FormFieldValidationRules.
+func marshalDesigntypesFormFieldValidationRulesToFormFieldValidationRulesResponseBody(v *designtypes.FormFieldValidationRules) *FormFieldValidationRulesResponseBody {
+	if v == nil {
+		return nil
+	}
+	res := &FormFieldValidationRulesResponseBody{
+		Pattern:   v.Pattern,
+		MinLength: v.MinLength,
+		MaxLength: v.MaxLength,
+		Min:       v.Min,
+		Max:       v.Max,
+	}
+
+	return res
+}
+
+// marshalDesigntypesOrganizationVerificationConfigToOrganizationVerificationConfigResponseBody
+// builds a value of type *OrganizationVerificationConfigResponseBody from a
+// value of type *designtypes.OrganizationVerificationConfig.
+func marshalDesigntypesOrganizationVerificationConfigToOrganizationVerificationConfigResponseBody(v *designtypes.OrganizationVerificationConfig) *OrganizationVerificationConfigResponseBody {
+	if v == nil {
+		return nil
+	}
+	res := &OrganizationVerificationConfigResponseBody{
+		CodeLength: v.CodeLength,
+		Method:     v.Method,
+	}
+	{
+		var zero int
+		if res.CodeLength == zero {
+			res.CodeLength = 6
+		}
+	}
+	{
+		var zero string
+		if res.Method == zero {
+			res.Method = "email"
 		}
 	}
 

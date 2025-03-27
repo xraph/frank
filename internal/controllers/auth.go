@@ -37,6 +37,47 @@ type AuthService struct {
 	mapper         *automapper.Mapper
 }
 
+func (a *AuthService) SendEmailVerification(ctx context.Context, payload *auth.SendEmailVerificationPayload) (res *auth.SendEmailVerificationResult, err error) {
+	info, ok := customMiddleware.GetRequestInfo(ctx)
+	if !ok {
+		return nil, errors.New(errors.CodeInternalServer, "failed to get request info")
+	}
+
+	authUser, err := a.userService.GetByEmail(ctx, payload.Email)
+	if err != nil {
+		return nil, err
+	}
+
+	expiresAt := time.Now().Add(a.config.Auth.EmailVerificationExpiry)
+	verification, err := a.userService.CreateVerification(ctx, user.CreateVerificationInput{
+		UserID:    authUser.ID,
+		Type:      "email",
+		Email:     authUser.Email,
+		Method:    payload.Method,
+		ExpiresAt: expiresAt,
+		IPAddress: utils.GetRealIP(info.Req),
+		UserAgent: utils.GetUserAgent(info.Req),
+	})
+
+	if err != nil {
+		a.logger.Error("Failed to create verification",
+			logging.String("user_id", authUser.ID),
+			logging.Error(err),
+		)
+		return nil, errors.New(errors.CodeEmailNotVerified, "email verification required")
+	}
+
+	return &auth.SendEmailVerificationResult{
+		Message:   "Email verification sent",
+		ExpiresAt: verification.ExpiresAt.Unix(),
+	}, nil
+}
+
+func (a *AuthService) CheckEmailVerification(ctx context.Context, payload *auth.CheckEmailVerificationPayload) (res *auth.CheckEmailVerificationResult, err error) {
+	// TODO implement me
+	panic("implement me")
+}
+
 func (a *AuthService) Csrf(ctx context.Context, payload *auth.CsrfPayload) (res *auth.CSRFTokenResponse, err error) {
 	info, ok := customMiddleware.GetRequestInfo(ctx)
 	if !ok {
@@ -63,9 +104,43 @@ func (a *AuthService) Login(ctx context.Context, payload *auth.LoginPayload) (re
 		return nil, err
 	}
 
+	userOut := &designtypes.User{}
+	mapper := automapper.CreateMap[*ent.User, designtypes.User]()
+	automapper.MapTo(authenticatedUser.User, userOut, mapper)
+
 	// Check if email verification is required
 	if a.config.Auth.RequireEmailVerification && !authenticatedUser.EmailVerified {
-		return nil, errors.New(errors.CodeEmailNotVerified, "email verification required")
+		method := "otp"
+
+		// Create verification
+		expiresAt := time.Now().Add(a.config.Auth.EmailVerificationExpiry)
+		verification, err := a.userService.CreateVerification(ctx, user.CreateVerificationInput{
+			UserID:    authenticatedUser.User.ID,
+			Type:      "email",
+			Email:     authenticatedUser.User.Email,
+			Method:    user.VerificationMethod(method),
+			ExpiresAt: expiresAt,
+			IPAddress: utils.GetRealIP(info.Req),
+			UserAgent: utils.GetUserAgent(info.Req),
+		})
+		if err != nil {
+			a.logger.Error("Failed to create verification",
+				logging.String("user_id", authenticatedUser.User.ID),
+				logging.Error(err),
+			)
+			return nil, errors.New(errors.CodeEmailNotVerified, "email verification required")
+		}
+
+		reqVer := true
+		return &auth.LoginResponse{
+			User:                 userOut,
+			VerificationID:       &verification.ID,
+			EmailVerified:        &authenticatedUser.EmailVerified,
+			VerificationMethod:   &method,
+			ExpiresAt:            expiresAt.Unix(),
+			RequiresVerification: &reqVer,
+			Message:              "Email verification required",
+		}, nil
 	}
 
 	orgId := ""
@@ -74,19 +149,19 @@ func (a *AuthService) Login(ctx context.Context, payload *auth.LoginPayload) (re
 	}
 
 	// Check if MFA is required
-	mfaRequired, mfaTypes, err := a.checkMFA(ctx, authenticatedUser.ID)
+	mfaRequired, mfaTypes, err := a.checkMFA(ctx, authenticatedUser.User.ID)
 	if err != nil {
 		return nil, err
 	}
 
 	// Create tokens
-	token, refreshToken, expiresAt, err := a.createTokens(authenticatedUser, orgId)
+	token, refreshToken, expiresAt, err := a.createTokens(authenticatedUser.User, orgId)
 	if err != nil {
 		return nil, err
 	}
 
 	sessionData := &session.CookieSessionData{
-		UserID:         authenticatedUser.ID,
+		UserID:         authenticatedUser.User.ID,
 		OrganizationID: orgId,
 		ExpiresAt:      time.Now().Add(a.config.Auth.SessionDuration),
 		IssuedAt:       time.Now(),
@@ -97,10 +172,10 @@ func (a *AuthService) Login(ctx context.Context, payload *auth.LoginPayload) (re
 
 	// Create session if session manager is available
 	if a.sessionManager != nil {
-		sess, err := a.createSession(ctx, info.Req, info.Res, authenticatedUser, orgId, payload.RememberMe)
+		sess, err := a.createSession(ctx, info.Req, info.Res, authenticatedUser.User, orgId, payload.RememberMe)
 		if err != nil {
 			a.logger.Error("Failed to create session",
-				logging.String("user_id", authenticatedUser.ID),
+				logging.String("user_id", authenticatedUser.User.ID),
 				logging.Error(err),
 			)
 			// Continue without session
@@ -114,10 +189,6 @@ func (a *AuthService) Login(ctx context.Context, payload *auth.LoginPayload) (re
 			// payload.SessionID = &sess.ID
 		}
 	}
-
-	userOut := &designtypes.User{}
-	mapper := automapper.CreateMap[*ent.User, designtypes.User]()
-	automapper.MapTo(authenticatedUser, userOut, mapper)
 
 	csrfToken, _ := crypto.GenerateRandomString(32)
 	a.cookieHandler.SetCSRFCookie(info.Res, csrfToken, a.config.Auth.SessionDuration)
@@ -387,8 +458,18 @@ func (a *AuthService) ResetPassword(ctx context.Context, payload *auth.ResetPass
 }
 
 func (a *AuthService) VerifyEmail(ctx context.Context, payload *auth.VerifyEmailPayload) (res *auth.VerifyEmailResult, err error) {
-	// Verify the token
-	verification, err := a.userService.VerifyToken(ctx, payload.Token)
+	var verification *ent.Verification
+
+	// Determine verification method based on provided inputs
+	if payload.Method == user.VerificationMethodLink {
+		// Token-based verification (link method)
+		verification, err = a.userService.VerifyToken(ctx, *payload.Token)
+	} else if payload.Email != "" && payload.Otp != nil {
+		// OTP-based verification
+		verification, err = a.userService.VerifyEmailOTP(ctx, payload.Email, *payload.Otp)
+	} else {
+		return nil, errors.New(errors.CodeInvalidInput, "either token or email and OTP are required")
+	}
 	if err != nil {
 		return nil, err
 	}

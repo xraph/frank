@@ -52,14 +52,14 @@ migrate:
 
 clean:
 	rm -f ./bin/$(BINARY_NAME)
-	rm -rf web/client/dist
+	rm -rf web/apps/client/dist
 
 ngrok:
 	sh scripts/start-ngrok.sh
 
 # Run the web client development server
 dev-client:
-	cd web/client && pnpm run dev
+	cd web && pnpm run dev:web
 
 # Run both backend and frontend in development mode
 dev-all:

@@ -1,0 +1,82 @@
+---
+import { cn } from "../../../lib/react/utils";
+import {
+	Bell,
+	CreditCard,
+	Key,
+	Lock,
+	LogOut,
+	Mail,
+	Settings,
+	Shield,
+	User,
+} from "lucide-react";
+import Link from "../ui/Link.astro";
+
+const items = [
+	{
+		title: "Profile",
+		href: "/profile",
+		icon: User,
+	},
+	{
+		title: "Account",
+		href: "/profile/account",
+		icon: Settings,
+	},
+	{
+		title: "Security",
+		href: "/profile/security",
+		icon: Shield,
+	},
+	{
+		title: "Password",
+		href: "/profile/password",
+		icon: Lock,
+	},
+	{
+		title: "API Keys",
+		href: "/profile/api-keys",
+		icon: Key,
+	},
+	{
+		title: "Notifications",
+		href: "/profile/notifications",
+		icon: Bell,
+	},
+	{
+		title: "Billing",
+		href: "/profile/billing",
+		icon: CreditCard,
+	},
+	{
+		title: "Email",
+		href: "/profile/email",
+		icon: Mail,
+	},
+	{
+		title: "Logout",
+		href: "/profile/logout",
+		icon: LogOut,
+	},
+];
+
+const pathname = import.meta.env.SSR ? "/" : location.pathname;
+---
+
+<nav class="grid items-start px-2 py-4">
+    {items.map((item) => (
+            <Link
+                    key={item.href}
+                    href={item.href}
+                    className={cn(
+                        "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:text-primary",
+                        pathname === item.href ? "bg-muted text-primary" : "text-muted-foreground",
+                        item.title === "Logout" ? "mt-6 text-destructive hover:text-destructive" : "",
+                    )}
+            >
+                <item.icon className="h-4 w-4" />
+                <span>{item.title}</span>
+            </Link>
+    ))}
+</nav>

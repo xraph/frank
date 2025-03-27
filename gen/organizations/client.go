@@ -10,6 +10,7 @@ package organizations
 import (
 	"context"
 
+	designtypes "github.com/juicycleff/frank/gen/designtypes"
 	goa "goa.design/goa/v3/pkg"
 )
 
@@ -74,13 +75,13 @@ func (c *Client) List(ctx context.Context, p *ListPayload) (res *ListResult, err
 //   - "not_found" (type *NotFoundError)
 //   - "internal_error" (type *InternalServerError)
 //   - error: internal error
-func (c *Client) Create(ctx context.Context, p *CreatePayload) (res *OrganizationResponse, err error) {
+func (c *Client) Create(ctx context.Context, p *CreatePayload) (res *designtypes.Organization, err error) {
 	var ires any
 	ires, err = c.CreateEndpoint(ctx, p)
 	if err != nil {
 		return
 	}
-	return ires.(*OrganizationResponse), nil
+	return ires.(*designtypes.Organization), nil
 }
 
 // Get calls the "get" endpoint of the "organizations" service.
@@ -92,13 +93,13 @@ func (c *Client) Create(ctx context.Context, p *CreatePayload) (res *Organizatio
 //   - "conflict" (type *ConflictError)
 //   - "internal_error" (type *InternalServerError)
 //   - error: internal error
-func (c *Client) Get(ctx context.Context, p *GetPayload) (res *OrganizationResponse, err error) {
+func (c *Client) Get(ctx context.Context, p *GetPayload) (res *designtypes.Organization, err error) {
 	var ires any
 	ires, err = c.GetEndpoint(ctx, p)
 	if err != nil {
 		return
 	}
-	return ires.(*OrganizationResponse), nil
+	return ires.(*designtypes.Organization), nil
 }
 
 // Update calls the "update" endpoint of the "organizations" service.
@@ -110,13 +111,13 @@ func (c *Client) Get(ctx context.Context, p *GetPayload) (res *OrganizationRespo
 //   - "conflict" (type *ConflictError)
 //   - "internal_error" (type *InternalServerError)
 //   - error: internal error
-func (c *Client) Update(ctx context.Context, p *UpdatePayload) (res *OrganizationResponse, err error) {
+func (c *Client) Update(ctx context.Context, p *UpdatePayload) (res *designtypes.Organization, err error) {
 	var ires any
 	ires, err = c.UpdateEndpoint(ctx, p)
 	if err != nil {
 		return
 	}
-	return ires.(*OrganizationResponse), nil
+	return ires.(*designtypes.Organization), nil
 }
 
 // Delete calls the "delete" endpoint of the "organizations" service.

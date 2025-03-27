@@ -53,8 +53,15 @@ type OAuthServices struct {
 
 func New(repos *repo.Repo, cfg *config.Config, client *data.Clients, logger logging.Logger) (*Services, error) {
 	// Initialize services
+	sender := email.SenderFactory(cfg, logger)
+	emailTemplateManager := email.NewTemplateManager(repos.Template, cfg, logger)
+	emailService := email.NewService(cfg, sender, emailTemplateManager, repos.Template, logger)
+
+	emailProvider := sms.SenderFactory(cfg, logger)
+	smsService := sms.NewService(cfg, emailProvider, logger)
+
 	orgService := organization.NewService(repos.Organization, logger)
-	pwdVerifyManger := user.NewVerificationManager(client.DB)
+	pwdVerifyManger := user.NewVerificationManager(client.DB, emailService, logger)
 	pwdManger := user.NewPasswordManager(cfg, client.DB, pwdVerifyManger)
 
 	enforce := rbac.NewEnforcer(repos.RBAC, logger)
@@ -77,13 +84,6 @@ func New(repos *repo.Repo, cfg *config.Config, client *data.Clients, logger logg
 	sessionManager := session.NewManager(client.DB, cfg, logger, cookieStore)
 	sessionStore := session.NewManagerStore(sessionManager, cookieHandler, cfg)
 	utils.InitSessionStoreWithStore(sessionStore)
-
-	sender := email.SenderFactory(cfg, logger)
-	emailTemplateManager := email.NewTemplateManager(cfg, logger)
-	emailService := email.NewService(cfg, sender, emailTemplateManager, repos.Template, logger)
-
-	emailProvider := sms.SenderFactory(cfg, logger)
-	smsService := sms.NewService(cfg, emailProvider, logger)
 
 	// Create services container
 	services := &Services{

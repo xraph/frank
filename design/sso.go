@@ -190,7 +190,8 @@ var _ = Service("sso", func() {
 		Result(func() {
 			Attribute("authenticated", Boolean, "Whether authentication was successful")
 			Attribute("user", User, "User data if authentication successful")
-			Required("authenticated")
+			Attribute("message", String, "Message to display to the user")
+			Required("authenticated", "message")
 		})
 		Error("bad_request", BadRequestError)
 		Error("unauthorized", UnauthorizedError)

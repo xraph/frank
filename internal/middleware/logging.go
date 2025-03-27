@@ -97,7 +97,7 @@ func RequestLogging(next http.Handler) http.Handler {
 
 		// Extract authentication information if available
 		userID, hasUserID := GetUserIDReq(r)
-		orgID, hasOrgID := GetOrganizationID(r)
+		orgID, hasOrgID := GetOrganizationIDReq(r)
 
 		if hasUserID {
 			logger.With(logging.String("user_id", userID)).Debug("Authenticated request")

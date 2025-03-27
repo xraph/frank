@@ -12,6 +12,7 @@ import (
 
 	auth "github.com/juicycleff/frank/gen/auth"
 	designtypes "github.com/juicycleff/frank/gen/designtypes"
+	"github.com/juicycleff/frank/internal/user"
 	goa "goa.design/goa/v3/pkg"
 )
 
@@ -73,8 +74,23 @@ type ResetPasswordRequestBody struct {
 // VerifyEmailRequestBody is the type of the "auth" service "verify_email"
 // endpoint HTTP request body.
 type VerifyEmailRequestBody struct {
-	// Email verification token
+	// Email verification token for link verification
 	Token *string `form:"token,omitempty" json:"token,omitempty" xml:"token,omitempty"`
+	// One-time password for OTP verification
+	Otp *string `form:"otp,omitempty" json:"otp,omitempty" xml:"otp,omitempty"`
+	// User email
+	Email *string `form:"email,omitempty" json:"email,omitempty" xml:"email,omitempty"`
+	// Verification method (link or otp)
+	Method *user.VerificationMethod `form:"method,omitempty" json:"method,omitempty" xml:"method,omitempty"`
+}
+
+// SendEmailVerificationRequestBody is the type of the "auth" service
+// "send_email_verification" endpoint HTTP request body.
+type SendEmailVerificationRequestBody struct {
+	// User email
+	Email *string `form:"email,omitempty" json:"email,omitempty" xml:"email,omitempty"`
+	// Verification method (link or otp)
+	Method *user.VerificationMethod `form:"method,omitempty" json:"method,omitempty" xml:"method,omitempty"`
 }
 
 // LoginResponseBody is the type of the "auth" service "login" endpoint HTTP
@@ -94,6 +110,18 @@ type LoginResponseBody struct {
 	MfaRequired bool `form:"mfa_required" json:"mfa_required" xml:"mfa_required"`
 	// Available MFA methods when MFA is required
 	MfaTypes []string `form:"mfa_types,omitempty" json:"mfa_types,omitempty" xml:"mfa_types,omitempty"`
+	// Login message
+	Message string `json:"message,omitempty"`
+	// Whether email verification is required
+	VerificationRequired *bool `form:"verificationRequired,omitempty" json:"verificationRequired,omitempty" xml:"verificationRequired,omitempty"`
+	// Verification ID for email verification
+	VerificationID *string `form:"verificationId,omitempty" json:"verificationId,omitempty" xml:"verificationId,omitempty"`
+	// Verification method for email verification
+	VerificationMethod *string `form:"verificationMethod,omitempty" json:"verificationMethod,omitempty" xml:"verificationMethod,omitempty"`
+	// Whether email is verified
+	EmailVerified *bool `form:"emailVerified,omitempty" json:"emailVerified,omitempty" xml:"emailVerified,omitempty"`
+	// Whether email verification is required
+	RequiresVerification *bool `form:"requiresVerification,omitempty" json:"requiresVerification,omitempty" xml:"requiresVerification,omitempty"`
 }
 
 // RegisterResponseBody is the type of the "auth" service "register" endpoint
@@ -113,6 +141,18 @@ type RegisterResponseBody struct {
 	MfaRequired bool `form:"mfa_required" json:"mfa_required" xml:"mfa_required"`
 	// Available MFA methods when MFA is required
 	MfaTypes []string `form:"mfa_types,omitempty" json:"mfa_types,omitempty" xml:"mfa_types,omitempty"`
+	// Login message
+	Message string `json:"message,omitempty"`
+	// Whether email verification is required
+	VerificationRequired *bool `form:"verificationRequired,omitempty" json:"verificationRequired,omitempty" xml:"verificationRequired,omitempty"`
+	// Verification ID for email verification
+	VerificationID *string `form:"verificationId,omitempty" json:"verificationId,omitempty" xml:"verificationId,omitempty"`
+	// Verification method for email verification
+	VerificationMethod *string `form:"verificationMethod,omitempty" json:"verificationMethod,omitempty" xml:"verificationMethod,omitempty"`
+	// Whether email is verified
+	EmailVerified *bool `form:"emailVerified,omitempty" json:"emailVerified,omitempty" xml:"emailVerified,omitempty"`
+	// Whether email verification is required
+	RequiresVerification *bool `form:"requiresVerification,omitempty" json:"requiresVerification,omitempty" xml:"requiresVerification,omitempty"`
 }
 
 // LogoutResponseBody is the type of the "auth" service "logout" endpoint HTTP
@@ -149,6 +189,22 @@ type ResetPasswordResponseBody struct {
 // endpoint HTTP response body.
 type VerifyEmailResponseBody struct {
 	Message string `form:"message" json:"message" xml:"message"`
+}
+
+// SendEmailVerificationResponseBody is the type of the "auth" service
+// "send_email_verification" endpoint HTTP response body.
+type SendEmailVerificationResponseBody struct {
+	// Success message
+	Message string `form:"message" json:"message" xml:"message"`
+	// When the verification code/link expires
+	ExpiresAt int64 `form:"expires_at" json:"expires_at" xml:"expires_at"`
+}
+
+// CheckEmailVerificationResponseBody is the type of the "auth" service
+// "check_email_verification" endpoint HTTP response body.
+type CheckEmailVerificationResponseBody struct {
+	// Whether email is verified
+	Verified bool `form:"verified" json:"verified" xml:"verified"`
 }
 
 // MeResponseBody is the type of the "auth" service "me" endpoint HTTP response
@@ -729,6 +785,174 @@ type VerifyEmailUnauthorizedResponseBody struct {
 	ID *string `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
 }
 
+// SendEmailVerificationBadRequestResponseBody is the type of the "auth"
+// service "send_email_verification" endpoint HTTP response body for the
+// "bad_request" error.
+type SendEmailVerificationBadRequestResponseBody struct {
+	// Error code
+	Code string `form:"code" json:"code" xml:"code"`
+	// Error message
+	Message string `form:"message" json:"message" xml:"message"`
+	// Additional error details
+	Details any `form:"details,omitempty" json:"details,omitempty" xml:"details,omitempty"`
+	// Unique error ID
+	ID *string `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
+}
+
+// SendEmailVerificationConflictResponseBody is the type of the "auth" service
+// "send_email_verification" endpoint HTTP response body for the "conflict"
+// error.
+type SendEmailVerificationConflictResponseBody struct {
+	// Error code
+	Code string `form:"code" json:"code" xml:"code"`
+	// Error message
+	Message string `form:"message" json:"message" xml:"message"`
+	// Additional error details
+	Details any `form:"details,omitempty" json:"details,omitempty" xml:"details,omitempty"`
+	// Unique error ID
+	ID *string `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
+}
+
+// SendEmailVerificationForbiddenResponseBody is the type of the "auth" service
+// "send_email_verification" endpoint HTTP response body for the "forbidden"
+// error.
+type SendEmailVerificationForbiddenResponseBody struct {
+	// Error code
+	Code string `form:"code" json:"code" xml:"code"`
+	// Error message
+	Message string `form:"message" json:"message" xml:"message"`
+	// Additional error details
+	Details any `form:"details,omitempty" json:"details,omitempty" xml:"details,omitempty"`
+	// Unique error ID
+	ID *string `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
+}
+
+// SendEmailVerificationInternalErrorResponseBody is the type of the "auth"
+// service "send_email_verification" endpoint HTTP response body for the
+// "internal_error" error.
+type SendEmailVerificationInternalErrorResponseBody struct {
+	// Error code
+	Code string `form:"code" json:"code" xml:"code"`
+	// Error message
+	Message string `form:"message" json:"message" xml:"message"`
+	// Additional error details
+	Details any `form:"details,omitempty" json:"details,omitempty" xml:"details,omitempty"`
+	// Unique error ID
+	ID *string `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
+}
+
+// SendEmailVerificationNotFoundResponseBody is the type of the "auth" service
+// "send_email_verification" endpoint HTTP response body for the "not_found"
+// error.
+type SendEmailVerificationNotFoundResponseBody struct {
+	// Error code
+	Code string `form:"code" json:"code" xml:"code"`
+	// Error message
+	Message string `form:"message" json:"message" xml:"message"`
+	// Additional error details
+	Details any `form:"details,omitempty" json:"details,omitempty" xml:"details,omitempty"`
+	// Unique error ID
+	ID *string `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
+}
+
+// SendEmailVerificationUnauthorizedResponseBody is the type of the "auth"
+// service "send_email_verification" endpoint HTTP response body for the
+// "unauthorized" error.
+type SendEmailVerificationUnauthorizedResponseBody struct {
+	// Error code
+	Code string `form:"code" json:"code" xml:"code"`
+	// Error message
+	Message string `form:"message" json:"message" xml:"message"`
+	// Additional error details
+	Details any `form:"details,omitempty" json:"details,omitempty" xml:"details,omitempty"`
+	// Unique error ID
+	ID *string `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
+}
+
+// CheckEmailVerificationBadRequestResponseBody is the type of the "auth"
+// service "check_email_verification" endpoint HTTP response body for the
+// "bad_request" error.
+type CheckEmailVerificationBadRequestResponseBody struct {
+	// Error code
+	Code string `form:"code" json:"code" xml:"code"`
+	// Error message
+	Message string `form:"message" json:"message" xml:"message"`
+	// Additional error details
+	Details any `form:"details,omitempty" json:"details,omitempty" xml:"details,omitempty"`
+	// Unique error ID
+	ID *string `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
+}
+
+// CheckEmailVerificationConflictResponseBody is the type of the "auth" service
+// "check_email_verification" endpoint HTTP response body for the "conflict"
+// error.
+type CheckEmailVerificationConflictResponseBody struct {
+	// Error code
+	Code string `form:"code" json:"code" xml:"code"`
+	// Error message
+	Message string `form:"message" json:"message" xml:"message"`
+	// Additional error details
+	Details any `form:"details,omitempty" json:"details,omitempty" xml:"details,omitempty"`
+	// Unique error ID
+	ID *string `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
+}
+
+// CheckEmailVerificationForbiddenResponseBody is the type of the "auth"
+// service "check_email_verification" endpoint HTTP response body for the
+// "forbidden" error.
+type CheckEmailVerificationForbiddenResponseBody struct {
+	// Error code
+	Code string `form:"code" json:"code" xml:"code"`
+	// Error message
+	Message string `form:"message" json:"message" xml:"message"`
+	// Additional error details
+	Details any `form:"details,omitempty" json:"details,omitempty" xml:"details,omitempty"`
+	// Unique error ID
+	ID *string `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
+}
+
+// CheckEmailVerificationInternalErrorResponseBody is the type of the "auth"
+// service "check_email_verification" endpoint HTTP response body for the
+// "internal_error" error.
+type CheckEmailVerificationInternalErrorResponseBody struct {
+	// Error code
+	Code string `form:"code" json:"code" xml:"code"`
+	// Error message
+	Message string `form:"message" json:"message" xml:"message"`
+	// Additional error details
+	Details any `form:"details,omitempty" json:"details,omitempty" xml:"details,omitempty"`
+	// Unique error ID
+	ID *string `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
+}
+
+// CheckEmailVerificationNotFoundResponseBody is the type of the "auth" service
+// "check_email_verification" endpoint HTTP response body for the "not_found"
+// error.
+type CheckEmailVerificationNotFoundResponseBody struct {
+	// Error code
+	Code string `form:"code" json:"code" xml:"code"`
+	// Error message
+	Message string `form:"message" json:"message" xml:"message"`
+	// Additional error details
+	Details any `form:"details,omitempty" json:"details,omitempty" xml:"details,omitempty"`
+	// Unique error ID
+	ID *string `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
+}
+
+// CheckEmailVerificationUnauthorizedResponseBody is the type of the "auth"
+// service "check_email_verification" endpoint HTTP response body for the
+// "unauthorized" error.
+type CheckEmailVerificationUnauthorizedResponseBody struct {
+	// Error code
+	Code string `form:"code" json:"code" xml:"code"`
+	// Error message
+	Message string `form:"message" json:"message" xml:"message"`
+	// Additional error details
+	Details any `form:"details,omitempty" json:"details,omitempty" xml:"details,omitempty"`
+	// Unique error ID
+	ID *string `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
+}
+
 // MeBadRequestResponseBody is the type of the "auth" service "me" endpoint
 // HTTP response body for the "bad_request" error.
 type MeBadRequestResponseBody struct {
@@ -913,11 +1137,17 @@ type UserResponseBody struct {
 // "login" endpoint of the "auth" service.
 func NewLoginResponseBody(res *auth.LoginResponse) *LoginResponseBody {
 	body := &LoginResponseBody{
-		Token:        res.Token,
-		RefreshToken: res.RefreshToken,
-		CsrfToken:    res.CsrfToken,
-		ExpiresAt:    res.ExpiresAt,
-		MfaRequired:  res.MfaRequired,
+		Token:                res.Token,
+		RefreshToken:         res.RefreshToken,
+		CsrfToken:            res.CsrfToken,
+		ExpiresAt:            res.ExpiresAt,
+		MfaRequired:          res.MfaRequired,
+		Message:              res.Message,
+		VerificationRequired: res.VerificationRequired,
+		VerificationID:       res.VerificationID,
+		VerificationMethod:   res.VerificationMethod,
+		EmailVerified:        res.EmailVerified,
+		RequiresVerification: res.RequiresVerification,
 	}
 	if res.User != nil {
 		body.User = marshalDesigntypesUserToUserResponseBody(res.User)
@@ -928,6 +1158,12 @@ func NewLoginResponseBody(res *auth.LoginResponse) *LoginResponseBody {
 			body.MfaTypes[i] = val
 		}
 	}
+	{
+		var zero string
+		if body.Message == zero {
+			body.Message = "Login successful"
+		}
+	}
 	return body
 }
 
@@ -935,11 +1171,17 @@ func NewLoginResponseBody(res *auth.LoginResponse) *LoginResponseBody {
 // "register" endpoint of the "auth" service.
 func NewRegisterResponseBody(res *auth.LoginResponse) *RegisterResponseBody {
 	body := &RegisterResponseBody{
-		Token:        res.Token,
-		RefreshToken: res.RefreshToken,
-		CsrfToken:    res.CsrfToken,
-		ExpiresAt:    res.ExpiresAt,
-		MfaRequired:  res.MfaRequired,
+		Token:                res.Token,
+		RefreshToken:         res.RefreshToken,
+		CsrfToken:            res.CsrfToken,
+		ExpiresAt:            res.ExpiresAt,
+		MfaRequired:          res.MfaRequired,
+		Message:              res.Message,
+		VerificationRequired: res.VerificationRequired,
+		VerificationID:       res.VerificationID,
+		VerificationMethod:   res.VerificationMethod,
+		EmailVerified:        res.EmailVerified,
+		RequiresVerification: res.RequiresVerification,
 	}
 	if res.User != nil {
 		body.User = marshalDesigntypesUserToUserResponseBody(res.User)
@@ -948,6 +1190,12 @@ func NewRegisterResponseBody(res *auth.LoginResponse) *RegisterResponseBody {
 		body.MfaTypes = make([]string, len(res.MfaTypes))
 		for i, val := range res.MfaTypes {
 			body.MfaTypes[i] = val
+		}
+	}
+	{
+		var zero string
+		if body.Message == zero {
+			body.Message = "Login successful"
 		}
 	}
 	return body
@@ -996,6 +1244,25 @@ func NewResetPasswordResponseBody(res *auth.ResetPasswordResult) *ResetPasswordR
 func NewVerifyEmailResponseBody(res *auth.VerifyEmailResult) *VerifyEmailResponseBody {
 	body := &VerifyEmailResponseBody{
 		Message: res.Message,
+	}
+	return body
+}
+
+// NewSendEmailVerificationResponseBody builds the HTTP response body from the
+// result of the "send_email_verification" endpoint of the "auth" service.
+func NewSendEmailVerificationResponseBody(res *auth.SendEmailVerificationResult) *SendEmailVerificationResponseBody {
+	body := &SendEmailVerificationResponseBody{
+		Message:   res.Message,
+		ExpiresAt: res.ExpiresAt,
+	}
+	return body
+}
+
+// NewCheckEmailVerificationResponseBody builds the HTTP response body from the
+// result of the "check_email_verification" endpoint of the "auth" service.
+func NewCheckEmailVerificationResponseBody(res *auth.CheckEmailVerificationResult) *CheckEmailVerificationResponseBody {
+	body := &CheckEmailVerificationResponseBody{
+		Verified: res.Verified,
 	}
 	return body
 }
@@ -1544,6 +1811,162 @@ func NewVerifyEmailUnauthorizedResponseBody(res *auth.UnauthorizedError) *Verify
 	return body
 }
 
+// NewSendEmailVerificationBadRequestResponseBody builds the HTTP response body
+// from the result of the "send_email_verification" endpoint of the "auth"
+// service.
+func NewSendEmailVerificationBadRequestResponseBody(res *auth.BadRequestError) *SendEmailVerificationBadRequestResponseBody {
+	body := &SendEmailVerificationBadRequestResponseBody{
+		Code:    res.Code,
+		Message: res.Message,
+		Details: res.Details,
+		ID:      res.ID,
+	}
+	return body
+}
+
+// NewSendEmailVerificationConflictResponseBody builds the HTTP response body
+// from the result of the "send_email_verification" endpoint of the "auth"
+// service.
+func NewSendEmailVerificationConflictResponseBody(res *auth.ConflictError) *SendEmailVerificationConflictResponseBody {
+	body := &SendEmailVerificationConflictResponseBody{
+		Code:    res.Code,
+		Message: res.Message,
+		Details: res.Details,
+		ID:      res.ID,
+	}
+	return body
+}
+
+// NewSendEmailVerificationForbiddenResponseBody builds the HTTP response body
+// from the result of the "send_email_verification" endpoint of the "auth"
+// service.
+func NewSendEmailVerificationForbiddenResponseBody(res *auth.ForbiddenError) *SendEmailVerificationForbiddenResponseBody {
+	body := &SendEmailVerificationForbiddenResponseBody{
+		Code:    res.Code,
+		Message: res.Message,
+		Details: res.Details,
+		ID:      res.ID,
+	}
+	return body
+}
+
+// NewSendEmailVerificationInternalErrorResponseBody builds the HTTP response
+// body from the result of the "send_email_verification" endpoint of the "auth"
+// service.
+func NewSendEmailVerificationInternalErrorResponseBody(res *auth.InternalServerError) *SendEmailVerificationInternalErrorResponseBody {
+	body := &SendEmailVerificationInternalErrorResponseBody{
+		Code:    res.Code,
+		Message: res.Message,
+		Details: res.Details,
+		ID:      res.ID,
+	}
+	return body
+}
+
+// NewSendEmailVerificationNotFoundResponseBody builds the HTTP response body
+// from the result of the "send_email_verification" endpoint of the "auth"
+// service.
+func NewSendEmailVerificationNotFoundResponseBody(res *auth.NotFoundError) *SendEmailVerificationNotFoundResponseBody {
+	body := &SendEmailVerificationNotFoundResponseBody{
+		Code:    res.Code,
+		Message: res.Message,
+		Details: res.Details,
+		ID:      res.ID,
+	}
+	return body
+}
+
+// NewSendEmailVerificationUnauthorizedResponseBody builds the HTTP response
+// body from the result of the "send_email_verification" endpoint of the "auth"
+// service.
+func NewSendEmailVerificationUnauthorizedResponseBody(res *auth.UnauthorizedError) *SendEmailVerificationUnauthorizedResponseBody {
+	body := &SendEmailVerificationUnauthorizedResponseBody{
+		Code:    res.Code,
+		Message: res.Message,
+		Details: res.Details,
+		ID:      res.ID,
+	}
+	return body
+}
+
+// NewCheckEmailVerificationBadRequestResponseBody builds the HTTP response
+// body from the result of the "check_email_verification" endpoint of the
+// "auth" service.
+func NewCheckEmailVerificationBadRequestResponseBody(res *auth.BadRequestError) *CheckEmailVerificationBadRequestResponseBody {
+	body := &CheckEmailVerificationBadRequestResponseBody{
+		Code:    res.Code,
+		Message: res.Message,
+		Details: res.Details,
+		ID:      res.ID,
+	}
+	return body
+}
+
+// NewCheckEmailVerificationConflictResponseBody builds the HTTP response body
+// from the result of the "check_email_verification" endpoint of the "auth"
+// service.
+func NewCheckEmailVerificationConflictResponseBody(res *auth.ConflictError) *CheckEmailVerificationConflictResponseBody {
+	body := &CheckEmailVerificationConflictResponseBody{
+		Code:    res.Code,
+		Message: res.Message,
+		Details: res.Details,
+		ID:      res.ID,
+	}
+	return body
+}
+
+// NewCheckEmailVerificationForbiddenResponseBody builds the HTTP response body
+// from the result of the "check_email_verification" endpoint of the "auth"
+// service.
+func NewCheckEmailVerificationForbiddenResponseBody(res *auth.ForbiddenError) *CheckEmailVerificationForbiddenResponseBody {
+	body := &CheckEmailVerificationForbiddenResponseBody{
+		Code:    res.Code,
+		Message: res.Message,
+		Details: res.Details,
+		ID:      res.ID,
+	}
+	return body
+}
+
+// NewCheckEmailVerificationInternalErrorResponseBody builds the HTTP response
+// body from the result of the "check_email_verification" endpoint of the
+// "auth" service.
+func NewCheckEmailVerificationInternalErrorResponseBody(res *auth.InternalServerError) *CheckEmailVerificationInternalErrorResponseBody {
+	body := &CheckEmailVerificationInternalErrorResponseBody{
+		Code:    res.Code,
+		Message: res.Message,
+		Details: res.Details,
+		ID:      res.ID,
+	}
+	return body
+}
+
+// NewCheckEmailVerificationNotFoundResponseBody builds the HTTP response body
+// from the result of the "check_email_verification" endpoint of the "auth"
+// service.
+func NewCheckEmailVerificationNotFoundResponseBody(res *auth.NotFoundError) *CheckEmailVerificationNotFoundResponseBody {
+	body := &CheckEmailVerificationNotFoundResponseBody{
+		Code:    res.Code,
+		Message: res.Message,
+		Details: res.Details,
+		ID:      res.ID,
+	}
+	return body
+}
+
+// NewCheckEmailVerificationUnauthorizedResponseBody builds the HTTP response
+// body from the result of the "check_email_verification" endpoint of the
+// "auth" service.
+func NewCheckEmailVerificationUnauthorizedResponseBody(res *auth.UnauthorizedError) *CheckEmailVerificationUnauthorizedResponseBody {
+	body := &CheckEmailVerificationUnauthorizedResponseBody{
+		Code:    res.Code,
+		Message: res.Message,
+		Details: res.Details,
+		ID:      res.ID,
+	}
+	return body
+}
+
 // NewMeBadRequestResponseBody builds the HTTP response body from the result of
 // the "me" endpoint of the "auth" service.
 func NewMeBadRequestResponseBody(res *auth.BadRequestError) *MeBadRequestResponseBody {
@@ -1781,8 +2204,42 @@ func NewResetPasswordPayload(body *ResetPasswordRequestBody, sessionID *string) 
 // NewVerifyEmailPayload builds a auth service verify_email endpoint payload.
 func NewVerifyEmailPayload(body *VerifyEmailRequestBody, sessionID *string) *auth.VerifyEmailPayload {
 	v := &auth.VerifyEmailPayload{
-		Token: *body.Token,
+		Token:  body.Token,
+		Otp:    body.Otp,
+		Email:  *body.Email,
+		Method: *body.Method,
 	}
+	v.SessionID = sessionID
+
+	return v
+}
+
+// NewSendEmailVerificationPayload builds a auth service
+// send_email_verification endpoint payload.
+func NewSendEmailVerificationPayload(body *SendEmailVerificationRequestBody, redirectURL *string, sessionID *string) *auth.SendEmailVerificationPayload {
+	v := &auth.SendEmailVerificationPayload{
+		Email: *body.Email,
+	}
+	if body.Method != nil {
+		v.Method = *body.Method
+	}
+	if body.Method == nil {
+		v.Method = "otp"
+	}
+	v.RedirectURL = redirectURL
+	v.SessionID = sessionID
+
+	return v
+}
+
+// NewCheckEmailVerificationPayload builds a auth service
+// check_email_verification endpoint payload.
+func NewCheckEmailVerificationPayload(email string, oauth2 *string, jwt *string, xAPIKey *string, sessionID *string) *auth.CheckEmailVerificationPayload {
+	v := &auth.CheckEmailVerificationPayload{}
+	v.Email = email
+	v.Oauth2 = oauth2
+	v.JWT = jwt
+	v.XAPIKey = xAPIKey
 	v.SessionID = sessionID
 
 	return v
@@ -1885,8 +2342,36 @@ func ValidateResetPasswordRequestBody(body *ResetPasswordRequestBody) (err error
 // ValidateVerifyEmailRequestBody runs the validations defined on
 // verify_email_request_body
 func ValidateVerifyEmailRequestBody(body *VerifyEmailRequestBody) (err error) {
-	if body.Token == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("token", "body"))
+	if body.Method == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("method", "body"))
+	}
+	if body.Email == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("email", "body"))
+	}
+	if body.Email != nil {
+		err = goa.MergeErrors(err, goa.ValidateFormat("body.email", *body.Email, goa.FormatEmail))
+	}
+	if body.Method != nil {
+		if !(*body.Method == "link" || *body.Method == "otp") {
+			err = goa.MergeErrors(err, goa.InvalidEnumValueError("body.method", *body.Method, []any{"link", "otp"}))
+		}
+	}
+	return
+}
+
+// ValidateSendEmailVerificationRequestBody runs the validations defined on
+// send_email_verification_request_body
+func ValidateSendEmailVerificationRequestBody(body *SendEmailVerificationRequestBody) (err error) {
+	if body.Email == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("email", "body"))
+	}
+	if body.Email != nil {
+		err = goa.MergeErrors(err, goa.ValidateFormat("body.email", *body.Email, goa.FormatEmail))
+	}
+	if body.Method != nil {
+		if !(*body.Method == "link" || *body.Method == "otp") {
+			err = goa.MergeErrors(err, goa.InvalidEnumValueError("body.method", *body.Method, []any{"link", "otp"}))
+		}
 	}
 	return
 }

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/caarlos0/env/v6"
+	"github.com/juicycleff/frank/gen/designtypes"
 
 	"github.com/spf13/viper"
 )
@@ -20,30 +21,31 @@ var (
 
 // Config represents the application configuration
 type Config struct {
-	Environment     string `json:"environment" yaml:"environment" mapstructure:"environment" env:"ENVIRONMENT" envDefault:"development"`
-	Version         string `json:"version" yaml:"version" mapstructure:"version" env:"VERSION" envDefault:"0.0.0"`
-	GenerateSwagger bool   `json:"generate_swagger" yaml:"generate_swagger" mapstructure:"generate_swagger" env:"GENERATE_SWAGGER" envDefault:"false"`
-	UseHuma         bool   `json:"useHuma" yaml:"useHuma" mapstructure:"useHuma" env:"USE_HUMA" envDefault:"false"`
-	UseGoa          bool   `json:"useGoa" yaml:"useGoa" mapstructure:"useGoa" env:"USE_GOA" envDefault:"true"`
-	GitCommit       string `json:"git_commit" yaml:"git_commit" mapstructure:"git_commit" env:"GIT_COMMIT" envDefault:""`
-	GitBranch       string `json:"git_branch" yaml:"git_branch" mapstructure:"git_branch" env:"GIT_BRANCH" envDefault:""`
-	GitTag          string `json:"git_tag" yaml:"git_tag" mapstructure:"git_tag" env:"GIT_TAG" envDefault:""`
-	BuildDate       string `json:"build_date" yaml:"build_date" mapstructure:"build_date" env:"BUILD_DATE" envDefault:""`
-
-	Server     ServerConfig     `json:"server" yaml:"server" mapstructure:"server"`
-	Database   DatabaseConfig   `json:"database" yaml:"database" mapstructure:"database"`
-	Auth       AuthConfig       `json:"auth" yaml:"auth" mapstructure:"auth"`
-	Email      EmailConfig      `json:"email" yaml:"email" mapstructure:"email"`
-	SMS        SMSConfig        `json:"sms" yaml:"sms" mapstructure:"sms"` // Redis configuration
-	Redis      RedisConfig      `json:"redis" yaml:"redis" mapstructure:"redis"`
-	OAuth      OAuthConfig      `json:"oauth" yaml:"oauth" mapstructure:"oauth"`
-	Passkeys   PasskeysConfig   `json:"passkeys" yaml:"passkeys" mapstructure:"passkeys"`
-	Webhooks   WebhooksConfig   `json:"webhooks" yaml:"webhooks" mapstructure:"webhooks"`
-	Security   SecurityConfig   `json:"security" yaml:"security" mapstructure:"security"`
-	Logging    LoggingConfig    `json:"logging" yaml:"logging" mapstructure:"logging"`
-	Features   FeaturesConfig   `json:"features" yaml:"features" mapstructure:"features"`
-	Templates  TemplatesConfig  `json:"templates" yaml:"templates" mapstructure:"templates"`
-	Monitoring MonitoringConfig `json:"monitoring" yaml:"monitoring" mapstructure:"monitoring"`
+	Environment     string             `json:"environment" yaml:"environment" mapstructure:"environment" env:"ENVIRONMENT" envDefault:"development"`
+	Version         string             `json:"version" yaml:"version" mapstructure:"version" env:"VERSION" envDefault:"0.0.0"`
+	GenerateSwagger bool               `json:"generate_swagger" yaml:"generate_swagger" mapstructure:"generate_swagger" env:"GENERATE_SWAGGER" envDefault:"false"`
+	UseHuma         bool               `json:"useHuma" yaml:"useHuma" mapstructure:"useHuma" env:"USE_HUMA" envDefault:"false"`
+	UseGoa          bool               `json:"useGoa" yaml:"useGoa" mapstructure:"useGoa" env:"USE_GOA" envDefault:"true"`
+	GitCommit       string             `json:"git_commit" yaml:"git_commit" mapstructure:"git_commit" env:"GIT_COMMIT" envDefault:""`
+	GitBranch       string             `json:"git_branch" yaml:"git_branch" mapstructure:"git_branch" env:"GIT_BRANCH" envDefault:""`
+	GitTag          string             `json:"git_tag" yaml:"git_tag" mapstructure:"git_tag" env:"GIT_TAG" envDefault:""`
+	BuildDate       string             `json:"build_date" yaml:"build_date" mapstructure:"build_date" env:"BUILD_DATE" envDefault:""`
+	StandaloneMode  bool               `json:"standalone_mode" yaml:"standalone_mode" mapstructure:"standalone_mode" env:"STANDALONE_MODE" envDefault:"false"`
+	Server          ServerConfig       `json:"server" yaml:"server" mapstructure:"server"`
+	Database        DatabaseConfig     `json:"database" yaml:"database" mapstructure:"database"`
+	Auth            AuthConfig         `json:"auth" yaml:"auth" mapstructure:"auth"`
+	Email           EmailConfig        `json:"email" yaml:"email" mapstructure:"email"`
+	SMS             SMSConfig          `json:"sms" yaml:"sms" mapstructure:"sms"` // Redis configuration
+	Redis           RedisConfig        `json:"redis" yaml:"redis" mapstructure:"redis"`
+	OAuth           OAuthConfig        `json:"oauth" yaml:"oauth" mapstructure:"oauth"`
+	Passkeys        PasskeysConfig     `json:"passkeys" yaml:"passkeys" mapstructure:"passkeys"`
+	Webhooks        WebhooksConfig     `json:"webhooks" yaml:"webhooks" mapstructure:"webhooks"`
+	Security        SecurityConfig     `json:"security" yaml:"security" mapstructure:"security"`
+	Logging         LoggingConfig      `json:"logging" yaml:"logging" mapstructure:"logging"`
+	Features        FeaturesConfig     `json:"features" yaml:"features" mapstructure:"features"`
+	Templates       TemplatesConfig    `json:"templates" yaml:"templates" mapstructure:"templates"`
+	Monitoring      MonitoringConfig   `json:"monitoring" yaml:"monitoring" mapstructure:"monitoring"`
+	Organization    OrganizationConfig `json:"organization" yaml:"organization" mapstructure:"organization"`
 }
 
 func (c *Config) GetServerAddress() string {
@@ -154,7 +156,7 @@ type AuthConfig struct {
 	CookieSameSite   string        `json:"cookie_same_site" yaml:"cookie_same_site" mapstructure:"cookie_same_site" env:"AUTH_COOKIE_SAME_SITE" envDefault:"none"`
 
 	// Email verification
-	RequireEmailVerification bool          `json:"require_email_verification" yaml:"require_email_verification" mapstructure:"require_email_verification" env:"AUTH_REQUIRE_EMAIL_VERIFICATION" envDefault:"false"`
+	RequireEmailVerification bool          `json:"require_email_verification" yaml:"require_email_verification" mapstructure:"require_email_verification" env:"AUTH_REQUIRE_EMAIL_VERIFICATION" envDefault:"true"`
 	EmailVerificationExpiry  time.Duration `json:"email_verification_expiry" yaml:"email_verification_expiry" mapstructure:"email_verification_expiry" env:"AUTH_EMAIL_VERIFICATION_EXPIRY" envDefault:"24h"`
 
 	// Default user role
@@ -186,6 +188,20 @@ type PasswordPolicy struct {
 	MaxReusedPasswords int  `json:"password_max_reused_passwords" yaml:"password_max_reused_passwords" mapstructure:"password_max_reused_passwords" env:"AUTH_PASSWORD_MAX_REUSED_PASSWORDS" envDefault:"3"`
 	PreventReuse       bool `json:"password_prevent_reuse" yaml:"password_prevent_reuse" mapstructure:"password_prevent_reuse" env:"AUTH_PASSWORD_PREVENT_REUSE" envDefault:"true"`
 	ExpiryDays         int  `json:"password_expiry_days" yaml:"password_expiry_days" mapstructure:"password_expiry_days" env:"AUTH_PASSWORD_EXPIRY_DAYS" envDefault:"90"`
+}
+
+// OrganizationConfig defines organization settings
+type OrganizationConfig struct {
+	DefaultName     string                  `json:"default_name" yaml:"default_name" mapstructure:"default_name" env:"ORG_DEFAULT_NAME" envDefault:"Default"`
+	DefaultFeatures []string                `json:"default_features" yaml:"default_features" mapstructure:"default_features" env:"ORG_DEFAULT_FEATURES" envDefault:"email,sms,magic_link"`
+	SignupFields    []designtypes.FormField `json:"signup_fields" yaml:"signup_fields" mapstructure:"signup_fields"`
+	Verification    OrgVerificationConfig   `json:"verification" yaml:"verification" mapstructure:"verification"`
+}
+
+// OrgVerificationConfig defines organization settings
+type OrgVerificationConfig struct {
+	CodeLength int    `json:"code_length" yaml:"code_length" mapstructure:"code_length" env:"ORG_VERIFICATION_CODE_LENGTH" envDefault:"6"`
+	Method     string `json:"method" yaml:"method" mapstructure:"method" env:"ORG_VERIFICATION_METHOD" envDefault:"email"`
 }
 
 // EmailConfig represents email-specific configuration

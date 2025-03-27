@@ -1,0 +1,23 @@
+{
+	"name": "frank-auth",
+	"private": true,
+	"workspaces": ["apps/*", "packages/*"],
+	"scripts": {
+		"build": "turbo run build",
+		"dev": "turbo run dev",
+		"build:web": "turbo run build --filter client",
+		"dev:web": "turbo build dev --filter=./packages/* && turbo run dev --filter client",
+		"build:sdk": "turbo build dev --filter=./packages/* && turbo run build --filter @frank/sdk",
+		"dev:sdk": "turbo run dev --filter @frank/sdk",
+		"build:react": "turbo run build --filter @frank/react",
+		"dev:react": "turbo run dev --filter @frank/react",
+		"lint:fix": "biome lint --write",
+		"lint:check": "biome check --write",
+		"format": "biome format --write"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "1.9.4",
+		"turbo": "^2.4.4"
+	},
+	"packageManager": "pnpm@10.6.5"
+}

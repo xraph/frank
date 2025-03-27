@@ -1297,6 +1297,376 @@ func DecodeVerifyEmailResponse(decoder func(*http.Response) goahttp.Decoder, res
 	}
 }
 
+// BuildSendEmailVerificationRequest instantiates a HTTP request object with
+// method and path set to call the "auth" service "send_email_verification"
+// endpoint
+func (c *Client) BuildSendEmailVerificationRequest(ctx context.Context, v any) (*http.Request, error) {
+	u := &url.URL{Scheme: c.scheme, Host: c.host, Path: SendEmailVerificationAuthPath()}
+	req, err := http.NewRequest("POST", u.String(), nil)
+	if err != nil {
+		return nil, goahttp.ErrInvalidURL("auth", "send_email_verification", u.String(), err)
+	}
+	if ctx != nil {
+		req = req.WithContext(ctx)
+	}
+
+	return req, nil
+}
+
+// EncodeSendEmailVerificationRequest returns an encoder for requests sent to
+// the auth send_email_verification server.
+func EncodeSendEmailVerificationRequest(encoder func(*http.Request) goahttp.Encoder) func(*http.Request, any) error {
+	return func(req *http.Request, v any) error {
+		p, ok := v.(*auth.SendEmailVerificationPayload)
+		if !ok {
+			return goahttp.ErrInvalidType("auth", "send_email_verification", "*auth.SendEmailVerificationPayload", v)
+		}
+		if p.SessionID != nil {
+			v := *p.SessionID
+			req.AddCookie(&http.Cookie{
+				Name:  "frank_sid",
+				Value: v,
+			})
+		}
+		values := req.URL.Query()
+		if p.RedirectURL != nil {
+			values.Add("redirect_url", *p.RedirectURL)
+		}
+		req.URL.RawQuery = values.Encode()
+		body := NewSendEmailVerificationRequestBody(p)
+		if err := encoder(req).Encode(&body); err != nil {
+			return goahttp.ErrEncodingError("auth", "send_email_verification", err)
+		}
+		return nil
+	}
+}
+
+// DecodeSendEmailVerificationResponse returns a decoder for responses returned
+// by the auth send_email_verification endpoint. restoreBody controls whether
+// the response body should be restored after having been read.
+// DecodeSendEmailVerificationResponse may return the following errors:
+//   - "bad_request" (type *auth.BadRequestError): http.StatusBadRequest
+//   - "conflict" (type *auth.ConflictError): http.StatusConflict
+//   - "forbidden" (type *auth.ForbiddenError): http.StatusForbidden
+//   - "internal_error" (type *auth.InternalServerError): http.StatusInternalServerError
+//   - "not_found" (type *auth.NotFoundError): http.StatusNotFound
+//   - "unauthorized" (type *auth.UnauthorizedError): http.StatusUnauthorized
+//   - error: internal error
+func DecodeSendEmailVerificationResponse(decoder func(*http.Response) goahttp.Decoder, restoreBody bool) func(*http.Response) (any, error) {
+	return func(resp *http.Response) (any, error) {
+		if restoreBody {
+			b, err := io.ReadAll(resp.Body)
+			if err != nil {
+				return nil, err
+			}
+			resp.Body = io.NopCloser(bytes.NewBuffer(b))
+			defer func() {
+				resp.Body = io.NopCloser(bytes.NewBuffer(b))
+			}()
+		} else {
+			defer resp.Body.Close()
+		}
+		switch resp.StatusCode {
+		case http.StatusOK:
+			var (
+				body SendEmailVerificationResponseBody
+				err  error
+			)
+			err = decoder(resp).Decode(&body)
+			if err != nil {
+				return nil, goahttp.ErrDecodingError("auth", "send_email_verification", err)
+			}
+			err = ValidateSendEmailVerificationResponseBody(&body)
+			if err != nil {
+				return nil, goahttp.ErrValidationError("auth", "send_email_verification", err)
+			}
+			res := NewSendEmailVerificationResultOK(&body)
+			return res, nil
+		case http.StatusBadRequest:
+			var (
+				body SendEmailVerificationBadRequestResponseBody
+				err  error
+			)
+			err = decoder(resp).Decode(&body)
+			if err != nil {
+				return nil, goahttp.ErrDecodingError("auth", "send_email_verification", err)
+			}
+			err = ValidateSendEmailVerificationBadRequestResponseBody(&body)
+			if err != nil {
+				return nil, goahttp.ErrValidationError("auth", "send_email_verification", err)
+			}
+			return nil, NewSendEmailVerificationBadRequest(&body)
+		case http.StatusConflict:
+			var (
+				body SendEmailVerificationConflictResponseBody
+				err  error
+			)
+			err = decoder(resp).Decode(&body)
+			if err != nil {
+				return nil, goahttp.ErrDecodingError("auth", "send_email_verification", err)
+			}
+			err = ValidateSendEmailVerificationConflictResponseBody(&body)
+			if err != nil {
+				return nil, goahttp.ErrValidationError("auth", "send_email_verification", err)
+			}
+			return nil, NewSendEmailVerificationConflict(&body)
+		case http.StatusForbidden:
+			var (
+				body SendEmailVerificationForbiddenResponseBody
+				err  error
+			)
+			err = decoder(resp).Decode(&body)
+			if err != nil {
+				return nil, goahttp.ErrDecodingError("auth", "send_email_verification", err)
+			}
+			err = ValidateSendEmailVerificationForbiddenResponseBody(&body)
+			if err != nil {
+				return nil, goahttp.ErrValidationError("auth", "send_email_verification", err)
+			}
+			return nil, NewSendEmailVerificationForbidden(&body)
+		case http.StatusInternalServerError:
+			var (
+				body SendEmailVerificationInternalErrorResponseBody
+				err  error
+			)
+			err = decoder(resp).Decode(&body)
+			if err != nil {
+				return nil, goahttp.ErrDecodingError("auth", "send_email_verification", err)
+			}
+			err = ValidateSendEmailVerificationInternalErrorResponseBody(&body)
+			if err != nil {
+				return nil, goahttp.ErrValidationError("auth", "send_email_verification", err)
+			}
+			return nil, NewSendEmailVerificationInternalError(&body)
+		case http.StatusNotFound:
+			var (
+				body SendEmailVerificationNotFoundResponseBody
+				err  error
+			)
+			err = decoder(resp).Decode(&body)
+			if err != nil {
+				return nil, goahttp.ErrDecodingError("auth", "send_email_verification", err)
+			}
+			err = ValidateSendEmailVerificationNotFoundResponseBody(&body)
+			if err != nil {
+				return nil, goahttp.ErrValidationError("auth", "send_email_verification", err)
+			}
+			return nil, NewSendEmailVerificationNotFound(&body)
+		case http.StatusUnauthorized:
+			var (
+				body SendEmailVerificationUnauthorizedResponseBody
+				err  error
+			)
+			err = decoder(resp).Decode(&body)
+			if err != nil {
+				return nil, goahttp.ErrDecodingError("auth", "send_email_verification", err)
+			}
+			err = ValidateSendEmailVerificationUnauthorizedResponseBody(&body)
+			if err != nil {
+				return nil, goahttp.ErrValidationError("auth", "send_email_verification", err)
+			}
+			return nil, NewSendEmailVerificationUnauthorized(&body)
+		default:
+			body, _ := io.ReadAll(resp.Body)
+			return nil, goahttp.ErrInvalidResponse("auth", "send_email_verification", resp.StatusCode, string(body))
+		}
+	}
+}
+
+// BuildCheckEmailVerificationRequest instantiates a HTTP request object with
+// method and path set to call the "auth" service "check_email_verification"
+// endpoint
+func (c *Client) BuildCheckEmailVerificationRequest(ctx context.Context, v any) (*http.Request, error) {
+	u := &url.URL{Scheme: c.scheme, Host: c.host, Path: CheckEmailVerificationAuthPath()}
+	req, err := http.NewRequest("GET", u.String(), nil)
+	if err != nil {
+		return nil, goahttp.ErrInvalidURL("auth", "check_email_verification", u.String(), err)
+	}
+	if ctx != nil {
+		req = req.WithContext(ctx)
+	}
+
+	return req, nil
+}
+
+// EncodeCheckEmailVerificationRequest returns an encoder for requests sent to
+// the auth check_email_verification server.
+func EncodeCheckEmailVerificationRequest(encoder func(*http.Request) goahttp.Encoder) func(*http.Request, any) error {
+	return func(req *http.Request, v any) error {
+		p, ok := v.(*auth.CheckEmailVerificationPayload)
+		if !ok {
+			return goahttp.ErrInvalidType("auth", "check_email_verification", "*auth.CheckEmailVerificationPayload", v)
+		}
+		if p.Oauth2 != nil {
+			head := *p.Oauth2
+			if !strings.Contains(head, " ") {
+				req.Header.Set("Authorization", "Bearer "+head)
+			} else {
+				req.Header.Set("Authorization", head)
+			}
+		}
+		if p.JWT != nil {
+			head := *p.JWT
+			if !strings.Contains(head, " ") {
+				req.Header.Set("Authorization", "Bearer "+head)
+			} else {
+				req.Header.Set("Authorization", head)
+			}
+		}
+		if p.XAPIKey != nil {
+			head := *p.XAPIKey
+			if !strings.Contains(head, " ") {
+				req.Header.Set("Authorization", "Bearer "+head)
+			} else {
+				req.Header.Set("Authorization", head)
+			}
+		}
+		if p.SessionID != nil {
+			v := *p.SessionID
+			req.AddCookie(&http.Cookie{
+				Name:  "frank_sid",
+				Value: v,
+			})
+		}
+		values := req.URL.Query()
+		values.Add("email", p.Email)
+		req.URL.RawQuery = values.Encode()
+		return nil
+	}
+}
+
+// DecodeCheckEmailVerificationResponse returns a decoder for responses
+// returned by the auth check_email_verification endpoint. restoreBody controls
+// whether the response body should be restored after having been read.
+// DecodeCheckEmailVerificationResponse may return the following errors:
+//   - "bad_request" (type *auth.BadRequestError): http.StatusBadRequest
+//   - "conflict" (type *auth.ConflictError): http.StatusConflict
+//   - "forbidden" (type *auth.ForbiddenError): http.StatusForbidden
+//   - "internal_error" (type *auth.InternalServerError): http.StatusInternalServerError
+//   - "not_found" (type *auth.NotFoundError): http.StatusNotFound
+//   - "unauthorized" (type *auth.UnauthorizedError): http.StatusUnauthorized
+//   - error: internal error
+func DecodeCheckEmailVerificationResponse(decoder func(*http.Response) goahttp.Decoder, restoreBody bool) func(*http.Response) (any, error) {
+	return func(resp *http.Response) (any, error) {
+		if restoreBody {
+			b, err := io.ReadAll(resp.Body)
+			if err != nil {
+				return nil, err
+			}
+			resp.Body = io.NopCloser(bytes.NewBuffer(b))
+			defer func() {
+				resp.Body = io.NopCloser(bytes.NewBuffer(b))
+			}()
+		} else {
+			defer resp.Body.Close()
+		}
+		switch resp.StatusCode {
+		case http.StatusOK:
+			var (
+				body CheckEmailVerificationResponseBody
+				err  error
+			)
+			err = decoder(resp).Decode(&body)
+			if err != nil {
+				return nil, goahttp.ErrDecodingError("auth", "check_email_verification", err)
+			}
+			err = ValidateCheckEmailVerificationResponseBody(&body)
+			if err != nil {
+				return nil, goahttp.ErrValidationError("auth", "check_email_verification", err)
+			}
+			res := NewCheckEmailVerificationResultOK(&body)
+			return res, nil
+		case http.StatusBadRequest:
+			var (
+				body CheckEmailVerificationBadRequestResponseBody
+				err  error
+			)
+			err = decoder(resp).Decode(&body)
+			if err != nil {
+				return nil, goahttp.ErrDecodingError("auth", "check_email_verification", err)
+			}
+			err = ValidateCheckEmailVerificationBadRequestResponseBody(&body)
+			if err != nil {
+				return nil, goahttp.ErrValidationError("auth", "check_email_verification", err)
+			}
+			return nil, NewCheckEmailVerificationBadRequest(&body)
+		case http.StatusConflict:
+			var (
+				body CheckEmailVerificationConflictResponseBody
+				err  error
+			)
+			err = decoder(resp).Decode(&body)
+			if err != nil {
+				return nil, goahttp.ErrDecodingError("auth", "check_email_verification", err)
+			}
+			err = ValidateCheckEmailVerificationConflictResponseBody(&body)
+			if err != nil {
+				return nil, goahttp.ErrValidationError("auth", "check_email_verification", err)
+			}
+			return nil, NewCheckEmailVerificationConflict(&body)
+		case http.StatusForbidden:
+			var (
+				body CheckEmailVerificationForbiddenResponseBody
+				err  error
+			)
+			err = decoder(resp).Decode(&body)
+			if err != nil {
+				return nil, goahttp.ErrDecodingError("auth", "check_email_verification", err)
+			}
+			err = ValidateCheckEmailVerificationForbiddenResponseBody(&body)
+			if err != nil {
+				return nil, goahttp.ErrValidationError("auth", "check_email_verification", err)
+			}
+			return nil, NewCheckEmailVerificationForbidden(&body)
+		case http.StatusInternalServerError:
+			var (
+				body CheckEmailVerificationInternalErrorResponseBody
+				err  error
+			)
+			err = decoder(resp).Decode(&body)
+			if err != nil {
+				return nil, goahttp.ErrDecodingError("auth", "check_email_verification", err)
+			}
+			err = ValidateCheckEmailVerificationInternalErrorResponseBody(&body)
+			if err != nil {
+				return nil, goahttp.ErrValidationError("auth", "check_email_verification", err)
+			}
+			return nil, NewCheckEmailVerificationInternalError(&body)
+		case http.StatusNotFound:
+			var (
+				body CheckEmailVerificationNotFoundResponseBody
+				err  error
+			)
+			err = decoder(resp).Decode(&body)
+			if err != nil {
+				return nil, goahttp.ErrDecodingError("auth", "check_email_verification", err)
+			}
+			err = ValidateCheckEmailVerificationNotFoundResponseBody(&body)
+			if err != nil {
+				return nil, goahttp.ErrValidationError("auth", "check_email_verification", err)
+			}
+			return nil, NewCheckEmailVerificationNotFound(&body)
+		case http.StatusUnauthorized:
+			var (
+				body CheckEmailVerificationUnauthorizedResponseBody
+				err  error
+			)
+			err = decoder(resp).Decode(&body)
+			if err != nil {
+				return nil, goahttp.ErrDecodingError("auth", "check_email_verification", err)
+			}
+			err = ValidateCheckEmailVerificationUnauthorizedResponseBody(&body)
+			if err != nil {
+				return nil, goahttp.ErrValidationError("auth", "check_email_verification", err)
+			}
+			return nil, NewCheckEmailVerificationUnauthorized(&body)
+		default:
+			body, _ := io.ReadAll(resp.Body)
+			return nil, goahttp.ErrInvalidResponse("auth", "check_email_verification", resp.StatusCode, string(body))
+		}
+	}
+}
+
 // BuildMeRequest instantiates a HTTP request object with method and path set
 // to call the "auth" service "me" endpoint
 func (c *Client) BuildMeRequest(ctx context.Context, v any) (*http.Request, error) {

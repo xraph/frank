@@ -198,7 +198,7 @@ type GetSessionsResponseBody struct {
 // GetOrganizationsResponseBody is the type of the "users" service
 // "get_organizations" endpoint HTTP response body.
 type GetOrganizationsResponseBody struct {
-	Organizations []*OrganizationResponseResponseBody `form:"organizations,omitempty" json:"organizations,omitempty" xml:"organizations,omitempty"`
+	Organizations []*OrganizationResponseBody `form:"organizations,omitempty" json:"organizations,omitempty" xml:"organizations,omitempty"`
 }
 
 // ListBadRequestResponseBody is the type of the "users" service "list"
@@ -1076,9 +1076,8 @@ type SessionResponseBody struct {
 	UpdatedAt *string `json:"updated_at,updatedAt"`
 }
 
-// OrganizationResponseResponseBody is used to define fields on response body
-// types.
-type OrganizationResponseResponseBody struct {
+// OrganizationResponseBody is used to define fields on response body types.
+type OrganizationResponseBody struct {
 	// Organization ID
 	ID *string `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
 	// Organization name
@@ -1103,6 +1102,78 @@ type OrganizationResponseResponseBody struct {
 	CreatedAt *string `form:"created_at,omitempty" json:"created_at,omitempty" xml:"created_at,omitempty"`
 	// Last update timestamp
 	UpdatedAt *string `form:"updated_at,omitempty" json:"updated_at,omitempty" xml:"updated_at,omitempty"`
+	// Organization settings
+	Settings *OrganizationSettingsResponseBody `json:"settings"`
+}
+
+// OrganizationSettingsResponseBody is used to define fields on response body
+// types.
+type OrganizationSettingsResponseBody struct {
+	// Signup fields
+	SignupFields []*FormFieldResponseBody `json:"signupFields"`
+	// Signup fields
+	Verification []*OrganizationVerificationConfigResponseBody `json:"verification"`
+}
+
+// FormFieldResponseBody is used to define fields on response body types.
+type FormFieldResponseBody struct {
+	// Field identifier name
+	Name *string `json:"name" mapstructure:"name" yaml:"name"`
+	// Display label for the field
+	Label *string `json:"label" mapstructure:"label" yaml:"label"`
+	// Type of form field
+	Type *string `json:"type" mapstructure:"type" yaml:"type"`
+	// Placeholder text
+	Placeholder *string `json:"placeholder" mapstructure:"placeholder" yaml:"placeholder"`
+	// Whether the field is required
+	Required *bool `json:"required" mapstructure:"required" yaml:"required"`
+	// Indicates if field represents a first name
+	IsFirstName *bool `json:"isFirstName" mapstructure:"isFirstName" yaml:"isFirstName"`
+	// Indicates if field represents a last name
+	IsLastName *bool `json:"isLastName" mapstructure:"isLastName" yaml:"isLastName"`
+	// Indicates if field represents an email
+	IsEmail *bool `json:"isEmail" mapstructure:"isEmail" yaml:"isEmail"`
+	// Options for select fields
+	Options []*FormFieldSelectOptionResponseBody `json:"options" mapstructure:"options" yaml:"options"`
+	// Validation rules for the field
+	Validation *FormFieldValidationRulesResponseBody `json:"validation" mapstructure:"validation" yaml:"validation"`
+	// Row position identifier (string or number)
+	Row any `json:"row" mapstructure:"row" yaml:"row"`
+	// Width of the field
+	Width *string `json:"width" mapstructure:"width" yaml:"width"`
+}
+
+// FormFieldSelectOptionResponseBody is used to define fields on response body
+// types.
+type FormFieldSelectOptionResponseBody struct {
+	// Option value
+	Value *string `json:"value" mapstructure:"value" yaml:"value"`
+	// Option display label
+	Label *string `json:"label" mapstructure:"label" yaml:"label"`
+}
+
+// FormFieldValidationRulesResponseBody is used to define fields on response
+// body types.
+type FormFieldValidationRulesResponseBody struct {
+	// Regex pattern for validation
+	Pattern *string `json:"pattern" mapstructure:"pattern" yaml:"pattern"`
+	// Minimum length
+	MinLength *int `json:"minLength" mapstructure:"minLength" yaml:"minLength"`
+	// Maximum length
+	MaxLength *int `json:"maxLength" mapstructure:"maxLength" yaml:"maxLength"`
+	// Minimum value
+	Min *float32 `json:"min" mapstructure:"min" yaml:"min"`
+	// Maximum value
+	Max *float32 `json:"max" mapstructure:"max" yaml:"max"`
+}
+
+// OrganizationVerificationConfigResponseBody is used to define fields on
+// response body types.
+type OrganizationVerificationConfigResponseBody struct {
+	// Length of verification code
+	CodeLength *int `form:"code_length,omitempty" json:"code_length,omitempty" xml:"code_length,omitempty"`
+	// Method used for verification
+	Method *string `form:"method,omitempty" json:"method,omitempty" xml:"method,omitempty"`
 }
 
 // NewCreateRequestBody builds the HTTP request body from the payload of the
@@ -2020,9 +2091,9 @@ func NewDeleteSessionUnauthorized(body *DeleteSessionUnauthorizedResponseBody) *
 // endpoint result from a HTTP "OK" response.
 func NewGetOrganizationsResultOK(body *GetOrganizationsResponseBody) *users.GetOrganizationsResult {
 	v := &users.GetOrganizationsResult{}
-	v.Organizations = make([]*users.OrganizationResponse, len(body.Organizations))
+	v.Organizations = make([]*designtypes.Organization, len(body.Organizations))
 	for i, val := range body.Organizations {
-		v.Organizations[i] = unmarshalOrganizationResponseResponseBodyToUsersOrganizationResponse(val)
+		v.Organizations[i] = unmarshalOrganizationResponseBodyToDesigntypesOrganization(val)
 	}
 
 	return v
@@ -2239,7 +2310,7 @@ func ValidateGetOrganizationsResponseBody(body *GetOrganizationsResponseBody) (e
 	}
 	for _, e := range body.Organizations {
 		if e != nil {
-			if err2 := ValidateOrganizationResponseResponseBody(e); err2 != nil {
+			if err2 := ValidateOrganizationResponseBody(e); err2 != nil {
 				err = goa.MergeErrors(err, err2)
 			}
 		}
@@ -3056,9 +3127,9 @@ func ValidateSessionResponseBody(body *SessionResponseBody) (err error) {
 	return
 }
 
-// ValidateOrganizationResponseResponseBody runs the validations defined on
-// OrganizationResponseResponseBody
-func ValidateOrganizationResponseResponseBody(body *OrganizationResponseResponseBody) (err error) {
+// ValidateOrganizationResponseBody runs the validations defined on
+// OrganizationResponseBody
+func ValidateOrganizationResponseBody(body *OrganizationResponseBody) (err error) {
 	if body.ID == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("id", "body"))
 	}
@@ -3076,6 +3147,107 @@ func ValidateOrganizationResponseResponseBody(body *OrganizationResponseResponse
 	}
 	if body.UpdatedAt == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("updated_at", "body"))
+	}
+	if body.Settings != nil {
+		if err2 := ValidateOrganizationSettingsResponseBody(body.Settings); err2 != nil {
+			err = goa.MergeErrors(err, err2)
+		}
+	}
+	return
+}
+
+// ValidateOrganizationSettingsResponseBody runs the validations defined on
+// OrganizationSettingsResponseBody
+func ValidateOrganizationSettingsResponseBody(body *OrganizationSettingsResponseBody) (err error) {
+	for _, e := range body.SignupFields {
+		if e != nil {
+			if err2 := ValidateFormFieldResponseBody(e); err2 != nil {
+				err = goa.MergeErrors(err, err2)
+			}
+		}
+	}
+	for _, e := range body.Verification {
+		if e != nil {
+			if err2 := ValidateOrganizationVerificationConfigResponseBody(e); err2 != nil {
+				err = goa.MergeErrors(err, err2)
+			}
+		}
+	}
+	return
+}
+
+// ValidateFormFieldResponseBody runs the validations defined on
+// FormFieldResponseBody
+func ValidateFormFieldResponseBody(body *FormFieldResponseBody) (err error) {
+	if body.Name == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("name", "body"))
+	}
+	if body.Label == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("label", "body"))
+	}
+	if body.Type == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("type", "body"))
+	}
+	if body.Type != nil {
+		if !(*body.Type == "text" || *body.Type == "select" || *body.Type == "checkbox" || *body.Type == "number") {
+			err = goa.MergeErrors(err, goa.InvalidEnumValueError("body.type", *body.Type, []any{"text", "select", "checkbox", "number"}))
+		}
+	}
+	for _, e := range body.Options {
+		if e != nil {
+			if err2 := ValidateFormFieldSelectOptionResponseBody(e); err2 != nil {
+				err = goa.MergeErrors(err, err2)
+			}
+		}
+	}
+	if body.Validation != nil {
+		if err2 := ValidateFormFieldValidationRulesResponseBody(body.Validation); err2 != nil {
+			err = goa.MergeErrors(err, err2)
+		}
+	}
+	if body.Width != nil {
+		if !(*body.Width == "full" || *body.Width == "half" || *body.Width == "third") {
+			err = goa.MergeErrors(err, goa.InvalidEnumValueError("body.width", *body.Width, []any{"full", "half", "third"}))
+		}
+	}
+	return
+}
+
+// ValidateFormFieldSelectOptionResponseBody runs the validations defined on
+// FormFieldSelectOptionResponseBody
+func ValidateFormFieldSelectOptionResponseBody(body *FormFieldSelectOptionResponseBody) (err error) {
+	if body.Label == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("label", "body"))
+	}
+	if body.Value == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("value", "body"))
+	}
+	return
+}
+
+// ValidateFormFieldValidationRulesResponseBody runs the validations defined on
+// FormFieldValidationRulesResponseBody
+func ValidateFormFieldValidationRulesResponseBody(body *FormFieldValidationRulesResponseBody) (err error) {
+	if body.MinLength != nil {
+		if *body.MinLength < 0 {
+			err = goa.MergeErrors(err, goa.InvalidRangeError("body.minLength", *body.MinLength, 0, true))
+		}
+	}
+	if body.MaxLength != nil {
+		if *body.MaxLength < 1 {
+			err = goa.MergeErrors(err, goa.InvalidRangeError("body.maxLength", *body.MaxLength, 1, true))
+		}
+	}
+	return
+}
+
+// ValidateOrganizationVerificationConfigResponseBody runs the validations
+// defined on OrganizationVerificationConfigResponseBody
+func ValidateOrganizationVerificationConfigResponseBody(body *OrganizationVerificationConfigResponseBody) (err error) {
+	if body.Method != nil {
+		if !(*body.Method == "email" || *body.Method == "sms" || *body.Method == "phone") {
+			err = goa.MergeErrors(err, goa.InvalidEnumValueError("body.method", *body.Method, []any{"email", "sms", "phone"}))
+		}
 	}
 	return
 }

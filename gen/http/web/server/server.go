@@ -21,10 +21,10 @@ import (
 
 // Server lists the web service endpoint HTTP handlers.
 type Server struct {
-	Mounts        []*MountPoint
-	Home          http.Handler
-	CORS          http.Handler
-	WebClientDist http.Handler
+	Mounts            []*MountPoint
+	Home              http.Handler
+	CORS              http.Handler
+	WebAppsClientDist http.Handler
 }
 
 // MountPoint holds information about the mounted endpoints.
@@ -51,12 +51,12 @@ func New(
 	encoder func(context.Context, http.ResponseWriter) goahttp.Encoder,
 	errhandler func(context.Context, http.ResponseWriter, error),
 	formatter func(ctx context.Context, err error) goahttp.Statuser,
-	fileSystemWebClientDist http.FileSystem,
+	fileSystemWebAppsClientDist http.FileSystem,
 ) *Server {
-	if fileSystemWebClientDist == nil {
-		fileSystemWebClientDist = http.Dir(".")
+	if fileSystemWebAppsClientDist == nil {
+		fileSystemWebAppsClientDist = http.Dir(".")
 	}
-	fileSystemWebClientDist = appendPrefix(fileSystemWebClientDist, "/./web/client/dist")
+	fileSystemWebAppsClientDist = appendPrefix(fileSystemWebAppsClientDist, "/./web/apps/client/dist")
 	return &Server{
 		Mounts: []*MountPoint{
 			{"Home", "GET", "/"},
@@ -64,11 +64,11 @@ func New(
 			{"CORS", "OPTIONS", "/"},
 			{"CORS", "OPTIONS", "/ui"},
 			{"CORS", "OPTIONS", "/ui/{*filepath}"},
-			{"Serve ./web/client/dist", "GET", "/ui"},
+			{"Serve ./web/apps/client/dist", "GET", "/ui"},
 		},
-		Home:          NewHomeHandler(e.Home, mux, decoder, encoder, errhandler, formatter),
-		CORS:          NewCORSHandler(),
-		WebClientDist: http.FileServer(fileSystemWebClientDist),
+		Home:              NewHomeHandler(e.Home, mux, decoder, encoder, errhandler, formatter),
+		CORS:              NewCORSHandler(),
+		WebAppsClientDist: http.FileServer(fileSystemWebAppsClientDist),
 	}
 }
 
@@ -88,7 +88,7 @@ func (s *Server) MethodNames() []string { return web.MethodNames[:] }
 func Mount(mux goahttp.Muxer, h *Server) {
 	MountHomeHandler(mux, h.Home)
 	MountCORSHandler(mux, h.CORS)
-	MountWebClientDist(mux, http.StripPrefix("/ui", h.WebClientDist))
+	MountWebAppsClientDist(mux, http.StripPrefix("/ui", h.WebAppsClientDist))
 }
 
 // Mount configures the mux to serve the web endpoints.
@@ -148,8 +148,8 @@ func appendPrefix(fsys http.FileSystem, prefix string) http.FileSystem {
 	return appendFS{prefix: prefix, fs: fsys}
 }
 
-// MountWebClientDist configures the mux to serve GET request made to "/ui".
-func MountWebClientDist(mux goahttp.Muxer, h http.Handler) {
+// MountWebAppsClientDist configures the mux to serve GET request made to "/ui".
+func MountWebAppsClientDist(mux goahttp.Muxer, h http.Handler) {
 	mux.Handle("GET", "/ui/", HandleWebOrigin(h).ServeHTTP)
 	mux.Handle("GET", "/ui/{*filepath}", HandleWebOrigin(h).ServeHTTP)
 }

@@ -11,6 +11,11 @@ import (
 func SenderFactory(cfg *config.Config, logger logging.Logger) Sender {
 	provider := strings.ToLower(cfg.Email.Provider)
 
+	if cfg.Environment == "development" {
+		logger.Warn("dev email provider, using mock sender", logging.String("provider", provider))
+		return NewMockEmailSender("./tmp/emails")
+	}
+
 	switch provider {
 	case "smtp":
 		return NewSMTPSender(cfg, logger)

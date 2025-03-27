@@ -42,6 +42,16 @@ func VerifyEmailAuthPath() string {
 	return "/v1/auth/verify-email"
 }
 
+// SendEmailVerificationAuthPath returns the URL path to the auth service send_email_verification HTTP endpoint.
+func SendEmailVerificationAuthPath() string {
+	return "/v1/auth/send-verification-email"
+}
+
+// CheckEmailVerificationAuthPath returns the URL path to the auth service check_email_verification HTTP endpoint.
+func CheckEmailVerificationAuthPath() string {
+	return "/v1/auth/check-verification"
+}
+
 // MeAuthPath returns the URL path to the auth service me HTTP endpoint.
 func MeAuthPath() string {
 	return "/v1/auth/me"

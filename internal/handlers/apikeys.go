@@ -58,7 +58,7 @@ type UpdateAPIKeyRequest struct {
 func (h *APIKeyHandler) ListAPIKeys(w http.ResponseWriter, r *http.Request) {
 	// Get user and organization IDs from context
 	userID, _ := middleware.GetUserIDReq(r)
-	orgID, _ := middleware.GetOrganizationID(r)
+	orgID, _ := middleware.GetOrganizationIDReq(r)
 
 	if userID == "" && orgID == "" {
 		utils.RespondError(w, errors.New(errors.CodeMissingRequiredField, "either user ID or organization ID is required"))
@@ -102,7 +102,7 @@ func (h *APIKeyHandler) ListAPIKeys(w http.ResponseWriter, r *http.Request) {
 func (h *APIKeyHandler) CreateAPIKey(w http.ResponseWriter, r *http.Request) {
 	// Get user and organization IDs from context
 	userID, _ := middleware.GetUserIDReq(r)
-	orgID, _ := middleware.GetOrganizationID(r)
+	orgID, _ := middleware.GetOrganizationIDReq(r)
 
 	if userID == "" && orgID == "" {
 		utils.RespondError(w, errors.New(errors.CodeMissingRequiredField, "either user ID or organization ID is required"))

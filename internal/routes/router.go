@@ -212,7 +212,7 @@ func (rt *Router) RegisterRoutes() {
 	fileServer := http.FileServer(http.Dir("./web/static"))
 	rt.router.Handle("/static/*", http.StripPrefix("/static", fileServer))
 
-	rt.router.Handle("/*", handlers.FileServer("./web/client/dist", rt.router))
+	rt.router.Handle("/*", handlers.FileServer("./web/apps/client/dist", rt.router))
 }
 
 // Handler returns the HTTP handler

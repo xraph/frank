@@ -19,11 +19,11 @@ type Service interface {
 	// List organizations
 	List(context.Context, *ListPayload) (res *ListResult, err error)
 	// Create a new organization
-	Create(context.Context, *CreatePayload) (res *OrganizationResponse, err error)
+	Create(context.Context, *CreatePayload) (res *designtypes.Organization, err error)
 	// Get organization by ID
-	Get(context.Context, *GetPayload) (res *OrganizationResponse, err error)
+	Get(context.Context, *GetPayload) (res *designtypes.Organization, err error)
 	// Update organization
-	Update(context.Context, *UpdatePayload) (res *OrganizationResponse, err error)
+	Update(context.Context, *UpdatePayload) (res *designtypes.Organization, err error)
 	// Delete organization
 	Delete(context.Context, *DeletePayload) (err error)
 	// List organization members
@@ -258,7 +258,7 @@ type ListPayload struct {
 
 // ListResult is the result type of the organizations service list method.
 type ListResult struct {
-	Data       []*OrganizationResponse
+	Data       []*designtypes.Organization
 	Pagination *designtypes.Pagination
 }
 
@@ -308,35 +308,6 @@ type OrganizationMemberResponse struct {
 	Roles []string
 	// When user joined the organization
 	JoinedAt string
-}
-
-// OrganizationResponse is the result type of the organizations service create
-// method.
-type OrganizationResponse struct {
-	// Organization ID
-	ID string
-	// Organization name
-	Name string
-	// Organization slug
-	Slug string
-	// Organization domain
-	Domain *string
-	// Organization logo URL
-	LogoURL *string
-	// Organization plan
-	Plan *string
-	// Whether organization is active
-	Active bool
-	// Organization metadata
-	Metadata map[string]any
-	// Trial end date
-	TrialEndsAt *string
-	// Whether trial has been used
-	TrialUsed *bool
-	// Creation timestamp
-	CreatedAt string
-	// Last update timestamp
-	UpdatedAt string
 }
 
 // RemoveMemberPayload is the payload type of the organizations service

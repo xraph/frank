@@ -124,7 +124,7 @@ func getContentType(path string) string {
 
 // FileServer provides a static file server with proper handling for SPA routing
 func FileServer(rootPath string, router chi.Router) http.Handler {
-	fs := http.FileServer(http.Dir("./web/client/dist"))
+	fs := http.FileServer(http.Dir("./web/apps/client/dist"))
 	router.Handle("/_astro/", fs)
 	router.Handle("/assets/", fs)
 

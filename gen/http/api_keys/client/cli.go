@@ -99,7 +99,7 @@ func BuildCreatePayload(apiKeysCreateBody string, apiKeysCreateJWT string) (*api
 	{
 		err = json.Unmarshal([]byte(apiKeysCreateBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"key\": {\n         \"expires_in\": 2592000,\n         \"metadata\": {\n            \"Voluptatum sint.\": \"Hic quasi dolores iure dolorem iusto.\"\n         },\n         \"name\": \"My API Key\",\n         \"permissions\": [\n            \"read:users\",\n            \"write:organizations\"\n         ],\n         \"scopes\": [\n            \"api:access\"\n         ],\n         \"type\": \"server\"\n      }\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"key\": {\n         \"expires_in\": 2592000,\n         \"metadata\": {\n            \"Odit quo id.\": \"Totam culpa.\",\n            \"Qui repudiandae a dolor cum.\": \"Et ea.\"\n         },\n         \"name\": \"My API Key\",\n         \"permissions\": [\n            \"read:users\",\n            \"write:organizations\"\n         ],\n         \"scopes\": [\n            \"api:access\"\n         ],\n         \"type\": \"client\"\n      }\n   }'")
 		}
 		if body.Key == nil {
 			err = goa.MergeErrors(err, goa.MissingFieldError("key", "body"))
@@ -156,7 +156,7 @@ func BuildUpdatePayload(apiKeysUpdateBody string, apiKeysUpdateID string, apiKey
 	{
 		err = json.Unmarshal([]byte(apiKeysUpdateBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"key\": {\n         \"active\": true,\n         \"expires_at\": \"At sit consequatur quia recusandae fugit.\",\n         \"metadata\": {\n            \"Animi consequatur consequatur rerum fugit.\": \"Cum modi neque quis necessitatibus repudiandae.\",\n            \"Odio provident quibusdam.\": \"Consectetur at.\"\n         },\n         \"name\": \"Esse velit eum.\",\n         \"permissions\": [\n            \"Quis reiciendis quo cupiditate quos dolores ratione.\",\n            \"Autem neque quo facere velit neque.\"\n         ],\n         \"scopes\": [\n            \"Modi qui doloribus est et non.\",\n            \"Eius eius ut quia est.\"\n         ]\n      }\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"key\": {\n         \"active\": false,\n         \"expires_at\": \"Dolore rerum.\",\n         \"metadata\": {\n            \"Dignissimos ad quisquam et.\": \"Est praesentium qui deserunt.\",\n            \"Est saepe recusandae quam.\": \"Deserunt inventore.\",\n            \"Sit tempora.\": \"Provident hic in dolorem dicta dignissimos.\"\n         },\n         \"name\": \"Accusantium similique vel est.\",\n         \"permissions\": [\n            \"Voluptatibus esse temporibus.\",\n            \"Neque soluta mollitia.\"\n         ],\n         \"scopes\": [\n            \"Enim quasi voluptatem quia.\",\n            \"Sequi repudiandae voluptatem ut provident repellat.\"\n         ]\n      }\n   }'")
 		}
 		if body.Key == nil {
 			err = goa.MergeErrors(err, goa.MissingFieldError("key", "body"))

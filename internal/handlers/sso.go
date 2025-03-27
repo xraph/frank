@@ -49,7 +49,7 @@ type SSOCompleteRequest struct {
 // SSOProvidersList handles listing SSO providers
 func (h *SSOHandler) SSOProvidersList(w http.ResponseWriter, r *http.Request) {
 	// Get organization ID if available
-	orgID, _ := middleware.GetOrganizationID(r)
+	orgID, _ := middleware.GetOrganizationIDReq(r)
 
 	// Get providers
 	providers, err := h.ssoService.GetProviders(r.Context(), orgID)

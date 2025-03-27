@@ -6,7 +6,7 @@ toolchain go1.24.1
 
 require (
 	entgo.io/contrib v0.6.0
-	entgo.io/ent v0.14.3
+	entgo.io/ent v0.14.4
 	github.com/andybalholm/brotli v1.1.1
 	github.com/aws/aws-sdk-go-v2 v1.36.3
 	github.com/aws/aws-sdk-go-v2/config v1.29.9
@@ -23,6 +23,7 @@ require (
 	github.com/go-playground/validator/v10 v10.25.0
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/go-webauthn/webauthn v0.12.1
+	github.com/golang-jwt/jwt/v4 v4.4.3
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/golang/mock v1.6.0
 	github.com/google/uuid v1.6.0
@@ -31,13 +32,13 @@ require (
 	github.com/jackc/pgx/v5 v5.7.2
 	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.10.9
-	github.com/mashingan/smapping v0.1.19
 	github.com/mattn/go-sqlite3 v1.14.16
 	github.com/mvrilo/go-redoc v0.1.5
 	github.com/oasdiff/yaml v0.0.0-20250309154309-f31be36b4037
 	github.com/ogen-go/ogen v1.10.1
 	github.com/oklog/ulid v1.3.1
 	github.com/pquerna/otp v1.4.0
+	github.com/samber/lo v1.49.1
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.10.0
 	github.com/swaggo/http-swagger v1.3.4
@@ -57,6 +58,7 @@ require (
 
 require (
 	ariga.io/atlas v0.32.0 // indirect
+	cloud.google.com/go/compute/metadata v0.5.2 // indirect
 	github.com/KyleBanks/depth v1.2.1 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
@@ -104,7 +106,6 @@ require (
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-webauthn/x v0.1.18 // indirect
 	github.com/gohugoio/hashstructure v0.5.0 // indirect
-	github.com/golang-jwt/jwt/v4 v4.4.3 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/go-tpm v0.9.3 // indirect
 	github.com/gorilla/securecookie v1.1.2 // indirect
@@ -136,7 +137,6 @@ require (
 	github.com/russellhaering/goxmldsig v1.3.0 // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
-	github.com/samber/lo v1.49.1 // indirect
 	github.com/segmentio/asm v1.2.0 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/afero v1.11.0 // indirect

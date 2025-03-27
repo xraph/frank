@@ -39,6 +39,8 @@ type ProviderCallbackResponseBody struct {
 	Authenticated bool `form:"authenticated" json:"authenticated" xml:"authenticated"`
 	// User data if authentication successful
 	User *UserResponseBody `form:"user,omitempty" json:"user,omitempty" xml:"user,omitempty"`
+	// Message to display to the user
+	Message string `form:"message" json:"message" xml:"message"`
 }
 
 // ListIdentityProvidersResponseBody is the type of the "sso" service
@@ -1160,6 +1162,7 @@ func NewListProvidersResponseBody(res *sso.ListProvidersResult) *ListProvidersRe
 func NewProviderCallbackResponseBody(res *sso.ProviderCallbackResult) *ProviderCallbackResponseBody {
 	body := &ProviderCallbackResponseBody{
 		Authenticated: res.Authenticated,
+		Message:       res.Message,
 	}
 	if res.User != nil {
 		body.User = marshalDesigntypesUserToUserResponseBody(res.User)

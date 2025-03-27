@@ -4,8 +4,10 @@ import (
 	. "goa.design/goa/v3/dsl"
 )
 
-var OrganizationResponse = Type("OrganizationResponse", func() {
+var Organization = Type("Organization", func() {
 	Description("Organization information")
+	Meta("struct:pkg:path", "designtypes")
+
 	Attribute("id", String, "Organization ID")
 	Attribute("name", String, "Organization name")
 	Attribute("slug", String, "Organization slug")
@@ -18,7 +20,39 @@ var OrganizationResponse = Type("OrganizationResponse", func() {
 	Attribute("trial_used", Boolean, "Whether trial has been used")
 	Attribute("created_at", String, "Creation timestamp")
 	Attribute("updated_at", String, "Last update timestamp")
+	Attribute("settings", OrganizationSettings, "Organization settings", func() {
+		Meta("struct:tag:json", "settings")
+	})
 	Required("id", "name", "slug", "active", "created_at", "updated_at")
+})
+
+var OrganizationSettings = Type("OrganizationSettings", func() {
+	Description("Organization information")
+	Meta("struct:pkg:path", "designtypes")
+
+	Field(1, "signupFields", ArrayOf(FormField), "Signup fields", func() {
+		Meta("struct:tag:json", "signupFields")
+	})
+	Field(1, "verification", ArrayOf(OrganizationVerificationConfig), "Signup fields", func() {
+		Meta("struct:tag:json", "verification")
+	})
+})
+
+var OrganizationVerificationConfig = Type("OrganizationVerificationConfig", func() {
+	Description("Configuration for organization verification")
+
+	Field(1, "code_length", Int, func() {
+		Description("Length of verification code")
+		Default(6)
+		Example(6)
+	})
+
+	Field(2, "method", String, func() {
+		Description("Method used for verification")
+		Default("email")
+		Example("email")
+		Enum("email", "sms", "phone") // Add other possible verification methods
+	})
 })
 
 var CreateOrganizationRequest = Type("CreateOrganizationRequest", func() {
@@ -141,7 +175,7 @@ var _ = Service("organizations", func() {
 			Attribute("search", String, "Search term")
 		})
 		Result(func() {
-			Attribute("data", ArrayOf("OrganizationResponse"))
+			Attribute("data", ArrayOf("Organization"))
 			Attribute("pagination", "Pagination")
 			Required("data", "pagination")
 		})
@@ -165,7 +199,7 @@ var _ = Service("organizations", func() {
 			Attribute("organization", CreateOrganizationRequest)
 			Required("organization")
 		})
-		Result(OrganizationResponse)
+		Result(Organization)
 		Error("bad_request", BadRequestError)
 		Error("unauthorized", UnauthorizedError)
 		Error("conflict", ConflictError, "Organization with this slug or domain already exists")
@@ -183,7 +217,7 @@ var _ = Service("organizations", func() {
 			Attribute("id", String, "Organization ID")
 			Required("id")
 		})
-		Result(OrganizationResponse)
+		Result(Organization)
 		Error("not_found", NotFoundError)
 		Error("unauthorized", UnauthorizedError)
 		HTTP(func() {
@@ -201,7 +235,7 @@ var _ = Service("organizations", func() {
 			Attribute("organization", UpdateOrganizationRequest)
 			Required("id", "organization")
 		})
-		Result(OrganizationResponse)
+		Result(Organization)
 		Error("bad_request", BadRequestError)
 		Error("not_found", NotFoundError)
 		Error("unauthorized", UnauthorizedError)

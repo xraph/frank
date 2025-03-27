@@ -1,0 +1,13 @@
+---
+import AuthLayout from "../layouts/AuthLayout.astro";
+import { LoginLayout } from "../components/react/auth/wrappers";
+---
+<AuthLayout title="Login">
+    <div class="space-y-6">
+        <!--<div class="space-y-2 text-center">-->
+        <!--    <h1 class="text-3xl font-bold">Welcome back</h1>-->
+        <!--    <p class="text-muted-foreground">Enter your credentials to sign in to your account</p>-->
+        <!--</div>-->
+        <LoginLayout client:load />
+    </div>
+</AuthLayout>

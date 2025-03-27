@@ -146,7 +146,7 @@ type GetOrganizationsPayload struct {
 // GetOrganizationsResult is the result type of the users service
 // get_organizations method.
 type GetOrganizationsResult struct {
-	Organizations []*OrganizationResponse
+	Organizations []*designtypes.Organization
 }
 
 // GetPayload is the payload type of the users service get method.
@@ -212,34 +212,6 @@ type NotFoundError struct {
 	Details any
 	// Unique error ID
 	ID *string
-}
-
-// Organization information
-type OrganizationResponse struct {
-	// Organization ID
-	ID string
-	// Organization name
-	Name string
-	// Organization slug
-	Slug string
-	// Organization domain
-	Domain *string
-	// Organization logo URL
-	LogoURL *string
-	// Organization plan
-	Plan *string
-	// Whether organization is active
-	Active bool
-	// Organization metadata
-	Metadata map[string]any
-	// Trial end date
-	TrialEndsAt *string
-	// Whether trial has been used
-	TrialUsed *bool
-	// Creation timestamp
-	CreatedAt string
-	// Last update timestamp
-	UpdatedAt string
 }
 
 // Unauthorized response

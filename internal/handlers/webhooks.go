@@ -63,7 +63,7 @@ type UpdateWebhookRequest struct {
 // ListWebhooks handles listing webhooks with pagination
 func (h *WebhookHandler) ListWebhooks(w http.ResponseWriter, r *http.Request) {
 	// Get organization ID from context
-	orgID, ok := middleware.GetOrganizationID(r)
+	orgID, ok := middleware.GetOrganizationIDReq(r)
 	if !ok || orgID == "" {
 		utils.RespondError(w, errors.New(errors.CodeMissingRequiredField, "organization ID is required"))
 		return
@@ -104,7 +104,7 @@ func (h *WebhookHandler) ListWebhooks(w http.ResponseWriter, r *http.Request) {
 // CreateWebhook handles creating a new webhook
 func (h *WebhookHandler) CreateWebhook(w http.ResponseWriter, r *http.Request) {
 	// Get organization ID from context
-	orgID, ok := middleware.GetOrganizationID(r)
+	orgID, ok := middleware.GetOrganizationIDReq(r)
 	if !ok || orgID == "" {
 		utils.RespondError(w, errors.New(errors.CodeMissingRequiredField, "organization ID is required"))
 		return
@@ -315,7 +315,7 @@ type TriggerEventRequest struct {
 // TriggerWebhookEvent handles manually triggering a webhook event
 func (h *WebhookHandler) TriggerWebhookEvent(w http.ResponseWriter, r *http.Request) {
 	// Get organization ID from context
-	orgID, ok := middleware.GetOrganizationID(r)
+	orgID, ok := middleware.GetOrganizationIDReq(r)
 	if !ok || orgID == "" {
 		utils.RespondError(w, errors.New(errors.CodeMissingRequiredField, "organization ID is required"))
 		return

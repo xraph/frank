@@ -40,7 +40,7 @@ func (m *OrganizationMiddleware) RequireOrganization(next http.Handler) http.Han
 		}
 
 		// Get organization ID from context
-		orgID, ok := GetOrganizationID(r)
+		orgID, ok := GetOrganizationIDReq(r)
 		if !ok || orgID == "" {
 			// Try to get from header
 			orgID = r.Header.Get("X-Organization-ID")
@@ -90,7 +90,7 @@ func (m *OrganizationMiddleware) RequireOrganizationMember(next http.Handler) ht
 		}
 
 		// Get organization ID from context
-		orgID, ok := GetOrganizationID(r)
+		orgID, ok := GetOrganizationIDReq(r)
 		if !ok || orgID == "" {
 			utils.RespondError(w, errors.New(errors.CodeMissingRequiredField, "organization ID is required"))
 			return
@@ -128,7 +128,7 @@ func (m *OrganizationMiddleware) RequireFeatureEnabled(featureKey string) func(h
 			ctx := r.Context()
 
 			// Get organization ID from context
-			orgID, ok := GetOrganizationID(r)
+			orgID, ok := GetOrganizationIDReq(r)
 			if !ok || orgID == "" {
 				utils.RespondError(w, errors.New(errors.CodeMissingRequiredField, "organization ID is required"))
 				return
@@ -182,7 +182,7 @@ func (m *OrganizationMiddleware) WithOrganizationContext(next http.Handler) http
 		ctx := r.Context()
 
 		// Get organization ID from context
-		orgID, ok := GetOrganizationID(r)
+		orgID, ok := GetOrganizationIDReq(r)
 		if !ok || orgID == "" {
 			// No organization context, continue without it
 			next.ServeHTTP(w, r)

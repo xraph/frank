@@ -511,8 +511,13 @@ func GetUserID(ctx context.Context) (string, bool) {
 	return userID, ok
 }
 
+// GetOrganizationIDReq gets the organization ID from the request context
+func GetOrganizationIDReq(r *http.Request) (string, bool) {
+	return GetOrganizationID(r.Context())
+}
+
 // GetOrganizationID gets the organization ID from the request context
-func GetOrganizationID(r *http.Request) (string, bool) {
-	orgID, ok := r.Context().Value(OrganizationIDKey).(string)
+func GetOrganizationID(ctx context.Context) (string, bool) {
+	orgID, ok := ctx.Value(OrganizationIDKey).(string)
 	return orgID, ok
 }

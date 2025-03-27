@@ -4,39 +4,81 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/juicycleff/frank/config"
+	"github.com/juicycleff/frank/ent"
 	"github.com/juicycleff/frank/gen/designtypes"
+	rbachttp "github.com/juicycleff/frank/gen/http/rbac/server"
 	"github.com/juicycleff/frank/gen/rbac"
+	rbac2 "github.com/juicycleff/frank/internal/rbac"
+	"github.com/juicycleff/frank/internal/services"
+	"github.com/juicycleff/frank/internal/user"
+	"github.com/juicycleff/frank/pkg/automapper"
+	"github.com/juicycleff/frank/pkg/errors"
+	"github.com/juicycleff/frank/pkg/logging"
+	"goa.design/clue/debug"
 	"goa.design/clue/log"
+	goahttp "goa.design/goa/v3/http"
 	"goa.design/goa/v3/security"
 )
 
+func RegisterRBACHTTPService(
+	mux goahttp.Muxer,
+	svcs *services.Services,
+	config *config.Config,
+	logger logging.Logger,
+	auther *AutherService,
+) {
+	eh := errorHandler(logger)
+	svc := NewRbac(svcs.RBAC, svcs.User, config, logger, auther)
+
+	endpoints := rbac.NewEndpoints(svc)
+	handler := rbachttp.New(endpoints, mux, decoder, encoder, eh, errors.CustomErrorFormatter)
+
+	endpoints.Use(debug.LogPayloads())
+	endpoints.Use(log.Endpoint)
+
+	rbachttp.Mount(mux, handler)
+}
+
 // rbac service example implementation.
 // The example methods log the requests and return zero values.
-type rbacsrvc struct{}
+type rbacsrvc struct {
+	rbacService rbac2.Service
+	userService user.Service
+	config      *config.Config
+	logger      logging.Logger
+	auther      *AutherService
+	mapper      *automapper.Mapper
+}
 
 // NewRbac returns the rbac service implementation.
-func NewRbac() rbac.Service {
-	return &rbacsrvc{}
+func NewRbac(
+	rbacService rbac2.Service,
+	userService user.Service,
+	config *config.Config,
+	logger logging.Logger,
+	auther *AutherService,
+) rbac.Service {
+	mapper := automapper.NewMapper()
+
+	// Create and configure the mapper
+	userMapper := automapper.CreateMap[*ent.User, designtypes.User]()
+	automapper.RegisterWithTypes(mapper, userMapper)
+
+	return &rbacsrvc{
+		rbacService: rbacService,
+		userService: userService,
+		config:      config,
+		logger:      logger,
+		auther:      auther,
+		mapper:      mapper,
+	}
 }
 
 // JWTAuth implements the authorization logic for service "rbac" for the "jwt"
 // security scheme.
 func (s *rbacsrvc) JWTAuth(ctx context.Context, token string, scheme *security.JWTScheme) (context.Context, error) {
-	//
-	// TBD: add authorization logic.
-	//
-	// In case of authorization failure this function should return
-	// one of the generated error structs, e.g.:
-	//
-	//    return ctx, myservice.MakeUnauthorizedError("invalid token")
-	//
-	// Alternatively this function may return an instance of
-	// goa.ServiceError with a Name field value that matches one of
-	// the design error names, e.g:
-	//
-	//    return ctx, goa.PermanentError("unauthorized", "invalid token")
-	//
-	return ctx, fmt.Errorf("not implemented")
+	return s.auther.JWTAuth(ctx, token, scheme)
 }
 
 // ListPermissions List permissions
@@ -103,27 +145,72 @@ func (s *rbacsrvc) UpdateRole(ctx context.Context, p *rbac.UpdateRolePayload) (r
 
 // DeleteRole Delete role
 func (s *rbacsrvc) DeleteRole(ctx context.Context, p *rbac.DeleteRolePayload) (err error) {
-	log.Printf(ctx, "rbac.delete_role")
-	return
+	return s.rbacService.DeleteRole(ctx, p.ID)
 }
 
 // ListRolePermissions List role permissions
 func (s *rbacsrvc) ListRolePermissions(ctx context.Context, p *rbac.ListRolePermissionsPayload) (res *rbac.ListRolePermissionsResult, err error) {
 	res = &rbac.ListRolePermissionsResult{}
-	log.Printf(ctx, "rbac.list_role_permissions")
+
+	params := rbac2.ListPermissionsParams{
+		Offset:   0,
+		Limit:    0,
+		Resource: "",
+		Action:   "",
+		Search:   "",
+	}
+
+	// Get role
+	perms, count, err := s.rbacService.ListPermissions(ctx, params)
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println(perms)
+	fmt.Println(count)
+
 	return
 }
 
 // AddRolePermission Add permission to role
 func (s *rbacsrvc) AddRolePermission(ctx context.Context, p *rbac.AddRolePermissionPayload) (res *rbac.AddRolePermissionResult, err error) {
 	res = &rbac.AddRolePermissionResult{}
-	log.Printf(ctx, "rbac.add_role_permission")
+	id := p.ID
+	if id == "" {
+		err = errors.New(errors.CodeInvalidInput, "role id is required")
+		return
+	}
+
+	permissionId := p.Permission.PermissionID
+	if permissionId == "" {
+		err = errors.New(errors.CodeInvalidInput, "permission id is required")
+		return
+	}
+
+	err = s.rbacService.AddPermissionToRole(ctx, id, permissionId)
+	if err != nil {
+		return
+	}
+
+	res.Message = "Permission added to role"
 	return
 }
 
 // RemoveRolePermission Remove permission from role
 func (s *rbacsrvc) RemoveRolePermission(ctx context.Context, p *rbac.RemoveRolePermissionPayload) (err error) {
-	log.Printf(ctx, "rbac.remove_role_permission")
+	id := p.ID
+	if id == "" {
+		err = errors.New(errors.CodeInvalidInput, "role id is required")
+		return
+	}
+
+	permissionId := p.PermissionID
+	if permissionId == "" {
+		err = errors.New(errors.CodeInvalidInput, "permission id is required")
+		return
+	}
+
+	err = s.rbacService.RemovePermissionFromRole(ctx, id, permissionId)
 	return
 }
 

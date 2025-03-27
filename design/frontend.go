@@ -28,7 +28,7 @@ var _ = Service("web", func() {
 	Description("Front-end web service with template rendering")
 
 	// Serve the React app
-	Files("/ui/{*filepath}", "./web/client/dist")
+	Files("/ui/{*filepath}", "./web/apps/client/dist")
 
 	// Serve static assets directly
 	// Files("/robots.txt", "ui/public/robots.txt")

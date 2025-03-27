@@ -47,6 +47,17 @@ var LoginResponse = Type("LoginResponse", func() {
 	Attribute("session_id", String, "Session ID", func() {
 		Example("1234567890")
 	})
+	Attribute("message", String, "Login message", func() {
+		Meta("struct:tag:json", "message,omitempty")
+		Default("Login successful")
+		Example("Login successful")
+	})
+	Attribute("verificationRequired", Boolean, "Whether email verification is required")
+	Attribute("verificationId", String, "Verification ID for email verification")
+	Attribute("verificationMethod", String, "Verification method for email verification")
+	Attribute("emailVerified", Boolean, "Whether email is verified")
+	Attribute("requiresVerification", Boolean, "Whether email verification is required")
+
 	Required("user", "token", "csrf_token", "refresh_token", "expires_at", "mfa_required")
 })
 
@@ -102,8 +113,33 @@ var ResetPasswordRequest = Type("ResetPasswordRequest", func() {
 
 var VerifyEmailRequest = Type("VerifyEmailRequest", func() {
 	Description("Email verification request")
-	Attribute("token", String, "Email verification token")
-	Required("token")
+	Attribute("token", String, "Email verification token for link verification")
+	Attribute("otp", String, "One-time password for OTP verification")
+	Attribute("email", String, "User email", func() {
+		Format(FormatEmail)
+		Example("user@example.com")
+	})
+	Attribute("method", String, "Verification method (link or otp)", func() {
+		Meta("struct:field:type", "user.VerificationMethod", "github.com/juicycleff/frank/internal/user")
+		Enum("link", "otp")
+		Example("otp")
+	})
+	Required("method", "email")
+})
+
+var SendEmailVerificationRequest = Type("SendEmailVerificationRequest", func() {
+	Description("Send email verification request")
+	Attribute("email", String, "User email", func() {
+		Format(FormatEmail)
+		Example("user@example.com")
+	})
+	Attribute("method", String, "Verification method (link or otp)", func() {
+		Meta("struct:field:type", "user.VerificationMethod", "github.com/juicycleff/frank/internal/user")
+		Enum("link", "otp")
+		Default("otp")
+	})
+	Attribute("redirect_url", String, "URL to redirect after verification (for link verification)")
+	Required("email")
 })
 
 var CSRFTokenResponse = Type("CSRFTokenResponse", func() {
@@ -262,9 +298,6 @@ var _ = Service("auth", func() {
 		// Security(OAuth2Auth, APIKeyAuth, JWTAuth)
 		NoSecurity()
 		Payload(func() {
-			// AccessToken("oauth2", String, "OAuth2 access token")
-			// APIKey("api_key", "X-API-Key", String, "API key")
-			// Token("jwt", String, "JWT token")
 			Extend(VerifyEmailRequest)
 			Attribute("session_id", String)
 
@@ -277,6 +310,56 @@ var _ = Service("auth", func() {
 		// Error("unauthorized", UnauthorizedError, "Invalid or expired token")
 		HTTP(func() {
 			POST("/verify-email")
+			Response(StatusOK)
+		})
+	})
+
+	Method("send_email_verification", func() {
+		Description("Send verification email with link or OTP")
+		NoSecurity()
+		// Security(APIKeyAuth)
+		Payload(func() {
+			// APIKey("api_key", "X-API-Key", String, "API key")
+			Extend(SendEmailVerificationRequest)
+			Attribute("session_id", String)
+		})
+		Result(func() {
+			Attribute("message", String, "Success message")
+			Attribute("expires_at", Int64, "When the verification code/link expires")
+			Required("message", "expires_at")
+		})
+		Error("bad_request", BadRequestError)
+		Error("not_found", NotFoundError, "User not found")
+		HTTP(func() {
+			POST("/send-verification-email")
+			Param("redirect_url")
+			Response(StatusOK)
+		})
+	})
+
+	Method("check_email_verification", func() {
+		Description("Check if email is verified")
+		// Security(JWTAuth)
+		Payload(func() {
+			AccessToken("oauth2", String, "OAuth2 access token")
+			APIKey("api_key", "X-API-Key", String, "API key")
+			Token("jwt", String, "JWT token")
+			Attribute("email", String, "User email", func() {
+				Format(FormatEmail)
+			})
+			Attribute("session_id", String)
+
+			Required("email")
+		})
+		Result(func() {
+			Attribute("verified", Boolean, "Whether email is verified")
+			Required("verified")
+		})
+		Error("bad_request", BadRequestError)
+		Error("not_found", NotFoundError, "User not found")
+		HTTP(func() {
+			GET("/check-verification")
+			Param("email")
 			Response(StatusOK)
 		})
 	})

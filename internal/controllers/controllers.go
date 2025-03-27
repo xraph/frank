@@ -108,9 +108,14 @@ func (c *Controllers) RegisterRoutes() {
 	mux.Use(customMiddleware.AddRequestInfo())
 	mux.Use(customMiddleware.CSRFProtectionWithConfig(c.config, c.logger, csrfConfig))
 
+	// Register controllers
 	RegisterHealthHTTPService(mux, c.clients, c.svcs, c.config, c.logger, c.auther) // Register Health Service
 	RegisterAuthHTTPService(mux, c.svcs, c.config, c.logger, c.auther)              // Register Auth Service
 	RegisterUserHTTPService(mux, c.svcs, c.config, c.logger, c.auther)              // Register User Service
+	RegisterRBACHTTPService(mux, c.svcs, c.config, c.logger, c.auther)              // Register RBAC Service
+	RegisterOauthProviderHTTPService(mux, c.svcs, c.config, c.logger, c.auther)     // Register Oauth Provider Service
+	RegisterOauthClientHTTPService(mux, c.svcs, c.config, c.logger, c.auther)       // Register Oauth Client Service
+	RegisterSSOHTTPService(mux, c.svcs, c.config, c.logger, c.auther)               // Register SSO Service
 
 	doc := redoc.Redoc{
 		Title:       "Example API",
@@ -142,10 +147,10 @@ func (c *Controllers) RegisterRoutes() {
 	c.router.Handle("/__metrics", mux)
 	c.router.Handle("/__ready", mux)
 
-	// c.router.Handle("/*", FileServer("./web/client/dist", c.router))
+	// c.router.Handle("/*", FileServer("./web/apps/client/dist", c.router))
 	RegisterFrontendRoutes(
 		c.router,
-		"web/client/dist",
+		"web/apps/client/dist",
 		c.svcs,
 		c.config,
 		c.logger,

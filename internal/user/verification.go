@@ -4,12 +4,17 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"fmt"
+	"math"
+	"math/big"
+	"strings"
 	"time"
 
 	"github.com/juicycleff/frank/ent"
 	"github.com/juicycleff/frank/ent/verification"
+	"github.com/juicycleff/frank/internal/email"
 	"github.com/juicycleff/frank/pkg/errors"
-	"github.com/juicycleff/frank/pkg/utils"
+	"github.com/juicycleff/frank/pkg/logging"
 )
 
 // VerificationManager handles verification-related operations
@@ -19,6 +24,9 @@ type VerificationManager interface {
 
 	// VerifyToken verifies a verification token
 	VerifyToken(ctx context.Context, token string) (*ent.Verification, error)
+
+	// VerifyEmailOTP verifies an OTP for a given email and returns the associated verification entity or an error.
+	VerifyEmailOTP(ctx context.Context, email, otp string) (*ent.Verification, error)
 
 	// GetVerification retrieves a verification by ID
 	GetVerification(ctx context.Context, id string) (*ent.Verification, error)
@@ -34,35 +42,62 @@ type VerificationManager interface {
 }
 
 type verificationManager struct {
-	client *ent.Client
+	client       *ent.Client
+	emailService email.Service
+	logger       logging.Logger
 }
 
 // NewVerificationManager creates a new verification manager
-func NewVerificationManager(client *ent.Client) VerificationManager {
+func NewVerificationManager(client *ent.Client, emailService email.Service,
+	logger logging.Logger) VerificationManager {
 	return &verificationManager{
-		client: client,
+		client:       client,
+		emailService: emailService,
+		logger:       logger,
 	}
 }
 
 // CreateVerification creates a new verification token
 func (v *verificationManager) CreateVerification(ctx context.Context, input CreateVerificationInput) (*ent.Verification, error) {
-	// Generate UUID
-	id := utils.NewID()
-
 	// Generate token
-	token, err := v.GenerateToken(32)
-	if err != nil {
-		return nil, err
+
+	// Set default method if not provided
+	if input.Method == "" {
+		input.Method = VerificationMethodLink // Default to link
+	}
+
+	var token string
+	var err error
+
+	// Generate token based on verification method
+	switch input.Method {
+	case VerificationMethodLink:
+		// Generate a secure random token for link verification
+		token, err = v.GenerateToken(32)
+		if err != nil {
+			return nil, errors.Wrap(errors.CodeCryptoError, err, "failed to generate verification token")
+		}
+	case VerificationMethodOTP:
+		// Generate a 6-digit OTP code
+		token, err = v.GenerateOTP(6)
+		if err != nil {
+			return nil, errors.Wrap(errors.CodeCryptoError, err, "failed to generate OTP code")
+		}
+	default:
+		return nil, errors.New(errors.CodeInvalidInput, "invalid verification method")
 	}
 
 	// Create verification
 	create := v.client.Verification.
 		Create().
-		SetID(id.String()).
 		SetUserID(input.UserID).
 		SetType(input.Type).
 		SetToken(token).
-		SetExpiresAt(input.ExpiresAt)
+		SetExpiresAt(input.ExpiresAt).
+		SetUsed(false).
+		SetAttestation(map[string]interface{}{
+			"method": string(input.Method),
+		})
 
 	// Add optional fields
 	if input.Email != "" {
@@ -86,12 +121,78 @@ func (v *verificationManager) CreateVerification(ctx context.Context, input Crea
 	}
 
 	// Save verification
-	verification, err := create.Save(ctx)
+	ver, err := create.Save(ctx)
 	if err != nil {
 		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to create verification")
 	}
 
-	return verification, nil
+	// Handle sending the verification based on method
+	if input.Method == VerificationMethodOTP && input.Type == "email" && input.Email != "" {
+		// Send OTP via email
+		err = v.sendOTPEmail(ctx, input.Email, token, input.ExpiresAt)
+		if err != nil {
+			v.logger.Error("Failed to send OTP email",
+				logging.String("user_id", input.UserID),
+				logging.Error(err),
+			)
+			// Continue despite error
+		}
+	} else if input.Method == VerificationMethodLink && input.Type == "email" && input.Email != "" {
+		// Send verification link via email
+		err = v.sendVerificationEmail(ctx, input.Email, token, input.RedirectURL, input.ExpiresAt)
+		if err != nil {
+			v.logger.Error("Failed to send verification email",
+				logging.String("user_id", input.UserID),
+				logging.Error(err),
+			)
+			// Continue despite error
+		}
+	}
+
+	return ver, nil
+}
+
+// sendOTPEmail sends an email with OTP code
+func (v *verificationManager) sendOTPEmail(ctx context.Context, emailAddr, otp string, expiresAt time.Time) error {
+	// Example using the email service:
+	data := map[string]interface{}{
+		"OTP":       otp,
+		"ExpiresAt": expiresAt.Format(time.RFC1123),
+	}
+
+	// The actual call would depend on your email service
+	return v.emailService.SendTemplate(
+		ctx, email.SendTemplateInput{
+			To:           []string{emailAddr},
+			TemplateType: "email_verification_otp",
+			TemplateData: data,
+		})
+}
+
+// sendVerificationEmail sends an email with verification link
+func (v *verificationManager) sendVerificationEmail(ctx context.Context, emailAddr, token, redirectURL string, expiresAt time.Time) error {
+	// Implement email sending logic here
+	// This will depend on your email service implementation
+
+	// Construct the verification link
+	verificationLink := redirectURL
+	if !strings.Contains(redirectURL, "?") {
+		verificationLink += "?token=" + token
+	} else {
+		verificationLink += "&token=" + token
+	}
+
+	data := map[string]interface{}{
+		"VerificationLink": verificationLink,
+		"ExpiresAt":        expiresAt.Format(time.RFC1123),
+	}
+
+	return v.emailService.SendTemplate(
+		ctx, email.SendTemplateInput{
+			To:           []string{emailAddr},
+			TemplateType: "email_verification_link",
+			TemplateData: data,
+		})
 }
 
 // VerifyToken verifies a verification token
@@ -117,6 +218,59 @@ func (v *verificationManager) VerifyToken(ctx context.Context, token string) (*e
 	// Check if token has already been used
 	if verif.Used {
 		return nil, errors.New(errors.CodeInvalidToken, "verification token has already been used")
+	}
+
+	// Mark verification as used
+	verif, err = v.client.Verification.
+		UpdateOne(verif).
+		SetUsed(true).
+		SetUsedAt(time.Now()).
+		Save(ctx)
+
+	if err != nil {
+		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to mark verification as used")
+	}
+
+	return verif, nil
+}
+
+// VerifyEmailOTP verifies an email with OTP
+func (v *verificationManager) VerifyEmailOTP(ctx context.Context, email, otp string) (*ent.Verification, error) {
+	// Find the verification by email and token (OTP)
+	verif, err := v.client.Verification.
+		Query().
+		Where(
+			verification.Email(email),
+			verification.Token(otp),
+		).
+		First(ctx)
+
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, errors.New(errors.CodeInvalidToken, "invalid or expired OTP")
+		}
+		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to verify OTP")
+	}
+
+	// Check if token is expired
+	if verif.ExpiresAt.Before(time.Now()) {
+		return nil, errors.New(errors.CodeTokenExpired, "verification token has expired")
+	}
+
+	// Check if token has already been used
+	if verif.Used {
+		return nil, errors.New(errors.CodeInvalidToken, "verification token has already been used")
+	}
+
+	// Mark verification as used
+	verif, err = v.client.Verification.
+		UpdateOne(verif).
+		SetUsed(true).
+		SetUsedAt(time.Now()).
+		Save(ctx)
+
+	if err != nil {
+		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to mark verification as used")
 	}
 
 	return verif, nil
@@ -183,6 +337,20 @@ func (v *verificationManager) DeleteExpired(ctx context.Context) (int, error) {
 	}
 
 	return deleted, nil
+}
+
+// GenerateOTP Helper function to generate OTP
+func (v *verificationManager) GenerateOTP(digits int) (string, error) {
+	// Generate a random numeric OTP
+	m := int64(math.Pow10(digits))
+	n, err := rand.Int(rand.Reader, big.NewInt(m))
+	if err != nil {
+		return "", err
+	}
+
+	// Format the OTP to ensure it has the correct number of digits
+	format := fmt.Sprintf("%%0%dd", digits)
+	return fmt.Sprintf(format, n), nil
 }
 
 // GenerateToken generates a random token

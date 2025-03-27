@@ -16,29 +16,33 @@ import (
 
 // Client is the "auth" service client.
 type Client struct {
-	LoginEndpoint          goa.Endpoint
-	RegisterEndpoint       goa.Endpoint
-	LogoutEndpoint         goa.Endpoint
-	RefreshTokenEndpoint   goa.Endpoint
-	ForgotPasswordEndpoint goa.Endpoint
-	ResetPasswordEndpoint  goa.Endpoint
-	VerifyEmailEndpoint    goa.Endpoint
-	MeEndpoint             goa.Endpoint
-	CsrfEndpoint           goa.Endpoint
+	LoginEndpoint                  goa.Endpoint
+	RegisterEndpoint               goa.Endpoint
+	LogoutEndpoint                 goa.Endpoint
+	RefreshTokenEndpoint           goa.Endpoint
+	ForgotPasswordEndpoint         goa.Endpoint
+	ResetPasswordEndpoint          goa.Endpoint
+	VerifyEmailEndpoint            goa.Endpoint
+	SendEmailVerificationEndpoint  goa.Endpoint
+	CheckEmailVerificationEndpoint goa.Endpoint
+	MeEndpoint                     goa.Endpoint
+	CsrfEndpoint                   goa.Endpoint
 }
 
 // NewClient initializes a "auth" service client given the endpoints.
-func NewClient(login, register, logout, refreshToken, forgotPassword, resetPassword, verifyEmail, me, csrf goa.Endpoint) *Client {
+func NewClient(login, register, logout, refreshToken, forgotPassword, resetPassword, verifyEmail, sendEmailVerification, checkEmailVerification, me, csrf goa.Endpoint) *Client {
 	return &Client{
-		LoginEndpoint:          login,
-		RegisterEndpoint:       register,
-		LogoutEndpoint:         logout,
-		RefreshTokenEndpoint:   refreshToken,
-		ForgotPasswordEndpoint: forgotPassword,
-		ResetPasswordEndpoint:  resetPassword,
-		VerifyEmailEndpoint:    verifyEmail,
-		MeEndpoint:             me,
-		CsrfEndpoint:           csrf,
+		LoginEndpoint:                  login,
+		RegisterEndpoint:               register,
+		LogoutEndpoint:                 logout,
+		RefreshTokenEndpoint:           refreshToken,
+		ForgotPasswordEndpoint:         forgotPassword,
+		ResetPasswordEndpoint:          resetPassword,
+		VerifyEmailEndpoint:            verifyEmail,
+		SendEmailVerificationEndpoint:  sendEmailVerification,
+		CheckEmailVerificationEndpoint: checkEmailVerification,
+		MeEndpoint:                     me,
+		CsrfEndpoint:                   csrf,
 	}
 }
 
@@ -173,6 +177,46 @@ func (c *Client) VerifyEmail(ctx context.Context, p *VerifyEmailPayload) (res *V
 		return
 	}
 	return ires.(*VerifyEmailResult), nil
+}
+
+// SendEmailVerification calls the "send_email_verification" endpoint of the
+// "auth" service.
+// SendEmailVerification may return the following errors:
+//   - "bad_request" (type *BadRequestError)
+//   - "not_found" (type *NotFoundError): User not found
+//   - "unauthorized" (type *UnauthorizedError)
+//   - "forbidden" (type *ForbiddenError)
+//   - "conflict" (type *ConflictError)
+//   - "internal_error" (type *InternalServerError)
+//   - "invalid_credentials" (type *InternalServerError)
+//   - error: internal error
+func (c *Client) SendEmailVerification(ctx context.Context, p *SendEmailVerificationPayload) (res *SendEmailVerificationResult, err error) {
+	var ires any
+	ires, err = c.SendEmailVerificationEndpoint(ctx, p)
+	if err != nil {
+		return
+	}
+	return ires.(*SendEmailVerificationResult), nil
+}
+
+// CheckEmailVerification calls the "check_email_verification" endpoint of the
+// "auth" service.
+// CheckEmailVerification may return the following errors:
+//   - "bad_request" (type *BadRequestError)
+//   - "not_found" (type *NotFoundError): User not found
+//   - "unauthorized" (type *UnauthorizedError)
+//   - "forbidden" (type *ForbiddenError)
+//   - "conflict" (type *ConflictError)
+//   - "internal_error" (type *InternalServerError)
+//   - "invalid_credentials" (type *InternalServerError)
+//   - error: internal error
+func (c *Client) CheckEmailVerification(ctx context.Context, p *CheckEmailVerificationPayload) (res *CheckEmailVerificationResult, err error) {
+	var ires any
+	ires, err = c.CheckEmailVerificationEndpoint(ctx, p)
+	if err != nil {
+		return
+	}
+	return ires.(*CheckEmailVerificationResult), nil
 }
 
 // Me calls the "me" endpoint of the "auth" service.

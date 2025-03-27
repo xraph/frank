@@ -8,6 +8,7 @@
 package server
 
 import (
+	designtypes "github.com/juicycleff/frank/gen/designtypes"
 	organizations "github.com/juicycleff/frank/gen/organizations"
 	goa "goa.design/goa/v3/pkg"
 )
@@ -45,8 +46,8 @@ type EnableFeatureRequestBody struct {
 // ListResponseBody is the type of the "organizations" service "list" endpoint
 // HTTP response body.
 type ListResponseBody struct {
-	Data       []*OrganizationResponseResponseBody `form:"data" json:"data" xml:"data"`
-	Pagination *PaginationResponseBody             `form:"pagination" json:"pagination" xml:"pagination"`
+	Data       []*OrganizationResponseBody `form:"data" json:"data" xml:"data"`
+	Pagination *PaginationResponseBody     `form:"pagination" json:"pagination" xml:"pagination"`
 }
 
 // CreateResponseBody is the type of the "organizations" service "create"
@@ -76,6 +77,8 @@ type CreateResponseBody struct {
 	CreatedAt string `form:"created_at" json:"created_at" xml:"created_at"`
 	// Last update timestamp
 	UpdatedAt string `form:"updated_at" json:"updated_at" xml:"updated_at"`
+	// Organization settings
+	Settings *OrganizationSettingsResponseBody `json:"settings"`
 }
 
 // GetResponseBody is the type of the "organizations" service "get" endpoint
@@ -105,6 +108,8 @@ type GetResponseBody struct {
 	CreatedAt string `form:"created_at" json:"created_at" xml:"created_at"`
 	// Last update timestamp
 	UpdatedAt string `form:"updated_at" json:"updated_at" xml:"updated_at"`
+	// Organization settings
+	Settings *OrganizationSettingsResponseBody `json:"settings"`
 }
 
 // UpdateResponseBody is the type of the "organizations" service "update"
@@ -134,6 +139,8 @@ type UpdateResponseBody struct {
 	CreatedAt string `form:"created_at" json:"created_at" xml:"created_at"`
 	// Last update timestamp
 	UpdatedAt string `form:"updated_at" json:"updated_at" xml:"updated_at"`
+	// Organization settings
+	Settings *OrganizationSettingsResponseBody `json:"settings"`
 }
 
 // ListMembersResponseBody is the type of the "organizations" service
@@ -1128,9 +1135,8 @@ type DisableFeatureUnauthorizedResponseBody struct {
 	ID *string `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
 }
 
-// OrganizationResponseResponseBody is used to define fields on response body
-// types.
-type OrganizationResponseResponseBody struct {
+// OrganizationResponseBody is used to define fields on response body types.
+type OrganizationResponseBody struct {
 	// Organization ID
 	ID string `form:"id" json:"id" xml:"id"`
 	// Organization name
@@ -1155,6 +1161,78 @@ type OrganizationResponseResponseBody struct {
 	CreatedAt string `form:"created_at" json:"created_at" xml:"created_at"`
 	// Last update timestamp
 	UpdatedAt string `form:"updated_at" json:"updated_at" xml:"updated_at"`
+	// Organization settings
+	Settings *OrganizationSettingsResponseBody `json:"settings"`
+}
+
+// OrganizationSettingsResponseBody is used to define fields on response body
+// types.
+type OrganizationSettingsResponseBody struct {
+	// Signup fields
+	SignupFields []*FormFieldResponseBody `json:"signupFields"`
+	// Signup fields
+	Verification []*OrganizationVerificationConfigResponseBody `json:"verification"`
+}
+
+// FormFieldResponseBody is used to define fields on response body types.
+type FormFieldResponseBody struct {
+	// Field identifier name
+	Name string `json:"name" mapstructure:"name" yaml:"name"`
+	// Display label for the field
+	Label string `json:"label" mapstructure:"label" yaml:"label"`
+	// Type of form field
+	Type string `json:"type" mapstructure:"type" yaml:"type"`
+	// Placeholder text
+	Placeholder *string `json:"placeholder" mapstructure:"placeholder" yaml:"placeholder"`
+	// Whether the field is required
+	Required bool `json:"required" mapstructure:"required" yaml:"required"`
+	// Indicates if field represents a first name
+	IsFirstName bool `json:"isFirstName" mapstructure:"isFirstName" yaml:"isFirstName"`
+	// Indicates if field represents a last name
+	IsLastName bool `json:"isLastName" mapstructure:"isLastName" yaml:"isLastName"`
+	// Indicates if field represents an email
+	IsEmail bool `json:"isEmail" mapstructure:"isEmail" yaml:"isEmail"`
+	// Options for select fields
+	Options []*FormFieldSelectOptionResponseBody `json:"options" mapstructure:"options" yaml:"options"`
+	// Validation rules for the field
+	Validation *FormFieldValidationRulesResponseBody `json:"validation" mapstructure:"validation" yaml:"validation"`
+	// Row position identifier (string or number)
+	Row any `json:"row" mapstructure:"row" yaml:"row"`
+	// Width of the field
+	Width string `json:"width" mapstructure:"width" yaml:"width"`
+}
+
+// FormFieldSelectOptionResponseBody is used to define fields on response body
+// types.
+type FormFieldSelectOptionResponseBody struct {
+	// Option value
+	Value string `json:"value" mapstructure:"value" yaml:"value"`
+	// Option display label
+	Label string `json:"label" mapstructure:"label" yaml:"label"`
+}
+
+// FormFieldValidationRulesResponseBody is used to define fields on response
+// body types.
+type FormFieldValidationRulesResponseBody struct {
+	// Regex pattern for validation
+	Pattern *string `json:"pattern" mapstructure:"pattern" yaml:"pattern"`
+	// Minimum length
+	MinLength *int `json:"minLength" mapstructure:"minLength" yaml:"minLength"`
+	// Maximum length
+	MaxLength *int `json:"maxLength" mapstructure:"maxLength" yaml:"maxLength"`
+	// Minimum value
+	Min *float32 `json:"min" mapstructure:"min" yaml:"min"`
+	// Maximum value
+	Max *float32 `json:"max" mapstructure:"max" yaml:"max"`
+}
+
+// OrganizationVerificationConfigResponseBody is used to define fields on
+// response body types.
+type OrganizationVerificationConfigResponseBody struct {
+	// Length of verification code
+	CodeLength int `form:"code_length" json:"code_length" xml:"code_length"`
+	// Method used for verification
+	Method string `form:"method" json:"method" xml:"method"`
 }
 
 // PaginationResponseBody is used to define fields on response body types.
@@ -1281,12 +1359,12 @@ type EnableFeatureRequestRequestBody struct {
 func NewListResponseBody(res *organizations.ListResult) *ListResponseBody {
 	body := &ListResponseBody{}
 	if res.Data != nil {
-		body.Data = make([]*OrganizationResponseResponseBody, len(res.Data))
+		body.Data = make([]*OrganizationResponseBody, len(res.Data))
 		for i, val := range res.Data {
-			body.Data[i] = marshalOrganizationsOrganizationResponseToOrganizationResponseResponseBody(val)
+			body.Data[i] = marshalDesigntypesOrganizationToOrganizationResponseBody(val)
 		}
 	} else {
-		body.Data = []*OrganizationResponseResponseBody{}
+		body.Data = []*OrganizationResponseBody{}
 	}
 	if res.Pagination != nil {
 		body.Pagination = marshalDesigntypesPaginationToPaginationResponseBody(res.Pagination)
@@ -1296,7 +1374,7 @@ func NewListResponseBody(res *organizations.ListResult) *ListResponseBody {
 
 // NewCreateResponseBody builds the HTTP response body from the result of the
 // "create" endpoint of the "organizations" service.
-func NewCreateResponseBody(res *organizations.OrganizationResponse) *CreateResponseBody {
+func NewCreateResponseBody(res *designtypes.Organization) *CreateResponseBody {
 	body := &CreateResponseBody{
 		ID:          res.ID,
 		Name:        res.Name,
@@ -1318,12 +1396,15 @@ func NewCreateResponseBody(res *organizations.OrganizationResponse) *CreateRespo
 			body.Metadata[tk] = tv
 		}
 	}
+	if res.Settings != nil {
+		body.Settings = marshalDesigntypesOrganizationSettingsToOrganizationSettingsResponseBody(res.Settings)
+	}
 	return body
 }
 
 // NewGetResponseBody builds the HTTP response body from the result of the
 // "get" endpoint of the "organizations" service.
-func NewGetResponseBody(res *organizations.OrganizationResponse) *GetResponseBody {
+func NewGetResponseBody(res *designtypes.Organization) *GetResponseBody {
 	body := &GetResponseBody{
 		ID:          res.ID,
 		Name:        res.Name,
@@ -1345,12 +1426,15 @@ func NewGetResponseBody(res *organizations.OrganizationResponse) *GetResponseBod
 			body.Metadata[tk] = tv
 		}
 	}
+	if res.Settings != nil {
+		body.Settings = marshalDesigntypesOrganizationSettingsToOrganizationSettingsResponseBody(res.Settings)
+	}
 	return body
 }
 
 // NewUpdateResponseBody builds the HTTP response body from the result of the
 // "update" endpoint of the "organizations" service.
-func NewUpdateResponseBody(res *organizations.OrganizationResponse) *UpdateResponseBody {
+func NewUpdateResponseBody(res *designtypes.Organization) *UpdateResponseBody {
 	body := &UpdateResponseBody{
 		ID:          res.ID,
 		Name:        res.Name,
@@ -1371,6 +1455,9 @@ func NewUpdateResponseBody(res *organizations.OrganizationResponse) *UpdateRespo
 			tv := val
 			body.Metadata[tk] = tv
 		}
+	}
+	if res.Settings != nil {
+		body.Settings = marshalDesigntypesOrganizationSettingsToOrganizationSettingsResponseBody(res.Settings)
 	}
 	return body
 }

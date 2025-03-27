@@ -1143,6 +1143,333 @@ func EncodeVerifyEmailError(encoder func(context.Context, http.ResponseWriter) g
 	}
 }
 
+// EncodeSendEmailVerificationResponse returns an encoder for responses
+// returned by the auth send_email_verification endpoint.
+func EncodeSendEmailVerificationResponse(encoder func(context.Context, http.ResponseWriter) goahttp.Encoder) func(context.Context, http.ResponseWriter, any) error {
+	return func(ctx context.Context, w http.ResponseWriter, v any) error {
+		res, _ := v.(*auth.SendEmailVerificationResult)
+		enc := encoder(ctx, w)
+		body := NewSendEmailVerificationResponseBody(res)
+		w.WriteHeader(http.StatusOK)
+		return enc.Encode(body)
+	}
+}
+
+// DecodeSendEmailVerificationRequest returns a decoder for requests sent to
+// the auth send_email_verification endpoint.
+func DecodeSendEmailVerificationRequest(mux goahttp.Muxer, decoder func(*http.Request) goahttp.Decoder) func(*http.Request) (any, error) {
+	return func(r *http.Request) (any, error) {
+		var (
+			body SendEmailVerificationRequestBody
+			err  error
+		)
+		err = decoder(r).Decode(&body)
+		if err != nil {
+			if err == io.EOF {
+				return nil, goa.MissingPayloadError()
+			}
+			var gerr *goa.ServiceError
+			if errors.As(err, &gerr) {
+				return nil, gerr
+			}
+			return nil, goa.DecodePayloadError(err.Error())
+		}
+		err = ValidateSendEmailVerificationRequestBody(&body)
+		if err != nil {
+			return nil, err
+		}
+
+		var (
+			redirectURL *string
+			sessionID   *string
+			c           *http.Cookie
+		)
+		redirectURLRaw := r.URL.Query().Get("redirect_url")
+		if redirectURLRaw != "" {
+			redirectURL = &redirectURLRaw
+		}
+		c, _ = r.Cookie("frank_sid")
+		var sessionIDRaw string
+		if c != nil {
+			sessionIDRaw = c.Value
+		}
+		if sessionIDRaw != "" {
+			sessionID = &sessionIDRaw
+		}
+		payload := NewSendEmailVerificationPayload(&body, redirectURL, sessionID)
+
+		return payload, nil
+	}
+}
+
+// EncodeSendEmailVerificationError returns an encoder for errors returned by
+// the send_email_verification auth endpoint.
+func EncodeSendEmailVerificationError(encoder func(context.Context, http.ResponseWriter) goahttp.Encoder, formatter func(ctx context.Context, err error) goahttp.Statuser) func(context.Context, http.ResponseWriter, error) error {
+	encodeError := goahttp.ErrorEncoder(encoder, formatter)
+	return func(ctx context.Context, w http.ResponseWriter, v error) error {
+		var en goa.GoaErrorNamer
+		if !errors.As(v, &en) {
+			return encodeError(ctx, w, v)
+		}
+		switch en.GoaErrorName() {
+		case "bad_request":
+			var res *auth.BadRequestError
+			errors.As(v, &res)
+			enc := encoder(ctx, w)
+			var body any
+			if formatter != nil {
+				body = formatter(ctx, res)
+			} else {
+				body = NewSendEmailVerificationBadRequestResponseBody(res)
+			}
+			w.Header().Set("goa-error", res.GoaErrorName())
+			w.WriteHeader(http.StatusBadRequest)
+			return enc.Encode(body)
+		case "conflict":
+			var res *auth.ConflictError
+			errors.As(v, &res)
+			enc := encoder(ctx, w)
+			var body any
+			if formatter != nil {
+				body = formatter(ctx, res)
+			} else {
+				body = NewSendEmailVerificationConflictResponseBody(res)
+			}
+			w.Header().Set("goa-error", res.GoaErrorName())
+			w.WriteHeader(http.StatusConflict)
+			return enc.Encode(body)
+		case "forbidden":
+			var res *auth.ForbiddenError
+			errors.As(v, &res)
+			enc := encoder(ctx, w)
+			var body any
+			if formatter != nil {
+				body = formatter(ctx, res)
+			} else {
+				body = NewSendEmailVerificationForbiddenResponseBody(res)
+			}
+			w.Header().Set("goa-error", res.GoaErrorName())
+			w.WriteHeader(http.StatusForbidden)
+			return enc.Encode(body)
+		case "internal_error":
+			var res *auth.InternalServerError
+			errors.As(v, &res)
+			enc := encoder(ctx, w)
+			var body any
+			if formatter != nil {
+				body = formatter(ctx, res)
+			} else {
+				body = NewSendEmailVerificationInternalErrorResponseBody(res)
+			}
+			w.Header().Set("goa-error", res.GoaErrorName())
+			w.WriteHeader(http.StatusInternalServerError)
+			return enc.Encode(body)
+		case "not_found":
+			var res *auth.NotFoundError
+			errors.As(v, &res)
+			enc := encoder(ctx, w)
+			var body any
+			if formatter != nil {
+				body = formatter(ctx, res)
+			} else {
+				body = NewSendEmailVerificationNotFoundResponseBody(res)
+			}
+			w.Header().Set("goa-error", res.GoaErrorName())
+			w.WriteHeader(http.StatusNotFound)
+			return enc.Encode(body)
+		case "unauthorized":
+			var res *auth.UnauthorizedError
+			errors.As(v, &res)
+			enc := encoder(ctx, w)
+			var body any
+			if formatter != nil {
+				body = formatter(ctx, res)
+			} else {
+				body = NewSendEmailVerificationUnauthorizedResponseBody(res)
+			}
+			w.Header().Set("goa-error", res.GoaErrorName())
+			w.WriteHeader(http.StatusUnauthorized)
+			return enc.Encode(body)
+		default:
+			return encodeError(ctx, w, v)
+		}
+	}
+}
+
+// EncodeCheckEmailVerificationResponse returns an encoder for responses
+// returned by the auth check_email_verification endpoint.
+func EncodeCheckEmailVerificationResponse(encoder func(context.Context, http.ResponseWriter) goahttp.Encoder) func(context.Context, http.ResponseWriter, any) error {
+	return func(ctx context.Context, w http.ResponseWriter, v any) error {
+		res, _ := v.(*auth.CheckEmailVerificationResult)
+		enc := encoder(ctx, w)
+		body := NewCheckEmailVerificationResponseBody(res)
+		w.WriteHeader(http.StatusOK)
+		return enc.Encode(body)
+	}
+}
+
+// DecodeCheckEmailVerificationRequest returns a decoder for requests sent to
+// the auth check_email_verification endpoint.
+func DecodeCheckEmailVerificationRequest(mux goahttp.Muxer, decoder func(*http.Request) goahttp.Decoder) func(*http.Request) (any, error) {
+	return func(r *http.Request) (any, error) {
+		var (
+			email     string
+			oauth2    *string
+			jwt       *string
+			xAPIKey   *string
+			sessionID *string
+			err       error
+			c         *http.Cookie
+		)
+		email = r.URL.Query().Get("email")
+		if email == "" {
+			err = goa.MergeErrors(err, goa.MissingFieldError("email", "query string"))
+		}
+		err = goa.MergeErrors(err, goa.ValidateFormat("email", email, goa.FormatEmail))
+		oauth2Raw := r.Header.Get("Authorization")
+		if oauth2Raw != "" {
+			oauth2 = &oauth2Raw
+		}
+		jwtRaw := r.Header.Get("Authorization")
+		if jwtRaw != "" {
+			jwt = &jwtRaw
+		}
+		xAPIKeyRaw := r.Header.Get("Authorization")
+		if xAPIKeyRaw != "" {
+			xAPIKey = &xAPIKeyRaw
+		}
+		c, _ = r.Cookie("frank_sid")
+		var sessionIDRaw string
+		if c != nil {
+			sessionIDRaw = c.Value
+		}
+		if sessionIDRaw != "" {
+			sessionID = &sessionIDRaw
+		}
+		if err != nil {
+			return nil, err
+		}
+		payload := NewCheckEmailVerificationPayload(email, oauth2, jwt, xAPIKey, sessionID)
+		if payload.Oauth2 != nil {
+			if strings.Contains(*payload.Oauth2, " ") {
+				// Remove authorization scheme prefix (e.g. "Bearer")
+				cred := strings.SplitN(*payload.Oauth2, " ", 2)[1]
+				payload.Oauth2 = &cred
+			}
+		}
+		if payload.JWT != nil {
+			if strings.Contains(*payload.JWT, " ") {
+				// Remove authorization scheme prefix (e.g. "Bearer")
+				cred := strings.SplitN(*payload.JWT, " ", 2)[1]
+				payload.JWT = &cred
+			}
+		}
+		if payload.XAPIKey != nil {
+			if strings.Contains(*payload.XAPIKey, " ") {
+				// Remove authorization scheme prefix (e.g. "Bearer")
+				cred := strings.SplitN(*payload.XAPIKey, " ", 2)[1]
+				payload.XAPIKey = &cred
+			}
+		}
+
+		return payload, nil
+	}
+}
+
+// EncodeCheckEmailVerificationError returns an encoder for errors returned by
+// the check_email_verification auth endpoint.
+func EncodeCheckEmailVerificationError(encoder func(context.Context, http.ResponseWriter) goahttp.Encoder, formatter func(ctx context.Context, err error) goahttp.Statuser) func(context.Context, http.ResponseWriter, error) error {
+	encodeError := goahttp.ErrorEncoder(encoder, formatter)
+	return func(ctx context.Context, w http.ResponseWriter, v error) error {
+		var en goa.GoaErrorNamer
+		if !errors.As(v, &en) {
+			return encodeError(ctx, w, v)
+		}
+		switch en.GoaErrorName() {
+		case "bad_request":
+			var res *auth.BadRequestError
+			errors.As(v, &res)
+			enc := encoder(ctx, w)
+			var body any
+			if formatter != nil {
+				body = formatter(ctx, res)
+			} else {
+				body = NewCheckEmailVerificationBadRequestResponseBody(res)
+			}
+			w.Header().Set("goa-error", res.GoaErrorName())
+			w.WriteHeader(http.StatusBadRequest)
+			return enc.Encode(body)
+		case "conflict":
+			var res *auth.ConflictError
+			errors.As(v, &res)
+			enc := encoder(ctx, w)
+			var body any
+			if formatter != nil {
+				body = formatter(ctx, res)
+			} else {
+				body = NewCheckEmailVerificationConflictResponseBody(res)
+			}
+			w.Header().Set("goa-error", res.GoaErrorName())
+			w.WriteHeader(http.StatusConflict)
+			return enc.Encode(body)
+		case "forbidden":
+			var res *auth.ForbiddenError
+			errors.As(v, &res)
+			enc := encoder(ctx, w)
+			var body any
+			if formatter != nil {
+				body = formatter(ctx, res)
+			} else {
+				body = NewCheckEmailVerificationForbiddenResponseBody(res)
+			}
+			w.Header().Set("goa-error", res.GoaErrorName())
+			w.WriteHeader(http.StatusForbidden)
+			return enc.Encode(body)
+		case "internal_error":
+			var res *auth.InternalServerError
+			errors.As(v, &res)
+			enc := encoder(ctx, w)
+			var body any
+			if formatter != nil {
+				body = formatter(ctx, res)
+			} else {
+				body = NewCheckEmailVerificationInternalErrorResponseBody(res)
+			}
+			w.Header().Set("goa-error", res.GoaErrorName())
+			w.WriteHeader(http.StatusInternalServerError)
+			return enc.Encode(body)
+		case "not_found":
+			var res *auth.NotFoundError
+			errors.As(v, &res)
+			enc := encoder(ctx, w)
+			var body any
+			if formatter != nil {
+				body = formatter(ctx, res)
+			} else {
+				body = NewCheckEmailVerificationNotFoundResponseBody(res)
+			}
+			w.Header().Set("goa-error", res.GoaErrorName())
+			w.WriteHeader(http.StatusNotFound)
+			return enc.Encode(body)
+		case "unauthorized":
+			var res *auth.UnauthorizedError
+			errors.As(v, &res)
+			enc := encoder(ctx, w)
+			var body any
+			if formatter != nil {
+				body = formatter(ctx, res)
+			} else {
+				body = NewCheckEmailVerificationUnauthorizedResponseBody(res)
+			}
+			w.Header().Set("goa-error", res.GoaErrorName())
+			w.WriteHeader(http.StatusUnauthorized)
+			return enc.Encode(body)
+		default:
+			return encodeError(ctx, w, v)
+		}
+	}
+}
+
 // EncodeMeResponse returns an encoder for responses returned by the auth me
 // endpoint.
 func EncodeMeResponse(encoder func(context.Context, http.ResponseWriter) goahttp.Encoder) func(context.Context, http.ResponseWriter, any) error {

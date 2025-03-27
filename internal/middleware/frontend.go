@@ -43,7 +43,7 @@ func DefaultFrontendRouteOptions(cfg *config.Config) FrontendRouteOptions {
 		},
 		ProtectedPaths: []string{
 			"/dashboard",
-			"/profile",
+			"/account",
 			"/settings",
 			"/projects",
 			"/reports",

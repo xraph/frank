@@ -200,7 +200,7 @@ type GetSessionsResponseBody struct {
 // GetOrganizationsResponseBody is the type of the "users" service
 // "get_organizations" endpoint HTTP response body.
 type GetOrganizationsResponseBody struct {
-	Organizations []*OrganizationResponseResponseBody `form:"organizations" json:"organizations" xml:"organizations"`
+	Organizations []*OrganizationResponseBody `form:"organizations" json:"organizations" xml:"organizations"`
 }
 
 // ListBadRequestResponseBody is the type of the "users" service "list"
@@ -1058,9 +1058,8 @@ type SessionResponseBody struct {
 	UpdatedAt string `json:"updated_at,updatedAt"`
 }
 
-// OrganizationResponseResponseBody is used to define fields on response body
-// types.
-type OrganizationResponseResponseBody struct {
+// OrganizationResponseBody is used to define fields on response body types.
+type OrganizationResponseBody struct {
 	// Organization ID
 	ID string `form:"id" json:"id" xml:"id"`
 	// Organization name
@@ -1085,6 +1084,78 @@ type OrganizationResponseResponseBody struct {
 	CreatedAt string `form:"created_at" json:"created_at" xml:"created_at"`
 	// Last update timestamp
 	UpdatedAt string `form:"updated_at" json:"updated_at" xml:"updated_at"`
+	// Organization settings
+	Settings *OrganizationSettingsResponseBody `json:"settings"`
+}
+
+// OrganizationSettingsResponseBody is used to define fields on response body
+// types.
+type OrganizationSettingsResponseBody struct {
+	// Signup fields
+	SignupFields []*FormFieldResponseBody `json:"signupFields"`
+	// Signup fields
+	Verification []*OrganizationVerificationConfigResponseBody `json:"verification"`
+}
+
+// FormFieldResponseBody is used to define fields on response body types.
+type FormFieldResponseBody struct {
+	// Field identifier name
+	Name string `json:"name" mapstructure:"name" yaml:"name"`
+	// Display label for the field
+	Label string `json:"label" mapstructure:"label" yaml:"label"`
+	// Type of form field
+	Type string `json:"type" mapstructure:"type" yaml:"type"`
+	// Placeholder text
+	Placeholder *string `json:"placeholder" mapstructure:"placeholder" yaml:"placeholder"`
+	// Whether the field is required
+	Required bool `json:"required" mapstructure:"required" yaml:"required"`
+	// Indicates if field represents a first name
+	IsFirstName bool `json:"isFirstName" mapstructure:"isFirstName" yaml:"isFirstName"`
+	// Indicates if field represents a last name
+	IsLastName bool `json:"isLastName" mapstructure:"isLastName" yaml:"isLastName"`
+	// Indicates if field represents an email
+	IsEmail bool `json:"isEmail" mapstructure:"isEmail" yaml:"isEmail"`
+	// Options for select fields
+	Options []*FormFieldSelectOptionResponseBody `json:"options" mapstructure:"options" yaml:"options"`
+	// Validation rules for the field
+	Validation *FormFieldValidationRulesResponseBody `json:"validation" mapstructure:"validation" yaml:"validation"`
+	// Row position identifier (string or number)
+	Row any `json:"row" mapstructure:"row" yaml:"row"`
+	// Width of the field
+	Width string `json:"width" mapstructure:"width" yaml:"width"`
+}
+
+// FormFieldSelectOptionResponseBody is used to define fields on response body
+// types.
+type FormFieldSelectOptionResponseBody struct {
+	// Option value
+	Value string `json:"value" mapstructure:"value" yaml:"value"`
+	// Option display label
+	Label string `json:"label" mapstructure:"label" yaml:"label"`
+}
+
+// FormFieldValidationRulesResponseBody is used to define fields on response
+// body types.
+type FormFieldValidationRulesResponseBody struct {
+	// Regex pattern for validation
+	Pattern *string `json:"pattern" mapstructure:"pattern" yaml:"pattern"`
+	// Minimum length
+	MinLength *int `json:"minLength" mapstructure:"minLength" yaml:"minLength"`
+	// Maximum length
+	MaxLength *int `json:"maxLength" mapstructure:"maxLength" yaml:"maxLength"`
+	// Minimum value
+	Min *float32 `json:"min" mapstructure:"min" yaml:"min"`
+	// Maximum value
+	Max *float32 `json:"max" mapstructure:"max" yaml:"max"`
+}
+
+// OrganizationVerificationConfigResponseBody is used to define fields on
+// response body types.
+type OrganizationVerificationConfigResponseBody struct {
+	// Length of verification code
+	CodeLength int `form:"code_length" json:"code_length" xml:"code_length"`
+	// Method used for verification
+	Method string `form:"method" json:"method" xml:"method"`
 }
 
 // UpdateUserRequestRequestBody is used to define fields on request body types.
@@ -1281,12 +1352,12 @@ func NewGetSessionsResponseBody(res *users.GetUserSessionResponse) *GetSessionsR
 func NewGetOrganizationsResponseBody(res *users.GetOrganizationsResult) *GetOrganizationsResponseBody {
 	body := &GetOrganizationsResponseBody{}
 	if res.Organizations != nil {
-		body.Organizations = make([]*OrganizationResponseResponseBody, len(res.Organizations))
+		body.Organizations = make([]*OrganizationResponseBody, len(res.Organizations))
 		for i, val := range res.Organizations {
-			body.Organizations[i] = marshalUsersOrganizationResponseToOrganizationResponseResponseBody(val)
+			body.Organizations[i] = marshalDesigntypesOrganizationToOrganizationResponseBody(val)
 		}
 	} else {
-		body.Organizations = []*OrganizationResponseResponseBody{}
+		body.Organizations = []*OrganizationResponseBody{}
 	}
 	return body
 }

@@ -25,7 +25,7 @@ data "composite_schema" "project" {
     # }
 
     schema "public" {
-        url = "ent://../../internal/data/ent/schema"
+        url = "ent://ent/schema"
     }
 }
 

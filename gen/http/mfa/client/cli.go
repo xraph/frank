@@ -23,7 +23,7 @@ func BuildEnrollPayload(mfaEnrollBody string, mfaEnrollJWT string) (*mfa.EnrollP
 	{
 		err = json.Unmarshal([]byte(mfaEnrollBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"request\": {\n         \"email\": \"charley_kilback@conn.name\",\n         \"method\": \"totp\",\n         \"phone_number\": \"Et corporis.\"\n      }\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"request\": {\n         \"email\": \"katrina@huels.name\",\n         \"method\": \"totp\",\n         \"phone_number\": \"Delectus rem voluptatem vel laborum commodi.\"\n      }\n   }'")
 		}
 		if body.Request == nil {
 			err = goa.MergeErrors(err, goa.MissingFieldError("request", "body"))
@@ -60,7 +60,7 @@ func BuildVerifyPayload(mfaVerifyBody string, mfaVerifyJWT string) (*mfa.VerifyP
 	{
 		err = json.Unmarshal([]byte(mfaVerifyBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"request\": {\n         \"code\": \"123456\",\n         \"method\": \"totp\",\n         \"phone_number\": \"Quo similique qui facilis facilis.\"\n      }\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"request\": {\n         \"code\": \"123456\",\n         \"method\": \"totp\",\n         \"phone_number\": \"Molestiae provident.\"\n      }\n   }'")
 		}
 		if body.Request == nil {
 			err = goa.MergeErrors(err, goa.MissingFieldError("request", "body"))

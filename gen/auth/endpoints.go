@@ -16,15 +16,17 @@ import (
 
 // Endpoints wraps the "auth" service endpoints.
 type Endpoints struct {
-	Login          goa.Endpoint
-	Register       goa.Endpoint
-	Logout         goa.Endpoint
-	RefreshToken   goa.Endpoint
-	ForgotPassword goa.Endpoint
-	ResetPassword  goa.Endpoint
-	VerifyEmail    goa.Endpoint
-	Me             goa.Endpoint
-	Csrf           goa.Endpoint
+	Login                  goa.Endpoint
+	Register               goa.Endpoint
+	Logout                 goa.Endpoint
+	RefreshToken           goa.Endpoint
+	ForgotPassword         goa.Endpoint
+	ResetPassword          goa.Endpoint
+	VerifyEmail            goa.Endpoint
+	SendEmailVerification  goa.Endpoint
+	CheckEmailVerification goa.Endpoint
+	Me                     goa.Endpoint
+	Csrf                   goa.Endpoint
 }
 
 // NewEndpoints wraps the methods of the "auth" service with endpoints.
@@ -32,15 +34,17 @@ func NewEndpoints(s Service, si ServerInterceptors) *Endpoints {
 	// Casting service to Auther interface
 	a := s.(Auther)
 	endpoints := &Endpoints{
-		Login:          NewLoginEndpoint(s),
-		Register:       NewRegisterEndpoint(s),
-		Logout:         NewLogoutEndpoint(s, a.JWTAuth),
-		RefreshToken:   NewRefreshTokenEndpoint(s, a.OAuth2Auth, a.APIKeyAuth, a.JWTAuth),
-		ForgotPassword: NewForgotPasswordEndpoint(s, a.OAuth2Auth, a.APIKeyAuth, a.JWTAuth),
-		ResetPassword:  NewResetPasswordEndpoint(s),
-		VerifyEmail:    NewVerifyEmailEndpoint(s),
-		Me:             NewMeEndpoint(s, a.JWTAuth),
-		Csrf:           NewCsrfEndpoint(s),
+		Login:                  NewLoginEndpoint(s),
+		Register:               NewRegisterEndpoint(s),
+		Logout:                 NewLogoutEndpoint(s, a.JWTAuth),
+		RefreshToken:           NewRefreshTokenEndpoint(s, a.OAuth2Auth, a.APIKeyAuth, a.JWTAuth),
+		ForgotPassword:         NewForgotPasswordEndpoint(s, a.OAuth2Auth, a.APIKeyAuth, a.JWTAuth),
+		ResetPassword:          NewResetPasswordEndpoint(s),
+		VerifyEmail:            NewVerifyEmailEndpoint(s),
+		SendEmailVerification:  NewSendEmailVerificationEndpoint(s),
+		CheckEmailVerification: NewCheckEmailVerificationEndpoint(s, a.OAuth2Auth, a.JWTAuth, a.APIKeyAuth),
+		Me:                     NewMeEndpoint(s, a.JWTAuth),
+		Csrf:                   NewCsrfEndpoint(s),
 	}
 	endpoints.Login = WrapLoginEndpoint(endpoints.Login, si)
 	return endpoints
@@ -55,6 +59,8 @@ func (e *Endpoints) Use(m func(goa.Endpoint) goa.Endpoint) {
 	e.ForgotPassword = m(e.ForgotPassword)
 	e.ResetPassword = m(e.ResetPassword)
 	e.VerifyEmail = m(e.VerifyEmail)
+	e.SendEmailVerification = m(e.SendEmailVerification)
+	e.CheckEmailVerification = m(e.CheckEmailVerification)
 	e.Me = m(e.Me)
 	e.Csrf = m(e.Csrf)
 }
@@ -225,6 +231,70 @@ func NewVerifyEmailEndpoint(s Service) goa.Endpoint {
 	return func(ctx context.Context, req any) (any, error) {
 		p := req.(*VerifyEmailPayload)
 		return s.VerifyEmail(ctx, p)
+	}
+}
+
+// NewSendEmailVerificationEndpoint returns an endpoint function that calls the
+// method "send_email_verification" of service "auth".
+func NewSendEmailVerificationEndpoint(s Service) goa.Endpoint {
+	return func(ctx context.Context, req any) (any, error) {
+		p := req.(*SendEmailVerificationPayload)
+		return s.SendEmailVerification(ctx, p)
+	}
+}
+
+// NewCheckEmailVerificationEndpoint returns an endpoint function that calls
+// the method "check_email_verification" of service "auth".
+func NewCheckEmailVerificationEndpoint(s Service, authOAuth2Fn security.AuthOAuth2Func, authJWTFn security.AuthJWTFunc, authAPIKeyFn security.AuthAPIKeyFunc) goa.Endpoint {
+	return func(ctx context.Context, req any) (any, error) {
+		p := req.(*CheckEmailVerificationPayload)
+		var err error
+		sc := security.OAuth2Scheme{
+			Name:           "oauth2",
+			Scopes:         []string{"profile", "email", "openid", "offline_access", "api"},
+			RequiredScopes: []string{},
+			Flows: []*security.OAuthFlow{
+				&security.OAuthFlow{
+					Type:             "authorization_code",
+					AuthorizationURL: "/v1/oauth/authorize",
+					TokenURL:         "/v1/oauth/token",
+					RefreshURL:       "/v1/oauth/refresh",
+				},
+			},
+		}
+		var token string
+		if p.Oauth2 != nil {
+			token = *p.Oauth2
+		}
+		ctx, err = authOAuth2Fn(ctx, token, &sc)
+		if err == nil {
+			sc := security.JWTScheme{
+				Name:           "jwt",
+				Scopes:         []string{"api:read", "api:write"},
+				RequiredScopes: []string{},
+			}
+			var token string
+			if p.JWT != nil {
+				token = *p.JWT
+			}
+			ctx, err = authJWTFn(ctx, token, &sc)
+		}
+		if err == nil {
+			sc := security.APIKeyScheme{
+				Name:           "api_key",
+				Scopes:         []string{},
+				RequiredScopes: []string{},
+			}
+			var key string
+			if p.XAPIKey != nil {
+				key = *p.XAPIKey
+			}
+			ctx, err = authAPIKeyFn(ctx, key, &sc)
+		}
+		if err != nil {
+			return nil, err
+		}
+		return s.CheckEmailVerification(ctx, p)
 	}
 }
 

@@ -11,6 +11,7 @@ import (
 	"context"
 
 	designtypes "github.com/juicycleff/frank/gen/designtypes"
+	"github.com/juicycleff/frank/internal/user"
 	"goa.design/goa/v3/security"
 )
 
@@ -30,6 +31,10 @@ type Service interface {
 	ResetPassword(context.Context, *ResetPasswordPayload) (res *ResetPasswordResult, err error)
 	// Verify email using token
 	VerifyEmail(context.Context, *VerifyEmailPayload) (res *VerifyEmailResult, err error)
+	// Send verification email with link or OTP
+	SendEmailVerification(context.Context, *SendEmailVerificationPayload) (res *SendEmailVerificationResult, err error)
+	// Check if email is verified
+	CheckEmailVerification(context.Context, *CheckEmailVerificationPayload) (res *CheckEmailVerificationResult, err error)
 	// Get current user info
 	Me(context.Context, *MePayload) (res *designtypes.User, err error)
 	// Generates a CSRF token
@@ -60,7 +65,7 @@ const ServiceName = "auth"
 // MethodNames lists the service method names as defined in the design. These
 // are the same values that are set in the endpoint request contexts under the
 // MethodKey key.
-var MethodNames = [9]string{"login", "register", "logout", "refresh_token", "forgot_password", "reset_password", "verify_email", "me", "csrf"}
+var MethodNames = [11]string{"login", "register", "logout", "refresh_token", "forgot_password", "reset_password", "verify_email", "send_email_verification", "check_email_verification", "me", "csrf"}
 
 // Bad request response
 type BadRequestError struct {
@@ -78,6 +83,27 @@ type BadRequestError struct {
 type CSRFTokenResponse struct {
 	// CSRF token
 	CsrfToken string
+}
+
+// CheckEmailVerificationPayload is the payload type of the auth service
+// check_email_verification method.
+type CheckEmailVerificationPayload struct {
+	// OAuth2 access token
+	Oauth2 *string
+	// API key
+	XAPIKey *string
+	// JWT token
+	JWT *string
+	// User email
+	Email     string
+	SessionID *string
+}
+
+// CheckEmailVerificationResult is the result type of the auth service
+// check_email_verification method.
+type CheckEmailVerificationResult struct {
+	// Whether email is verified
+	Verified bool
 }
 
 // Conflict response
@@ -176,6 +202,18 @@ type LoginResponse struct {
 	MfaTypes []string
 	// Session ID
 	SessionID *string
+	// Login message
+	Message string `json:"message,omitempty"`
+	// Whether email verification is required
+	VerificationRequired *bool
+	// Verification ID for email verification
+	VerificationID *string
+	// Verification method for email verification
+	VerificationMethod *string
+	// Whether email is verified
+	EmailVerified *bool
+	// Whether email verification is required
+	RequiresVerification *bool
 }
 
 // LogoutPayload is the payload type of the auth service logout method.
@@ -266,6 +304,27 @@ type ResetPasswordResult struct {
 	Message string
 }
 
+// SendEmailVerificationPayload is the payload type of the auth service
+// send_email_verification method.
+type SendEmailVerificationPayload struct {
+	SessionID *string
+	// User email
+	Email string
+	// Verification method (link or otp)
+	Method user.VerificationMethod
+	// URL to redirect after verification (for link verification)
+	RedirectURL *string
+}
+
+// SendEmailVerificationResult is the result type of the auth service
+// send_email_verification method.
+type SendEmailVerificationResult struct {
+	// Success message
+	Message string
+	// When the verification code/link expires
+	ExpiresAt int64
+}
+
 // Unauthorized response
 type UnauthorizedError struct {
 	// Error code
@@ -282,8 +341,14 @@ type UnauthorizedError struct {
 // method.
 type VerifyEmailPayload struct {
 	SessionID *string
-	// Email verification token
-	Token string
+	// Email verification token for link verification
+	Token *string
+	// One-time password for OTP verification
+	Otp *string
+	// User email
+	Email string
+	// Verification method (link or otp)
+	Method user.VerificationMethod
 }
 
 // VerifyEmailResult is the result type of the auth service verify_email method.

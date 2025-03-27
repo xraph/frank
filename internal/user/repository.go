@@ -37,6 +37,9 @@ type Repository interface {
 
 	// IsUserMemberOfOrganization checks if a user is a member of an organization
 	IsUserMemberOfOrganization(ctx context.Context, userID, orgID string) (bool, error)
+
+	// GetUserCount returns the total number of users
+	GetUserCount(ctx context.Context) (int, error)
 }
 
 // RepositoryCreateInput represents input for creating a user
@@ -430,6 +433,11 @@ func (r *repository) IsUserMemberOfOrganization(ctx context.Context, userID, org
 			user.HasOrganizationsWith(organization.ID(orgID)),
 		).
 		Exist(ctx)
+}
+
+// GetUserCount retrieves the total count of users from the database. Returns the count and any potential error.
+func (r *repository) GetUserCount(ctx context.Context) (int, error) {
+	return r.client.User.Query().Count(ctx)
 }
 
 // Helper function to return nil for empty strings

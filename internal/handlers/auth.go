@@ -105,14 +105,14 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if MFA is required
-	mfaRequired, mfaTypes, err := h.checkMFA(r.Context(), authenticatedUser.ID)
+	mfaRequired, mfaTypes, err := h.checkMFA(r.Context(), authenticatedUser.User.ID)
 	if err != nil {
 		utils.RespondError(w, err)
 		return
 	}
 
 	// Create tokens
-	token, refreshToken, expiresAt, err := h.createTokens(authenticatedUser, input.OrganizationID)
+	token, refreshToken, expiresAt, err := h.createTokens(authenticatedUser.User, input.OrganizationID)
 	if err != nil {
 		utils.RespondError(w, err)
 		return
@@ -120,10 +120,10 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	// Create session if session manager is available
 	if h.sessionManager != nil {
-		session, err := h.createSession(r, w, authenticatedUser, input.OrganizationID, input.RememberMe)
+		session, err := h.createSession(r, w, authenticatedUser.User, input.OrganizationID, input.RememberMe)
 		if err != nil {
 			h.logger.Error("Failed to create session",
-				logging.String("user_id", authenticatedUser.ID),
+				logging.String("user_id", authenticatedUser.User.ID),
 				logging.Error(err),
 			)
 			// Continue without session
@@ -138,7 +138,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	// Return response
 	utils.RespondJSON(w, http.StatusOK, &LoginResponse{
-		User:         authenticatedUser,
+		User:         authenticatedUser.User,
 		Token:        token,
 		RefreshToken: refreshToken,
 		ExpiresAt:    expiresAt,

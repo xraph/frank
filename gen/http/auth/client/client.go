@@ -43,6 +43,14 @@ type Client struct {
 	// verify_email endpoint.
 	VerifyEmailDoer goahttp.Doer
 
+	// SendEmailVerification Doer is the HTTP client used to make requests to the
+	// send_email_verification endpoint.
+	SendEmailVerificationDoer goahttp.Doer
+
+	// CheckEmailVerification Doer is the HTTP client used to make requests to the
+	// check_email_verification endpoint.
+	CheckEmailVerificationDoer goahttp.Doer
+
 	// Me Doer is the HTTP client used to make requests to the me endpoint.
 	MeDoer goahttp.Doer
 
@@ -72,21 +80,23 @@ func NewClient(
 	restoreBody bool,
 ) *Client {
 	return &Client{
-		LoginDoer:           doer,
-		RegisterDoer:        doer,
-		LogoutDoer:          doer,
-		RefreshTokenDoer:    doer,
-		ForgotPasswordDoer:  doer,
-		ResetPasswordDoer:   doer,
-		VerifyEmailDoer:     doer,
-		MeDoer:              doer,
-		CsrfDoer:            doer,
-		CORSDoer:            doer,
-		RestoreResponseBody: restoreBody,
-		scheme:              scheme,
-		host:                host,
-		decoder:             dec,
-		encoder:             enc,
+		LoginDoer:                  doer,
+		RegisterDoer:               doer,
+		LogoutDoer:                 doer,
+		RefreshTokenDoer:           doer,
+		ForgotPasswordDoer:         doer,
+		ResetPasswordDoer:          doer,
+		VerifyEmailDoer:            doer,
+		SendEmailVerificationDoer:  doer,
+		CheckEmailVerificationDoer: doer,
+		MeDoer:                     doer,
+		CsrfDoer:                   doer,
+		CORSDoer:                   doer,
+		RestoreResponseBody:        restoreBody,
+		scheme:                     scheme,
+		host:                       host,
+		decoder:                    dec,
+		encoder:                    enc,
 	}
 }
 
@@ -253,6 +263,54 @@ func (c *Client) VerifyEmail() goa.Endpoint {
 		resp, err := c.VerifyEmailDoer.Do(req)
 		if err != nil {
 			return nil, goahttp.ErrRequestError("auth", "verify_email", err)
+		}
+		return decodeResponse(resp)
+	}
+}
+
+// SendEmailVerification returns an endpoint that makes HTTP requests to the
+// auth service send_email_verification server.
+func (c *Client) SendEmailVerification() goa.Endpoint {
+	var (
+		encodeRequest  = EncodeSendEmailVerificationRequest(c.encoder)
+		decodeResponse = DecodeSendEmailVerificationResponse(c.decoder, c.RestoreResponseBody)
+	)
+	return func(ctx context.Context, v any) (any, error) {
+		req, err := c.BuildSendEmailVerificationRequest(ctx, v)
+		if err != nil {
+			return nil, err
+		}
+		err = encodeRequest(req, v)
+		if err != nil {
+			return nil, err
+		}
+		resp, err := c.SendEmailVerificationDoer.Do(req)
+		if err != nil {
+			return nil, goahttp.ErrRequestError("auth", "send_email_verification", err)
+		}
+		return decodeResponse(resp)
+	}
+}
+
+// CheckEmailVerification returns an endpoint that makes HTTP requests to the
+// auth service check_email_verification server.
+func (c *Client) CheckEmailVerification() goa.Endpoint {
+	var (
+		encodeRequest  = EncodeCheckEmailVerificationRequest(c.encoder)
+		decodeResponse = DecodeCheckEmailVerificationResponse(c.decoder, c.RestoreResponseBody)
+	)
+	return func(ctx context.Context, v any) (any, error) {
+		req, err := c.BuildCheckEmailVerificationRequest(ctx, v)
+		if err != nil {
+			return nil, err
+		}
+		err = encodeRequest(req, v)
+		if err != nil {
+			return nil, err
+		}
+		resp, err := c.CheckEmailVerificationDoer.Do(req)
+		if err != nil {
+			return nil, goahttp.ErrRequestError("auth", "check_email_verification", err)
 		}
 		return decodeResponse(resp)
 	}

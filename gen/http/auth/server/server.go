@@ -20,17 +20,19 @@ import (
 
 // Server lists the auth service endpoint HTTP handlers.
 type Server struct {
-	Mounts         []*MountPoint
-	Login          http.Handler
-	Register       http.Handler
-	Logout         http.Handler
-	RefreshToken   http.Handler
-	ForgotPassword http.Handler
-	ResetPassword  http.Handler
-	VerifyEmail    http.Handler
-	Me             http.Handler
-	Csrf           http.Handler
-	CORS           http.Handler
+	Mounts                 []*MountPoint
+	Login                  http.Handler
+	Register               http.Handler
+	Logout                 http.Handler
+	RefreshToken           http.Handler
+	ForgotPassword         http.Handler
+	ResetPassword          http.Handler
+	VerifyEmail            http.Handler
+	SendEmailVerification  http.Handler
+	CheckEmailVerification http.Handler
+	Me                     http.Handler
+	Csrf                   http.Handler
+	CORS                   http.Handler
 }
 
 // MountPoint holds information about the mounted endpoints.
@@ -67,6 +69,8 @@ func New(
 			{"ForgotPassword", "POST", "/v1/auth/forgot-password"},
 			{"ResetPassword", "POST", "/v1/auth/reset-password"},
 			{"VerifyEmail", "POST", "/v1/auth/verify-email"},
+			{"SendEmailVerification", "POST", "/v1/auth/send-verification-email"},
+			{"CheckEmailVerification", "GET", "/v1/auth/check-verification"},
 			{"Me", "GET", "/v1/auth/me"},
 			{"Csrf", "GET", "/v1/auth/csrf-token"},
 			{"CORS", "OPTIONS", "/v1/auth/login"},
@@ -76,19 +80,23 @@ func New(
 			{"CORS", "OPTIONS", "/v1/auth/forgot-password"},
 			{"CORS", "OPTIONS", "/v1/auth/reset-password"},
 			{"CORS", "OPTIONS", "/v1/auth/verify-email"},
+			{"CORS", "OPTIONS", "/v1/auth/send-verification-email"},
+			{"CORS", "OPTIONS", "/v1/auth/check-verification"},
 			{"CORS", "OPTIONS", "/v1/auth/me"},
 			{"CORS", "OPTIONS", "/v1/auth/csrf-token"},
 		},
-		Login:          NewLoginHandler(e.Login, mux, decoder, encoder, errhandler, formatter),
-		Register:       NewRegisterHandler(e.Register, mux, decoder, encoder, errhandler, formatter),
-		Logout:         NewLogoutHandler(e.Logout, mux, decoder, encoder, errhandler, formatter),
-		RefreshToken:   NewRefreshTokenHandler(e.RefreshToken, mux, decoder, encoder, errhandler, formatter),
-		ForgotPassword: NewForgotPasswordHandler(e.ForgotPassword, mux, decoder, encoder, errhandler, formatter),
-		ResetPassword:  NewResetPasswordHandler(e.ResetPassword, mux, decoder, encoder, errhandler, formatter),
-		VerifyEmail:    NewVerifyEmailHandler(e.VerifyEmail, mux, decoder, encoder, errhandler, formatter),
-		Me:             NewMeHandler(e.Me, mux, decoder, encoder, errhandler, formatter),
-		Csrf:           NewCsrfHandler(e.Csrf, mux, decoder, encoder, errhandler, formatter),
-		CORS:           NewCORSHandler(),
+		Login:                  NewLoginHandler(e.Login, mux, decoder, encoder, errhandler, formatter),
+		Register:               NewRegisterHandler(e.Register, mux, decoder, encoder, errhandler, formatter),
+		Logout:                 NewLogoutHandler(e.Logout, mux, decoder, encoder, errhandler, formatter),
+		RefreshToken:           NewRefreshTokenHandler(e.RefreshToken, mux, decoder, encoder, errhandler, formatter),
+		ForgotPassword:         NewForgotPasswordHandler(e.ForgotPassword, mux, decoder, encoder, errhandler, formatter),
+		ResetPassword:          NewResetPasswordHandler(e.ResetPassword, mux, decoder, encoder, errhandler, formatter),
+		VerifyEmail:            NewVerifyEmailHandler(e.VerifyEmail, mux, decoder, encoder, errhandler, formatter),
+		SendEmailVerification:  NewSendEmailVerificationHandler(e.SendEmailVerification, mux, decoder, encoder, errhandler, formatter),
+		CheckEmailVerification: NewCheckEmailVerificationHandler(e.CheckEmailVerification, mux, decoder, encoder, errhandler, formatter),
+		Me:                     NewMeHandler(e.Me, mux, decoder, encoder, errhandler, formatter),
+		Csrf:                   NewCsrfHandler(e.Csrf, mux, decoder, encoder, errhandler, formatter),
+		CORS:                   NewCORSHandler(),
 	}
 }
 
@@ -104,6 +112,8 @@ func (s *Server) Use(m func(http.Handler) http.Handler) {
 	s.ForgotPassword = m(s.ForgotPassword)
 	s.ResetPassword = m(s.ResetPassword)
 	s.VerifyEmail = m(s.VerifyEmail)
+	s.SendEmailVerification = m(s.SendEmailVerification)
+	s.CheckEmailVerification = m(s.CheckEmailVerification)
 	s.Me = m(s.Me)
 	s.Csrf = m(s.Csrf)
 	s.CORS = m(s.CORS)
@@ -121,6 +131,8 @@ func Mount(mux goahttp.Muxer, h *Server) {
 	MountForgotPasswordHandler(mux, h.ForgotPassword)
 	MountResetPasswordHandler(mux, h.ResetPassword)
 	MountVerifyEmailHandler(mux, h.VerifyEmail)
+	MountSendEmailVerificationHandler(mux, h.SendEmailVerification)
+	MountCheckEmailVerificationHandler(mux, h.CheckEmailVerification)
 	MountMeHandler(mux, h.Me)
 	MountCsrfHandler(mux, h.Csrf)
 	MountCORSHandler(mux, h.CORS)
@@ -488,6 +500,108 @@ func NewVerifyEmailHandler(
 	})
 }
 
+// MountSendEmailVerificationHandler configures the mux to serve the "auth"
+// service "send_email_verification" endpoint.
+func MountSendEmailVerificationHandler(mux goahttp.Muxer, h http.Handler) {
+	f, ok := HandleAuthOrigin(h).(http.HandlerFunc)
+	if !ok {
+		f = func(w http.ResponseWriter, r *http.Request) {
+			h.ServeHTTP(w, r)
+		}
+	}
+	mux.Handle("POST", "/v1/auth/send-verification-email", f)
+}
+
+// NewSendEmailVerificationHandler creates a HTTP handler which loads the HTTP
+// request and calls the "auth" service "send_email_verification" endpoint.
+func NewSendEmailVerificationHandler(
+	endpoint goa.Endpoint,
+	mux goahttp.Muxer,
+	decoder func(*http.Request) goahttp.Decoder,
+	encoder func(context.Context, http.ResponseWriter) goahttp.Encoder,
+	errhandler func(context.Context, http.ResponseWriter, error),
+	formatter func(ctx context.Context, err error) goahttp.Statuser,
+) http.Handler {
+	var (
+		decodeRequest  = DecodeSendEmailVerificationRequest(mux, decoder)
+		encodeResponse = EncodeSendEmailVerificationResponse(encoder)
+		encodeError    = EncodeSendEmailVerificationError(encoder, formatter)
+	)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.WithValue(r.Context(), goahttp.AcceptTypeKey, r.Header.Get("Accept"))
+		ctx = context.WithValue(ctx, goa.MethodKey, "send_email_verification")
+		ctx = context.WithValue(ctx, goa.ServiceKey, "auth")
+		payload, err := decodeRequest(r)
+		if err != nil {
+			if err := encodeError(ctx, w, err); err != nil {
+				errhandler(ctx, w, err)
+			}
+			return
+		}
+		res, err := endpoint(ctx, payload)
+		if err != nil {
+			if err := encodeError(ctx, w, err); err != nil {
+				errhandler(ctx, w, err)
+			}
+			return
+		}
+		if err := encodeResponse(ctx, w, res); err != nil {
+			errhandler(ctx, w, err)
+		}
+	})
+}
+
+// MountCheckEmailVerificationHandler configures the mux to serve the "auth"
+// service "check_email_verification" endpoint.
+func MountCheckEmailVerificationHandler(mux goahttp.Muxer, h http.Handler) {
+	f, ok := HandleAuthOrigin(h).(http.HandlerFunc)
+	if !ok {
+		f = func(w http.ResponseWriter, r *http.Request) {
+			h.ServeHTTP(w, r)
+		}
+	}
+	mux.Handle("GET", "/v1/auth/check-verification", f)
+}
+
+// NewCheckEmailVerificationHandler creates a HTTP handler which loads the HTTP
+// request and calls the "auth" service "check_email_verification" endpoint.
+func NewCheckEmailVerificationHandler(
+	endpoint goa.Endpoint,
+	mux goahttp.Muxer,
+	decoder func(*http.Request) goahttp.Decoder,
+	encoder func(context.Context, http.ResponseWriter) goahttp.Encoder,
+	errhandler func(context.Context, http.ResponseWriter, error),
+	formatter func(ctx context.Context, err error) goahttp.Statuser,
+) http.Handler {
+	var (
+		decodeRequest  = DecodeCheckEmailVerificationRequest(mux, decoder)
+		encodeResponse = EncodeCheckEmailVerificationResponse(encoder)
+		encodeError    = EncodeCheckEmailVerificationError(encoder, formatter)
+	)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.WithValue(r.Context(), goahttp.AcceptTypeKey, r.Header.Get("Accept"))
+		ctx = context.WithValue(ctx, goa.MethodKey, "check_email_verification")
+		ctx = context.WithValue(ctx, goa.ServiceKey, "auth")
+		payload, err := decodeRequest(r)
+		if err != nil {
+			if err := encodeError(ctx, w, err); err != nil {
+				errhandler(ctx, w, err)
+			}
+			return
+		}
+		res, err := endpoint(ctx, payload)
+		if err != nil {
+			if err := encodeError(ctx, w, err); err != nil {
+				errhandler(ctx, w, err)
+			}
+			return
+		}
+		if err := encodeResponse(ctx, w, res); err != nil {
+			errhandler(ctx, w, err)
+		}
+	})
+}
+
 // MountMeHandler configures the mux to serve the "auth" service "me" endpoint.
 func MountMeHandler(mux goahttp.Muxer, h http.Handler) {
 	f, ok := HandleAuthOrigin(h).(http.HandlerFunc)
@@ -600,6 +714,8 @@ func MountCORSHandler(mux goahttp.Muxer, h http.Handler) {
 	mux.Handle("OPTIONS", "/v1/auth/forgot-password", h.ServeHTTP)
 	mux.Handle("OPTIONS", "/v1/auth/reset-password", h.ServeHTTP)
 	mux.Handle("OPTIONS", "/v1/auth/verify-email", h.ServeHTTP)
+	mux.Handle("OPTIONS", "/v1/auth/send-verification-email", h.ServeHTTP)
+	mux.Handle("OPTIONS", "/v1/auth/check-verification", h.ServeHTTP)
 	mux.Handle("OPTIONS", "/v1/auth/me", h.ServeHTTP)
 	mux.Handle("OPTIONS", "/v1/auth/csrf-token", h.ServeHTTP)
 }

@@ -2,6 +2,7 @@ package user
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -51,9 +52,23 @@ type Service interface {
 	// VerifyToken verifies a verification token
 	VerifyToken(ctx context.Context, token string) (*ent.Verification, error)
 
+	// VerifyEmailOTP validates the provided OTP for a given email and returns the corresponding verification record or an error.
+	VerifyEmailOTP(ctx context.Context, email string, otp string) (*ent.Verification, error)
+
 	// Authenticate authenticates a user with email and password
-	Authenticate(ctx context.Context, email, password string) (*ent.User, error)
+	Authenticate(ctx context.Context, email, password string) (*LoginResult, error)
 }
+
+// VerificationMethod represents the method used for verification
+type VerificationMethod string
+
+const (
+	// VerificationMethodLink uses a magic link for verification
+	VerificationMethodLink VerificationMethod = "link"
+
+	// VerificationMethodOTP uses a one-time password for verification
+	VerificationMethodOTP VerificationMethod = "otp"
+)
 
 // CreateUserInput represents input for creating a user
 type CreateUserInput struct {
@@ -82,14 +97,22 @@ type UpdateUserInput struct {
 
 // CreateVerificationInput represents input for creating a verification
 type CreateVerificationInput struct {
-	UserID      string    `json:"user_id" validate:"required"`
-	Type        string    `json:"type" validate:"required"` // email, phone, password_reset, magic_link
-	Email       string    `json:"email,omitempty"`
-	PhoneNumber string    `json:"phone_number,omitempty"`
-	RedirectURL string    `json:"redirect_url,omitempty"`
-	ExpiresAt   time.Time `json:"expires_at"`
-	IPAddress   string    `json:"ip_address,omitempty"`
-	UserAgent   string    `json:"user_agent,omitempty"`
+	UserID      string             `json:"user_id" validate:"required"`
+	Type        string             `json:"type" validate:"required"` // email, phone, password_reset, magic_link
+	Email       string             `json:"email,omitempty"`
+	PhoneNumber string             `json:"phone_number,omitempty"`
+	RedirectURL string             `json:"redirect_url,omitempty"`
+	ExpiresAt   time.Time          `json:"expires_at"`
+	IPAddress   string             `json:"ip_address,omitempty"`
+	UserAgent   string             `json:"user_agent,omitempty"`
+	Method      VerificationMethod `json:"method,omitempty"`
+}
+
+// LoginResult represents the result of an authentication attempt
+type LoginResult struct {
+	User           *ent.User // The authenticated user
+	EmailVerified  bool      `json:"email_verified"`
+	VerificationID string    `json:"verification_id"`
 }
 
 // ListParams represents pagination and filtering parameters
@@ -169,9 +192,35 @@ func (s *service) Create(ctx context.Context, input CreateUserInput) (*ent.User,
 		ProfileImageURL: input.ProfileImageURL,
 		Locale:          input.Locale,
 	})
-
 	if err != nil {
 		return nil, err
+	}
+
+	// Check if this is the first user ever created
+	// If so, create a default organization and make this user the root user
+	count, err := s.repo.GetUserCount(ctx)
+	if err != nil {
+		s.logger.Error("Failed to get user count", logging.Error(err))
+	} else if count == 1 {
+		// This is the first user, make them root and create default org
+		err = s.makeFirstUserRoot(ctx, user)
+		if err != nil {
+			s.logger.Error("Failed to set up first user as root", logging.Error(err))
+		}
+	} else if input.OrganizationID != "" {
+		// For non-first users, add to specified organization if provided
+		err = s.orgService.AddMember(ctx, input.OrganizationID, user.ID, []string{"member"})
+		if err != nil {
+			s.logger.Error("Failed to add user to organization",
+				logging.String("user_id", user.ID),
+				logging.String("org_id", input.OrganizationID),
+				logging.Error(err))
+		}
+	} else {
+		// For non-first users without an organization, you might want to
+		// require an organization or add them to a default one
+		s.logger.Warn("User created without an organization",
+			logging.String("user_id", user.ID))
 	}
 
 	// Add user to organization if provided
@@ -184,6 +233,65 @@ func (s *service) Create(ctx context.Context, input CreateUserInput) (*ent.User,
 	}
 
 	return user, nil
+}
+
+// makeFirstUserRoot sets up the first user as a root user and creates a default organization
+func (s *service) makeFirstUserRoot(ctx context.Context, user *ent.User) error {
+	// Add "root" role to user metadata
+	metadata := user.Metadata
+	if metadata == nil {
+		metadata = make(map[string]interface{})
+	}
+	metadata["is_root"] = true
+	metadata["is_admin"] = true
+
+	// Update user metadata
+	_, err := s.repo.Update(ctx, user.ID, RepositoryUpdateInput{
+		Metadata: metadata,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to update first user as root: %w", err)
+	}
+
+	// Create default organization
+	orgInput := organization.CreateOrganizationInput{
+		Name:      s.cfg.Organization.DefaultName,
+		Slug:      "default",
+		Plan:      "enterprise",
+		OwnerID:   user.ID,
+		TrialDays: 0, // No trial for default org
+		Features:  s.cfg.Organization.DefaultFeatures,
+		Metadata: map[string]interface{}{
+			"default": true,
+			"system":  true,
+		},
+	}
+
+	org, err := s.orgService.Create(ctx, orgInput)
+	if err != nil {
+		return fmt.Errorf("failed to create default organization: %w", err)
+	}
+
+	// Add user as owner of the organization with all privileges
+	err = s.orgService.AddMember(ctx, org.ID, user.ID, []string{"owner", "admin"})
+	if err != nil {
+		return fmt.Errorf("failed to add first user as owner of default organization: %w", err)
+	}
+
+	// Set organization as user's primary organization
+	primaryOrgID := org.ID
+	_, err = s.repo.Update(ctx, user.ID, RepositoryUpdateInput{
+		PrimaryOrganizationID: &primaryOrgID,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to set default organization as primary for first user: %w", err)
+	}
+
+	s.logger.Info("Set up first user as root with default organization",
+		logging.String("user_id", user.ID),
+		logging.String("org_id", org.ID))
+
+	return nil
 }
 
 // Get retrieves a user by ID
@@ -374,7 +482,12 @@ func (s *service) CreateVerification(ctx context.Context, input CreateVerificati
 	}
 
 	// Create verification
-	return s.verifyManager.CreateVerification(ctx, input)
+	ver, err := s.verifyManager.CreateVerification(ctx, input)
+	if err != nil {
+		return nil, err
+	}
+
+	return ver, nil
 }
 
 // VerifyToken verifies a verification token
@@ -400,14 +513,37 @@ func (s *service) VerifyToken(ctx context.Context, token string) (*ent.Verificat
 
 	if err != nil {
 		// Log error but don't fail verification
-		// TODO: Add proper logging
+		s.logger.Error("Failed to update email verification status",
+			logging.String("user_id", verification.UserID),
+			logging.Error(err),
+		)
+	}
+
+	return verification, nil
+}
+
+func (s *service) VerifyEmailOTP(ctx context.Context, email string, otp string) (*ent.Verification, error) {
+	// Verify OTP
+	verification, err := s.verifyManager.VerifyEmailOTP(ctx, email, otp)
+	if err != nil {
+		return nil, err
+	}
+
+	// Update user verification status
+	err = s.VerifyEmail(ctx, verification.UserID)
+	if err != nil {
+		// Log error but don't fail verification
+		s.logger.Error("Failed to update email verification status",
+			logging.String("user_id", verification.UserID),
+			logging.Error(err),
+		)
 	}
 
 	return verification, nil
 }
 
 // Authenticate authenticates a user with email and password
-func (s *service) Authenticate(ctx context.Context, email, password string) (*ent.User, error) {
+func (s *service) Authenticate(ctx context.Context, email, password string) (*LoginResult, error) {
 	// Get user by email
 	user, err := s.repo.GetByEmail(ctx, normalizeEmail(email))
 	if err != nil {
@@ -441,10 +577,45 @@ func (s *service) Authenticate(ctx context.Context, email, password string) (*en
 
 	if err != nil {
 		// Log error but don't fail authentication
-		// TODO: Add proper logging
+		s.logger.Error("Failed to update last login time",
+			logging.String("user_id", user.ID),
+			logging.Error(err),
+		)
 	}
 
-	return user, nil
+	result := &LoginResult{
+		User:          user,
+		EmailVerified: user.EmailVerified,
+	}
+
+	// If email is not verified and verification is required, create a verification
+	if !user.EmailVerified && s.cfg.Auth.RequireEmailVerification {
+		// Create verification for email
+		expiresAt := time.Now().Add(time.Hour * 24) // 24 hour expiry
+		verification, err := s.CreateVerification(ctx, CreateVerificationInput{
+			UserID:    user.ID,
+			Type:      "email",
+			Email:     user.Email,
+			ExpiresAt: expiresAt,
+			IPAddress: "",
+			UserAgent: "",
+			Method:    VerificationMethodOTP,
+		})
+
+		if err != nil {
+			s.logger.Error("Failed to create verification",
+				logging.String("user_id", user.ID),
+				logging.Error(err),
+			)
+		} else {
+			result.VerificationID = verification.ID
+		}
+
+		// Return result without tokens
+		return result, nil
+	}
+
+	return result, nil
 }
 
 // Helper function to normalize email addresses for consistent lookup
