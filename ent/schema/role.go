@@ -25,7 +25,6 @@ func (Role) Fields() []ent.Field {
 			Optional(),
 		field.Bool("system").
 			Default(false).
-			Immutable().
 			Comment("System roles cannot be modified"),
 		field.Bool("is_default").
 			Default(false).
