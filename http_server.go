@@ -20,7 +20,7 @@ import (
 // Server represents an HTTP server
 type Server struct {
 	server *http.Server
-	config *config.Config
+	config *config.ServerConfig
 	logger logging.Logger
 	router router.FrankRouter
 }
@@ -48,7 +48,30 @@ func NewServer(clients *data.Clients, cfg *config.Config, logger logging.Logger)
 
 	return &Server{
 		server: server,
-		config: cfg,
+		config: cfg.Server,
+		logger: logger,
+		router: frk.Router,
+	}
+}
+
+// NewPureServer creates a new HTTP server
+func NewPureServer(frk *Frank, cfg *config.Config, logger logging.Logger) *Server {
+	// Create HTTP server
+	server := &http.Server{
+		Addr:         fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port),
+		Handler:      frk.Router.Handler(),
+		ReadTimeout:  cfg.Server.ReadTimeout,
+		WriteTimeout: cfg.Server.WriteTimeout,
+		IdleTimeout:  cfg.Server.IdleTimeout,
+	}
+
+	if cfg.Server.EnableHTTP2 {
+		astro_fs.EnableHTTP2(server)
+	}
+
+	return &Server{
+		server: server,
+		config: cfg.Server,
 		logger: logger,
 		router: frk.Router,
 	}
@@ -65,14 +88,14 @@ func (s *Server) Start() chan error {
 	go func() {
 		s.logger.Info("Starting HTTP server",
 			logging.String("address", s.server.Addr),
-			logging.Bool("tls", s.config.Server.TLS.Enabled),
+			logging.Bool("tls", s.config.TLS.Enabled),
 		)
 
 		var err error
-		if s.config.Server.TLS.Enabled {
+		if s.config.TLS.Enabled {
 			err = s.server.ListenAndServeTLS(
-				s.config.Server.TLS.CertFile,
-				s.config.Server.TLS.KeyFile,
+				s.config.TLS.CertFile,
+				s.config.TLS.KeyFile,
 			)
 		} else {
 			err = s.server.ListenAndServe()
@@ -93,11 +116,11 @@ func (s *Server) Stop() error {
 	s.logger.Info("Stopping HTTP server")
 
 	// Create context with timeout for shutdown
-	ctx, cancel := context.WithTimeout(context.Background(), s.config.Server.ShutdownTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), s.config.ShutdownTimeout)
 	defer cancel()
 
 	// Attempt graceful shutdown
-	if s.config.Server.GracefulShutdown {
+	if s.config.GracefulShutdown {
 		s.logger.Info("Attempting graceful shutdown")
 		if err := s.server.Shutdown(ctx); err != nil {
 			s.logger.Error("Server shutdown failed", logging.Error(err))

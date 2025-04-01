@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -13,11 +12,13 @@ import (
 	webhttp "github.com/juicycleff/frank/gen/http/web/server"
 	websvc "github.com/juicycleff/frank/gen/web"
 	"github.com/juicycleff/frank/internal/middleware"
+	"github.com/juicycleff/frank/internal/router"
 	"github.com/juicycleff/frank/internal/services"
 	"github.com/juicycleff/frank/pkg/astro_fs"
 	"github.com/juicycleff/frank/pkg/data"
 	"github.com/juicycleff/frank/pkg/logging"
 	"github.com/juicycleff/frank/pkg/utils"
+	"github.com/juicycleff/frank/web"
 	goahttp "goa.design/goa/v3/http"
 )
 
@@ -68,7 +69,7 @@ func RegisterWebHTTPService(
 
 // FileServer provides a static file server with proper handling for SPA routing
 func FileServer(rootPath string, router chi.Router) http.Handler {
-	fs := http.FileServer(http.Dir("./web/apps/client/dist"))
+	fs := http.FileServer(http.Dir("./web/apps/ui/out"))
 	router.Handle("/_astro/", fs)
 	router.Handle("/assets/", fs)
 
@@ -102,16 +103,22 @@ func FileServer(rootPath string, router chi.Router) http.Handler {
 
 // ProtectedFrontendFileServer serves static files with frontend route protection
 func ProtectedFrontendFileServer(
-	rootPath string,
-	router chi.Router,
+	rootFs http.FileSystem,
+	router router.FrankRouter,
 	protection *middleware.FrontendRouteProtection,
 	logger logging.Logger,
 ) http.Handler {
-	fs := http.FileServer(http.Dir(rootPath))
+	// rootSubFs, err := fs.Sub(rootPath, "apps/client/dist")
+	// if err != nil {
+	// 	log.Fatal("Failed to create sub-filesystem:", err)
+	// }
+
+	fs := http.FileServer(rootFs)
+	rootPathPrefix := router.BuildPath("/ui")
 
 	// Create file server handler
-	fileHandler := astro_fs.NewCustomFileHandler(rootPath, logger, &astro_fs.Configuration{
-		Directory:     rootPath,
+	fileHandler := astro_fs.NewCustomFileHandler(rootFs, logger, &astro_fs.Configuration{
+		Directory:     rootFs,
 		CacheTTL:      0,
 		EnableGzip:    true,
 		LogFile:       "",
@@ -121,9 +128,12 @@ func ProtectedFrontendFileServer(
 		MaxLogSize:    0,
 		MaxLogBackups: 0,
 		MaxLogAge:     0,
-		AstroMode:     true,
+		AstroMode:     false,
+		NextJSMode:    true,
 		PreloadAssets: true,
 		HTTP2:         true,
+		URLPrefix:     router.BuildPath("/ui"),
+		BasePrefix:    router.BuildPath("/"),
 	})
 
 	// Configure static file paths to bypass protection
@@ -132,7 +142,7 @@ func ProtectedFrontendFileServer(
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		path := r.URL.Path
+		path := strings.TrimPrefix(r.URL.Path, rootPathPrefix)
 
 		// Block direct access to API endpoints through the file server
 		if strings.HasPrefix(path, "/v1/") {
@@ -225,8 +235,7 @@ func ProtectedFrontendFileServer(
 
 // RegisterFrontendRoutes sets up protected frontend routes
 func RegisterFrontendRoutes(
-	router chi.Router,
-	rootPath string,
+	router router.FrankRouter,
 	svcs *services.Services,
 	config *config.Config,
 	logger logging.Logger,
@@ -241,71 +250,50 @@ func RegisterFrontendRoutes(
 
 	// Configure public and protected paths
 	protection.SetPublicPaths(
-		"/",
-		"/login",
-		"/register",
-		"/signup",
-		"/forgot-password",
-		"/reset-password",
-		"/verify-email",
-		"/about",
-		"/contact",
-		"/legal/*",
-		"/_astro/*",
-		"/assets/*",
+		"/ui",
+		"/ui/login",
+		"/ui/register",
+		"/ui/signup",
+		"/ui/forgot-password",
+		"/ui/reset-password",
+		"/ui/verify-email",
+		"/ui/about",
+		"/ui/contact",
+		"/ui/legal/*",
+		"/ui/_astro/*",
+		"/ui/assets/*",
 	)
 
 	protection.SetProtectedPaths(
-		"/dashboard",
-		"/dashboard/*",
-		"/account",
-		"/settings",
-		"/projects",
-		"/projects/*",
-		"/reports",
-		"/reports/*",
-		"/admin",
-		"/admin/*",
+		"/ui/dashboard",
+		"/ui/dashboard/*",
+		"/ui/account",
+		"/ui/settings",
+		"/ui/projects",
+		"/ui/projects/*",
+		"/ui/reports",
+		"/ui/reports/*",
+		"/ui/admin",
+		"/ui/admin/*",
 	)
 
 	authMw := middleware.Auth(config, logger, svcs.Session, svcs.APIKey, false)
 
-	// Add this to your routes
-	router.HandleFunc("/debug/log", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-			return
-		}
-
-		var logData struct {
-			Level   string `json:"level"`
-			Message string `json:"message"`
-			Source  string `json:"source"`
-		}
-
-		if err := json.NewDecoder(r.Body).Decode(&logData); err != nil {
-			http.Error(w, "Invalid request body", http.StatusBadRequest)
-			return
-		}
-
-		// Log to server console
-		logger.Info("Client log",
-			logging.String("level", logData.Level),
-			logging.String("message", logData.Message),
-			logging.String("source", logData.Source))
-
-		w.WriteHeader(http.StatusOK)
-	})
-
-	router.Group(func(r chi.Router) {
+	router.Route("/ui", func(r chi.Router) {
 		r.Use(authMw)
-		protection.SetLoginPath("/login")
-		protection.SetStaticFilePrefixes("/_astro/", "/assets/")
+		protection.SetLoginPath("/ui/login")
+		protection.SetStaticFilePrefixes("/_astro/", "/assets/", "/_next/")
+
 		// Apply the middleware to all routes
 		r.Use(protection.ProtectFrontendRoutes)
 
+		pathPrefixer := middleware.NewAstroPathPrefixer(router.BuildPath("/ui"), "/ui", logger)
+		r.Use(pathPrefixer.Middleware)
+
+		fss := http.FS(web.WebUISub)
+
 		// Set up the file server
-		fs := ProtectedFrontendFileServer(rootPath, router, protection, logger)
+		fs := ProtectedFrontendFileServer(fss, router, protection, logger)
 
 		r.Handle("/*", fs)
 	})

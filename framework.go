@@ -3,15 +3,43 @@ package frank
 import (
 	"fmt"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/internal/controllers"
+	"github.com/juicycleff/frank/internal/hooks"
 	"github.com/juicycleff/frank/internal/repo"
 	"github.com/juicycleff/frank/internal/router"
-	"github.com/juicycleff/frank/internal/routes"
 	"github.com/juicycleff/frank/internal/services"
 	"github.com/juicycleff/frank/pkg/data"
 	"github.com/juicycleff/frank/pkg/logging"
 )
+
+// Option represents a functional option for configuring Frank
+type Option func(*Frank) error
+
+// WithChiRouter sets up Frank to use Chi router instead of the default Goa router
+func WithChiRouter(mux *chi.Mux) Option {
+	return func(f *Frank) error {
+		f.chiMux = mux
+		return nil
+	}
+}
+
+// WithHooks sets up Frank to use Chi router instead of the default Goa router
+func WithHooks(hooks *hooks.Hooks) Option {
+	return func(f *Frank) error {
+		f.hooks = hooks
+		return nil
+	}
+}
+
+// WithCustomRouter allows setting a custom router implementation
+func WithCustomRouter(customRouter router.FrankRouter) Option {
+	return func(f *Frank) error {
+		f.Router = customRouter
+		return nil
+	}
+}
 
 type Frank struct {
 	Router   router.FrankRouter
@@ -20,10 +48,13 @@ type Frank struct {
 	Logger   logging.Logger
 	Clients  *data.Clients
 	Repo     *repo.Repo
+	hooks    *hooks.Hooks
+
+	chiMux *chi.Mux
 }
 
 // New initializes and returns a new instance of Frank, setting up session store, repositories, services, and routes.
-func New(clients *data.Clients, cfg *config.Config, logger logging.Logger) (*Frank, error) {
+func New(clients *data.Clients, cfg *config.Config, logger logging.Logger, opts ...Option) (*Frank, error) {
 	// Run Migration
 	err := clients.RunAutoMigration()
 	if err != nil {
@@ -41,23 +72,25 @@ func New(clients *data.Clients, cfg *config.Config, logger logging.Logger) (*Fra
 
 	// Init routes
 	var rtr router.FrankRouter
-	if cfg.UseGoa {
-		logger.Info("Using Goa framework")
-		rtr = controllers.NewControllers(clients, svcs, cfg, logger)
-	} else if cfg.UseHuma {
-		logger.Info("Using Huma with Chi router")
-		rtr = routes.NewHumaRouter(clients, svcs, cfg, logger)
-	} else {
-		logger.Info("Using Chi router")
-		rtr = routes.NewRouter(clients, svcs, cfg, logger)
-	}
 
-	return &Frank{
+	f := &Frank{
 		Router:   rtr,
 		Services: svcs,
 		Config:   cfg,
 		Logger:   logger,
 		Clients:  clients,
 		Repo:     repos,
-	}, nil
+	}
+
+	// Apply options if any
+	for _, opt := range opts {
+		if err := opt(f); err != nil {
+			return nil, fmt.Errorf("failed to apply option: %w", err)
+		}
+	}
+
+	logger.Info("Using Goa framework (default)")
+	f.Router = controllers.NewControllers(clients, svcs, cfg, f.hooks, logger, f.chiMux)
+
+	return f, nil
 }

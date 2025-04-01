@@ -2,6 +2,7 @@ package routes
 
 import (
 	"net/http"
+	"path"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -20,11 +21,22 @@ import (
 
 // Router manages HTTP routing
 type Router struct {
-	svcs    *services.Services
-	router  chi.Router
-	config  *config.Config
-	logger  logging.Logger
-	faktory *Factory
+	svcs       *services.Services
+	router     chi.Router
+	config     *config.Config
+	logger     logging.Logger
+	faktory    *Factory
+	pathPrefix string
+}
+
+func (rt *Router) Handle(pattern string, h http.Handler) {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (rt *Router) Mount(parent chi.Router, mountPath string) {
+	// TODO implement me
+	panic("implement me")
 }
 
 // NewRouter creates a new router
@@ -212,7 +224,7 @@ func (rt *Router) RegisterRoutes() {
 	fileServer := http.FileServer(http.Dir("./web/static"))
 	rt.router.Handle("/static/*", http.StripPrefix("/static", fileServer))
 
-	rt.router.Handle("/*", handlers.FileServer("./web/apps/client/dist", rt.router))
+	rt.router.Handle("/*", handlers.FileServer("./web/apps/ui/out", rt.router))
 }
 
 // Handler returns the HTTP handler
@@ -223,6 +235,10 @@ func (rt *Router) Handler() http.Handler {
 // Group adds a new route group
 func (rt *Router) Group(fn func(r chi.Router)) {
 	rt.router.Group(fn)
+}
+
+func (rt *Router) HandleFunc(pattern string, handler http.HandlerFunc) {
+	rt.router.HandleFunc(pattern, handler)
 }
 
 // Route adds a new route group with a pattern
@@ -248,4 +264,10 @@ func (rt *Router) NotFound(handler http.HandlerFunc) {
 // MethodNotAllowed sets the method not allowed handler
 func (rt *Router) MethodNotAllowed(handler http.HandlerFunc) {
 	rt.router.MethodNotAllowed(handler)
+}
+
+// BuildPath builds an absolute path from the given relative path
+// This will work whether the router is standalone or mounted
+func (rt *Router) BuildPath(relativePath string) string {
+	return path.Join(rt.pathPrefix, relativePath)
 }

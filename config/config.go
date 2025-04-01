@@ -21,31 +21,33 @@ var (
 
 // Config represents the application configuration
 type Config struct {
-	Environment     string             `json:"environment" yaml:"environment" mapstructure:"environment" env:"ENVIRONMENT" envDefault:"development"`
-	Version         string             `json:"version" yaml:"version" mapstructure:"version" env:"VERSION" envDefault:"0.0.0"`
-	GenerateSwagger bool               `json:"generate_swagger" yaml:"generate_swagger" mapstructure:"generate_swagger" env:"GENERATE_SWAGGER" envDefault:"false"`
-	UseHuma         bool               `json:"useHuma" yaml:"useHuma" mapstructure:"useHuma" env:"USE_HUMA" envDefault:"false"`
-	UseGoa          bool               `json:"useGoa" yaml:"useGoa" mapstructure:"useGoa" env:"USE_GOA" envDefault:"true"`
-	GitCommit       string             `json:"git_commit" yaml:"git_commit" mapstructure:"git_commit" env:"GIT_COMMIT" envDefault:""`
-	GitBranch       string             `json:"git_branch" yaml:"git_branch" mapstructure:"git_branch" env:"GIT_BRANCH" envDefault:""`
-	GitTag          string             `json:"git_tag" yaml:"git_tag" mapstructure:"git_tag" env:"GIT_TAG" envDefault:""`
-	BuildDate       string             `json:"build_date" yaml:"build_date" mapstructure:"build_date" env:"BUILD_DATE" envDefault:""`
-	StandaloneMode  bool               `json:"standalone_mode" yaml:"standalone_mode" mapstructure:"standalone_mode" env:"STANDALONE_MODE" envDefault:"false"`
-	Server          ServerConfig       `json:"server" yaml:"server" mapstructure:"server"`
-	Database        DatabaseConfig     `json:"database" yaml:"database" mapstructure:"database"`
-	Auth            AuthConfig         `json:"auth" yaml:"auth" mapstructure:"auth"`
-	Email           EmailConfig        `json:"email" yaml:"email" mapstructure:"email"`
-	SMS             SMSConfig          `json:"sms" yaml:"sms" mapstructure:"sms"` // Redis configuration
-	Redis           RedisConfig        `json:"redis" yaml:"redis" mapstructure:"redis"`
-	OAuth           OAuthConfig        `json:"oauth" yaml:"oauth" mapstructure:"oauth"`
-	Passkeys        PasskeysConfig     `json:"passkeys" yaml:"passkeys" mapstructure:"passkeys"`
-	Webhooks        WebhooksConfig     `json:"webhooks" yaml:"webhooks" mapstructure:"webhooks"`
-	Security        SecurityConfig     `json:"security" yaml:"security" mapstructure:"security"`
-	Logging         LoggingConfig      `json:"logging" yaml:"logging" mapstructure:"logging"`
-	Features        FeaturesConfig     `json:"features" yaml:"features" mapstructure:"features"`
-	Templates       TemplatesConfig    `json:"templates" yaml:"templates" mapstructure:"templates"`
-	Monitoring      MonitoringConfig   `json:"monitoring" yaml:"monitoring" mapstructure:"monitoring"`
-	Organization    OrganizationConfig `json:"organization" yaml:"organization" mapstructure:"organization"`
+	Environment     string `json:"environment" yaml:"environment" mapstructure:"environment" env:"ENVIRONMENT" envDefault:"development"`
+	Version         string `json:"version" yaml:"version" mapstructure:"version" env:"VERSION" envDefault:"0.0.0"`
+	GenerateSwagger bool   `json:"generate_swagger" yaml:"generate_swagger" mapstructure:"generate_swagger" env:"GENERATE_SWAGGER" envDefault:"false"`
+	UseHuma         bool   `json:"useHuma" yaml:"useHuma" mapstructure:"useHuma" env:"USE_HUMA" envDefault:"false"`
+	UseGoa          bool   `json:"useGoa" yaml:"useGoa" mapstructure:"useGoa" env:"USE_GOA" envDefault:"true"`
+	GitCommit       string `json:"git_commit" yaml:"git_commit" mapstructure:"git_commit" env:"GIT_COMMIT" envDefault:""`
+	GitBranch       string `json:"git_branch" yaml:"git_branch" mapstructure:"git_branch" env:"GIT_BRANCH" envDefault:""`
+	GitTag          string `json:"git_tag" yaml:"git_tag" mapstructure:"git_tag" env:"GIT_TAG" envDefault:""`
+	BuildDate       string `json:"build_date" yaml:"build_date" mapstructure:"build_date" env:"BUILD_DATE" envDefault:""`
+	StandaloneMode  bool   `json:"standalone_mode" yaml:"standalone_mode" mapstructure:"standalone_mode" env:"STANDALONE_MODE" envDefault:"false"`
+	BasePath        string `json:"base_path" yaml:"base_path" mapstructure:"base_path" env:"BASE_PATH" envDefault:"/"`
+
+	Server       *ServerConfig      `json:"server" yaml:"server" mapstructure:"server"`
+	Database     DatabaseConfig     `json:"database" yaml:"database" mapstructure:"database"`
+	Auth         AuthConfig         `json:"auth" yaml:"auth" mapstructure:"auth"`
+	Email        EmailConfig        `json:"email" yaml:"email" mapstructure:"email"`
+	SMS          SMSConfig          `json:"sms" yaml:"sms" mapstructure:"sms"` // Redis configuration
+	Redis        RedisConfig        `json:"redis" yaml:"redis" mapstructure:"redis"`
+	OAuth        OAuthConfig        `json:"oauth" yaml:"oauth" mapstructure:"oauth"`
+	Passkeys     PasskeysConfig     `json:"passkeys" yaml:"passkeys" mapstructure:"passkeys"`
+	Webhooks     WebhooksConfig     `json:"webhooks" yaml:"webhooks" mapstructure:"webhooks"`
+	Security     SecurityConfig     `json:"security" yaml:"security" mapstructure:"security"`
+	Logging      LoggingConfig      `json:"logging" yaml:"logging" mapstructure:"logging"`
+	Features     FeaturesConfig     `json:"features" yaml:"features" mapstructure:"features"`
+	Templates    TemplatesConfig    `json:"templates" yaml:"templates" mapstructure:"templates"`
+	Monitoring   MonitoringConfig   `json:"monitoring" yaml:"monitoring" mapstructure:"monitoring"`
+	Organization OrganizationConfig `json:"organization" yaml:"organization" mapstructure:"organization"`
 }
 
 func (c *Config) GetServerAddress() string {

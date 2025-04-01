@@ -11,6 +11,7 @@ import (
 	"github.com/juicycleff/frank/gen/designtypes"
 	authhttp "github.com/juicycleff/frank/gen/http/auth/server"
 	"github.com/juicycleff/frank/internal/auth/session"
+	"github.com/juicycleff/frank/internal/hooks"
 	customMiddleware "github.com/juicycleff/frank/internal/middleware"
 	"github.com/juicycleff/frank/internal/services"
 	"github.com/juicycleff/frank/pkg/automapper"
@@ -35,6 +36,7 @@ type AuthService struct {
 	cookieHandler  *session.CookieHandler
 	auther         *AutherService
 	mapper         *automapper.Mapper
+	hooks          *hooks.Hooks
 }
 
 func (a *AuthService) SendEmailVerification(ctx context.Context, payload *auth.SendEmailVerificationPayload) (res *auth.SendEmailVerificationResult, err error) {
@@ -148,6 +150,12 @@ func (a *AuthService) Login(ctx context.Context, payload *auth.LoginPayload) (re
 		orgId = *payload.OrganizationID
 	}
 
+	_ = a.hooks.BeforeLogin(user.LoginResult{
+		User:           authenticatedUser.User,
+		EmailVerified:  authenticatedUser.User.EmailVerified,
+		VerificationID: "",
+	})
+
 	// Check if MFA is required
 	mfaRequired, mfaTypes, err := a.checkMFA(ctx, authenticatedUser.User.ID)
 	if err != nil {
@@ -193,7 +201,7 @@ func (a *AuthService) Login(ctx context.Context, payload *auth.LoginPayload) (re
 	csrfToken, _ := crypto.GenerateRandomString(32)
 	a.cookieHandler.SetCSRFCookie(info.Res, csrfToken, a.config.Auth.SessionDuration)
 
-	return &auth.LoginResponse{
+	authRes := &auth.LoginResponse{
 		User:         userOut,
 		Token:        token,
 		RefreshToken: refreshToken,
@@ -201,7 +209,10 @@ func (a *AuthService) Login(ctx context.Context, payload *auth.LoginPayload) (re
 		MfaRequired:  mfaRequired,
 		MfaTypes:     mfaTypes,
 		CsrfToken:    csrfToken,
-	}, nil
+	}
+
+	_ = a.hooks.OnLogin(authRes)
+	return authRes, nil
 }
 
 func (a *AuthService) Register(ctx context.Context, payload *auth.RegisterPayload) (res *auth.LoginResponse, err error) {
@@ -228,6 +239,8 @@ func (a *AuthService) Register(ctx context.Context, payload *auth.RegisterPayloa
 	if payload.LastName != nil {
 		createInput.LastName = *payload.LastName
 	}
+
+	_ = a.hooks.BeforeSignup(createInput)
 
 	newUser, err := a.userService.Create(ctx, createInput)
 	if err != nil {
@@ -277,6 +290,8 @@ func (a *AuthService) Register(ctx context.Context, payload *auth.RegisterPayloa
 	res.ExpiresAt = expiresAt
 	res.CsrfToken = csrfToken
 
+	_ = a.hooks.OnSignup(res)
+
 	return res, nil
 
 }
@@ -286,6 +301,20 @@ func (a *AuthService) Logout(ctx context.Context, payload *auth.LogoutPayload) (
 	if !ok {
 		return nil, errors.New(errors.CodeInternalServer, "failed to get request info")
 	}
+
+	// Get user ID from request context
+	userID, ok := customMiddleware.GetUserID(ctx)
+	if !ok || userID == "" {
+		return nil, errors.New(errors.CodeUnauthorized, "not authenticated")
+	}
+
+	// Get user from database
+	userEntity, err := a.userService.Get(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	_ = a.hooks.BeforeLogout(userEntity)
 
 	// Clear session if using sessions
 	if a.sessionManager != nil {
@@ -328,6 +357,8 @@ func (a *AuthService) Logout(ctx context.Context, payload *auth.LogoutPayload) (
 	// Clear csrf tokens
 	a.cookieHandler.ClearSessionCookie(info.Res)
 	a.cookieHandler.ClearCSRFCookie(info.Res)
+
+	_ = a.hooks.OnLogout(userEntity)
 
 	// Respond with success
 	return &auth.LogoutResult{
@@ -482,8 +513,11 @@ func (a *AuthService) VerifyEmail(ctx context.Context, payload *auth.VerifyEmail
 	// Update user's email verification status
 	err = a.userService.VerifyEmail(ctx, verification.UserID)
 	if err != nil {
+		_ = a.hooks.OnAccountVerified(*payload, false)
 		return nil, err
 	}
+
+	_ = a.hooks.OnAccountVerified(*payload, true)
 
 	return &auth.VerifyEmailResult{
 		Message: "Email verification successful",
@@ -648,6 +682,7 @@ func NewAuthService(
 	config *config.Config,
 	logger logging.Logger,
 	auther *AutherService,
+	hooks *hooks.Hooks,
 ) auth.Service {
 	mapper := automapper.NewMapper()
 
@@ -663,6 +698,7 @@ func NewAuthService(
 		auther:         auther,
 		mapper:         mapper,
 		cookieHandler:  cookieHandler,
+		hooks:          hooks,
 	}
 }
 
@@ -672,9 +708,10 @@ func RegisterAuthHTTPService(
 	config *config.Config,
 	logger logging.Logger,
 	auther *AutherService,
+	hooks *hooks.Hooks,
 ) {
 	eh := errorHandler(logger)
-	svc := NewAuthService(svcs.User, svcs.Session, svcs.CookieHandler, config, logger, auther)
+	svc := NewAuthService(svcs.User, svcs.Session, svcs.CookieHandler, config, logger, auther, hooks)
 
 	csrfInterceptor := NewCSRFInterceptor(config, logger)
 	endpoints := auth.NewEndpoints(svc, csrfInterceptor)
