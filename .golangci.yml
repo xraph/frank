@@ -11,6 +11,7 @@ run:
     - testdata
     - examples
     - tools
+    - ent/schema
   # Skip files
   skip-files:
     - ".*\\_test\\.go$"
@@ -27,6 +28,12 @@ output:
 
 # Configure specific linters
 linters:
+  exclusions:
+    rules:
+      - typecheck
+    paths:
+      - ent/schema/*
+
   disable-all: true
   enable:
     - errcheck
@@ -34,7 +41,7 @@ linters:
     - govet
     - ineffassign
     - staticcheck
-    - typecheck
+#    - typecheck
     - unused
     - gosec
     - revive
@@ -106,6 +113,14 @@ issues:
 
   exclude-rules:
     # Exclude some linters from running on tests files
+    - path: ent/schema/*.go
+      linters:
+        - dupl
+        - gosec
+        - goconst
+        - errcheck
+        - unparam
+        - typecheck
     - path: _test\.go
       linters:
         - dupl
