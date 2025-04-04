@@ -98,7 +98,7 @@ func NewControllers(
 	)
 
 	if hooks == nil {
-		hooks = hooks.NewHooks()
+		hooks = &hooks.Hooks{}
 	}
 
 	c := &Controllers{
