@@ -6,11 +6,11 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/internal/controllers"
-	"github.com/juicycleff/frank/internal/hooks"
 	"github.com/juicycleff/frank/internal/repo"
 	"github.com/juicycleff/frank/internal/router"
 	"github.com/juicycleff/frank/internal/services"
 	"github.com/juicycleff/frank/pkg/data"
+	"github.com/juicycleff/frank/pkg/hooks"
 	"github.com/juicycleff/frank/pkg/logging"
 )
 
@@ -18,7 +18,7 @@ import (
 type Option func(*Frank) error
 
 // WithChiRouter sets up Frank to use Chi router instead of the default Goa router
-func WithChiRouter(mux *chi.Mux) Option {
+func WithChiRouter(mux chi.Router) Option {
 	return func(f *Frank) error {
 		f.chiMux = mux
 		return nil
@@ -49,8 +49,7 @@ type Frank struct {
 	Clients  *data.Clients
 	Repo     *repo.Repo
 	hooks    *hooks.Hooks
-
-	chiMux *chi.Mux
+	chiMux   chi.Router
 }
 
 // New initializes and returns a new instance of Frank, setting up session store, repositories, services, and routes.

@@ -4,7 +4,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/internal/handlers"
-	"github.com/juicycleff/frank/internal/organization"
+	"github.com/juicycleff/frank/organization"
 	"github.com/juicycleff/frank/pkg/logging"
 )
 

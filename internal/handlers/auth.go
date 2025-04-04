@@ -10,12 +10,12 @@ import (
 	"github.com/juicycleff/frank/ent"
 	"github.com/juicycleff/frank/internal/auth/session"
 	"github.com/juicycleff/frank/internal/middleware"
-	"github.com/juicycleff/frank/internal/user"
 	"github.com/juicycleff/frank/pkg/crypto"
 	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/juicycleff/frank/pkg/logging"
 	"github.com/juicycleff/frank/pkg/utils"
 	"github.com/juicycleff/frank/pkg/validator"
+	"github.com/juicycleff/frank/user"
 )
 
 // AuthHandler handles authentication operations

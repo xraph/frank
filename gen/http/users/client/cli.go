@@ -94,7 +94,7 @@ func BuildCreatePayload(usersCreateBody string, usersCreateJWT string) (*users.C
 	{
 		err = json.Unmarshal([]byte(usersCreateBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"email\": \"user@example.com\",\n      \"first_name\": \"Saepe voluptas et sit dolores aut et.\",\n      \"last_name\": \"Autem explicabo doloribus omnis voluptatem sunt aut.\",\n      \"locale\": \"Fugit ullam vel ex repellendus dolores.\",\n      \"metadata\": {\n         \"Qui nisi.\": \"Voluptas occaecati id nemo et occaecati vero.\"\n      },\n      \"organization_id\": \"Molestias labore saepe molestiae ut.\",\n      \"password\": \"securepassword\",\n      \"phone_number\": \"Aut excepturi quasi dolores aut.\",\n      \"profile_image_url\": \"Quia fugit voluptatem consectetur.\"\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"email\": \"user@example.com\",\n      \"first_name\": \"Saepe voluptas et sit dolores aut et.\",\n      \"id\": \"2023-01-01T12:00:00Z\",\n      \"last_name\": \"Autem explicabo doloribus omnis voluptatem sunt aut.\",\n      \"locale\": \"Fugit ullam vel ex repellendus dolores.\",\n      \"metadata\": {\n         \"Qui nisi.\": \"Voluptas occaecati id nemo et occaecati vero.\"\n      },\n      \"organization_id\": \"Molestias labore saepe molestiae ut.\",\n      \"password\": \"securepassword\",\n      \"phone_number\": \"Aut excepturi quasi dolores aut.\",\n      \"profile_image_url\": \"Quia fugit voluptatem consectetur.\"\n   }'")
 		}
 		if body.Password != nil {
 			if utf8.RuneCountInString(*body.Password) < 8 {
@@ -117,6 +117,7 @@ func BuildCreatePayload(usersCreateBody string, usersCreateJWT string) (*users.C
 		OrganizationID:  body.OrganizationID,
 		FirstName:       body.FirstName,
 		LastName:        body.LastName,
+		ID:              body.ID,
 		PhoneNumber:     body.PhoneNumber,
 		ProfileImageURL: body.ProfileImageURL,
 		Locale:          body.Locale,

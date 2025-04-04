@@ -9,10 +9,10 @@ import (
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/ent"
 	"github.com/juicycleff/frank/internal/auth/oauth2"
-	"github.com/juicycleff/frank/internal/user"
 	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/juicycleff/frank/pkg/logging"
 	"github.com/juicycleff/frank/pkg/utils"
+	"github.com/juicycleff/frank/user"
 )
 
 // OAuthHandler handles OAuth2 operations

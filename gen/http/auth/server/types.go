@@ -12,7 +12,7 @@ import (
 
 	auth "github.com/juicycleff/frank/gen/auth"
 	designtypes "github.com/juicycleff/frank/gen/designtypes"
-	"github.com/juicycleff/frank/internal/user"
+	"github.com/juicycleff/frank/user"
 	goa "goa.design/goa/v3/pkg"
 )
 
@@ -222,6 +222,8 @@ type MeResponseBody struct {
 	FirstName *string `json:"first_name,firstName"`
 	// User last name
 	LastName *string `json:"last_name,lastName"`
+	// ID of the entity
+	ID *string `json:"id"`
 	// User phone number
 	PhoneNumber *string `json:"phone_number,phoneNumber"`
 	// User metadata
@@ -1123,6 +1125,8 @@ type UserResponseBody struct {
 	FirstName *string `json:"first_name,firstName"`
 	// User last name
 	LastName *string `json:"last_name,lastName"`
+	// ID of the entity
+	ID *string `json:"id"`
 	// User phone number
 	PhoneNumber *string `json:"phone_number,phoneNumber"`
 	// User metadata
@@ -1277,6 +1281,7 @@ func NewMeResponseBody(res *designtypes.User) *MeResponseBody {
 		ProfileImageURL: res.ProfileImageURL,
 		FirstName:       res.FirstName,
 		LastName:        res.LastName,
+		ID:              res.ID,
 		PhoneNumber:     res.PhoneNumber,
 		Locale:          res.Locale,
 		Email:           res.Email,

@@ -5,12 +5,12 @@
 package mocks
 
 import (
-	context "context"
-	reflect "reflect"
+	"context"
+	"reflect"
 
-	gomock "github.com/golang/mock/gomock"
-	ent "github.com/juicycleff/frank/ent"
-	user "github.com/juicycleff/frank/internal/user"
+	"github.com/golang/mock/gomock"
+	"github.com/juicycleff/frank/ent"
+	"github.com/juicycleff/frank/user"
 )
 
 // MockUserRepository is a mock of Repository interface.

@@ -15,9 +15,9 @@ import (
 	"github.com/juicycleff/frank/internal/auth/sso"
 	"github.com/juicycleff/frank/internal/email"
 	"github.com/juicycleff/frank/internal/sms"
-	"github.com/juicycleff/frank/internal/user"
 	"github.com/juicycleff/frank/internal/webhook"
 	"github.com/juicycleff/frank/pkg/logging"
+	"github.com/juicycleff/frank/user"
 )
 
 // Registry provides access to all authentication services

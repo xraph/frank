@@ -137,7 +137,7 @@ type EmailTemplateResponse struct {
 	Locale string
 	// Template metadata
 	Metadata map[string]any
-	// Created At
+	// ID of the entity
 	ID string `json:"id"`
 	// Created At
 	CreatedAt string `json:"created_at,createdAt"`

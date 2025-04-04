@@ -1503,6 +1503,7 @@ paths:
                                     email: user@example.com
                                     email_verified: true
                                     first_name: Eaque velit et molestiae ea.
+                                    id: "2023-01-01T12:00:00Z"
                                     last_name: Repellendus totam nihil animi et nulla.
                                     locale: Itaque quae saepe aut.
                                     metadata:
@@ -1686,6 +1687,7 @@ paths:
                                 email: user@example.com
                                 email_verified: true
                                 first_name: Temporibus atque nulla.
+                                id: "2023-01-01T12:00:00Z"
                                 last_name: Sint sit eum voluptas neque.
                                 locale: Distinctio et.
                                 metadata:
@@ -2193,6 +2195,7 @@ paths:
                                     email: user@example.com
                                     email_verified: true
                                     first_name: Eaque velit et molestiae ea.
+                                    id: "2023-01-01T12:00:00Z"
                                     last_name: Repellendus totam nihil animi et nulla.
                                     locale: Itaque quae saepe aut.
                                     metadata:
@@ -3382,6 +3385,7 @@ paths:
                                     email: user@example.com
                                     email_verified: true
                                     first_name: Eaque velit et molestiae ea.
+                                    id: "2023-01-01T12:00:00Z"
                                     last_name: Repellendus totam nihil animi et nulla.
                                     locale: Itaque quae saepe aut.
                                     metadata:
@@ -3602,6 +3606,7 @@ paths:
                                     email: user@example.com
                                     email_verified: true
                                     first_name: Eaque velit et molestiae ea.
+                                    id: "2023-01-01T12:00:00Z"
                                     last_name: Repellendus totam nihil animi et nulla.
                                     locale: Itaque quae saepe aut.
                                     metadata:
@@ -3936,6 +3941,7 @@ paths:
                                     email: user@example.com
                                     email_verified: true
                                     first_name: Eaque velit et molestiae ea.
+                                    id: "2023-01-01T12:00:00Z"
                                     last_name: Repellendus totam nihil animi et nulla.
                                     locale: Itaque quae saepe aut.
                                     metadata:
@@ -11563,6 +11569,7 @@ paths:
                                       email: user@example.com
                                       email_verified: true
                                       first_name: Eaque velit et molestiae ea.
+                                      id: "2023-01-01T12:00:00Z"
                                       last_name: Repellendus totam nihil animi et nulla.
                                       locale: Itaque quae saepe aut.
                                       metadata:
@@ -11574,6 +11581,7 @@ paths:
                                       email: user@example.com
                                       email_verified: true
                                       first_name: Eaque velit et molestiae ea.
+                                      id: "2023-01-01T12:00:00Z"
                                       last_name: Repellendus totam nihil animi et nulla.
                                       locale: Itaque quae saepe aut.
                                       metadata:
@@ -11585,6 +11593,7 @@ paths:
                                       email: user@example.com
                                       email_verified: true
                                       first_name: Eaque velit et molestiae ea.
+                                      id: "2023-01-01T12:00:00Z"
                                       last_name: Repellendus totam nihil animi et nulla.
                                       locale: Itaque quae saepe aut.
                                       metadata:
@@ -11596,6 +11605,7 @@ paths:
                                       email: user@example.com
                                       email_verified: true
                                       first_name: Eaque velit et molestiae ea.
+                                      id: "2023-01-01T12:00:00Z"
                                       last_name: Repellendus totam nihil animi et nulla.
                                       locale: Itaque quae saepe aut.
                                       metadata:
@@ -11688,6 +11698,7 @@ paths:
                         example:
                             email: user@example.com
                             first_name: Saepe voluptas et sit dolores aut et.
+                            id: "2023-01-01T12:00:00Z"
                             last_name: Autem explicabo doloribus omnis voluptatem sunt aut.
                             locale: Fugit ullam vel ex repellendus dolores.
                             metadata:
@@ -11708,6 +11719,7 @@ paths:
                                 email: user@example.com
                                 email_verified: true
                                 first_name: Aspernatur qui qui est.
+                                id: "2023-01-01T12:00:00Z"
                                 last_name: Quia perspiciatis consequuntur.
                                 locale: Architecto maxime repudiandae est inventore.
                                 metadata:
@@ -11888,6 +11900,7 @@ paths:
                                 email: user@example.com
                                 email_verified: false
                                 first_name: Quia veniam distinctio quos qui.
+                                id: "2023-01-01T12:00:00Z"
                                 last_name: Necessitatibus eligendi quae enim vitae quo.
                                 locale: Aliquid voluptate.
                                 metadata:
@@ -12004,6 +12017,7 @@ paths:
                                 email: user@example.com
                                 email_verified: false
                                 first_name: Consequuntur similique odit facilis odio distinctio nulla.
+                                id: "2023-01-01T12:00:00Z"
                                 last_name: Dicta repellendus mollitia suscipit est.
                                 locale: Voluptatem laboriosam aperiam inventore est nemo.
                                 metadata:
@@ -12457,6 +12471,7 @@ paths:
                                 email: user@example.com
                                 email_verified: false
                                 first_name: Harum sit et.
+                                id: "2023-01-01T12:00:00Z"
                                 last_name: Et esse quia optio nobis.
                                 locale: Deserunt alias sunt.
                                 metadata:
@@ -14132,7 +14147,7 @@ components:
                     format: date-time
                 id:
                     type: string
-                    description: Created At
+                    description: ID of the entity
                     example: "2023-01-01T12:00:00Z"
                 updated_at:
                     type: string
@@ -14164,6 +14179,10 @@ components:
                     type: string
                     description: User first name
                     example: Amet hic et aspernatur.
+                id:
+                    type: string
+                    description: ID of the entity
+                    example: "2023-01-01T12:00:00Z"
                 last_name:
                     type: string
                     description: User last name
@@ -14197,6 +14216,7 @@ components:
                 email: user@example.com
                 email_verified: false
                 first_name: Atque deleniti.
+                id: "2023-01-01T12:00:00Z"
                 last_name: Quidem est molestiae et iure.
                 locale: Pariatur et fugit fugit.
                 metadata:
@@ -14219,6 +14239,10 @@ components:
                     type: string
                     description: User first name
                     example: Et facilis nemo et.
+                id:
+                    type: string
+                    description: ID of the entity
+                    example: "2023-01-01T12:00:00Z"
                 last_name:
                     type: string
                     description: User last name
@@ -14246,6 +14270,7 @@ components:
             example:
                 email: user@example.com
                 first_name: Et non.
+                id: "2023-01-01T12:00:00Z"
                 last_name: Tempora qui voluptatibus aperiam.
                 locale: Veniam eum deserunt.
                 metadata:
@@ -15018,6 +15043,10 @@ components:
                     type: string
                     description: User first name
                     example: Amet eos et laudantium.
+                id:
+                    type: string
+                    description: ID of the entity
+                    example: "2023-01-01T12:00:00Z"
                 last_name:
                     type: string
                     description: User last name
@@ -15055,6 +15084,7 @@ components:
             example:
                 email: user@example.com
                 first_name: Libero corporis.
+                id: "2023-01-01T12:00:00Z"
                 last_name: Illum aliquid recusandae.
                 locale: At quae rerum.
                 metadata:
@@ -15180,7 +15210,7 @@ components:
                     example: Impedit eligendi eligendi quos tempore.
                 id:
                     type: string
-                    description: Created At
+                    description: ID of the entity
                     example: "2023-01-01T12:00:00Z"
                 locale:
                     type: string
@@ -17858,6 +17888,7 @@ components:
                           email: user@example.com
                           email_verified: true
                           first_name: Eaque velit et molestiae ea.
+                          id: "2023-01-01T12:00:00Z"
                           last_name: Repellendus totam nihil animi et nulla.
                           locale: Itaque quae saepe aut.
                           metadata:
@@ -17869,6 +17900,7 @@ components:
                           email: user@example.com
                           email_verified: true
                           first_name: Eaque velit et molestiae ea.
+                          id: "2023-01-01T12:00:00Z"
                           last_name: Repellendus totam nihil animi et nulla.
                           locale: Itaque quae saepe aut.
                           metadata:
@@ -17880,6 +17912,7 @@ components:
                           email: user@example.com
                           email_verified: true
                           first_name: Eaque velit et molestiae ea.
+                          id: "2023-01-01T12:00:00Z"
                           last_name: Repellendus totam nihil animi et nulla.
                           locale: Itaque quae saepe aut.
                           metadata:
@@ -17891,6 +17924,7 @@ components:
                           email: user@example.com
                           email_verified: true
                           first_name: Eaque velit et molestiae ea.
+                          id: "2023-01-01T12:00:00Z"
                           last_name: Repellendus totam nihil animi et nulla.
                           locale: Itaque quae saepe aut.
                           metadata:
@@ -17906,6 +17940,7 @@ components:
                       email: user@example.com
                       email_verified: true
                       first_name: Eaque velit et molestiae ea.
+                      id: "2023-01-01T12:00:00Z"
                       last_name: Repellendus totam nihil animi et nulla.
                       locale: Itaque quae saepe aut.
                       metadata:
@@ -17917,6 +17952,7 @@ components:
                       email: user@example.com
                       email_verified: true
                       first_name: Eaque velit et molestiae ea.
+                      id: "2023-01-01T12:00:00Z"
                       last_name: Repellendus totam nihil animi et nulla.
                       locale: Itaque quae saepe aut.
                       metadata:
@@ -18628,6 +18664,7 @@ components:
                     email: user@example.com
                     email_verified: false
                     first_name: Tenetur illum occaecati dolor.
+                    id: "2023-01-01T12:00:00Z"
                     last_name: A vitae officiis eligendi neque.
                     locale: Nostrum et.
                     metadata:
@@ -18723,6 +18760,7 @@ components:
                     email: user@example.com
                     email_verified: true
                     first_name: Eaque velit et molestiae ea.
+                    id: "2023-01-01T12:00:00Z"
                     last_name: Repellendus totam nihil animi et nulla.
                     locale: Itaque quae saepe aut.
                     metadata:
@@ -18819,6 +18857,7 @@ components:
                     email: user@example.com
                     email_verified: true
                     first_name: Eaque velit et molestiae ea.
+                    id: "2023-01-01T12:00:00Z"
                     last_name: Repellendus totam nihil animi et nulla.
                     locale: Itaque quae saepe aut.
                     metadata:
@@ -20271,6 +20310,7 @@ components:
                     email: user@example.com
                     email_verified: true
                     first_name: Eaque velit et molestiae ea.
+                    id: "2023-01-01T12:00:00Z"
                     last_name: Repellendus totam nihil animi et nulla.
                     locale: Itaque quae saepe aut.
                     metadata:
@@ -20974,7 +21014,7 @@ components:
                     format: date-time
                 id:
                     type: string
-                    description: Created At
+                    description: ID of the entity
                     example: "2023-01-01T12:00:00Z"
                 ip_address:
                     type: string
@@ -22018,6 +22058,10 @@ components:
                     type: string
                     description: User first name
                     example: Dolor eveniet vel similique.
+                id:
+                    type: string
+                    description: ID of the entity
+                    example: "2023-01-01T12:00:00Z"
                 last_name:
                     type: string
                     description: User last name
@@ -22052,6 +22096,7 @@ components:
                 email: user@example.com
                 email_verified: false
                 first_name: Aut a esse et consequuntur.
+                id: "2023-01-01T12:00:00Z"
                 last_name: Quis cum velit aliquam.
                 locale: Error earum voluptate.
                 metadata:
@@ -22282,6 +22327,7 @@ components:
                     email: user@example.com
                     email_verified: true
                     first_name: Eaque velit et molestiae ea.
+                    id: "2023-01-01T12:00:00Z"
                     last_name: Repellendus totam nihil animi et nulla.
                     locale: Itaque quae saepe aut.
                     metadata:

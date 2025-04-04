@@ -55,7 +55,7 @@ var BaseType = Type("Base", func() {
 	// Generate in shared types package
 	Meta("struct:pkg:path", "designtypes")
 	Description("Base type")
-	Field(1, "id", String, "Created At", func() {
+	Field(1, "id", String, "ID of the entity", func() {
 		Example("2023-01-01T12:00:00Z")
 		Meta("struct:tag:json", "id")
 	})
@@ -78,12 +78,15 @@ var BaseUserType = Type("BaseUser", func() {
 	Description("Base user type")
 
 	Extend(EmailType)
-
 	Field(5, "first_name", String, "User first name", func() {
 		Meta("struct:tag:json", "first_name", "firstName")
 	})
 	Field(6, "last_name", String, "User last name", func() {
 		Meta("struct:tag:json", "last_name", "lastName")
+	})
+	Field(7, "id", String, "ID of the entity", func() {
+		Example("2023-01-01T12:00:00Z")
+		Meta("struct:tag:json", "id")
 	})
 	Field(8, "phone_number", String, "User phone number", func() {
 		Meta("struct:tag:json", "phone_number", "phoneNumber")

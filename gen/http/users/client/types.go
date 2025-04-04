@@ -24,6 +24,8 @@ type CreateRequestBody struct {
 	FirstName *string `json:"first_name,firstName"`
 	// User last name
 	LastName *string `json:"last_name,lastName"`
+	// ID of the entity
+	ID *string `json:"id"`
 	// User phone number
 	PhoneNumber *string `json:"phone_number,phoneNumber"`
 	// URL to user's profile image
@@ -94,6 +96,8 @@ type CreateResponseBody struct {
 	FirstName *string `json:"first_name,firstName"`
 	// User last name
 	LastName *string `json:"last_name,lastName"`
+	// ID of the entity
+	ID *string `json:"id"`
 	// User phone number
 	PhoneNumber *string `json:"phone_number,phoneNumber"`
 	// User metadata
@@ -119,6 +123,8 @@ type GetResponseBody struct {
 	FirstName *string `json:"first_name,firstName"`
 	// User last name
 	LastName *string `json:"last_name,lastName"`
+	// ID of the entity
+	ID *string `json:"id"`
 	// User phone number
 	PhoneNumber *string `json:"phone_number,phoneNumber"`
 	// User metadata
@@ -144,6 +150,8 @@ type UpdateResponseBody struct {
 	FirstName *string `json:"first_name,firstName"`
 	// User last name
 	LastName *string `json:"last_name,lastName"`
+	// ID of the entity
+	ID *string `json:"id"`
 	// User phone number
 	PhoneNumber *string `json:"phone_number,phoneNumber"`
 	// User metadata
@@ -169,6 +177,8 @@ type UpdateMeResponseBody struct {
 	FirstName *string `json:"first_name,firstName"`
 	// User last name
 	LastName *string `json:"last_name,lastName"`
+	// ID of the entity
+	ID *string `json:"id"`
 	// User phone number
 	PhoneNumber *string `json:"phone_number,phoneNumber"`
 	// User metadata
@@ -996,6 +1006,8 @@ type UserResponseBody struct {
 	FirstName *string `json:"first_name,firstName"`
 	// User last name
 	LastName *string `json:"last_name,lastName"`
+	// ID of the entity
+	ID *string `json:"id"`
 	// User phone number
 	PhoneNumber *string `json:"phone_number,phoneNumber"`
 	// User metadata
@@ -1068,7 +1080,7 @@ type SessionResponseBody struct {
 	LastActiveAt *string `json:"last_active_at,lastActiveAt"`
 	// Expiry timestamp
 	ExpiresAt *string `json:"expires_at,expiresAt"`
-	// Created At
+	// ID of the entity
 	ID *string `json:"id"`
 	// Created At
 	CreatedAt *string `json:"created_at,createdAt"`
@@ -1184,6 +1196,7 @@ func NewCreateRequestBody(p *users.CreatePayload) *CreateRequestBody {
 		OrganizationID:  p.OrganizationID,
 		FirstName:       p.FirstName,
 		LastName:        p.LastName,
+		ID:              p.ID,
 		PhoneNumber:     p.PhoneNumber,
 		ProfileImageURL: p.ProfileImageURL,
 		Locale:          p.Locale,
@@ -1345,6 +1358,7 @@ func NewCreateUserCreated(body *CreateResponseBody) *designtypes.User {
 		ProfileImageURL: body.ProfileImageURL,
 		FirstName:       body.FirstName,
 		LastName:        body.LastName,
+		ID:              body.ID,
 		PhoneNumber:     body.PhoneNumber,
 		Email:           *body.Email,
 	}
@@ -1450,6 +1464,7 @@ func NewGetUserOK(body *GetResponseBody) *designtypes.User {
 		ProfileImageURL: body.ProfileImageURL,
 		FirstName:       body.FirstName,
 		LastName:        body.LastName,
+		ID:              body.ID,
 		PhoneNumber:     body.PhoneNumber,
 		Email:           *body.Email,
 	}
@@ -1553,6 +1568,7 @@ func NewUpdateUserOK(body *UpdateResponseBody) *designtypes.User {
 		ProfileImageURL: body.ProfileImageURL,
 		FirstName:       body.FirstName,
 		LastName:        body.LastName,
+		ID:              body.ID,
 		PhoneNumber:     body.PhoneNumber,
 		Email:           *body.Email,
 	}
@@ -1732,6 +1748,7 @@ func NewUpdateMeUserOK(body *UpdateMeResponseBody) *designtypes.User {
 		ProfileImageURL: body.ProfileImageURL,
 		FirstName:       body.FirstName,
 		LastName:        body.LastName,
+		ID:              body.ID,
 		PhoneNumber:     body.PhoneNumber,
 		Email:           *body.Email,
 	}

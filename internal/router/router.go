@@ -41,4 +41,6 @@ type FrankRouter interface {
 
 	// BuildPath constructs an absolute path by appending the given relative path to the base path of the router.
 	BuildPath(relativePath string) string
+
+	Mux() chi.Router
 }

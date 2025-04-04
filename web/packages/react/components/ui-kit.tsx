@@ -407,11 +407,15 @@ export function FrankUIKit({
 
 	const handleVerifyOtp = async (e: React.FormEvent) => {
 		e.preventDefault();
-		if (!configOnVerifyOtp) return;
-
 		setIsLoading(true);
 		try {
-			await configOnVerifyOtp(otpCode, email);
+			const rsp = await frank.verifyEmail({
+				email,
+				otp: otpCode,
+				method: "otp",
+			});
+			configOnVerifyOtp?.(email, otpCode);
+			console.log("Verify OTP response:", rsp);
 			setCurrentView("login");
 			resetState();
 		} catch (error) {
@@ -778,6 +782,7 @@ export function FrankUIKit({
 									maxLength={codeInputLength.length}
 									pattern={REGEXP_ONLY_DIGITS_AND_CHARS}
 									value={otpCode}
+									required
 									onChange={(v) => setOtpCode(v)}
 									className={`text-center text-lg tracking-widest ${inputClassName}`}
 								>
@@ -785,8 +790,7 @@ export function FrankUIKit({
 										{codeInputLength.map((value, idx) => (
 											<InputOTPSlot
 												index={idx}
-												className="size-10
-											 text-xl"
+												className="size-10 text-xl"
 											/>
 										))}
 									</InputOTPGroup>

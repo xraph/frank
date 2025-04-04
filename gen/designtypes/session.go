@@ -31,7 +31,7 @@ type Session struct {
 	LastActiveAt *string `json:"last_active_at,lastActiveAt"`
 	// Expiry timestamp
 	ExpiresAt string `json:"expires_at,expiresAt"`
-	// Created At
+	// ID of the entity
 	ID string `json:"id"`
 	// Created At
 	CreatedAt string `json:"created_at,createdAt"`

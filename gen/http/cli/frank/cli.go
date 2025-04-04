@@ -3967,6 +3967,7 @@ Example:
     %[1]s users create --body '{
       "email": "user@example.com",
       "first_name": "Saepe voluptas et sit dolores aut et.",
+      "id": "2023-01-01T12:00:00Z",
       "last_name": "Autem explicabo doloribus omnis voluptatem sunt aut.",
       "locale": "Fugit ullam vel ex repellendus dolores.",
       "metadata": {

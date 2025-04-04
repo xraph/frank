@@ -8,9 +8,9 @@ import (
 	"github.com/juicycleff/frank/internal/auth/oauth2"
 	"github.com/juicycleff/frank/internal/handlers"
 	"github.com/juicycleff/frank/internal/services"
-	"github.com/juicycleff/frank/internal/user"
 	"github.com/juicycleff/frank/pkg/data"
 	"github.com/juicycleff/frank/pkg/logging"
+	"github.com/juicycleff/frank/user"
 )
 
 // OAuthRoutes handles OAuth2 routes for both the provider and client roles

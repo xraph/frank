@@ -8,8 +8,8 @@ import (
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/internal/auth/session"
 	"github.com/juicycleff/frank/internal/handlers"
-	"github.com/juicycleff/frank/internal/user"
 	"github.com/juicycleff/frank/pkg/logging"
+	"github.com/juicycleff/frank/user"
 )
 
 // AuthRoutes handles authentication routes

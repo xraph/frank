@@ -1469,6 +1469,7 @@ func marshalDesigntypesUserToUserResponseBody(v *designtypes.User) *UserResponse
 		ProfileImageURL: v.ProfileImageURL,
 		FirstName:       v.FirstName,
 		LastName:        v.LastName,
+		ID:              v.ID,
 		PhoneNumber:     v.PhoneNumber,
 		Locale:          v.Locale,
 		Email:           v.Email,

@@ -120,7 +120,7 @@ var VerifyEmailRequest = Type("VerifyEmailRequest", func() {
 		Example("user@example.com")
 	})
 	Attribute("method", String, "Verification method (link or otp)", func() {
-		Meta("struct:field:type", "user.VerificationMethod", "github.com/juicycleff/frank/internal/user")
+		Meta("struct:field:type", "user.VerificationMethod", "github.com/juicycleff/frank/user")
 		Enum("link", "otp")
 		Example("otp")
 	})
@@ -134,7 +134,7 @@ var SendEmailVerificationRequest = Type("SendEmailVerificationRequest", func() {
 		Example("user@example.com")
 	})
 	Attribute("method", String, "Verification method (link or otp)", func() {
-		Meta("struct:field:type", "user.VerificationMethod", "github.com/juicycleff/frank/internal/user")
+		Meta("struct:field:type", "user.VerificationMethod", "github.com/juicycleff/frank/user")
 		Enum("link", "otp")
 		Default("otp")
 	})

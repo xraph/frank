@@ -2016,6 +2016,7 @@ func unmarshalUserResponseBodyToDesigntypesUser(v *UserResponseBody) *designtype
 		ProfileImageURL: v.ProfileImageURL,
 		FirstName:       v.FirstName,
 		LastName:        v.LastName,
+		ID:              v.ID,
 		PhoneNumber:     v.PhoneNumber,
 		Email:           *v.Email,
 	}

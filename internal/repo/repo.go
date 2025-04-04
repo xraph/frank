@@ -9,11 +9,11 @@ import (
 	"github.com/juicycleff/frank/internal/auth/passkeys"
 	"github.com/juicycleff/frank/internal/auth/session"
 	"github.com/juicycleff/frank/internal/email"
-	"github.com/juicycleff/frank/internal/organization"
 	"github.com/juicycleff/frank/internal/rbac"
-	"github.com/juicycleff/frank/internal/user"
 	"github.com/juicycleff/frank/internal/webhook"
+	"github.com/juicycleff/frank/organization"
 	"github.com/juicycleff/frank/pkg/logging"
+	"github.com/juicycleff/frank/user"
 )
 
 // Repo contains all the service dependencies

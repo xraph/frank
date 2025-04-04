@@ -5,12 +5,12 @@
 package mocks
 
 import (
-	context "context"
-	reflect "reflect"
+	"context"
+	"reflect"
 
-	gomock "github.com/golang/mock/gomock"
-	ent "github.com/juicycleff/frank/ent"
-	organization "github.com/juicycleff/frank/internal/organization"
+	"github.com/golang/mock/gomock"
+	"github.com/juicycleff/frank/ent"
+	"github.com/juicycleff/frank/organization"
 )
 
 // MockOrganizationService is a mock of Service interface.

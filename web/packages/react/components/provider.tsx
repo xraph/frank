@@ -162,6 +162,8 @@ export function FrankProvider({
 		}));
 	};
 
+	console.log(initialConfig.api?.baseUrl)
+
 	client.setConfig({
 		baseUrl: initialConfig.api?.baseUrl ?? "/",
 		credentials: "include",

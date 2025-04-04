@@ -5,8 +5,8 @@ import (
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/internal/auth/passwordless"
 	"github.com/juicycleff/frank/internal/handlers"
-	"github.com/juicycleff/frank/internal/user"
 	"github.com/juicycleff/frank/pkg/logging"
+	"github.com/juicycleff/frank/user"
 )
 
 // PasswordlessRoutes handles passwordless authentication routes

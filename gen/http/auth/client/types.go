@@ -220,6 +220,8 @@ type MeResponseBody struct {
 	FirstName *string `json:"first_name,firstName"`
 	// User last name
 	LastName *string `json:"last_name,lastName"`
+	// ID of the entity
+	ID *string `json:"id"`
 	// User phone number
 	PhoneNumber *string `json:"phone_number,phoneNumber"`
 	// User metadata
@@ -1121,6 +1123,8 @@ type UserResponseBody struct {
 	FirstName *string `json:"first_name,firstName"`
 	// User last name
 	LastName *string `json:"last_name,lastName"`
+	// ID of the entity
+	ID *string `json:"id"`
 	// User phone number
 	PhoneNumber *string `json:"phone_number,phoneNumber"`
 	// User metadata
@@ -2066,6 +2070,7 @@ func NewMeUserOK(body *MeResponseBody) *designtypes.User {
 		ProfileImageURL: body.ProfileImageURL,
 		FirstName:       body.FirstName,
 		LastName:        body.LastName,
+		ID:              body.ID,
 		PhoneNumber:     body.PhoneNumber,
 		Email:           *body.Email,
 	}

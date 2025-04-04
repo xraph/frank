@@ -127,7 +127,7 @@ type CreateTemplateResponseBody struct {
 	Locale *string `form:"locale,omitempty" json:"locale,omitempty" xml:"locale,omitempty"`
 	// Template metadata
 	Metadata map[string]any `form:"metadata,omitempty" json:"metadata,omitempty" xml:"metadata,omitempty"`
-	// Created At
+	// ID of the entity
 	ID *string `json:"id"`
 	// Created At
 	CreatedAt *string `json:"created_at,createdAt"`
@@ -158,7 +158,7 @@ type GetTemplateResponseBody struct {
 	Locale *string `form:"locale,omitempty" json:"locale,omitempty" xml:"locale,omitempty"`
 	// Template metadata
 	Metadata map[string]any `form:"metadata,omitempty" json:"metadata,omitempty" xml:"metadata,omitempty"`
-	// Created At
+	// ID of the entity
 	ID *string `json:"id"`
 	// Created At
 	CreatedAt *string `json:"created_at,createdAt"`
@@ -189,7 +189,7 @@ type GetTemplateByTypeResponseBody struct {
 	Locale *string `form:"locale,omitempty" json:"locale,omitempty" xml:"locale,omitempty"`
 	// Template metadata
 	Metadata map[string]any `form:"metadata,omitempty" json:"metadata,omitempty" xml:"metadata,omitempty"`
-	// Created At
+	// ID of the entity
 	ID *string `json:"id"`
 	// Created At
 	CreatedAt *string `json:"created_at,createdAt"`
@@ -220,7 +220,7 @@ type UpdateTemplateResponseBody struct {
 	Locale *string `form:"locale,omitempty" json:"locale,omitempty" xml:"locale,omitempty"`
 	// Template metadata
 	Metadata map[string]any `form:"metadata,omitempty" json:"metadata,omitempty" xml:"metadata,omitempty"`
-	// Created At
+	// ID of the entity
 	ID *string `json:"id"`
 	// Created At
 	CreatedAt *string `json:"created_at,createdAt"`
@@ -788,7 +788,7 @@ type EmailTemplateResponseResponseBody struct {
 	Locale *string `form:"locale,omitempty" json:"locale,omitempty" xml:"locale,omitempty"`
 	// Template metadata
 	Metadata map[string]any `form:"metadata,omitempty" json:"metadata,omitempty" xml:"metadata,omitempty"`
-	// Created At
+	// ID of the entity
 	ID *string `json:"id"`
 	// Created At
 	CreatedAt *string `json:"created_at,createdAt"`

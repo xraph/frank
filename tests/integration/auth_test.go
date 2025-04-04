@@ -14,9 +14,9 @@ import (
 	entuser "github.com/juicycleff/frank/ent/user"
 	"github.com/juicycleff/frank/internal/auth/session"
 	"github.com/juicycleff/frank/internal/handlers"
-	"github.com/juicycleff/frank/internal/user"
 	"github.com/juicycleff/frank/pkg/crypto"
 	"github.com/juicycleff/frank/pkg/logging"
+	user2 "github.com/juicycleff/frank/user"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -333,10 +333,10 @@ func setupTestDatabase(t *testing.T) *ent.Client {
 	return client
 }
 
-func setupUserService(client *ent.Client, cfg *config.Config, logger logging.Logger) user.Service {
+func setupUserService(client *ent.Client, cfg *config.Config, logger logging.Logger) user2.Service {
 	// Setup the user repository
-	repo := user.NewRepository(client)
+	repo := user2.NewRepository(client)
 
 	// Create the user service
-	return user.NewService(repo, cfg, logger)
+	return user2.NewService(repo, cfg, logger)
 }

@@ -11,20 +11,19 @@ import (
 	"github.com/juicycleff/frank/gen/designtypes"
 	authhttp "github.com/juicycleff/frank/gen/http/auth/server"
 	"github.com/juicycleff/frank/internal/auth/session"
-	"github.com/juicycleff/frank/internal/hooks"
 	customMiddleware "github.com/juicycleff/frank/internal/middleware"
 	"github.com/juicycleff/frank/internal/services"
 	"github.com/juicycleff/frank/pkg/automapper"
 	"github.com/juicycleff/frank/pkg/crypto"
 	"github.com/juicycleff/frank/pkg/errors"
+	"github.com/juicycleff/frank/pkg/hooks"
 	"github.com/juicycleff/frank/pkg/logging"
 	"github.com/juicycleff/frank/pkg/utils"
+	"github.com/juicycleff/frank/user"
 	"goa.design/clue/debug"
 	"goa.design/clue/log"
 	goahttp "goa.design/goa/v3/http"
 	"goa.design/goa/v3/security"
-
-	"github.com/juicycleff/frank/internal/user"
 )
 
 // AuthService implements the genconcerts.Service interface

@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -152,6 +153,7 @@ func ProtectedFrontendFileServer(
 
 		// For static assets, serve directly without protection
 		for _, prefix := range protection.GetStaticFilePrefixes() {
+			fmt.Println(prefix, path)
 			if strings.HasPrefix(path, prefix) {
 				fs.ServeHTTP(w, r)
 				return

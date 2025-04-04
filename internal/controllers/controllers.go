@@ -13,11 +13,11 @@ import (
 	openmw "github.com/go-openapi/runtime/middleware"
 	"github.com/juicycleff/frank/config"
 	genht "github.com/juicycleff/frank/gen/http"
-	"github.com/juicycleff/frank/internal/hooks"
 	customMiddleware "github.com/juicycleff/frank/internal/middleware"
 	"github.com/juicycleff/frank/internal/router"
 	"github.com/juicycleff/frank/internal/services"
 	"github.com/juicycleff/frank/pkg/data"
+	"github.com/juicycleff/frank/pkg/hooks"
 	"github.com/juicycleff/frank/pkg/logging"
 	goahttp "goa.design/goa/v3/http"
 	"goa.design/goa/v3/middleware"
@@ -41,10 +41,10 @@ func NewControllers(
 	cfg *config.Config,
 	hooks *hooks.Hooks,
 	logger logging.Logger,
-	router *chi.Mux,
+	router chi.Router,
 ) router.FrankRouter {
 	// Create Chi r
-	var r *chi.Mux
+	var r chi.Router
 	if router != nil {
 		r = router
 	} else {
@@ -97,6 +97,10 @@ func NewControllers(
 		// svcs.Organization,
 	)
 
+	if hooks == nil {
+		hooks = hooks.NewHooks()
+	}
+
 	c := &Controllers{
 		svcs:              svcs,
 		router:            r,
@@ -115,6 +119,14 @@ func NewControllers(
 }
 
 func (c *Controllers) RegisterRoutes() {
+
+	// Ensure no trailing slash in basePath
+	if strings.HasSuffix(c.pathPrefix, "/") && c.pathPrefix != "/" {
+		c.pathPrefix = c.pathPrefix[:len(c.pathPrefix)-1]
+	}
+
+	c.logger.Info("mounting routes in " + c.pathPrefix)
+
 	// Set up CSRF configuration
 	csrfConfig := customMiddleware.DefaultCSRFConfig()
 	csrfConfig.RegenerateOnRequest = false // Set to true to regenerate token on every request
@@ -146,7 +158,7 @@ func (c *Controllers) RegisterRoutes() {
 
 	// Serve Swagger UI
 	opts := openmw.SwaggerUIOpts{
-		SpecURL: "/swagger.json",
+		SpecURL: c.BuildPath("/swagger.json"),
 	}
 
 	sh := openmw.SwaggerUI(opts, nil)
@@ -213,7 +225,7 @@ func (c *Controllers) Mount(parent chi.Router, mountPath string) {
 	c.pathPrefix = path.Join(mountPath, c.config.BasePath)
 
 	// Mount the router
-	parent.Mount(mountPath, c.router)
+	parent.Mount(c.pathPrefix, c.router)
 }
 
 // Route adds a new route group with a pattern
@@ -244,6 +256,11 @@ func (c *Controllers) NotFound(handler http.HandlerFunc) {
 // MethodNotAllowed sets the method not allowed handler
 func (c *Controllers) MethodNotAllowed(handler http.HandlerFunc) {
 	c.router.MethodNotAllowed(handler)
+}
+
+// Mux sets the method not allowed handler
+func (c *Controllers) Mux() chi.Router {
+	return c.router
 }
 
 // BuildPath builds an absolute path from the given relative path

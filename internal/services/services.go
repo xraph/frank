@@ -13,22 +13,22 @@ import (
 	"github.com/juicycleff/frank/internal/auth/session"
 	"github.com/juicycleff/frank/internal/auth/sso"
 	"github.com/juicycleff/frank/internal/email"
-	"github.com/juicycleff/frank/internal/organization"
 	"github.com/juicycleff/frank/internal/rbac"
 	"github.com/juicycleff/frank/internal/repo"
 	"github.com/juicycleff/frank/internal/sms"
-	"github.com/juicycleff/frank/internal/user"
 	"github.com/juicycleff/frank/internal/webhook"
+	"github.com/juicycleff/frank/organization"
 	"github.com/juicycleff/frank/pkg/data"
 	"github.com/juicycleff/frank/pkg/logging"
 	"github.com/juicycleff/frank/pkg/utils"
+	user2 "github.com/juicycleff/frank/user"
 )
 
 // Services contains all the service dependencies
 type Services struct {
 	APIKey              apikeys.Service
 	Organization        organization.Service
-	User                user.Service
+	User                user2.Service
 	Webhook             webhook.Service
 	Email               email.Service
 	SMS                 sms.Service
@@ -61,12 +61,12 @@ func New(repos *repo.Repo, cfg *config.Config, client *data.Clients, logger logg
 	smsService := sms.NewService(cfg, emailProvider, logger)
 
 	orgService := organization.NewService(repos.Organization, logger)
-	pwdVerifyManger := user.NewVerificationManager(client.DB, emailService, logger)
-	pwdManger := user.NewPasswordManager(cfg, client.DB, pwdVerifyManger)
+	pwdVerifyManger := user2.NewVerificationManager(client.DB, emailService, logger)
+	pwdManger := user2.NewPasswordManager(cfg, client.DB, pwdVerifyManger)
 
 	enforce := rbac.NewEnforcer(repos.RBAC, logger)
 	rbacService := rbac.NewService(repos.RBAC, enforce, logger)
-	userService := user.NewService(repos.User, pwdManger, pwdVerifyManger, orgService, cfg, logger)
+	userService := user2.NewService(repos.User, pwdManger, pwdVerifyManger, orgService, cfg, logger)
 
 	// Initialize auth services
 	cookieHandler := session.NewCookieHandler(cfg, logger)

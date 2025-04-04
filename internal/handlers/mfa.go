@@ -8,10 +8,10 @@ import (
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/internal/auth/mfa"
 	"github.com/juicycleff/frank/internal/middleware"
-	"github.com/juicycleff/frank/internal/user"
 	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/juicycleff/frank/pkg/logging"
 	"github.com/juicycleff/frank/pkg/utils"
+	"github.com/juicycleff/frank/user"
 )
 
 // MFAHandler handles multi-factor authentication operations

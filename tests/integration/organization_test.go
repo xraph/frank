@@ -9,11 +9,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/juicycleff/frank/config"
-	"github.com/juicycleff/frank/ent"
 	"github.com/juicycleff/frank/internal/handlers"
 	"github.com/juicycleff/frank/internal/middleware"
 	"github.com/juicycleff/frank/internal/organization"
+	organization2 "github.com/juicycleff/frank/organization"
 	"github.com/juicycleff/frank/pkg/logging"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -38,7 +37,7 @@ func TestCreateOrganization(t *testing.T) {
 
 	// Setup organization service and handler
 	orgRepo := organization.NewEntRepository(client)
-	orgService := organization.NewService(orgRepo, cfg, logger)
+	orgService := organization2.NewService(orgRepo, cfg, logger)
 	orgHandler := handlers.NewOrganizationHandler(orgService, cfg, logger)
 
 	// Create test request
@@ -124,7 +123,7 @@ func TestListOrganizations(t *testing.T) {
 
 	// Setup organization service and handler
 	orgRepo := organization.NewEntRepository(client)
-	orgService := organization.NewService(orgRepo, cfg, logger)
+	orgService := organization2.NewService(orgRepo, cfg, logger)
 	orgHandler := handlers.NewOrganizationHandler(orgService, cfg, logger)
 
 	// Create test request
@@ -185,7 +184,7 @@ func TestGetOrganization(t *testing.T) {
 
 	// Setup organization service and handler
 	orgRepo := organization.NewEntRepository(client)
-	orgService := organization.NewService(orgRepo, cfg, logger)
+	orgService := organization2.NewService(orgRepo, cfg, logger)
 	orgHandler := handlers.NewOrganizationHandler(orgService, cfg, logger)
 
 	// Create test request
@@ -243,8 +242,8 @@ func TestUpdateOrganization(t *testing.T) {
 	require.NoError(t, err)
 
 	// Setup organization service and handler
-	orgRepo := organization.NewRepository(client)
-	orgService := organization.NewService(orgRepo, cfg, logger)
+	orgRepo := organization2.NewRepository(client)
+	orgService := organization2.NewService(orgRepo, cfg, logger)
 	orgHandler := handlers.NewOrganizationHandler(orgService, cfg, logger)
 
 	// Create update request
@@ -314,8 +313,8 @@ func TestManageOrganizationFeatures(t *testing.T) {
 	require.NoError(t, err)
 
 	// Setup organization service and handler
-	orgRepo := organization.NewRepository(client)
-	orgService := organization.NewService(orgRepo, logger)
+	orgRepo := organization2.NewRepository(client)
+	orgService := organization2.NewService(orgRepo, logger)
 	orgHandler := handlers.NewOrganizationHandler(orgService, cfg, logger)
 
 	// Step 1: Enable a feature

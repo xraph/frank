@@ -3,7 +3,7 @@ package hooks
 import (
 	"github.com/juicycleff/frank/ent"
 	"github.com/juicycleff/frank/gen/auth"
-	"github.com/juicycleff/frank/internal/user"
+	"github.com/juicycleff/frank/user"
 )
 
 type AuthHooks interface {
@@ -27,6 +27,10 @@ type OrganisationHooks interface{}
 type Hooks struct {
 	Auth AuthHooks
 	Org  OrganisationHooks
+}
+
+func New() *Hooks {
+	return &Hooks{}
 }
 
 func (h *Hooks) BeforeLogout(input *ent.User) error {

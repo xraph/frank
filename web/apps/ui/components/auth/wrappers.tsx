@@ -2,11 +2,10 @@
 
 import React from "react";
 import {FrankProvider} from "@frank-auth/react";
-import {LoginForm} from "./login-form";
-import {RegisterForm} from "./register-form";
 import {Logo} from "@/components/logo";
 
 const prefix = process.env.NEXT_PUBLIC_AUTH_PATH_PREFIX ?? "";
+const baseUrl = process.env.NEXT_PUBLIC_FRANK_ENDPOINT ?? "/";
 
 export function BaseAuthLayout({ children }: { children: React.ReactNode }) {
 	return (
@@ -16,7 +15,7 @@ export function BaseAuthLayout({ children }: { children: React.ReactNode }) {
 				theme: "purple",
 				logo: <Logo className="h-10 w-10" />,
 				api: {
-					baseUrl: process.env.PUBLIC_FRANK_ENDPOINT,
+					baseUrl: baseUrl,
 				},
 				links: {
 					showAuthLinks: true,
@@ -86,21 +85,5 @@ export function BaseAuthLayout({ children }: { children: React.ReactNode }) {
 		>
 			{children}
 		</FrankProvider>
-	);
-}
-
-export function LoginLayout() {
-	return (
-		<BaseAuthLayout>
-			<LoginForm />
-		</BaseAuthLayout>
-	);
-}
-
-export function SignupLayout() {
-	return (
-		<BaseAuthLayout>
-			<RegisterForm />
-		</BaseAuthLayout>
 	);
 }

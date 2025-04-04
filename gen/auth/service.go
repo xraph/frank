@@ -11,7 +11,7 @@ import (
 	"context"
 
 	designtypes "github.com/juicycleff/frank/gen/designtypes"
-	"github.com/juicycleff/frank/internal/user"
+	"github.com/juicycleff/frank/user"
 	"goa.design/goa/v3/security"
 )
 
