@@ -13,7 +13,6 @@ import (
 	"net/http"
 	"os"
 
-	adminc "github.com/juicycleff/frank/gen/http/admin/client"
 	apikeysc "github.com/juicycleff/frank/gen/http/api_keys/client"
 	authc "github.com/juicycleff/frank/gen/http/auth/client"
 	emailc "github.com/juicycleff/frank/gen/http/email/client"
@@ -27,7 +26,6 @@ import (
 	rbacc "github.com/juicycleff/frank/gen/http/rbac/client"
 	ssoc "github.com/juicycleff/frank/gen/http/sso/client"
 	usersc "github.com/juicycleff/frank/gen/http/users/client"
-	webc "github.com/juicycleff/frank/gen/http/web/client"
 	webhooksc "github.com/juicycleff/frank/gen/http/webhooks/client"
 	goahttp "goa.design/goa/v3/http"
 	goa "goa.design/goa/v3/pkg"
@@ -39,8 +37,6 @@ import (
 func UsageCommands() string {
 	return `api-keys (list|create|get|update|delete|validate)
 email (list-templates|create-template|get-template|get-template-by-type|update-template|delete-template|send|send-template)
-admin home
-web home
 health (check|ready|version|metrics|debug)
 auth (login|register|logout|refresh-token|forgot-password|reset-password|verify-email|send-email-verification|check-email-verification|me|csrf)
 mfa (enroll|verify|unenroll|methods|send-code)
@@ -60,9 +56,21 @@ webhooks (list|create|get|update|delete|trigger-event|list-events|replay-event|r
 func UsageExamples() string {
 	return os.Args[0] + ` api-keys list --offset 825384666803638849 --limit 38 --type "client" --organization-id "Neque aut ipsam sapiente odit." --jwt "Ut occaecati."` + "\n" +
 		os.Args[0] + ` email list-templates --offset 2427607000444438512 --limit 10 --type "Vel aut vero quis." --organization-id "Excepturi qui voluptatem dolorum sed." --locale "Incidunt et." --jwt "Id aliquid eius labore saepe et atque."` + "\n" +
-		os.Args[0] + ` admin home` + "\n" +
-		os.Args[0] + ` web home` + "\n" +
 		os.Args[0] + ` health check` + "\n" +
+		os.Args[0] + ` auth login --body '{
+      "captcha_response": "Eum fugit est ut sed.",
+      "email": "user@example.com",
+      "organization_id": "Consequuntur quia.",
+      "password": "secure-password",
+      "remember_me": true
+   }' --session-id "Sit culpa sint atque reiciendis est."` + "\n" +
+		os.Args[0] + ` mfa enroll --body '{
+      "request": {
+         "email": "katrina@huels.name",
+         "method": "totp",
+         "phone_number": "Delectus rem voluptatem vel laborum commodi."
+      }
+   }' --jwt "Architecto quaerat in."` + "\n" +
 		""
 }
 
@@ -145,14 +153,6 @@ func ParseEndpoint(
 		emailSendTemplateFlags    = flag.NewFlagSet("send-template", flag.ExitOnError)
 		emailSendTemplateBodyFlag = emailSendTemplateFlags.String("body", "REQUIRED", "")
 		emailSendTemplateJWTFlag  = emailSendTemplateFlags.String("jwt", "", "")
-
-		adminFlags = flag.NewFlagSet("admin", flag.ContinueOnError)
-
-		adminHomeFlags = flag.NewFlagSet("home", flag.ExitOnError)
-
-		webFlags = flag.NewFlagSet("web", flag.ContinueOnError)
-
-		webHomeFlags = flag.NewFlagSet("home", flag.ExitOnError)
 
 		healthFlags = flag.NewFlagSet("health", flag.ContinueOnError)
 
@@ -730,12 +730,6 @@ func ParseEndpoint(
 	emailSendFlags.Usage = emailSendUsage
 	emailSendTemplateFlags.Usage = emailSendTemplateUsage
 
-	adminFlags.Usage = adminUsage
-	adminHomeFlags.Usage = adminHomeUsage
-
-	webFlags.Usage = webUsage
-	webHomeFlags.Usage = webHomeUsage
-
 	healthFlags.Usage = healthUsage
 	healthCheckFlags.Usage = healthCheckUsage
 	healthReadyFlags.Usage = healthReadyUsage
@@ -890,10 +884,6 @@ func ParseEndpoint(
 			svcf = apiKeysFlags
 		case "email":
 			svcf = emailFlags
-		case "admin":
-			svcf = adminFlags
-		case "web":
-			svcf = webFlags
 		case "health":
 			svcf = healthFlags
 		case "auth":
@@ -980,20 +970,6 @@ func ParseEndpoint(
 
 			case "send-template":
 				epf = emailSendTemplateFlags
-
-			}
-
-		case "admin":
-			switch epn {
-			case "home":
-				epf = adminHomeFlags
-
-			}
-
-		case "web":
-			switch epn {
-			case "home":
-				epf = webHomeFlags
 
 			}
 
@@ -1447,18 +1423,6 @@ func ParseEndpoint(
 			case "send-template":
 				endpoint = c.SendTemplate()
 				data, err = emailc.BuildSendTemplatePayload(*emailSendTemplateBodyFlag, *emailSendTemplateJWTFlag)
-			}
-		case "admin":
-			c := adminc.NewClient(scheme, host, doer, enc, dec, restore)
-			switch epn {
-			case "home":
-				endpoint = c.Home()
-			}
-		case "web":
-			c := webc.NewClient(scheme, host, doer, enc, dec, restore)
-			switch epn {
-			case "home":
-				endpoint = c.Home()
 			}
 		case "health":
 			c := healthc.NewClient(scheme, host, doer, enc, dec, restore)
@@ -2181,52 +2145,6 @@ Example:
          "user@example.com"
       ]
    }' --jwt "Architecto praesentium."
-`, os.Args[0])
-}
-
-// adminUsage displays the usage of the admin command and its subcommands.
-func adminUsage() {
-	fmt.Fprintf(os.Stderr, `Service is the admin service interface.
-Usage:
-    %[1]s [globalflags] admin COMMAND [flags]
-
-COMMAND:
-    home: Render the home page
-
-Additional help:
-    %[1]s admin COMMAND --help
-`, os.Args[0])
-}
-func adminHomeUsage() {
-	fmt.Fprintf(os.Stderr, `%[1]s [flags] admin home
-
-Render the home page
-
-Example:
-    %[1]s admin home
-`, os.Args[0])
-}
-
-// webUsage displays the usage of the web command and its subcommands.
-func webUsage() {
-	fmt.Fprintf(os.Stderr, `Front-end web service with template rendering
-Usage:
-    %[1]s [globalflags] web COMMAND [flags]
-
-COMMAND:
-    home: Render the home page
-
-Additional help:
-    %[1]s web COMMAND --help
-`, os.Args[0])
-}
-func webHomeUsage() {
-	fmt.Fprintf(os.Stderr, `%[1]s [flags] web home
-
-Render the home page
-
-Example:
-    %[1]s web home
 `, os.Args[0])
 }
 

@@ -121,7 +121,7 @@ var BaseAuthUserType = Type("BaseAuthUser", func() {
 		Meta("struct:tag:json", "profile_image_url", "profileImageUrl")
 	})
 
-	Required("email", "email_verified")
+	Required("email", "email_verified", "id")
 })
 
 var Pagination = Type("Pagination", func() {

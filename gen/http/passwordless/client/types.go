@@ -1264,6 +1264,9 @@ func ValidateUserResponseBody(body *UserResponseBody) (err error) {
 	if body.EmailVerified == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("email_verified", "body"))
 	}
+	if body.ID == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("id", "body"))
+	}
 	if body.Email != nil {
 		err = goa.MergeErrors(err, goa.ValidateFormat("body.email", *body.Email, goa.FormatEmail))
 	}

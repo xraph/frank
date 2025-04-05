@@ -10,7 +10,7 @@ package client
 import (
 	auth "github.com/juicycleff/frank/gen/auth"
 	designtypes "github.com/juicycleff/frank/gen/designtypes"
-	"github.com/juicycleff/frank/internal/user"
+	"github.com/juicycleff/frank/user"
 	goa "goa.design/goa/v3/pkg"
 )
 
@@ -2070,7 +2070,7 @@ func NewMeUserOK(body *MeResponseBody) *designtypes.User {
 		ProfileImageURL: body.ProfileImageURL,
 		FirstName:       body.FirstName,
 		LastName:        body.LastName,
-		ID:              body.ID,
+		ID:              *body.ID,
 		PhoneNumber:     body.PhoneNumber,
 		Email:           *body.Email,
 	}
@@ -2385,6 +2385,9 @@ func ValidateMeResponseBody(body *MeResponseBody) (err error) {
 	}
 	if body.EmailVerified == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("email_verified", "body"))
+	}
+	if body.ID == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("id", "body"))
 	}
 	if body.Email != nil {
 		err = goa.MergeErrors(err, goa.ValidateFormat("body.email", *body.Email, goa.FormatEmail))
@@ -3202,6 +3205,9 @@ func ValidateUserResponseBody(body *UserResponseBody) (err error) {
 	}
 	if body.EmailVerified == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("email_verified", "body"))
+	}
+	if body.ID == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("id", "body"))
 	}
 	if body.Email != nil {
 		err = goa.MergeErrors(err, goa.ValidateFormat("body.email", *body.Email, goa.FormatEmail))

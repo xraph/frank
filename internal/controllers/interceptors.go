@@ -7,7 +7,7 @@ import (
 
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/gen/auth"
-	customMiddleware "github.com/juicycleff/frank/internal/middleware"
+	middleware2 "github.com/juicycleff/frank/internal/middleware"
 	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/juicycleff/frank/pkg/logging"
 	"github.com/juicycleff/frank/pkg/utils"
@@ -20,7 +20,7 @@ type CSRFInterceptor struct {
 }
 
 func (c *CSRFInterceptor) CSRFToken(ctx context.Context, info *auth.CSRFTokenInfo, next goa.Endpoint) (any, error) {
-	reqInfo, ok := customMiddleware.GetRequestInfo(ctx)
+	reqInfo, ok := middleware2.GetRequestInfo(ctx)
 	if !ok {
 		return nil, errors.New(errors.CodeInternalServer, "failed to get request info")
 	}
@@ -37,7 +37,7 @@ func (c *CSRFInterceptor) CSRFToken(ctx context.Context, info *auth.CSRFTokenInf
 	// Process the response
 	if result := info.Result(resp); result != nil {
 		// Generate a new CSRF token
-		token, err := customMiddleware.GenerateCSRFToken(crw, c.cfg, c.logger, 24*time.Hour)
+		token, err := middleware2.GenerateCSRFToken(crw, c.cfg, c.logger, 24*time.Hour)
 		if err == nil {
 			result.SetCsrfToken(token)
 			return resp, nil

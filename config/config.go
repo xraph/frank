@@ -578,6 +578,12 @@ func Load(configPaths ...string) (*Config, error) {
 		// Set configuration defaults
 		SetDefaults(v)
 
+		// Parse environment variables into the struct
+		if err := env.Parse(config); err != nil {
+			loadErr = fmt.Errorf("error passring config env: %w", err)
+			return
+		}
+
 		// Load environment variables
 		LoadEnvironment(v)
 
@@ -605,12 +611,6 @@ func Load(configPaths ...string) (*Config, error) {
 
 		if err := v.Unmarshal(config); err != nil {
 			loadErr = fmt.Errorf("error unmarshaling config: %w", err)
-			return
-		}
-
-		// Parse environment variables into the struct
-		if err := env.Parse(config); err != nil {
-			loadErr = fmt.Errorf("error passring config env: %w", err)
 			return
 		}
 

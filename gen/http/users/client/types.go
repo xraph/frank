@@ -1358,7 +1358,7 @@ func NewCreateUserCreated(body *CreateResponseBody) *designtypes.User {
 		ProfileImageURL: body.ProfileImageURL,
 		FirstName:       body.FirstName,
 		LastName:        body.LastName,
-		ID:              body.ID,
+		ID:              *body.ID,
 		PhoneNumber:     body.PhoneNumber,
 		Email:           *body.Email,
 	}
@@ -1464,7 +1464,7 @@ func NewGetUserOK(body *GetResponseBody) *designtypes.User {
 		ProfileImageURL: body.ProfileImageURL,
 		FirstName:       body.FirstName,
 		LastName:        body.LastName,
-		ID:              body.ID,
+		ID:              *body.ID,
 		PhoneNumber:     body.PhoneNumber,
 		Email:           *body.Email,
 	}
@@ -1568,7 +1568,7 @@ func NewUpdateUserOK(body *UpdateResponseBody) *designtypes.User {
 		ProfileImageURL: body.ProfileImageURL,
 		FirstName:       body.FirstName,
 		LastName:        body.LastName,
-		ID:              body.ID,
+		ID:              *body.ID,
 		PhoneNumber:     body.PhoneNumber,
 		Email:           *body.Email,
 	}
@@ -1748,7 +1748,7 @@ func NewUpdateMeUserOK(body *UpdateMeResponseBody) *designtypes.User {
 		ProfileImageURL: body.ProfileImageURL,
 		FirstName:       body.FirstName,
 		LastName:        body.LastName,
-		ID:              body.ID,
+		ID:              *body.ID,
 		PhoneNumber:     body.PhoneNumber,
 		Email:           *body.Email,
 	}
@@ -2228,6 +2228,9 @@ func ValidateCreateResponseBody(body *CreateResponseBody) (err error) {
 	if body.EmailVerified == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("email_verified", "body"))
 	}
+	if body.ID == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("id", "body"))
+	}
 	if body.Email != nil {
 		err = goa.MergeErrors(err, goa.ValidateFormat("body.email", *body.Email, goa.FormatEmail))
 	}
@@ -2244,6 +2247,9 @@ func ValidateGetResponseBody(body *GetResponseBody) (err error) {
 	}
 	if body.EmailVerified == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("email_verified", "body"))
+	}
+	if body.ID == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("id", "body"))
 	}
 	if body.Email != nil {
 		err = goa.MergeErrors(err, goa.ValidateFormat("body.email", *body.Email, goa.FormatEmail))
@@ -2262,6 +2268,9 @@ func ValidateUpdateResponseBody(body *UpdateResponseBody) (err error) {
 	if body.EmailVerified == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("email_verified", "body"))
 	}
+	if body.ID == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("id", "body"))
+	}
 	if body.Email != nil {
 		err = goa.MergeErrors(err, goa.ValidateFormat("body.email", *body.Email, goa.FormatEmail))
 	}
@@ -2279,6 +2288,9 @@ func ValidateUpdateMeResponseBody(body *UpdateMeResponseBody) (err error) {
 	}
 	if body.EmailVerified == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("email_verified", "body"))
+	}
+	if body.ID == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("id", "body"))
 	}
 	if body.Email != nil {
 		err = goa.MergeErrors(err, goa.ValidateFormat("body.email", *body.Email, goa.FormatEmail))
@@ -3065,6 +3077,9 @@ func ValidateUserResponseBody(body *UserResponseBody) (err error) {
 	}
 	if body.EmailVerified == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("email_verified", "body"))
+	}
+	if body.ID == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("id", "body"))
 	}
 	if body.Email != nil {
 		err = goa.MergeErrors(err, goa.ValidateFormat("body.email", *body.Email, goa.FormatEmail))

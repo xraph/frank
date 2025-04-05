@@ -12,7 +12,7 @@ import (
 	_ "github.com/juicycleff/frank/api/swagger"
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/internal/handlers"
-	customMiddleware "github.com/juicycleff/frank/internal/middleware"
+	middleware3 "github.com/juicycleff/frank/internal/middleware"
 	"github.com/juicycleff/frank/internal/services"
 	"github.com/juicycleff/frank/pkg/data"
 	"github.com/juicycleff/frank/pkg/logging"
@@ -42,25 +42,25 @@ func NewHumaRouter(clients *data.Clients, svcs *services.Services, cfg *config.C
 	r.Use(middleware.Timeout(30 * time.Second))
 
 	// Add custom middleware
-	r.Use(customMiddleware.Logging(logger))
+	r.Use(middleware3.Logging(logger))
 	r.Use(logging.Middleware)
-	r.Use(customMiddleware.RequestLogging)
+	r.Use(middleware3.RequestLogging)
 
 	// Add rate limiter if enabled
 	if cfg.Security.RateLimitEnabled {
-		r.Use(customMiddleware.RateLimiter(cfg.Security.RateLimitPerSecond, cfg.Security.RateLimitBurst))
+		r.Use(middleware3.RateLimiter(cfg.Security.RateLimitPerSecond, cfg.Security.RateLimitBurst))
 	}
 
 	// Add recovery middleware
-	r.Use(customMiddleware.Recovery(logger))
-	r.Use(customMiddleware.ErrorHandler(logger))
+	r.Use(middleware3.Recovery(logger))
+	r.Use(middleware3.ErrorHandler(logger))
 
 	// CORS middleware
-	r.Use(customMiddleware.CORS(cfg))
+	r.Use(middleware3.CORS(cfg))
 
 	// Rate limiting middleware if enabled
 	if cfg.Security.RateLimitEnabled {
-		r.Use(customMiddleware.RateLimiter(cfg.Security.RateLimitPerSecond, cfg.Security.RateLimitBurst))
+		r.Use(middleware3.RateLimiter(cfg.Security.RateLimitPerSecond, cfg.Security.RateLimitBurst))
 	}
 
 	// Security headers middleware
@@ -95,7 +95,7 @@ func (rt *HumaRouter) RegisterRoutes() {
 
 	// Apply Auth middleware - you might need to modify your Auth middleware to work with Chi
 	// Since Chi uses middleware differently, the Auth middleware should be adapted
-	authMw := customMiddleware.AuthHuma(rt.config, rt.logger, rt.svcs.Session, rt.svcs.APIKey)
+	authMw := middleware3.AuthHuma(rt.config, rt.logger, rt.svcs.Session, rt.svcs.APIKey)
 
 	// Organization middleware (for routes that need organization context)
 	// orgMiddleware := customMiddleware.NewOrganizationMiddleware(rt.config, rt.svcs.Organization, rt.logger)
@@ -107,7 +107,7 @@ func (rt *HumaRouter) RegisterRoutes() {
 
 	// Apply auth middleware
 	protectedGroup.UseMiddleware(authMw)
-	protectedGroup.UseMiddleware(customMiddleware.RequireAuthenticationHuma)
+	protectedGroup.UseMiddleware(middleware3.RequireAuthenticationHuma)
 
 	faktory.Auth.RegisterRoutesHuma(protectedGroup)
 

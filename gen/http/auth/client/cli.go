@@ -13,7 +13,7 @@ import (
 	"unicode/utf8"
 
 	auth "github.com/juicycleff/frank/gen/auth"
-	"github.com/juicycleff/frank/internal/user"
+	"github.com/juicycleff/frank/user"
 	goa "goa.design/goa/v3/pkg"
 )
 

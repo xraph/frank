@@ -347,8 +347,8 @@ import (
 	"context"
 	"testing"
 	
-	"github.com/juicycleff/frank/internal/auth"
-	"github.com/juicycleff/frank/internal/user"
+	"github.com/juicycleff/frank/auth"
+	"github.com/juicycleff/frank/user"
 )
 
 func TestAuthFlow(t *testing.T) {

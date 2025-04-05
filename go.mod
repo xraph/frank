@@ -33,7 +33,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.10.9
 	github.com/mattn/go-sqlite3 v1.14.16
-	github.com/mvrilo/go-redoc v0.1.5
+	github.com/oapi-codegen/runtime v1.1.1
 	github.com/oasdiff/yaml v0.0.0-20250309154309-f31be36b4037
 	github.com/ogen-go/ogen v1.10.1
 	github.com/oklog/ulid v1.3.1
@@ -61,6 +61,7 @@ require (
 	cloud.google.com/go/compute/metadata v0.5.2 // indirect
 	github.com/KyleBanks/depth v1.2.1 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
+	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.30 // indirect

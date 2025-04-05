@@ -13,11 +13,12 @@ import (
 	openmw "github.com/go-openapi/runtime/middleware"
 	"github.com/juicycleff/frank/config"
 	genht "github.com/juicycleff/frank/gen/http"
-	customMiddleware "github.com/juicycleff/frank/internal/middleware"
+	middleware3 "github.com/juicycleff/frank/internal/middleware"
 	"github.com/juicycleff/frank/internal/router"
 	"github.com/juicycleff/frank/internal/services"
 	"github.com/juicycleff/frank/pkg/data"
 	"github.com/juicycleff/frank/pkg/hooks"
+	hooks2 "github.com/juicycleff/frank/pkg/hooks"
 	"github.com/juicycleff/frank/pkg/logging"
 	goahttp "goa.design/goa/v3/http"
 	"goa.design/goa/v3/middleware"
@@ -32,7 +33,7 @@ type Controllers struct {
 	auther            *AutherService
 	hooks             *hooks.Hooks
 	pathPrefix        string
-	webRouteProtector *customMiddleware.FrontendRouteProtection
+	webRouteProtector *middleware3.FrontendRouteProtection
 }
 
 func NewControllers(
@@ -58,28 +59,28 @@ func NewControllers(
 	r.Use(chimw.Timeout(30 * time.Second))
 
 	// Add custom middleware
-	r.Use(customMiddleware.Logging(logger))
+	r.Use(middleware3.Logging(logger))
 	r.Use(logging.Middleware)
 
-	r.Use(customMiddleware.AddRequestInfo())
-	r.Use(customMiddleware.AddHeader())
+	r.Use(middleware3.AddRequestInfo())
+	r.Use(middleware3.AddHeader())
 	// r.Use(svcs.Session.Middleware())
 
 	// Add rate limiter if enabled
 	if cfg.Security.RateLimitEnabled {
-		r.Use(customMiddleware.RateLimiter(cfg.Security.RateLimitPerSecond, cfg.Security.RateLimitBurst))
+		r.Use(middleware3.RateLimiter(cfg.Security.RateLimitPerSecond, cfg.Security.RateLimitBurst))
 	}
 
 	// Add recovery middleware
-	r.Use(customMiddleware.Recovery(logger))
-	r.Use(customMiddleware.ErrorHandler(logger))
+	r.Use(middleware3.Recovery(logger))
+	r.Use(middleware3.ErrorHandler(logger))
 
 	// CORS middleware
-	r.Use(customMiddleware.CORS(cfg))
+	r.Use(middleware3.CORS(cfg))
 
 	// Rate limiting middleware if enabled
 	if cfg.Security.RateLimitEnabled {
-		r.Use(customMiddleware.RateLimiter(cfg.Security.RateLimitPerSecond, cfg.Security.RateLimitBurst))
+		r.Use(middleware3.RateLimiter(cfg.Security.RateLimitPerSecond, cfg.Security.RateLimitBurst))
 	}
 
 	// Security headers middleware
@@ -88,7 +89,7 @@ func NewControllers(
 	}
 
 	// Create route protection middleware
-	routeProtector := customMiddleware.NewFrontendRouteProtection(
+	routeProtector := middleware3.NewFrontendRouteProtection(
 		cfg,
 		logger,
 		svcs.Session,
@@ -98,7 +99,7 @@ func NewControllers(
 	)
 
 	if hooks == nil {
-		hooks = &hooks.Hooks{}
+		hooks = &hooks2.Hooks{}
 	}
 
 	c := &Controllers{
@@ -128,16 +129,16 @@ func (c *Controllers) RegisterRoutes() {
 	c.logger.Info("mounting routes in " + c.pathPrefix)
 
 	// Set up CSRF configuration
-	csrfConfig := customMiddleware.DefaultCSRFConfig()
+	csrfConfig := middleware3.DefaultCSRFConfig()
 	csrfConfig.RegenerateOnRequest = false // Set to true to regenerate token on every request
 	csrfConfig.CookieExpiry = 8 * time.Hour
 
 	// Initialize the services
 	mux := goahttp.NewMuxer()
 
-	mux.Use(customMiddleware.AddHeader())
-	mux.Use(customMiddleware.AddRequestInfo())
-	mux.Use(customMiddleware.CSRFProtectionWithConfig(c.config, c.logger, csrfConfig))
+	mux.Use(middleware3.AddHeader())
+	mux.Use(middleware3.AddRequestInfo())
+	mux.Use(middleware3.CSRFProtectionWithConfig(c.config, c.logger, csrfConfig))
 
 	// Register controllers
 	RegisterHealthHTTPService(mux, c.clients, c.svcs, c.config, c.logger, c.auther) // Register Health Service
@@ -147,6 +148,7 @@ func (c *Controllers) RegisterRoutes() {
 	RegisterOauthProviderHTTPService(mux, c.svcs, c.config, c.logger, c.auther)     // Register Oauth Provider Service
 	RegisterOauthClientHTTPService(mux, c.svcs, c.config, c.logger, c.auther)       // Register Oauth Client Service
 	RegisterSSOHTTPService(mux, c.svcs, c.config, c.logger, c.auther)               // Register SSO Service
+	RegisterAPIKeyHTTPService(mux, c.svcs, c.config, c.logger, c.auther)            // Register SSO Service
 
 	// doc := redoc.Redoc{
 	// 	Title:       "Example API",

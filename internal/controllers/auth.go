@@ -11,7 +11,7 @@ import (
 	"github.com/juicycleff/frank/gen/designtypes"
 	authhttp "github.com/juicycleff/frank/gen/http/auth/server"
 	"github.com/juicycleff/frank/internal/auth/session"
-	customMiddleware "github.com/juicycleff/frank/internal/middleware"
+	middleware2 "github.com/juicycleff/frank/internal/middleware"
 	"github.com/juicycleff/frank/internal/services"
 	"github.com/juicycleff/frank/pkg/automapper"
 	"github.com/juicycleff/frank/pkg/crypto"
@@ -39,7 +39,7 @@ type AuthService struct {
 }
 
 func (a *AuthService) SendEmailVerification(ctx context.Context, payload *auth.SendEmailVerificationPayload) (res *auth.SendEmailVerificationResult, err error) {
-	info, ok := customMiddleware.GetRequestInfo(ctx)
+	info, ok := middleware2.GetRequestInfo(ctx)
 	if !ok {
 		return nil, errors.New(errors.CodeInternalServer, "failed to get request info")
 	}
@@ -80,7 +80,7 @@ func (a *AuthService) CheckEmailVerification(ctx context.Context, payload *auth.
 }
 
 func (a *AuthService) Csrf(ctx context.Context, payload *auth.CsrfPayload) (res *auth.CSRFTokenResponse, err error) {
-	info, ok := customMiddleware.GetRequestInfo(ctx)
+	info, ok := middleware2.GetRequestInfo(ctx)
 	if !ok {
 		return nil, errors.New(errors.CodeInternalServer, "failed to get request info")
 	}
@@ -94,7 +94,7 @@ func (a *AuthService) Csrf(ctx context.Context, payload *auth.CsrfPayload) (res 
 }
 
 func (a *AuthService) Login(ctx context.Context, payload *auth.LoginPayload) (res *auth.LoginResponse, err error) {
-	info, ok := customMiddleware.GetRequestInfo(ctx)
+	info, ok := middleware2.GetRequestInfo(ctx)
 	if !ok {
 		return nil, errors.New(errors.CodeInternalServer, "failed to get request info")
 	}
@@ -201,13 +201,14 @@ func (a *AuthService) Login(ctx context.Context, payload *auth.LoginPayload) (re
 	a.cookieHandler.SetCSRFCookie(info.Res, csrfToken, a.config.Auth.SessionDuration)
 
 	authRes := &auth.LoginResponse{
-		User:         userOut,
-		Token:        token,
-		RefreshToken: refreshToken,
-		ExpiresAt:    expiresAt,
-		MfaRequired:  mfaRequired,
-		MfaTypes:     mfaTypes,
-		CsrfToken:    csrfToken,
+		User:          userOut,
+		Token:         token,
+		RefreshToken:  refreshToken,
+		ExpiresAt:     expiresAt,
+		MfaRequired:   mfaRequired,
+		MfaTypes:      mfaTypes,
+		CsrfToken:     csrfToken,
+		EmailVerified: &userOut.EmailVerified,
 	}
 
 	_ = a.hooks.OnLogin(authRes)
@@ -215,7 +216,7 @@ func (a *AuthService) Login(ctx context.Context, payload *auth.LoginPayload) (re
 }
 
 func (a *AuthService) Register(ctx context.Context, payload *auth.RegisterPayload) (res *auth.LoginResponse, err error) {
-	info, ok := customMiddleware.GetRequestInfo(ctx)
+	info, ok := middleware2.GetRequestInfo(ctx)
 	if !ok {
 		return nil, errors.New(errors.CodeInternalServer, "failed to get request info")
 	}
@@ -296,13 +297,13 @@ func (a *AuthService) Register(ctx context.Context, payload *auth.RegisterPayloa
 }
 
 func (a *AuthService) Logout(ctx context.Context, payload *auth.LogoutPayload) (res *auth.LogoutResult, err error) {
-	info, ok := customMiddleware.GetRequestInfo(ctx)
+	info, ok := middleware2.GetRequestInfo(ctx)
 	if !ok {
 		return nil, errors.New(errors.CodeInternalServer, "failed to get request info")
 	}
 
 	// Get user ID from request context
-	userID, ok := customMiddleware.GetUserID(ctx)
+	userID, ok := middleware2.GetUserID(ctx)
 	if !ok || userID == "" {
 		return nil, errors.New(errors.CodeUnauthorized, "not authenticated")
 	}
@@ -420,7 +421,7 @@ func (a *AuthService) RefreshToken(ctx context.Context, payload *auth.RefreshTok
 }
 
 func (a *AuthService) ForgotPassword(ctx context.Context, payload *auth.ForgotPasswordPayload) (res *auth.ForgotPasswordResult, err error) {
-	info, ok := customMiddleware.GetRequestInfo(ctx)
+	info, ok := middleware2.GetRequestInfo(ctx)
 	if !ok {
 		return nil, errors.New(errors.CodeInternalServer, "failed to get request info")
 	}
@@ -525,7 +526,7 @@ func (a *AuthService) VerifyEmail(ctx context.Context, payload *auth.VerifyEmail
 
 func (a *AuthService) Me(ctx context.Context, payload *auth.MePayload) (res *designtypes.User, err error) {
 	// Get user ID from request context
-	userID, ok := customMiddleware.GetUserID(ctx)
+	userID, ok := middleware2.GetUserID(ctx)
 	if !ok || userID == "" {
 		return nil, errors.New(errors.CodeUnauthorized, "not authenticated")
 	}

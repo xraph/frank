@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -10,63 +9,14 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/juicycleff/frank/config"
-	webhttp "github.com/juicycleff/frank/gen/http/web/server"
-	websvc "github.com/juicycleff/frank/gen/web"
 	"github.com/juicycleff/frank/internal/middleware"
 	"github.com/juicycleff/frank/internal/router"
 	"github.com/juicycleff/frank/internal/services"
 	"github.com/juicycleff/frank/pkg/astro_fs"
-	"github.com/juicycleff/frank/pkg/data"
 	"github.com/juicycleff/frank/pkg/logging"
 	"github.com/juicycleff/frank/pkg/utils"
 	"github.com/juicycleff/frank/web"
-	goahttp "goa.design/goa/v3/http"
 )
-
-type WebService struct {
-	clients *data.Clients
-	config  *config.Config
-	logger  logging.Logger
-	auther  *AutherService
-}
-
-func (w *WebService) Home(ctx context.Context) (err error) {
-	return nil
-}
-
-func NewWebService(
-	clients *data.Clients,
-	cfg *config.Config,
-	logger logging.Logger,
-	auther *AutherService,
-) websvc.Service {
-
-	return &WebService{
-		clients: clients,
-		logger:  logger,
-		auther:  auther,
-		config:  cfg,
-	}
-}
-
-func RegisterWebHTTPService(
-	mux goahttp.Muxer,
-	clients *data.Clients,
-	svcs *services.Services,
-	config *config.Config,
-	logger logging.Logger,
-	auther *AutherService,
-) {
-	eh := errorHandler(logger)
-	svc := NewWebService(clients, config, logger, auther)
-	endpoints := websvc.NewEndpoints(svc)
-	handler := webhttp.New(
-		endpoints, mux, decoder, encoder, eh, nil, nil,
-	)
-
-	// handler2 := otelhttp.NewHandler(handler, "auth-service")
-	webhttp.Mount(mux, handler)
-}
 
 // FileServer provides a static file server with proper handling for SPA routing
 func FileServer(rootPath string, router chi.Router) http.Handler {

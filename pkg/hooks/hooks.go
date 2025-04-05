@@ -61,7 +61,6 @@ func (h *Hooks) OnLogin(input *auth.LoginResponse) error {
 	if h.Auth == nil {
 		return nil
 	}
-
 	return h.Auth.OnLogin(input)
 }
 

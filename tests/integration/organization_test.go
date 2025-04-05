@@ -11,7 +11,7 @@ import (
 
 	"github.com/juicycleff/frank/internal/handlers"
 	"github.com/juicycleff/frank/internal/middleware"
-	"github.com/juicycleff/frank/internal/organization"
+	"github.com/juicycleff/frank/organization"
 	organization2 "github.com/juicycleff/frank/organization"
 	"github.com/juicycleff/frank/pkg/logging"
 	"github.com/stretchr/testify/assert"

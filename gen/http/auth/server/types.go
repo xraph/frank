@@ -223,7 +223,7 @@ type MeResponseBody struct {
 	// User last name
 	LastName *string `json:"last_name,lastName"`
 	// ID of the entity
-	ID *string `json:"id"`
+	ID string `json:"id"`
 	// User phone number
 	PhoneNumber *string `json:"phone_number,phoneNumber"`
 	// User metadata
@@ -1126,7 +1126,7 @@ type UserResponseBody struct {
 	// User last name
 	LastName *string `json:"last_name,lastName"`
 	// ID of the entity
-	ID *string `json:"id"`
+	ID string `json:"id"`
 	// User phone number
 	PhoneNumber *string `json:"phone_number,phoneNumber"`
 	// User metadata
