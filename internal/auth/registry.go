@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/juicycleff/frank/config"
+	"github.com/juicycleff/frank/email"
 	"github.com/juicycleff/frank/ent"
 	"github.com/juicycleff/frank/internal/apikeys"
 	"github.com/juicycleff/frank/internal/auth/mfa"
@@ -13,7 +14,6 @@ import (
 	"github.com/juicycleff/frank/internal/auth/passwordless"
 	"github.com/juicycleff/frank/internal/auth/session"
 	"github.com/juicycleff/frank/internal/auth/sso"
-	"github.com/juicycleff/frank/internal/email"
 	"github.com/juicycleff/frank/internal/sms"
 	"github.com/juicycleff/frank/internal/webhook"
 	"github.com/juicycleff/frank/pkg/logging"
@@ -119,7 +119,7 @@ func NewRegistry(
 
 	// Initialize passwordless service
 	if cfg.Features.EnablePasswordless {
-		emailService := email.NewService(cfg, logger)
+		emailService := email.NewService(&cfg.Email, logger)
 		smsService := sms.NewService(cfg, logger)
 		registry.PasswordlessService, err = passwordless.NewService(
 			cfg,

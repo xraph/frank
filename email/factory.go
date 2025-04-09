@@ -8,10 +8,10 @@ import (
 )
 
 // SenderFactory creates an email sender based on configuration
-func SenderFactory(cfg *config.Config, logger logging.Logger) Sender {
-	provider := strings.ToLower(cfg.Email.Provider)
+func SenderFactory(cfg *config.EmailConfig, logger logging.Logger) Sender {
+	provider := strings.ToLower(cfg.Provider)
 
-	if cfg.Environment == "development" {
+	if config.IsDevelopment() {
 		logger.Warn("dev email provider, using mock sender", logging.String("provider", provider))
 		return NewMockEmailSender("./tmp/emails")
 	}

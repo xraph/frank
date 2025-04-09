@@ -3,7 +3,7 @@ package routes
 import (
 	"github.com/go-chi/chi/v5"
 	"github.com/juicycleff/frank/config"
-	"github.com/juicycleff/frank/internal/email"
+	"github.com/juicycleff/frank/email"
 	"github.com/juicycleff/frank/internal/handlers"
 	"github.com/juicycleff/frank/pkg/logging"
 )

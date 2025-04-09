@@ -20,7 +20,7 @@ import (
 
 // TemplateManager manages email templates
 type TemplateManager struct {
-	config        *config.Config
+	config        *config.EmailConfig
 	logger        logging.Logger
 	htmlTemplates map[string]*template.Template
 	textTemplates map[string]*texttemplate.Template
@@ -84,7 +84,11 @@ type TemplateRepositoryListInput struct {
 }
 
 // NewTemplateManager creates a new template manager
-func NewTemplateManager(repo TemplateRepository, cfg *config.Config, logger logging.Logger) *TemplateManager {
+func NewTemplateManager(
+	repo TemplateRepository,
+	cfg *config.EmailConfig,
+	logger logging.Logger,
+) *TemplateManager {
 	manager := &TemplateManager{
 		config:        cfg,
 		logger:        logger,
@@ -112,9 +116,9 @@ type templatePersist struct {
 // LoadTemplates loads templates from the templates directory
 func (m *TemplateManager) LoadTemplates() error {
 	// Get template paths
-	templatePath := m.config.Templates.EmailPath
+	templatePath := m.config.TemplatesDir
 	if templatePath == "" {
-		templatePath = "./web/templates/email"
+		templatePath = "./templates/email"
 	}
 
 	// Check if directory exists
@@ -252,7 +256,11 @@ func (m *TemplateManager) LoadTemplates() error {
 		logging.Int("text_count", len(m.textTemplates)),
 	)
 
-	return m.persistTemplates(templatesToPersist)
+	if m.config.EnableRemoteStore {
+		return m.persistTemplates(templatesToPersist)
+	}
+
+	return nil
 }
 
 // RenderHTML renders an HTML template with data

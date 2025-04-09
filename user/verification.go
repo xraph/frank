@@ -10,9 +10,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/juicycleff/frank/email"
 	"github.com/juicycleff/frank/ent"
 	"github.com/juicycleff/frank/ent/verification"
-	"github.com/juicycleff/frank/internal/email"
 	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/juicycleff/frank/pkg/logging"
 )

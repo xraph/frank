@@ -5,6 +5,7 @@ import (
 
 	"github.com/gorilla/sessions"
 	"github.com/juicycleff/frank/config"
+	email2 "github.com/juicycleff/frank/email"
 	"github.com/juicycleff/frank/internal/apikeys"
 	"github.com/juicycleff/frank/internal/auth/mfa"
 	"github.com/juicycleff/frank/internal/auth/oauth2"
@@ -12,7 +13,6 @@ import (
 	"github.com/juicycleff/frank/internal/auth/passwordless"
 	"github.com/juicycleff/frank/internal/auth/session"
 	"github.com/juicycleff/frank/internal/auth/sso"
-	"github.com/juicycleff/frank/internal/email"
 	"github.com/juicycleff/frank/internal/rbac"
 	"github.com/juicycleff/frank/internal/repo"
 	"github.com/juicycleff/frank/internal/sms"
@@ -30,7 +30,7 @@ type Services struct {
 	Organization        organization.Service
 	User                user2.Service
 	Webhook             webhook.Service
-	Email               email.Service
+	Email               email2.Service
 	SMS                 sms.Service
 	Session             *session.Manager
 	SessionStore        sessions.Store
@@ -53,9 +53,9 @@ type OAuthServices struct {
 
 func New(repos *repo.Repo, cfg *config.Config, client *data.Clients, logger logging.Logger) (*Services, error) {
 	// Initialize services
-	sender := email.SenderFactory(cfg, logger)
-	emailTemplateManager := email.NewTemplateManager(repos.Template, cfg, logger)
-	emailService := email.NewService(cfg, sender, emailTemplateManager, repos.Template, logger)
+	sender := email2.SenderFactory(&cfg.Email, logger)
+	emailTemplateManager := email2.NewTemplateManager(repos.Template, &cfg.Email, logger)
+	emailService := email2.NewService(&cfg.Email, sender, emailTemplateManager, repos.Template, logger)
 
 	emailProvider := sms.SenderFactory(cfg, logger)
 	smsService := sms.NewService(cfg, emailProvider, logger)

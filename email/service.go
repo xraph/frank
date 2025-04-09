@@ -133,7 +133,7 @@ func NewAttachment(filename string, contentType string, base64Content string) At
 }
 
 type service struct {
-	config    *config.Config
+	config    *config.EmailConfig
 	sender    Sender
 	templates *TemplateManager
 	logger    logging.Logger
@@ -142,7 +142,7 @@ type service struct {
 
 // NewService creates a new email service
 func NewService(
-	cfg *config.Config,
+	cfg *config.EmailConfig,
 	sender Sender,
 	templates *TemplateManager,
 	repo TemplateRepository,
@@ -174,12 +174,12 @@ func (s *service) Send(ctx context.Context, input SendEmailInput) error {
 
 	// Use default from address if not provided
 	if input.From == "" {
-		input.From = s.config.Email.FromEmail
+		input.From = s.config.FromEmail
 	}
 
 	// Use custom headers from config if provided
 	headers := make(map[string]string)
-	for k, v := range s.config.Email.CustomHeaders {
+	for k, v := range s.config.CustomHeaders {
 		headers[k] = v
 	}
 
@@ -261,7 +261,7 @@ func (s *service) SendTemplate(ctx context.Context, input SendTemplateInput) err
 	// Use default from address if not provided
 	fromEmail := input.From
 	if fromEmail == "" {
-		fromEmail = s.config.Email.FromEmail
+		fromEmail = s.config.FromEmail
 	}
 
 	// Render HTML content
@@ -299,7 +299,7 @@ func (s *service) SendTemplate(ctx context.Context, input SendTemplateInput) err
 
 	// Use custom headers from config if provided
 	headers := make(map[string]string)
-	for k, v := range s.config.Email.CustomHeaders {
+	for k, v := range s.config.CustomHeaders {
 		headers[k] = v
 	}
 
@@ -350,14 +350,14 @@ func (s *service) SendMagicLinkEmail(ctx context.Context, email, firstName, magi
 		"ExpiresAt":       expiresAt.Format(time.RFC1123),
 		"IPAddress":       ipAddress,
 		"UserAgent":       userAgent,
-		"ApplicationName": s.config.Server.Name,
-		"SupportEmail":    s.config.Email.FromEmail,
+		"ApplicationName": s.config.FromName,
+		"SupportEmail":    s.config.FromEmail,
 	}
 
-	sbj := "Your Magic Link for " + s.config.Server.Name
+	sbj := "Your Magic Link for " + s.config.FromName
 	err := s.SendTemplate(ctx, SendTemplateInput{
 		To:           []string{email},
-		From:         s.config.Email.FromEmail,
+		From:         s.config.FromEmail,
 		Subject:      &sbj,
 		TemplateType: "magic_link",
 		TemplateData: data,

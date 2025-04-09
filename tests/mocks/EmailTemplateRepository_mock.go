@@ -5,12 +5,12 @@
 package mocks
 
 import (
-	context "context"
-	reflect "reflect"
+	"context"
+	"reflect"
 
-	gomock "github.com/golang/mock/gomock"
-	ent "github.com/juicycleff/frank/ent"
-	email "github.com/juicycleff/frank/internal/email"
+	"github.com/golang/mock/gomock"
+	"github.com/juicycleff/frank/email"
+	"github.com/juicycleff/frank/ent"
 )
 
 // MockEmailTemplateRepository is a mock of TemplateRepository interface.

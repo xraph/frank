@@ -15,13 +15,13 @@ import (
 
 // ResendSender sends emails using Resend
 type ResendSender struct {
-	config *config.Config
+	config *config.EmailConfig
 	logger logging.Logger
 	client *http.Client
 }
 
 // NewResendSender creates a new Resend sender
-func NewResendSender(cfg *config.Config, logger logging.Logger) *ResendSender {
+func NewResendSender(cfg *config.EmailConfig, logger logging.Logger) *ResendSender {
 	return &ResendSender{
 		config: cfg,
 		logger: logger,
@@ -34,14 +34,14 @@ func NewResendSender(cfg *config.Config, logger logging.Logger) *ResendSender {
 // Send sends an email using Resend
 func (s *ResendSender) Send(ctx context.Context, email Email) error {
 	// Check if Resend is configured
-	if s.config.Email.Resend.APIKey == "" {
+	if s.config.Resend.APIKey == "" {
 		return errors.New(errors.CodeConfigurationError, "Resend API key not configured")
 	}
 
 	// Set from email if not provided
 	from := email.From
 	if from == "" {
-		from = s.config.Email.FromEmail
+		from = s.config.FromEmail
 	}
 
 	// Construct payload
@@ -105,7 +105,7 @@ func (s *ResendSender) Send(ctx context.Context, email Email) error {
 
 	// Add headers
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+s.config.Email.Resend.APIKey)
+	req.Header.Set("Authorization", "Bearer "+s.config.Resend.APIKey)
 
 	// Execute request
 	resp, err := s.client.Do(req)

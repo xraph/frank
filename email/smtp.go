@@ -14,12 +14,12 @@ import (
 
 // SMTPSender sends emails using SMTP
 type SMTPSender struct {
-	config *config.Config
+	config *config.EmailConfig
 	logger logging.Logger
 }
 
 // NewSMTPSender creates a new SMTP sender
-func NewSMTPSender(cfg *config.Config, logger logging.Logger) *SMTPSender {
+func NewSMTPSender(cfg *config.EmailConfig, logger logging.Logger) *SMTPSender {
 	return &SMTPSender{
 		config: cfg,
 		logger: logger,
@@ -28,7 +28,7 @@ func NewSMTPSender(cfg *config.Config, logger logging.Logger) *SMTPSender {
 
 // Send sends an email using SMTP
 func (s *SMTPSender) Send(ctx context.Context, email Email) error {
-	smtpConfig := s.config.Email.SMTP
+	smtpConfig := s.config.SMTP
 
 	// SMTP connection string
 	addr := fmt.Sprintf("%s:%d", smtpConfig.Host, smtpConfig.Port)
@@ -42,7 +42,7 @@ func (s *SMTPSender) Send(ctx context.Context, email Email) error {
 	// Set from name if provided
 	from := email.From
 	if strings.TrimSpace(from) == "" {
-		from = s.config.Email.FromEmail
+		from = s.config.FromEmail
 	}
 
 	// Build recipients list

@@ -4,11 +4,11 @@ import (
 	"time"
 
 	"github.com/juicycleff/frank/config"
+	email2 "github.com/juicycleff/frank/email"
 	"github.com/juicycleff/frank/ent"
 	"github.com/juicycleff/frank/internal/apikeys"
 	"github.com/juicycleff/frank/internal/auth/passkeys"
 	"github.com/juicycleff/frank/internal/auth/session"
-	"github.com/juicycleff/frank/internal/email"
 	"github.com/juicycleff/frank/internal/rbac"
 	"github.com/juicycleff/frank/internal/webhook"
 	"github.com/juicycleff/frank/organization"
@@ -22,7 +22,7 @@ type Repo struct {
 	Organization organization.Repository
 	User         user.Repository
 	Webhook      webhook.Repository
-	Template     email.TemplateRepository
+	Template     email2.TemplateRepository
 	Passkeys     passkeys.Repository
 	WebhookEvent webhook.EventRepository
 	RBAC         rbac.Repository
@@ -36,7 +36,7 @@ func New(cfg *config.Config, client *ent.Client, logger logging.Logger) *Repo {
 	webhookRepo := webhook.NewRepository(client)
 	webhookEventRepo := webhook.NewEventRepository(client)
 	sessStore := session.NewInMemoryStore(logger, time.Hour*24)
-	templateRepo := email.NewTemplateRepository(client)
+	templateRepo := email2.NewTemplateRepository(client)
 	rbacRepo := rbac.NewRepository(client)
 	// templateRepo := passkeys.New(client)
 

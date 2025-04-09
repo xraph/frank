@@ -18,32 +18,32 @@ import (
 
 // AmazonSESSender sends emails using SNS SES
 type AmazonSESSender struct {
-	config *frankconfig.Config
+	config *frankconfig.EmailConfig
 	logger logging.Logger
 	client *ses.Client
 }
 
 // NewAmazonSESSender creates a new SNS SES sender
-func NewAmazonSESSender(cfg *frankconfig.Config, logger logging.Logger) *AmazonSESSender {
+func NewAmazonSESSender(cfg *frankconfig.EmailConfig, logger logging.Logger) *AmazonSESSender {
 	// Create SNS config
 	var awsCfg aws.Config
 	var err error
 
 	ctx := context.Background()
-	if cfg.Email.SES.AccessKey != "" && cfg.Email.SES.SecretKey != "" {
+	if cfg.SES.AccessKey != "" && cfg.SES.SecretKey != "" {
 		// Use static credentials if provided
 		awsCfg, err = config.LoadDefaultConfig(ctx,
-			config.WithRegion(cfg.Email.SES.Region),
+			config.WithRegion(cfg.SES.Region),
 			config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(
-				cfg.Email.SES.AccessKey,
-				cfg.Email.SES.SecretKey,
+				cfg.SES.AccessKey,
+				cfg.SES.SecretKey,
 				"",
 			)),
 		)
 	} else {
 		// Use default credentials provider chain
 		awsCfg, err = config.LoadDefaultConfig(ctx,
-			config.WithRegion(cfg.Email.SES.Region),
+			config.WithRegion(cfg.SES.Region),
 		)
 	}
 
@@ -76,7 +76,7 @@ func (s *AmazonSESSender) Send(ctx context.Context, email Email) error {
 	// Set from email if not provided
 	from := email.From
 	if from == "" {
-		from = s.config.Email.FromEmail
+		from = s.config.FromEmail
 	}
 
 	// Create message
@@ -132,8 +132,8 @@ func (s *AmazonSESSender) Send(ctx context.Context, email Email) error {
 	}
 
 	// Add configuration set if configured
-	if s.config.Email.SES.ConfigurationSet != "" {
-		input.ConfigurationSetName = aws.String(s.config.Email.SES.ConfigurationSet)
+	if s.config.SES.ConfigurationSet != "" {
+		input.ConfigurationSetName = aws.String(s.config.SES.ConfigurationSet)
 	}
 
 	// Send email
@@ -160,7 +160,7 @@ func (s *AmazonSESSender) sendWithAttachments(ctx context.Context, email Email) 
 	// Set from email if not provided
 	from := email.From
 	if from == "" {
-		from = s.config.Email.FromEmail
+		from = s.config.FromEmail
 	}
 
 	// Create a unique boundary for the multipart message

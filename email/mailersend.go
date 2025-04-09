@@ -15,13 +15,13 @@ import (
 
 // MailerSendSender sends emails using MailerSend
 type MailerSendSender struct {
-	config *config.Config
+	config *config.EmailConfig
 	logger logging.Logger
 	client *http.Client
 }
 
 // NewMailerSendSender creates a new MailerSend sender
-func NewMailerSendSender(cfg *config.Config, logger logging.Logger) *MailerSendSender {
+func NewMailerSendSender(cfg *config.EmailConfig, logger logging.Logger) *MailerSendSender {
 	return &MailerSendSender{
 		config: cfg,
 		logger: logger,
@@ -34,14 +34,14 @@ func NewMailerSendSender(cfg *config.Config, logger logging.Logger) *MailerSendS
 // Send sends an email using MailerSend
 func (s *MailerSendSender) Send(ctx context.Context, email Email) error {
 	// Check if MailerSend is configured
-	if s.config.Email.MailerSend.APIKey == "" {
+	if s.config.MailerSend.APIKey == "" {
 		return errors.New(errors.CodeConfigurationError, "MailerSend API key not configured")
 	}
 
 	// Set from email if not provided
 	from := email.From
 	if from == "" {
-		from = s.config.Email.FromEmail
+		from = s.config.FromEmail
 	}
 
 	// Construct recipients
@@ -143,7 +143,7 @@ func (s *MailerSendSender) Send(ctx context.Context, email Email) error {
 
 	// Add headers
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+s.config.Email.MailerSend.APIKey)
+	req.Header.Set("Authorization", "Bearer "+s.config.MailerSend.APIKey)
 	req.Header.Set("X-Requested-With", "XMLHttpRequest")
 
 	// Execute request

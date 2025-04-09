@@ -15,13 +15,13 @@ import (
 
 // PostmarkSender sends emails using Postmark
 type PostmarkSender struct {
-	config *config.Config
+	config *config.EmailConfig
 	logger logging.Logger
 	client *http.Client
 }
 
 // NewPostmarkSender creates a new Postmark sender
-func NewPostmarkSender(cfg *config.Config, logger logging.Logger) *PostmarkSender {
+func NewPostmarkSender(cfg *config.EmailConfig, logger logging.Logger) *PostmarkSender {
 	return &PostmarkSender{
 		config: cfg,
 		logger: logger,
@@ -34,14 +34,14 @@ func NewPostmarkSender(cfg *config.Config, logger logging.Logger) *PostmarkSende
 // Send sends an email using Postmark
 func (s *PostmarkSender) Send(ctx context.Context, email Email) error {
 	// Check if Postmark is configured
-	if s.config.Email.Postmark.ServerToken == "" {
+	if s.config.Postmark.ServerToken == "" {
 		return errors.New(errors.CodeConfigurationError, "Postmark server token not configured")
 	}
 
 	// Set from email if not provided
 	from := email.From
 	if from == "" {
-		from = s.config.Email.FromEmail
+		from = s.config.FromEmail
 	}
 
 	// Construct payload
@@ -115,7 +115,7 @@ func (s *PostmarkSender) Send(ctx context.Context, email Email) error {
 	// Add headers
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("X-Postmark-Server-Token", s.config.Email.Postmark.ServerToken)
+	req.Header.Set("X-Postmark-Server-Token", s.config.Postmark.ServerToken)
 
 	// Execute request
 	resp, err := s.client.Do(req)

@@ -17,6 +17,10 @@ type Logger interface {
 	Warn(msg string, fields ...Field)
 	Error(msg string, fields ...Field)
 	Errorf(msg string, fields ...any)
+	Infof(msg string, fields ...any)
+	Warnf(msg string, fields ...any)
+	Debugf(msg string, fields ...any)
+	Fatalf(msg string, fields ...any)
 	Fatal(msg string, fields ...Field)
 	With(fields ...Field) Logger
 	WithContext(ctx context.Context) Logger
@@ -234,14 +238,29 @@ func (l *logger) Debug(msg string, fields ...Field) {
 	l.zap.Debug(msg, fields...)
 }
 
+// Debugf logs a debug message
+func (l *logger) Debugf(msg string, fields ...any) {
+	l.zap.Debug(fmt.Sprintf(msg, fields...))
+}
+
 // Info logs an info message
 func (l *logger) Info(msg string, fields ...Field) {
 	l.zap.Info(msg, fields...)
 }
 
+// Infof logs an info message
+func (l *logger) Infof(msg string, fields ...any) {
+	l.zap.Info(fmt.Sprintf(msg, fields...))
+}
+
 // Warn logs a warning message
 func (l *logger) Warn(msg string, fields ...Field) {
 	l.zap.Warn(msg, fields...)
+}
+
+// Warnf logs a warning message
+func (l *logger) Warnf(msg string, fields ...any) {
+	l.zap.Warn(fmt.Sprintf(msg, fields...))
 }
 
 // Error logs an error message
@@ -257,6 +276,11 @@ func (l *logger) Errorf(msg string, fields ...any) {
 // Fatal logs a fatal message then calls os.Exit(1)
 func (l *logger) Fatal(msg string, fields ...Field) {
 	l.zap.Fatal(msg, fields...)
+	os.Exit(1)
+}
+
+func (l *logger) Fatalf(msg string, fields ...any) {
+	l.zap.Fatal(fmt.Sprintf(msg, fields...))
 	os.Exit(1)
 }
 

@@ -235,8 +235,9 @@ type EmailConfig struct {
 	Postmark PostmarkConfig `json:"postmark" yaml:"postmark" mapstructure:"postmark"`
 
 	// Template settings
-	TemplatesDir    string `json:"templates_dir" yaml:"templates_dir" mapstructure:"templates_dir" env:"EMAIL_TEMPLATES_DIR" envDefault:"./templates/email"`
-	DefaultLanguage string `json:"default_language" yaml:"default_language" mapstructure:"default_language" env:"EMAIL_DEFAULT_LANGUAGE" envDefault:"en"`
+	TemplatesDir      string `json:"templates_dir" yaml:"templates_dir" mapstructure:"templates_dir" env:"EMAIL_TEMPLATES_DIR" envDefault:"./templates/email"`
+	DefaultLanguage   string `json:"default_language" yaml:"default_language" mapstructure:"default_language" env:"EMAIL_DEFAULT_LANGUAGE" envDefault:"en"`
+	EnableRemoteStore bool   `json:"enable_remote_store" yaml:"enable_remote_store" mapstructure:"enable_remote_store" env:"EMAIL_ENABLE_REMOTE_STORE" envDefault:"true"`
 }
 
 // SMTPConfig represents SMTP configuration

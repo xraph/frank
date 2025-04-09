@@ -15,13 +15,13 @@ import (
 
 // SendgridSender sends emails using Twilio SendGrid
 type SendgridSender struct {
-	config *config.Config
+	config *config.EmailConfig
 	logger logging.Logger
 	client *http.Client
 }
 
 // NewSendgridSender creates a new SendGrid sender
-func NewSendgridSender(cfg *config.Config, logger logging.Logger) *SendgridSender {
+func NewSendgridSender(cfg *config.EmailConfig, logger logging.Logger) *SendgridSender {
 	return &SendgridSender{
 		config: cfg,
 		logger: logger,
@@ -34,14 +34,14 @@ func NewSendgridSender(cfg *config.Config, logger logging.Logger) *SendgridSende
 // Send sends an email using SendGrid
 func (s *SendgridSender) Send(ctx context.Context, email Email) error {
 	// Check if SendGrid is configured
-	if s.config.Email.Sendgrid.APIKey == "" {
+	if s.config.Sendgrid.APIKey == "" {
 		return errors.New(errors.CodeConfigurationError, "SendGrid API key not configured")
 	}
 
 	// Set from email if not provided
 	from := email.From
 	if from == "" {
-		from = s.config.Email.FromEmail
+		from = s.config.FromEmail
 	}
 
 	// Parse from name and email
@@ -162,7 +162,7 @@ func (s *SendgridSender) Send(ctx context.Context, email Email) error {
 
 	// Add headers
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+s.config.Email.Sendgrid.APIKey)
+	req.Header.Set("Authorization", "Bearer "+s.config.Sendgrid.APIKey)
 
 	// Execute request
 	resp, err := s.client.Do(req)

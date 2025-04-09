@@ -174,8 +174,8 @@ func devTheme(logLevel zapcore.Level) *zap.Logger {
 	return zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1))
 }
 
-// // GetLogger returns the global logger
-// func GetLogger() Logger {
+// // Logger returns the global logger
+// func Logger() Logger {
 // 	if globalLogger == nil {
 // 		// Provide a default colored logger if not initialized
 // 		// Create the encoder config
