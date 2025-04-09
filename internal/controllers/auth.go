@@ -240,7 +240,7 @@ func (a *AuthService) Register(ctx context.Context, payload *auth.RegisterPayloa
 		createInput.LastName = *payload.LastName
 	}
 
-	_ = a.hooks.BeforeSignup(createInput)
+	_ = a.hooks.BeforeSignup(&createInput)
 
 	newUser, err := a.userService.Create(ctx, createInput)
 	if err != nil {

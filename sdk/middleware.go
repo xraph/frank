@@ -2,7 +2,6 @@ package sdk
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -40,68 +39,62 @@ func (f *Frank) AuthMiddleware() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
-
 			cookie, err := r.Cookie(cookiename)
-			params := &AuthMeParams{}
-			if cookie != nil {
-				params.FrankSid = &cookie.Value
-			}
 
-			response, err := f.client.AuthMeWithResponse(ctx, params, f.getModifier(r.Header.Get("Authorization")))
+			cookieString := r.Header.Get("Cookie")
+			u, err := f.getLoggedInUser(ctx, r.Header.Get("Authorization"), cookieString, cookie)
 			if err != nil {
 				utils.RespondError(w, err)
 				return
 			}
 
-			if response.JSON200 == nil {
-				utils.RespondError(w, errors.New(errors.CodeUnauthorized, "user not found"))
-				return
-			}
-
-			r = r.WithContext(newCurrenUser(ctx, response.JSON200))
+			r = r.WithContext(newCurrenUser(ctx, u))
 			next.ServeHTTP(w, r)
 		})
 	}
 }
 
-func (f *Frank) getModifier(token string) func(ctx context.Context, req *http.Request) error {
+func (f *Frank) getModifier(token string, cookies string) func(ctx context.Context, req *http.Request) error {
 	return func(ctx context.Context, req *http.Request) error {
 		req.Header.Set("X-API-Key", f.apikey)
 		req.Header.Set("Authorization", token)
+		req.Header.Set("Cookie", cookies)
 		return nil
 	}
+}
+
+func (f *Frank) getLoggedInUser(ctx context.Context, token string, cookies string, cookie *http.Cookie) (*User, error) {
+	params := &AuthMeParams{}
+	if cookie != nil {
+		params.FrankSid = &cookie.Value
+	}
+
+	response, err := f.client.AuthMeWithResponse(ctx, params, f.getModifier(token, cookies))
+	if err != nil {
+		return nil, errors.New(errors.CodeUnauthorized, "unauthorized")
+	}
+	if response.JSON200 == nil {
+		return nil, errors.New(response.JSON401.Code, response.JSON401.Message)
+	}
+
+	return response.JSON200, nil
 }
 
 func (f *Frank) AuthMiddlewareHuma(api huma.API) func(ctx huma.Context, next func(huma.Context)) {
 	return func(ctx huma.Context, next func(huma.Context)) {
 		octx := ctx.Context()
-
 		cookie, _ := huma.ReadCookie(ctx, cookiename)
-		params := &AuthMeParams{}
-		fmt.Println("cookie.Value")
-		if cookie != nil {
-			fmt.Println(cookie.Value)
-			params.FrankSid = &cookie.Value
-		}
+		cookieString := ctx.Header("Cookie")
 
-		response, err := f.client.AuthMeWithResponse(octx, params, f.getModifier(ctx.Header("Authorization")))
+		u, err := f.getLoggedInUser(octx, ctx.Header("Authorization"), cookieString, cookie)
 		if err != nil {
-			// err = errors.New(errors.CodeUnauthorized, "unauthorized")
 			huma.WriteErr(api, ctx, http.StatusUnauthorized,
 				"unauthorized", err,
 			)
 			return
 		}
 
-		if response.JSON200 == nil {
-			err = errors.New(response.JSON401.Code, response.JSON401.Message)
-			huma.WriteErr(api, ctx, http.StatusUnauthorized,
-				response.JSON401.Message, err,
-			)
-			return
-		}
-
-		ctx = huma.WithValue(ctx, userCtxKey{}, response.JSON200)
+		ctx = huma.WithValue(ctx, userCtxKey{}, u)
 
 		next(ctx)
 	}
@@ -111,7 +104,7 @@ type userCtxKey struct{}
 
 func CurrenUserFromContext(ctx context.Context) (*User, error) {
 	u, ok := ctx.Value(userCtxKey{}).(*User)
-	if !ok {
+	if !ok || u == nil {
 		return nil, errors.New(errors.CodeUnauthorized, "user id not found")
 	}
 

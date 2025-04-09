@@ -13,7 +13,7 @@ type AuthHooks interface {
 	BeforeLogout(rsp *ent.User) error
 	OnLogout(rsp *ent.User) error
 
-	BeforeSignup(rsp user.CreateUserInput) error
+	BeforeSignup(rsp *user.CreateUserInput) error
 	OnSignup(rsp *auth.LoginResponse) error
 
 	OnAccountVerified(input auth.VerifyEmailPayload, verified bool) error
@@ -64,7 +64,7 @@ func (h *Hooks) OnLogin(input *auth.LoginResponse) error {
 	return h.Auth.OnLogin(input)
 }
 
-func (h *Hooks) BeforeSignup(input user.CreateUserInput) error {
+func (h *Hooks) BeforeSignup(input *user.CreateUserInput) error {
 	if h.Auth == nil {
 		return nil
 	}
