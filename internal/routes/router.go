@@ -7,7 +7,6 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	_ "github.com/juicycleff/frank/api/swagger"
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/internal/handlers"
 	middleware3 "github.com/juicycleff/frank/internal/middleware"
@@ -77,15 +76,17 @@ func NewRouter(clients *data.Clients, svcs *services.Services, cfg *config.Confi
 		// r.Use(customMiddleware.SecurityHeaders(cfg.Security))
 	}
 
-	faktory := NewFactory(svcs, clients, cfg, logger)
+	// faktory := NewFactory(svcs, clients, cfg, logger)
 
-	return &Router{
-		router:  r,
-		config:  cfg,
-		logger:  logger,
-		svcs:    svcs,
-		faktory: faktory,
-	}
+	// return &Router{
+	// 	router:  r,
+	// 	config:  cfg,
+	// 	logger:  logger,
+	// 	svcs:    svcs,
+	// 	faktory: faktory,
+	// }
+
+	return nil
 }
 
 // RegisterRoutes registers all API routes
