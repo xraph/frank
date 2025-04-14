@@ -12,7 +12,6 @@ import (
 	"github.com/go-redis/redis/v8"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/juicycleff/frank"
-	_ "github.com/juicycleff/frank/api/swagger"
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/pkg/data"
 	"github.com/juicycleff/frank/pkg/logging"
