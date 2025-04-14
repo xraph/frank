@@ -5,7 +5,7 @@
 	"scripts": {
 		"build": "turbo run build",
 		"dev": "turbo run dev",
-		"build:web": "turbo run build --filter ui",
+		"build:web": "turbo run build --filter=./packages/*",
 		"dev:web": "turbo build dev --filter=./packages/* && turbo run dev --filter ui",
 		"build:sdk": "turbo build dev --filter=./packages/* && turbo run build --filter @frank/sdk",
 		"dev:sdk": "turbo run dev --filter @frank/sdk",

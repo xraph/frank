@@ -12,6 +12,21 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: "18"
+        registry-url: "https://registry.npmjs.org"
+
+    - name: Install dependencies in core
+      run: cd web && pnpm install --frozen-lockfile
+
+    - name: Build packages
+      run: cd web && pnpm build:web
+
+    - name: Build web
+      run: pnpm build && cd ..
+
     - name: Set up Go
       uses: actions/setup-go@v4
       with:
