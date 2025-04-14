@@ -1,0 +1,52 @@
+name: PR Conventional Commits Check
+
+on:
+  pull_request:
+    branches: [ main ]
+    types: [ opened, synchronize, reopened, edited ]
+
+jobs:
+  validate-commits:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      repository-projects: write
+      id-token: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      # Install commitlint dependencies
+      - name: Install Commitlint
+        run: |
+          npm install --save-dev @commitlint/config-conventional @commitlint/cli
+
+      # Create a temporary commitlint config
+      - name: Create Commitlint Config
+        run: |
+          echo "module.exports = {extends: ['@commitlint/config-conventional']}" > commitlint.config.js
+
+      # Validate PR title follows conventional commits format
+      - name: Check PR Title
+        run: |
+          echo "${{ github.event.pull_request.title }}" | npx commitlint
+
+      # Validate all commits in the PR follow conventional commits format
+      - name: Check PR Commits
+        run: |
+          npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+
+      # Label the PR based on commit types
+      - name: Label PR based on Conventional Commits
+        uses: bcoe/conventional-release-labels@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
