@@ -41,6 +41,9 @@ jobs:
       - name: Build web
         run: cd web && pnpm build
 
+      - name: Update dependencies for publishing
+        run: node ./scripts/update-dependencies.js
+
       - name: Update package version (sdk)
         run: cd web/packages/sdk && npm version ${{ steps.extract_version.outputs.VERSION }} --no-git-tag-version
 
