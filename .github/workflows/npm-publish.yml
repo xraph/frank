@@ -1,9 +1,9 @@
 name: Publish NPM Packages
 
-on:
-  push:
-    tags:
-      - "v*"
+#on:
+#  push:
+#    tags:
+#      - "v*"
 
 jobs:
   publish-npm:
@@ -11,6 +11,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
+      - name: Setup pnpm 9
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -23,29 +28,26 @@ jobs:
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
 
       - name: Install dependencies in core
-        run: cd frontend/core && npm ci
+        run: cd web && pnpm install --frozen-lockfile
 
-      - name: Build core package
-        run: cd frontend/core && npm run build
+      - name: Build packages
+        run: cd web && pnpm build:web
+
+      - name: Build web
+        run: cd web && pnpm build
 
       - name: Update package version (core)
-        run: cd frontend/core && npm version ${{ steps.extract_version.outputs.VERSION }} --no-git-tag-version
+        run: cd web/packages/core && npm version ${{ steps.extract_version.outputs.VERSION }} --no-git-tag-version
 
       - name: Publish core package
-        run: cd frontend/core && npm publish
+        run: cd web/packages/core && npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Install dependencies in react
-        run: cd frontend/react && npm ci
-
-      - name: Build react package
-        run: cd frontend/react && npm run build
-
       - name: Update package version (react)
-        run: cd frontend/react && npm version ${{ steps.extract_version.outputs.VERSION }} --no-git-tag-version
+        run: cd web/packages/react && npm version ${{ steps.extract_version.outputs.VERSION }} --no-git-tag-version
 
       - name: Publish react package
-        run: cd frontend/react && npm publish
+        run: cd web/packages/react && npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
