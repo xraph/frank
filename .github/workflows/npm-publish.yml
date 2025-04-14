@@ -41,11 +41,11 @@ jobs:
       - name: Build web
         run: cd web && pnpm build
 
-      - name: Update package version (core)
-        run: cd web/packages/core && npm version ${{ steps.extract_version.outputs.VERSION }} --no-git-tag-version
+      - name: Update package version (sdk)
+        run: cd web/packages/sdk && npm version ${{ steps.extract_version.outputs.VERSION }} --no-git-tag-version
 
-      - name: Publish core package
-        run: cd web/packages/core && npm publish
+      - name: Publish sdk package
+        run: cd web/packages/sdk && npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
