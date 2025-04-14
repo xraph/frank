@@ -9,7 +9,6 @@ import (
 	"github.com/danielgtaylor/huma/v2/adapters/humachi"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	_ "github.com/juicycleff/frank/api/swagger"
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/internal/handlers"
 	middleware3 "github.com/juicycleff/frank/internal/middleware"
