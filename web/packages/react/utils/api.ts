@@ -6,7 +6,7 @@ import {TokenData} from '../types';
 // type Client = () => typeof fclient;
 
 // Create a base API client
-export const createApiClient: Client = () => {
+export const createApiClient= (): Client  => {
     const config = getConfig();
 
     fclient.setConfig({
@@ -18,7 +18,7 @@ export const createApiClient: Client = () => {
 };
 
 // Create an authenticated API client with token handling
-export const createAuthenticatedClient: Client = () => {
+export const createAuthenticatedClient = (): Client => {
     const config = getConfig();
     const tokenData = getTokenData();
 
@@ -80,3 +80,32 @@ export const getAuthClient = async (): Promise<Client> => {
 
     return createAuthenticatedClient() as any;
 };
+//
+// // Function to refresh the token
+// export const refreshAuthToken = async (): Promise<TokenData | null> => {
+//     const tokenData = getTokenData();
+//     if (!tokenData) return null;
+//
+//     try {
+//         const client = createApiClient();
+//         const { data } = await authRefreshToken({
+//             client,
+//             body: {
+//                 refresh_token: tokenData.refreshToken
+//             },
+//             throwOnError: true
+//         });
+//
+//         const newTokenData: TokenData = {
+//             token: data.token,
+//             refreshToken: data.refresh_token,
+//             expiresAt: Number(data.expires_at),
+//         };
+//
+//         setTokenData(newTokenData);
+//         return newTokenData;
+//     } catch (error) {
+//         clearTokenData();
+//         return null;
+//     }
+// };

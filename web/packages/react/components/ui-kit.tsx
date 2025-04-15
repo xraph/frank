@@ -1,5 +1,4 @@
 "use client";
-import "./styles/globals.css";
 
 import React, {useEffect, useMemo, useRef, useState} from "react";
 import {AlertCircle, ArrowLeft, CheckCircle2, Eye, EyeOff, Fingerprint, Key, Mail, RefreshCw,} from "lucide-react";

@@ -1,4 +1,5 @@
-import {getTokenData, isTokenExpired, refreshAuthToken} from '../utils/token';
+import {getTokenData, isTokenExpired} from '../utils/token';
+import {refreshAuthToken} from '../utils/api';
 
 export interface AuthMiddlewareOptions {
     redirectTo?: string;
