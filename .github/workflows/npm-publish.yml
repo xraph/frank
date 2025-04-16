@@ -47,6 +47,7 @@ jobs:
       - name: Update package version (sdk)
         run: cd web/packages/sdk && pnpm version ${{ steps.extract_version.outputs.VERSION }} --no-git-tag-version
 
+
       - name: Publish sdk package
         run: cd web/packages/sdk && npm publish
         env:
