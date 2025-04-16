@@ -41,19 +41,19 @@ jobs:
       - name: Build web
         run: cd web && pnpm build
 
-      - name: Update dependencies for publishing (sdk)
-        run: cd web && node ./scripts/update-dependencies.js
+#      - name: Update dependencies for publishing (sdk)
+#        run: cd web && node ./scripts/update-dependencies.js
 
       - name: Update package version (sdk)
-        run: cd web/packages/sdk && pnpm version ${{ steps.extract_version.outputs.VERSION }} --no-git-tag-version
+        run: cd web && node ./scripts/update-dependencies.js && cd packages/sdk && pnpm version ${{ steps.extract_version.outputs.VERSION }} --no-git-tag-version
 
       - name: Publish sdk package
-        run: cd web/packages/sdk && npm publish
+        run: cd web && node ./scripts/update-dependencies.js && cd packages/sdk && npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Update dependencies for publishing (sdk)
-        run: cd web && node ./scripts/update-dependencies.js
+#      - name: Update dependencies for publishing (sdk)
+#        run: cd web && node ./scripts/update-dependencies.js
 
       - name: Update package version (react)
         run: cd web/packages/react && pnpm version ${{ steps.extract_version.outputs.VERSION }} --no-git-tag-version
