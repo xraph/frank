@@ -1,13 +1,20 @@
 "use client";
 
 import * as React from "react";
-import type {User} from "@frank-auth/sdk";
-import {Bell, Lock, Mail, Shield, UserIcon} from "lucide-react";
-import {NavProfile} from "./nav-profile";
+import type { User } from "@frank-auth/sdk";
+import { Bell, Lock, Mail, Shield, UserIcon } from "lucide-react";
+import { NavProfile } from "./nav-profile";
 // import {TeamSwitcher} from "@/components/react/team-switcher"
-import {Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarRail, useSidebar,} from "@/components/ui/sidebar";
-import {NavUser} from "./nav-user";
-import {Logo} from "@/components/logo";
+import {
+	Sidebar,
+	SidebarContent,
+	SidebarFooter,
+	SidebarHeader,
+	SidebarRail,
+	useSidebar,
+} from "@/components/ui/sidebar";
+import { NavUser } from "./nav-user";
+import { Logo } from "@/components/logo";
 
 // This is sample data.
 const data = {

@@ -1,10 +1,10 @@
-import {DataProviders} from "@/components/data-providers";
+import { DataProviders } from "@/components/data-providers";
 import ProfileLayout from "./profile-layout";
 import React from "react";
-import {type User} from "@frank-auth/sdk";
-import {SecurityForm} from "@/components/account/security-form";
-import {PasswordForm} from "@/components/account/password-form";
-import {ProfileForm} from "@/components/account/profile-form";
+import { type User } from "@frank-auth/sdk";
+import { SecurityForm } from "@/components/account/security-form";
+import { PasswordForm } from "@/components/account/password-form";
+import { ProfileForm } from "@/components/account/profile-form";
 
 export function AccountRootLayout({
 	children,

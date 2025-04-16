@@ -1,12 +1,12 @@
-'use client'
+"use client";
 
-import {ProfileSidebar} from "./profile-sidebar";
-import {SidebarInset, SidebarProvider} from "@/components/ui/sidebar";
-import {ProfileHeader} from "@/components/account/profile-header";
+import { ProfileSidebar } from "./profile-sidebar";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { ProfileHeader } from "@/components/account/profile-header";
 import React from "react";
-import {authMeOptions} from "@frank-auth/sdk/query";
-import type {User} from "@frank-auth/sdk";
-import {useQuery} from "@tanstack/react-query";
+import { authMeOptions } from "@frank-auth/sdk/query";
+import type { User } from "@frank-auth/sdk";
+import { useQuery } from "@tanstack/react-query";
 
 export default function ProfileLayout({
 	children,

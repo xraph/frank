@@ -1,15 +1,21 @@
 // Create the provider component
-import React, {ReactNode, useCallback, useState} from "react";
-import {Key} from "lucide-react";
+import React, { ReactNode, useCallback, useState } from "react";
+import { Key } from "lucide-react";
 import {
 	authSendEmailVerification,
 	authVerifyEmail,
 	client,
 	SendEmailVerificationRequestBody,
 	User,
-	VerifyEmailRequest
+	VerifyEmailRequest,
 } from "@frank-auth/sdk";
-import {FrankConfig, FrankContext, Session, ThemeConfigPreset, themePresets,} from "@/components/context";
+import {
+	FrankConfig,
+	FrankContext,
+	Session,
+	ThemeConfigPreset,
+	themePresets,
+} from "@/components/context";
 
 export function FrankProvider({
 	children,
@@ -145,13 +151,13 @@ export function FrankProvider({
 		return await authSendEmailVerification({
 			body: data,
 		});
-	}
+	};
 
 	const verifyEmail = async (data: VerifyEmailRequest) => {
 		return await authVerifyEmail({
 			body: data,
 		});
-	}
+	};
 
 	const updateConfig = (newConfig: Partial<FrankConfig>) => {
 		setConfig((prevConfig) => ({
@@ -162,7 +168,7 @@ export function FrankProvider({
 		}));
 	};
 
-	console.log(initialConfig.api?.baseUrl)
+	console.log(initialConfig.api?.baseUrl);
 
 	client.setConfig({
 		baseUrl: initialConfig.api?.baseUrl ?? "/",

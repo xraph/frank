@@ -1,9 +1,14 @@
 "use client";
 
-import {BellIcon, LogOutIcon, MoreVerticalIcon, UserCircleIcon,} from "lucide-react";
+import {
+	BellIcon,
+	LogOutIcon,
+	MoreVerticalIcon,
+	UserCircleIcon,
+} from "lucide-react";
 
-import type {User} from "@frank-auth/sdk";
-import {Avatar, AvatarFallback, AvatarImage,} from "@/components/ui/avatar";
+import type { User } from "@frank-auth/sdk";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -13,7 +18,12 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar,} from "@/components/ui/sidebar";
+import {
+	SidebarMenu,
+	SidebarMenuButton,
+	SidebarMenuItem,
+	useSidebar,
+} from "@/components/ui/sidebar";
 
 export function NavUser({
 	user,

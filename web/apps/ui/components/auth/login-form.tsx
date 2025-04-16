@@ -5,5 +5,5 @@ import "@/client";
 import {FrankUIKit} from "@frank-auth/react";
 
 export function LoginForm() {
-	return <FrankUIKit showTabs={false} />;
+	return <FrankUIKit showTabs={false} useProviderConfig={true}  />;
 }

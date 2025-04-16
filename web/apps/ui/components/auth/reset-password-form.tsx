@@ -1,13 +1,13 @@
 "use client";
 
 import type React from "react";
-import {useState} from "react";
-import {Link} from "../link";
-import {Button} from "@/components/ui/button";
-import {Input} from "@/components/ui/input";
-import {Label} from "@/components/ui/label";
-import {AlertCircle, ArrowLeft, CheckCircle2} from "lucide-react";
-import {Alert, AlertDescription, AlertTitle,} from "@/components/ui/alert";
+import { useState } from "react";
+import { Link } from "../link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { AlertCircle, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export function ResetPasswordForm() {
 	const [isLoading, setIsLoading] = useState(false);

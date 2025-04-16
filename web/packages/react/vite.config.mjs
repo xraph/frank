@@ -22,13 +22,32 @@ export default defineConfig({
 				`${entryName}.${format === "es" ? "mjs" : "cjs"}`,
 		},
 		rollupOptions: {
-			external: ["react", "react-dom"],
+			external: [
+				"react",
+				"react-dom",
+				/^@radix-ui\/.*$/,
+				/^@hookform\/.*$/,
+				/^lucide-react$/,
+				"zod"
+			],
 			output: {
 				globals: {
 					react: "React",
 					"react-dom": "ReactDOM",
 				},
+				preserveModules: false,
 			},
 		},
+		// sourcemap: true,
+		// minify: false,
+		// rollupOptions: {
+		// 	external: ["react", "react-dom"],
+		// 	output: {
+		// 		globals: {
+		// 			react: "React",
+		// 			"react-dom": "ReactDOM",
+		// 		},
+		// 	},
+		// },
 	},
 });

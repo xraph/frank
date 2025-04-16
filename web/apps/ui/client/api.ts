@@ -1,4 +1,4 @@
-import {client} from "@frank-auth/sdk";
+import { client } from "@frank-auth/sdk";
 
 export const isLocal = process.env.PUBLIC_MODE === "local";
 

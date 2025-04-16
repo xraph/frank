@@ -1,8 +1,8 @@
 "use client";
 
-import type {ReactNode} from "react";
-import React, {createContext} from "react";
-import {Key} from "lucide-react";
+import type { ReactNode } from "react";
+import React, { createContext } from "react";
+import { Key } from "lucide-react";
 import {
 	AuthVerifyEmailError,
 	client,
@@ -10,7 +10,7 @@ import {
 	SendEmailVerificationResponseBody,
 	SendResponseBody,
 	User,
-	VerifyEmailRequest
+	VerifyEmailRequest,
 } from "@frank-auth/sdk";
 
 // Define types for the FrankAuth configuration
@@ -173,8 +173,17 @@ export const FrankContext = createContext<{
 	isAuthenticated: boolean;
 	signIn: (credentials: any) => Promise<boolean>;
 	signOut: () => Promise<void>;
-	resendVerification: (data: SendEmailVerificationRequestBody) => Promise<{data: SendEmailVerificationResponseBody, error: undefined} | {}>;
-	verifyEmail: (data: VerifyEmailRequest) => Promise<{data: SendResponseBody, error: undefined} | {data: undefined, error: AuthVerifyEmailError}>;
+	resendVerification: (
+		data: SendEmailVerificationRequestBody,
+	) => Promise<
+		{ data: SendEmailVerificationResponseBody; error: undefined } | {}
+	>;
+	verifyEmail: (
+		data: VerifyEmailRequest,
+	) => Promise<
+		| { data: SendResponseBody; error: undefined }
+		| { data: undefined; error: AuthVerifyEmailError }
+	>;
 	updateSession: (newSession: Session | null) => void;
 	updateUser: (newUser: User | null) => void;
 	resendCooldown: number; // Cooldown time in seconds
@@ -238,5 +247,5 @@ export const FrankContext = createContext<{
 	// @ts-ignore
 	resendVerification: () => {},
 	// @ts-ignore
-	verifyEmail: () => {}
+	verifyEmail: () => {},
 });

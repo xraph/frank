@@ -1,17 +1,17 @@
 "use client";
 
 import type React from "react";
-import {useState} from "react";
-import {Button} from "@/components/ui/button";
-import {Input} from "@/components/ui/input";
-import {Label} from "@/components/ui/label";
-import {Textarea} from "@/components/ui/textarea";
-import {Avatar, AvatarFallback, AvatarImage,} from "@/components/ui/avatar";
-import {Card, CardContent} from "@/components/ui/card";
-import {AlertCircle, CheckCircle2, Upload} from "lucide-react";
-import {Alert, AlertDescription, AlertTitle,} from "@/components/ui/alert";
-import {useMutation, useQuery} from "@tanstack/react-query";
-import {authMeOptions, usersUpdateMeMutation} from "@frank-auth/sdk/query";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Card, CardContent } from "@/components/ui/card";
+import { AlertCircle, CheckCircle2, Upload } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { authMeOptions, usersUpdateMeMutation } from "@frank-auth/sdk/query";
 
 export function ProfileForm() {
 	const [isLoading, setIsLoading] = useState(false);
@@ -40,7 +40,7 @@ export function ProfileForm() {
 		setIsLoading(true);
 
 		console.log(payload);
-		
+
 		setError("");
 		setSuccess("");
 

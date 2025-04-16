@@ -1,15 +1,15 @@
-import {AuthConfig} from '../types';
+import { AuthConfig } from "../types";
 
 let config: AuthConfig = {
-    baseUrl: '',
-    storagePrefix: 'frank_auth_',
-    tokenStorageType: 'localStorage'
+	baseUrl: "",
+	storagePrefix: "frank_auth_",
+	tokenStorageType: "localStorage",
 };
 
 export const setConfig = (newConfig: Partial<AuthConfig>): void => {
-    config = { ...config, ...newConfig };
+	config = { ...config, ...newConfig };
 };
 
 export const getConfig = (): AuthConfig => {
-    return { ...config };
+	return { ...config };
 };

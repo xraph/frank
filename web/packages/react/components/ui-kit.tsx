@@ -18,7 +18,7 @@ import {Alert, AlertDescription, AlertTitle} from "@/components/ui/alert";
 import {InputOTP, InputOTPGroup, InputOTPSlot,} from "@/components/ui/input-otp";
 import {REGEXP_ONLY_DIGITS_AND_CHARS} from "input-otp";
 
-interface FrankProps extends FrankConfig {
+export interface FrankProps extends FrankConfig {
 	useProviderConfig?: boolean;
 }
 
@@ -432,11 +432,10 @@ export function FrankUIKit({
 		try {
 			const rsp = await frank.resendVerification({
 				email,
-				verification_type: "otp"
-			})
-			
-			await configOnResendVerification
-				?.(email);
+				verification_type: "otp",
+			});
+
+			await configOnResendVerification?.(email);
 
 			// Start cooldown timer
 			setCooldownRemaining(frank.resendCooldown);
@@ -788,10 +787,7 @@ export function FrankUIKit({
 								>
 									<InputOTPGroup>
 										{codeInputLength.map((value, idx) => (
-											<InputOTPSlot
-												index={idx}
-												className="size-10 text-xl"
-											/>
+											<InputOTPSlot index={idx} className="size-10 text-xl" />
 										))}
 									</InputOTPGroup>
 								</InputOTP>

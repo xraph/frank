@@ -1,5 +1,5 @@
-import {useOrganizationContext} from './OrganizationContext';
+import { useOrganizationContext } from "./OrganizationContext";
 
 export const useOrganization = () => {
-    return useOrganizationContext();
+	return useOrganizationContext();
 };

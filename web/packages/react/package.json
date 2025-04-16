@@ -1,6 +1,6 @@
 {
 	"name": "@frank-auth/react",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"description": "Frank Authentication React Client",
 	"main": "dist/index.cjs",
 	"module": "dist/index.mjs",
@@ -19,9 +19,9 @@
 			"import": "./dist/react.css"
 		},
 		"./next": {
-			"types": "./dist/middleware/nextMiddleware.d.ts",
-			"import": "./dist/middleware/nextMiddleware.mjs",
-			"require": "./dist/middleware/nextMiddleware.cjs"
+			"types": "./dist/types/middleware/nextMiddleware.d.ts",
+			"import": "./dist/next.mjs",
+			"require": "./dist/next.cjs"
 		}
 	},
 	"scripts": {

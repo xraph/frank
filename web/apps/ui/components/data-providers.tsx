@@ -1,7 +1,7 @@
-'use client'
+"use client";
 
-import {QueryClientProvider} from "@tanstack/react-query";
-import {queryClient} from "./client";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "./client";
 import "@/client";
 import React from "react";
 

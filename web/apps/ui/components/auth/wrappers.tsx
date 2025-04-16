@@ -1,8 +1,8 @@
-'use client'
+"use client";
 
 import React from "react";
-import {FrankProvider} from "@frank-auth/react";
-import {Logo} from "@/components/logo";
+import { FrankProvider } from "@frank-auth/react";
+import { Logo } from "@/components/logo";
 
 const prefix = process.env.NEXT_PUBLIC_AUTH_PATH_PREFIX ?? "";
 const baseUrl = process.env.NEXT_PUBLIC_FRANK_ENDPOINT ?? "/";

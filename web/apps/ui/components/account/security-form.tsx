@@ -1,14 +1,26 @@
 "use client";
 
 import type React from "react";
-import {useState} from "react";
-import {Button} from "@/components/ui/button";
-import {Card, CardContent, CardDescription, CardHeader, CardTitle,} from "@/components/ui/card";
-import {AlertCircle, CheckCircle2, Laptop, Smartphone, Trash2,} from "lucide-react";
-import {Alert, AlertDescription, AlertTitle,} from "@/components/ui/alert";
-import {Switch} from "@/components/ui/switch";
-import {Separator} from "@/components/ui/separator";
-import {Badge} from "@/components/ui/badge";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from "@/components/ui/card";
+import {
+	AlertCircle,
+	CheckCircle2,
+	Laptop,
+	Smartphone,
+	Trash2,
+} from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 
 export function SecurityForm() {
 	const [isLoading, setIsLoading] = useState(false);

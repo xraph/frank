@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import {FrankUIKit} from "@frank-auth/react";
+import { FrankUIKit } from "@frank-auth/react";
 
 export function RegisterForm() {
 	return (
