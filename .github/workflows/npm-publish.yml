@@ -45,7 +45,7 @@ jobs:
         run: node ./scripts/update-dependencies.js
 
       - name: Update package version (sdk)
-        run: cd web/packages/sdk && npm version ${{ steps.extract_version.outputs.VERSION }} --no-git-tag-version
+        run: cd web/packages/sdk && pnpm version ${{ steps.extract_version.outputs.VERSION }} --no-git-tag-version
 
       - name: Publish sdk package
         run: cd web/packages/sdk && npm publish
@@ -53,7 +53,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Update package version (react)
-        run: cd web/packages/react && npm version ${{ steps.extract_version.outputs.VERSION }} --no-git-tag-version
+        run: cd web/packages/react && pnpm version ${{ steps.extract_version.outputs.VERSION }} --no-git-tag-version
 
       - name: Publish react package
         run: cd web/packages/react && npm publish
