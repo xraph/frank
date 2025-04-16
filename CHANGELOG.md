@@ -1,3 +1,12 @@
+## [0.1.4](https://github.com/juicycleff/frank/compare/v0.1.3...v0.1.4) (2025-04-16)
+
+
+### Bug Fixes
+
+* npm commands to pnpm in publish workflow ([b55e876](https://github.com/juicycleff/frank/commit/b55e876fec3f3a5b18779570937d878e1f799aad))
+
+
+
 ## [0.1.3](https://github.com/juicycleff/frank/compare/v0.1.2...v0.1.3) (2025-04-16)
 
 
