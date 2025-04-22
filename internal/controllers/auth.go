@@ -218,6 +218,8 @@ func (a *AuthService) Login(ctx context.Context, payload *auth.LoginPayload) (re
 }
 
 func (a *AuthService) Register(ctx context.Context, payload *auth.RegisterPayload) (res *auth.LoginResponse, err error) {
+	res = &auth.LoginResponse{}
+
 	info, ok := middleware2.GetRequestInfo(ctx)
 	if !ok {
 		return nil, errors.New(errors.CodeInternalServer, "failed to get request info")

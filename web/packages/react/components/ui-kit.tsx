@@ -13,7 +13,7 @@ import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue,} from "@/
 import {AuthView, FormField, FrankConfig, Link} from "./context";
 import {useFrank} from "./hooks";
 import {cn} from "@/lib/utils";
-import {authLogin} from "@frank-auth/sdk";
+import {authLogin, authRegister, LoginResponse2, LoginResponse3} from "@frank-auth/sdk";
 import {Alert, AlertDescription, AlertTitle} from "@/components/ui/alert";
 import {InputOTP, InputOTPGroup, InputOTPSlot,} from "@/components/ui/input-otp";
 import {REGEXP_ONLY_DIGITS_AND_CHARS} from "input-otp";
@@ -363,6 +363,48 @@ export function FrankUIKit({
 	// 	}
 	// };
 
+	const postLoginOrSignup = async (rsp: LoginResponse3 | LoginResponse2 ) => {
+		let href;
+
+		if (rsp.requiresVerification) {
+			if (links?.verify) {
+				href = `${links.verify.url}?email=${email}&${rsp.token}`;
+				href += `&redirect_url=${window.location.href}`;
+				href += `&method=${rsp.verificationMethod}`;
+				href += `&vid=${rsp.verificationId}`;
+				window.location.href = href;
+			} else {
+				setCurrentView("verify-otp");
+			}
+			return;
+		}
+
+		if (rsp.message) {
+			setSuccess(rsp.message);
+		}
+
+		if (rsp.mfa_required) {
+			if (links?.mfa) {
+				href = `${links.mfa.url}?email=${email}&${rsp.token}`;
+				href += `&redirect_url=${window.location.href}`;
+				href += `&method=${rsp.verificationMethod}`;
+				href += `&vid=${rsp.verificationId}`;
+				window.location.href = href;
+			} else {
+				setCurrentView("mfa");
+			}
+			return;
+		}
+
+		const tokenData: TokenData = {
+			token: rsp.token,
+			refreshToken: rsp.refresh_token,
+			expiresAt: Number(rsp.expires_at),
+		};
+
+		setTokenData(tokenData);
+	}
+
 
 	const handleLogin = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -383,45 +425,7 @@ export function FrankUIKit({
 			}
 
 			await configOnLogin?.({ email, password });
-			let href;
-
-			if (rsp.data.requiresVerification) {
-				if (links?.verify) {
-					href = `${links.verify.url}?email=${email}&${rsp.data.token}`;
-					href += `&redirect_url=${window.location.href}`;
-					href += `&method=${rsp.data.verificationMethod}`;
-					href += `&vid=${rsp.data.verificationId}`;
-					window.location.href = href;
-				} else {
-					setCurrentView("verify-otp");
-				}
-				return;
-			}
-
-			if (rsp.data.message) {
-				setSuccess(rsp.data.message);
-			}
-
-			if (rsp.data.mfa_required) {
-				if (links?.mfa) {
-					href = `${links.mfa.url}?email=${email}&${rsp.data.token}`;
-					href += `&redirect_url=${window.location.href}`;
-					href += `&method=${rsp.data.verificationMethod}`;
-					href += `&vid=${rsp.data.verificationId}`;
-					window.location.href = href;
-				} else {
-					setCurrentView("mfa");
-				}
-				return;
-			}
-
-			const tokenData: TokenData = {
-				token: rsp.data.token,
-				refreshToken: rsp.data.refresh_token,
-				expiresAt: Number(rsp.data.expires_at),
-			};
-
-			setTokenData(tokenData);
+			await postLoginOrSignup(rsp.data);
 		} catch (error) {
 			console.error("Login error:", error);
 		} finally {
@@ -431,11 +435,40 @@ export function FrankUIKit({
 
 	const handleSignup = async (e: React.FormEvent) => {
 		e.preventDefault();
-		if (!configOnSignup) return;
 
 		setIsLoading(true);
 		try {
-			await configOnSignup(signupFormData);
+			const firstNameField = configSignupFields.find(value => value.isFirstName)
+			const lastNameField = configSignupFields.find(value => value.isLastName)
+			const emailField = configSignupFields.find(value => value.type === "email" || value.isEmail)
+			const passwordField = configSignupFields.find(value => value.type === "password" || value.isEmail)
+
+			const rsp = await authRegister({
+				body: {
+					email: signupFormData[emailField?.name || "email"],
+					password: signupFormData[passwordField?.name || "password"],
+					organization_id: config.api?.projectId,
+					first_name: signupFormData[firstNameField?.name || "first_name"],
+					last_name: signupFormData[lastNameField?.name || "last_name"],
+					metadata: signupFormData,
+				},
+			});
+
+			if (rsp.error) {
+				setError(rsp.error.message);
+				return;
+			}
+
+			await configOnSignup?.(signupFormData);
+
+			await postLoginOrSignup(rsp.data);
+			
+			if (links?.login) {
+				window.location.href = `${links.login.url}?redirect_url=${window.location.href}`;
+			} else {
+				setCurrentView("login");
+			}
+			resetState();
 		} catch (error) {
 			console.error("Signup error:", error);
 		} finally {
