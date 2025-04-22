@@ -38,7 +38,7 @@ func NewEndpoints(s Service, si ServerInterceptors) *Endpoints {
 		Register:               NewRegisterEndpoint(s),
 		Logout:                 NewLogoutEndpoint(s, a.JWTAuth),
 		RefreshToken:           NewRefreshTokenEndpoint(s),
-		ForgotPassword:         NewForgotPasswordEndpoint(s, a.OAuth2Auth, a.APIKeyAuth, a.JWTAuth),
+		ForgotPassword:         NewForgotPasswordEndpoint(s),
 		ResetPassword:          NewResetPasswordEndpoint(s),
 		VerifyEmail:            NewVerifyEmailEndpoint(s),
 		SendEmailVerification:  NewSendEmailVerificationEndpoint(s),
@@ -117,55 +117,9 @@ func NewRefreshTokenEndpoint(s Service) goa.Endpoint {
 
 // NewForgotPasswordEndpoint returns an endpoint function that calls the method
 // "forgot_password" of service "auth".
-func NewForgotPasswordEndpoint(s Service, authOAuth2Fn security.AuthOAuth2Func, authAPIKeyFn security.AuthAPIKeyFunc, authJWTFn security.AuthJWTFunc) goa.Endpoint {
+func NewForgotPasswordEndpoint(s Service) goa.Endpoint {
 	return func(ctx context.Context, req any) (any, error) {
 		p := req.(*ForgotPasswordPayload)
-		var err error
-		sc := security.OAuth2Scheme{
-			Name:           "oauth2",
-			Scopes:         []string{"profile", "email", "openid", "offline_access", "api"},
-			RequiredScopes: []string{},
-			Flows: []*security.OAuthFlow{
-				&security.OAuthFlow{
-					Type:             "authorization_code",
-					AuthorizationURL: "/v1/oauth/authorize",
-					TokenURL:         "/v1/oauth/token",
-					RefreshURL:       "/v1/oauth/refresh",
-				},
-			},
-		}
-		var token string
-		if p.Oauth2 != nil {
-			token = *p.Oauth2
-		}
-		ctx, err = authOAuth2Fn(ctx, token, &sc)
-		if err == nil {
-			sc := security.APIKeyScheme{
-				Name:           "api_key",
-				Scopes:         []string{},
-				RequiredScopes: []string{},
-			}
-			var key string
-			if p.XAPIKey != nil {
-				key = *p.XAPIKey
-			}
-			ctx, err = authAPIKeyFn(ctx, key, &sc)
-		}
-		if err == nil {
-			sc := security.JWTScheme{
-				Name:           "jwt",
-				Scopes:         []string{"api:read", "api:write"},
-				RequiredScopes: []string{},
-			}
-			var token string
-			if p.JWT != nil {
-				token = *p.JWT
-			}
-			ctx, err = authJWTFn(ctx, token, &sc)
-		}
-		if err != nil {
-			return nil, err
-		}
 		return s.ForgotPassword(ctx, p)
 	}
 }

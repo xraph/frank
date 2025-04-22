@@ -138,12 +138,6 @@ type ForbiddenError struct {
 // ForgotPasswordPayload is the payload type of the auth service
 // forgot_password method.
 type ForgotPasswordPayload struct {
-	// OAuth2 access token
-	Oauth2 *string
-	// API key
-	XAPIKey *string
-	// JWT token
-	JWT *string
 	// URL to redirect after password reset
 	RedirectURL *string
 	SessionID   *string

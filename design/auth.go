@@ -255,11 +255,12 @@ var _ = Service("auth", func() {
 
 	Method("forgot_password", func() {
 		Description("Initiate password reset process")
-		Security(OAuth2Auth, APIKeyAuth, JWTAuth)
+		// Security(OAuth2Auth, APIKeyAuth, JWTAuth)
+		NoSecurity()
 		Payload(func() {
-			AccessToken("oauth2", String, "OAuth2 access token")
-			APIKey("api_key", "X-API-Key", String, "API key")
-			Token("jwt", String, "JWT token")
+			// AccessToken("oauth2", String, "OAuth2 access token")
+			// APIKey("api_key", "X-API-Key", String, "API key")
+			// Token("jwt", String, "JWT token")
 			Extend(ForgotPasswordRequest)
 			Attribute("redirect_url", String, "URL to redirect after password reset")
 			Attribute("session_id", String)

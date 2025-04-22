@@ -89,6 +89,7 @@ function _FrankProvider({
 				text: "Sign up",
 				url: "/signup",
 			},
+			...(initialConfig.links ?? {})
 		},
 		theme: initialConfig.theme ?? {
 			primaryColor: "bg-primary",

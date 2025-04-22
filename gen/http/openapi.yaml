@@ -839,21 +839,6 @@ paths:
                   description: URL to redirect after password reset
                   required: false
                   type: string
-                - name: Authorization
-                  in: header
-                  description: OAuth2 access token
-                  required: false
-                  type: string
-                - name: Authorization
-                  in: header
-                  description: API key
-                  required: false
-                  type: string
-                - name: Authorization
-                  in: header
-                  description: JWT token
-                  required: false
-                  type: string
                 - name: forgot_password_request_body
                   in: body
                   required: true
@@ -912,10 +897,6 @@ paths:
                             - message
             schemes:
                 - http
-            security:
-                - api_key_header_Authorization: []
-                  jwt_header_Authorization: []
-                  oauth2_header_Authorization: []
     /v1/auth/login:
         post:
             tags:

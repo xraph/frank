@@ -13,7 +13,15 @@ import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue,} from "@/
 import {AuthView, FormField, FrankConfig, Link} from "./context";
 import {useFrank} from "./hooks";
 import {cn} from "@/lib/utils";
-import {authLogin, authRegister, LoginResponse2, LoginResponse3} from "@frank-auth/sdk";
+import {
+	authForgotPassword,
+	authLogin,
+	authRegister,
+	LoginResponse2,
+	LoginResponse3,
+	passkeysLoginBegin,
+	passwordlessMagicLink
+} from "@frank-auth/sdk";
 import {Alert, AlertDescription, AlertTitle} from "@/components/ui/alert";
 import {InputOTP, InputOTPGroup, InputOTPSlot,} from "@/components/ui/input-otp";
 import {REGEXP_ONLY_DIGITS_AND_CHARS} from "input-otp";
@@ -289,78 +297,6 @@ export function FrankUIKit({
 		</div>
 	);
 
-	// const handleLoginHook = async (rsp: LoginResponse2) => {
-	// 	try {
-	// 		// const rsp = await authLogin({
-	// 		// 	body: {
-	// 		// 		email,
-	// 		// 		password,
-	// 		// 		organization_id: config.api?.projectId,
-	// 		// 	},
-	// 		// });
-	//
-	// 		// if (rsp.error) {
-	// 		// 	setError(rsp.message);
-	// 		// 	return;
-	// 		// }
-	//
-	// 		await configOnLogin?.({ email, password });
-	// 		let href;
-	//
-	// 		if (rsp.requiresVerification) {
-	// 			if (links?.verify) {
-	// 				href = `${links.verify.url}?email=${email}&${rsp.token}`;
-	// 				href += `&redirect_url=${window.location.href}`;
-	// 				href += `&method=${rsp.verificationMethod}`;
-	// 				href += `&vid=${rsp.verificationId}`;
-	// 				window.location.href = href;
-	// 			} else {
-	// 				setCurrentView("verify-otp");
-	// 			}
-	// 			return;
-	// 		}
-	//
-	// 		if (rsp.message) {
-	// 			setSuccess(rsp.message);
-	// 		}
-	//
-	// 		if (rsp.mfa_required) {
-	// 			if (links?.mfa) {
-	// 				href = `${links.mfa.url}?email=${email}&${rsp.token}`;
-	// 				href += `&redirect_url=${window.location.href}`;
-	// 				href += `&method=${rsp.verificationMethod}`;
-	// 				href += `&vid=${rsp.verificationId}`;
-	// 				window.location.href = href;
-	// 			} else {
-	// 				setCurrentView("mfa");
-	// 			}
-	// 			return;
-	// 		}
-	// 	} catch (error) {
-	// 		console.error("Login error:", error);
-	// 	} finally {
-	// 		setIsLoading(false);
-	// 	}
-	// };
-	//
-	// const handleLogin = async (e: React.FormEvent) => {
-	// 	e.preventDefault();
-	//
-	// 	setIsLoading(true);
-	// 	try {
-	// 		const rsp = await login({
-	// 			email,
-	// 			password,
-	// 			organization_id: config.api?.projectId,
-	// 		}, handleLoginHook, (err) => {
-	// 			setError(err.message);
-	// 		});
-	// 	} catch (error) {
-	// 		console.error("Login error:", error);
-	// 	} finally {
-	// 		setIsLoading(false);
-	// 	}
-	// };
 
 	const postLoginOrSignup = async (rsp: LoginResponse3 | LoginResponse2 ) => {
 		let href;
@@ -432,6 +368,14 @@ export function FrankUIKit({
 		}
 	};
 
+	const navigateToLogin = () => {
+		if (configLinks?.login) {
+			window.location.href = `${configLinks.login.url}?redirect_url=${window.location.href}`;
+		} else {
+			setCurrentView("login");
+		}
+	}
+
 	const handleSignup = async (e: React.FormEvent) => {
 		e.preventDefault();
 
@@ -462,11 +406,7 @@ export function FrankUIKit({
 
 			await postLoginOrSignup(rsp.data);
 
-			if (configLinks?.login) {
-				window.location.href = `${configLinks.login.url}?redirect_url=${window.location.href}`;
-			} else {
-				setCurrentView("login");
-			}
+			navigateToLogin()
 			resetState();
 		} catch (error) {
 			console.error("Signup error:", error);
@@ -481,6 +421,20 @@ export function FrankUIKit({
 		setIsLoading(true);
 		try {
 			await configOnPasswordless(email);
+
+			const rsp = await passwordlessMagicLink({
+				// @ts-ignore
+				body: {
+					email,
+				}
+			});
+
+			await configOnPasswordless?.(email);
+
+			if (rsp.error) {
+				setError(rsp.error.message);
+				return;
+			}
 		} catch (error) {
 			console.error("Passwordless error:", error);
 		} finally {
@@ -489,11 +443,21 @@ export function FrankUIKit({
 	};
 
 	const handlePasskey = async () => {
-		if (!configOnPasskey) return;
-
 		setIsLoading(true);
 		try {
-			await configOnPasskey();
+			const rsp = await passkeysLoginBegin({
+				// @ts-ignore
+				body: {
+					email,
+				}
+			});
+
+			await configOnPasskey?.();
+
+			if (rsp.error) {
+				setError(rsp.error.message);
+				return;
+			}
 		} catch (error) {
 			console.error("Passkey error:", error);
 		} finally {
@@ -519,12 +483,21 @@ export function FrankUIKit({
 
 	const handleForgotPassword = async (e: React.FormEvent) => {
 		e.preventDefault();
-		if (!configOnForgotPassword) return;
 
 		setIsLoading(true);
 		try {
-			await configOnForgotPassword(email);
-			// Optionally navigate to a confirmation screen
+			const rsp = await authForgotPassword({
+				body: {
+					email
+				}
+			});
+
+			await configOnForgotPassword?.(email);
+
+			if (rsp.error) {
+				setError(rsp.error.message);
+				return;
+			}
 		} catch (error) {
 			console.error("Forgot password error:", error);
 		} finally {
@@ -541,9 +514,15 @@ export function FrankUIKit({
 				otp: otpCode,
 				method: "otp",
 			});
-			configOnVerifyOtp?.(email, otpCode);
-			console.log("Verify OTP response:", rsp);
-			setCurrentView("login");
+
+			await configOnVerifyOtp?.(email, otpCode);
+
+			if (rsp.error) {
+				setError(rsp.error.message);
+				return;
+			}
+
+			navigateToLogin()
 			resetState();
 		} catch (error) {
 			console.error("OTP verification error:", error);

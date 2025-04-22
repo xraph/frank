@@ -152,7 +152,7 @@ func BuildRefreshTokenPayload(authRefreshTokenBody string, authRefreshTokenSessi
 
 // BuildForgotPasswordPayload builds the payload for the auth forgot_password
 // endpoint from CLI flags.
-func BuildForgotPasswordPayload(authForgotPasswordBody string, authForgotPasswordRedirectURL string, authForgotPasswordOauth2 string, authForgotPasswordXAPIKey string, authForgotPasswordJWT string, authForgotPasswordSessionID string) (*auth.ForgotPasswordPayload, error) {
+func BuildForgotPasswordPayload(authForgotPasswordBody string, authForgotPasswordRedirectURL string, authForgotPasswordSessionID string) (*auth.ForgotPasswordPayload, error) {
 	var err error
 	var body ForgotPasswordRequestBody
 	{
@@ -171,24 +171,6 @@ func BuildForgotPasswordPayload(authForgotPasswordBody string, authForgotPasswor
 			redirectURL = &authForgotPasswordRedirectURL
 		}
 	}
-	var oauth2 *string
-	{
-		if authForgotPasswordOauth2 != "" {
-			oauth2 = &authForgotPasswordOauth2
-		}
-	}
-	var xAPIKey *string
-	{
-		if authForgotPasswordXAPIKey != "" {
-			xAPIKey = &authForgotPasswordXAPIKey
-		}
-	}
-	var jwt *string
-	{
-		if authForgotPasswordJWT != "" {
-			jwt = &authForgotPasswordJWT
-		}
-	}
 	var sessionID *string
 	{
 		if authForgotPasswordSessionID != "" {
@@ -199,9 +181,6 @@ func BuildForgotPasswordPayload(authForgotPasswordBody string, authForgotPasswor
 		Email: body.Email,
 	}
 	v.RedirectURL = redirectURL
-	v.Oauth2 = oauth2
-	v.XAPIKey = xAPIKey
-	v.JWT = jwt
 	v.SessionID = sessionID
 
 	return v, nil
@@ -215,7 +194,7 @@ func BuildResetPasswordPayload(authResetPasswordBody string, authResetPasswordSe
 	{
 		err = json.Unmarshal([]byte(authResetPasswordBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"new_password\": \"new-secure-password\",\n      \"token\": \"Sit ea qui tenetur nesciunt dicta.\"\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"new_password\": \"new-secure-password\",\n      \"token\": \"Eveniet fugit.\"\n   }'")
 		}
 		if utf8.RuneCountInString(body.NewPassword) < 8 {
 			err = goa.MergeErrors(err, goa.InvalidLengthError("body.new_password", body.NewPassword, utf8.RuneCountInString(body.NewPassword), 8, true))
@@ -247,7 +226,7 @@ func BuildVerifyEmailPayload(authVerifyEmailBody string, authVerifyEmailSessionI
 	{
 		err = json.Unmarshal([]byte(authVerifyEmailBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"email\": \"user@example.com\",\n      \"method\": \"otp\",\n      \"otp\": \"Expedita esse exercitationem qui repellat error.\",\n      \"token\": \"Aut quam sunt sit velit corporis.\"\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"email\": \"user@example.com\",\n      \"method\": \"otp\",\n      \"otp\": \"Quisquam ad assumenda error.\",\n      \"token\": \"Aut animi.\"\n   }'")
 		}
 		err = goa.MergeErrors(err, goa.ValidateFormat("body.email", body.Email, goa.FormatEmail))
 		if !(body.Method == "link" || body.Method == "otp") {
@@ -282,7 +261,7 @@ func BuildSendEmailVerificationPayload(authSendEmailVerificationBody string, aut
 	{
 		err = json.Unmarshal([]byte(authSendEmailVerificationBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"email\": \"user@example.com\",\n      \"method\": \"link\"\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"email\": \"user@example.com\",\n      \"method\": \"otp\"\n   }'")
 		}
 		err = goa.MergeErrors(err, goa.ValidateFormat("body.email", body.Email, goa.FormatEmail))
 		if !(body.Method == "link" || body.Method == "otp") {

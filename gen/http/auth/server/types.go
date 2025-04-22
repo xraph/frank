@@ -2178,14 +2178,11 @@ func NewRefreshTokenPayload(body *RefreshTokenRequestBody, sessionID *string) *a
 
 // NewForgotPasswordPayload builds a auth service forgot_password endpoint
 // payload.
-func NewForgotPasswordPayload(body *ForgotPasswordRequestBody, redirectURL *string, oauth2 *string, xAPIKey *string, jwt *string, sessionID *string) *auth.ForgotPasswordPayload {
+func NewForgotPasswordPayload(body *ForgotPasswordRequestBody, redirectURL *string, sessionID *string) *auth.ForgotPasswordPayload {
 	v := &auth.ForgotPasswordPayload{
 		Email: *body.Email,
 	}
 	v.RedirectURL = redirectURL
-	v.Oauth2 = oauth2
-	v.XAPIKey = xAPIKey
-	v.JWT = jwt
 	v.SessionID = sessionID
 
 	return v

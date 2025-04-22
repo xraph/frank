@@ -187,9 +187,6 @@ func ParseEndpoint(
 		authForgotPasswordFlags           = flag.NewFlagSet("forgot-password", flag.ExitOnError)
 		authForgotPasswordBodyFlag        = authForgotPasswordFlags.String("body", "REQUIRED", "")
 		authForgotPasswordRedirectURLFlag = authForgotPasswordFlags.String("redirect-url", "", "")
-		authForgotPasswordOauth2Flag      = authForgotPasswordFlags.String("oauth2", "", "")
-		authForgotPasswordXAPIKeyFlag     = authForgotPasswordFlags.String("xapi-key", "", "")
-		authForgotPasswordJWTFlag         = authForgotPasswordFlags.String("jwt", "", "")
 		authForgotPasswordSessionIDFlag   = authForgotPasswordFlags.String("session-id", "", "")
 
 		authResetPasswordFlags         = flag.NewFlagSet("reset-password", flag.ExitOnError)
@@ -1452,7 +1449,7 @@ func ParseEndpoint(
 				data, err = authc.BuildRefreshTokenPayload(*authRefreshTokenBodyFlag, *authRefreshTokenSessionIDFlag)
 			case "forgot-password":
 				endpoint = c.ForgotPassword()
-				data, err = authc.BuildForgotPasswordPayload(*authForgotPasswordBodyFlag, *authForgotPasswordRedirectURLFlag, *authForgotPasswordOauth2Flag, *authForgotPasswordXAPIKeyFlag, *authForgotPasswordJWTFlag, *authForgotPasswordSessionIDFlag)
+				data, err = authc.BuildForgotPasswordPayload(*authForgotPasswordBodyFlag, *authForgotPasswordRedirectURLFlag, *authForgotPasswordSessionIDFlag)
 			case "reset-password":
 				endpoint = c.ResetPassword()
 				data, err = authc.BuildResetPasswordPayload(*authResetPasswordBodyFlag, *authResetPasswordSessionIDFlag)
@@ -2301,20 +2298,17 @@ Example:
 }
 
 func authForgotPasswordUsage() {
-	fmt.Fprintf(os.Stderr, `%[1]s [flags] auth forgot-password -body JSON -redirect-url STRING -oauth2 STRING -xapi-key STRING -jwt STRING -session-id STRING
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] auth forgot-password -body JSON -redirect-url STRING -session-id STRING
 
 Initiate password reset process
     -body JSON: 
     -redirect-url STRING: 
-    -oauth2 STRING: 
-    -xapi-key STRING: 
-    -jwt STRING: 
     -session-id STRING: 
 
 Example:
     %[1]s auth forgot-password --body '{
       "email": "user@example.com"
-   }' --redirect-url "Natus aut." --oauth2 "Voluptates doloremque aut animi ratione molestiae pariatur." --xapi-key "Ut ut voluptatum." --jwt "Fugit nihil in itaque corporis quia." --session-id "Quas et."
+   }' --redirect-url "Natus aut." --session-id "Voluptates doloremque aut animi ratione molestiae pariatur."
 `, os.Args[0])
 }
 
@@ -2328,8 +2322,8 @@ Reset password using token
 Example:
     %[1]s auth reset-password --body '{
       "new_password": "new-secure-password",
-      "token": "Sit ea qui tenetur nesciunt dicta."
-   }' --session-id "Reprehenderit dicta et ut debitis."
+      "token": "Eveniet fugit."
+   }' --session-id "Maxime asperiores voluptate iusto aut qui rem."
 `, os.Args[0])
 }
 
@@ -2344,9 +2338,9 @@ Example:
     %[1]s auth verify-email --body '{
       "email": "user@example.com",
       "method": "otp",
-      "otp": "Expedita esse exercitationem qui repellat error.",
-      "token": "Aut quam sunt sit velit corporis."
-   }' --session-id "Rerum quam."
+      "otp": "Quisquam ad assumenda error.",
+      "token": "Aut animi."
+   }' --session-id "Sint blanditiis."
 `, os.Args[0])
 }
 
@@ -2361,8 +2355,8 @@ Send verification email with link or OTP
 Example:
     %[1]s auth send-email-verification --body '{
       "email": "user@example.com",
-      "method": "link"
-   }' --redirect-url "Qui dolor." --session-id "Ut qui et fuga veniam qui non."
+      "method": "otp"
+   }' --redirect-url "Nobis et quam soluta et." --session-id "Tenetur provident."
 `, os.Args[0])
 }
 
@@ -2377,7 +2371,7 @@ Check if email is verified
     -session-id STRING: 
 
 Example:
-    %[1]s auth check-email-verification --email "shanie@carrollshields.name" --oauth2 "Qui beatae ut quia consequatur aut." --jwt "Quas quibusdam dolorem." --xapi-key "Unde saepe." --session-id "Velit in a."
+    %[1]s auth check-email-verification --email "dalton@harvey.org" --oauth2 "Ut soluta rerum ratione iste quidem id." --jwt "Quas vero voluptatem voluptas." --xapi-key "Beatae ut quia." --session-id "Aut sed quas quibusdam dolorem quibusdam."
 `, os.Args[0])
 }
 
@@ -2389,7 +2383,7 @@ Get current user info
     -session-id STRING: 
 
 Example:
-    %[1]s auth me --jwt "Voluptas quia sint dolor aut qui." --session-id "Reprehenderit consequatur neque aut laudantium expedita nisi."
+    %[1]s auth me --jwt "Blanditiis et exercitationem voluptas quia sint." --session-id "Aut qui sint reprehenderit consequatur neque aut."
 `, os.Args[0])
 }
 

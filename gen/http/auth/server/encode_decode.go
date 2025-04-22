@@ -660,27 +660,12 @@ func DecodeForgotPasswordRequest(mux goahttp.Muxer, decoder func(*http.Request) 
 
 		var (
 			redirectURL *string
-			oauth2      *string
-			xAPIKey     *string
-			jwt         *string
 			sessionID   *string
 			c           *http.Cookie
 		)
 		redirectURLRaw := r.URL.Query().Get("redirect_url")
 		if redirectURLRaw != "" {
 			redirectURL = &redirectURLRaw
-		}
-		oauth2Raw := r.Header.Get("Authorization")
-		if oauth2Raw != "" {
-			oauth2 = &oauth2Raw
-		}
-		xAPIKeyRaw := r.Header.Get("Authorization")
-		if xAPIKeyRaw != "" {
-			xAPIKey = &xAPIKeyRaw
-		}
-		jwtRaw := r.Header.Get("Authorization")
-		if jwtRaw != "" {
-			jwt = &jwtRaw
 		}
 		c, _ = r.Cookie("frank_sid")
 		var sessionIDRaw string
@@ -690,28 +675,7 @@ func DecodeForgotPasswordRequest(mux goahttp.Muxer, decoder func(*http.Request) 
 		if sessionIDRaw != "" {
 			sessionID = &sessionIDRaw
 		}
-		payload := NewForgotPasswordPayload(&body, redirectURL, oauth2, xAPIKey, jwt, sessionID)
-		if payload.Oauth2 != nil {
-			if strings.Contains(*payload.Oauth2, " ") {
-				// Remove authorization scheme prefix (e.g. "Bearer")
-				cred := strings.SplitN(*payload.Oauth2, " ", 2)[1]
-				payload.Oauth2 = &cred
-			}
-		}
-		if payload.XAPIKey != nil {
-			if strings.Contains(*payload.XAPIKey, " ") {
-				// Remove authorization scheme prefix (e.g. "Bearer")
-				cred := strings.SplitN(*payload.XAPIKey, " ", 2)[1]
-				payload.XAPIKey = &cred
-			}
-		}
-		if payload.JWT != nil {
-			if strings.Contains(*payload.JWT, " ") {
-				// Remove authorization scheme prefix (e.g. "Bearer")
-				cred := strings.SplitN(*payload.JWT, " ", 2)[1]
-				payload.JWT = &cred
-			}
-		}
+		payload := NewForgotPasswordPayload(&body, redirectURL, sessionID)
 
 		return payload, nil
 	}
