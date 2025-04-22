@@ -298,12 +298,12 @@ func (weq *WebhookEventQuery) WithWebhook(opts ...func(*WebhookQuery)) *WebhookE
 // Example:
 //
 //	var v []struct {
-//		WebhookID string `json:"webhook_id,omitempty"`
+//		CreatedAt time.Time `json:"created_at,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.WebhookEvent.Query().
-//		GroupBy(webhookevent.FieldWebhookID).
+//		GroupBy(webhookevent.FieldCreatedAt).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (weq *WebhookEventQuery) GroupBy(field string, fields ...string) *WebhookEventGroupBy {
@@ -321,11 +321,11 @@ func (weq *WebhookEventQuery) GroupBy(field string, fields ...string) *WebhookEv
 // Example:
 //
 //	var v []struct {
-//		WebhookID string `json:"webhook_id,omitempty"`
+//		CreatedAt time.Time `json:"created_at,omitempty"`
 //	}
 //
 //	client.WebhookEvent.Query().
-//		Select(webhookevent.FieldWebhookID).
+//		Select(webhookevent.FieldCreatedAt).
 //		Scan(ctx, &v)
 func (weq *WebhookEventQuery) Select(fields ...string) *WebhookEventSelect {
 	weq.ctx.Fields = append(weq.ctx.Fields, fields...)

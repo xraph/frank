@@ -23162,6 +23162,8 @@ type WebhookEventMutation struct {
 	op             Op
 	typ            string
 	id             *string
+	created_at     *time.Time
+	updated_at     *time.Time
 	event_type     *string
 	headers        *map[string]string
 	payload        *map[string]interface{}
@@ -23174,8 +23176,6 @@ type WebhookEventMutation struct {
 	addstatus_code *int
 	response_body  *string
 	error          *string
-	created_at     *time.Time
-	updated_at     *time.Time
 	clearedFields  map[string]struct{}
 	webhook        *string
 	clearedwebhook bool
@@ -23286,6 +23286,78 @@ func (m *WebhookEventMutation) IDs(ctx context.Context) ([]string, error) {
 	default:
 		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
 	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *WebhookEventMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *WebhookEventMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the WebhookEvent entity.
+// If the WebhookEvent object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *WebhookEventMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *WebhookEventMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *WebhookEventMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *WebhookEventMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the WebhookEvent entity.
+// If the WebhookEvent object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *WebhookEventMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *WebhookEventMutation) ResetUpdatedAt() {
+	m.updated_at = nil
 }
 
 // SetWebhookID sets the "webhook_id" field.
@@ -23816,78 +23888,6 @@ func (m *WebhookEventMutation) ResetError() {
 	delete(m.clearedFields, webhookevent.FieldError)
 }
 
-// SetCreatedAt sets the "created_at" field.
-func (m *WebhookEventMutation) SetCreatedAt(t time.Time) {
-	m.created_at = &t
-}
-
-// CreatedAt returns the value of the "created_at" field in the mutation.
-func (m *WebhookEventMutation) CreatedAt() (r time.Time, exists bool) {
-	v := m.created_at
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldCreatedAt returns the old "created_at" field's value of the WebhookEvent entity.
-// If the WebhookEvent object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *WebhookEventMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
-	}
-	return oldValue.CreatedAt, nil
-}
-
-// ResetCreatedAt resets all changes to the "created_at" field.
-func (m *WebhookEventMutation) ResetCreatedAt() {
-	m.created_at = nil
-}
-
-// SetUpdatedAt sets the "updated_at" field.
-func (m *WebhookEventMutation) SetUpdatedAt(t time.Time) {
-	m.updated_at = &t
-}
-
-// UpdatedAt returns the value of the "updated_at" field in the mutation.
-func (m *WebhookEventMutation) UpdatedAt() (r time.Time, exists bool) {
-	v := m.updated_at
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldUpdatedAt returns the old "updated_at" field's value of the WebhookEvent entity.
-// If the WebhookEvent object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *WebhookEventMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
-	}
-	return oldValue.UpdatedAt, nil
-}
-
-// ResetUpdatedAt resets all changes to the "updated_at" field.
-func (m *WebhookEventMutation) ResetUpdatedAt() {
-	m.updated_at = nil
-}
-
 // ClearWebhook clears the "webhook" edge to the Webhook entity.
 func (m *WebhookEventMutation) ClearWebhook() {
 	m.clearedwebhook = true
@@ -23950,6 +23950,12 @@ func (m *WebhookEventMutation) Type() string {
 // AddedFields().
 func (m *WebhookEventMutation) Fields() []string {
 	fields := make([]string, 0, 13)
+	if m.created_at != nil {
+		fields = append(fields, webhookevent.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, webhookevent.FieldUpdatedAt)
+	}
 	if m.webhook != nil {
 		fields = append(fields, webhookevent.FieldWebhookID)
 	}
@@ -23983,12 +23989,6 @@ func (m *WebhookEventMutation) Fields() []string {
 	if m.error != nil {
 		fields = append(fields, webhookevent.FieldError)
 	}
-	if m.created_at != nil {
-		fields = append(fields, webhookevent.FieldCreatedAt)
-	}
-	if m.updated_at != nil {
-		fields = append(fields, webhookevent.FieldUpdatedAt)
-	}
 	return fields
 }
 
@@ -23997,6 +23997,10 @@ func (m *WebhookEventMutation) Fields() []string {
 // schema.
 func (m *WebhookEventMutation) Field(name string) (ent.Value, bool) {
 	switch name {
+	case webhookevent.FieldCreatedAt:
+		return m.CreatedAt()
+	case webhookevent.FieldUpdatedAt:
+		return m.UpdatedAt()
 	case webhookevent.FieldWebhookID:
 		return m.WebhookID()
 	case webhookevent.FieldEventType:
@@ -24019,10 +24023,6 @@ func (m *WebhookEventMutation) Field(name string) (ent.Value, bool) {
 		return m.ResponseBody()
 	case webhookevent.FieldError:
 		return m.Error()
-	case webhookevent.FieldCreatedAt:
-		return m.CreatedAt()
-	case webhookevent.FieldUpdatedAt:
-		return m.UpdatedAt()
 	}
 	return nil, false
 }
@@ -24032,6 +24032,10 @@ func (m *WebhookEventMutation) Field(name string) (ent.Value, bool) {
 // database failed.
 func (m *WebhookEventMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
+	case webhookevent.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case webhookevent.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
 	case webhookevent.FieldWebhookID:
 		return m.OldWebhookID(ctx)
 	case webhookevent.FieldEventType:
@@ -24054,10 +24058,6 @@ func (m *WebhookEventMutation) OldField(ctx context.Context, name string) (ent.V
 		return m.OldResponseBody(ctx)
 	case webhookevent.FieldError:
 		return m.OldError(ctx)
-	case webhookevent.FieldCreatedAt:
-		return m.OldCreatedAt(ctx)
-	case webhookevent.FieldUpdatedAt:
-		return m.OldUpdatedAt(ctx)
 	}
 	return nil, fmt.Errorf("unknown WebhookEvent field %s", name)
 }
@@ -24067,6 +24067,20 @@ func (m *WebhookEventMutation) OldField(ctx context.Context, name string) (ent.V
 // type.
 func (m *WebhookEventMutation) SetField(name string, value ent.Value) error {
 	switch name {
+	case webhookevent.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case webhookevent.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
 	case webhookevent.FieldWebhookID:
 		v, ok := value.(string)
 		if !ok {
@@ -24143,20 +24157,6 @@ func (m *WebhookEventMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetError(v)
-		return nil
-	case webhookevent.FieldCreatedAt:
-		v, ok := value.(time.Time)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetCreatedAt(v)
-		return nil
-	case webhookevent.FieldUpdatedAt:
-		v, ok := value.(time.Time)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetUpdatedAt(v)
 		return nil
 	}
 	return fmt.Errorf("unknown WebhookEvent field %s", name)
@@ -24279,6 +24279,12 @@ func (m *WebhookEventMutation) ClearField(name string) error {
 // It returns an error if the field is not defined in the schema.
 func (m *WebhookEventMutation) ResetField(name string) error {
 	switch name {
+	case webhookevent.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case webhookevent.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
 	case webhookevent.FieldWebhookID:
 		m.ResetWebhookID()
 		return nil
@@ -24311,12 +24317,6 @@ func (m *WebhookEventMutation) ResetField(name string) error {
 		return nil
 	case webhookevent.FieldError:
 		m.ResetError()
-		return nil
-	case webhookevent.FieldCreatedAt:
-		m.ResetCreatedAt()
-		return nil
-	case webhookevent.FieldUpdatedAt:
-		m.ResetUpdatedAt()
 		return nil
 	}
 	return fmt.Errorf("unknown WebhookEvent field %s", name)

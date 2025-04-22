@@ -100,6 +100,8 @@ var (
 	DefaultSignCount int
 	// DefaultActive holds the default value on creation for the "active" field.
 	DefaultActive bool
+	// DefaultID holds the default value on creation for the "id" field.
+	DefaultID func() string
 )
 
 // OrderOption defines the ordering options for the Passkey queries.

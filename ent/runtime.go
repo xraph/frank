@@ -204,25 +204,29 @@ func init() {
 	// mfa.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	mfa.UpdateDefaultUpdatedAt = mfaDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// mfaDescUserID is the schema descriptor for user_id field.
-	mfaDescUserID := mfaFields[1].Descriptor()
+	mfaDescUserID := mfaFields[0].Descriptor()
 	// mfa.UserIDValidator is a validator for the "user_id" field. It is called by the builders before save.
 	mfa.UserIDValidator = mfaDescUserID.Validators[0].(func(string) error)
 	// mfaDescMethod is the schema descriptor for method field.
-	mfaDescMethod := mfaFields[2].Descriptor()
+	mfaDescMethod := mfaFields[1].Descriptor()
 	// mfa.MethodValidator is a validator for the "method" field. It is called by the builders before save.
 	mfa.MethodValidator = mfaDescMethod.Validators[0].(func(string) error)
 	// mfaDescSecret is the schema descriptor for secret field.
-	mfaDescSecret := mfaFields[3].Descriptor()
+	mfaDescSecret := mfaFields[2].Descriptor()
 	// mfa.SecretValidator is a validator for the "secret" field. It is called by the builders before save.
 	mfa.SecretValidator = mfaDescSecret.Validators[0].(func(string) error)
 	// mfaDescVerified is the schema descriptor for verified field.
-	mfaDescVerified := mfaFields[4].Descriptor()
+	mfaDescVerified := mfaFields[3].Descriptor()
 	// mfa.DefaultVerified holds the default value on creation for the verified field.
 	mfa.DefaultVerified = mfaDescVerified.Default.(bool)
 	// mfaDescActive is the schema descriptor for active field.
-	mfaDescActive := mfaFields[5].Descriptor()
+	mfaDescActive := mfaFields[4].Descriptor()
 	// mfa.DefaultActive holds the default value on creation for the active field.
 	mfa.DefaultActive = mfaDescActive.Default.(bool)
+	// mfaDescID is the schema descriptor for id field.
+	mfaDescID := mfaMixinFields0[0].Descriptor()
+	// mfa.DefaultID holds the default value on creation for the id field.
+	mfa.DefaultID = mfaDescID.Default.(func() string)
 	oauthauthorizationMixin := schema.OAuthAuthorization{}.Mixin()
 	oauthauthorizationMixinFields0 := oauthauthorizationMixin[0].Fields()
 	_ = oauthauthorizationMixinFields0
@@ -337,21 +341,25 @@ func init() {
 	// oauthscope.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	oauthscope.UpdateDefaultUpdatedAt = oauthscopeDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// oauthscopeDescName is the schema descriptor for name field.
-	oauthscopeDescName := oauthscopeFields[1].Descriptor()
+	oauthscopeDescName := oauthscopeFields[0].Descriptor()
 	// oauthscope.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	oauthscope.NameValidator = oauthscopeDescName.Validators[0].(func(string) error)
 	// oauthscopeDescDescription is the schema descriptor for description field.
-	oauthscopeDescDescription := oauthscopeFields[2].Descriptor()
+	oauthscopeDescDescription := oauthscopeFields[1].Descriptor()
 	// oauthscope.DescriptionValidator is a validator for the "description" field. It is called by the builders before save.
 	oauthscope.DescriptionValidator = oauthscopeDescDescription.Validators[0].(func(string) error)
 	// oauthscopeDescDefaultScope is the schema descriptor for default_scope field.
-	oauthscopeDescDefaultScope := oauthscopeFields[3].Descriptor()
+	oauthscopeDescDefaultScope := oauthscopeFields[2].Descriptor()
 	// oauthscope.DefaultDefaultScope holds the default value on creation for the default_scope field.
 	oauthscope.DefaultDefaultScope = oauthscopeDescDefaultScope.Default.(bool)
 	// oauthscopeDescPublic is the schema descriptor for public field.
-	oauthscopeDescPublic := oauthscopeFields[4].Descriptor()
+	oauthscopeDescPublic := oauthscopeFields[3].Descriptor()
 	// oauthscope.DefaultPublic holds the default value on creation for the public field.
 	oauthscope.DefaultPublic = oauthscopeDescPublic.Default.(bool)
+	// oauthscopeDescID is the schema descriptor for id field.
+	oauthscopeDescID := oauthscopeMixinFields0[0].Descriptor()
+	// oauthscope.DefaultID holds the default value on creation for the id field.
+	oauthscope.DefaultID = oauthscopeDescID.Default.(func() string)
 	oauthtokenMixin := schema.OAuthToken{}.Mixin()
 	oauthtokenMixinFields0 := oauthtokenMixin[0].Fields()
 	_ = oauthtokenMixinFields0
@@ -481,29 +489,33 @@ func init() {
 	// passkey.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	passkey.UpdateDefaultUpdatedAt = passkeyDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// passkeyDescUserID is the schema descriptor for user_id field.
-	passkeyDescUserID := passkeyFields[1].Descriptor()
+	passkeyDescUserID := passkeyFields[0].Descriptor()
 	// passkey.UserIDValidator is a validator for the "user_id" field. It is called by the builders before save.
 	passkey.UserIDValidator = passkeyDescUserID.Validators[0].(func(string) error)
 	// passkeyDescName is the schema descriptor for name field.
-	passkeyDescName := passkeyFields[2].Descriptor()
+	passkeyDescName := passkeyFields[1].Descriptor()
 	// passkey.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	passkey.NameValidator = passkeyDescName.Validators[0].(func(string) error)
 	// passkeyDescCredentialID is the schema descriptor for credential_id field.
-	passkeyDescCredentialID := passkeyFields[3].Descriptor()
+	passkeyDescCredentialID := passkeyFields[2].Descriptor()
 	// passkey.CredentialIDValidator is a validator for the "credential_id" field. It is called by the builders before save.
 	passkey.CredentialIDValidator = passkeyDescCredentialID.Validators[0].(func(string) error)
 	// passkeyDescPublicKey is the schema descriptor for public_key field.
-	passkeyDescPublicKey := passkeyFields[4].Descriptor()
+	passkeyDescPublicKey := passkeyFields[3].Descriptor()
 	// passkey.PublicKeyValidator is a validator for the "public_key" field. It is called by the builders before save.
 	passkey.PublicKeyValidator = passkeyDescPublicKey.Validators[0].(func([]byte) error)
 	// passkeyDescSignCount is the schema descriptor for sign_count field.
-	passkeyDescSignCount := passkeyFields[5].Descriptor()
+	passkeyDescSignCount := passkeyFields[4].Descriptor()
 	// passkey.DefaultSignCount holds the default value on creation for the sign_count field.
 	passkey.DefaultSignCount = passkeyDescSignCount.Default.(int)
 	// passkeyDescActive is the schema descriptor for active field.
-	passkeyDescActive := passkeyFields[6].Descriptor()
+	passkeyDescActive := passkeyFields[5].Descriptor()
 	// passkey.DefaultActive holds the default value on creation for the active field.
 	passkey.DefaultActive = passkeyDescActive.Default.(bool)
+	// passkeyDescID is the schema descriptor for id field.
+	passkeyDescID := passkeyMixinFields0[0].Descriptor()
+	// passkey.DefaultID holds the default value on creation for the id field.
+	passkey.DefaultID = passkeyDescID.Default.(func() string)
 	permissionMixin := schema.Permission{}.Mixin()
 	permissionMixinFields0 := permissionMixin[0].Fields()
 	_ = permissionMixinFields0
@@ -559,17 +571,21 @@ func init() {
 	// role.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	role.UpdateDefaultUpdatedAt = roleDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// roleDescName is the schema descriptor for name field.
-	roleDescName := roleFields[1].Descriptor()
+	roleDescName := roleFields[0].Descriptor()
 	// role.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	role.NameValidator = roleDescName.Validators[0].(func(string) error)
 	// roleDescSystem is the schema descriptor for system field.
-	roleDescSystem := roleFields[4].Descriptor()
+	roleDescSystem := roleFields[3].Descriptor()
 	// role.DefaultSystem holds the default value on creation for the system field.
 	role.DefaultSystem = roleDescSystem.Default.(bool)
 	// roleDescIsDefault is the schema descriptor for is_default field.
-	roleDescIsDefault := roleFields[5].Descriptor()
+	roleDescIsDefault := roleFields[4].Descriptor()
 	// role.DefaultIsDefault holds the default value on creation for the is_default field.
 	role.DefaultIsDefault = roleDescIsDefault.Default.(bool)
+	// roleDescID is the schema descriptor for id field.
+	roleDescID := roleMixinFields0[0].Descriptor()
+	// role.DefaultID holds the default value on creation for the id field.
+	role.DefaultID = roleDescID.Default.(func() string)
 	ssostateMixin := schema.SSOState{}.Mixin()
 	ssostateMixinFields0 := ssostateMixin[0].Fields()
 	_ = ssostateMixinFields0
@@ -755,32 +771,39 @@ func init() {
 	webhookDescID := webhookMixinFields0[0].Descriptor()
 	// webhook.DefaultID holds the default value on creation for the id field.
 	webhook.DefaultID = webhookDescID.Default.(func() string)
+	webhookeventMixin := schema.WebhookEvent{}.Mixin()
+	webhookeventMixinFields0 := webhookeventMixin[0].Fields()
+	_ = webhookeventMixinFields0
 	webhookeventFields := schema.WebhookEvent{}.Fields()
 	_ = webhookeventFields
-	// webhookeventDescWebhookID is the schema descriptor for webhook_id field.
-	webhookeventDescWebhookID := webhookeventFields[1].Descriptor()
-	// webhookevent.WebhookIDValidator is a validator for the "webhook_id" field. It is called by the builders before save.
-	webhookevent.WebhookIDValidator = webhookeventDescWebhookID.Validators[0].(func(string) error)
-	// webhookeventDescEventType is the schema descriptor for event_type field.
-	webhookeventDescEventType := webhookeventFields[2].Descriptor()
-	// webhookevent.EventTypeValidator is a validator for the "event_type" field. It is called by the builders before save.
-	webhookevent.EventTypeValidator = webhookeventDescEventType.Validators[0].(func(string) error)
-	// webhookeventDescDelivered is the schema descriptor for delivered field.
-	webhookeventDescDelivered := webhookeventFields[5].Descriptor()
-	// webhookevent.DefaultDelivered holds the default value on creation for the delivered field.
-	webhookevent.DefaultDelivered = webhookeventDescDelivered.Default.(bool)
-	// webhookeventDescAttempts is the schema descriptor for attempts field.
-	webhookeventDescAttempts := webhookeventFields[7].Descriptor()
-	// webhookevent.DefaultAttempts holds the default value on creation for the attempts field.
-	webhookevent.DefaultAttempts = webhookeventDescAttempts.Default.(int)
 	// webhookeventDescCreatedAt is the schema descriptor for created_at field.
-	webhookeventDescCreatedAt := webhookeventFields[12].Descriptor()
+	webhookeventDescCreatedAt := webhookeventMixinFields0[1].Descriptor()
 	// webhookevent.DefaultCreatedAt holds the default value on creation for the created_at field.
 	webhookevent.DefaultCreatedAt = webhookeventDescCreatedAt.Default.(func() time.Time)
 	// webhookeventDescUpdatedAt is the schema descriptor for updated_at field.
-	webhookeventDescUpdatedAt := webhookeventFields[13].Descriptor()
+	webhookeventDescUpdatedAt := webhookeventMixinFields0[2].Descriptor()
 	// webhookevent.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	webhookevent.DefaultUpdatedAt = webhookeventDescUpdatedAt.Default.(func() time.Time)
 	// webhookevent.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	webhookevent.UpdateDefaultUpdatedAt = webhookeventDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// webhookeventDescWebhookID is the schema descriptor for webhook_id field.
+	webhookeventDescWebhookID := webhookeventFields[0].Descriptor()
+	// webhookevent.WebhookIDValidator is a validator for the "webhook_id" field. It is called by the builders before save.
+	webhookevent.WebhookIDValidator = webhookeventDescWebhookID.Validators[0].(func(string) error)
+	// webhookeventDescEventType is the schema descriptor for event_type field.
+	webhookeventDescEventType := webhookeventFields[1].Descriptor()
+	// webhookevent.EventTypeValidator is a validator for the "event_type" field. It is called by the builders before save.
+	webhookevent.EventTypeValidator = webhookeventDescEventType.Validators[0].(func(string) error)
+	// webhookeventDescDelivered is the schema descriptor for delivered field.
+	webhookeventDescDelivered := webhookeventFields[4].Descriptor()
+	// webhookevent.DefaultDelivered holds the default value on creation for the delivered field.
+	webhookevent.DefaultDelivered = webhookeventDescDelivered.Default.(bool)
+	// webhookeventDescAttempts is the schema descriptor for attempts field.
+	webhookeventDescAttempts := webhookeventFields[6].Descriptor()
+	// webhookevent.DefaultAttempts holds the default value on creation for the attempts field.
+	webhookevent.DefaultAttempts = webhookeventDescAttempts.Default.(int)
+	// webhookeventDescID is the schema descriptor for id field.
+	webhookeventDescID := webhookeventMixinFields0[0].Descriptor()
+	// webhookevent.DefaultID holds the default value on creation for the id field.
+	webhookevent.DefaultID = webhookeventDescID.Default.(func() string)
 }

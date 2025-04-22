@@ -118,6 +118,14 @@ func (rc *RoleCreate) SetID(s string) *RoleCreate {
 	return rc
 }
 
+// SetNillableID sets the "id" field if the given value is not nil.
+func (rc *RoleCreate) SetNillableID(s *string) *RoleCreate {
+	if s != nil {
+		rc.SetID(*s)
+	}
+	return rc
+}
+
 // AddUserIDs adds the "users" edge to the User entity by IDs.
 func (rc *RoleCreate) AddUserIDs(ids ...string) *RoleCreate {
 	rc.mutation.AddUserIDs(ids...)
@@ -198,6 +206,10 @@ func (rc *RoleCreate) defaults() {
 	if _, ok := rc.mutation.IsDefault(); !ok {
 		v := role.DefaultIsDefault
 		rc.mutation.SetIsDefault(v)
+	}
+	if _, ok := rc.mutation.ID(); !ok {
+		v := role.DefaultID()
+		rc.mutation.SetID(v)
 	}
 }
 

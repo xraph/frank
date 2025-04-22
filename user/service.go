@@ -12,6 +12,7 @@ import (
 	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/juicycleff/frank/pkg/logging"
 	"github.com/juicycleff/frank/pkg/validator"
+	"go.uber.org/zap"
 )
 
 // Service provides user management operations
@@ -56,7 +57,7 @@ type Service interface {
 	VerifyEmailOTP(ctx context.Context, email string, otp string) (*ent.Verification, error)
 
 	// Authenticate authenticates a user with email and password
-	Authenticate(ctx context.Context, email, password string) (*LoginResult, error)
+	Authenticate(ctx context.Context, email, password string, orgID string) (*LoginResult, error)
 }
 
 // VerificationMethod represents the method used for verification
@@ -201,20 +202,38 @@ func (s *service) Create(ctx context.Context, input CreateUserInput) (*ent.User,
 	count, err := s.repo.GetUserCount(ctx)
 	if err != nil {
 		s.logger.Error("Failed to get user count", logging.Error(err))
-	} else if count == 1 {
+	}
+
+	orgID := input.OrganizationID
+	if orgID == "" && count > 1 {
+		return nil, errors.New(errors.CodeConflict, "cannot create a new user without an organization")
+	}
+
+	if count == 1 {
+		defaultName := s.cfg.Organization.DefaultName
+		if defaultName == "" {
+			defaultName = "Default"
+		}
+
+		newOrg, err := s.orgService.Create(ctx, organization.CreateOrganizationInput{
+			Name:    s.cfg.Organization.DefaultName,
+			OwnerID: user.ID,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		orgID = newOrg.ID
+		user.PrimaryOrganizationID = orgID
+
+		// _, err = s.repo.Update(ctx, user.ID, RepositoryUpdateInput{
+		// 	PrimaryOrganizationID: &orgID,
+		// })
+
 		// This is the first user, make them root and create default org
 		err = s.makeFirstUserRoot(ctx, user)
 		if err != nil {
 			s.logger.Error("Failed to set up first user as root", logging.Error(err))
-		}
-	} else if input.OrganizationID != "" {
-		// For non-first users, add to specified organization if provided
-		err = s.orgService.AddMember(ctx, input.OrganizationID, user.ID, []string{"member"})
-		if err != nil {
-			s.logger.Error("Failed to add user to organization",
-				logging.String("user_id", user.ID),
-				logging.String("org_id", input.OrganizationID),
-				logging.Error(err))
 		}
 	} else {
 		// For non-first users without an organization, you might want to
@@ -223,13 +242,13 @@ func (s *service) Create(ctx context.Context, input CreateUserInput) (*ent.User,
 			logging.String("user_id", user.ID))
 	}
 
-	// Add user to organization if provided
-	if input.OrganizationID != "" {
-		err = s.orgService.AddMember(ctx, input.OrganizationID, user.ID, []string{"member"})
-		if err != nil {
-			// Log error but don't fail user creation
-			// TODO: Add proper logging
-		}
+	// For non-first users, add to specified organization if provided
+	err = s.orgService.AddMember(ctx, orgID, user.ID, []string{"member"})
+	if err != nil {
+		s.logger.Error("Failed to add user to organization",
+			logging.String("user_id", user.ID),
+			logging.String("org_id", input.OrganizationID),
+			logging.Error(err))
 	}
 
 	return user, nil
@@ -543,14 +562,25 @@ func (s *service) VerifyEmailOTP(ctx context.Context, email string, otp string) 
 }
 
 // Authenticate authenticates a user with email and password
-func (s *service) Authenticate(ctx context.Context, email, password string) (*LoginResult, error) {
+func (s *service) Authenticate(ctx context.Context, email, password, orgID string) (*LoginResult, error) {
 	// Get user by email
 	user, err := s.repo.GetByEmail(ctx, normalizeEmail(email))
 	if err != nil {
+		s.logger.Error("Failed to get user by email", zap.Error(err), zap.String("email", email))
 		if errors.IsNotFound(err) {
 			return nil, errors.New(errors.CodeInvalidCredentials, "invalid email or password")
 		}
 		return nil, err
+	}
+
+	if orgID != "" {
+		isMember, err := s.repo.IsUserMemberOfOrganization(ctx, user.ID, orgID)
+		if err != nil {
+			return nil, err
+		}
+		if !isMember {
+			return nil, errors.New(errors.CodeForbidden, "user is not a member of this organization")
+		}
 	}
 
 	// Check if user is active
@@ -566,6 +596,7 @@ func (s *service) Authenticate(ctx context.Context, email, password string) (*Lo
 	// Verify password
 	err = s.pwdManager.VerifyPassword(user.PasswordHash, password)
 	if err != nil {
+		s.logger.Error("Failed to verify password", zap.Error(err), zap.String("email", email))
 		return nil, errors.New(errors.CodeInvalidCredentials, "invalid email or password")
 	}
 

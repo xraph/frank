@@ -8785,6 +8785,14 @@
               "schema": {
                 "type": "object",
                 "properties": {
+                  "created_at": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "updated_at": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
                   "webhook_id": {
                     "type": "string"
                   },
@@ -8826,25 +8834,17 @@
                   "error": {
                     "type": "string"
                   },
-                  "created_at": {
-                    "type": "string",
-                    "format": "date-time"
-                  },
-                  "updated_at": {
-                    "type": "string",
-                    "format": "date-time"
-                  },
                   "webhook": {
                     "type": "string"
                   }
                 },
                 "required": [
+                  "created_at",
+                  "updated_at",
                   "webhook_id",
                   "event_type",
                   "delivered",
                   "attempts",
-                  "created_at",
-                  "updated_at",
                   "webhook"
                 ]
               }
@@ -8980,6 +8980,10 @@
               "schema": {
                 "type": "object",
                 "properties": {
+                  "updated_at": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
                   "webhook_id": {
                     "type": "string"
                   },
@@ -9020,10 +9024,6 @@
                   },
                   "error": {
                     "type": "string"
-                  },
-                  "updated_at": {
-                    "type": "string",
-                    "format": "date-time"
                   },
                   "webhook": {
                     "type": "string"
@@ -17980,6 +17980,14 @@
           "id": {
             "type": "string"
           },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
           "webhook_id": {
             "type": "string"
           },
@@ -18021,26 +18029,18 @@
           "error": {
             "type": "string"
           },
-          "created_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time"
-          },
           "webhook": {
             "$ref": "#/components/schemas/Webhook"
           }
         },
         "required": [
           "id",
+          "created_at",
+          "updated_at",
           "webhook_id",
           "event_type",
           "delivered",
           "attempts",
-          "created_at",
-          "updated_at",
           "webhook"
         ]
       },
@@ -18050,6 +18050,14 @@
           "id": {
             "type": "string"
           },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
           "webhook_id": {
             "type": "string"
           },
@@ -18090,24 +18098,16 @@
           },
           "error": {
             "type": "string"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time"
           }
         },
         "required": [
           "id",
+          "created_at",
+          "updated_at",
           "webhook_id",
           "event_type",
           "delivered",
-          "attempts",
-          "created_at",
-          "updated_at"
+          "attempts"
         ]
       },
       "WebhookEventList": {
@@ -18116,6 +18116,14 @@
           "id": {
             "type": "string"
           },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
           "webhook_id": {
             "type": "string"
           },
@@ -18156,24 +18164,16 @@
           },
           "error": {
             "type": "string"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time"
           }
         },
         "required": [
           "id",
+          "created_at",
+          "updated_at",
           "webhook_id",
           "event_type",
           "delivered",
-          "attempts",
-          "created_at",
-          "updated_at"
+          "attempts"
         ]
       },
       "WebhookEventRead": {
@@ -18182,6 +18182,14 @@
           "id": {
             "type": "string"
           },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
           "webhook_id": {
             "type": "string"
           },
@@ -18222,24 +18230,16 @@
           },
           "error": {
             "type": "string"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time"
           }
         },
         "required": [
           "id",
+          "created_at",
+          "updated_at",
           "webhook_id",
           "event_type",
           "delivered",
-          "attempts",
-          "created_at",
-          "updated_at"
+          "attempts"
         ]
       },
       "WebhookEventUpdate": {
@@ -18248,6 +18248,14 @@
           "id": {
             "type": "string"
           },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
           "webhook_id": {
             "type": "string"
           },
@@ -18288,24 +18296,16 @@
           },
           "error": {
             "type": "string"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time"
           }
         },
         "required": [
           "id",
+          "created_at",
+          "updated_at",
           "webhook_id",
           "event_type",
           "delivered",
-          "attempts",
-          "created_at",
-          "updated_at"
+          "attempts"
         ]
       },
       "WebhookEvent_WebhookRead": {
@@ -18598,6 +18598,14 @@
           "id": {
             "type": "string"
           },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
           "webhook_id": {
             "type": "string"
           },
@@ -18638,24 +18646,16 @@
           },
           "error": {
             "type": "string"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time"
           }
         },
         "required": [
           "id",
+          "created_at",
+          "updated_at",
           "webhook_id",
           "event_type",
           "delivered",
-          "attempts",
-          "created_at",
-          "updated_at"
+          "attempts"
         ]
       },
       "Webhook_OrganizationRead": {

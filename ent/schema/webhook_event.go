@@ -1,8 +1,6 @@
 package schema
 
 import (
-	"time"
-
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
@@ -18,8 +16,6 @@ type WebhookEvent struct {
 // Fields of the WebhookEvent.
 func (WebhookEvent) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("id").
-			Unique(),
 		field.String("webhook_id").
 			NotEmpty(),
 		field.String("event_type").
@@ -43,12 +39,6 @@ func (WebhookEvent) Fields() []ent.Field {
 			Optional(),
 		field.String("error").
 			Optional(),
-		field.Time("created_at").
-			Default(time.Now).
-			Immutable(),
-		field.Time("updated_at").
-			Default(time.Now).
-			UpdateDefault(time.Now),
 	}
 }
 
@@ -70,5 +60,12 @@ func (WebhookEvent) Indexes() []ent.Index {
 		index.Fields("event_type"),
 		index.Fields("delivered"),
 		index.Fields("next_retry"),
+	}
+}
+
+// Mixin of the WebhookEvent.
+func (WebhookEvent) Mixin() []ent.Mixin {
+	return []ent.Mixin{
+		ModelBaseMixin{},
 	}
 }

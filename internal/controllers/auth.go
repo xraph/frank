@@ -101,8 +101,13 @@ func (a *AuthService) Login(ctx context.Context, payload *auth.LoginPayload) (re
 		return nil, errors.New(errors.CodeInternalServer, "failed to get request info")
 	}
 
+	orgId := ""
+	if payload.OrganizationID != nil {
+		orgId = *payload.OrganizationID
+	}
+
 	// Authenticate user
-	authenticatedUser, err := a.userService.Authenticate(ctx, payload.Email, payload.Password)
+	authenticatedUser, err := a.userService.Authenticate(ctx, payload.Email, payload.Password, orgId)
 	if err != nil {
 		return nil, err
 	}
@@ -144,11 +149,6 @@ func (a *AuthService) Login(ctx context.Context, payload *auth.LoginPayload) (re
 			RequiresVerification: &reqVer,
 			Message:              "Email verification required",
 		}, nil
-	}
-
-	orgId := ""
-	if payload.OrganizationID != nil {
-		orgId = *payload.OrganizationID
 	}
 
 	_ = a.hooks.BeforeLogin(user.LoginResult{

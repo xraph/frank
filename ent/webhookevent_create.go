@@ -21,6 +21,34 @@ type WebhookEventCreate struct {
 	hooks    []Hook
 }
 
+// SetCreatedAt sets the "created_at" field.
+func (wec *WebhookEventCreate) SetCreatedAt(t time.Time) *WebhookEventCreate {
+	wec.mutation.SetCreatedAt(t)
+	return wec
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (wec *WebhookEventCreate) SetNillableCreatedAt(t *time.Time) *WebhookEventCreate {
+	if t != nil {
+		wec.SetCreatedAt(*t)
+	}
+	return wec
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (wec *WebhookEventCreate) SetUpdatedAt(t time.Time) *WebhookEventCreate {
+	wec.mutation.SetUpdatedAt(t)
+	return wec
+}
+
+// SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
+func (wec *WebhookEventCreate) SetNillableUpdatedAt(t *time.Time) *WebhookEventCreate {
+	if t != nil {
+		wec.SetUpdatedAt(*t)
+	}
+	return wec
+}
+
 // SetWebhookID sets the "webhook_id" field.
 func (wec *WebhookEventCreate) SetWebhookID(s string) *WebhookEventCreate {
 	wec.mutation.SetWebhookID(s)
@@ -143,37 +171,17 @@ func (wec *WebhookEventCreate) SetNillableError(s *string) *WebhookEventCreate {
 	return wec
 }
 
-// SetCreatedAt sets the "created_at" field.
-func (wec *WebhookEventCreate) SetCreatedAt(t time.Time) *WebhookEventCreate {
-	wec.mutation.SetCreatedAt(t)
-	return wec
-}
-
-// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (wec *WebhookEventCreate) SetNillableCreatedAt(t *time.Time) *WebhookEventCreate {
-	if t != nil {
-		wec.SetCreatedAt(*t)
-	}
-	return wec
-}
-
-// SetUpdatedAt sets the "updated_at" field.
-func (wec *WebhookEventCreate) SetUpdatedAt(t time.Time) *WebhookEventCreate {
-	wec.mutation.SetUpdatedAt(t)
-	return wec
-}
-
-// SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (wec *WebhookEventCreate) SetNillableUpdatedAt(t *time.Time) *WebhookEventCreate {
-	if t != nil {
-		wec.SetUpdatedAt(*t)
-	}
-	return wec
-}
-
 // SetID sets the "id" field.
 func (wec *WebhookEventCreate) SetID(s string) *WebhookEventCreate {
 	wec.mutation.SetID(s)
+	return wec
+}
+
+// SetNillableID sets the "id" field if the given value is not nil.
+func (wec *WebhookEventCreate) SetNillableID(s *string) *WebhookEventCreate {
+	if s != nil {
+		wec.SetID(*s)
+	}
 	return wec
 }
 
@@ -217,14 +225,6 @@ func (wec *WebhookEventCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (wec *WebhookEventCreate) defaults() {
-	if _, ok := wec.mutation.Delivered(); !ok {
-		v := webhookevent.DefaultDelivered
-		wec.mutation.SetDelivered(v)
-	}
-	if _, ok := wec.mutation.Attempts(); !ok {
-		v := webhookevent.DefaultAttempts
-		wec.mutation.SetAttempts(v)
-	}
 	if _, ok := wec.mutation.CreatedAt(); !ok {
 		v := webhookevent.DefaultCreatedAt()
 		wec.mutation.SetCreatedAt(v)
@@ -233,10 +233,28 @@ func (wec *WebhookEventCreate) defaults() {
 		v := webhookevent.DefaultUpdatedAt()
 		wec.mutation.SetUpdatedAt(v)
 	}
+	if _, ok := wec.mutation.Delivered(); !ok {
+		v := webhookevent.DefaultDelivered
+		wec.mutation.SetDelivered(v)
+	}
+	if _, ok := wec.mutation.Attempts(); !ok {
+		v := webhookevent.DefaultAttempts
+		wec.mutation.SetAttempts(v)
+	}
+	if _, ok := wec.mutation.ID(); !ok {
+		v := webhookevent.DefaultID()
+		wec.mutation.SetID(v)
+	}
 }
 
 // check runs all checks and user-defined validators on the builder.
 func (wec *WebhookEventCreate) check() error {
+	if _, ok := wec.mutation.CreatedAt(); !ok {
+		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "WebhookEvent.created_at"`)}
+	}
+	if _, ok := wec.mutation.UpdatedAt(); !ok {
+		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "WebhookEvent.updated_at"`)}
+	}
 	if _, ok := wec.mutation.WebhookID(); !ok {
 		return &ValidationError{Name: "webhook_id", err: errors.New(`ent: missing required field "WebhookEvent.webhook_id"`)}
 	}
@@ -258,12 +276,6 @@ func (wec *WebhookEventCreate) check() error {
 	}
 	if _, ok := wec.mutation.Attempts(); !ok {
 		return &ValidationError{Name: "attempts", err: errors.New(`ent: missing required field "WebhookEvent.attempts"`)}
-	}
-	if _, ok := wec.mutation.CreatedAt(); !ok {
-		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "WebhookEvent.created_at"`)}
-	}
-	if _, ok := wec.mutation.UpdatedAt(); !ok {
-		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "WebhookEvent.updated_at"`)}
 	}
 	if len(wec.mutation.WebhookIDs()) == 0 {
 		return &ValidationError{Name: "webhook", err: errors.New(`ent: missing required edge "WebhookEvent.webhook"`)}
@@ -302,6 +314,14 @@ func (wec *WebhookEventCreate) createSpec() (*WebhookEvent, *sqlgraph.CreateSpec
 	if id, ok := wec.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = id
+	}
+	if value, ok := wec.mutation.CreatedAt(); ok {
+		_spec.SetField(webhookevent.FieldCreatedAt, field.TypeTime, value)
+		_node.CreatedAt = value
+	}
+	if value, ok := wec.mutation.UpdatedAt(); ok {
+		_spec.SetField(webhookevent.FieldUpdatedAt, field.TypeTime, value)
+		_node.UpdatedAt = value
 	}
 	if value, ok := wec.mutation.EventType(); ok {
 		_spec.SetField(webhookevent.FieldEventType, field.TypeString, value)
@@ -342,14 +362,6 @@ func (wec *WebhookEventCreate) createSpec() (*WebhookEvent, *sqlgraph.CreateSpec
 	if value, ok := wec.mutation.Error(); ok {
 		_spec.SetField(webhookevent.FieldError, field.TypeString, value)
 		_node.Error = value
-	}
-	if value, ok := wec.mutation.CreatedAt(); ok {
-		_spec.SetField(webhookevent.FieldCreatedAt, field.TypeTime, value)
-		_node.CreatedAt = value
-	}
-	if value, ok := wec.mutation.UpdatedAt(); ok {
-		_spec.SetField(webhookevent.FieldUpdatedAt, field.TypeTime, value)
-		_node.UpdatedAt = value
 	}
 	if nodes := wec.mutation.WebhookIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

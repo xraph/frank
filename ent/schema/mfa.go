@@ -16,8 +16,6 @@ type MFA struct {
 // Fields of the MFA.
 func (MFA) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("id").
-			Unique(),
 		field.String("user_id").
 			NotEmpty(),
 		field.String("method").

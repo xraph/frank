@@ -99,6 +99,8 @@ var (
 	DefaultDefaultScope bool
 	// DefaultPublic holds the default value on creation for the "public" field.
 	DefaultPublic bool
+	// DefaultID holds the default value on creation for the "id" field.
+	DefaultID func() string
 )
 
 // OrderOption defines the ordering options for the OAuthScope queries.

@@ -832,6 +832,8 @@ var (
 	// WebhookEventsColumns holds the columns for the "webhook_events" table.
 	WebhookEventsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "event_type", Type: field.TypeString},
 		{Name: "headers", Type: field.TypeJSON, Nullable: true, SchemaType: map[string]string{"mysql": "json", "postgres": "jsonb", "sqlite3": "text"}},
 		{Name: "payload", Type: field.TypeJSON, Nullable: true, SchemaType: map[string]string{"mysql": "json", "postgres": "jsonb", "sqlite3": "text"}},
@@ -842,8 +844,6 @@ var (
 		{Name: "status_code", Type: field.TypeInt, Nullable: true},
 		{Name: "response_body", Type: field.TypeString, Nullable: true},
 		{Name: "error", Type: field.TypeString, Nullable: true},
-		{Name: "created_at", Type: field.TypeTime},
-		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "webhook_id", Type: field.TypeString},
 	}
 	// WebhookEventsTable holds the schema information for the "webhook_events" table.
@@ -868,17 +868,17 @@ var (
 			{
 				Name:    "webhookevent_event_type",
 				Unique:  false,
-				Columns: []*schema.Column{WebhookEventsColumns[1]},
+				Columns: []*schema.Column{WebhookEventsColumns[3]},
 			},
 			{
 				Name:    "webhookevent_delivered",
 				Unique:  false,
-				Columns: []*schema.Column{WebhookEventsColumns[4]},
+				Columns: []*schema.Column{WebhookEventsColumns[6]},
 			},
 			{
 				Name:    "webhookevent_next_retry",
 				Unique:  false,
-				Columns: []*schema.Column{WebhookEventsColumns[7]},
+				Columns: []*schema.Column{WebhookEventsColumns[9]},
 			},
 		},
 	}

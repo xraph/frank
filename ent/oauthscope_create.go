@@ -97,6 +97,14 @@ func (osc *OAuthScopeCreate) SetID(s string) *OAuthScopeCreate {
 	return osc
 }
 
+// SetNillableID sets the "id" field if the given value is not nil.
+func (osc *OAuthScopeCreate) SetNillableID(s *string) *OAuthScopeCreate {
+	if s != nil {
+		osc.SetID(*s)
+	}
+	return osc
+}
+
 // AddClientIDs adds the "clients" edge to the OAuthClient entity by IDs.
 func (osc *OAuthScopeCreate) AddClientIDs(ids ...string) *OAuthScopeCreate {
 	osc.mutation.AddClientIDs(ids...)
@@ -192,6 +200,10 @@ func (osc *OAuthScopeCreate) defaults() {
 	if _, ok := osc.mutation.Public(); !ok {
 		v := oauthscope.DefaultPublic
 		osc.mutation.SetPublic(v)
+	}
+	if _, ok := osc.mutation.ID(); !ok {
+		v := oauthscope.DefaultID()
+		osc.mutation.SetID(v)
 	}
 }
 

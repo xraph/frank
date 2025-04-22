@@ -161,6 +161,14 @@ func (pc *PasskeyCreate) SetID(s string) *PasskeyCreate {
 	return pc
 }
 
+// SetNillableID sets the "id" field if the given value is not nil.
+func (pc *PasskeyCreate) SetNillableID(s *string) *PasskeyCreate {
+	if s != nil {
+		pc.SetID(*s)
+	}
+	return pc
+}
+
 // SetUser sets the "user" edge to the User entity.
 func (pc *PasskeyCreate) SetUser(u *User) *PasskeyCreate {
 	return pc.SetUserID(u.ID)
@@ -216,6 +224,10 @@ func (pc *PasskeyCreate) defaults() {
 	if _, ok := pc.mutation.Active(); !ok {
 		v := passkey.DefaultActive
 		pc.mutation.SetActive(v)
+	}
+	if _, ok := pc.mutation.ID(); !ok {
+		v := passkey.DefaultID()
+		pc.mutation.SetID(v)
 	}
 }
 

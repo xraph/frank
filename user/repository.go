@@ -216,7 +216,7 @@ func (r *repository) List(ctx context.Context, input RepositoryListInput) ([]*en
 	// Apply organization filter if provided
 	if input.OrganizationID != "" {
 		predicates = append(predicates,
-			user.HasOrganizationsWith(organization.ID(input.OrganizationID)),
+			user.HasOrganizationsWith(organization.Or(organization.ID(input.OrganizationID), organization.Slug(input.OrganizationID))),
 		)
 	}
 
@@ -430,7 +430,7 @@ func (r *repository) IsUserMemberOfOrganization(ctx context.Context, userID, org
 		Query().
 		Where(
 			user.ID(userID),
-			user.HasOrganizationsWith(organization.ID(orgID)),
+			user.HasOrganizationsWith(organization.Or(organization.ID(orgID), organization.Slug(orgID))),
 		).
 		Exist(ctx)
 }

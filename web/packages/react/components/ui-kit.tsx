@@ -17,7 +17,6 @@ import {authLogin, authRegister, LoginResponse2, LoginResponse3} from "@frank-au
 import {Alert, AlertDescription, AlertTitle} from "@/components/ui/alert";
 import {InputOTP, InputOTPGroup, InputOTPSlot,} from "@/components/ui/input-otp";
 import {REGEXP_ONLY_DIGITS_AND_CHARS} from "input-otp";
-import {TokenData} from "@/types";
 import {setTokenData} from "@/utils/token";
 
 export interface FrankProps extends FrankConfig {
@@ -367,8 +366,8 @@ export function FrankUIKit({
 		let href;
 
 		if (rsp.requiresVerification) {
-			if (links?.verify) {
-				href = `${links.verify.url}?email=${email}&${rsp.token}`;
+			if (configLinks?.verify) {
+				href = `${configLinks.verify.url}?email=${email}&${rsp.token}`;
 				href += `&redirect_url=${window.location.href}`;
 				href += `&method=${rsp.verificationMethod}`;
 				href += `&vid=${rsp.verificationId}`;
@@ -384,8 +383,8 @@ export function FrankUIKit({
 		}
 
 		if (rsp.mfa_required) {
-			if (links?.mfa) {
-				href = `${links.mfa.url}?email=${email}&${rsp.token}`;
+			if (configLinks?.mfa) {
+				href = `${configLinks.mfa.url}?email=${email}&${rsp.token}`;
 				href += `&redirect_url=${window.location.href}`;
 				href += `&method=${rsp.verificationMethod}`;
 				href += `&vid=${rsp.verificationId}`;
@@ -396,13 +395,13 @@ export function FrankUIKit({
 			return;
 		}
 
-		const tokenData: TokenData = {
-			token: rsp.token,
-			refreshToken: rsp.refresh_token,
-			expiresAt: Number(rsp.expires_at),
-		};
-
-		setTokenData(tokenData);
+		if (rsp.refresh_token && rsp.token && rsp.token.length > 0) {
+			setTokenData({
+				token: rsp.token,
+				refreshToken: rsp.refresh_token,
+				expiresAt: Number(rsp.expires_at),
+			});
+		}
 	}
 
 
@@ -441,7 +440,7 @@ export function FrankUIKit({
 			const firstNameField = configSignupFields.find(value => value.isFirstName)
 			const lastNameField = configSignupFields.find(value => value.isLastName)
 			const emailField = configSignupFields.find(value => value.type === "email" || value.isEmail)
-			const passwordField = configSignupFields.find(value => value.type === "password" || value.isEmail)
+			const passwordField = configSignupFields.find(value => value.type === "password")
 
 			const rsp = await authRegister({
 				body: {
@@ -462,9 +461,9 @@ export function FrankUIKit({
 			await configOnSignup?.(signupFormData);
 
 			await postLoginOrSignup(rsp.data);
-			
-			if (links?.login) {
-				window.location.href = `${links.login.url}?redirect_url=${window.location.href}`;
+
+			if (configLinks?.login) {
+				window.location.href = `${configLinks.login.url}?redirect_url=${window.location.href}`;
 			} else {
 				setCurrentView("login");
 			}

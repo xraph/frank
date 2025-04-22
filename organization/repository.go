@@ -2,6 +2,7 @@ package organization
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/juicycleff/frank/ent"
@@ -202,6 +203,7 @@ func (r *repository) Create(ctx context.Context, input RepositoryCreateInput) (*
 
 		if err != nil {
 			_ = tx.Rollback()
+			fmt.Println(err)
 			return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to create owner role")
 		}
 	}

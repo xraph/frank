@@ -14,6 +14,10 @@ const (
 	Label = "webhook_event"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldCreatedAt holds the string denoting the created_at field in the database.
+	FieldCreatedAt = "created_at"
+	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
+	FieldUpdatedAt = "updated_at"
 	// FieldWebhookID holds the string denoting the webhook_id field in the database.
 	FieldWebhookID = "webhook_id"
 	// FieldEventType holds the string denoting the event_type field in the database.
@@ -36,10 +40,6 @@ const (
 	FieldResponseBody = "response_body"
 	// FieldError holds the string denoting the error field in the database.
 	FieldError = "error"
-	// FieldCreatedAt holds the string denoting the created_at field in the database.
-	FieldCreatedAt = "created_at"
-	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
-	FieldUpdatedAt = "updated_at"
 	// EdgeWebhook holds the string denoting the webhook edge name in mutations.
 	EdgeWebhook = "webhook"
 	// Table holds the table name of the webhookevent in the database.
@@ -56,6 +56,8 @@ const (
 // Columns holds all SQL columns for webhookevent fields.
 var Columns = []string{
 	FieldID,
+	FieldCreatedAt,
+	FieldUpdatedAt,
 	FieldWebhookID,
 	FieldEventType,
 	FieldHeaders,
@@ -67,8 +69,6 @@ var Columns = []string{
 	FieldStatusCode,
 	FieldResponseBody,
 	FieldError,
-	FieldCreatedAt,
-	FieldUpdatedAt,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -82,6 +82,12 @@ func ValidColumn(column string) bool {
 }
 
 var (
+	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
+	DefaultCreatedAt func() time.Time
+	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
+	DefaultUpdatedAt func() time.Time
+	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
+	UpdateDefaultUpdatedAt func() time.Time
 	// WebhookIDValidator is a validator for the "webhook_id" field. It is called by the builders before save.
 	WebhookIDValidator func(string) error
 	// EventTypeValidator is a validator for the "event_type" field. It is called by the builders before save.
@@ -90,12 +96,8 @@ var (
 	DefaultDelivered bool
 	// DefaultAttempts holds the default value on creation for the "attempts" field.
 	DefaultAttempts int
-	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
-	DefaultCreatedAt func() time.Time
-	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
-	DefaultUpdatedAt func() time.Time
-	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
-	UpdateDefaultUpdatedAt func() time.Time
+	// DefaultID holds the default value on creation for the "id" field.
+	DefaultID func() string
 )
 
 // OrderOption defines the ordering options for the WebhookEvent queries.
@@ -104,6 +106,16 @@ type OrderOption func(*sql.Selector)
 // ByID orders the results by the id field.
 func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
+}
+
+// ByCreatedAt orders the results by the created_at field.
+func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCreatedAt, opts...).ToFunc()
+}
+
+// ByUpdatedAt orders the results by the updated_at field.
+func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
 }
 
 // ByWebhookID orders the results by the webhook_id field.
@@ -149,16 +161,6 @@ func ByResponseBody(opts ...sql.OrderTermOption) OrderOption {
 // ByError orders the results by the error field.
 func ByError(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldError, opts...).ToFunc()
-}
-
-// ByCreatedAt orders the results by the created_at field.
-func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldCreatedAt, opts...).ToFunc()
-}
-
-// ByUpdatedAt orders the results by the updated_at field.
-func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
 }
 
 // ByWebhookField orders the results by webhook field.

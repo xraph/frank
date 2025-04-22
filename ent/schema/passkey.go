@@ -16,8 +16,6 @@ type Passkey struct {
 // Fields of the Passkey.
 func (Passkey) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("id").
-			Unique(),
 		field.String("user_id").
 			NotEmpty(),
 		field.String("name").

@@ -19,6 +19,10 @@ type WebhookEvent struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID string `json:"id,omitempty"`
+	// CreatedAt holds the value of the "created_at" field.
+	CreatedAt time.Time `json:"created_at,omitempty"`
+	// UpdatedAt holds the value of the "updated_at" field.
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// WebhookID holds the value of the "webhook_id" field.
 	WebhookID string `json:"webhook_id,omitempty"`
 	// EventType holds the value of the "event_type" field.
@@ -41,16 +45,11 @@ type WebhookEvent struct {
 	ResponseBody string `json:"response_body,omitempty"`
 	// Error holds the value of the "error" field.
 	Error string `json:"error,omitempty"`
-	// CreatedAt holds the value of the "created_at" field.
-	CreatedAt time.Time `json:"created_at,omitempty"`
-	// UpdatedAt holds the value of the "updated_at" field.
-	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the WebhookEventQuery when eager-loading is set.
 	Edges        WebhookEventEdges `json:"edges"`
 	selectValues sql.SelectValues
 } //@name WebhookEvent
-
 
 // WebhookEventEdges holds the relations/edges for other nodes in the graph.
 type WebhookEventEdges struct {
@@ -85,7 +84,7 @@ func (*WebhookEvent) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullInt64)
 		case webhookevent.FieldID, webhookevent.FieldWebhookID, webhookevent.FieldEventType, webhookevent.FieldResponseBody, webhookevent.FieldError:
 			values[i] = new(sql.NullString)
-		case webhookevent.FieldDeliveredAt, webhookevent.FieldNextRetry, webhookevent.FieldCreatedAt, webhookevent.FieldUpdatedAt:
+		case webhookevent.FieldCreatedAt, webhookevent.FieldUpdatedAt, webhookevent.FieldDeliveredAt, webhookevent.FieldNextRetry:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -107,6 +106,18 @@ func (we *WebhookEvent) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
 			} else if value.Valid {
 				we.ID = value.String
+			}
+		case webhookevent.FieldCreatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field created_at", values[i])
+			} else if value.Valid {
+				we.CreatedAt = value.Time
+			}
+		case webhookevent.FieldUpdatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
+			} else if value.Valid {
+				we.UpdatedAt = value.Time
 			}
 		case webhookevent.FieldWebhookID:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -181,18 +192,6 @@ func (we *WebhookEvent) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				we.Error = value.String
 			}
-		case webhookevent.FieldCreatedAt:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field created_at", values[i])
-			} else if value.Valid {
-				we.CreatedAt = value.Time
-			}
-		case webhookevent.FieldUpdatedAt:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
-			} else if value.Valid {
-				we.UpdatedAt = value.Time
-			}
 		default:
 			we.selectValues.Set(columns[i], values[i])
 		}
@@ -234,6 +233,12 @@ func (we *WebhookEvent) String() string {
 	var builder strings.Builder
 	builder.WriteString("WebhookEvent(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", we.ID))
+	builder.WriteString("created_at=")
+	builder.WriteString(we.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("updated_at=")
+	builder.WriteString(we.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
 	builder.WriteString("webhook_id=")
 	builder.WriteString(we.WebhookID)
 	builder.WriteString(", ")
@@ -272,12 +277,6 @@ func (we *WebhookEvent) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("error=")
 	builder.WriteString(we.Error)
-	builder.WriteString(", ")
-	builder.WriteString("created_at=")
-	builder.WriteString(we.CreatedAt.Format(time.ANSIC))
-	builder.WriteString(", ")
-	builder.WriteString("updated_at=")
-	builder.WriteString(we.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

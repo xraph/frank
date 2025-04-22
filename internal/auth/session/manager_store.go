@@ -1,7 +1,6 @@
 package session
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
@@ -52,7 +51,7 @@ func (s *ManagerStore) Get(r *http.Request, name string) (*sessions.Session, err
 
 	// Retrieve session from Manager
 	ctx := r.Context()
-	fmt.Println("GetSession:", token)
+
 	sessionInfo, err := s.manager.GetSession(ctx, token)
 	if err != nil {
 		// Session not found or expired - return new session

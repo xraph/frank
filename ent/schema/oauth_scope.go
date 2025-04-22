@@ -15,8 +15,6 @@ type OAuthScope struct {
 // Fields of the OAuthScope.
 func (OAuthScope) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("id").
-			Unique(),
 		field.String("name").
 			Unique().
 			NotEmpty(),

@@ -29,6 +29,12 @@ func (weu *WebhookEventUpdate) Where(ps ...predicate.WebhookEvent) *WebhookEvent
 	return weu
 }
 
+// SetUpdatedAt sets the "updated_at" field.
+func (weu *WebhookEventUpdate) SetUpdatedAt(t time.Time) *WebhookEventUpdate {
+	weu.mutation.SetUpdatedAt(t)
+	return weu
+}
+
 // SetWebhookID sets the "webhook_id" field.
 func (weu *WebhookEventUpdate) SetWebhookID(s string) *WebhookEventUpdate {
 	weu.mutation.SetWebhookID(s)
@@ -223,12 +229,6 @@ func (weu *WebhookEventUpdate) ClearError() *WebhookEventUpdate {
 	return weu
 }
 
-// SetUpdatedAt sets the "updated_at" field.
-func (weu *WebhookEventUpdate) SetUpdatedAt(t time.Time) *WebhookEventUpdate {
-	weu.mutation.SetUpdatedAt(t)
-	return weu
-}
-
 // SetWebhook sets the "webhook" edge to the Webhook entity.
 func (weu *WebhookEventUpdate) SetWebhook(w *Webhook) *WebhookEventUpdate {
 	return weu.SetWebhookID(w.ID)
@@ -311,6 +311,9 @@ func (weu *WebhookEventUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
+	if value, ok := weu.mutation.UpdatedAt(); ok {
+		_spec.SetField(webhookevent.FieldUpdatedAt, field.TypeTime, value)
+	}
 	if value, ok := weu.mutation.EventType(); ok {
 		_spec.SetField(webhookevent.FieldEventType, field.TypeString, value)
 	}
@@ -368,9 +371,6 @@ func (weu *WebhookEventUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if weu.mutation.ErrorCleared() {
 		_spec.ClearField(webhookevent.FieldError, field.TypeString)
 	}
-	if value, ok := weu.mutation.UpdatedAt(); ok {
-		_spec.SetField(webhookevent.FieldUpdatedAt, field.TypeTime, value)
-	}
 	if weu.mutation.WebhookCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -418,6 +418,12 @@ type WebhookEventUpdateOne struct {
 	fields   []string
 	hooks    []Hook
 	mutation *WebhookEventMutation
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (weuo *WebhookEventUpdateOne) SetUpdatedAt(t time.Time) *WebhookEventUpdateOne {
+	weuo.mutation.SetUpdatedAt(t)
+	return weuo
 }
 
 // SetWebhookID sets the "webhook_id" field.
@@ -614,12 +620,6 @@ func (weuo *WebhookEventUpdateOne) ClearError() *WebhookEventUpdateOne {
 	return weuo
 }
 
-// SetUpdatedAt sets the "updated_at" field.
-func (weuo *WebhookEventUpdateOne) SetUpdatedAt(t time.Time) *WebhookEventUpdateOne {
-	weuo.mutation.SetUpdatedAt(t)
-	return weuo
-}
-
 // SetWebhook sets the "webhook" edge to the Webhook entity.
 func (weuo *WebhookEventUpdateOne) SetWebhook(w *Webhook) *WebhookEventUpdateOne {
 	return weuo.SetWebhookID(w.ID)
@@ -732,6 +732,9 @@ func (weuo *WebhookEventUpdateOne) sqlSave(ctx context.Context) (_node *WebhookE
 			}
 		}
 	}
+	if value, ok := weuo.mutation.UpdatedAt(); ok {
+		_spec.SetField(webhookevent.FieldUpdatedAt, field.TypeTime, value)
+	}
 	if value, ok := weuo.mutation.EventType(); ok {
 		_spec.SetField(webhookevent.FieldEventType, field.TypeString, value)
 	}
@@ -788,9 +791,6 @@ func (weuo *WebhookEventUpdateOne) sqlSave(ctx context.Context) (_node *WebhookE
 	}
 	if weuo.mutation.ErrorCleared() {
 		_spec.ClearField(webhookevent.FieldError, field.TypeString)
-	}
-	if value, ok := weuo.mutation.UpdatedAt(); ok {
-		_spec.SetField(webhookevent.FieldUpdatedAt, field.TypeTime, value)
 	}
 	if weuo.mutation.WebhookCleared() {
 		edge := &sqlgraph.EdgeSpec{

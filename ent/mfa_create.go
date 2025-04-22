@@ -155,6 +155,14 @@ func (mc *MFACreate) SetID(s string) *MFACreate {
 	return mc
 }
 
+// SetNillableID sets the "id" field if the given value is not nil.
+func (mc *MFACreate) SetNillableID(s *string) *MFACreate {
+	if s != nil {
+		mc.SetID(*s)
+	}
+	return mc
+}
+
 // SetUser sets the "user" edge to the User entity.
 func (mc *MFACreate) SetUser(u *User) *MFACreate {
 	return mc.SetUserID(u.ID)
@@ -210,6 +218,10 @@ func (mc *MFACreate) defaults() {
 	if _, ok := mc.mutation.Active(); !ok {
 		v := mfa.DefaultActive
 		mc.mutation.SetActive(v)
+	}
+	if _, ok := mc.mutation.ID(); !ok {
+		v := mfa.DefaultID()
+		mc.mutation.SetID(v)
 	}
 }
 

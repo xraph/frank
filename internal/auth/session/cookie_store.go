@@ -2,7 +2,6 @@ package session
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -73,7 +72,6 @@ func (s *CookieStore) DeleteSession(ctx context.Context, token string) error {
 
 // SetSessionCookie sets a session cookie in the HTTP response
 func (s *CookieStore) SetSessionCookie(w http.ResponseWriter, token string, expiry time.Duration) {
-	fmt.Println("Setting session cookie secure => ", s.cookieSecure)
 	// Create a cookie with the session token
 	cookie := &http.Cookie{
 		Name:     s.cookieName,
