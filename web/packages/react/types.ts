@@ -1,4 +1,4 @@
-import {OrganizationResponse, User} from "@frank-auth/sdk";
+import { OrganizationResponse, User } from "@frank-auth/sdk";
 
 export interface AuthConfig {
 	baseUrl: string;

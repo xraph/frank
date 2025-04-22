@@ -20,7 +20,8 @@ export type AuthView =
 	| "signup"
 	| "forgot-password"
 	| "verify-otp"
-	| "mfa";
+	| "mfa"
+	| "reset-password";
 export type AuthTabs = AuthView; //"login" | "signup" | "mfa"
 export type FieldType =
 	| "text"
@@ -124,6 +125,7 @@ export interface FrankConfig {
 	title?: string;
 	titleAlign?: "left" | "center" | "right";
 	description?: string;
+	frontendUrl?: string;
 	oauthProviders?: OAuthProvider[];
 	onLogin?: (data: any) => Promise<boolean>;
 	onSignup?: (data: any) => Promise<void>;
@@ -133,6 +135,7 @@ export interface FrankConfig {
 	onForgotPassword?: (email: string) => Promise<void>;
 	onVerifyOtp?: (otp: string, email: string) => Promise<void>;
 	onResendVerification?: (email: string) => Promise<void>;
+	onResetPassword?: (password: string, token: string) => Promise<void>;
 	supportedMethods?: AuthMethod[];
 	showTabs?: boolean;
 	availableTabs?: AuthTabs[];
@@ -150,6 +153,7 @@ export interface FrankConfig {
 		verify?: Link;
 		mfa?: Link;
 		forgotPassword?: Link;
+		resetPassword?: Link;
 		redirectAfterLogin?: string;
 	};
 	theme?: ThemeConfigPreset;
@@ -166,7 +170,7 @@ export interface FrankConfig {
 		tab?: string;
 		tabActive?: string;
 		tabDisabled?: string;
-	}
+	};
 	components?: {
 		Button?: React.FC;
 		Card?: React.FC;
@@ -178,7 +182,7 @@ export interface FrankConfig {
 		Input?: React.FC;
 		Label?: React.FC;
 		Link?: React.FC;
-	}
+	};
 
 	api?: {
 		baseUrl?: string;
@@ -215,6 +219,7 @@ export const FrankContext = createContext<{
 	resendCooldown: number; // Cooldown time in seconds
 }>({
 	config: {
+		frontendUrl: "http://localhost:3000",
 		logo: <Key className="h-6 w-6" />,
 		title: "Welcome Back",
 		description: "Sign in to your account",

@@ -12,15 +12,17 @@ import {Checkbox} from "@/components/ui/checkbox";
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue,} from "@/components/ui/select";
 import {AuthView, FormField, FrankConfig, Link} from "./context";
 import {useFrank} from "./hooks";
+import {useUrlSearchParams} from "../hooks/use-url-search-params";
 import {cn} from "@/lib/utils";
 import {
 	authForgotPassword,
 	authLogin,
 	authRegister,
+	authResetPassword,
 	LoginResponse2,
 	LoginResponse3,
 	passkeysLoginBegin,
-	passwordlessMagicLink
+	passwordlessMagicLink,
 } from "@frank-auth/sdk";
 import {Alert, AlertDescription, AlertTitle} from "@/components/ui/alert";
 import {InputOTP, InputOTPGroup, InputOTPSlot,} from "@/components/ui/input-otp";
@@ -45,6 +47,7 @@ export function FrankUIKit({
 	onForgotPassword,
 	onVerifyOtp,
 	onResendVerification,
+							   onResetPassword,
 	supportedMethods,
 	showTabs,
 	availableTabs,
@@ -54,11 +57,13 @@ export function FrankUIKit({
 	links,
 	verification,
 	useProviderConfig = true,
-							   components,
+	components,
+	api,
 	cssClasses,
 }: FrankProps) {
 	// Get configuration from context if useProviderConfig is true
 	const { config: providerConfig, ...frank } = useFrank();
+	const searchParams = useUrlSearchParams();
 
 	// Merge the provider config with props, prioritizing props
 	const config = useProviderConfig
@@ -79,6 +84,7 @@ export function FrankUIKit({
 				...(onMfa !== undefined && { onMfa }),
 				...(onForgotPassword !== undefined && { onForgotPassword }),
 				...(onVerifyOtp !== undefined && { onVerifyOtp }),
+			...(onResetPassword !== undefined && { onResetPassword }),
 				...(supportedMethods !== undefined && { supportedMethods }),
 				...(showTabs !== undefined && { showTabs }),
 				...(availableTabs !== undefined && { availableTabs }),
@@ -89,6 +95,7 @@ export function FrankUIKit({
 				...(verification !== undefined && { verification }),
 				...(cssClasses !== undefined && { cssClasses }),
 				...(components !== undefined && { components }),
+				...(api !== undefined && { api }),
 			}
 		: {
 				// If not using provider config, just use the props directly
@@ -104,7 +111,9 @@ export function FrankUIKit({
 				onMfa,
 				onForgotPassword,
 				onVerifyOtp,
+			onResetPassword,
 				supportedMethods,
+				onResendVerification,
 				showTabs,
 				availableTabs,
 				initialView,
@@ -112,8 +121,9 @@ export function FrankUIKit({
 				theme,
 				links,
 				verification,
-			components,
-			cssClasses,
+				api,
+				components,
+				cssClasses,
 			};
 
 	// Set default values for required props (rest of the component remains the same)
@@ -131,11 +141,13 @@ export function FrankUIKit({
 		onForgotPassword: configOnForgotPassword,
 		onVerifyOtp: configOnVerifyOtp,
 		onResendVerification: configOnResendVerification,
+		onResetPassword: configOnResetPassword,
 		supportedMethods: configSupportedMethods = [
 			"password",
 			"passwordless",
 			"passkey",
 		],
+		api: configApi,
 		showTabs: configShowTabs = true,
 		availableTabs: configAvailableTabs = ["login", "signup"],
 		initialView: configInitialView = "login",
@@ -198,9 +210,17 @@ export function FrankUIKit({
 	const [showPassword, setShowPassword] = useState(false);
 	const [mfaCode, setMfaCode] = useState("");
 	const [otpCode, setOtpCode] = useState("");
+
+	// Reset password states
+	const [resetPasswordToken, setResetPasswordToken] = useState<string | null>(null);
+	const [newPassword, setNewPassword] = useState("");
+	const [confirmPassword, setConfirmPassword] = useState("");
+
+
 	// Resend verification cooldown state
 	const [cooldownRemaining, setCooldownRemaining] = useState(0);
 	const cooldownTimerRef = useRef<NodeJS.Timeout | null>(null);
+
 	// Status messages
 	const [success, setSuccess] = useState("");
 	const [isLoading, setIsLoading] = useState(false);
@@ -220,7 +240,7 @@ export function FrankUIKit({
 	}, [configThemeTemp, frank]);
 
 	// Apply theme styles
-	const cardClassName = `w-full py-6 max-w-xl  min-w-md mx-auto ${configTheme.borderRadius || "rounded-md"} overflow-hidden ${configCssClasses?.card ?? ''}`;
+	const cardClassName = `w-full py-6 max-w-xl  min-w-md mx-auto ${configTheme.borderRadius || "rounded-md"} overflow-hidden ${configCssClasses?.card ?? ""}`;
 	const buttonClassName = `${configTheme.primaryColor || "bg-primary"} ${configTheme.borderRadius || "rounded-md"}`;
 	const inputClassName = `${configTheme.borderRadius || "rounded-md"}`;
 	const cardStyle = configTheme.backgroundColor
@@ -229,16 +249,24 @@ export function FrankUIKit({
 	const textStyle = configTheme.textColor
 		? { color: configTheme.textColor.replace("text-", "") }
 		: {};
-	const titleClasses = cn("text-3xl font-bold", {
-		"text-center": configTitleAlign === "center",
-		"text-left": configTitleAlign === "left",
-		"text-right": configTitleAlign === "right",
-	}, configCssClasses?.title);
-	const descriptionClasses = cn("text-muted-foreground ", {
-		"text-center": configTitleAlign === "center",
-		"text-left": configTitleAlign === "left",
-		"text-right": configTitleAlign === "right",
-	}, configCssClasses?.desc);
+	const titleClasses = cn(
+		"text-3xl font-bold",
+		{
+			"text-center": configTitleAlign === "center",
+			"text-left": configTitleAlign === "left",
+			"text-right": configTitleAlign === "right",
+		},
+		configCssClasses?.title,
+	);
+	const descriptionClasses = cn(
+		"text-muted-foreground ",
+		{
+			"text-center": configTitleAlign === "center",
+			"text-left": configTitleAlign === "left",
+			"text-right": configTitleAlign === "right",
+		},
+		configCssClasses?.desc,
+	);
 
 	const codeInputLength = useMemo(() => {
 		return new Array(configVerification.codeLength ?? 6).fill(0);
@@ -253,6 +281,31 @@ export function FrankUIKit({
 		};
 	}, []);
 
+	// Check for token in URL
+	useEffect(() => {
+		// If we're in reset-password view, check for token
+		if (currentView === "reset-password") {
+			const token = searchParams?.get('token');
+
+			if (token) {
+				setResetPasswordToken(token);
+			} else {
+				// No token found, but we're in reset-password view
+				setResetPasswordToken(null);
+			}
+		}
+	}, [searchParams, currentView]);
+
+	// Check if initialView is reset-password and set token if available
+	useEffect(() => {
+		if (configInitialView === "reset-password") {
+			const token = searchParams?.get('token');
+			if (token) {
+				setResetPasswordToken(token);
+			}
+		}
+	}, [configInitialView, searchParams]);
+
 	const resetState = () => {
 		setLoginStep(1);
 		setPassword("");
@@ -261,6 +314,8 @@ export function FrankUIKit({
 		setError(null);
 		setSuccess("");
 		setShowPassword(false);
+		setNewPassword("");
+		setConfirmPassword("");
 	};
 
 	const handleTabChange = (value: string) => {
@@ -297,8 +352,7 @@ export function FrankUIKit({
 		</div>
 	);
 
-
-	const postLoginOrSignup = async (rsp: LoginResponse3 | LoginResponse2 ) => {
+	const postLoginOrSignup = async (rsp: LoginResponse3 | LoginResponse2) => {
 		let href;
 
 		if (rsp.requiresVerification) {
@@ -338,19 +392,21 @@ export function FrankUIKit({
 				expiresAt: Number(rsp.expires_at),
 			});
 		}
-	}
-
+	};
 
 	const handleLogin = async (e: React.FormEvent) => {
 		e.preventDefault();
 
 		setIsLoading(true);
+		setError(null);
+		setError(null);
+
 		try {
 			const rsp = await authLogin({
 				body: {
 					email,
 					password,
-					organization_id: config.api?.projectId,
+					organization_id: configApi?.projectId,
 				},
 			});
 
@@ -361,6 +417,8 @@ export function FrankUIKit({
 
 			await configOnLogin?.({ email, password });
 			await postLoginOrSignup(rsp.data);
+			navigateToHome();
+			resetState();
 		} catch (error) {
 			console.error("Login error:", error);
 		} finally {
@@ -369,28 +427,49 @@ export function FrankUIKit({
 	};
 
 	const navigateToLogin = () => {
-		if (configLinks?.login) {
-			window.location.href = `${configLinks.login.url}?redirect_url=${window.location.href}`;
-		} else {
-			setCurrentView("login");
-		}
-	}
+		setTimeout(() => {
+			if (configLinks?.login) {
+				window.location.href = `${configLinks.login.url}?redirect_url=${window.location.href}`;
+			} else {
+				setCurrentView("login");
+			}
+		}, 500);
+	};
+
+
+	const navigateToHome = () => {
+		setTimeout(() => {
+			const red = configLinks?.redirectAfterLogin ?? searchParams?.get('redirect') ?? searchParams?.get('redirect_url') ?? searchParams?.get('redirect_after_login') ?? window.location.host;
+			window.location.replace(red);
+		}, 500);
+	};
 
 	const handleSignup = async (e: React.FormEvent) => {
 		e.preventDefault();
 
 		setIsLoading(true);
+		setError(null);
+		setError(null);
+
 		try {
-			const firstNameField = configSignupFields.find(value => value.isFirstName)
-			const lastNameField = configSignupFields.find(value => value.isLastName)
-			const emailField = configSignupFields.find(value => value.type === "email" || value.isEmail)
-			const passwordField = configSignupFields.find(value => value.type === "password")
+			const firstNameField = configSignupFields.find(
+				(value) => value.isFirstName,
+			);
+			const lastNameField = configSignupFields.find(
+				(value) => value.isLastName,
+			);
+			const emailField = configSignupFields.find(
+				(value) => value.type === "email" || value.isEmail,
+			);
+			const passwordField = configSignupFields.find(
+				(value) => value.type === "password",
+			);
 
 			const rsp = await authRegister({
 				body: {
 					email: signupFormData[emailField?.name || "email"],
 					password: signupFormData[passwordField?.name || "password"],
-					organization_id: config.api?.projectId,
+					organization_id: configApi?.projectId,
 					first_name: signupFormData[firstNameField?.name || "first_name"],
 					last_name: signupFormData[lastNameField?.name || "last_name"],
 					metadata: signupFormData,
@@ -406,7 +485,7 @@ export function FrankUIKit({
 
 			await postLoginOrSignup(rsp.data);
 
-			navigateToLogin()
+			navigateToLogin();
 			resetState();
 		} catch (error) {
 			console.error("Signup error:", error);
@@ -419,6 +498,9 @@ export function FrankUIKit({
 		if (!configOnPasswordless) return;
 
 		setIsLoading(true);
+		setError(null);
+		setError(null);
+
 		try {
 			await configOnPasswordless(email);
 
@@ -426,7 +508,7 @@ export function FrankUIKit({
 				// @ts-ignore
 				body: {
 					email,
-				}
+				},
 			});
 
 			await configOnPasswordless?.(email);
@@ -444,12 +526,15 @@ export function FrankUIKit({
 
 	const handlePasskey = async () => {
 		setIsLoading(true);
+		setError(null);
+		setError(null);
+
 		try {
 			const rsp = await passkeysLoginBegin({
 				// @ts-ignore
 				body: {
 					email,
-				}
+				},
 			});
 
 			await configOnPasskey?.();
@@ -470,6 +555,9 @@ export function FrankUIKit({
 		if (!configOnMfa) return;
 
 		setIsLoading(true);
+		setError(null);
+		setError(null);
+
 		try {
 			await configOnMfa(mfaCode);
 			setCurrentView("login");
@@ -485,11 +573,17 @@ export function FrankUIKit({
 		e.preventDefault();
 
 		setIsLoading(true);
+		setError(null);
+		setError(null);
+
 		try {
 			const rsp = await authForgotPassword({
 				body: {
-					email
-				}
+					email,
+				},
+				query: {
+					redirect_url:  configLinks?.resetPassword?.url ?? window.location.host,
+				},
 			});
 
 			await configOnForgotPassword?.(email);
@@ -498,6 +592,8 @@ export function FrankUIKit({
 				setError(rsp.error.message);
 				return;
 			}
+
+			setSuccess(rsp.data.message);
 		} catch (error) {
 			console.error("Forgot password error:", error);
 		} finally {
@@ -505,9 +601,62 @@ export function FrankUIKit({
 		}
 	};
 
+	const handleResetPassword = async (e: React.FormEvent) => {
+		e.preventDefault();
+
+		setIsLoading(true);
+		setError(null);
+
+		// Validate passwords match
+		if (newPassword !== confirmPassword) {
+			setError("Passwords do not match");
+			setIsLoading(false);
+			return;
+		}
+
+		try {
+			if (!resetPasswordToken) {
+				setError("Reset token is missing or invalid");
+				setIsLoading(false);
+				return;
+			}
+
+			const rsp = await authResetPassword({
+				body: {
+					new_password: newPassword,
+					token: resetPasswordToken,
+				},
+			});
+
+			await configOnResetPassword?.(newPassword, resetPasswordToken);
+
+			if (rsp.error) {
+				setError(rsp.error.message);
+				return;
+			}
+
+			setSuccess("Your password has been reset successfully");
+
+			// Redirect to login after short delay
+			setTimeout(() => {
+				navigateToLogin();
+			}, 3000);
+
+		} catch (error) {
+			console.error("Reset password error:", error);
+			setError("An error occurred while resetting your password");
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+
 	const handleVerifyOtp = async (e: React.FormEvent) => {
 		e.preventDefault();
 		setIsLoading(true);
+		setError(null);
+		setError(null);
+
 		try {
 			const rsp = await frank.verifyEmail({
 				email,
@@ -522,7 +671,7 @@ export function FrankUIKit({
 				return;
 			}
 
-			navigateToLogin()
+			navigateToLogin();
 			resetState();
 		} catch (error) {
 			console.error("OTP verification error:", error);
@@ -593,6 +742,106 @@ export function FrankUIKit({
 				</a>
 			</p>
 		</div>
+	);
+
+	const renderResetPassword = () => (
+		<Card className={cardClassName} style={cardStyle}>
+			<CardHeader className={configCssClasses?.cardHeader}>
+				<div className="flex items-center justify-center mb-4">
+					{configLogo}
+				</div>
+				<CardTitle className={titleClasses} style={textStyle}>
+					Reset Your Password
+				</CardTitle>
+				<CardDescription className={descriptionClasses} style={textStyle}>
+					{resetPasswordToken
+						? "Enter your new password below"
+						: "Invalid or expired reset link. Please request a new password reset."}
+				</CardDescription>
+			</CardHeader>
+			<CardContent className={configCssClasses?.cardContent}>
+				{renderAlertMessages()}
+
+				{resetPasswordToken ? (
+					<form onSubmit={handleResetPassword}>
+						<div className="grid gap-4">
+							<div className="grid gap-2">
+								<Label htmlFor="new-password" style={textStyle}>
+									New Password
+								</Label>
+								<div className="relative">
+									<Input
+										id="new-password"
+										type={showPassword ? "text" : "password"}
+										value={newPassword}
+										onChange={(e) => setNewPassword(e.target.value)}
+										required
+										className={inputClassName}
+									/>
+									<Button
+										type="button"
+										variant="ghost"
+										size="icon"
+										className="absolute right-0 top-0 h-full px-3"
+										onClick={() => setShowPassword(!showPassword)}
+									>
+										{showPassword ? (
+											<EyeOff className="h-4 w-4" />
+										) : (
+											<Eye className="h-4 w-4" />
+										)}
+									</Button>
+								</div>
+							</div>
+
+							<div className="grid gap-2">
+								<Label htmlFor="confirm-password" style={textStyle}>
+									Confirm Password
+								</Label>
+								<div className="relative">
+									<Input
+										id="confirm-password"
+										type={showPassword ? "text" : "password"}
+										value={confirmPassword}
+										onChange={(e) => setConfirmPassword(e.target.value)}
+										required
+										className={inputClassName}
+									/>
+								</div>
+							</div>
+
+							<Button
+								type="submit"
+								className={buttonClassName}
+								disabled={isLoading}
+							>
+								{isLoading ? "Resetting Password..." : "Reset Password"}
+							</Button>
+						</div>
+					</form>
+				) : (
+					<div className="grid gap-4">
+						<Button
+							variant="outline"
+							type="button"
+							onClick={() => setCurrentView("forgot-password")}
+							className={configTheme.borderRadius}
+						>
+							Request New Reset Link
+						</Button>
+						<Button
+							variant="outline"
+							type="button"
+							onClick={() => navigateToLogin()}
+							className={configTheme.borderRadius}
+						>
+							<ArrowLeft className="mr-2 h-4 w-4" />
+							Back to Login
+						</Button>
+					</div>
+				)}
+			</CardContent>
+		</Card>
 	);
 
 	const renderFormFieldContent = (field: FormField) => {

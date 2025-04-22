@@ -1,4 +1,4 @@
-import {AuthConfig} from "../types";
+import { AuthConfig } from "../types";
 
 let config: AuthConfig = {
 	baseUrl: process.env.NEXT_PUBLIC_FRANK_ENDPOINT ?? "",

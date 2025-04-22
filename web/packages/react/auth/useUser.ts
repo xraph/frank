@@ -1,5 +1,5 @@
-import {User} from "@frank-auth/sdk";
-import {useAuth} from "./useAuth";
+import { User } from "@frank-auth/sdk";
+import { useAuth } from "./useAuth";
 
 export const useUser = (): {
 	user: User | null | undefined;

@@ -32,6 +32,7 @@ type Config struct {
 	BuildDate       string `json:"build_date" yaml:"build_date" mapstructure:"build_date" env:"BUILD_DATE" envDefault:""`
 	StandaloneMode  bool   `json:"standalone_mode" yaml:"standalone_mode" mapstructure:"standalone_mode" env:"STANDALONE_MODE" envDefault:"false"`
 	BasePath        string `json:"base_path" yaml:"base_path" mapstructure:"base_path" env:"BASE_PATH" envDefault:"/"`
+	RedirectURL     string `json:"redirect_url" yaml:"redirect_url" mapstructure:"redirect_url" env:"REDIRECT_URL" envDefault:"http://localhost:8998/ui"`
 
 	Server       *ServerConfig      `json:"server" yaml:"server" mapstructure:"server"`
 	Database     DatabaseConfig     `json:"database" yaml:"database" mapstructure:"database"`
@@ -58,8 +59,8 @@ func (c *Config) GetServerAddress() string {
 type ServerConfig struct {
 	Host             string        `json:"host" yaml:"host" mapstructure:"host" env:"SERVER_HOST" envDefault:"localhost"`
 	Name             string        `json:"name" yaml:"name" mapstructure:"name" env:"SERVER_NAME" envDefault:"Wakflo"`
-	Port             int           `json:"port" yaml:"port" mapstructure:"port" env:"SERVER_PORT" envDefault:"8080"`
-	BaseURL          string        `json:"base_url" yaml:"base_url" mapstructure:"base_url" env:"SERVER_BASE_URL" envDefault:"http://localhost:8080"`
+	Port             int           `json:"port" yaml:"port" mapstructure:"port" env:"SERVER_PORT" envDefault:"8998"`
+	BaseURL          string        `json:"base_url" yaml:"base_url" mapstructure:"base_url" env:"SERVER_BASE_URL" envDefault:"http://localhost:8998"`
 	ReadTimeout      time.Duration `json:"read_timeout" yaml:"read_timeout" mapstructure:"read_timeout" env:"SERVER_READ_TIMEOUT" envDefault:"5s"`
 	WriteTimeout     time.Duration `json:"write_timeout" yaml:"write_timeout" mapstructure:"write_timeout" env:"SERVER_WRITE_TIMEOUT" envDefault:"10s"`
 	IdleTimeout      time.Duration `json:"idle_timeout" yaml:"idle_timeout" mapstructure:"idle_timeout" env:"SERVER_IDLE_TIMEOUT" envDefault:"120s"`

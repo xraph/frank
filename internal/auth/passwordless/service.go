@@ -7,6 +7,7 @@ import (
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/email"
 	"github.com/juicycleff/frank/ent"
+	"github.com/juicycleff/frank/ent/user"
 	"github.com/juicycleff/frank/internal/sms"
 	appErrors "github.com/juicycleff/frank/pkg/errors"
 	"github.com/juicycleff/frank/pkg/logging"
@@ -188,6 +189,14 @@ func (s *serviceImpl) GenerateMagicLink(
 	// Check if feature is enabled
 	if !s.config.Features.EnablePasswordless {
 		return "", appErrors.New(appErrors.CodeFeatureNotEnabled, "passwordless authentication is not enabled")
+	}
+
+	if userID == "" {
+		u, err := s.client.User.Query().Where(user.Email(email)).Only(ctx)
+		if err != nil {
+			return "", err
+		}
+		userID = u.ID
 	}
 
 	// Generate magic link

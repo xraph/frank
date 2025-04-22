@@ -147,6 +147,16 @@ func (v *verificationManager) CreateVerification(ctx context.Context, input Crea
 			)
 			// Continue despite error
 		}
+	} else if input.Type == "password_reset" && input.Email != "" {
+		// Send verification link via email
+		err = v.sendForgotPasswordEmail(ctx, input.Email, token, input.RedirectURL, input.ExpiresAt)
+		if err != nil {
+			v.logger.Error("Failed to send forgot password email",
+				logging.String("user_id", input.UserID),
+				logging.Error(err),
+			)
+			// Continue despite error
+		}
 	}
 
 	return ver, nil
@@ -171,9 +181,6 @@ func (v *verificationManager) sendOTPEmail(ctx context.Context, emailAddr, otp s
 
 // sendVerificationEmail sends an email with verification link
 func (v *verificationManager) sendVerificationEmail(ctx context.Context, emailAddr, token, redirectURL string, expiresAt time.Time) error {
-	// Implement email sending logic here
-	// This will depend on your email service implementation
-
 	// Construct the verification link
 	verificationLink := redirectURL
 	if !strings.Contains(redirectURL, "?") {
@@ -191,6 +198,28 @@ func (v *verificationManager) sendVerificationEmail(ctx context.Context, emailAd
 		ctx, email.SendTemplateInput{
 			To:           []string{emailAddr},
 			TemplateType: "email_verification_link",
+			TemplateData: data,
+		})
+}
+
+// sendVerificationEmail sends an email with verification link
+func (v *verificationManager) sendForgotPasswordEmail(ctx context.Context, emailAddr, token, redirectURL string, expiresAt time.Time) error {
+	// Construct the verification link
+	resetLink := redirectURL
+	if !strings.Contains(redirectURL, "?") {
+		resetLink += "?token=" + token
+	} else {
+		resetLink += "&token=" + token
+	}
+
+	data := map[string]interface{}{
+		"ResetURL": resetLink,
+	}
+
+	return v.emailService.SendTemplate(
+		ctx, email.SendTemplateInput{
+			To:           []string{emailAddr},
+			TemplateType: "password_reset",
 			TemplateData: data,
 		})
 }

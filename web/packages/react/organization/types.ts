@@ -1,4 +1,8 @@
-import {OrganizationResponse, OrganizationsAddMemberData, OrganizationsRemoveMemberData,} from "@frank-auth/sdk";
+import {
+	OrganizationResponse,
+	OrganizationsAddMemberData,
+	OrganizationsRemoveMemberData,
+} from "@frank-auth/sdk";
 
 export interface OrganizationContextType {
 	currentOrganization: OrganizationResponse | null;

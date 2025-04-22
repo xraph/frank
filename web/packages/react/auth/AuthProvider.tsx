@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React, { useEffect, useState } from "react";
 import {
 	authLogin,
 	authLogout,
@@ -11,12 +11,17 @@ import {
 	User,
 	usersUpdateMe,
 } from "@frank-auth/sdk";
-import {AuthContext} from "./AuthContext";
-import {AuthProviderProps} from "./types";
-import {TokenData} from "../types";
-import {clearTokenData, getTokenData, isTokenExpired, setTokenData,} from "../utils/token";
-import {setConfig} from "../config";
-import {getAuthClient, refreshAuthToken} from "../utils/api";
+import { AuthContext } from "./AuthContext";
+import { AuthProviderProps } from "./types";
+import { TokenData } from "../types";
+import {
+	clearTokenData,
+	getTokenData,
+	isTokenExpired,
+	setTokenData,
+} from "../utils/token";
+import { setConfig } from "../config";
+import { getAuthClient, refreshAuthToken } from "../utils/api";
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({
 	children,

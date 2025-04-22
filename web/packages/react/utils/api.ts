@@ -1,8 +1,17 @@
-import {authRefreshToken, client as fclient, type Client} from "@frank-auth/sdk";
-import {getConfig} from "../config";
-import {clearTokenData, getTokenData, isTokenExpired, setTokenData,} from "./token";
-import {TokenData} from "../types";
-import {CookieHandler} from "@/utils/cookie";
+import {
+	authRefreshToken,
+	client as fclient,
+	type Client,
+} from "@frank-auth/sdk";
+import { getConfig } from "../config";
+import {
+	clearTokenData,
+	getTokenData,
+	isTokenExpired,
+	setTokenData,
+} from "./token";
+import { TokenData } from "../types";
+import { CookieHandler } from "@/utils/cookie";
 
 // type Client = () => typeof fclient;
 
@@ -47,7 +56,10 @@ export const createAuthenticatedClient = (cookie?: string): Client => {
 };
 
 // Function to refresh the token
-export const refreshAuthToken = async (cookie?: string, cookieHandler?: CookieHandler): Promise<TokenData | null> => {
+export const refreshAuthToken = async (
+	cookie?: string,
+	cookieHandler?: CookieHandler,
+): Promise<TokenData | null> => {
 	const tokenData = getTokenData(cookie);
 	if (!tokenData) return null;
 

@@ -53,13 +53,14 @@ func (a *AuthService) SendEmailVerification(ctx context.Context, payload *auth.S
 
 	expiresAt := time.Now().Add(a.config.Auth.EmailVerificationExpiry)
 	verification, err := a.userService.CreateVerification(ctx, user.CreateVerificationInput{
-		UserID:    authUser.ID,
-		Type:      "email",
-		Email:     authUser.Email,
-		Method:    payload.Method,
-		ExpiresAt: expiresAt,
-		IPAddress: utils.GetRealIP(info.Req),
-		UserAgent: utils.GetUserAgent(info.Req),
+		UserID:      authUser.ID,
+		Type:        "email",
+		Email:       authUser.Email,
+		Method:      payload.Method,
+		ExpiresAt:   expiresAt,
+		IPAddress:   utils.GetRealIP(info.Req),
+		UserAgent:   utils.GetUserAgent(info.Req),
+		RedirectURL: a.config.RedirectURL,
 	})
 
 	if err != nil {
@@ -439,7 +440,7 @@ func (a *AuthService) ForgotPassword(ctx context.Context, payload *auth.ForgotPa
 		}, nil
 	}
 
-	redirectURL := ""
+	redirectURL := a.config.RedirectURL
 	if payload.RedirectURL != nil {
 		redirectURL = *payload.RedirectURL
 	}

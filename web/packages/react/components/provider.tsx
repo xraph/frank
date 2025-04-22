@@ -14,19 +14,17 @@ import {AuthProvider} from "../auth/AuthProvider";
 import {getConfig} from "@/config";
 
 export function FrankProvider({
-												  children,
-												  initialConfig = {},
-											  }: {
+	children,
+	initialConfig = {},
+}: {
 	children: ReactNode;
 	initialConfig?: Partial<FrankConfig>;
 }) {
 	return (
 		<AuthProvider organizationId={initialConfig.api?.projectId ?? "default"}>
-			<_FrankProvider initialConfig={initialConfig}>
-				{children}
-			</_FrankProvider>
+			<_FrankProvider initialConfig={initialConfig}>{children}</_FrankProvider>
 		</AuthProvider>
-	)
+	);
 }
 
 function _FrankProvider({
@@ -37,6 +35,7 @@ function _FrankProvider({
 	initialConfig?: Partial<FrankConfig>;
 }) {
 	const [config, setConfig] = useState<FrankConfig>({
+		frontendUrl: initialConfig.frontendUrl ?? "http://localhost:3000",
 		logo: initialConfig.logo ?? <Key className="h-6 w-6" />,
 		title: initialConfig.title ?? "Welcome Back",
 		description: initialConfig.description ?? "Sign in to your account",
@@ -48,6 +47,7 @@ function _FrankProvider({
 		onMfa: initialConfig.onMfa,
 		onForgotPassword: initialConfig.onForgotPassword,
 		onVerifyOtp: initialConfig.onVerifyOtp,
+		onResetPassword: initialConfig.onResetPassword,
 		supportedMethods: initialConfig.supportedMethods ?? [
 			"password",
 			"passwordless",
@@ -89,7 +89,11 @@ function _FrankProvider({
 				text: "Sign up",
 				url: "/signup",
 			},
-			...(initialConfig.links ?? {})
+			resetPassword: {
+				text: "Sign up",
+				url: initialConfig.frontendUrl + "/login/reset-password",
+			},
+			...(initialConfig.links ?? {}),
 		},
 		theme: initialConfig.theme ?? {
 			primaryColor: "bg-primary",

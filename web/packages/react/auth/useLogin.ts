@@ -1,6 +1,11 @@
-import {useState} from "react";
-import {InternalServerError, LoginRequest, LoginResponse2, User} from "@frank-auth/sdk";
-import {useAuth} from "./useAuth";
+import { useState } from "react";
+import {
+	InternalServerError,
+	LoginRequest,
+	LoginResponse2,
+	User,
+} from "@frank-auth/sdk";
+import { useAuth } from "./useAuth";
 
 export const useLogin = () => {
 	const { login } = useAuth();
