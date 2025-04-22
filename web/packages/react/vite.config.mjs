@@ -14,7 +14,7 @@ export default defineConfig({
 		lib: {
 			entry: {
 				index: path.resolve(__dirname, "index.ts"),
-				next: path.resolve(__dirname, "middleware/nextMiddleware.ts"),
+				next: path.resolve(__dirname, "next.ts"),
 			},
 			name: "FrankAuth",
 			formats: ["es", "cjs"],

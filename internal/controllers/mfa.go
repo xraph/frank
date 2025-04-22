@@ -38,7 +38,7 @@ func (s *mfasrvc) JWTAuth(ctx context.Context, token string, scheme *security.JW
 	return ctx, fmt.Errorf("not implemented")
 }
 
-// Start MFA enrollment
+// Enroll Start MFA enrollment
 func (s *mfasrvc) Enroll(ctx context.Context, p *mfa.EnrollPayload) (res *mfa.EnrollResult, err error) {
 	res = &mfa.EnrollResult{}
 	log.Printf(ctx, "mfa.enroll")
@@ -52,21 +52,21 @@ func (s *mfasrvc) Verify(ctx context.Context, p *mfa.VerifyPayload) (res *mfa.Ve
 	return
 }
 
-// Disable MFA method
+// Unenroll Disable MFA method
 func (s *mfasrvc) Unenroll(ctx context.Context, p *mfa.UnenrollPayload) (res *mfa.UnenrollResult, err error) {
 	res = &mfa.UnenrollResult{}
 	log.Printf(ctx, "mfa.unenroll")
 	return
 }
 
-// Get enabled MFA methods
+// Methods Get enabled MFA methods
 func (s *mfasrvc) Methods(ctx context.Context, p *mfa.MethodsPayload) (res *mfa.MethodsResult, err error) {
 	res = &mfa.MethodsResult{}
 	log.Printf(ctx, "mfa.methods")
 	return
 }
 
-// Send verification code
+// SendCode Send verification code
 func (s *mfasrvc) SendCode(ctx context.Context, p *mfa.SendCodePayload) (res *mfa.SendCodeResult, err error) {
 	res = &mfa.SendCodeResult{}
 	log.Printf(ctx, "mfa.send_code")

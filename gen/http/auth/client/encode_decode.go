@@ -587,30 +587,6 @@ func EncodeRefreshTokenRequest(encoder func(*http.Request) goahttp.Encoder) func
 		if !ok {
 			return goahttp.ErrInvalidType("auth", "refresh_token", "*auth.RefreshTokenPayload", v)
 		}
-		if p.Oauth2 != nil {
-			head := *p.Oauth2
-			if !strings.Contains(head, " ") {
-				req.Header.Set("Authorization", "Bearer "+head)
-			} else {
-				req.Header.Set("Authorization", head)
-			}
-		}
-		if p.XAPIKey != nil {
-			head := *p.XAPIKey
-			if !strings.Contains(head, " ") {
-				req.Header.Set("Authorization", "Bearer "+head)
-			} else {
-				req.Header.Set("Authorization", head)
-			}
-		}
-		if p.JWT != nil {
-			head := *p.JWT
-			if !strings.Contains(head, " ") {
-				req.Header.Set("Authorization", "Bearer "+head)
-			} else {
-				req.Header.Set("Authorization", head)
-			}
-		}
 		if p.SessionID != nil {
 			v := *p.SessionID
 			req.AddCookie(&http.Cookie{

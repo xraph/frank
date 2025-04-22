@@ -20,7 +20,6 @@ import (
 	"github.com/juicycleff/frank/organization"
 	"github.com/juicycleff/frank/pkg/data"
 	"github.com/juicycleff/frank/pkg/logging"
-	"github.com/juicycleff/frank/pkg/utils"
 	user2 "github.com/juicycleff/frank/user"
 )
 
@@ -83,7 +82,7 @@ func New(repos *repo.Repo, cfg *config.Config, client *data.Clients, logger logg
 	// Initialize session store
 	sessionManager := session.NewManager(client.DB, cfg, logger, cookieStore)
 	sessionStore := session.NewManagerStore(sessionManager, cookieHandler, cfg)
-	utils.InitSessionStoreWithStore(sessionStore)
+	session.InitSessionStoreWithStore(sessionStore)
 
 	// Create services container
 	services := &Services{

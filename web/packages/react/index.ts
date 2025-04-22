@@ -47,6 +47,13 @@ export {
 	refreshAuthToken,
 } from "./utils/api";
 
+export type {
+	CookieHandler
+} from "./utils/cookie";
+export {
+	NextClientCookieHandler
+} from "./utils/cookie-next-client";
+
 // Types
 export type { AuthConfig, TokenData, AuthState } from "./types";
 export type { AuthContextType, AuthProviderProps } from "./auth/types";

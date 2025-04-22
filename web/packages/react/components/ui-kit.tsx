@@ -2,9 +2,9 @@
 
 import React, {useEffect, useMemo, useRef, useState} from "react";
 import {AlertCircle, ArrowLeft, CheckCircle2, Eye, EyeOff, Fingerprint, Key, Mail, RefreshCw,} from "lucide-react";
-import {Button} from "@/components/ui/button";
+import {Button as StyledButton} from "@/components/ui/button";
 import {Card, CardContent, CardDescription, CardHeader, CardTitle,} from "@/components/ui/card";
-import {Input} from "@/components/ui/input";
+import {Input as StyledInput} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
 import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
 import {Separator} from "@/components/ui/separator";
@@ -17,6 +17,8 @@ import {authLogin} from "@frank-auth/sdk";
 import {Alert, AlertDescription, AlertTitle} from "@/components/ui/alert";
 import {InputOTP, InputOTPGroup, InputOTPSlot,} from "@/components/ui/input-otp";
 import {REGEXP_ONLY_DIGITS_AND_CHARS} from "input-otp";
+import {TokenData} from "@/types";
+import {setTokenData} from "@/utils/token";
 
 export interface FrankProps extends FrankConfig {
 	useProviderConfig?: boolean;
@@ -45,6 +47,8 @@ export function FrankUIKit({
 	links,
 	verification,
 	useProviderConfig = true,
+							   components,
+	cssClasses,
 }: FrankProps) {
 	// Get configuration from context if useProviderConfig is true
 	const { config: providerConfig, ...frank } = useFrank();
@@ -76,6 +80,8 @@ export function FrankUIKit({
 				...(theme !== undefined && { theme }),
 				...(links !== undefined && { links }),
 				...(verification !== undefined && { verification }),
+				...(cssClasses !== undefined && { cssClasses }),
+				...(components !== undefined && { components }),
 			}
 		: {
 				// If not using provider config, just use the props directly
@@ -99,6 +105,8 @@ export function FrankUIKit({
 				theme,
 				links,
 				verification,
+			components,
+			cssClasses,
 			};
 
 	// Set default values for required props (rest of the component remains the same)
@@ -163,7 +171,12 @@ export function FrankUIKit({
 			textColor: "text-foreground",
 			borderRadius: "rounded-md",
 		},
+		components: configComponents = {},
+		cssClasses: configCssClasses = {},
 	} = config;
+
+	const Input = configComponents?.Input ?? StyledInput;
+	const Button = configComponents?.Button ?? StyledButton;
 
 	const [activeTab, setActiveTab] = useState<"login" | "signup">(
 		configAvailableTabs.includes(configInitialView)
@@ -200,7 +213,7 @@ export function FrankUIKit({
 	}, [configThemeTemp, frank]);
 
 	// Apply theme styles
-	const cardClassName = `w-full py-6 max-w-xl  min-w-md mx-auto ${configTheme.borderRadius || "rounded-md"} overflow-hidden`;
+	const cardClassName = `w-full py-6 max-w-xl  min-w-md mx-auto ${configTheme.borderRadius || "rounded-md"} overflow-hidden ${configCssClasses?.card ?? ''}`;
 	const buttonClassName = `${configTheme.primaryColor || "bg-primary"} ${configTheme.borderRadius || "rounded-md"}`;
 	const inputClassName = `${configTheme.borderRadius || "rounded-md"}`;
 	const cardStyle = configTheme.backgroundColor
@@ -213,12 +226,12 @@ export function FrankUIKit({
 		"text-center": configTitleAlign === "center",
 		"text-left": configTitleAlign === "left",
 		"text-right": configTitleAlign === "right",
-	});
+	}, configCssClasses?.title);
 	const descriptionClasses = cn("text-muted-foreground ", {
 		"text-center": configTitleAlign === "center",
 		"text-left": configTitleAlign === "left",
 		"text-right": configTitleAlign === "right",
-	});
+	}, configCssClasses?.desc);
 
 	const codeInputLength = useMemo(() => {
 		return new Array(configVerification.codeLength ?? 6).fill(0);
@@ -277,6 +290,80 @@ export function FrankUIKit({
 		</div>
 	);
 
+	// const handleLoginHook = async (rsp: LoginResponse2) => {
+	// 	try {
+	// 		// const rsp = await authLogin({
+	// 		// 	body: {
+	// 		// 		email,
+	// 		// 		password,
+	// 		// 		organization_id: config.api?.projectId,
+	// 		// 	},
+	// 		// });
+	//
+	// 		// if (rsp.error) {
+	// 		// 	setError(rsp.message);
+	// 		// 	return;
+	// 		// }
+	//
+	// 		await configOnLogin?.({ email, password });
+	// 		let href;
+	//
+	// 		if (rsp.requiresVerification) {
+	// 			if (links?.verify) {
+	// 				href = `${links.verify.url}?email=${email}&${rsp.token}`;
+	// 				href += `&redirect_url=${window.location.href}`;
+	// 				href += `&method=${rsp.verificationMethod}`;
+	// 				href += `&vid=${rsp.verificationId}`;
+	// 				window.location.href = href;
+	// 			} else {
+	// 				setCurrentView("verify-otp");
+	// 			}
+	// 			return;
+	// 		}
+	//
+	// 		if (rsp.message) {
+	// 			setSuccess(rsp.message);
+	// 		}
+	//
+	// 		if (rsp.mfa_required) {
+	// 			if (links?.mfa) {
+	// 				href = `${links.mfa.url}?email=${email}&${rsp.token}`;
+	// 				href += `&redirect_url=${window.location.href}`;
+	// 				href += `&method=${rsp.verificationMethod}`;
+	// 				href += `&vid=${rsp.verificationId}`;
+	// 				window.location.href = href;
+	// 			} else {
+	// 				setCurrentView("mfa");
+	// 			}
+	// 			return;
+	// 		}
+	// 	} catch (error) {
+	// 		console.error("Login error:", error);
+	// 	} finally {
+	// 		setIsLoading(false);
+	// 	}
+	// };
+	//
+	// const handleLogin = async (e: React.FormEvent) => {
+	// 	e.preventDefault();
+	//
+	// 	setIsLoading(true);
+	// 	try {
+	// 		const rsp = await login({
+	// 			email,
+	// 			password,
+	// 			organization_id: config.api?.projectId,
+	// 		}, handleLoginHook, (err) => {
+	// 			setError(err.message);
+	// 		});
+	// 	} catch (error) {
+	// 		console.error("Login error:", error);
+	// 	} finally {
+	// 		setIsLoading(false);
+	// 	}
+	// };
+
+
 	const handleLogin = async (e: React.FormEvent) => {
 		e.preventDefault();
 
@@ -327,6 +414,14 @@ export function FrankUIKit({
 				}
 				return;
 			}
+
+			const tokenData: TokenData = {
+				token: rsp.data.token,
+				refreshToken: rsp.data.refresh_token,
+				expiresAt: Number(rsp.data.expires_at),
+			};
+
+			setTokenData(tokenData);
 		} catch (error) {
 			console.error("Login error:", error);
 		} finally {
@@ -739,7 +834,7 @@ export function FrankUIKit({
 
 	const renderVerifyOtp = () => (
 		<Card className={cardClassName} style={cardStyle}>
-			<CardHeader>
+			<CardHeader className={configCssClasses?.cardHeader}>
 				<div className="flex items-center justify-center mb-4">
 					{configLogo}
 				</div>
@@ -750,7 +845,7 @@ export function FrankUIKit({
 					Enter the verification code sent to your device
 				</CardDescription>
 			</CardHeader>
-			<CardContent>
+			<CardContent className={configCssClasses?.cardContent}>
 				<form onSubmit={handleVerifyOtp}>
 					<div className="grid gap-4">
 						<div

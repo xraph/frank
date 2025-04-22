@@ -1,6 +1,7 @@
 package session
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -51,6 +52,7 @@ func (s *ManagerStore) Get(r *http.Request, name string) (*sessions.Session, err
 
 	// Retrieve session from Manager
 	ctx := r.Context()
+	fmt.Println("GetSession:", token)
 	sessionInfo, err := s.manager.GetSession(ctx, token)
 	if err != nil {
 		// Session not found or expired - return new session
@@ -87,83 +89,39 @@ func (s *ManagerStore) Save(r *http.Request, w http.ResponseWriter, sess *sessio
 	if sess.Options.MaxAge < 0 {
 		// If there's a token in the session, revoke it
 		if token, ok := sess.Values["token"].(string); ok && token != "" {
-			err := s.manager.RevokeSession(r.Context(), token)
-			if err != nil {
-				return err
-			}
+			_ = s.manager.RevokeSession(r.Context(), token)
 		}
 
+		// Clear the cookie
 		s.cookieHandler.ClearSessionCookie(w)
-
-		// // Delete the cookie
-		// http.SetCookie(w, &http.Cookie{
-		// 	Name:     sess.Name(),
-		// 	Path:     sess.Options.Path,
-		// 	Domain:   sess.Options.Domain,
-		// 	MaxAge:   -1,
-		// 	Secure:   sess.Options.Secure,
-		// 	HttpOnly: sess.Options.HttpOnly,
-		// 	SameSite: sess.Options.SameSite,
-		// })
-
 		return nil
 	}
 
-	cookieData := &CookieSessionData{}
-
-	// For existing sessions
-	if !sess.IsNew {
-		// Update the session if needed
-		if token, ok := sess.Values["token"].(string); ok && token != "" {
-			// You might want to update the session in the store
-			// For example, extending the expiration time
-			expiry := time.Duration(sess.Options.MaxAge) * time.Second
-			_ = s.manager.ExtendSession(r.Context(), token, expiry)
-
-			// // Set the cookie with the existing token
-			// http.SetCookie(w, &http.Cookie{
-			// 	Name:     sess.Name(),
-			// 	Value:    token,
-			// 	Path:     sess.Options.Path,
-			// 	Domain:   sess.Options.Domain,
-			// 	MaxAge:   sess.Options.MaxAge,
-			// 	Secure:   sess.Options.Secure,
-			// 	HttpOnly: sess.Options.HttpOnly,
-			// 	SameSite: sess.Options.SameSite,
-			// })
-
-			if v, ok := sess.Values["metadata"].(map[string]interface{}); ok {
-				cookieData.Metadata = v
-			}
-
-			if v, ok := sess.Values["organization_id"].(string); ok {
-				cookieData.OrganizationID = v
-			}
-
-			if v, ok := sess.Values["user_id"].(string); ok {
-				cookieData.UserID = v
-			}
-
-			cookieData.Token = token
-			cookieData.ExpiresAt = time.Now().Add(expiry)
-			err := s.cookieHandler.SetSecureSessionCookie(r, w, cookieData, expiry)
-			if err != nil {
-				return err
-			}
-
-			return nil
-		}
+	expiry := time.Duration(sess.Options.MaxAge) * time.Second
+	if expiry <= 0 {
+		expiry = s.manager.config.Auth.SessionDuration
 	}
 
-	// For new sessions or sessions without a token
-	userID, _ := sess.Values["user_id"].(string)
-	if userID == "" {
-		// Can't create session without a user ID
-		return nil
+	// Prepare cookie data
+	cookieData := &CookieSessionData{
+		ExpiresAt: time.Now().Add(expiry),
+		IssuedAt:  time.Now(),
 	}
 
-	// Create a new session in the Manager
-	// Prepare metadata from session values
+	// Extract important values
+	if userID, ok := sess.Values["user_id"].(string); ok && userID != "" {
+		cookieData.UserID = userID
+	}
+
+	if token, ok := sess.Values["token"].(string); ok && token != "" {
+		cookieData.Token = token
+	}
+
+	if orgID, ok := sess.Values["organization_id"].(string); ok && orgID != "" {
+		cookieData.OrganizationID = orgID
+	}
+
+	// Add metadata
 	metadata := make(map[string]interface{})
 	for k, v := range sess.Values {
 		if k != "user_id" && k != "organization_id" && k != "token" {
@@ -171,56 +129,45 @@ func (s *ManagerStore) Save(r *http.Request, w http.ResponseWriter, sess *sessio
 		}
 	}
 
-	// Create session options
-	options := []Option{WithMetadata(metadata)}
-
-	// Add organization ID if present
-	if orgID, ok := sess.Values["organization_id"].(string); ok && orgID != "" {
-		options = append(options, WithOrganizationID(orgID))
+	if len(metadata) > 0 {
+		cookieData.Metadata = metadata
 	}
 
-	expiry := time.Duration(sess.Options.MaxAge) * time.Second
-	// Set expiration
-	options = append(options, WithExpiration(expiry))
+	// For existing sessions
+	if !sess.IsNew && cookieData.Token != "" {
+		// Update session expiry in the store
+		_ = s.manager.ExtendSession(r.Context(), cookieData.Token, expiry)
+	} else if cookieData.UserID != "" {
+		// Create a new session
+		options := []Option{
+			WithExpiration(expiry),
+		}
 
-	// Create the session
-	sessionInfo, err := s.manager.CreateSession(r.Context(), userID, options...)
-	if err != nil {
-		return err
+		if cookieData.OrganizationID != "" {
+			options = append(options, WithOrganizationID(cookieData.OrganizationID))
+		}
+
+		if len(metadata) > 0 {
+			options = append(options, WithMetadata(metadata))
+		}
+
+		// Create a new session token
+		sessionInfo, err := s.manager.CreateSession(r.Context(), cookieData.UserID, options...)
+		if err != nil {
+			return err
+		}
+
+		// Update token in cookie data and session
+		cookieData.Token = sessionInfo.Token
+		sess.Values["token"] = sessionInfo.Token
 	}
 
-	// Store the token in session values
-	sess.Values["token"] = sessionInfo.Token
-
-	// Set the cookie
-	// http.SetCookie(w, &http.Cookie{
-	// 	Name:     sess.Name(),
-	// 	Value:    sessionInfo.Token,
-	// 	Path:     sess.Options.Path,
-	// 	Domain:   sess.Options.Domain,
-	// 	MaxAge:   sess.Options.MaxAge,
-	// 	Secure:   sess.Options.Secure,
-	// 	HttpOnly: sess.Options.HttpOnly,
-	// 	SameSite: sess.Options.SameSite,
-	// })
-
-	if v, ok := sess.Values["metadata"].(map[string]interface{}); ok {
-		cookieData.Metadata = v
-	}
-
-	if v, ok := sess.Values["organization_id"].(string); ok {
-		cookieData.OrganizationID = v
-	}
-
-	if v, ok := sess.Values["user_id"].(string); ok {
-		cookieData.UserID = v
-	}
-
-	cookieData.Token = sessionInfo.Token
-	cookieData.ExpiresAt = time.Now().Add(expiry)
-	err = s.cookieHandler.SetSecureSessionCookie(r, w, cookieData, expiry)
-	if err != nil {
-		return err
+	// If we have a valid token, set the cookie
+	if cookieData.Token != "" && cookieData.UserID != "" {
+		err := s.cookieHandler.SetSecureSessionCookie(r, w, cookieData, expiry)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

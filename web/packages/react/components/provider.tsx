@@ -1,6 +1,6 @@
 // Create the provider component
-import React, { ReactNode, useCallback, useState } from "react";
-import { Key } from "lucide-react";
+import React, {ReactNode, useCallback, useState} from "react";
+import {Key} from "lucide-react";
 import {
 	authSendEmailVerification,
 	authVerifyEmail,
@@ -9,15 +9,27 @@ import {
 	User,
 	VerifyEmailRequest,
 } from "@frank-auth/sdk";
-import {
-	FrankConfig,
-	FrankContext,
-	Session,
-	ThemeConfigPreset,
-	themePresets,
-} from "@/components/context";
+import {FrankConfig, FrankContext, Session, ThemeConfigPreset, themePresets,} from "@/components/context";
+import {AuthProvider} from "../auth/AuthProvider";
+import {getConfig} from "@/config";
 
 export function FrankProvider({
+												  children,
+												  initialConfig = {},
+											  }: {
+	children: ReactNode;
+	initialConfig?: Partial<FrankConfig>;
+}) {
+	return (
+		<AuthProvider organizationId={initialConfig.api?.projectId ?? "default"}>
+			<_FrankProvider initialConfig={initialConfig}>
+				{children}
+			</_FrankProvider>
+		</AuthProvider>
+	)
+}
+
+function _FrankProvider({
 	children,
 	initialConfig = {},
 }: {
@@ -85,10 +97,12 @@ export function FrankProvider({
 			borderRadius: "rounded-md",
 		},
 		api: initialConfig.api ?? {
-			baseUrl: "/",
-			projectId: "frank-auth",
+			projectId: "default",
 		},
+		cssClasses: initialConfig.cssClasses ?? {},
+		components: initialConfig.components ?? {},
 	});
+	const apiConfig = getConfig();
 
 	const getTheme = (theme?: ThemeConfigPreset) => {
 		if (!theme) return themePresets.default;
@@ -168,10 +182,8 @@ export function FrankProvider({
 		}));
 	};
 
-	console.log(initialConfig.api?.baseUrl);
-
 	client.setConfig({
-		baseUrl: initialConfig.api?.baseUrl ?? "/",
+		baseUrl: initialConfig.api?.baseUrl ?? apiConfig.baseUrl,
 		credentials: "include",
 		auth: (auth) => {
 			if (initialConfig.api?.secret && auth.scheme === "bearer") {

@@ -3,6 +3,7 @@ package controllers
 import (
 	"context"
 
+	"github.com/gorilla/sessions"
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/internal/apikeys"
 	"github.com/juicycleff/frank/internal/auth/session"
@@ -19,11 +20,12 @@ func NewAuther(
 	cfg *config.Config,
 	logger logging.Logger,
 	sessionManager *session.Manager,
+	sessionStore sessions.Store,
 	cookieHandler *session.CookieHandler,
 	apiKeyService apikeys.Service,
 ) *AutherService {
 	return &AutherService{
-		authMw: middleware.AuthGoa(cfg, logger, sessionManager, apiKeyService, cookieHandler),
+		authMw: middleware.AuthGoa(cfg, logger, sessionManager, sessionStore, apiKeyService, cookieHandler),
 	}
 }
 

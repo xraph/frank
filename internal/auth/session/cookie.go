@@ -37,103 +37,186 @@ type CookieSessionData struct {
 	Metadata       map[string]interface{} `json:"metadata,omitempty"`
 }
 
-// SetSecureSessionCookie sets a secure, encrypted session cookie
+// SetSecureSessionCookie that just uses JWT for everything
 func (h *CookieHandler) SetSecureSessionCookie(r *http.Request, w http.ResponseWriter, data *CookieSessionData, expiry time.Duration) error {
-	// Marshal the data to JSON
-	jsonData, err := json.Marshal(data)
-	if err != nil {
-		return errors.Wrap(errors.CodeInternalServer, err, "failed to marshal cookie session data")
+	h.logger.Debug("Setting secure session cookie",
+		logging.String("user_id", data.UserID),
+		logging.Duration("expiry", expiry))
+
+	// Create JWT claims
+	claims := map[string]interface{}{
+		"user_id": data.UserID,
+		"exp":     time.Now().Add(expiry).Unix(),
+		"iat":     time.Now().Unix(),
+		"iss":     h.config.Auth.TokenIssuer,
 	}
 
-	// Generate a random IV
-	iv, err := crypto.GenerateEncryptionAESKey(h.config.Auth.SessionSecretKey)
-	if err != nil {
-		return errors.Wrap(errors.CodeCryptoError, err, "failed to generate IV")
+	// Add organization ID if present
+	if data.OrganizationID != "" {
+		claims["organization_id"] = data.OrganizationID
 	}
 
-	// Encrypt the data
-	encrypted, err := crypto.EncryptAES(jsonData, h.config.Auth.SessionSecretKey, iv)
-	if err != nil {
-		return errors.Wrap(errors.CodeCryptoError, err, "failed to encrypt session data")
+	// Add any metadata
+	if data.Metadata != nil {
+		for k, v := range data.Metadata {
+			// Skip reserved claim names
+			if k != "user_id" && k != "exp" && k != "iat" && k != "iss" && k != "organization_id" {
+				claims[k] = v
+			}
+		}
 	}
 
-	// Combine IV and ciphertext
-	combined := encrypted
+	// Create JWT token
+	jwtConfig := &crypto.JWTConfig{
+		SigningMethod: h.config.Auth.TokenSigningMethod,
+		SignatureKey:  []byte(h.config.Auth.TokenSecretKey),
+		ValidationKey: []byte(h.config.Auth.TokenSecretKey),
+		Issuer:        h.config.Auth.TokenIssuer,
+		Audience:      h.config.Auth.TokenAudience,
+	}
 
-	// Encode to base64
-	cookieValue := base64.URLEncoding.EncodeToString(combined)
+	token, err := jwtConfig.GenerateToken(data.UserID, claims, expiry)
+	if err != nil {
+		h.logger.Error("Failed to create JWT token", logging.Error(err))
+		return errors.Wrap(errors.CodeCryptoError, err, "failed to create session token")
+	}
 
+	// domain := h.config.Auth.CookieDomain
+	// if domain == "" && r != nil {
+	// 	// Extract host from request
+	// 	host := r.Host
+	// 	// Remove port if present
+	// 	if colonIndex := strings.Index(host, ":"); colonIndex != -1 {
+	// 		host = host[:colonIndex]
+	// 	}
+	// 	domain = host
+	// }
+
+	// Domain handling
 	domain := h.config.Auth.CookieDomain
 	if domain == "" && r != nil {
-		// Extract host from request
 		host := r.Host
-		// Remove port if present
 		if colonIndex := strings.Index(host, ":"); colonIndex != -1 {
 			host = host[:colonIndex]
 		}
-		domain = host
+
+		// For localhost, leave domain empty
+		if host == "localhost" {
+			domain = ""
+		} else {
+			domain = host
+		}
 	}
 
-	// Set cookie
-	http.SetCookie(w, &http.Cookie{
+	secure := h.config.Auth.CookieSecure
+	if config.IsDevelopment() {
+		secure = false
+	}
+
+	// Create cookie with consistent settings
+	cookie := &http.Cookie{
 		Name:     h.getSessionCookieName(),
-		Value:    cookieValue,
+		Value:    token,
 		Path:     "/",
 		Domain:   domain,
 		Expires:  time.Now().Add(expiry),
 		MaxAge:   int(expiry.Seconds()),
-		Secure:   h.config.Auth.CookieSecure,
+		Secure:   secure,
 		HttpOnly: h.config.Auth.CookieHTTPOnly,
-		SameSite: parseCookieSameSite(h.config.Auth.CookieSameSite),
-	})
+		SameSite: http.SameSiteLaxMode, // Use Lax for frontend compatibility
+	}
 
+	h.logger.Debug("Setting JWT cookie",
+		logging.String("name", cookie.Name),
+		logging.String("domain", cookie.Domain),
+		logging.String("path", cookie.Path),
+		logging.Int("max_age", cookie.MaxAge))
+
+	http.SetCookie(w, cookie)
 	return nil
 }
 
-// GetSecureSessionCookie gets and decrypts a secure session cookie
+// GetSecureSessionCookie that just uses JWT for everything
 func (h *CookieHandler) GetSecureSessionCookie(r *http.Request) (*CookieSessionData, error) {
+	h.logger.Debug("Attempting to extract session cookie")
+
 	// Get the cookie
 	cookie, err := r.Cookie(h.getSessionCookieName())
 	if err != nil {
-		if err == http.ErrNoCookie {
-			return nil, errors.New(errors.CodeSessionExpired, "session cookie not found")
+		h.logger.Debug("Cookie not found", logging.Error(err))
+		return nil, errors.New(errors.CodeSessionExpired, "session cookie not found")
+	}
+
+	h.logger.Debug("Found cookie",
+		logging.String("cookie_value_prefix", cookie.Value[:10]+"..."),
+		logging.String("domain", cookie.Domain),
+		logging.String("path", cookie.Path),
+		logging.Int("max_age", cookie.MaxAge))
+
+	// Log the cookie value for debugging
+	h.logger.Debug("cookie value: ", logging.String("cookie_value", cookie.Value))
+
+	// If this is not a JWT token, we can't process it
+	if !strings.HasPrefix(cookie.Value, "eyJ") {
+		h.logger.Debug("Cookie value is not a JWT token")
+		return nil, errors.New(errors.CodeInvalidToken, "invalid token format")
+	}
+
+	// Validate JWT token
+	jwtConfig := &crypto.JWTConfig{
+		SigningMethod: h.config.Auth.TokenSigningMethod,
+		SignatureKey:  []byte(h.config.Auth.TokenSecretKey),
+		ValidationKey: []byte(h.config.Auth.TokenSecretKey),
+		Issuer:        h.config.Auth.TokenIssuer,
+		Audience:      h.config.Auth.TokenAudience,
+	}
+
+	claims, err := jwtConfig.ValidateToken(cookie.Value)
+	if err != nil {
+		h.logger.Debug("Failed to validate JWT token", logging.Error(err))
+		return nil, errors.Wrap(errors.CodeInvalidToken, err, "invalid session token")
+	}
+
+	// Create session data from JWT claims
+	sessionData := &CookieSessionData{
+		Token:     cookie.Value,
+		ExpiresAt: time.Now().Add(h.config.Auth.SessionDuration),
+		IssuedAt:  time.Now(),
+	}
+
+	// Extract user ID
+	if userID, ok := claims["user_id"].(string); ok && userID != "" {
+		sessionData.UserID = userID
+	} else if userID, ok := claims["sub"].(string); ok && userID != "" {
+		sessionData.UserID = userID
+	} else {
+		h.logger.Debug("JWT token does not contain user ID")
+		return nil, errors.New(errors.CodeInvalidToken, "invalid token: missing user ID")
+	}
+
+	// Extract organization ID if present
+	if orgID, ok := claims["organization_id"].(string); ok && orgID != "" {
+		sessionData.OrganizationID = orgID
+	}
+
+	// Extract metadata
+	metadata := make(map[string]interface{})
+	for k, v := range claims {
+		// Skip reserved claim names
+		if k != "user_id" && k != "exp" && k != "iat" && k != "iss" &&
+			k != "organization_id" && k != "sub" && k != "aud" && k != "nbf" {
+			metadata[k] = v
 		}
-		return nil, errors.Wrap(errors.CodeInvalidToken, err, "failed to read session cookie")
 	}
 
-	// Decode from base64
-	combined, err := base64.URLEncoding.DecodeString(cookie.Value)
-	if err != nil {
-		return nil, errors.Wrap(errors.CodeInvalidToken, err, "failed to decode session cookie value")
+	if len(metadata) > 0 {
+		sessionData.Metadata = metadata
 	}
 
-	// Extract IV and ciphertext
-	if len(combined) < 16 {
-		return nil, errors.New(errors.CodeInvalidToken, "invalid session cookie data")
-	}
+	h.logger.Debug("Successfully extracted session data from JWT",
+		logging.String("user_id", sessionData.UserID))
 
-	// iv := combined[:16]
-	// encrypted := combined[16:]
-	encrypted := combined
-
-	// Decrypt the data
-	decrypted, err := crypto.DecryptAES(encrypted, h.config.Auth.SessionSecretKey, nil)
-	if err != nil {
-		return nil, errors.Wrap(errors.CodeInvalidToken, err, "failed to decrypt session cookie")
-	}
-
-	// Unmarshal the JSON data
-	var data CookieSessionData
-	if err = json.Unmarshal(decrypted, &data); err != nil {
-		return nil, errors.Wrap(errors.CodeInvalidToken, err, "failed to unmarshal session data")
-	}
-
-	// Check if the session has expired
-	if time.Now().After(data.ExpiresAt) {
-		return nil, errors.New(errors.CodeSessionExpired, "session has expired")
-	}
-
-	return &data, nil
+	return sessionData, nil
 }
 
 // ClearSessionCookie clears the session cookie
@@ -364,3 +447,175 @@ func (h *CookieHandler) ClearCSRFCookie(w http.ResponseWriter) {
 		SameSite: parseCookieSameSite(h.config.Auth.CookieSameSite),
 	})
 }
+
+// todo: Please keep this code for reference.
+// // SetSecureSessionCookie with simpler GCM encryption
+// func (h *CookieHandler) SetSecureSessionCookie(r *http.Request, w http.ResponseWriter, data *CookieSessionData, expiry time.Duration) error {
+// 	h.logger.Debug("Setting secure session cookie",
+// 		logging.String("user_id", data.UserID),
+// 		logging.Duration("expiry", expiry))
+//
+// 	// Marshal the data to JSON
+// 	jsonData, err := json.Marshal(data)
+// 	if err != nil {
+// 		h.logger.Error("Failed to marshal cookie data", logging.Error(err))
+// 		return errors.Wrap(errors.CodeInternalServer, err, "failed to marshal cookie session data")
+// 	}
+//
+// 	// Use EncryptWithRandomIV from your crypto package - this is simpler and more robust
+// 	// It creates a random IV, prepends it to the ciphertext, and uses AES-GCM
+// 	encrypted, err := crypto.EncryptWithRandomIV(jsonData, []byte(h.config.Auth.SessionSecretKey))
+// 	if err != nil {
+// 		h.logger.Error("Failed to encrypt data", logging.Error(err))
+// 		return errors.Wrap(errors.CodeCryptoError, err, "failed to encrypt session data")
+// 	}
+//
+// 	// Use URL-safe base64 encoding
+// 	cookieValue := base64.URLEncoding.EncodeToString(encrypted)
+//
+// 	// Domain handling
+// 	domain := h.config.Auth.CookieDomain
+// 	if domain == "" && r != nil {
+// 		host := r.Host
+// 		if colonIndex := strings.Index(host, ":"); colonIndex != -1 {
+// 			host = host[:colonIndex]
+// 		}
+//
+// 		// For localhost, leave domain empty
+// 		if host == "localhost" {
+// 			domain = ""
+// 		} else {
+// 			domain = host
+// 		}
+// 	}
+//
+// 	fmt.Println("Setting session cookie secure CH => ", h.config.Auth.CookieSecure)
+//
+// 	// Create cookie with consistent settings
+// 	cookie := &http.Cookie{
+// 		Name:     h.getSessionCookieName(),
+// 		Value:    cookieValue,
+// 		Path:     "/",
+// 		Domain:   domain,
+// 		Expires:  time.Now().Add(expiry),
+// 		MaxAge:   int(expiry.Seconds()),
+// 		Secure:   h.config.Auth.CookieSecure,
+// 		HttpOnly: h.config.Auth.CookieHTTPOnly,
+// 		SameSite: http.SameSiteLaxMode, // Use Lax for frontend compatibility
+// 	}
+//
+// 	h.logger.Debug("Setting cookie",
+// 		logging.String("name", cookie.Name),
+// 		logging.String("domain", cookie.Domain),
+// 		logging.String("path", cookie.Path),
+// 		logging.Int("max_age", cookie.MaxAge))
+//
+// 	http.SetCookie(w, cookie)
+// 	return nil
+// }
+//
+// // GetSecureSessionCookie with simpler GCM decryption
+// func (h *CookieHandler) GetSecureSessionCookie(r *http.Request) (*CookieSessionData, error) {
+// 	h.logger.Debug("Attempting to extract session cookie")
+//
+// 	// Get the cookie
+// 	cookie, err := r.Cookie(h.getSessionCookieName())
+// 	if err != nil {
+// 		h.logger.Debug("Cookie not found", logging.Error(err))
+// 		return nil, errors.New(errors.CodeSessionExpired, "session cookie not found")
+// 	}
+//
+// 	h.logger.Debug("Found cookie",
+// 		logging.String("cookie_value_prefix", cookie.Value[:10]+"..."),
+// 		logging.String("domain", cookie.Domain),
+// 		logging.String("path", cookie.Path),
+// 		logging.Int("max_age", cookie.MaxAge))
+//
+// 	// Log the cookie value for debugging
+// 	h.logger.Debug("cookie value: ", logging.String("cookie_value", cookie.Value))
+//
+// 	// First, check if this is a JWT token (for Swagger UI compatibility)
+// 	if strings.HasPrefix(cookie.Value, "eyJ") {
+// 		jwtConfig := &crypto.JWTConfig{
+// 			SigningMethod: h.config.Auth.TokenSigningMethod,
+// 			SignatureKey:  []byte(h.config.Auth.TokenSecretKey),
+// 			ValidationKey: []byte(h.config.Auth.TokenSecretKey),
+// 			Issuer:        h.config.Auth.TokenIssuer,
+// 			Audience:      h.config.Auth.TokenAudience,
+// 		}
+//
+// 		claims, err := jwtConfig.ValidateToken(cookie.Value)
+// 		if err == nil {
+// 			// Create session data from JWT
+// 			sessionData := &CookieSessionData{
+// 				Token:     cookie.Value,
+// 				ExpiresAt: time.Now().Add(h.config.Auth.SessionDuration),
+// 				IssuedAt:  time.Now(),
+// 			}
+//
+// 			if userID, ok := claims["user_id"].(string); ok && userID != "" {
+// 				sessionData.UserID = userID
+// 			} else if userID, ok := claims["sub"].(string); ok && userID != "" {
+// 				sessionData.UserID = userID
+// 			}
+//
+// 			if orgID, ok := claims["organization_id"].(string); ok && orgID != "" {
+// 				sessionData.OrganizationID = orgID
+// 			}
+//
+// 			h.logger.Debug("Successfully extracted session data from JWT",
+// 				logging.String("user_id", sessionData.UserID))
+//
+// 			return sessionData, nil
+// 		}
+// 	}
+//
+// 	// Handle URL-encoded cookie value
+// 	cookieValue := cookie.Value
+//
+// 	// URL-unescape the cookie value if needed
+// 	unescapedValue, err := url.QueryUnescape(cookieValue)
+// 	if err == nil {
+// 		cookieValue = unescapedValue
+// 	}
+//
+// 	// Decode from base64
+// 	encrypted, err := base64.URLEncoding.DecodeString(cookieValue)
+// 	if err != nil {
+// 		h.logger.Debug("Failed URLEncoding decode, trying StdEncoding", logging.Error(err))
+// 		encrypted, err = base64.StdEncoding.DecodeString(cookieValue)
+// 		if err != nil {
+// 			h.logger.Debug("All base64 decode attempts failed", logging.Error(err))
+// 			return nil, errors.Wrap(errors.CodeInvalidToken, err, "failed to decode session cookie value")
+// 		}
+// 	}
+//
+// 	// Use DecryptWithPrependedIV from your crypto package
+// 	// This handles the IV properly and uses AES-GCM
+// 	jsonData, err := crypto.DecryptWithPrependedIV(encrypted, []byte(h.config.Auth.SessionSecretKey))
+// 	if err != nil {
+// 		h.logger.Debug("Failed to decrypt data", logging.Error(err))
+// 		return nil, errors.Wrap(errors.CodeInvalidToken, err, "failed to decrypt session cookie")
+// 	}
+//
+// 	// Unmarshal the JSON data
+// 	var data CookieSessionData
+// 	if err = json.Unmarshal(jsonData, &data); err != nil {
+// 		h.logger.Debug("Failed to unmarshal JSON", logging.Error(err))
+// 		return nil, errors.Wrap(errors.CodeInvalidToken, err, "failed to unmarshal session data")
+// 	}
+//
+// 	// Check if the session has expired
+// 	if time.Now().After(data.ExpiresAt) {
+// 		h.logger.Debug("Session has expired",
+// 			logging.Time("expires_at", data.ExpiresAt),
+// 			logging.Time("now", time.Now()))
+// 		return nil, errors.New(errors.CodeSessionExpired, "session has expired")
+// 	}
+//
+// 	h.logger.Debug("Successfully extracted session data",
+// 		logging.String("user_id", data.UserID),
+// 		logging.Time("expires_at", data.ExpiresAt))
+//
+// 	return &data, nil
+// }

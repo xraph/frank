@@ -2,6 +2,7 @@ import {authRefreshToken, client as fclient, type Client} from "@frank-auth/sdk"
 import {getConfig} from "../config";
 import {clearTokenData, getTokenData, isTokenExpired, setTokenData,} from "./token";
 import {TokenData} from "../types";
+import {CookieHandler} from "@/utils/cookie";
 
 // type Client = () => typeof fclient;
 
@@ -18,9 +19,9 @@ export const createApiClient = (): Client => {
 };
 
 // Create an authenticated API client with token handling
-export const createAuthenticatedClient = (): Client => {
+export const createAuthenticatedClient = (cookie?: string): Client => {
 	const config = getConfig();
-	const tokenData = getTokenData();
+	const tokenData = getTokenData(cookie);
 
 	fclient.setConfig({
 		baseUrl: config.baseUrl,
@@ -46,8 +47,8 @@ export const createAuthenticatedClient = (): Client => {
 };
 
 // Function to refresh the token
-export const refreshAuthToken = async (): Promise<TokenData | null> => {
-	const tokenData = getTokenData();
+export const refreshAuthToken = async (cookie?: string, cookieHandler?: CookieHandler): Promise<TokenData | null> => {
+	const tokenData = getTokenData(cookie);
 	if (!tokenData) return null;
 
 	try {
@@ -66,7 +67,7 @@ export const refreshAuthToken = async (): Promise<TokenData | null> => {
 			expiresAt: Number(data.expires_at),
 		};
 
-		setTokenData(newTokenData);
+		setTokenData(newTokenData, cookieHandler);
 		return newTokenData;
 	} catch (error) {
 		clearTokenData();

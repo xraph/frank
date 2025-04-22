@@ -1,6 +1,6 @@
 {
   "name": "@frank-auth/react",
-  "version": "0.0.2",
+  "version": "0.1.5",
   "description": "Frank Authentication React Client",
   "main": "dist/index.cjs",
   "module": "dist/index.mjs",
@@ -24,7 +24,7 @@
       "import": "./dist/react.css"
     },
     "./next": {
-      "types": "./dist/types/middleware/nextMiddleware.d.ts",
+      "types": "./dist/types/next.d.ts",
       "import": "./dist/next.mjs",
       "require": "./dist/next.cjs"
     }
@@ -48,6 +48,9 @@
     "@radix-ui/react-tooltip": "^1.1.8",
     "@tailwindcss/vite": "^4.0.13",
     "class-variance-authority": "^0.7.1",
+    "jwt-decode": "^4.0.0",
+    "cookie": "^1.0.2",
+    "cookies-next": "^5.1.0",
     "clsx": "^2.1.1",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.483.0",

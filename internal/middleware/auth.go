@@ -8,6 +8,7 @@ import (
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/adapters/humachi"
 	"github.com/go-chi/chi/v5"
+	"github.com/gorilla/sessions"
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/internal/apikeys"
 	"github.com/juicycleff/frank/internal/auth/session"
@@ -78,6 +79,9 @@ type AuthOptions struct {
 	// SessionManager is used for session-based authentication
 	SessionManager *session.Manager
 
+	// SessionManagerStore is used for session-based authentication
+	SessionStore sessions.Store
+
 	// APIKeyService is used for API key authentication
 	APIKeyService apikeys.Service
 
@@ -99,6 +103,7 @@ func Auth(
 	cfg *config.Config,
 	logger logging.Logger,
 	sessionManager *session.Manager,
+	sessionStore sessions.Store,
 	apiKeyService apikeys.Service,
 	required bool,
 ) func(http.Handler) http.Handler {
@@ -109,13 +114,14 @@ func Auth(
 	options.AllowBearerToken = cfg.Auth.AllowBearerToken
 
 	options.SessionManager = sessionManager
+	options.SessionStore = sessionStore
 	options.APIKeyService = apiKeyService
 
-	return AuthWithOptions(cfg, logger, options)
+	return AuthWithOptions(cfg, logger, &options)
 }
 
 // AuthWithOptions returns an Auth middleware with custom options
-func AuthWithOptions(cfg *config.Config, logger logging.Logger, options AuthOptions) func(http.Handler) http.Handler {
+func AuthWithOptions(cfg *config.Config, logger logging.Logger, options *AuthOptions) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			authenticated, ctx, err := PrefillAuthWithOptions(r, r.Context(), cfg, logger, options)
@@ -138,29 +144,37 @@ func PrefillAuthWithOptions(
 	ctx context.Context,
 	cfg *config.Config,
 	logger logging.Logger,
-	options AuthOptions,
+	options *AuthOptions,
 ) (bool, context.Context, error) {
 	authenticated := false
 
-	// // Skip authentication for public routes (modify this based on your requirements)
-	// for _, path := range cfg.Security.PublicPaths {
-	// 	if routePattern == path {
-	// 		return ctx, nil
-	// 	}
-	// }
-
-	// Try to authenticate using various methods
+	// Try to authenticate using bearer tokens
 	if options.AllowBearerToken {
 		authHeader := r.Header.Get("Authorization")
 		if strings.HasPrefix(authHeader, "Bearer ") {
 			token := strings.TrimPrefix(authHeader, "Bearer ")
-			if userID, orgID, err := validateBearerToken(ctx, token, cfg); err == nil {
-				// Token is valid, add info to context
+			userID, orgID, err := validateBearerToken(ctx, token, cfg)
+			if err == nil {
+				// Valid JWT token
 				ctx = context.WithValue(ctx, UserIDKey, userID)
 				if orgID != "" {
 					ctx = context.WithValue(ctx, OrganizationIDKey, orgID)
 				}
 				authenticated = true
+				logger.Debug("Authenticated via Bearer token")
+			} else {
+				// If not a valid JWT, check if it's a session token
+				if options.SessionManager != nil {
+					sess, err := options.SessionManager.GetSession(ctx, token)
+					if err == nil {
+						ctx = context.WithValue(ctx, UserIDKey, sess.UserID)
+						if sess.OrganizationID != "" {
+							ctx = context.WithValue(ctx, OrganizationIDKey, sess.OrganizationID)
+						}
+						authenticated = true
+						logger.Debug("Authenticated via session token in Authorization header")
+					}
+				}
 			}
 		}
 	}
@@ -175,7 +189,7 @@ func PrefillAuthWithOptions(
 
 		if apiKey != "" {
 			if apiKeyInfo, err := options.APIKeyService.Validate(ctx, apiKey); err == nil {
-				// API key is valid, add info to context
+				// API key is valid
 				if apiKeyInfo.UserID != "" {
 					ctx = context.WithValue(ctx, UserIDKey, apiKeyInfo.UserID)
 				}
@@ -183,6 +197,7 @@ func PrefillAuthWithOptions(
 					ctx = context.WithValue(ctx, OrganizationIDKey, apiKeyInfo.OrganizationID)
 				}
 				authenticated = true
+				logger.Debug("Authenticated via API key")
 
 				// Update last used timestamp in a goroutine
 				go func(id string) {
@@ -199,31 +214,32 @@ func PrefillAuthWithOptions(
 	}
 
 	// Try session authentication
-	if !authenticated && options.AllowSession && options.SessionManager != nil {
-		// Try to get token from session cookie
-		// sess, err := a.options.CookieHandler.GetSecureSessionCookie(info.Req)
-		sess, err := utils.GetSession(r, cfg)
+	if !authenticated && options.AllowSession {
+		// Get session via the helper
+		sess, err := session.GetSessionHelper(r, cfg, options.CookieHandler, options.SessionStore, logger)
 		if err == nil {
 			// Check if user is authenticated in session
 			if userID, ok := sess.Values["user_id"].(string); ok && userID != "" {
-				ctx = NewLoggedInUserIDCtx(ctx, userID)
+				ctx = context.WithValue(ctx, UserIDKey, userID)
 
 				// Also check for organization in session
 				if orgID, ok := sess.Values["organization_id"].(string); ok && orgID != "" {
 					ctx = context.WithValue(ctx, OrganizationIDKey, orgID)
 				}
 				authenticated = true
+				logger.Debug("Authenticated via session cookie")
 			}
 		}
 	}
 
-	// Check if authentication is required but not provided
-	if options.Required && !authenticated {
-		return authenticated, nil, errors.New(errors.CodeUnauthorized, "authentication required")
-	}
-
 	// Add authentication status to context
 	ctx = context.WithValue(ctx, AuthenticatedKey, authenticated)
+
+	// Check if authentication is required but not provided
+	if options.Required && !authenticated {
+		return authenticated, ctx, errors.New(errors.CodeUnauthorized, "authentication required")
+	}
+
 	return authenticated, ctx, nil
 }
 
@@ -309,7 +325,7 @@ func AuthWithOptionsHuma(cfg *config.Config, logger logging.Logger, options Auth
 			// Try session authentication
 			if !authenticated && options.AllowSession && options.SessionManager != nil {
 				// Try to get token from session cookie
-				sess, err := utils.GetSession(r, cfg)
+				sess, err := session.GetSessionHelper(r, cfg, options.CookieHandler, options.SessionStore, logger)
 				if err == nil {
 					// Check if user is authenticated in session
 					if userID, ok := sess.Values["user_id"].(string); ok && userID != "" {

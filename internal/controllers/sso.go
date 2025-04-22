@@ -9,6 +9,7 @@ import (
 	"github.com/juicycleff/frank/gen/designtypes"
 	ssohttp "github.com/juicycleff/frank/gen/http/sso/server"
 	"github.com/juicycleff/frank/gen/sso"
+	"github.com/juicycleff/frank/internal/auth/session"
 	sso2 "github.com/juicycleff/frank/internal/auth/sso"
 	"github.com/juicycleff/frank/internal/middleware"
 	"github.com/juicycleff/frank/internal/services"
@@ -130,7 +131,7 @@ func (s *ssosrvc) ProviderAuth(ctx context.Context, p *sso.ProviderAuthPayload) 
 	}
 
 	// Store state and other data in session
-	session, err := utils.GetSession(info.Req, s.config)
+	session, err := session.GetSessionHelper(info.Req, s.config, s.svcs.CookieHandler, s.svcs.SessionStore, s.logger)
 	if err != nil {
 		return errors.Wrap(errors.CodeInternalServer, err, "failed to get session")
 	}
@@ -181,7 +182,7 @@ func (s *ssosrvc) ProviderCallback(ctx context.Context, p *sso.ProviderCallbackP
 	}
 
 	// Verify state
-	session, err := utils.GetSession(info.Req, s.config)
+	session, err := session.GetSessionHelper(info.Req, s.config, s.svcs.CookieHandler, s.svcs.SessionStore, s.logger)
 	if err != nil {
 		err = errors.Wrap(errors.CodeInternalServer, err, "failed to get session")
 		return

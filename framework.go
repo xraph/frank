@@ -61,7 +61,7 @@ func New(clients *data.Clients, cfg *config.Config, logger logging.Logger, opts 
 	}
 
 	// Init repos
-	repos := repo.New(cfg, clients.DB, logger)
+	repos := repo.New(cfg, clients, logger)
 
 	// Initialize services
 	svcs, err := services.New(repos, cfg, clients, logger)

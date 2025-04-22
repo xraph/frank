@@ -1,9 +1,10 @@
-import { AuthConfig } from "../types";
+import {AuthConfig} from "../types";
 
 let config: AuthConfig = {
-	baseUrl: "",
+	baseUrl: process.env.NEXT_PUBLIC_FRANK_ENDPOINT ?? "",
 	storagePrefix: "frank_auth_",
 	tokenStorageType: "localStorage",
+	cookieName: "_frank_sid",
 };
 
 export const setConfig = (newConfig: Partial<AuthConfig>): void => {

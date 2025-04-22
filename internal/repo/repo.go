@@ -1,17 +1,15 @@
 package repo
 
 import (
-	"time"
-
 	"github.com/juicycleff/frank/config"
 	email2 "github.com/juicycleff/frank/email"
-	"github.com/juicycleff/frank/ent"
 	"github.com/juicycleff/frank/internal/apikeys"
 	"github.com/juicycleff/frank/internal/auth/passkeys"
 	"github.com/juicycleff/frank/internal/auth/session"
 	"github.com/juicycleff/frank/internal/rbac"
 	"github.com/juicycleff/frank/internal/webhook"
 	"github.com/juicycleff/frank/organization"
+	"github.com/juicycleff/frank/pkg/data"
 	"github.com/juicycleff/frank/pkg/logging"
 	"github.com/juicycleff/frank/user"
 )
@@ -29,15 +27,15 @@ type Repo struct {
 	Session      session.Store
 }
 
-func New(cfg *config.Config, client *ent.Client, logger logging.Logger) *Repo {
-	apiKeyRepo := apikeys.NewRepository(client)
-	orgRepo := organization.NewRepository(client)
-	userRepo := user.NewRepository(client)
-	webhookRepo := webhook.NewRepository(client)
-	webhookEventRepo := webhook.NewEventRepository(client)
-	sessStore := session.NewInMemoryStore(logger, time.Hour*24)
-	templateRepo := email2.NewTemplateRepository(client)
-	rbacRepo := rbac.NewRepository(client)
+func New(cfg *config.Config, client *data.Clients, logger logging.Logger) *Repo {
+	apiKeyRepo := apikeys.NewRepository(client.DB)
+	orgRepo := organization.NewRepository(client.DB)
+	userRepo := user.NewRepository(client.DB)
+	webhookRepo := webhook.NewRepository(client.DB)
+	webhookEventRepo := webhook.NewEventRepository(client.DB)
+	sessStore := session.NewRedisStore(client.Redis, "frank_", logger)
+	templateRepo := email2.NewTemplateRepository(client.DB)
+	rbacRepo := rbac.NewRepository(client.DB)
 	// templateRepo := passkeys.New(client)
 
 	// Determine repository type from config
@@ -58,7 +56,7 @@ func New(cfg *config.Config, client *ent.Client, logger logging.Logger) *Repo {
 		RBAC:         rbacRepo,
 	}
 
-	repos.Passkeys = passkeys.CreateRepository(repoPassKeyType, client, logger)
+	repos.Passkeys = passkeys.CreateRepository(repoPassKeyType, client.DB, logger)
 
 	return repos
 }

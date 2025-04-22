@@ -155,7 +155,7 @@ type AuthConfig struct {
 	CookieDomain     string        `json:"cookie_domain" yaml:"cookie_domain" mapstructure:"cookie_domain" env:"AUTH_COOKIE_DOMAIN" envDefault:"localhost"`
 	CookieSecure     bool          `json:"cookie_secure" yaml:"cookie_secure" mapstructure:"cookie_secure" env:"AUTH_COOKIE_SECURE" envDefault:"false"`
 	CookieHTTPOnly   bool          `json:"cookie_http_only" yaml:"cookie_http_only" mapstructure:"cookie_http_only" env:"AUTH_COOKIE_HTTP_ONLY" envDefault:"true"`
-	CookieSameSite   string        `json:"cookie_same_site" yaml:"cookie_same_site" mapstructure:"cookie_same_site" env:"AUTH_COOKIE_SAME_SITE" envDefault:"none"`
+	CookieSameSite   string        `json:"cookie_same_site" yaml:"cookie_same_site" mapstructure:"cookie_same_site" env:"AUTH_COOKIE_SAME_SITE" envDefault:"lax"`
 
 	// Email verification
 	RequireEmailVerification bool          `json:"require_email_verification" yaml:"require_email_verification" mapstructure:"require_email_verification" env:"AUTH_REQUIRE_EMAIL_VERIFICATION" envDefault:"true"`

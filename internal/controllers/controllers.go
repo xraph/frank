@@ -108,7 +108,7 @@ func NewControllers(
 		config:            cfg,
 		logger:            logger,
 		clients:           clients,
-		auther:            NewAuther(cfg, logger, svcs.Session, svcs.CookieHandler, svcs.APIKey),
+		auther:            NewAuther(cfg, logger, svcs.Session, svcs.SessionStore, svcs.CookieHandler, svcs.APIKey),
 		webRouteProtector: routeProtector,
 		pathPrefix:        cfg.BasePath,
 		hooks:             hooks,
@@ -120,7 +120,6 @@ func NewControllers(
 }
 
 func (c *Controllers) RegisterRoutes() {
-
 	// Ensure no trailing slash in basePath
 	if strings.HasSuffix(c.pathPrefix, "/") && c.pathPrefix != "/" {
 		c.pathPrefix = c.pathPrefix[:len(c.pathPrefix)-1]

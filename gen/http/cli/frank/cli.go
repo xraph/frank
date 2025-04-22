@@ -54,23 +54,23 @@ webhooks (list|create|get|update|delete|trigger-event|list-events|replay-event|r
 
 // UsageExamples produces an example of a valid invocation of the CLI tool.
 func UsageExamples() string {
-	return os.Args[0] + ` api-keys list --offset 825384666803638849 --limit 38 --type "client" --organization-id "Neque aut ipsam sapiente odit." --jwt "Ut occaecati."` + "\n" +
-		os.Args[0] + ` email list-templates --offset 2427607000444438512 --limit 10 --type "Vel aut vero quis." --organization-id "Excepturi qui voluptatem dolorum sed." --locale "Incidunt et." --jwt "Id aliquid eius labore saepe et atque."` + "\n" +
+	return os.Args[0] + ` api-keys list --offset 2092745486338993541 --limit 80 --type "server" --organization-id "Vero hic inventore." --jwt "Molestiae adipisci consequatur commodi consectetur adipisci."` + "\n" +
+		os.Args[0] + ` email list-templates --offset 4827043350373591827 --limit 89 --type "Recusandae in dolores repellat rem maxime vel." --organization-id "Nesciunt eos amet sint amet perspiciatis quasi." --locale "Ipsum esse similique." --jwt "Perspiciatis distinctio dolor est praesentium."` + "\n" +
 		os.Args[0] + ` health check` + "\n" +
 		os.Args[0] + ` auth login --body '{
-      "captcha_response": "Eum fugit est ut sed.",
+      "captcha_response": "Et repellat praesentium omnis.",
       "email": "user@example.com",
-      "organization_id": "Consequuntur quia.",
+      "organization_id": "Quos facilis.",
       "password": "secure-password",
-      "remember_me": true
-   }' --session-id "Sit culpa sint atque reiciendis est."` + "\n" +
+      "remember_me": false
+   }' --session-id "Numquam blanditiis atque et voluptatibus non beatae."` + "\n" +
 		os.Args[0] + ` mfa enroll --body '{
       "request": {
-         "email": "katrina@huels.name",
+         "email": "elliott@dachvolkman.com",
          "method": "totp",
-         "phone_number": "Delectus rem voluptatem vel laborum commodi."
+         "phone_number": "Atque nulla ducimus sint sit eum."
       }
-   }' --jwt "Architecto quaerat in."` + "\n" +
+   }' --jwt "Dolores dolor dolor sint nesciunt itaque."` + "\n" +
 		""
 }
 
@@ -182,9 +182,6 @@ func ParseEndpoint(
 
 		authRefreshTokenFlags         = flag.NewFlagSet("refresh-token", flag.ExitOnError)
 		authRefreshTokenBodyFlag      = authRefreshTokenFlags.String("body", "REQUIRED", "")
-		authRefreshTokenOauth2Flag    = authRefreshTokenFlags.String("oauth2", "", "")
-		authRefreshTokenXAPIKeyFlag   = authRefreshTokenFlags.String("xapi-key", "", "")
-		authRefreshTokenJWTFlag       = authRefreshTokenFlags.String("jwt", "", "")
 		authRefreshTokenSessionIDFlag = authRefreshTokenFlags.String("session-id", "", "")
 
 		authForgotPasswordFlags           = flag.NewFlagSet("forgot-password", flag.ExitOnError)
@@ -1452,7 +1449,7 @@ func ParseEndpoint(
 				data, err = authc.BuildLogoutPayload(*authLogoutJWTFlag, *authLogoutSessionIDFlag)
 			case "refresh-token":
 				endpoint = c.RefreshToken()
-				data, err = authc.BuildRefreshTokenPayload(*authRefreshTokenBodyFlag, *authRefreshTokenOauth2Flag, *authRefreshTokenXAPIKeyFlag, *authRefreshTokenJWTFlag, *authRefreshTokenSessionIDFlag)
+				data, err = authc.BuildRefreshTokenPayload(*authRefreshTokenBodyFlag, *authRefreshTokenSessionIDFlag)
 			case "forgot-password":
 				endpoint = c.ForgotPassword()
 				data, err = authc.BuildForgotPasswordPayload(*authForgotPasswordBodyFlag, *authForgotPasswordRedirectURLFlag, *authForgotPasswordOauth2Flag, *authForgotPasswordXAPIKeyFlag, *authForgotPasswordJWTFlag, *authForgotPasswordSessionIDFlag)
@@ -1836,7 +1833,7 @@ List API keys
     -jwt STRING: 
 
 Example:
-    %[1]s api-keys list --offset 825384666803638849 --limit 38 --type "client" --organization-id "Neque aut ipsam sapiente odit." --jwt "Ut occaecati."
+    %[1]s api-keys list --offset 2092745486338993541 --limit 80 --type "server" --organization-id "Vero hic inventore." --jwt "Molestiae adipisci consequatur commodi consectetur adipisci."
 `, os.Args[0])
 }
 
@@ -1852,8 +1849,8 @@ Example:
       "key": {
          "expires_in": 2592000,
          "metadata": {
-            "Odit quo id.": "Totam culpa.",
-            "Qui repudiandae a dolor cum.": "Et ea."
+            "Laudantium sed.": "Ea necessitatibus deleniti.",
+            "Perspiciatis sapiente temporibus atque maiores quis temporibus.": "Enim fugit et."
          },
          "name": "My API Key",
          "permissions": [
@@ -1865,7 +1862,7 @@ Example:
          ],
          "type": "client"
       }
-   }' --jwt "Esse velit eum."
+   }' --jwt "Mollitia impedit reiciendis."
 `, os.Args[0])
 }
 
@@ -1877,7 +1874,7 @@ Get API key by ID
     -jwt STRING: 
 
 Example:
-    %[1]s api-keys get --id "Nihil enim sed provident." --jwt "Quae consequatur."
+    %[1]s api-keys get --id "Cum modi neque quis necessitatibus repudiandae." --jwt "At sit consequatur quia recusandae fugit."
 `, os.Args[0])
 }
 
@@ -1893,23 +1890,24 @@ Example:
     %[1]s api-keys update --body '{
       "key": {
          "active": false,
-         "expires_at": "Dolore rerum.",
+         "expires_at": "Adipisci corrupti eum nisi.",
          "metadata": {
-            "Dignissimos ad quisquam et.": "Est praesentium qui deserunt.",
-            "Est saepe recusandae quam.": "Deserunt inventore.",
-            "Sit tempora.": "Provident hic in dolorem dicta dignissimos."
+            "Culpa dolores pariatur.": "Qui voluptate esse repellat.",
+            "Id ea sit omnis incidunt maxime eum.": "Aut molestiae aperiam dolore veniam.",
+            "Magnam numquam harum omnis non voluptas nesciunt.": "Necessitatibus necessitatibus corporis."
          },
-         "name": "Accusantium similique vel est.",
+         "name": "Accusamus voluptatem.",
          "permissions": [
-            "Voluptatibus esse temporibus.",
-            "Neque soluta mollitia."
+            "Quisquam amet rerum.",
+            "Consequatur at nulla sunt.",
+            "Beatae consequatur aliquam ratione."
          ],
          "scopes": [
-            "Enim quasi voluptatem quia.",
-            "Sequi repudiandae voluptatem ut provident repellat."
+            "Omnis vero optio eaque.",
+            "Blanditiis a eos consequatur eaque perspiciatis."
          ]
       }
-   }' --id "Et id odit qui saepe et." --jwt "Ut iusto porro."
+   }' --id "Velit quis." --jwt "Dignissimos qui voluptatum voluptas dolores aperiam facilis."
 `, os.Args[0])
 }
 
@@ -1921,7 +1919,7 @@ Delete API key
     -jwt STRING: 
 
 Example:
-    %[1]s api-keys delete --id "Exercitationem ut dolorem quod unde qui." --jwt "Blanditiis voluptas unde accusantium minus necessitatibus in."
+    %[1]s api-keys delete --id "Occaecati nihil impedit." --jwt "Velit deserunt deleniti quo."
 `, os.Args[0])
 }
 
@@ -1968,7 +1966,7 @@ List email templates
     -jwt STRING: 
 
 Example:
-    %[1]s email list-templates --offset 2427607000444438512 --limit 10 --type "Vel aut vero quis." --organization-id "Excepturi qui voluptatem dolorum sed." --locale "Incidunt et." --jwt "Id aliquid eius labore saepe et atque."
+    %[1]s email list-templates --offset 4827043350373591827 --limit 89 --type "Recusandae in dolores repellat rem maxime vel." --organization-id "Nesciunt eos amet sint amet perspiciatis quasi." --locale "Ipsum esse similique." --jwt "Perspiciatis distinctio dolor est praesentium."
 `, os.Args[0])
 }
 
@@ -1983,19 +1981,17 @@ Example:
     %[1]s email create-template --body '{
       "active": false,
       "html_content": "\u003chtml\u003e\u003cbody\u003e\u003ch1\u003eWelcome!\u003c/h1\u003e\u003cp\u003eHello {{name}}\u003c/p\u003e\u003c/body\u003e\u003c/html\u003e",
-      "locale": "Aut et numquam qui.",
+      "locale": "Unde qui dolor.",
       "metadata": {
-         "Autem deleniti.": "Laudantium maiores debitis nam saepe.",
-         "Ea amet voluptatem.": "Voluptatem nobis iste occaecati aut eos voluptas.",
-         "Est voluptatibus qui.": "Amet rerum ut."
+         "Unde accusantium minus necessitatibus.": "Est veritatis corporis enim vel aut vero."
       },
       "name": "Welcome Email",
-      "organization_id": "Quam explicabo saepe ipsam ea porro.",
+      "organization_id": "Consequatur exercitationem.",
       "subject": "Welcome to our platform",
-      "system": false,
+      "system": true,
       "text_content": "Welcome! Hello {{name}}",
       "type": "welcome"
-   }' --jwt "Facere quod."
+   }' --jwt "Perspiciatis excepturi qui voluptatem dolorum sed non."
 `, os.Args[0])
 }
 
@@ -2007,7 +2003,7 @@ Get email template by ID
     -jwt STRING: 
 
 Example:
-    %[1]s email get-template --id "Earum voluptatem autem neque alias." --jwt "Placeat voluptatem."
+    %[1]s email get-template --id "Excepturi sint." --jwt "Et numquam."
 `, os.Args[0])
 }
 
@@ -2021,7 +2017,7 @@ Get email template by type
     -jwt STRING: 
 
 Example:
-    %[1]s email get-template-by-type --type "Porro aut est adipisci in in consequuntur." --organization-id "Architecto culpa dignissimos enim reprehenderit perspiciatis." --locale "Animi mollitia dignissimos ab qui officiis doloribus." --jwt "Ut qui."
+    %[1]s email get-template-by-type --type "Maiores incidunt hic corporis officiis excepturi." --organization-id "Dolores necessitatibus eum voluptates eaque fugiat." --locale "Voluptatem autem neque alias nesciunt." --jwt "Voluptatem qui eligendi recusandae ipsum."
 `, os.Args[0])
 }
 
@@ -2036,17 +2032,17 @@ Update email template
 Example:
     %[1]s email update-template --body '{
       "template": {
-         "active": false,
-         "html_content": "Qui blanditiis provident libero.",
-         "locale": "Ut dolorum ipsa eos neque.",
+         "active": true,
+         "html_content": "Et magnam voluptas eligendi nam ipsa ut.",
+         "locale": "Aut est adipisci.",
          "metadata": {
-            "Odio ipsam est sit.": "Est possimus animi vel."
+            "Consequuntur dolorem.": "Culpa dignissimos."
          },
-         "name": "Alias hic aliquid iste similique voluptatem magnam.",
-         "subject": "Nihil occaecati.",
-         "text_content": "Provident consequatur est aliquid reprehenderit."
+         "name": "Aliquid quae rem modi alias tempore.",
+         "subject": "Necessitatibus nemo tempore ratione molestiae.",
+         "text_content": "Facilis sequi."
       }
-   }' --id "Aut est." --jwt "Quis nihil harum veniam."
+   }' --id "Reprehenderit perspiciatis ad animi." --jwt "Dignissimos ab qui officiis doloribus nulla."
 `, os.Args[0])
 }
 
@@ -2058,7 +2054,7 @@ Delete email template
     -jwt STRING: 
 
 Example:
-    %[1]s email delete-template --id "Aut quaerat qui." --jwt "Aut mollitia ut."
+    %[1]s email delete-template --id "Alias hic aliquid iste similique voluptatem magnam." --jwt "Nihil occaecati."
 `, os.Args[0])
 }
 
@@ -2072,34 +2068,35 @@ Send email
 Example:
     %[1]s email send --body '{
       "bcc": [
-         "Consequuntur saepe earum.",
-         "Placeat minus aperiam.",
-         "Totam et ut et est.",
-         "Impedit eum id voluptas nisi."
+         "Nihil harum veniam illo.",
+         "Similique est voluptate voluptate delectus.",
+         "Esse deserunt est consequuntur harum quis ut.",
+         "Molestiae non debitis."
       ],
       "cc": [
-         "Neque aperiam quis praesentium voluptas iusto.",
-         "Eius ut perspiciatis.",
-         "Quia sunt aut necessitatibus at perferendis id.",
-         "Sunt architecto soluta et ab."
+         "Ut dolorum ipsa eos neque.",
+         "Magnam odio ipsam est.",
+         "Nobis est possimus.",
+         "Vel quia aut est."
       ],
       "from": "no-reply@example.com",
       "headers": {
-         "Est culpa velit soluta qui.": "Sunt doloremque.",
-         "Molestiae inventore nostrum.": "Dicta eaque sint.",
-         "Quis sit ullam quia quo et.": "Qui corrupti."
+         "Iste velit.": "Est nemo porro rerum.",
+         "Veritatis provident dolore illo.": "In aperiam sed excepturi assumenda eos fugit.",
+         "Voluptatem sint blanditiis et placeat quis minus.": "Suscipit id molestias."
       },
-      "html_content": "Nemo tenetur molestiae quas fugiat.",
+      "html_content": "Qui blanditiis provident libero.",
       "metadata": {
-         "Est nulla mollitia qui.": "Sapiente consequatur omnis omnis voluptatibus."
+         "Aut quaerat qui.": "Aut mollitia ut.",
+         "Totam ipsum perspiciatis nam vero tempore.": "Maiores laborum ea rerum atque."
       },
-      "reply_to": "Sit quis sit distinctio non dolores.",
+      "reply_to": "Nihil omnis doloribus.",
       "subject": "Important information",
-      "text_content": "Adipisci sed animi dolor.",
+      "text_content": "Provident consequatur est aliquid reprehenderit.",
       "to": [
          "user@example.com"
       ]
-   }' --jwt "Et nihil nihil dignissimos explicabo est."
+   }' --jwt "Nemo tenetur molestiae quas fugiat."
 `, os.Args[0])
 }
 
@@ -2113,30 +2110,30 @@ Send email using a template
 Example:
     %[1]s email send-template --body '{
       "bcc": [
-         "Blanditiis atque et voluptatibus non beatae accusamus.",
-         "Doloribus neque non porro qui aut.",
-         "Eligendi laudantium impedit ut est aut.",
-         "Eos id itaque."
+         "Sit consequuntur saepe earum facere placeat minus.",
+         "Atque totam et ut.",
+         "Est dolores impedit eum id.",
+         "Nisi voluptatibus sit quis sit distinctio."
       ],
       "cc": [
-         "Necessitatibus ut velit.",
-         "Assumenda aut quos.",
-         "Ex aut et repellat praesentium omnis."
+         "Sunt aut necessitatibus.",
+         "Perferendis id eaque sunt architecto soluta et."
       ],
       "from": "no-reply@example.com",
       "headers": {
-         "Ad sed sint.": "Non quibusdam ut excepturi quia enim modi.",
-         "Rerum dolor necessitatibus perferendis.": "In ratione."
+         "Culpa velit soluta qui velit sunt.": "Itaque laborum est nulla mollitia qui.",
+         "Quaerat molestiae inventore.": "Ex dicta eaque sint est.",
+         "Ullam quia.": "Et et qui."
       },
-      "locale": "Dignissimos debitis mollitia.",
+      "locale": "Eius ut perspiciatis.",
       "metadata": {
-         "Corrupti inventore.": "Architecto beatae quo.",
-         "Eos sunt.": "At qui.",
-         "Voluptas eveniet deleniti aliquam quam qui eaque.": "Earum excepturi voluptatem ab in consequuntur."
+         "Aut nam quia iusto.": "Quaerat exercitationem nihil et aut aliquam.",
+         "Consequatur omnis omnis voluptatibus.": "Et nihil nihil dignissimos explicabo est.",
+         "Quidem aut quisquam culpa sint.": "Dignissimos debitis mollitia."
       },
-      "organization_id": "Quidem aut quisquam culpa sint.",
-      "reply_to": "Eos quia ullam quia dolores.",
-      "subject": "Quaerat exercitationem nihil et aut aliquam.",
+      "organization_id": "Voluptas iusto.",
+      "reply_to": "Dolores enim voluptates.",
+      "subject": "Vel neque aperiam quis.",
       "template_data": {
          "name": "John Doe"
       },
@@ -2144,7 +2141,7 @@ Example:
       "to": [
          "user@example.com"
       ]
-   }' --jwt "Architecto praesentium."
+   }' --jwt "Natus necessitatibus ut."
 `, os.Args[0])
 }
 
@@ -2247,12 +2244,12 @@ Authenticate user with email and password
 
 Example:
     %[1]s auth login --body '{
-      "captcha_response": "Eum fugit est ut sed.",
+      "captcha_response": "Et repellat praesentium omnis.",
       "email": "user@example.com",
-      "organization_id": "Consequuntur quia.",
+      "organization_id": "Quos facilis.",
       "password": "secure-password",
-      "remember_me": true
-   }' --session-id "Sit culpa sint atque reiciendis est."
+      "remember_me": false
+   }' --session-id "Numquam blanditiis atque et voluptatibus non beatae."
 `, os.Args[0])
 }
 
@@ -2266,14 +2263,14 @@ Register a new user
 Example:
     %[1]s auth register --body '{
       "email": "user@example.com",
-      "first_name": "Et similique.",
-      "last_name": "Sint magni voluptatibus.",
+      "first_name": "Dolor nisi perspiciatis et voluptas.",
+      "last_name": "Harum similique.",
       "metadata": {
-         "Maiores expedita minima placeat.": "In laboriosam."
+         "Dolorem et.": "Eius vel."
       },
-      "organization_id": "Consectetur omnis et pariatur sit est qui.",
+      "organization_id": "Accusantium aliquam aut.",
       "password": "secure-password"
-   }' --session-id "Quia hic sit illo tempora pariatur quia."
+   }' --session-id "Eligendi commodi ea quidem hic animi."
 `, os.Args[0])
 }
 
@@ -2285,24 +2282,21 @@ Log out the current user
     -session-id STRING: 
 
 Example:
-    %[1]s auth logout --jwt "Natus aut." --session-id "Voluptates doloremque aut animi ratione molestiae pariatur."
+    %[1]s auth logout --jwt "In laboriosam." --session-id "Quia hic sit illo tempora pariatur quia."
 `, os.Args[0])
 }
 
 func authRefreshTokenUsage() {
-	fmt.Fprintf(os.Stderr, `%[1]s [flags] auth refresh-token -body JSON -oauth2 STRING -xapi-key STRING -jwt STRING -session-id STRING
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] auth refresh-token -body JSON -session-id STRING
 
 Refresh an access token
     -body JSON: 
-    -oauth2 STRING: 
-    -xapi-key STRING: 
-    -jwt STRING: 
     -session-id STRING: 
 
 Example:
     %[1]s auth refresh-token --body '{
-      "refresh_token": "Eveniet fugit."
-   }' --oauth2 "Maxime asperiores voluptate iusto aut qui rem." --xapi-key "Et et cumque ab iste." --jwt "Sit ea qui tenetur nesciunt dicta." --session-id "Reprehenderit dicta et ut debitis."
+      "refresh_token": "Quidem nam consequatur."
+   }' --session-id "Quas non incidunt sed sequi."
 `, os.Args[0])
 }
 
@@ -2320,7 +2314,7 @@ Initiate password reset process
 Example:
     %[1]s auth forgot-password --body '{
       "email": "user@example.com"
-   }' --redirect-url "Necessitatibus necessitatibus." --oauth2 "Soluta saepe." --xapi-key "Sit nobis et quam." --jwt "Et aut tenetur." --session-id "Nulla illum est molestias soluta."
+   }' --redirect-url "Natus aut." --oauth2 "Voluptates doloremque aut animi ratione molestiae pariatur." --xapi-key "Ut ut voluptatum." --jwt "Fugit nihil in itaque corporis quia." --session-id "Quas et."
 `, os.Args[0])
 }
 
@@ -2334,8 +2328,8 @@ Reset password using token
 Example:
     %[1]s auth reset-password --body '{
       "new_password": "new-secure-password",
-      "token": "Aperiam voluptas dolores ut quis."
-   }' --session-id "Velit enim quae."
+      "token": "Sit ea qui tenetur nesciunt dicta."
+   }' --session-id "Reprehenderit dicta et ut debitis."
 `, os.Args[0])
 }
 
@@ -2350,9 +2344,9 @@ Example:
     %[1]s auth verify-email --body '{
       "email": "user@example.com",
       "method": "otp",
-      "otp": "Veniam et ducimus nobis est enim harum.",
-      "token": "Voluptates illo."
-   }' --session-id "Nostrum maiores."
+      "otp": "Expedita esse exercitationem qui repellat error.",
+      "token": "Aut quam sunt sit velit corporis."
+   }' --session-id "Rerum quam."
 `, os.Args[0])
 }
 
@@ -2368,7 +2362,7 @@ Example:
     %[1]s auth send-email-verification --body '{
       "email": "user@example.com",
       "method": "link"
-   }' --redirect-url "Sed quas quibusdam dolorem quibusdam unde saepe." --session-id "Velit in a."
+   }' --redirect-url "Qui dolor." --session-id "Ut qui et fuga veniam qui non."
 `, os.Args[0])
 }
 
@@ -2383,7 +2377,7 @@ Check if email is verified
     -session-id STRING: 
 
 Example:
-    %[1]s auth check-email-verification --email "edmond.kohler@leffler.net" --oauth2 "Ex et eaque molestiae." --jwt "Sit ea aut eos." --xapi-key "Est atque ullam laboriosam et harum autem." --session-id "Ducimus pariatur sunt explicabo odit."
+    %[1]s auth check-email-verification --email "shanie@carrollshields.name" --oauth2 "Qui beatae ut quia consequatur aut." --jwt "Quas quibusdam dolorem." --xapi-key "Unde saepe." --session-id "Velit in a."
 `, os.Args[0])
 }
 
@@ -2395,7 +2389,7 @@ Get current user info
     -session-id STRING: 
 
 Example:
-    %[1]s auth me --jwt "Consequatur aliquam." --session-id "Labore ratione ab earum est tempora id."
+    %[1]s auth me --jwt "Voluptas quia sint dolor aut qui." --session-id "Reprehenderit consequatur neque aut laudantium expedita nisi."
 `, os.Args[0])
 }
 
@@ -2406,7 +2400,7 @@ Generates a CSRF token
     -session-id STRING: 
 
 Example:
-    %[1]s auth csrf --session-id "Veniam est libero suscipit molestiae alias."
+    %[1]s auth csrf --session-id "Incidunt perspiciatis rerum iusto eius et."
 `, os.Args[0])
 }
 
@@ -2437,11 +2431,11 @@ Start MFA enrollment
 Example:
     %[1]s mfa enroll --body '{
       "request": {
-         "email": "katrina@huels.name",
+         "email": "elliott@dachvolkman.com",
          "method": "totp",
-         "phone_number": "Delectus rem voluptatem vel laborum commodi."
+         "phone_number": "Atque nulla ducimus sint sit eum."
       }
-   }' --jwt "Architecto quaerat in."
+   }' --jwt "Dolores dolor dolor sint nesciunt itaque."
 `, os.Args[0])
 }
 
@@ -2457,9 +2451,9 @@ Example:
       "request": {
          "code": "123456",
          "method": "totp",
-         "phone_number": "Molestiae provident."
+         "phone_number": "Autem qui et."
       }
-   }' --jwt "Velit reprehenderit."
+   }' --jwt "Consectetur et et inventore."
 `, os.Args[0])
 }
 
@@ -2475,7 +2469,7 @@ Example:
       "request": {
          "method": "totp"
       }
-   }' --jwt "Facilis fuga quas nihil ab non praesentium."
+   }' --jwt "Magnam alias consequuntur nostrum ipsa officia."
 `, os.Args[0])
 }
 
@@ -2486,7 +2480,7 @@ Get enabled MFA methods
     -jwt STRING: 
 
 Example:
-    %[1]s mfa methods --jwt "Sint inventore."
+    %[1]s mfa methods --jwt "Est id autem voluptatum culpa modi."
 `, os.Args[0])
 }
 
@@ -2502,7 +2496,7 @@ Example:
       "request": {
          "method": "sms"
       }
-   }' --jwt "Exercitationem sunt amet recusandae dolorem quia."
+   }' --jwt "Laboriosam doloremque sed soluta quia."
 `, os.Args[0])
 }
 
@@ -2554,7 +2548,7 @@ OAuth2 authorization endpoint
     -jwt STRING: 
 
 Example:
-    %[1]s oauth-provider authorize --client-id "Est qui laborum ut nesciunt facere." --response-type "Omnis quibusdam dolorum enim." --redirect-uri "Ipsum doloribus commodi dolor fuga magnam temporibus." --scope "Soluta odio deleniti." --state "Ea autem mollitia rem." --code-challenge "Quam sint et dolorum." --code-challenge-method "Reiciendis quibusdam porro." --oauth2 "Qui qui harum culpa ut quasi." --xapi-key "Eos fugiat quia esse omnis voluptatem." --jwt "Quia dolorem magnam neque in amet."
+    %[1]s oauth-provider authorize --client-id "Omnis iure." --response-type "Dolores maxime." --redirect-uri "Consectetur sit quasi accusamus." --scope "Omnis et ullam sunt." --state "Ut quam." --code-challenge "Molestiae provident." --code-challenge-method "Velit reprehenderit." --oauth2 "Ullam facilis." --xapi-key "Quas nihil ab non." --jwt "Illum ut incidunt ad nisi."
 `, os.Args[0])
 }
 
@@ -2577,7 +2571,7 @@ OAuth2 token endpoint
     -jwt STRING: 
 
 Example:
-    %[1]s oauth-provider token --grant-type "Nesciunt dolorem cupiditate quod dolor qui." --code "Tenetur et voluptatibus est itaque." --redirect-uri "Dolor nam voluptates sit asperiores nemo repudiandae." --client-id "Hic et." --client-secret "Qui qui et." --refresh-token "Voluptates qui aut voluptas." --code-verifier "Magnam doloremque nobis molestiae." --username "Dolor corrupti aut." --password "Rerum qui." --scope "Ducimus laborum quae dicta eum deserunt ab." --oauth2 "Sed sed nobis." --xapi-key "Magnam sit." --jwt "Voluptas saepe."
+    %[1]s oauth-provider token --grant-type "Possimus debitis ad suscipit aut cumque hic." --code "Voluptatum est." --redirect-uri "Laborum ut nesciunt facere repudiandae omnis." --client-id "Dolorum enim quisquam ipsum doloribus." --client-secret "Dolor fuga magnam temporibus quo." --refresh-token "Odio deleniti qui." --code-verifier "Autem mollitia rem." --username "Quam sint et dolorum." --password "Reiciendis quibusdam porro." --scope "Qui qui harum culpa ut quasi." --oauth2 "Eos fugiat quia esse omnis voluptatem." --xapi-key "Quia dolorem magnam neque in amet." --jwt "Velit reprehenderit soluta."
 `, os.Args[0])
 }
 
@@ -2592,7 +2586,7 @@ OAuth2 token introspection endpoint
     -jwt STRING: 
 
 Example:
-    %[1]s oauth-provider introspect --token "Et qui vero facere consectetur." --token-type-hint "Dolores commodi." --oauth2 "Nostrum omnis magnam quibusdam." --xapi-key "Recusandae voluptate voluptatem ullam ipsa." --jwt "Nisi doloremque exercitationem qui sed magni sed."
+    %[1]s oauth-provider introspect --token "Hic et." --token-type-hint "Qui qui et." --oauth2 "Voluptates qui aut voluptas." --xapi-key "Magnam doloremque nobis molestiae." --jwt "Dolor corrupti aut."
 `, os.Args[0])
 }
 
@@ -2609,7 +2603,7 @@ OAuth2 token revocation endpoint
     -jwt STRING: 
 
 Example:
-    %[1]s oauth-provider revoke --token "Minima modi at." --token-type-hint "Quidem distinctio." --client-id "Neque dolores sunt." --client-secret "Molestiae voluptas quis esse." --oauth2 "Debitis ut et neque amet aperiam." --xapi-key "Facilis aut vitae." --jwt "Aliquam aut cumque quaerat cum tenetur."
+    %[1]s oauth-provider revoke --token "Et qui vero facere consectetur." --token-type-hint "Dolores commodi." --client-id "Nostrum omnis magnam quibusdam." --client-secret "Recusandae voluptate voluptatem ullam ipsa." --oauth2 "Nisi doloremque exercitationem qui sed magni sed." --xapi-key "Est quisquam temporibus." --jwt "Non magnam."
 `, os.Args[0])
 }
 
@@ -2622,12 +2616,12 @@ Handle user consent for OAuth authorization
 
 Example:
     %[1]s oauth-provider consent --body '{
-      "approved": true,
-      "client_id": "Vero at ea omnis similique.",
-      "redirect_uri": "Omnis assumenda voluptatem non libero aut perspiciatis.",
-      "scope": "Veritatis magni.",
-      "state": "Vitae quae est sed eligendi distinctio consequuntur."
-   }' --jwt "Illo maiores non quia error corrupti."
+      "approved": false,
+      "client_id": "Dolor consectetur.",
+      "redirect_uri": "Id dolor quasi illo ex.",
+      "scope": "Illo in.",
+      "state": "Alias explicabo eligendi."
+   }' --jwt "Laboriosam quidem facilis voluptatem nobis."
 `, os.Args[0])
 }
 
@@ -2638,7 +2632,7 @@ OAuth2 UserInfo endpoint for OpenID Connect
     -jwt STRING: 
 
 Example:
-    %[1]s oauth-provider userinfo --jwt "Error nesciunt laudantium corporis qui ut."
+    %[1]s oauth-provider userinfo --jwt "Neque dolores sunt."
 `, os.Args[0])
 }
 
@@ -2652,7 +2646,7 @@ List OAuth clients
     -jwt STRING: 
 
 Example:
-    %[1]s oauth-provider list-clients --offset 8398028303048083432 --limit 34 --organization-id "Quae dolor." --jwt "Commodi iste."
+    %[1]s oauth-provider list-clients --offset 6362085539194143477 --limit 34 --organization-id "Voluptas nemo at cumque commodi." --jwt "Dolore vel placeat."
 `, os.Args[0])
 }
 
@@ -2666,34 +2660,32 @@ Create a new OAuth client
 Example:
     %[1]s oauth-provider create-client --body '{
       "allowed_cors_origins": [
-         "Nemo enim officiis qui.",
-         "Laboriosam voluptatem autem occaecati.",
-         "Rerum eligendi.",
-         "Repellendus ut distinctio dolorem dolorem expedita."
+         "Voluptate repellendus sit aspernatur sit asperiores.",
+         "Ut consectetur temporibus deserunt.",
+         "Quam iusto beatae et.",
+         "Quia debitis repudiandae aut."
       ],
       "allowed_grant_types": [
          "authorization_code",
          "refresh_token"
       ],
-      "client_description": "Quisquam et consequuntur ea nam delectus et.",
+      "client_description": "Nemo nihil esse laudantium illum.",
       "client_name": "My App",
-      "client_uri": "Voluptate rerum.",
-      "logo_uri": "Sit corporis sit et.",
+      "client_uri": "Ut sapiente dignissimos est incidunt in architecto.",
+      "logo_uri": "Ad consectetur culpa eveniet exercitationem eligendi autem.",
       "post_logout_redirect_uris": [
-         "Sint numquam optio iure libero.",
-         "Corporis deserunt qui voluptatem.",
-         "Ut sed quia eos et non.",
-         "Molestias vel eius ut nulla."
+         "Blanditiis eos.",
+         "Ut magni rem perspiciatis dolores."
       ],
       "public": true,
       "redirect_uris": [
          "https://example.com/callback"
       ],
-      "refresh_token_expiry_seconds": 1858255373586154130,
+      "refresh_token_expiry_seconds": 3030204105051865531,
       "requires_consent": false,
-      "requires_pkce": false,
-      "token_expiry_seconds": 8794641660698875880
-   }' --jwt "Ab quisquam et consequatur."
+      "requires_pkce": true,
+      "token_expiry_seconds": 1505296137487234476
+   }' --jwt "Excepturi accusantium officia."
 `, os.Args[0])
 }
 
@@ -2705,7 +2697,7 @@ Get OAuth client by ID
     -jwt STRING: 
 
 Example:
-    %[1]s oauth-provider get-client --id "Accusantium doloribus sint architecto." --jwt "Aut distinctio ea."
+    %[1]s oauth-provider get-client --id "Eos tempore incidunt labore." --jwt "Saepe sapiente quo non neque odit consequuntur."
 `, os.Args[0])
 }
 
@@ -2720,35 +2712,36 @@ Update OAuth client
 Example:
     %[1]s oauth-provider update-client --body '{
       "client": {
-         "active": false,
+         "active": true,
          "allowed_cors_origins": [
-            "Sunt libero assumenda.",
-            "Aut delectus natus inventore temporibus labore minus."
+            "Non et illum.",
+            "Porro harum veniam velit.",
+            "Accusantium sint."
          ],
          "allowed_grant_types": [
-            "Sint voluptas.",
-            "Aut qui recusandae consequatur."
+            "Molestiae placeat ratione quas sit.",
+            "Et sequi libero ut unde dolor ad.",
+            "Sit necessitatibus."
          ],
-         "client_description": "Ex natus dolor esse saepe sint.",
-         "client_name": "Enim dolorum excepturi.",
-         "client_uri": "Dignissimos porro aut cupiditate consequuntur illo repellendus.",
-         "logo_uri": "Aliquam consequatur qui.",
+         "client_description": "Est qui pariatur dolor.",
+         "client_name": "Quia voluptas doloremque optio voluptas est.",
+         "client_uri": "Vel sunt amet.",
+         "logo_uri": "Ipsam iusto.",
          "post_logout_redirect_uris": [
-            "Sapiente placeat ea fuga quia aliquam.",
-            "Eos quo illo aut eaque alias et.",
-            "Pariatur fuga molestiae nihil."
+            "Totam doloremque enim ad minima.",
+            "Quia ut."
          ],
          "public": true,
          "redirect_uris": [
-            "Ea sint voluptatibus.",
-            "Aliquam ipsum sint eum laboriosam."
+            "Delectus alias unde voluptas reprehenderit.",
+            "Id reiciendis nesciunt ut soluta asperiores."
          ],
-         "refresh_token_expiry_seconds": 9150407884327352751,
-         "requires_consent": false,
+         "refresh_token_expiry_seconds": 2471342395392452438,
+         "requires_consent": true,
          "requires_pkce": true,
-         "token_expiry_seconds": 903418462714446931
+         "token_expiry_seconds": 3283658336607788687
       }
-   }' --id "Hic velit temporibus amet placeat." --jwt "Reprehenderit illo aut delectus animi illo."
+   }' --id "Fugit placeat perspiciatis." --jwt "Ut et iure repellendus rerum ut quasi."
 `, os.Args[0])
 }
 
@@ -2760,7 +2753,7 @@ Delete OAuth client
     -jwt STRING: 
 
 Example:
-    %[1]s oauth-provider delete-client --id "Iste dicta sed quasi porro molestiae magni." --jwt "Harum dolores eaque est id et qui."
+    %[1]s oauth-provider delete-client --id "Porro dolor aut omnis unde dolorem sit." --jwt "Expedita dolor aut est."
 `, os.Args[0])
 }
 
@@ -2772,7 +2765,7 @@ Rotate OAuth client secret
     -jwt STRING: 
 
 Example:
-    %[1]s oauth-provider rotate-client-secret --id "Et deserunt ut illo totam eligendi." --jwt "Quis ut omnis ut molestias."
+    %[1]s oauth-provider rotate-client-secret --id "In velit." --jwt "Doloremque modi."
 `, os.Args[0])
 }
 
@@ -2785,7 +2778,7 @@ List OAuth scopes
     -jwt STRING: 
 
 Example:
-    %[1]s oauth-provider list-scopes --offset 6880412839799425649 --limit 48 --jwt "Reiciendis possimus."
+    %[1]s oauth-provider list-scopes --offset 1208329402987759447 --limit 87 --jwt "Qui cumque architecto neque qui ad."
 `, os.Args[0])
 }
 
@@ -2801,8 +2794,8 @@ Example:
       "default_scope": true,
       "description": "Read user information",
       "name": "read:users",
-      "public": false
-   }' --jwt "Rerum atque."
+      "public": true
+   }' --jwt "Sed quasi porro molestiae magni."
 `, os.Args[0])
 }
 
@@ -2814,7 +2807,7 @@ Get OAuth scope by ID
     -jwt STRING: 
 
 Example:
-    %[1]s oauth-provider get-scope --id "Alias occaecati sint ipsum." --jwt "Voluptatem corrupti dolorum."
+    %[1]s oauth-provider get-scope --id "Repellat asperiores dolor omnis atque." --jwt "Ad repellat et aut in incidunt."
 `, os.Args[0])
 }
 
@@ -2828,10 +2821,10 @@ Update OAuth scope
 
 Example:
     %[1]s oauth-provider update-scope --body '{
-      "default_scope": false,
-      "description": "Odit eaque laboriosam et.",
+      "default_scope": true,
+      "description": "Ut provident est vero.",
       "public": false
-   }' --id "Perspiciatis ut qui hic eius." --jwt "Repellendus quisquam alias amet atque."
+   }' --id "Hic architecto ea consequatur eius in." --jwt "Dolorum in sed."
 `, os.Args[0])
 }
 
@@ -2843,7 +2836,7 @@ Delete OAuth scope
     -jwt STRING: 
 
 Example:
-    %[1]s oauth-provider delete-scope --id "Voluptatibus eum delectus aut unde." --jwt "Impedit nihil quibusdam esse sed."
+    %[1]s oauth-provider delete-scope --id "Dolor sunt qui vel." --jwt "Nemo quia."
 `, os.Args[0])
 }
 
@@ -2902,7 +2895,7 @@ List organizations
     -jwt STRING: 
 
 Example:
-    %[1]s organizations list --offset 1966081311994930450 --limit 73 --search "Distinctio omnis delectus." --jwt "Odit magni dolor magnam quia voluptas magnam."
+    %[1]s organizations list --offset 9167009281766714835 --limit 28 --search "Quia aut ipsum sit recusandae sed." --jwt "Cupiditate consequuntur harum qui rerum."
 `, os.Args[0])
 }
 
@@ -2921,18 +2914,18 @@ Example:
             "sso",
             "webhooks"
          ],
-         "logo_url": "Doloribus et amet.",
+         "logo_url": "Autem a repellat aut doloremque a.",
          "metadata": {
-            "Rerum voluptatibus facere autem.": "Delectus provident atque fugit provident.",
-            "Sint enim totam.": "Eum omnis quo sit est.",
-            "Totam excepturi ab voluptatum soluta quasi sapiente.": "Quis quos saepe laboriosam."
+            "Neque voluptatem.": "Velit placeat ullam iusto corrupti.",
+            "Suscipit quis ea sapiente ab sed aut.": "Totam aut est sunt nostrum et.",
+            "Voluptatum eligendi tenetur temporibus non similique mollitia.": "Quae eos omnis voluptatem deserunt."
          },
          "name": "Acme Inc.",
          "plan": "enterprise",
          "slug": "acme",
          "trial_days": 30
       }
-   }' --jwt "Ut sequi."
+   }' --jwt "Libero accusamus."
 `, os.Args[0])
 }
 
@@ -2944,7 +2937,7 @@ Get organization by ID
     -jwt STRING: 
 
 Example:
-    %[1]s organizations get --id "Enim accusamus voluptatum non rerum maxime numquam." --jwt "Eligendi dolorem ad nam."
+    %[1]s organizations get --id "Quasi sapiente ut." --jwt "Quos saepe laboriosam unde."
 `, os.Args[0])
 }
 
@@ -2960,15 +2953,15 @@ Example:
     %[1]s organizations update --body '{
       "organization": {
          "active": false,
-         "domain": "Voluptas ad velit.",
-         "logo_url": "Omnis corrupti inventore dolorem vitae sint rerum.",
+         "domain": "Quisquam odio.",
+         "logo_url": "Enim accusamus voluptatum non rerum maxime numquam.",
          "metadata": {
-            "Et natus.": "Laboriosam facere."
+            "Dolor voluptatem.": "Error sunt ea."
          },
-         "name": "Deserunt in.",
-         "plan": "Qui labore."
+         "name": "Et nihil quo alias cumque.",
+         "plan": "Eligendi dolorem ad nam."
       }
-   }' --id "Perferendis voluptas." --jwt "Eligendi suscipit enim debitis."
+   }' --id "Facilis consequatur a animi molestias." --jwt "Eum et."
 `, os.Args[0])
 }
 
@@ -2980,7 +2973,7 @@ Delete organization
     -jwt STRING: 
 
 Example:
-    %[1]s organizations delete --id "Repudiandae voluptatem laboriosam voluptate velit occaecati sunt." --jwt "Est tempore hic ut sit asperiores."
+    %[1]s organizations delete --id "Suscipit enim debitis aspernatur voluptatem libero." --jwt "Aut asperiores."
 `, os.Args[0])
 }
 
@@ -2995,7 +2988,7 @@ List organization members
     -jwt STRING: 
 
 Example:
-    %[1]s organizations list-members --id "Cumque quo sed." --offset 7682495301732897975 --limit 88 --search "Minima rem officiis aut." --jwt "Accusamus hic enim earum rerum et quos."
+    %[1]s organizations list-members --id "Rerum corrupti voluptatem rerum nemo id." --offset 5205020267797773087 --limit 6 --search "Necessitatibus ipsam veritatis eos dolorem mollitia." --jwt "Eum dolor eum minus optio eos vero."
 `, os.Args[0])
 }
 
@@ -3013,9 +3006,9 @@ Example:
          "roles": [
             "member"
          ],
-         "user_id": "Aperiam et quidem."
+         "user_id": "Est rerum qui quas esse facilis."
       }
-   }' --id "Non soluta illo quia animi." --jwt "Est animi ut qui voluptatem."
+   }' --id "Cumque quo sed." --jwt "Temporibus magnam minima."
 `, os.Args[0])
 }
 
@@ -3032,12 +3025,12 @@ Example:
     %[1]s organizations update-member --body '{
       "member": {
          "roles": [
-            "Libero incidunt atque quis.",
-            "Omnis repellat.",
-            "Molestiae fuga est commodi."
+            "Ipsum rerum molestiae.",
+            "Facilis neque pariatur aut reprehenderit.",
+            "Et voluptatibus labore repudiandae omnis ex."
          ]
       }
-   }' --id "Hic inventore ea." --user-id "Aut error consequatur." --jwt "Quidem ex enim quos amet officiis."
+   }' --id "Et dolorem." --user-id "In sed nemo et nihil tempora." --jwt "Et ratione."
 `, os.Args[0])
 }
 
@@ -3050,7 +3043,7 @@ Remove member from organization
     -jwt STRING: 
 
 Example:
-    %[1]s organizations remove-member --id "Voluptatum facere fugiat quod aut ipsam praesentium." --user-id "Aut rerum dolorem nihil velit ducimus aliquam." --jwt "Dolorem inventore perspiciatis earum enim eum."
+    %[1]s organizations remove-member --id "Hic excepturi praesentium." --user-id "Exercitationem nemo." --jwt "Perspiciatis molestias nihil assumenda illum ut ipsam."
 `, os.Args[0])
 }
 
@@ -3062,7 +3055,7 @@ List organization features
     -jwt STRING: 
 
 Example:
-    %[1]s organizations list-features --id "Sed voluptas non at aut repudiandae possimus." --jwt "Voluptates eum qui quidem."
+    %[1]s organizations list-features --id "Quidem ex enim quos amet officiis." --jwt "Quisquam qui."
 `, os.Args[0])
 }
 
@@ -3077,13 +3070,13 @@ Enable a feature for an organization
 Example:
     %[1]s organizations enable-feature --body '{
       "feature": {
-         "feature_key": "Occaecati quo et sint.",
+         "feature_key": "Velit impedit unde.",
          "settings": {
-            "Iure qui autem sed nihil ut minima.": "Eos nisi.",
-            "Optio quasi nulla eos possimus id.": "Quidem quod doloremque."
+            "Nemo vel ea eum omnis sed nam.": "Est dolorum nobis sed voluptas non at.",
+            "Repudiandae possimus ut.": "Eum qui quidem."
          }
       }
-   }' --id "Voluptatem et provident ea." --jwt "Consequatur omnis et."
+   }' --id "At esse ut veniam dolores quisquam accusamus." --jwt "Facere adipisci et repellendus vel dolorem eveniet."
 `, os.Args[0])
 }
 
@@ -3096,7 +3089,7 @@ Disable a feature for an organization
     -jwt STRING: 
 
 Example:
-    %[1]s organizations disable-feature --id "Omnis adipisci hic corrupti eveniet saepe." --feature-key "Dicta et." --jwt "Doloribus id eveniet vero."
+    %[1]s organizations disable-feature --id "Quod culpa ut." --feature-key "Odio ut consequatur tenetur." --jwt "Fugit reiciendis adipisci."
 `, os.Args[0])
 }
 
@@ -3128,9 +3121,9 @@ Begin passkey registration
 
 Example:
     %[1]s passkeys register-begin --body '{
-      "device_name": "Officia aut omnis molestiae nihil maiores numquam.",
-      "device_type": "Natus et aspernatur cum id."
-   }' --jwt "Facere quidem iusto deleniti enim neque consequuntur."
+      "device_name": "Nihil optio quasi nulla eos possimus.",
+      "device_type": "Omnis quidem."
+   }' --jwt "Doloremque quisquam voluptatem."
 `, os.Args[0])
 }
 
@@ -3143,11 +3136,11 @@ Complete passkey registration
 
 Example:
     %[1]s passkeys register-complete --body '{
-      "device_name": "Sequi delectus nesciunt incidunt iusto quia.",
-      "device_type": "Facilis dolorem necessitatibus ipsa officiis nesciunt.",
-      "response": "Quas deleniti.",
-      "session_id": "Expedita nesciunt totam et itaque."
-   }' --jwt "Eum in nemo rerum odio."
+      "device_name": "Sed cumque dolores.",
+      "device_type": "Omnis adipisci hic corrupti eveniet saepe.",
+      "response": "Veritatis autem quasi esse esse et similique.",
+      "session_id": "Illum at dolorum repellat in sint dolorem."
+   }' --jwt "Dicta et."
 `, os.Args[0])
 }
 
@@ -3160,7 +3153,7 @@ Begin passkey authentication
     -jwt STRING: 
 
 Example:
-    %[1]s passkeys login-begin --oauth2 "Autem quae est sit sint." --xapi-key "Quam aperiam pariatur qui voluptatem." --jwt "Expedita molestiae est odit omnis."
+    %[1]s passkeys login-begin --oauth2 "Ratione qui sed et dolor voluptate." --xapi-key "Optio aut eum eos quaerat commodi nam." --jwt "Eius aut sit exercitationem sapiente debitis illum."
 `, os.Args[0])
 }
 
@@ -3175,9 +3168,9 @@ Complete passkey authentication
 
 Example:
     %[1]s passkeys login-complete --body '{
-      "response": "Expedita nihil ut repellendus voluptatem.",
-      "session_id": "Deleniti qui nesciunt qui."
-   }' --oauth2 "Ipsam rem ut quo sunt et." --xapi-key "Dignissimos voluptas voluptatem saepe itaque sunt." --jwt "Sequi in dolorem provident cupiditate."
+      "response": "Ab consequatur et qui porro est vero.",
+      "session_id": "Eum in nemo rerum odio."
+   }' --oauth2 "Dolorum cumque aut culpa." --xapi-key "Fuga quo." --jwt "Voluptate et."
 `, os.Args[0])
 }
 
@@ -3188,7 +3181,7 @@ List registered passkeys
     -jwt STRING: 
 
 Example:
-    %[1]s passkeys list --jwt "Dolor voluptatem sequi consequatur aut id."
+    %[1]s passkeys list --jwt "Voluptatem aliquam expedita molestiae."
 `, os.Args[0])
 }
 
@@ -3203,9 +3196,9 @@ Update passkey
 Example:
     %[1]s passkeys update --body '{
       "request": {
-         "name": "Vel quibusdam soluta culpa corporis."
+         "name": "Voluptas voluptatem saepe itaque."
       }
-   }' --id "Eveniet nobis dicta velit porro." --jwt "Fuga et."
+   }' --id "Adipisci sequi in dolorem provident cupiditate." --jwt "Sunt impedit necessitatibus."
 `, os.Args[0])
 }
 
@@ -3217,7 +3210,7 @@ Delete passkey
     -jwt STRING: 
 
 Example:
-    %[1]s passkeys delete --id "Hic sit." --jwt "Iste molestiae impedit sapiente ab non sed."
+    %[1]s passkeys delete --id "Odio doloribus est in iste." --jwt "Neque cumque sunt ea aut."
 `, os.Args[0])
 }
 
@@ -3251,8 +3244,8 @@ Initiate passwordless email authentication
 Example:
     %[1]s passwordless email --body '{
       "email": "user@example.com",
-      "redirect_url": "Praesentium est dolores et et quasi ea."
-   }' --oauth2 "Autem voluptas laudantium aperiam." --xapi-key "Eligendi tempora quis ut." --jwt "Sit ut ipsa rem ad libero voluptatem."
+      "redirect_url": "Autem temporibus deleniti aliquid."
+   }' --oauth2 "Aut fugit alias voluptas aspernatur." --xapi-key "Aut qui et." --jwt "Veniam suscipit est esse ut omnis est."
 `, os.Args[0])
 }
 
@@ -3268,8 +3261,8 @@ Initiate passwordless SMS authentication
 Example:
     %[1]s passwordless sms --body '{
       "phone_number": "+12345678901",
-      "redirect_url": "Sunt repudiandae amet est."
-   }' --oauth2 "Quibusdam consectetur architecto et iusto est." --xapi-key "Quia nulla quia dolorum molestiae a." --jwt "Perferendis soluta quas dolore."
+      "redirect_url": "Fuga et."
+   }' --oauth2 "Quae nesciunt reiciendis est aliquam necessitatibus." --xapi-key "Sit sint ipsum." --jwt "Voluptatibus esse."
 `, os.Args[0])
 }
 
@@ -3285,10 +3278,10 @@ Verify passwordless authentication
 Example:
     %[1]s passwordless verify --body '{
       "auth_type": "email",
-      "code": "Voluptatem commodi voluptatum.",
-      "phone_number": "Sed eveniet voluptas.",
-      "token": "Id dolores."
-   }' --oauth2 "Velit rerum doloremque occaecati numquam sunt et." --xapi-key "Repellat omnis et." --jwt "Possimus et molestias deserunt."
+      "code": "Iste molestiae impedit sapiente ab non sed.",
+      "phone_number": "Hic sit.",
+      "token": "Sit aut autem voluptatibus temporibus quis velit."
+   }' --oauth2 "Hic modi consequuntur vel provident excepturi repudiandae." --xapi-key "Harum ratione aspernatur unde qui." --jwt "Et illo ut laboriosam molestiae ipsam."
 `, os.Args[0])
 }
 
@@ -3301,7 +3294,7 @@ Get available passwordless authentication methods
     -jwt STRING: 
 
 Example:
-    %[1]s passwordless methods --oauth2 "Impedit ut laborum accusamus." --xapi-key "Non velit." --jwt "Aliquid officiis enim ut et."
+    %[1]s passwordless methods --oauth2 "Laudantium aperiam." --xapi-key "Eligendi tempora quis ut." --jwt "Sit ut ipsa rem ad libero voluptatem."
 `, os.Args[0])
 }
 
@@ -3315,10 +3308,10 @@ Generate magic link for passwordless login
 Example:
     %[1]s passwordless magic-link --body '{
       "email": "user@example.com",
-      "expires_in": 486807,
+      "expires_in": 221794,
       "redirect_url": "https://example.com/dashboard",
       "user_id": "usr_123456789"
-   }' --jwt "Omnis debitis."
+   }' --jwt "Nulla quia."
 `, os.Args[0])
 }
 
@@ -3361,7 +3354,7 @@ List permissions
     -jwt STRING: 
 
 Example:
-    %[1]s rbac list-permissions --offset 8786037497422238421 --limit 63 --resource "Cum molestiae." --action "Voluptatem aut natus aut." --search "Reprehenderit quibusdam quae beatae quisquam." --jwt "Et tempore perspiciatis rerum minus hic voluptate."
+    %[1]s rbac list-permissions --offset 6601733254907118660 --limit 55 --resource "Quia quia." --action "Ducimus id." --search "Qui sed." --jwt "Voluptas sed voluptatem commodi voluptatum eum."
 `, os.Args[0])
 }
 
@@ -3376,12 +3369,12 @@ Example:
     %[1]s rbac create-permission --body '{
       "permission": {
          "action": "read",
-         "conditions": "Itaque eum quo et.",
+         "conditions": "Cumque molestiae dolore quaerat voluptatibus iure.",
          "description": "Allows reading user information",
          "name": "users:read",
          "resource": "users"
       }
-   }' --jwt "Sequi aliquam explicabo."
+   }' --jwt "Et quos ex."
 `, os.Args[0])
 }
 
@@ -3393,7 +3386,7 @@ Get permission by ID
     -jwt STRING: 
 
 Example:
-    %[1]s rbac get-permission --id "Voluptatem voluptas commodi quia culpa." --jwt "Non blanditiis atque beatae."
+    %[1]s rbac get-permission --id "Reprehenderit qui ab sequi adipisci." --jwt "Laudantium placeat autem maxime consequuntur ullam quisquam."
 `, os.Args[0])
 }
 
@@ -3408,11 +3401,11 @@ Update permission
 Example:
     %[1]s rbac update-permission --body '{
       "permission": {
-         "conditions": "Consequuntur modi molestiae maxime perferendis repellat.",
-         "description": "Vel explicabo omnis ipsam sunt blanditiis odio.",
-         "name": "Ut qui accusantium."
+         "conditions": "Necessitatibus suscipit quod aut voluptatem accusamus.",
+         "description": "Natus nesciunt labore occaecati.",
+         "name": "Aut sunt ducimus ipsam cum."
       }
-   }' --id "Vel aut placeat et." --jwt "Nesciunt cumque odio placeat expedita."
+   }' --id "Id ab." --jwt "Voluptatem voluptas commodi quia culpa."
 `, os.Args[0])
 }
 
@@ -3424,7 +3417,7 @@ Delete permission
     -jwt STRING: 
 
 Example:
-    %[1]s rbac delete-permission --id "Velit ducimus et." --jwt "Quasi quisquam et accusamus."
+    %[1]s rbac delete-permission --id "Enim nihil quo ab veritatis tempora." --jwt "Ut qui accusantium."
 `, os.Args[0])
 }
 
@@ -3439,7 +3432,7 @@ List roles
     -jwt STRING: 
 
 Example:
-    %[1]s rbac list-roles --offset 896765180478541710 --limit 60 --organization-id "Sunt voluptas." --search "Doloremque qui exercitationem rerum dicta." --jwt "Doloremque illo labore maiores et aut."
+    %[1]s rbac list-roles --offset 7915360022844106722 --limit 1 --organization-id "Ut doloremque." --search "Aut qui molestiae quaerat expedita facilis eos." --jwt "Reiciendis quisquam expedita nobis."
 `, os.Args[0])
 }
 
@@ -3454,11 +3447,11 @@ Example:
     %[1]s rbac create-role --body '{
       "role": {
          "description": "Administrator role with full access",
-         "is_default": false,
+         "is_default": true,
          "name": "Admin",
-         "organization_id": "Et ratione error."
+         "organization_id": "Quasi quisquam et accusamus."
       }
-   }' --jwt "Consequatur natus nemo adipisci exercitationem blanditiis amet."
+   }' --jwt "Velit dolorem."
 `, os.Args[0])
 }
 
@@ -3470,7 +3463,7 @@ Get role by ID
     -jwt STRING: 
 
 Example:
-    %[1]s rbac get-role --id "Praesentium ratione consequatur." --jwt "Ratione repellat maiores quisquam autem deserunt."
+    %[1]s rbac get-role --id "Necessitatibus voluptatem." --jwt "Nihil rerum et non labore exercitationem."
 `, os.Args[0])
 }
 
@@ -3485,11 +3478,11 @@ Update role
 Example:
     %[1]s rbac update-role --body '{
       "role": {
-         "description": "Voluptas non numquam voluptatibus et omnis dicta.",
+         "description": "Omnis praesentium.",
          "is_default": false,
-         "name": "Molestiae consequatur."
+         "name": "Iste sit aut facilis est enim nesciunt."
       }
-   }' --id "Quod et reprehenderit qui at aliquid." --jwt "Repellendus non sunt doloribus sit."
+   }' --id "Sint ipsam culpa." --jwt "Culpa hic."
 `, os.Args[0])
 }
 
@@ -3501,7 +3494,7 @@ Delete role
     -jwt STRING: 
 
 Example:
-    %[1]s rbac delete-role --id "Id autem ad impedit dolores iusto." --jwt "Quod sunt et accusamus quia sunt."
+    %[1]s rbac delete-role --id "Repudiandae quia voluptas doloribus et maxime." --jwt "Dolorem necessitatibus accusamus iste expedita."
 `, os.Args[0])
 }
 
@@ -3513,7 +3506,7 @@ List role permissions
     -jwt STRING: 
 
 Example:
-    %[1]s rbac list-role-permissions --id "Accusamus molestias omnis quibusdam esse." --jwt "In quaerat voluptatem mollitia."
+    %[1]s rbac list-role-permissions --id "Velit nihil nemo." --jwt "Molestiae consequatur."
 `, os.Args[0])
 }
 
@@ -3528,9 +3521,9 @@ Add permission to role
 Example:
     %[1]s rbac add-role-permission --body '{
       "permission": {
-         "permission_id": "Consectetur voluptatem sapiente natus autem."
+         "permission_id": "Aut accusantium ipsum inventore dolores et."
       }
-   }' --id "Velit dignissimos provident perferendis." --jwt "Odio saepe repudiandae debitis."
+   }' --id "Sunt eos quo tempora excepturi." --jwt "Esse expedita tempora quo est."
 `, os.Args[0])
 }
 
@@ -3543,7 +3536,7 @@ Remove permission from role
     -jwt STRING: 
 
 Example:
-    %[1]s rbac remove-role-permission --id "Doloremque voluptas qui soluta aut quisquam." --permission-id "Impedit ea itaque odio sit." --jwt "Temporibus voluptatem nam facere doloribus quasi."
+    %[1]s rbac remove-role-permission --id "Laudantium quam quis libero consequatur omnis." --permission-id "Velit fugit id autem ad impedit." --jwt "Iusto asperiores quod sunt et."
 `, os.Args[0])
 }
 
@@ -3556,7 +3549,7 @@ Check if user has a permission
     -jwt STRING: 
 
 Example:
-    %[1]s rbac check-permission --resource "Maxime rerum reprehenderit." --action "Velit dolores." --jwt "Tempore voluptatem fuga qui qui id vitae."
+    %[1]s rbac check-permission --resource "Facilis nostrum dolores sequi consequatur." --action "Accusamus molestias omnis quibusdam esse." --jwt "In quaerat voluptatem mollitia."
 `, os.Args[0])
 }
 
@@ -3569,7 +3562,7 @@ Check if user has a role
     -jwt STRING: 
 
 Example:
-    %[1]s rbac check-role --role "Pariatur eius." --organization-id "Temporibus omnis soluta delectus nesciunt." --jwt "Est laboriosam facilis."
+    %[1]s rbac check-role --role "Delectus numquam cum ipsa mollitia sit." --organization-id "Consectetur voluptatem sapiente natus autem." --jwt "Velit dignissimos provident perferendis."
 `, os.Args[0])
 }
 
@@ -3598,7 +3591,7 @@ List available OAuth providers
     -jwt STRING: 
 
 Example:
-    %[1]s oauth-client list-providers --oauth2 "Reprehenderit rem repellendus sit excepturi qui blanditiis." --xapi-key "Rerum natus." --jwt "Dolorum accusamus voluptatem sed aperiam rerum."
+    %[1]s oauth-client list-providers --oauth2 "Quo pariatur." --xapi-key "Sit quaerat dolores." --jwt "Quia aut rem."
 `, os.Args[0])
 }
 
@@ -3613,7 +3606,7 @@ Initiate authentication with an OAuth provider
     -jwt STRING: 
 
 Example:
-    %[1]s oauth-client provider-auth --provider "Repellendus at sapiente rem beatae ipsam." --redirect-uri "Fugiat rerum voluptas ut omnis." --oauth2 "Quae reiciendis soluta sapiente." --xapi-key "Voluptatem omnis illum." --jwt "Eum ducimus quas dolor quia ut aspernatur."
+    %[1]s oauth-client provider-auth --provider "Tempora expedita ea." --redirect-uri "Esse qui perspiciatis quos et." --oauth2 "Aut illum corrupti harum vel ut." --xapi-key "Et maxime rerum reprehenderit." --jwt "Velit dolores."
 `, os.Args[0])
 }
 
@@ -3629,7 +3622,7 @@ Handle OAuth provider callback
     -jwt STRING: 
 
 Example:
-    %[1]s oauth-client provider-callback --provider "Voluptatem quia." --code "Perspiciatis magnam." --state "Laudantium et quia rerum minus." --oauth2 "Veritatis sit sit." --xapi-key "Inventore itaque molestias quo eligendi." --jwt "Quasi accusamus eum."
+    %[1]s oauth-client provider-callback --provider "Et dolor quod quidem." --code "Illum eius ut dolorem similique quo et." --state "Fugiat suscipit inventore iure." --oauth2 "Quis eius a." --xapi-key "Pariatur eius." --jwt "Temporibus omnis soluta delectus nesciunt."
 `, os.Args[0])
 }
 
@@ -3665,7 +3658,7 @@ List available SSO providers
     -jwt STRING: 
 
 Example:
-    %[1]s sso list-providers --organization-id "Impedit velit doloremque." --oauth2 "Commodi sit non voluptate quaerat et." --xapi-key "Omnis odio et et." --jwt "Porro vitae ut quo."
+    %[1]s sso list-providers --organization-id "Atque autem aut ut." --oauth2 "Maiores cumque." --xapi-key "Perspiciatis ratione et." --jwt "Officiis architecto voluptates nisi."
 `, os.Args[0])
 }
 
@@ -3680,7 +3673,7 @@ Initiate SSO authentication with a provider
     -jwt STRING: 
 
 Example:
-    %[1]s sso provider-auth --provider "Quia assumenda modi ea sequi magnam." --redirect-uri "Dignissimos similique laboriosam in reiciendis reiciendis." --oauth2 "Illo et quas qui ab quis delectus." --xapi-key "Sed quaerat." --jwt "Laudantium ut quidem nemo voluptatum fuga in."
+    %[1]s sso provider-auth --provider "Quos fuga eos animi beatae tempora laborum." --redirect-uri "Quod commodi ut non." --oauth2 "Incidunt est quidem quis dolores impedit." --xapi-key "Impedit rerum qui temporibus eveniet et quaerat." --jwt "Nihil repellendus at sapiente rem beatae ipsam."
 `, os.Args[0])
 }
 
@@ -3698,7 +3691,7 @@ Handle SSO provider callback
     -jwt STRING: 
 
 Example:
-    %[1]s sso provider-callback --provider "Qui laboriosam." --code "Est rerum nostrum quisquam in modi pariatur." --state "Enim porro quaerat voluptas mollitia." --saml-response "Officia dignissimos atque dolore quo." --relay-state "Ut rerum qui." --oauth2 "Labore at aut." --xapi-key "Quia enim quo." --jwt "Et et ducimus."
+    %[1]s sso provider-callback --provider "Voluptatem quia." --code "Perspiciatis magnam." --state "Laudantium et quia rerum minus." --saml-response "Veritatis sit sit." --relay-state "Inventore itaque molestias quo eligendi." --oauth2 "Quasi accusamus eum." --xapi-key "Doloremque sunt consequatur assumenda voluptatem impedit velit." --jwt "Aut commodi sit non voluptate quaerat."
 `, os.Args[0])
 }
 
@@ -3710,7 +3703,7 @@ List identity providers
     -jwt STRING: 
 
 Example:
-    %[1]s sso list-identity-providers --organization-id "Ut soluta illum." --jwt "Omnis iure laudantium animi est."
+    %[1]s sso list-identity-providers --organization-id "Dolores est aut minima harum tempore." --jwt "Rerum maiores itaque et."
 `, os.Args[0])
 }
 
@@ -3723,15 +3716,15 @@ Create a new identity provider
 
 Example:
     %[1]s sso create-identity-provider --body '{
-      "organization_id": "Nobis aliquam neque perspiciatis dolores totam.",
+      "organization_id": "Omnis iure laudantium animi est.",
       "provider": {
-         "active": true,
+         "active": false,
          "attributes_mapping": {
             "email": "email",
             "name": "name"
          },
          "authorization_endpoint": "https://accounts.google.com/o/oauth2/auth",
-         "certificate": "Accusamus sint omnis.",
+         "certificate": "Fugiat dolor.",
          "client_id": "client_id_123",
          "client_secret": "client_secret_456",
          "domains": [
@@ -3739,16 +3732,16 @@ Example:
          ],
          "issuer": "https://accounts.google.com",
          "jwks_uri": "https://www.googleapis.com/oauth2/v3/certs",
-         "metadata_url": "Ipsam velit explicabo eius accusamus.",
+         "metadata_url": "Nulla qui illum in velit.",
          "name": "Google",
          "primary": false,
-         "private_key": "Aperiam quisquam magni rerum facere.",
+         "private_key": "Iusto cum est qui.",
          "provider_type": "oidc",
          "redirect_uri": "https://auth.example.com/callback",
          "token_endpoint": "https://oauth2.googleapis.com/token",
          "userinfo_endpoint": "https://openidconnect.googleapis.com/v1/userinfo"
       }
-   }' --jwt "Suscipit sit eligendi omnis ut."
+   }' --jwt "In et quo commodi non."
 `, os.Args[0])
 }
 
@@ -3760,7 +3753,7 @@ Get identity provider by ID
     -jwt STRING: 
 
 Example:
-    %[1]s sso get-identity-provider --id "Ea laudantium ut sed." --jwt "Quisquam pariatur aut."
+    %[1]s sso get-identity-provider --id "Laborum libero quos laborum et." --jwt "Veritatis ducimus corporis temporibus ut et."
 `, os.Args[0])
 }
 
@@ -3777,29 +3770,27 @@ Example:
       "provider": {
          "active": false,
          "attributes_mapping": {
-            "Doloribus fuga officia facere consectetur.": "Amet veniam illum iure ut corporis.",
-            "Est est et illum quidem veniam.": "In ut quibusdam labore sapiente ut.",
-            "Ipsum nesciunt et non.": "Quod quo voluptas odit ex recusandae dolorem."
+            "Inventore iste porro.": "Impedit aut a eius dolorem nihil rerum."
          },
-         "authorization_endpoint": "Id accusamus maxime voluptatibus.",
-         "certificate": "Optio aut eos earum ea.",
-         "client_id": "Voluptas molestiae accusamus voluptas dolores.",
-         "client_secret": "Odit nesciunt iusto ut.",
+         "authorization_endpoint": "Itaque ea ut.",
+         "certificate": "Nam rem nobis cupiditate qui et.",
+         "client_id": "Quos consequuntur adipisci eos quasi quibusdam.",
+         "client_secret": "Necessitatibus vel ipsum ipsum ratione commodi.",
          "domains": [
-            "Praesentium architecto libero accusamus est voluptatem.",
-            "Neque aspernatur."
+            "Rerum totam reiciendis esse voluptatibus sequi.",
+            "Earum qui."
          ],
-         "issuer": "Ut ratione error quae quaerat hic ipsam.",
-         "jwks_uri": "Omnis incidunt sequi qui est.",
-         "metadata_url": "Officiis quisquam at quas facere quis inventore.",
-         "name": "Architecto in quisquam nihil nisi.",
+         "issuer": "Soluta ut explicabo.",
+         "jwks_uri": "Eum optio eveniet quia.",
+         "metadata_url": "Tenetur et quia.",
+         "name": "Voluptatem quis sed velit ipsum.",
          "primary": true,
-         "private_key": "Voluptatem voluptatibus enim rerum.",
-         "redirect_uri": "Temporibus et autem aut reprehenderit unde.",
-         "token_endpoint": "Quis illo sit sint.",
-         "userinfo_endpoint": "Laborum et iusto."
+         "private_key": "Culpa numquam odit.",
+         "redirect_uri": "Sed doloremque.",
+         "token_endpoint": "Ea laudantium ut sed.",
+         "userinfo_endpoint": "Quisquam pariatur aut."
       }
-   }' --id "Voluptatem reiciendis ratione." --jwt "Facere qui praesentium vel."
+   }' --id "Soluta tempora aut." --jwt "Voluptas dolores pariatur eveniet eum provident."
 `, os.Args[0])
 }
 
@@ -3811,7 +3802,7 @@ Delete identity provider
     -jwt STRING: 
 
 Example:
-    %[1]s sso delete-identity-provider --id "At nemo deleniti fugit quas rerum quis." --jwt "Sapiente in consequatur id."
+    %[1]s sso delete-identity-provider --id "Voluptatem incidunt." --jwt "Aspernatur ut molestiae."
 `, os.Args[0])
 }
 
@@ -3822,7 +3813,7 @@ SAML metadata endpoint
     -id STRING: Provider ID
 
 Example:
-    %[1]s sso saml-metadata --id "Quia rerum ut."
+    %[1]s sso saml-metadata --id "Amet veniam illum iure ut corporis."
 `, os.Args[0])
 }
 
@@ -3833,7 +3824,7 @@ SAML assertion consumer service
     -id STRING: Provider ID
 
 Example:
-    %[1]s sso saml-acs --id "Voluptatem voluptatibus dolore."
+    %[1]s sso saml-acs --id "Omnis itaque sint inventore atque quidem."
 `, os.Args[0])
 }
 
@@ -3870,7 +3861,7 @@ List users
     -jwt STRING: 
 
 Example:
-    %[1]s users list --offset 4329725207556343076 --limit 94 --search "Ipsum minus nihil repellendus consequatur laborum cum." --organization-id "Ea ipsum delectus hic." --jwt "Dignissimos sunt nulla et occaecati."
+    %[1]s users list --offset 4762526368348054494 --limit 7 --search "Ducimus quos quia sit ipsam qui." --organization-id "Rerum non excepturi illum." --jwt "Aspernatur non quos et repudiandae."
 `, os.Args[0])
 }
 
@@ -3884,18 +3875,19 @@ Create a new user
 Example:
     %[1]s users create --body '{
       "email": "user@example.com",
-      "first_name": "Saepe voluptas et sit dolores aut et.",
+      "first_name": "Animi et esse saepe non qui nihil.",
       "id": "2023-01-01T12:00:00Z",
-      "last_name": "Autem explicabo doloribus omnis voluptatem sunt aut.",
-      "locale": "Fugit ullam vel ex repellendus dolores.",
+      "last_name": "Nihil voluptatem assumenda quia similique rerum ducimus.",
+      "locale": "Id excepturi tempore rerum ea eum.",
       "metadata": {
-         "Qui nisi.": "Voluptas occaecati id nemo et occaecati vero."
+         "Et et voluptate porro.": "Nobis et necessitatibus.",
+         "Ut in iure omnis at nemo deleniti.": "Quas rerum quis suscipit sapiente in."
       },
-      "organization_id": "Molestias labore saepe molestiae ut.",
+      "organization_id": "Et quos et.",
       "password": "securepassword",
-      "phone_number": "Aut excepturi quasi dolores aut.",
-      "profile_image_url": "Quia fugit voluptatem consectetur."
-   }' --jwt "Id veniam eos quisquam illo et."
+      "phone_number": "Harum asperiores.",
+      "profile_image_url": "Velit est non aut cumque dicta."
+   }' --jwt "Quam beatae provident incidunt."
 `, os.Args[0])
 }
 
@@ -3907,7 +3899,7 @@ Get user by ID
     -jwt STRING: 
 
 Example:
-    %[1]s users get --id "Voluptatum voluptatem." --jwt "Qui corporis ratione laborum omnis voluptas animi."
+    %[1]s users get --id "Animi aut sit minus voluptatem voluptate." --jwt "Quia voluptate."
 `, os.Args[0])
 }
 
@@ -3923,17 +3915,17 @@ Example:
     %[1]s users update --body '{
       "user": {
          "active": false,
-         "first_name": "Quidem odio saepe occaecati.",
-         "last_name": "Ut esse dignissimos.",
-         "locale": "Sed facere labore nobis sed minima omnis.",
+         "first_name": "Consectetur qui nesciunt.",
+         "last_name": "Nisi ad voluptas.",
+         "locale": "Illo et similique in.",
          "metadata": {
-            "Unde numquam pariatur officia molestiae corporis.": "Totam voluptatem."
+            "Nemo et occaecati vero ut.": "Ullam vel ex."
          },
-         "phone_number": "Ut aut expedita cupiditate eos rerum.",
-         "primary_organization_id": "Veniam enim mollitia est.",
-         "profile_image_url": "Consequatur perferendis."
+         "phone_number": "Quasi dolores aut suscipit quia fugit.",
+         "primary_organization_id": "Ab nihil itaque quidem.",
+         "profile_image_url": "Dolores dolorum id veniam eos."
       }
-   }' --id "Aut dignissimos repellat dolorem eveniet hic." --jwt "Minus laudantium dolores rerum numquam et."
+   }' --id "Aspernatur qui qui est." --jwt "Quia perspiciatis consequuntur."
 `, os.Args[0])
 }
 
@@ -3945,7 +3937,7 @@ Delete user
     -jwt STRING: 
 
 Example:
-    %[1]s users delete --id "Voluptate repellat aut." --jwt "Consequatur totam corporis sapiente."
+    %[1]s users delete --id "Dicta ut." --jwt "Voluptatibus ut tempore quibusdam commodi quam."
 `, os.Args[0])
 }
 
@@ -3959,16 +3951,18 @@ Update current user
 Example:
     %[1]s users update-me --body '{
       "active": false,
-      "first_name": "Nihil eos quaerat.",
-      "last_name": "Officiis nesciunt tempore exercitationem expedita consequuntur.",
-      "locale": "Tenetur voluptatum.",
+      "first_name": "Similique et eius molestiae odio voluptas error.",
+      "last_name": "Aliquid voluptate.",
+      "locale": "Doloremque unde numquam pariatur officia molestiae corporis.",
       "metadata": {
-         "Officiis est illum voluptate iste ut.": "Illo maxime."
+         "Dignissimos hic tempora non consequatur sit est.": "Sunt voluptas in.",
+         "Eos qui aut ut.": "Expedita cupiditate eos rerum dolor quidem.",
+         "Et omnis sit vel possimus debitis nihil.": "Sapiente quia ut eum veritatis officia dolores."
       },
-      "phone_number": "Ut voluptatem.",
-      "primary_organization_id": "Maiores voluptas.",
-      "profile_image_url": "Sed iusto."
-   }' --jwt "Aut ut aut illum iure."
+      "phone_number": "Enim deserunt aut id.",
+      "primary_organization_id": "Voluptatem ratione consequatur perferendis debitis sed facere.",
+      "profile_image_url": "Saepe occaecati a ut esse dignissimos."
+   }' --jwt "Nobis sed minima omnis."
 `, os.Args[0])
 }
 
@@ -3983,7 +3977,7 @@ Example:
     %[1]s users update-password --body '{
       "current_password": "oldpassword",
       "new_password": "newpassword"
-   }' --jwt "Perspiciatis impedit eum temporibus voluptatum."
+   }' --jwt "Ut voluptatibus nobis laudantium quia sit."
 `, os.Args[0])
 }
 
@@ -3994,7 +3988,7 @@ Get current user sessions
     -jwt STRING: 
 
 Example:
-    %[1]s users get-sessions --jwt "Consequatur odio molestiae excepturi optio quis veritatis."
+    %[1]s users get-sessions --jwt "Ex vero non doloremque nemo porro."
 `, os.Args[0])
 }
 
@@ -4006,7 +4000,7 @@ Delete user session
     -jwt STRING: 
 
 Example:
-    %[1]s users delete-session --session-id "Vel quae quisquam laboriosam in." --jwt "Exercitationem facere perspiciatis."
+    %[1]s users delete-session --session-id "Quidem voluptatum deserunt." --jwt "Sunt ut."
 `, os.Args[0])
 }
 
@@ -4018,7 +4012,7 @@ Get user organizations
     -jwt STRING: 
 
 Example:
-    %[1]s users get-organizations --id "Consequatur qui voluptate et fuga est corporis." --jwt "Id ducimus nulla sed."
+    %[1]s users get-organizations --id "Itaque magni." --jwt "Ut eius minima."
 `, os.Args[0])
 }
 
@@ -4054,11 +4048,11 @@ List webhooks
     -jwt STRING: 
 
 Example:
-    %[1]s webhooks list --offset 2929210102234605190 --limit 26 --organization-id "Quos velit corrupti qui minima et." --event-types '[
-      "Quia itaque expedita ipsum aut.",
-      "Sunt sequi totam quod.",
-      "Ea et soluta incidunt deleniti."
-   ]' --jwt "Quisquam dolore sed aspernatur id consectetur."
+    %[1]s webhooks list --offset 2112187036772221159 --limit 55 --organization-id "Omnis laboriosam excepturi id." --event-types '[
+      "Quaerat et.",
+      "Sed nam qui provident ullam.",
+      "Impedit veniam molestias."
+   ]' --jwt "Autem suscipit ea quia commodi."
 `, os.Args[0])
 }
 
@@ -4071,7 +4065,7 @@ Create a new webhook
 
 Example:
     %[1]s webhooks create --body '{
-      "organization_id": "Aperiam dolorum et et atque.",
+      "organization_id": "Et eius deleniti amet.",
       "webhook": {
          "event_types": [
             "user.created",
@@ -4079,15 +4073,15 @@ Example:
          ],
          "format": "json",
          "metadata": {
-            "Consectetur deserunt excepturi consequatur aperiam voluptas in.": "Molestias beatae.",
-            "Ratione aut rem qui.": "Dignissimos possimus officiis quidem distinctio occaecati delectus."
+            "Aspernatur sint veritatis.": "Quis est vel aut voluptatum.",
+            "Soluta quos velit corrupti qui minima.": "Non accusamus."
          },
          "name": "User Events",
-         "retry_count": 7,
-         "timeout_ms": 15365,
+         "retry_count": 3,
+         "timeout_ms": 13431,
          "url": "https://example.com/webhooks/receive"
       }
-   }' --jwt "Iure et ducimus."
+   }' --jwt "Itaque expedita."
 `, os.Args[0])
 }
 
@@ -4099,7 +4093,7 @@ Get webhook by ID
     -jwt STRING: 
 
 Example:
-    %[1]s webhooks get --id "Laborum beatae quis et recusandae est explicabo." --jwt "Qui impedit non tempora cumque quasi."
+    %[1]s webhooks get --id "Sit modi." --jwt "Sed occaecati nobis accusamus."
 `, os.Args[0])
 }
 
@@ -4116,23 +4110,22 @@ Example:
       "webhook": {
          "active": false,
          "event_types": [
-            "Accusamus ducimus odio aliquam velit.",
-            "Esse dolore tenetur architecto impedit eligendi dolorum.",
-            "Dignissimos illum inventore quidem voluptates ipsum optio.",
-            "In quo temporibus reiciendis dolores."
+            "Commodi repellendus quia est illum eligendi.",
+            "Nesciunt quia quis.",
+            "Beatae quis et recusandae est explicabo dolorem.",
+            "Impedit non tempora cumque."
          ],
          "format": "form",
          "metadata": {
-            "Corrupti ab.": "Et perferendis.",
-            "Doloribus omnis quaerat aperiam corporis.": "Perspiciatis quas est excepturi natus eum.",
-            "Quis vel quo error est.": "Sint porro iusto."
+            "Doloremque explicabo asperiores sunt in quasi.": "Molestiae hic nesciunt voluptas soluta.",
+            "Sequi eos voluptatem et soluta vitae.": "Et et adipisci ab."
          },
-         "name": "Ex fugit ex autem enim.",
-         "retry_count": 4,
-         "timeout_ms": 11844,
-         "url": "http://abernathy.info/haskell_willms"
+         "name": "Inventore consequatur velit consequatur consequatur saepe unde.",
+         "retry_count": 7,
+         "timeout_ms": 25434,
+         "url": "http://lesch.info/katrina"
       }
-   }' --id "Sunt non dolorem." --jwt "Et error tenetur non expedita."
+   }' --id "Omnis itaque." --jwt "Soluta quia cupiditate tempore rerum."
 `, os.Args[0])
 }
 
@@ -4144,7 +4137,7 @@ Delete webhook
     -jwt STRING: 
 
 Example:
-    %[1]s webhooks delete --id "Impedit maxime quam consequatur nihil vel eveniet." --jwt "Ut voluptas dolorem quisquam non sed et."
+    %[1]s webhooks delete --id "Eligendi ut libero temporibus." --jwt "Et quia cupiditate aut accusamus quaerat aliquam."
 `, os.Args[0])
 }
 
@@ -4160,15 +4153,16 @@ Example:
       "event": {
          "event_type": "user.created",
          "headers": {
-            "Aspernatur molestias reprehenderit veritatis dolor.": "Non temporibus vitae quia hic nulla."
+            "Et voluptate.": "In placeat sed et.",
+            "Perspiciatis sint aperiam quia similique.": "Voluptatibus id autem vero."
          },
          "payload": {
             "email": "user@example.com",
             "user_id": "123"
          }
       },
-      "organization_id": "Ea debitis quo explicabo."
-   }' --jwt "Ea quo optio sed quod ducimus minima."
+      "organization_id": "Quis animi adipisci unde."
+   }' --jwt "Ea itaque amet perferendis ipsa."
 `, os.Args[0])
 }
 
@@ -4184,7 +4178,7 @@ List webhook events
     -jwt STRING: 
 
 Example:
-    %[1]s webhooks list-events --id "Est repudiandae eos sed ad." --offset 6218846367380412626 --limit 34 --event-type "Exercitationem officia ullam non dolores non." --delivered true --jwt "Sit aperiam."
+    %[1]s webhooks list-events --id "Consequatur molestiae." --offset 5868906884046171347 --limit 52 --event-type "Voluptatem quia quasi nulla consequatur tenetur aliquid." --delivered false --jwt "Blanditiis est asperiores magnam iste aut."
 `, os.Args[0])
 }
 
@@ -4197,7 +4191,7 @@ Replay a webhook event
     -jwt STRING: 
 
 Example:
-    %[1]s webhooks replay-event --id "Facere unde quia sit." --event-id "Non ut molestias ipsam quis libero." --jwt "Consequatur est voluptate natus numquam nemo."
+    %[1]s webhooks replay-event --id "Sed quod ducimus minima." --event-id "Adipisci enim." --jwt "Qui atque ab."
 `, os.Args[0])
 }
 
@@ -4208,6 +4202,6 @@ Receive webhook callbacks from external sources
     -id STRING: Webhook receiver ID
 
 Example:
-    %[1]s webhooks receive --id "Sit debitis eos veritatis."
+    %[1]s webhooks receive --id "Est repudiandae eos sed ad."
 `, os.Args[0])
 }

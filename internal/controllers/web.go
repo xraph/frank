@@ -9,12 +9,12 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/juicycleff/frank/config"
+	"github.com/juicycleff/frank/internal/auth/session"
 	"github.com/juicycleff/frank/internal/middleware"
 	"github.com/juicycleff/frank/internal/router"
 	"github.com/juicycleff/frank/internal/services"
 	"github.com/juicycleff/frank/pkg/astro_fs"
 	"github.com/juicycleff/frank/pkg/logging"
-	"github.com/juicycleff/frank/pkg/utils"
 	"github.com/juicycleff/frank/web"
 )
 
@@ -55,6 +55,7 @@ func FileServer(rootPath string, router chi.Router) http.Handler {
 // ProtectedFrontendFileServer serves static files with frontend route protection
 func ProtectedFrontendFileServer(
 	rootFs http.FileSystem,
+	svcs *services.Services,
 	router router.FrankRouter,
 	protection *middleware.FrontendRouteProtection,
 	logger logging.Logger,
@@ -113,7 +114,7 @@ func ProtectedFrontendFileServer(
 		// Check authentication for protected routes
 		if protection.IsProtectedPath(path) {
 			// Check if user is authenticated
-			sess, err := utils.GetSession(r, protection.Config())
+			sess, err := session.GetSessionHelper(r, protection.Config(), svcs.CookieHandler, svcs.SessionStore, logger)
 			authenticated := false
 
 			if err == nil {
@@ -229,7 +230,7 @@ func RegisterFrontendRoutes(
 		"/ui/admin/*",
 	)
 
-	authMw := middleware.Auth(config, logger, svcs.Session, svcs.APIKey, false)
+	authMw := middleware.Auth(config, logger, svcs.Session, svcs.SessionStore, svcs.APIKey, false)
 
 	router.Route("/ui", func(r chi.Router) {
 		r.Use(authMw)
@@ -245,7 +246,7 @@ func RegisterFrontendRoutes(
 		fss := http.FS(web.WebUISub)
 
 		// Set up the file server
-		fs := ProtectedFrontendFileServer(fss, router, protection, logger)
+		fs := ProtectedFrontendFileServer(fss, svcs, router, protection, logger)
 
 		r.Handle("/*", fs)
 	})

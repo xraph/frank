@@ -23,7 +23,7 @@ func BuildRegisterBeginPayload(passkeysRegisterBeginBody string, passkeysRegiste
 	{
 		err = json.Unmarshal([]byte(passkeysRegisterBeginBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"device_name\": \"Officia aut omnis molestiae nihil maiores numquam.\",\n      \"device_type\": \"Natus et aspernatur cum id.\"\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"device_name\": \"Nihil optio quasi nulla eos possimus.\",\n      \"device_type\": \"Omnis quidem.\"\n   }'")
 		}
 	}
 	var jwt *string
@@ -49,7 +49,7 @@ func BuildRegisterCompletePayload(passkeysRegisterCompleteBody string, passkeysR
 	{
 		err = json.Unmarshal([]byte(passkeysRegisterCompleteBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"device_name\": \"Sequi delectus nesciunt incidunt iusto quia.\",\n      \"device_type\": \"Facilis dolorem necessitatibus ipsa officiis nesciunt.\",\n      \"response\": \"Quas deleniti.\",\n      \"session_id\": \"Expedita nesciunt totam et itaque.\"\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"device_name\": \"Sed cumque dolores.\",\n      \"device_type\": \"Omnis adipisci hic corrupti eveniet saepe.\",\n      \"response\": \"Veritatis autem quasi esse esse et similique.\",\n      \"session_id\": \"Illum at dolorum repellat in sint dolorem.\"\n   }'")
 		}
 		if body.Response == nil {
 			err = goa.MergeErrors(err, goa.MissingFieldError("response", "body"))
@@ -112,7 +112,7 @@ func BuildLoginCompletePayload(passkeysLoginCompleteBody string, passkeysLoginCo
 	{
 		err = json.Unmarshal([]byte(passkeysLoginCompleteBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"response\": \"Expedita nihil ut repellendus voluptatem.\",\n      \"session_id\": \"Deleniti qui nesciunt qui.\"\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"response\": \"Ab consequatur et qui porro est vero.\",\n      \"session_id\": \"Eum in nemo rerum odio.\"\n   }'")
 		}
 		if body.Response == nil {
 			err = goa.MergeErrors(err, goa.MissingFieldError("response", "body"))
@@ -173,7 +173,7 @@ func BuildUpdatePayload(passkeysUpdateBody string, passkeysUpdateID string, pass
 	{
 		err = json.Unmarshal([]byte(passkeysUpdateBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"request\": {\n         \"name\": \"Vel quibusdam soluta culpa corporis.\"\n      }\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"request\": {\n         \"name\": \"Voluptas voluptatem saepe itaque.\"\n      }\n   }'")
 		}
 		if body.Request == nil {
 			err = goa.MergeErrors(err, goa.MissingFieldError("request", "body"))

@@ -1,5 +1,5 @@
 import {useState} from "react";
-import {LoginRequest, User} from "@frank-auth/sdk";
+import {InternalServerError, LoginRequest, LoginResponse2, User} from "@frank-auth/sdk";
 import {useAuth} from "./useAuth";
 
 export const useLogin = () => {
@@ -9,12 +9,14 @@ export const useLogin = () => {
 
 	const handleLogin = async (
 		credentials: LoginRequest,
+		afterLogin?: (rsp: LoginResponse2) => void | Promise<void>,
+		onError?: (e: InternalServerError) => void,
 	): Promise<User | null> => {
 		setIsLoading(true);
 		setError(null);
 
 		try {
-			const user = await login(credentials);
+			const user = await login(credentials, afterLogin, onError);
 			return user;
 		} catch (err) {
 			const errorMessage =

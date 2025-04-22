@@ -25,7 +25,7 @@ func BuildLoginPayload(authLoginBody string, authLoginSessionID string) (*auth.L
 	{
 		err = json.Unmarshal([]byte(authLoginBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"captcha_response\": \"Eum fugit est ut sed.\",\n      \"email\": \"user@example.com\",\n      \"organization_id\": \"Consequuntur quia.\",\n      \"password\": \"secure-password\",\n      \"remember_me\": true\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"captcha_response\": \"Et repellat praesentium omnis.\",\n      \"email\": \"user@example.com\",\n      \"organization_id\": \"Quos facilis.\",\n      \"password\": \"secure-password\",\n      \"remember_me\": false\n   }'")
 		}
 		err = goa.MergeErrors(err, goa.ValidateFormat("body.email", body.Email, goa.FormatEmail))
 		if utf8.RuneCountInString(body.Password) < 1 {
@@ -67,7 +67,7 @@ func BuildRegisterPayload(authRegisterBody string, authRegisterSessionID string)
 	{
 		err = json.Unmarshal([]byte(authRegisterBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"email\": \"user@example.com\",\n      \"first_name\": \"Et similique.\",\n      \"last_name\": \"Sint magni voluptatibus.\",\n      \"metadata\": {\n         \"Maiores expedita minima placeat.\": \"In laboriosam.\"\n      },\n      \"organization_id\": \"Consectetur omnis et pariatur sit est qui.\",\n      \"password\": \"secure-password\"\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"email\": \"user@example.com\",\n      \"first_name\": \"Dolor nisi perspiciatis et voluptas.\",\n      \"last_name\": \"Harum similique.\",\n      \"metadata\": {\n         \"Dolorem et.\": \"Eius vel.\"\n      },\n      \"organization_id\": \"Accusantium aliquam aut.\",\n      \"password\": \"secure-password\"\n   }'")
 		}
 		err = goa.MergeErrors(err, goa.ValidateFormat("body.email", body.Email, goa.FormatEmail))
 		if utf8.RuneCountInString(body.Password) < 8 {
@@ -127,31 +127,13 @@ func BuildLogoutPayload(authLogoutJWT string, authLogoutSessionID string) (*auth
 
 // BuildRefreshTokenPayload builds the payload for the auth refresh_token
 // endpoint from CLI flags.
-func BuildRefreshTokenPayload(authRefreshTokenBody string, authRefreshTokenOauth2 string, authRefreshTokenXAPIKey string, authRefreshTokenJWT string, authRefreshTokenSessionID string) (*auth.RefreshTokenPayload, error) {
+func BuildRefreshTokenPayload(authRefreshTokenBody string, authRefreshTokenSessionID string) (*auth.RefreshTokenPayload, error) {
 	var err error
 	var body RefreshTokenRequestBody
 	{
 		err = json.Unmarshal([]byte(authRefreshTokenBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"refresh_token\": \"Eveniet fugit.\"\n   }'")
-		}
-	}
-	var oauth2 *string
-	{
-		if authRefreshTokenOauth2 != "" {
-			oauth2 = &authRefreshTokenOauth2
-		}
-	}
-	var xAPIKey *string
-	{
-		if authRefreshTokenXAPIKey != "" {
-			xAPIKey = &authRefreshTokenXAPIKey
-		}
-	}
-	var jwt *string
-	{
-		if authRefreshTokenJWT != "" {
-			jwt = &authRefreshTokenJWT
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"refresh_token\": \"Quidem nam consequatur.\"\n   }'")
 		}
 	}
 	var sessionID *string
@@ -163,9 +145,6 @@ func BuildRefreshTokenPayload(authRefreshTokenBody string, authRefreshTokenOauth
 	v := &auth.RefreshTokenPayload{
 		RefreshToken: body.RefreshToken,
 	}
-	v.Oauth2 = oauth2
-	v.XAPIKey = xAPIKey
-	v.JWT = jwt
 	v.SessionID = sessionID
 
 	return v, nil
@@ -236,7 +215,7 @@ func BuildResetPasswordPayload(authResetPasswordBody string, authResetPasswordSe
 	{
 		err = json.Unmarshal([]byte(authResetPasswordBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"new_password\": \"new-secure-password\",\n      \"token\": \"Aperiam voluptas dolores ut quis.\"\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"new_password\": \"new-secure-password\",\n      \"token\": \"Sit ea qui tenetur nesciunt dicta.\"\n   }'")
 		}
 		if utf8.RuneCountInString(body.NewPassword) < 8 {
 			err = goa.MergeErrors(err, goa.InvalidLengthError("body.new_password", body.NewPassword, utf8.RuneCountInString(body.NewPassword), 8, true))
@@ -268,7 +247,7 @@ func BuildVerifyEmailPayload(authVerifyEmailBody string, authVerifyEmailSessionI
 	{
 		err = json.Unmarshal([]byte(authVerifyEmailBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"email\": \"user@example.com\",\n      \"method\": \"otp\",\n      \"otp\": \"Veniam et ducimus nobis est enim harum.\",\n      \"token\": \"Voluptates illo.\"\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"email\": \"user@example.com\",\n      \"method\": \"otp\",\n      \"otp\": \"Expedita esse exercitationem qui repellat error.\",\n      \"token\": \"Aut quam sunt sit velit corporis.\"\n   }'")
 		}
 		err = goa.MergeErrors(err, goa.ValidateFormat("body.email", body.Email, goa.FormatEmail))
 		if !(body.Method == "link" || body.Method == "otp") {

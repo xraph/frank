@@ -86,7 +86,7 @@ func BuildCreatePayload(organizationsCreateBody string, organizationsCreateJWT s
 	{
 		err = json.Unmarshal([]byte(organizationsCreateBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"organization\": {\n         \"domain\": \"acme.com\",\n         \"features\": [\n            \"sso\",\n            \"webhooks\"\n         ],\n         \"logo_url\": \"Doloribus et amet.\",\n         \"metadata\": {\n            \"Rerum voluptatibus facere autem.\": \"Delectus provident atque fugit provident.\",\n            \"Sint enim totam.\": \"Eum omnis quo sit est.\",\n            \"Totam excepturi ab voluptatum soluta quasi sapiente.\": \"Quis quos saepe laboriosam.\"\n         },\n         \"name\": \"Acme Inc.\",\n         \"plan\": \"enterprise\",\n         \"slug\": \"acme\",\n         \"trial_days\": 30\n      }\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"organization\": {\n         \"domain\": \"acme.com\",\n         \"features\": [\n            \"sso\",\n            \"webhooks\"\n         ],\n         \"logo_url\": \"Autem a repellat aut doloremque a.\",\n         \"metadata\": {\n            \"Neque voluptatem.\": \"Velit placeat ullam iusto corrupti.\",\n            \"Suscipit quis ea sapiente ab sed aut.\": \"Totam aut est sunt nostrum et.\",\n            \"Voluptatum eligendi tenetur temporibus non similique mollitia.\": \"Quae eos omnis voluptatem deserunt.\"\n         },\n         \"name\": \"Acme Inc.\",\n         \"plan\": \"enterprise\",\n         \"slug\": \"acme\",\n         \"trial_days\": 30\n      }\n   }'")
 		}
 		if body.Organization == nil {
 			err = goa.MergeErrors(err, goa.MissingFieldError("organization", "body"))
@@ -143,7 +143,7 @@ func BuildUpdatePayload(organizationsUpdateBody string, organizationsUpdateID st
 	{
 		err = json.Unmarshal([]byte(organizationsUpdateBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"organization\": {\n         \"active\": false,\n         \"domain\": \"Voluptas ad velit.\",\n         \"logo_url\": \"Omnis corrupti inventore dolorem vitae sint rerum.\",\n         \"metadata\": {\n            \"Et natus.\": \"Laboriosam facere.\"\n         },\n         \"name\": \"Deserunt in.\",\n         \"plan\": \"Qui labore.\"\n      }\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"organization\": {\n         \"active\": false,\n         \"domain\": \"Quisquam odio.\",\n         \"logo_url\": \"Enim accusamus voluptatum non rerum maxime numquam.\",\n         \"metadata\": {\n            \"Dolor voluptatem.\": \"Error sunt ea.\"\n         },\n         \"name\": \"Et nihil quo alias cumque.\",\n         \"plan\": \"Eligendi dolorem ad nam.\"\n      }\n   }'")
 		}
 		if body.Organization == nil {
 			err = goa.MergeErrors(err, goa.MissingFieldError("organization", "body"))
@@ -267,7 +267,7 @@ func BuildAddMemberPayload(organizationsAddMemberBody string, organizationsAddMe
 	{
 		err = json.Unmarshal([]byte(organizationsAddMemberBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"member\": {\n         \"roles\": [\n            \"member\"\n         ],\n         \"user_id\": \"Aperiam et quidem.\"\n      }\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"member\": {\n         \"roles\": [\n            \"member\"\n         ],\n         \"user_id\": \"Est rerum qui quas esse facilis.\"\n      }\n   }'")
 		}
 		if body.Member == nil {
 			err = goa.MergeErrors(err, goa.MissingFieldError("member", "body"))
@@ -309,7 +309,7 @@ func BuildUpdateMemberPayload(organizationsUpdateMemberBody string, organization
 	{
 		err = json.Unmarshal([]byte(organizationsUpdateMemberBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"member\": {\n         \"roles\": [\n            \"Libero incidunt atque quis.\",\n            \"Omnis repellat.\",\n            \"Molestiae fuga est commodi.\"\n         ]\n      }\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"member\": {\n         \"roles\": [\n            \"Ipsum rerum molestiae.\",\n            \"Facilis neque pariatur aut reprehenderit.\",\n            \"Et voluptatibus labore repudiandae omnis ex.\"\n         ]\n      }\n   }'")
 		}
 		if body.Member == nil {
 			err = goa.MergeErrors(err, goa.MissingFieldError("member", "body"))
@@ -401,7 +401,7 @@ func BuildEnableFeaturePayload(organizationsEnableFeatureBody string, organizati
 	{
 		err = json.Unmarshal([]byte(organizationsEnableFeatureBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"feature\": {\n         \"feature_key\": \"Occaecati quo et sint.\",\n         \"settings\": {\n            \"Iure qui autem sed nihil ut minima.\": \"Eos nisi.\",\n            \"Optio quasi nulla eos possimus id.\": \"Quidem quod doloremque.\"\n         }\n      }\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"feature\": {\n         \"feature_key\": \"Velit impedit unde.\",\n         \"settings\": {\n            \"Nemo vel ea eum omnis sed nam.\": \"Est dolorum nobis sed voluptas non at.\",\n            \"Repudiandae possimus ut.\": \"Eum qui quidem.\"\n         }\n      }\n   }'")
 		}
 		if body.Feature == nil {
 			err = goa.MergeErrors(err, goa.MissingFieldError("feature", "body"))

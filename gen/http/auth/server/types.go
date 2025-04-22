@@ -2167,13 +2167,10 @@ func NewLogoutPayload(jwt *string, sessionID *string) *auth.LogoutPayload {
 }
 
 // NewRefreshTokenPayload builds a auth service refresh_token endpoint payload.
-func NewRefreshTokenPayload(body *RefreshTokenRequestBody, oauth2 *string, xAPIKey *string, jwt *string, sessionID *string) *auth.RefreshTokenPayload {
+func NewRefreshTokenPayload(body *RefreshTokenRequestBody, sessionID *string) *auth.RefreshTokenPayload {
 	v := &auth.RefreshTokenPayload{
 		RefreshToken: *body.RefreshToken,
 	}
-	v.Oauth2 = oauth2
-	v.XAPIKey = xAPIKey
-	v.JWT = jwt
 	v.SessionID = sessionID
 
 	return v

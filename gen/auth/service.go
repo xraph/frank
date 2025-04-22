@@ -249,12 +249,6 @@ type NotFoundError struct {
 // RefreshTokenPayload is the payload type of the auth service refresh_token
 // method.
 type RefreshTokenPayload struct {
-	// OAuth2 access token
-	Oauth2 *string
-	// API key
-	XAPIKey *string
-	// JWT token
-	JWT       *string
 	SessionID *string
 	// JWTAuth refresh token
 	RefreshToken string

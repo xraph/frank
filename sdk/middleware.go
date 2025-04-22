@@ -2,11 +2,13 @@ package sdk
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/juicycleff/frank/pkg/utils"
+	"goa.design/clue/log"
 )
 
 var cookiename = "frank_session"
@@ -42,6 +44,8 @@ func (f *Frank) AuthMiddleware() func(http.Handler) http.Handler {
 			cookie, err := r.Cookie(cookiename)
 
 			cookieString := r.Header.Get("Cookie")
+
+			fmt.Println(cookieString)
 			u, err := f.getLoggedInUser(ctx, r.Header.Get("Authorization"), cookieString, cookie)
 			if err != nil {
 				utils.RespondError(w, err)
@@ -71,9 +75,23 @@ func (f *Frank) getLoggedInUser(ctx context.Context, token string, cookies strin
 
 	response, err := f.client.AuthMeWithResponse(ctx, params, f.getModifier(token, cookies))
 	if err != nil {
+		fmt.Println(err)
+		log.Error(ctx, err)
 		return nil, errors.New(errors.CodeUnauthorized, "unauthorized")
 	}
 	if response.JSON200 == nil {
+		if response.JSON403 != nil {
+			return nil, errors.New(response.JSON403.Code, response.JSON403.Message)
+		} else if response.JSON404 != nil {
+			return nil, errors.New(response.JSON404.Code, response.JSON404.Message)
+		} else if response.JSON500 != nil {
+			return nil, errors.New(response.JSON500.Code, response.JSON500.Message)
+		} else if response.JSON400 != nil {
+			return nil, errors.New(response.JSON400.Code, response.JSON400.Message)
+		} else if response.JSON409 != nil {
+			return nil, errors.New(response.JSON409.Code, response.JSON409.Message)
+		}
+
 		return nil, errors.New(response.JSON401.Code, response.JSON401.Message)
 	}
 

@@ -57,7 +57,7 @@ func SetDefaults(v *viper.Viper) {
 	v.SetDefault("auth.cookie_domain", "")
 	v.SetDefault("auth.cookie_secure", false)
 	v.SetDefault("auth.cookie_http_only", true)
-	v.SetDefault("auth.cookie_same_site", "none")
+	v.SetDefault("auth.cookie_same_site", "lax")
 	v.SetDefault("auth.default_user_role", "user")
 	v.SetDefault("auth.default_admin_role", "admin")
 	v.SetDefault("auth.default_super_role", "super")

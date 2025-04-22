@@ -5,6 +5,7 @@ export interface AuthConfig {
 	storagePrefix?: string;
 	tokenStorageType?: "cookie" | "localStorage" | "sessionStorage" | "memory";
 	organizationId?: string;
+	cookieName?: string;
 }
 
 export interface TokenData {

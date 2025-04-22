@@ -1,8 +1,8 @@
 "use client";
 
-import type { ReactNode } from "react";
-import React, { createContext } from "react";
-import { Key } from "lucide-react";
+import type {ReactNode} from "react";
+import React, {createContext} from "react";
+import {Key} from "lucide-react";
 import {
 	AuthVerifyEmailError,
 	client,
@@ -153,6 +153,32 @@ export interface FrankConfig {
 		redirectAfterLogin?: string;
 	};
 	theme?: ThemeConfigPreset;
+
+	cssClasses?: {
+		card?: string;
+		cardHeader?: string;
+		cardContent?: string;
+		title?: string;
+		desc?: string;
+		container?: string;
+		footer?: string;
+		tabs?: string;
+		tab?: string;
+		tabActive?: string;
+		tabDisabled?: string;
+	}
+	components?: {
+		Button?: React.FC;
+		Card?: React.FC;
+		CardContent?: React.FC;
+		CardDescription?: React.FC;
+		CardHeader?: React.FC;
+		CardTitle?: React.FC;
+		Checkbox?: React.FC;
+		Input?: React.FC;
+		Label?: React.FC;
+		Link?: React.FC;
+	}
 
 	api?: {
 		baseUrl?: string;

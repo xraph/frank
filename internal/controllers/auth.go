@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gorilla/sessions"
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/ent"
 	"github.com/juicycleff/frank/gen/auth"
@@ -32,6 +33,7 @@ type AuthService struct {
 	config         *config.Config
 	logger         logging.Logger
 	sessionManager *session.Manager
+	sessionStore   sessions.Store
 	cookieHandler  *session.CookieHandler
 	auther         *AutherService
 	mapper         *automapper.Mapper
@@ -318,7 +320,7 @@ func (a *AuthService) Logout(ctx context.Context, payload *auth.LogoutPayload) (
 
 	// Clear session if using sessions
 	if a.sessionManager != nil {
-		session, err := utils.GetSession(info.Req, a.config)
+		session, err := session.GetSessionHelper(info.Req, a.config, a.cookieHandler, a.sessionStore, a.logger)
 		if err == nil {
 			// Get user ID from session
 			userID, ok := session.Values["user_id"].(string)
@@ -621,7 +623,7 @@ func (a *AuthService) createSession(ctx context.Context, r *http.Request, w http
 	}
 
 	// Store session info in cookie session
-	sess, err := utils.GetSession(r, a.config)
+	sess, err := session.GetSessionHelper(r, a.config, a.cookieHandler, a.sessionStore, a.logger)
 	if err != nil {
 		return nil, err
 	}
@@ -679,6 +681,7 @@ func NewAuthService(
 	userService user.Service,
 	sessionManager *session.Manager,
 	cookieHandler *session.CookieHandler,
+	sessionStore sessions.Store,
 	config *config.Config,
 	logger logging.Logger,
 	auther *AutherService,
@@ -698,6 +701,7 @@ func NewAuthService(
 		auther:         auther,
 		mapper:         mapper,
 		cookieHandler:  cookieHandler,
+		sessionStore:   sessionStore,
 		hooks:          hooks,
 	}
 }
@@ -711,7 +715,7 @@ func RegisterAuthHTTPService(
 	hooks *hooks.Hooks,
 ) {
 	eh := errorHandler(logger)
-	svc := NewAuthService(svcs.User, svcs.Session, svcs.CookieHandler, config, logger, auther, hooks)
+	svc := NewAuthService(svcs.User, svcs.Session, svcs.CookieHandler, svcs.SessionStore, config, logger, auther, hooks)
 
 	csrfInterceptor := NewCSRFInterceptor(config, logger)
 	endpoints := auth.NewEndpoints(svc, csrfInterceptor)

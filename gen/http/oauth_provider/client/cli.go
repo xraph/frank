@@ -289,7 +289,7 @@ func BuildConsentPayload(oauthProviderConsentBody string, oauthProviderConsentJW
 	{
 		err = json.Unmarshal([]byte(oauthProviderConsentBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"approved\": true,\n      \"client_id\": \"Vero at ea omnis similique.\",\n      \"redirect_uri\": \"Omnis assumenda voluptatem non libero aut perspiciatis.\",\n      \"scope\": \"Veritatis magni.\",\n      \"state\": \"Vitae quae est sed eligendi distinctio consequuntur.\"\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"approved\": false,\n      \"client_id\": \"Dolor consectetur.\",\n      \"redirect_uri\": \"Id dolor quasi illo ex.\",\n      \"scope\": \"Illo in.\",\n      \"state\": \"Alias explicabo eligendi.\"\n   }'")
 		}
 	}
 	var jwt *string
@@ -401,7 +401,7 @@ func BuildCreateClientPayload(oauthProviderCreateClientBody string, oauthProvide
 	{
 		err = json.Unmarshal([]byte(oauthProviderCreateClientBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"allowed_cors_origins\": [\n         \"Nemo enim officiis qui.\",\n         \"Laboriosam voluptatem autem occaecati.\",\n         \"Rerum eligendi.\",\n         \"Repellendus ut distinctio dolorem dolorem expedita.\"\n      ],\n      \"allowed_grant_types\": [\n         \"authorization_code\",\n         \"refresh_token\"\n      ],\n      \"client_description\": \"Quisquam et consequuntur ea nam delectus et.\",\n      \"client_name\": \"My App\",\n      \"client_uri\": \"Voluptate rerum.\",\n      \"logo_uri\": \"Sit corporis sit et.\",\n      \"post_logout_redirect_uris\": [\n         \"Sint numquam optio iure libero.\",\n         \"Corporis deserunt qui voluptatem.\",\n         \"Ut sed quia eos et non.\",\n         \"Molestias vel eius ut nulla.\"\n      ],\n      \"public\": true,\n      \"redirect_uris\": [\n         \"https://example.com/callback\"\n      ],\n      \"refresh_token_expiry_seconds\": 1858255373586154130,\n      \"requires_consent\": false,\n      \"requires_pkce\": false,\n      \"token_expiry_seconds\": 8794641660698875880\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"allowed_cors_origins\": [\n         \"Voluptate repellendus sit aspernatur sit asperiores.\",\n         \"Ut consectetur temporibus deserunt.\",\n         \"Quam iusto beatae et.\",\n         \"Quia debitis repudiandae aut.\"\n      ],\n      \"allowed_grant_types\": [\n         \"authorization_code\",\n         \"refresh_token\"\n      ],\n      \"client_description\": \"Nemo nihil esse laudantium illum.\",\n      \"client_name\": \"My App\",\n      \"client_uri\": \"Ut sapiente dignissimos est incidunt in architecto.\",\n      \"logo_uri\": \"Ad consectetur culpa eveniet exercitationem eligendi autem.\",\n      \"post_logout_redirect_uris\": [\n         \"Blanditiis eos.\",\n         \"Ut magni rem perspiciatis dolores.\"\n      ],\n      \"public\": true,\n      \"redirect_uris\": [\n         \"https://example.com/callback\"\n      ],\n      \"refresh_token_expiry_seconds\": 3030204105051865531,\n      \"requires_consent\": false,\n      \"requires_pkce\": true,\n      \"token_expiry_seconds\": 1505296137487234476\n   }'")
 		}
 		if body.RedirectUris == nil {
 			err = goa.MergeErrors(err, goa.MissingFieldError("redirect_uris", "body"))
@@ -516,7 +516,7 @@ func BuildUpdateClientPayload(oauthProviderUpdateClientBody string, oauthProvide
 	{
 		err = json.Unmarshal([]byte(oauthProviderUpdateClientBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"client\": {\n         \"active\": false,\n         \"allowed_cors_origins\": [\n            \"Sunt libero assumenda.\",\n            \"Aut delectus natus inventore temporibus labore minus.\"\n         ],\n         \"allowed_grant_types\": [\n            \"Sint voluptas.\",\n            \"Aut qui recusandae consequatur.\"\n         ],\n         \"client_description\": \"Ex natus dolor esse saepe sint.\",\n         \"client_name\": \"Enim dolorum excepturi.\",\n         \"client_uri\": \"Dignissimos porro aut cupiditate consequuntur illo repellendus.\",\n         \"logo_uri\": \"Aliquam consequatur qui.\",\n         \"post_logout_redirect_uris\": [\n            \"Sapiente placeat ea fuga quia aliquam.\",\n            \"Eos quo illo aut eaque alias et.\",\n            \"Pariatur fuga molestiae nihil.\"\n         ],\n         \"public\": true,\n         \"redirect_uris\": [\n            \"Ea sint voluptatibus.\",\n            \"Aliquam ipsum sint eum laboriosam.\"\n         ],\n         \"refresh_token_expiry_seconds\": 9150407884327352751,\n         \"requires_consent\": false,\n         \"requires_pkce\": true,\n         \"token_expiry_seconds\": 903418462714446931\n      }\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"client\": {\n         \"active\": true,\n         \"allowed_cors_origins\": [\n            \"Non et illum.\",\n            \"Porro harum veniam velit.\",\n            \"Accusantium sint.\"\n         ],\n         \"allowed_grant_types\": [\n            \"Molestiae placeat ratione quas sit.\",\n            \"Et sequi libero ut unde dolor ad.\",\n            \"Sit necessitatibus.\"\n         ],\n         \"client_description\": \"Est qui pariatur dolor.\",\n         \"client_name\": \"Quia voluptas doloremque optio voluptas est.\",\n         \"client_uri\": \"Vel sunt amet.\",\n         \"logo_uri\": \"Ipsam iusto.\",\n         \"post_logout_redirect_uris\": [\n            \"Totam doloremque enim ad minima.\",\n            \"Quia ut.\"\n         ],\n         \"public\": true,\n         \"redirect_uris\": [\n            \"Delectus alias unde voluptas reprehenderit.\",\n            \"Id reiciendis nesciunt ut soluta asperiores.\"\n         ],\n         \"refresh_token_expiry_seconds\": 2471342395392452438,\n         \"requires_consent\": true,\n         \"requires_pkce\": true,\n         \"token_expiry_seconds\": 3283658336607788687\n      }\n   }'")
 		}
 		if body.Client == nil {
 			err = goa.MergeErrors(err, goa.MissingFieldError("client", "body"))
@@ -648,7 +648,7 @@ func BuildCreateScopePayload(oauthProviderCreateScopeBody string, oauthProviderC
 	{
 		err = json.Unmarshal([]byte(oauthProviderCreateScopeBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"default_scope\": true,\n      \"description\": \"Read user information\",\n      \"name\": \"read:users\",\n      \"public\": false\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"default_scope\": true,\n      \"description\": \"Read user information\",\n      \"name\": \"read:users\",\n      \"public\": true\n   }'")
 		}
 	}
 	var jwt *string
@@ -708,7 +708,7 @@ func BuildUpdateScopePayload(oauthProviderUpdateScopeBody string, oauthProviderU
 	{
 		err = json.Unmarshal([]byte(oauthProviderUpdateScopeBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"default_scope\": false,\n      \"description\": \"Odit eaque laboriosam et.\",\n      \"public\": false\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"default_scope\": true,\n      \"description\": \"Ut provident est vero.\",\n      \"public\": false\n   }'")
 		}
 	}
 	var id string

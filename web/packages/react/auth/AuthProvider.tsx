@@ -4,7 +4,9 @@ import {
 	authLogout,
 	authMe,
 	authRegister,
+	InternalServerError,
 	LoginRequest,
+	LoginResponse2,
 	RegisterRequest,
 	User,
 	usersUpdateMe,
@@ -49,7 +51,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
 				if (isTokenExpired()) {
 					const newTokenData = await refreshAuthToken();
 					if (!newTokenData) {
-						clearTokenData();
+						// todo: handle token clear
+						// clearTokenData();
 						setIsLoading(false);
 						return;
 					}
@@ -74,7 +77,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
 		initAuth();
 	}, []);
 
-	const login = async (credentials: LoginRequest): Promise<User | null> => {
+	const login = async (
+		credentials: LoginRequest,
+		afterLogin?: (rsp: LoginResponse2) => void | Promise<void>,
+		onError?: (e: InternalServerError) => void,
+	): Promise<User | null> => {
 		setIsLoading(true);
 		setError(null);
 
@@ -85,6 +92,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
 				throwOnError: true,
 				client: client,
 			});
+
+			await afterLogin?.(data);
 
 			const tokenData: TokenData = {
 				token: data.token,
@@ -98,6 +107,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
 
 			return data.user;
 		} catch (err) {
+			onError?.(err as any);
 			setError(err instanceof Error ? err : new Error("Login failed"));
 			return null;
 		} finally {

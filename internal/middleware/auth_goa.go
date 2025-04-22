@@ -3,6 +3,7 @@ package middleware
 import (
 	"context"
 
+	"github.com/gorilla/sessions"
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/internal/apikeys"
 	"github.com/juicycleff/frank/internal/auth/session"
@@ -15,21 +16,23 @@ func AuthGoa(
 	cfg *config.Config,
 	logger logging.Logger,
 	sessionManager *session.Manager,
+	sessionStore sessions.Store,
 	apiKeyService apikeys.Service,
 	cookieHandler *session.CookieHandler,
 ) *AuthGoaMW {
 	options := DefaultAuthOptions()
 	options.SessionManager = sessionManager
+	options.SessionStore = sessionStore
 	options.APIKeyService = apiKeyService
 	options.CookieHandler = cookieHandler
 
-	return &AuthGoaMW{cfg, logger, options}
+	return &AuthGoaMW{cfg, logger, &options}
 }
 
 type AuthGoaMW struct {
 	cfg     *config.Config
 	logger  logging.Logger
-	options AuthOptions
+	options *AuthOptions
 }
 
 type AuthScheme struct {

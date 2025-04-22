@@ -1,6 +1,7 @@
 package crypto
 
 import (
+	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
@@ -243,8 +244,8 @@ func PBKDF2Key(password, salt []byte, iterations, keyLen int, h func() hash.Hash
 	return pbkdf2.Key(password, salt, iterations, keyLen, h)
 }
 
-// EncryptAES data using AES-GCM
-func EncryptAES(plaintext []byte, keyString string, iv []byte) ([]byte, error) {
+// EncryptAESMax data using AES-GCM
+func EncryptAESMax(plaintext []byte, keyString string, iv []byte) ([]byte, error) {
 	// Convert the base64 key string back to raw bytes
 	key, err := base64.RawURLEncoding.DecodeString(keyString)
 	if err != nil {
@@ -291,8 +292,8 @@ func EncryptAES(plaintext []byte, keyString string, iv []byte) ([]byte, error) {
 	return ciphertext, nil
 }
 
-// DecryptAES data using AES-GCM
-func DecryptAES(ciphertext []byte, keyString string, iv []byte) ([]byte, error) {
+// DecryptAESMax data using AES-GCM
+func DecryptAESMax(ciphertext []byte, keyString string, iv []byte) ([]byte, error) {
 	// Convert the base64 key string back to raw bytes
 	key, err := base64.RawURLEncoding.DecodeString(keyString)
 	if err != nil {
@@ -342,4 +343,88 @@ func DecryptAES(ciphertext []byte, keyString string, iv []byte) ([]byte, error) 
 	}
 
 	return plaintext, nil
+}
+
+// Check your crypto/aes.go file and ensure these functions are implemented correctly
+
+// EncryptAES encrypts data using AES
+func EncryptAES(plaintext []byte, key string, iv []byte) ([]byte, error) {
+	// Hash the key to get the right size for AES
+	hashedKey := sha256.Sum256([]byte(key))
+
+	// Create cipher
+	block, err := aes.NewCipher(hashedKey[:])
+	if err != nil {
+		return nil, err
+	}
+
+	// If no IV provided, use zero IV (not ideal for security, but ensures decryption works)
+	if iv == nil || len(iv) == 0 {
+		iv = make([]byte, aes.BlockSize)
+	}
+
+	// Pad plaintext to match block size
+	paddedPlaintext := pad(plaintext)
+
+	// Encrypt
+	ciphertext := make([]byte, len(paddedPlaintext))
+	mode := cipher.NewCBCEncrypter(block, iv)
+	mode.CryptBlocks(ciphertext, paddedPlaintext)
+
+	return ciphertext, nil
+}
+
+// DecryptAES decrypts data using AES
+func DecryptAES(ciphertext []byte, key string, iv []byte) ([]byte, error) {
+	// Hash the key to get the right size for AES
+	hashedKey := sha256.Sum256([]byte(key))
+
+	// Create cipher
+	block, err := aes.NewCipher(hashedKey[:])
+	if err != nil {
+		return nil, err
+	}
+
+	// If no IV provided, use zero IV (not ideal for security, but ensures decryption works)
+	if iv == nil || len(iv) == 0 {
+		iv = make([]byte, aes.BlockSize)
+	}
+
+	// Decrypt
+	plaintext := make([]byte, len(ciphertext))
+	mode := cipher.NewCBCDecrypter(block, iv)
+	mode.CryptBlocks(plaintext, ciphertext)
+
+	// Unpad
+	return unpad(plaintext)
+}
+
+// pad adds PKCS#7 padding to data
+func pad(data []byte) []byte {
+	blockSize := aes.BlockSize
+	padding := blockSize - len(data)%blockSize
+	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
+	return append(data, padtext...)
+}
+
+// unpad removes PKCS#7 padding from data
+func unpad(data []byte) ([]byte, error) {
+	length := len(data)
+	if length == 0 {
+		return nil, errors.New("invalid padding: data is empty")
+	}
+
+	padding := int(data[length-1])
+	if padding > aes.BlockSize || padding == 0 {
+		return nil, errors.New("invalid padding size")
+	}
+
+	// Check that all padding bytes have the correct value
+	for i := length - padding; i < length; i++ {
+		if data[i] != byte(padding) {
+			return nil, errors.New("invalid padding values")
+		}
+	}
+
+	return data[:length-padding], nil
 }

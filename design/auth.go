@@ -234,11 +234,12 @@ var _ = Service("auth", func() {
 
 	Method("refresh_token", func() {
 		Description("Refresh an access token")
-		Security(OAuth2Auth, APIKeyAuth, JWTAuth)
+		NoSecurity()
+		// Security(OAuth2Auth, APIKeyAuth, JWTAuth)
 		Payload(func() {
-			AccessToken("oauth2", String, "OAuth2 access token")
-			APIKey("api_key", "X-API-Key", String, "API key")
-			Token("jwt", String, "JWT token")
+			// AccessToken("oauth2", String, "OAuth2 access token")
+			// APIKey("api_key", "X-API-Key", String, "API key")
+			// Token("jwt", String, "JWT token")
 			Extend(RefreshTokenRequest)
 			Attribute("session_id", String)
 		})

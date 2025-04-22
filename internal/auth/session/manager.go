@@ -438,6 +438,43 @@ func (m *Manager) RefreshSession(ctx context.Context, token string) (*SessionInf
 	)
 }
 
+func (m *Manager) GetSessionCount(ctx context.Context) (int, error) {
+	count, err := m.client.Session.Query().Count(ctx)
+	if err != nil {
+		return 0, errors.Wrap(errors.CodeDatabaseError, err, "failed to query session count")
+	}
+	return count, nil
+}
+
+func (m *Manager) GetSessionCountByUserID(ctx context.Context, userID string) (int, error) {
+	count, err := m.client.Session.Query().
+		Where(
+			session.UserID(userID),
+		).
+		Count(ctx)
+	if err != nil {
+		return 0, errors.Wrap(errors.CodeDatabaseError, err, "failed to query session count")
+	}
+	return count, nil
+}
+
+func (m *Manager) GetSessionCountByOrganizationID(ctx context.Context, organizationID string) (int, error) {
+	count, err := m.client.Session.Query().
+		Where(
+			session.OrganizationID(organizationID),
+		).
+		Count(ctx)
+	if err != nil {
+		return 0, errors.Wrap(errors.CodeDatabaseError, err, "failed to query session count")
+	}
+
+	return count, nil
+}
+
+func (m *Manager) GetStore() Store {
+	return m.store
+}
+
 // Helper function to handle nil strings
 func nilString(s string) *string {
 	if s == "" {

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/gorilla/sessions"
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/internal/apikeys"
 	"github.com/juicycleff/frank/internal/auth/session"
@@ -74,6 +75,7 @@ type WebRouteProtection struct {
 	logger             logging.Logger
 	sessionManager     *session.Manager
 	cookieHandler      *session.CookieHandler
+	sessionStore       sessions.Store
 	apiKeyService      apikeys.Service
 	organizationSvc    organization.Service
 	options            RouteProtectionOptions
@@ -89,6 +91,7 @@ func NewWebRouteProtection(
 	logger logging.Logger,
 	sessionManager *session.Manager,
 	cookieHandler *session.CookieHandler,
+	sessionStore sessions.Store,
 	apiKeyService apikeys.Service,
 	organizationSvc organization.Service,
 ) *WebRouteProtection {
@@ -112,6 +115,7 @@ func NewWebRouteProtection(
 		cookieHandler:      cookieHandler,
 		apiKeyService:      apiKeyService,
 		organizationSvc:    organizationSvc,
+		sessionStore:       sessionStore,
 		options:            options,
 		publicPaths:        publicPaths,
 		csrfExemptPaths:    csrfExemptPaths,
@@ -216,7 +220,7 @@ func (w *WebRouteProtection) ProtectRoutes(next http.Handler) http.Handler {
 
 			// Try session authentication
 			if !authenticated && w.options.AllowSession && w.sessionManager != nil {
-				sess, err := utils.GetSession(r, w.config)
+				sess, err := session.GetSessionHelper(r, w.config, w.cookieHandler, w.sessionStore, w.logger)
 				if err == nil {
 					if userID, ok := sess.Values["user_id"].(string); ok && userID != "" {
 						ctx = context.WithValue(ctx, UserIDKey, userID)
