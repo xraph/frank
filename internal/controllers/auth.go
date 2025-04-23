@@ -97,6 +97,8 @@ func (a *AuthService) Csrf(ctx context.Context, payload *auth.CsrfPayload) (res 
 }
 
 func (a *AuthService) Login(ctx context.Context, payload *auth.LoginPayload) (res *auth.LoginResponse, err error) {
+	res = &auth.LoginResponse{}
+
 	info, ok := middleware2.GetRequestInfo(ctx)
 	if !ok {
 		return nil, errors.New(errors.CodeInternalServer, "failed to get request info")
@@ -117,39 +119,13 @@ func (a *AuthService) Login(ctx context.Context, payload *auth.LoginPayload) (re
 	mapper := automapper.CreateMap[*ent.User, designtypes.User]()
 	automapper.MapTo(authenticatedUser.User, userOut, mapper)
 
-	// Check if email verification is required
-	if a.config.Auth.RequireEmailVerification && !authenticatedUser.EmailVerified {
-		method := "otp"
+	rsp, err := a.verificationPreHook(ctx, authenticatedUser.User, userOut, info, orgId)
+	if err != nil {
+		return nil, err
+	}
 
-		// Create verification
-		expiresAt := time.Now().Add(a.config.Auth.EmailVerificationExpiry)
-		verification, err := a.userService.CreateVerification(ctx, user.CreateVerificationInput{
-			UserID:    authenticatedUser.User.ID,
-			Type:      "email",
-			Email:     authenticatedUser.User.Email,
-			Method:    user.VerificationMethod(method),
-			ExpiresAt: expiresAt,
-			IPAddress: utils.GetRealIP(info.Req),
-			UserAgent: utils.GetUserAgent(info.Req),
-		})
-		if err != nil {
-			a.logger.Error("Failed to create verification",
-				logging.String("user_id", authenticatedUser.User.ID),
-				logging.Error(err),
-			)
-			return nil, errors.New(errors.CodeEmailNotVerified, "email verification required")
-		}
-
-		reqVer := true
-		return &auth.LoginResponse{
-			User:                 userOut,
-			VerificationID:       &verification.ID,
-			EmailVerified:        &authenticatedUser.EmailVerified,
-			VerificationMethod:   &method,
-			ExpiresAt:            expiresAt.Unix(),
-			RequiresVerification: &reqVer,
-			Message:              "Email verification required",
-		}, nil
+	if rsp != nil {
+		return rsp, nil
 	}
 
 	_ = a.hooks.BeforeLogin(user.LoginResult{
@@ -158,64 +134,13 @@ func (a *AuthService) Login(ctx context.Context, payload *auth.LoginPayload) (re
 		VerificationID: "",
 	})
 
-	// Check if MFA is required
-	mfaRequired, mfaTypes, err := a.checkMFA(ctx, authenticatedUser.User.ID)
-	if err != nil {
-		return nil, err
-	}
+	res.User = userOut
+	res.EmailVerified = &userOut.EmailVerified
 
-	// Create tokens
-	token, refreshToken, expiresAt, err := a.createTokens(authenticatedUser.User, orgId)
-	if err != nil {
-		return nil, err
-	}
+	err = a.postLoginSignupHook(ctx, authenticatedUser.User, payload.RememberMe, info, authenticatedUser.User.PrimaryOrganizationID, res)
 
-	sessionData := &session.CookieSessionData{
-		UserID:         authenticatedUser.User.ID,
-		OrganizationID: orgId,
-		ExpiresAt:      time.Now().Add(a.config.Auth.SessionDuration),
-		IssuedAt:       time.Now(),
-		Metadata: map[string]interface{}{
-			"login_method": "password",
-		},
-	}
-
-	// Create session if session manager is available
-	if a.sessionManager != nil {
-		sess, err := a.createSession(ctx, info.Req, info.Res, authenticatedUser.User, orgId, payload.RememberMe)
-		if err != nil {
-			a.logger.Error("Failed to create session",
-				logging.String("user_id", authenticatedUser.User.ID),
-				logging.Error(err),
-			)
-			// Continue without session
-		}
-
-		// If a session was created, don't include token in response
-		if sess != nil {
-			// token = ""
-			// refreshToken = ""
-			sessionData.Metadata["sessionId"] = sess.ID
-			// payload.SessionID = &sess.ID
-		}
-	}
-
-	csrfToken, _ := crypto.GenerateRandomString(32)
-	a.cookieHandler.SetCSRFCookie(info.Res, csrfToken, a.config.Auth.SessionDuration)
-
-	authRes := &auth.LoginResponse{
-		User:          userOut,
-		Token:         token,
-		RefreshToken:  refreshToken,
-		ExpiresAt:     expiresAt,
-		MfaRequired:   mfaRequired,
-		MfaTypes:      mfaTypes,
-		CsrfToken:     csrfToken,
-		EmailVerified: &userOut.EmailVerified,
-	}
-
-	_ = a.hooks.OnLogin(authRes)
-	return authRes, nil
+	_ = a.hooks.OnLogin(res)
+	return res, nil
 }
 
 func (a *AuthService) Register(ctx context.Context, payload *auth.RegisterPayload) (res *auth.LoginResponse, err error) {
@@ -252,53 +177,124 @@ func (a *AuthService) Register(ctx context.Context, payload *auth.RegisterPayloa
 		return nil, err
 	}
 
-	// Create tokens if email verification is not required
-	var token, refreshToken string
-	var expiresAt int64
-
-	if !a.config.Auth.RequireEmailVerification {
-		token, refreshToken, expiresAt, err = a.createTokens(newUser, createInput.OrganizationID)
-		if err != nil {
-			return nil, err
-		}
-
-		// Create session if session manager is available
-		if a.sessionManager != nil {
-			session, err := a.createSession(ctx, info.Req, info.Res, newUser, createInput.OrganizationID, false)
-			if err != nil {
-				a.logger.Error("Failed to create session",
-					logging.String("user_id", newUser.ID),
-					logging.Error(err),
-				)
-				// Continue without session
-			}
-
-			// If session was created, don't include token in response
-			if session != nil {
-				// token = ""
-				// refreshToken = ""
-			}
-
-		}
-	}
-
 	userOut := &designtypes.User{}
 	mapper := automapper.CreateMap[*ent.User, designtypes.User]()
 	automapper.MapTo(newUser, userOut, mapper)
 
-	csrfToken, _ := crypto.GenerateRandomString(32)
-	a.cookieHandler.SetCSRFCookie(info.Res, csrfToken, a.config.Auth.SessionDuration)
+	rsp, err := a.verificationPreHook(ctx, newUser, userOut, info, newUser.PrimaryOrganizationID)
+	if err != nil {
+		return nil, err
+	}
+
+	if rsp != nil {
+		return rsp, nil
+	}
 
 	res.User = userOut
-	res.Token = token
-	res.RefreshToken = refreshToken
-	res.ExpiresAt = expiresAt
-	res.CsrfToken = csrfToken
+	res.EmailVerified = &userOut.EmailVerified
+
+	err = a.postLoginSignupHook(ctx, newUser, true, info, newUser.PrimaryOrganizationID, res)
+	if err != nil {
+		return nil, err
+	}
 
 	_ = a.hooks.OnSignup(res)
 
 	return res, nil
+}
 
+func (a *AuthService) verificationPreHook(ctx context.Context, authenticatedUser *ent.User, userOut *designtypes.User, info *middleware2.RequestInfo, orgId string) (res *auth.LoginResponse, err error) {
+	// Check if email verification is required
+	if a.config.Auth.RequireEmailVerification && !authenticatedUser.EmailVerified {
+		method := "otp"
+
+		// Create verification
+		expiresAt := time.Now().Add(a.config.Auth.EmailVerificationExpiry)
+		verification, err := a.userService.CreateVerification(ctx, user.CreateVerificationInput{
+			UserID:    authenticatedUser.ID,
+			Type:      "email",
+			Email:     authenticatedUser.Email,
+			Method:    user.VerificationMethod(method),
+			ExpiresAt: expiresAt,
+			IPAddress: utils.GetRealIP(info.Req),
+			UserAgent: utils.GetUserAgent(info.Req),
+		})
+		if err != nil {
+			a.logger.Error("Failed to create verification",
+				logging.String("user_id", authenticatedUser.ID),
+				logging.Error(err),
+			)
+			return nil, errors.New(errors.CodeEmailNotVerified, "email verification required")
+		}
+
+		reqVer := true
+		return &auth.LoginResponse{
+			User:                 userOut,
+			VerificationID:       &verification.ID,
+			EmailVerified:        &authenticatedUser.EmailVerified,
+			VerificationMethod:   &method,
+			ExpiresAt:            expiresAt.Unix(),
+			RequiresVerification: &reqVer,
+			Message:              "Email verification required",
+		}, nil
+	}
+
+	return nil, nil
+}
+
+func (a *AuthService) postLoginSignupHook(ctx context.Context, authenticatedUser *ent.User, rememberMe bool, info *middleware2.RequestInfo, orgId string, res *auth.LoginResponse) error {
+	sessionData := &session.CookieSessionData{
+		UserID:         authenticatedUser.ID,
+		OrganizationID: orgId,
+		ExpiresAt:      time.Now().Add(a.config.Auth.SessionDuration),
+		IssuedAt:       time.Now(),
+		Metadata: map[string]interface{}{
+			"login_method": "password",
+		},
+	}
+
+	// Create session if session manager is available
+	if a.sessionManager != nil {
+		sess, err := a.createSession(ctx, info.Req, info.Res, authenticatedUser, orgId, rememberMe)
+		if err != nil {
+			a.logger.Error("Failed to create session",
+				logging.String("user_id", authenticatedUser.ID),
+				logging.Error(err),
+			)
+		}
+
+		// If a session was created, don't include token in response
+		if sess != nil {
+			// token = ""
+			// refreshToken = ""
+			sessionData.Metadata["sessionId"] = sess.ID
+			// payload.SessionID = &sess.ID
+		}
+	}
+
+	csrfToken, _ := crypto.GenerateRandomString(32)
+	a.cookieHandler.SetCSRFCookie(info.Res, csrfToken, a.config.Auth.SessionDuration)
+
+	// Check if MFA is required
+	mfaRequired, mfaTypes, err := a.checkMFA(ctx, authenticatedUser.ID)
+	if err != nil {
+		return err
+	}
+
+	// Create tokens
+	token, refreshToken, expiresAt, err := a.createTokens(authenticatedUser, orgId)
+	if err != nil {
+		return err
+	}
+
+	res.Token = token
+	res.RefreshToken = refreshToken
+	res.ExpiresAt = expiresAt
+	res.CsrfToken = csrfToken
+	res.MfaRequired = mfaRequired
+	res.MfaTypes = mfaTypes
+
+	return nil
 }
 
 func (a *AuthService) Logout(ctx context.Context, payload *auth.LogoutPayload) (res *auth.LogoutResult, err error) {

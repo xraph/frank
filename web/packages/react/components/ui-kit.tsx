@@ -205,7 +205,7 @@ export function FrankUIKit({
 	const [error, setError] = useState<string | null>(null);
 	const [currentView, setCurrentView] = useState<AuthView>(configInitialView);
 	const [loginStep, setLoginStep] = useState<number>(1);
-	const [email, setEmail] = useState("");
+	const [email, setEmail] = useState(searchParams.get("email") || "");
 	const [password, setPassword] = useState("");
 	const [showPassword, setShowPassword] = useState(false);
 	const [mfaCode, setMfaCode] = useState("");
@@ -357,7 +357,7 @@ export function FrankUIKit({
 
 		if (rsp.requiresVerification) {
 			if (configLinks?.verify) {
-				href = `${configLinks.verify.url}?email=${email}&${rsp.token}`;
+				href = `${configLinks.verify.url}?email=${email}&token=${rsp.token}`;
 				href += `&redirect_url=${window.location.href}`;
 				href += `&method=${rsp.verificationMethod}`;
 				href += `&vid=${rsp.verificationId}`;
@@ -374,7 +374,7 @@ export function FrankUIKit({
 
 		if (rsp.mfa_required) {
 			if (configLinks?.mfa) {
-				href = `${configLinks.mfa.url}?email=${email}&${rsp.token}`;
+				href = `${configLinks.mfa.url}?email=${email}&token=${rsp.token}`;
 				href += `&redirect_url=${window.location.href}`;
 				href += `&method=${rsp.verificationMethod}`;
 				href += `&vid=${rsp.verificationId}`;
