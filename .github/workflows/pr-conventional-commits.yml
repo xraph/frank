@@ -45,8 +45,8 @@ jobs:
         run: |
           npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
 
-      # Label the PR based on commit types
-      - name: Label PR based on Conventional Commits
-        uses: bcoe/conventional-release-labels@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+#      # Label the PR based on commit types
+#      - name: Label PR based on Conventional Commits
+#        uses: bcoe/conventional-release-labels@v1
+#        with:
+#          token: ${{ secrets.GITHUB_TOKEN }}
