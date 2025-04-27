@@ -92,7 +92,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Authenticate user
-	authenticatedUser, err := h.userService.Authenticate(r.Context(), input.Email, input.Password)
+	authenticatedUser, err := h.userService.Authenticate(r.Context(), input.Email, input.Password, "")
 	if err != nil {
 		utils.RespondError(w, err)
 		return
