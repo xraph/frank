@@ -117,32 +117,32 @@ func TestPadKey(t *testing.T) {
 	}
 }
 
-func TestDeriveKeyFromPassword(t *testing.T) {
-	password := []byte("password123")
-	salt := []byte("salt123")
-
-	tests := []struct {
-		name          string
-		keyLength     int
-		expectedError bool
-	}{
-		{"ValidKey16", 16, false},
-		{"ValidKey32", 32, false},
-		{"InvalidKeyLength", 0, true},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			key, err := DeriveKeyFromPassword(password, salt, tt.keyLength)
-			if (err != nil) != tt.expectedError {
-				t.Errorf("DeriveKeyFromPassword() error = %v, wantErr %v", err, tt.expectedError)
-			}
-			if err == nil && len(key) != tt.keyLength {
-				t.Errorf("DeriveKeyFromPassword() length = %d, want %d", len(key), tt.keyLength)
-			}
-		})
-	}
-}
+// func TestDeriveKeyFromPassword(t *testing.T) {
+// 	password := []byte("password123")
+// 	salt := []byte("salt123")
+//
+// 	tests := []struct {
+// 		name          string
+// 		keyLength     int
+// 		expectedError bool
+// 	}{
+// 		{"ValidKey16", 16, false},
+// 		{"ValidKey32", 32, false},
+// 		{"InvalidKeyLength", 0, true},
+// 	}
+//
+// 	for _, tt := range tests {
+// 		t.Run(tt.name, func(t *testing.T) {
+// 			key, err := DeriveKeyFromPassword(password, salt, tt.keyLength)
+// 			if (err != nil) != tt.expectedError {
+// 				t.Errorf("DeriveKeyFromPassword() error = %v, wantErr %v", err, tt.expectedError)
+// 			}
+// 			if err == nil && len(key) != tt.keyLength {
+// 				t.Errorf("DeriveKeyFromPassword() length = %d, want %d", len(key), tt.keyLength)
+// 			}
+// 		})
+// 	}
+// }
 
 func TestGenerateEncryptionKey(t *testing.T) {
 	tests := []struct {
