@@ -51,7 +51,6 @@ func (r *WebhookRoutes) RegisterOrganizationRoutes(router chi.Router) {
 			router.Get("/", r.handler.GetWebhook)
 			router.Put("/", r.handler.UpdateWebhook)
 			router.Delete("/", r.handler.DeleteWebhook)
-
 			router.Get("/events", r.handler.ListWebhookEvents)
 			router.Post("/events/{eventId}/replay", r.handler.ReplayWebhookEvent)
 		})
