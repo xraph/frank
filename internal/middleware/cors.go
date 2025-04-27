@@ -102,7 +102,7 @@ func CORSWithConfig(config CORSConfig) func(http.Handler) http.Handler {
 					w.Header().Set("Access-Control-Allow-Headers", strings.Join(headers, ", "))
 
 					if config.MaxAge > 0 {
-						w.Header().Set("Access-Control-Max-Age", string(config.MaxAge))
+						w.Header().Set("Access-Control-Max-Age", string(rune(config.MaxAge)))
 					}
 				}
 

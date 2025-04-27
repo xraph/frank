@@ -8,6 +8,7 @@ import (
 	"github.com/juicycleff/frank/ent/enttest"
 	"github.com/juicycleff/frank/internal/auth/sso"
 	"github.com/juicycleff/frank/pkg/logging"
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
