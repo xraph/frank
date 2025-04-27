@@ -30,7 +30,7 @@ jobs:
       run: cd web && pnpm build:web
 
     - name: Build web
-      run: cd web && build:sdk && build:react && pnpm build:web
+      run: cd web && pnpm build:sdk && pnpm build:react && pnpm build:web
 
     - name: Set up Go
       uses: actions/setup-go@v4

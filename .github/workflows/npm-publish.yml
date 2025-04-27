@@ -36,7 +36,7 @@ jobs:
         run: cd web && pnpm install --frozen-lockfile
 
       - name: Build web
-        run: cd web && build:sdk && build:react && pnpm build:web
+        run: cd web && pnpm build:sdk && pnpm build:react && pnpm build:web
 
 #      - name: Build web
 #        run: cd web && pnpm build
