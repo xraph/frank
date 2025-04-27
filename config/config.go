@@ -33,7 +33,7 @@ type Config struct {
 	StandaloneMode  bool   `json:"standalone_mode" yaml:"standalone_mode" mapstructure:"standalone_mode" env:"STANDALONE_MODE" envDefault:"false"`
 	BasePath        string `json:"base_path" yaml:"base_path" mapstructure:"base_path" env:"BASE_PATH" envDefault:"/"`
 	RedirectURL     string `json:"redirect_url" yaml:"redirect_url" mapstructure:"redirect_url" env:"REDIRECT_URL" envDefault:"http://localhost:8998/ui"`
-	EnableUI        bool   `json:"enable_ui" yaml:"enable_ui" mapstructure:"enable_ui" env:"ENABLE_UI" envDefault:"true"`
+	EnableUI        bool   `json:"enable_ui" yaml:"enable_ui" mapstructure:"enable_ui" env:"ENABLE_UI" envDefault:"false"`
 
 	Server       *ServerConfig      `json:"server" yaml:"server" mapstructure:"server"`
 	Database     DatabaseConfig     `json:"database" yaml:"database" mapstructure:"database"`
