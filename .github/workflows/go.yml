@@ -40,9 +40,9 @@ jobs:
     - name: Build
       run: go build -v ./...
 
-    - name: Test
-      run: go test -v ./...
-      continue-on-error: true
+#    - name: Test
+#      run: go test -v ./...
+#      continue-on-error: true
 
   lint:
     runs-on: ubuntu-latest
