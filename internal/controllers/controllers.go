@@ -198,12 +198,14 @@ func (c *Controllers) RegisterRoutes() {
 	c.router.Handle("/__metrics", mux)
 	c.router.Handle("/__ready", mux)
 
-	RegisterFrontendRoutes(
-		c,
-		c.svcs,
-		c.config,
-		c.logger,
-	)
+	if c.config.EnableUI {
+		RegisterFrontendRoutes(
+			c,
+			c.svcs,
+			c.config,
+			c.logger,
+		)
+	}
 }
 
 // Handler returns the HTTP handler

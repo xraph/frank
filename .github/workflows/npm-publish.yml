@@ -35,11 +35,11 @@ jobs:
       - name: Install dependencies in core
         run: cd web && pnpm install --frozen-lockfile
 
-      - name: Build packages
-        run: cd web && pnpm build:web
-
       - name: Build web
-        run: cd web && pnpm build
+        run: cd web && build:sdk && build:react && pnpm build:web
+
+#      - name: Build web
+#        run: cd web && pnpm build
 
 #      - name: Update dependencies for publishing (sdk)
 #        run: cd web && node ./scripts/update-dependencies.js
