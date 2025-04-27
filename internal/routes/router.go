@@ -98,7 +98,7 @@ func (rt *Router) RegisterRoutes() {
 
 	// Apply Auth middleware - you might need to modify your Auth middleware to work with Chi
 	// Since Chi uses middleware differently, the Auth middleware should be adapted
-	authMw := middleware3.Auth(rt.config, rt.logger, rt.svcs.Session, rt.svcs.APIKey, true)
+	authMw := middleware3.Auth(rt.config, rt.logger, rt.svcs.Session, rt.svcs.SessionStore, rt.svcs.APIKey, true)
 
 	// Organization middleware (for routes that need organization context)
 	orgMiddleware := middleware3.NewOrganizationMiddleware(rt.config, rt.svcs.Organization, rt.logger)
