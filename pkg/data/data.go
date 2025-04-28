@@ -78,8 +78,11 @@ func (c *Clients) IsReplica() bool {
 // RunAutoMigration Run the auto migration tool.
 func (c *Clients) RunAutoMigration() error {
 	if !c.cfg.Database.AutoMigrate {
+		c.log.Infof("Auto migration is disabled. Skipping.")
 		return nil
 	}
+
+	c.log.Infof("Running auto migration")
 
 	ctx := context.Background()
 	if err := c.DB.Schema.Create(
@@ -98,5 +101,6 @@ func (c *Clients) RunAutoMigration() error {
 		return err
 	}
 
+	c.log.Infof("Completed running auto migration")
 	return nil
 }
