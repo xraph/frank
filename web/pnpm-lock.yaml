@@ -127,8 +127,8 @@ importers:
   packages/react:
     dependencies:
       '@frank-auth/sdk':
-        specifier: 0.1.2
-        version: 0.1.2(react@19.0.0)
+        specifier: 0.1.3
+        version: 0.1.3(react@19.0.0)
       '@hookform/resolvers':
         specifier: ^4.1.3
         version: 4.1.3(react-hook-form@7.54.2(react@19.0.0))
@@ -618,8 +618,8 @@ packages:
   '@floating-ui/utils@0.2.9':
     resolution: {integrity: sha512-MDWhGtE+eHw5JW7lq4qhc5yRLS11ERl1c7Z6Xd0a58DozHES6EnNNwUWbMiG4J9Cgj053Bhk8zvlhFYKVhULwg==}
 
-  '@frank-auth/sdk@0.1.2':
-    resolution: {integrity: sha512-ZTjAQUCajZPdfb/OaXaIFv7DxgGeahDZqyDZPj/7JdzPluJLoMG6WMeuapmh8/9jZqXWCCW7vBLvCEEWG9igCw==}
+  '@frank-auth/sdk@0.1.3':
+    resolution: {integrity: sha512-Ro0fNIHlrc1a8EHdyzx79gqSOMUoletri6qpbo0QFYR55TImWzuklmKGutk71h9MLRAgIlNrReBu+5yYHfcgRg==}
     peerDependencies:
       react: ^19.0.0
 
@@ -4118,7 +4118,7 @@ snapshots:
 
   '@floating-ui/utils@0.2.9': {}
 
-  '@frank-auth/sdk@0.1.2(react@19.0.0)':
+  '@frank-auth/sdk@0.1.3(react@19.0.0)':
     dependencies:
       '@hey-api/client-fetch': 0.8.3
       '@tanstack/react-query': 5.69.0(react@19.0.0)
