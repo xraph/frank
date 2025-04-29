@@ -1,3 +1,5 @@
+'use client'
+
 // Create the provider component
 import React, {ReactNode, useCallback, useState} from "react";
 import {Key} from "lucide-react";

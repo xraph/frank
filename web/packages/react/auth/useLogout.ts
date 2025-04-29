@@ -1,5 +1,7 @@
-import { useState } from "react";
-import { useAuth } from "./useAuth";
+'use client'
+
+import {useState} from "react";
+import {useAuth} from "./useAuth";
 
 export const useLogout = () => {
 	const { logout } = useAuth();

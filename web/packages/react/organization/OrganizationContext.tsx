@@ -1,5 +1,7 @@
-import React, { createContext } from "react";
-import { OrganizationContextType } from "./types";
+'use client'
+
+import React, {createContext} from "react";
+import {OrganizationContextType} from "./types";
 
 // Create organization context with default values
 export const OrganizationContext = createContext<OrganizationContextType>({

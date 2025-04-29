@@ -1,4 +1,6 @@
-import React, { useEffect, useState } from "react";
+'use client'
+
+import React, {useEffect, useState} from "react";
 import {
 	OrganizationResponse,
 	organizationsAddMember,
@@ -6,10 +8,10 @@ import {
 	organizationsList,
 	organizationsRemoveMember,
 } from "@frank-auth/sdk";
-import { OrganizationContext } from "./OrganizationContext";
-import { OrganizationProviderProps } from "./types";
-import { getAuthClient } from "../utils/api";
-import { setConfig } from "../config";
+import {OrganizationContext} from "./OrganizationContext";
+import {OrganizationProviderProps} from "./types";
+import {getAuthClient} from "../utils/api";
+import {setConfig} from "../config";
 
 export const OrganizationProvider: React.FC<OrganizationProviderProps> = ({
 	children,

@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -427,9 +428,12 @@ func (a *AuthService) ForgotPassword(ctx context.Context, payload *auth.ForgotPa
 		return nil, errors.New(errors.CodeInternalServer, "failed to get request info")
 	}
 
+	fmt.Println("Na wahoo, ======> ", payload.Email)
+
 	// Find user by email
 	userEntity, err := a.userService.GetByEmail(ctx, payload.Email)
 	if err != nil {
+		fmt.Println("Na wahoo, ======> ", err)
 		// Return success even if user not found for security
 		return &auth.ForgotPasswordResult{
 			Message: "If your email is registered, you will receive a password reset link",

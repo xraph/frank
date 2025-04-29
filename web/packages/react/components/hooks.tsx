@@ -1,6 +1,8 @@
+'use client'
+
 // Create a hook to use the Frank context
-import { useContext } from "react";
-import { FrankContext } from "@/components/context";
+import {useContext} from "react";
+import {FrankContext} from "@/components/context";
 
 export function useFrank() {
 	const context = useContext(FrankContext);

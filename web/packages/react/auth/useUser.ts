@@ -1,5 +1,7 @@
-import { User } from "@frank-auth/sdk";
-import { useAuth } from "./useAuth";
+'use client'
+
+import {User} from "@frank-auth/sdk";
+import {useAuth} from "./useAuth";
 
 export const useUser = (): {
 	user: User | null | undefined;

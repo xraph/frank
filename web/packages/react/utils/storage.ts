@@ -1,6 +1,6 @@
 // src/utils/storage.ts
-import { getConfig } from "../config";
-import { CookieHandler } from "@/utils/cookie";
+import {getConfig} from "../config";
+import {CookieHandler} from "@/utils/cookie";
 
 type StorageType = "localStorage" | "sessionStorage" | "cookie" | "memory";
 
@@ -8,7 +8,7 @@ type StorageType = "localStorage" | "sessionStorage" | "cookie" | "memory";
 const memoryStorage: Record<string, string> = {};
 
 export const getStorageType = (): StorageType => {
-	return getConfig().tokenStorageType || "localStorage";
+	return getConfig().tokenStorageType || "memory";
 };
 
 export const getStoragePrefix = (): string => {

@@ -1,6 +1,8 @@
-import React, { createContext } from "react";
-import { AuthContextType } from "./types";
-import { AuthState } from "../types";
+'use client'
+
+import React, {createContext} from "react";
+import {AuthContextType} from "./types";
+import {AuthState} from "../types";
 
 // Default auth state
 const defaultAuthState: AuthState = {

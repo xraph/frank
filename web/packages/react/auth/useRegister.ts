@@ -1,6 +1,8 @@
-import { useState } from "react";
-import { RegisterRequest, User } from "@frank-auth/sdk";
-import { useAuth } from "./useAuth";
+'use client'
+
+import {useState} from "react";
+import {RegisterRequest, User} from "@frank-auth/sdk";
+import {useAuth} from "./useAuth";
 
 export const useRegister = () => {
 	const { register } = useAuth();

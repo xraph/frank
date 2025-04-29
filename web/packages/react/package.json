@@ -1,6 +1,6 @@
 {
 	"name": "@frank-auth/react",
-	"version": "0.1.7",
+	"version": "0.1.8",
 	"description": "Frank Authentication React Client",
 	"main": "dist/index.cjs",
 	"module": "dist/index.mjs",
