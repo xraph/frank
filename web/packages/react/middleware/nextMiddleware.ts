@@ -247,18 +247,3 @@ export function createNextAuthMiddleware(
 		return response;
 	};
 }
-
-// Helper function to get client-side Next.js auth config
-export function getNextAuthConfig() {
-	// This can be used in _app.js or app layout to initialize the auth provider
-	return {
-		baseUrl:
-			typeof window !== "undefined"
-				? window.localStorage.getItem("frank_auth_baseUrl") || ""
-				: "",
-		organizationId:
-			typeof window !== "undefined"
-				? window.localStorage.getItem("frank_auth_organizationId") || ""
-				: "",
-	};
-}

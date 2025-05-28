@@ -1,6 +1,6 @@
 {
 	"name": "@frank-auth/react",
-	"version": "0.1.8",
+	"version": "0.1.15",
 	"description": "Frank Authentication React Client",
 	"main": "dist/index.cjs",
 	"module": "dist/index.mjs",
@@ -45,7 +45,8 @@
 		"class-variance-authority": "^0.7.1",
 		"jwt-decode": "^4.0.0",
 		"cookie": "^1.0.2",
-		"cookies-next": "^5.1.0",
+		"cookies-next": "^6.0.0",
+		"@edge-runtime/cookies": "^6.0.0",
 		"clsx": "^2.1.1",
 		"input-otp": "^1.4.2",
 		"lucide-react": "^0.483.0",

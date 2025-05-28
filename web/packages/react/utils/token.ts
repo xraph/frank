@@ -1,9 +1,8 @@
-// src/utils/token.ts
-import { TokenData } from "../types";
-import cookieParser from "cookie";
-import { getItem, removeItem, setItem } from "./storage";
-import { getConfig } from "../config";
-import { CookieHandler } from "@/utils/cookie";
+import {TokenData} from "../types";
+import * as cookieParser from "@edge-runtime/cookies";
+import {getItem, removeItem, setItem} from "./storage";
+import {getConfig} from "../config";
+import {CookieHandler} from "@/utils/cookie";
 
 const TOKEN_KEY = "token";
 const REFRESH_TOKEN_KEY = "refresh_token";
@@ -88,7 +87,8 @@ export const getSessionTokenFromCookie = (
 
 	// Match the session cookie name
 	const cookieName = getConfig().cookieName || SESSION_COOKIE_NAME;
-	const cookies = cookieParser.parse(cookieString);
+	const cookies = cookieParser.parseCookie(cookieString);
+	// @ts-ignore
 	return cookies[cookieName] ?? null;
 };
 
@@ -107,7 +107,8 @@ export const getRemoteSessionTokenFromCookie = (
 
 	// Match the session cookie name
 	const cn = cookieName ?? "frank_session";
-	const cookies = cookieParser.parse(cookieString);
+	const cookies = cookieParser.parseCookie(cookieString);
+	// @ts-ignore
 	return cookies[cn] ?? null;
 };
 

@@ -180,7 +180,7 @@ func SetDefaults(v *viper.Viper) {
 	v.SetDefault("security.rate_limit_burst", 30)
 	v.SetDefault("security.allowed_origins", []string{"http://localhost:3000", "http://localhost:8080", "http://localhost:4321"})
 	v.SetDefault("security.allowed_methods", []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"})
-	v.SetDefault("security.allowed_headers", []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"})
+	v.SetDefault("security.allowed_headers", []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "X-Organization-ID"})
 	v.SetDefault("security.exposed_headers", []string{"X-CSRF-Token"})
 	v.SetDefault("security.allow_credentials", true)
 	v.SetDefault("security.csrf_enabled", false)

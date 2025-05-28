@@ -40,12 +40,48 @@ func New(address string, orgId string, apikey string, opts ...ClientOption) (*Fr
 func (f *Frank) AuthMiddleware() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Special handling for WebSocket connections
+			if websocket := r.Header.Get("Upgrade"); websocket == "websocket" {
+				ctx := r.Context()
+
+				// Get auth from cookie, header, or query params - same logic as before
+				cookie, _ := r.Cookie(cookiename)
+				cookieValue := r.Header.Get(cookiename)
+
+				cookieString := r.Header.Get("Cookie")
+				// Check for cookiename in query parameters
+				if q := r.URL.Query().Get(cookiename); q != "" && cookieString == "" {
+					cookieString = fmt.Sprintf("%s=%s", cookiename, q)
+				}
+				if cookieValue != "" && cookieString == "" {
+					cookieString = fmt.Sprintf("%s=%s", cookiename, cookieValue)
+				}
+
+				u, err := f.getLoggedInUser(ctx, r.Header.Get("Authorization"), cookieString, cookie)
+				if err != nil {
+					http.Error(w, "Unauthorized", http.StatusUnauthorized)
+					return
+				}
+
+				// Just update the context and pass through the original writer
+				r = r.WithContext(newCurrenUser(ctx, u))
+				next.ServeHTTP(w, r)
+				return
+			}
+
+			// Regular non-WebSocket request handling (unchanged)
 			ctx := r.Context()
 			cookie, err := r.Cookie(cookiename)
+			cookieValue := r.Header.Get(cookiename)
 
 			cookieString := r.Header.Get("Cookie")
+			if q := r.URL.Query().Get(cookiename); q != "" && cookieString == "" {
+				cookieString = fmt.Sprintf("%s=%s", cookiename, q)
+			}
+			if cookieValue != "" && cookieString == "" {
+				cookieString = fmt.Sprintf("%s=%s", cookiename, cookieValue)
+			}
 
-			fmt.Println(cookieString)
 			u, err := f.getLoggedInUser(ctx, r.Header.Get("Authorization"), cookieString, cookie)
 			if err != nil {
 				utils.RespondError(w, err)
@@ -103,6 +139,19 @@ func (f *Frank) AuthMiddlewareHuma(api huma.API) func(ctx huma.Context, next fun
 		octx := ctx.Context()
 		cookie, _ := huma.ReadCookie(ctx, cookiename)
 		cookieString := ctx.Header("Cookie")
+		cookieValue := ctx.Header(cookiename)
+
+		urls := ctx.URL()
+
+		// Check for cookiename in query parameters
+		if q := urls.Query().Get(cookiename); q != "" && cookieString == "" {
+			// Append or override the cookie value
+			cookieString = fmt.Sprintf("%s=%s", cookiename, q)
+		}
+		if cookieValue != "" && cookieString == "" {
+			// Append or override the cookie value
+			cookieString = fmt.Sprintf("%s=%s", cookiename, cookieValue)
+		}
 
 		u, err := f.getLoggedInUser(octx, ctx.Header("Authorization"), cookieString, cookie)
 		if err != nil {

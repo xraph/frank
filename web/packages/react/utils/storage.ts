@@ -1,4 +1,3 @@
-// src/utils/storage.ts
 import {getConfig} from "../config";
 import {CookieHandler} from "@/utils/cookie";
 

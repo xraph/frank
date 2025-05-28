@@ -1,0 +1,57 @@
+# Files and directories to exclude from the library build
+
+# Build scripts and tooling
+scripts/
+post-build.js
+vite.config.mjs
+tsconfig.*.json
+.buildignore
+
+# Development files
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+__tests__/
+test/
+tests/
+
+# Documentation and config
+README.md
+CHANGELOG.md
+.github/
+docs/
+
+# Node.js and tooling
+node_modules/
+.npm/
+.yarn/
+.pnpm/
+
+# Build outputs (exclude from source, not from distribution)
+dist/
+lib/
+build/
+.next/
+.nuxt/
+.output/
+
+# Environment and config
+.env*
+.vscode/
+.idea/
+
+# Version control
+.git/
+.gitignore
+.gitattributes
+
+# Package manager
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Misc
+*.log
+.DS_Store
+Thumbs.db
