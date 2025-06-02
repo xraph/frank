@@ -2,7 +2,6 @@
 
 import type {ReactNode} from "react";
 import React, {createContext} from "react";
-import {Key} from "lucide-react";
 import {
 	AuthVerifyEmailError,
 	client,
@@ -220,7 +219,6 @@ export const FrankContext = createContext<{
 }>({
 	config: {
 		frontendUrl: "http://localhost:3000",
-		logo: <Key className="h-6 w-6" />,
 		title: "Welcome Back",
 		description: "Sign in to your account",
 		oauthProviders: [],

@@ -2,7 +2,6 @@
 
 // Create the provider component
 import React, {ReactNode, useCallback, useState} from "react";
-import {Key} from "lucide-react";
 import {
 	authSendEmailVerification,
 	authVerifyEmail,
@@ -38,7 +37,7 @@ function _FrankProvider({
 }) {
 	const [config, setConfig] = useState<FrankConfig>({
 		frontendUrl: initialConfig.frontendUrl ?? "http://localhost:3000",
-		logo: initialConfig.logo ?? <Key className="h-6 w-6" />,
+		logo: initialConfig.logo,
 		title: initialConfig.title ?? "Welcome Back",
 		description: initialConfig.description ?? "Sign in to your account",
 		oauthProviders: initialConfig.oauthProviders ?? [],

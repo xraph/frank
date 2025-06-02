@@ -1,7 +1,7 @@
 "use client";
 
-import React, {useEffect, useMemo, useRef, useState} from "react";
-import {AlertCircle, ArrowLeft, CheckCircle2, Eye, EyeOff, Fingerprint, Key, Mail, RefreshCw,} from "lucide-react";
+import React, {ReactNode, useEffect, useMemo, useRef, useState} from "react";
+import {AlertCircle, ArrowLeft, CheckCircle2, Eye, EyeOff, Fingerprint, Mail, RefreshCw,} from "lucide-react";
 import {Button as StyledButton} from "@/components/ui/button";
 import {Card, CardContent, CardDescription, CardHeader, CardTitle,} from "@/components/ui/card";
 import {Input as StyledInput} from "@/components/ui/input";
@@ -128,7 +128,7 @@ export function FrankUIKit({
 
 	// Set default values for required props (rest of the component remains the same)
 	const {
-		logo: configLogo = <Key className="h-6 w-6" />,
+		logo: configLogo,
 		title: configTitle = "Welcome Back",
 		titleAlign: configTitleAlign = "center",
 		description: configDescription = "Sign in to your account",
@@ -305,6 +305,13 @@ export function FrankUIKit({
 			}
 		}
 	}, [configInitialView, searchParams]);
+
+	const renderLogo = (): ReactNode => {
+		if (!configLogo) return null;
+
+		// If it's already JSX, render it directly
+		return configLogo;
+	};
 
 	const resetState = () => {
 		setLoginStep(1);
@@ -748,7 +755,7 @@ export function FrankUIKit({
 		<Card className={cardClassName} style={cardStyle}>
 			<CardHeader className={configCssClasses?.cardHeader}>
 				<div className="flex items-center justify-center mb-4">
-					{configLogo}
+					{renderLogo()}
 				</div>
 				<CardTitle className={titleClasses} style={textStyle}>
 					Reset Your Password
@@ -1043,7 +1050,7 @@ export function FrankUIKit({
 		<Card className={cardClassName} style={cardStyle}>
 			<CardHeader>
 				<div className="flex items-center justify-center mb-4">
-					{configLogo}
+					{renderLogo()}
 				</div>
 				<CardTitle className={titleClasses} style={textStyle}>
 					{configTitle}
@@ -1096,7 +1103,7 @@ export function FrankUIKit({
 		<Card className={cardClassName} style={cardStyle}>
 			<CardHeader className={configCssClasses?.cardHeader}>
 				<div className="flex items-center justify-center mb-4">
-					{configLogo}
+					{renderLogo()}
 				</div>
 				<CardTitle className={titleClasses} style={textStyle}>
 					Verification Required
@@ -1193,7 +1200,7 @@ export function FrankUIKit({
 		<Card className={cardClassName} style={cardStyle}>
 			<CardHeader>
 				<div className="flex items-center justify-center mb-4">
-					{configLogo}
+					{renderLogo()}
 				</div>
 				<CardTitle className={titleClasses} style={textStyle}>
 					Two-Factor Authentication
@@ -1441,7 +1448,7 @@ export function FrankUIKit({
 						"justify-end": configTitleAlign === "right",
 					})}
 				>
-					{configLogo}
+					{renderLogo()}
 				</div>
 				<CardTitle className={titleClasses} style={textStyle}>
 					{configTitle}
