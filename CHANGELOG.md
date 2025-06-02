@@ -1,3 +1,12 @@
+# [0.4.0](https://github.com/juicycleff/frank/compare/v0.3.0...v0.4.0) (2025-06-02)
+
+
+### Features
+
+* **react:** add "use client" directive for React components and hooks, update default storage type to memory, and bump package version to 0.1.8 ([2dca90a](https://github.com/juicycleff/frank/commit/2dca90a78d44a24eba7854cafa0316e0fbef09e5))
+
+
+
 # [0.3.0](https://github.com/juicycleff/frank/compare/v0.2.0...v0.3.0) (2025-05-28)
 
 
@@ -32,15 +41,6 @@
 ### Bug Fixes
 
 * CORS MaxAge header and add SQLite dependency in tests ([698b18a](https://github.com/juicycleff/frank/commit/698b18a1494b75219b3369e8c4189a12a2ea6542))
-
-
-
-## [0.1.7](https://github.com/juicycleff/frank/compare/v0.1.6...v0.1.7) (2025-04-27)
-
-
-### Bug Fixes
-
-* CORS MaxAge header and add SQLite dependency in tests ([8ad6c18](https://github.com/juicycleff/frank/commit/8ad6c18b5eb4eb414298fc130030b26b9a4e5e7a))
 
 
 
