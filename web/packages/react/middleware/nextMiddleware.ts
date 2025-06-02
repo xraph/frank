@@ -157,6 +157,7 @@ export function createNextAuthMiddleware(
 					cookieHeader,
 					cookieHandler,
 				);
+
 				if (!newTokenData) {
 					// clearTokenData(cookieHandler)
 				}
@@ -186,10 +187,12 @@ export function createNextAuthMiddleware(
 			return response;
 		}
 
+		console.log("step ================== 5", isAuthenticated, user, token)
 		// If on a protected page and not authenticated, redirect to login
 		if (!isAuthenticated) {
 			if (options.onAuthFailure) {
 				const rsp = await options.onAuthFailure(request, response);
+				console.log("step ================== 6")
 				if (rsp) return rsp;
 			}
 			const loginUrl = new URL(options.loginPage || "/login", request.url);

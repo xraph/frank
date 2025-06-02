@@ -1,5 +1,5 @@
 import {TokenData} from "../types";
-import * as cookieParser from "@edge-runtime/cookies";
+import * as cookieParser from "cookie";
 import {getItem, removeItem, setItem} from "./storage";
 import {getConfig} from "../config";
 import {CookieHandler} from "@/utils/cookie";
@@ -87,7 +87,7 @@ export const getSessionTokenFromCookie = (
 
 	// Match the session cookie name
 	const cookieName = getConfig().cookieName || SESSION_COOKIE_NAME;
-	const cookies = cookieParser.parseCookie(cookieString);
+	const cookies = cookieParser.parse(cookieString);
 	// @ts-ignore
 	return cookies[cookieName] ?? null;
 };
@@ -107,7 +107,7 @@ export const getRemoteSessionTokenFromCookie = (
 
 	// Match the session cookie name
 	const cn = cookieName ?? "frank_session";
-	const cookies = cookieParser.parseCookie(cookieString);
+	const cookies = cookieParser.parse(cookieString);
 	// @ts-ignore
 	return cookies[cn] ?? null;
 };
