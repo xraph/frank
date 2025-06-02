@@ -1,6 +1,6 @@
 {
 	"name": "@frank-auth/react",
-	"version": "0.1.16",
+	"version": "0.1.17",
 	"description": "Frank Authentication React Client",
 	"main": "dist/index.cjs",
 	"module": "dist/index.mjs",
@@ -68,6 +68,6 @@
 	"peerDependencies": {
 		"react": "^19.0.0",
 		"tailwindcss": "^4.0.16",
-		"next": "^15.3.0"
+		"next": "^15.3.3"
 	}
 }
