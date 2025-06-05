@@ -1,6 +1,8 @@
 package logging
 
 import (
+	"bufio"
+	"net"
 	"net/http"
 	"strings"
 	"time"
@@ -39,13 +41,31 @@ func Middleware(next http.Handler) http.Handler {
 		ctx = WithContext(ctx, logger)
 		r = r.WithContext(ctx)
 
-		// Create wrapper response writer to capture status code
+		// Check if this is a WebSocket request
+		isWebSocket := strings.ToLower(r.Header.Get("Upgrade")) == "websocket"
+
+		isSSE := IsSSERequest(r)
+
+		if isWebSocket {
+			// For WebSocket connections, don't wrap the ResponseWriter
+			logger.Info("WebSocket connection started")
+			next.ServeHTTP(w, r)
+			logger.Info("WebSocket connection handling complete")
+			return
+		} else if isSSE {
+			// For SSE connections, use a minimal wrapper that preserves flusher
+			logger.Info("SSE connection started")
+			sseWrapper := &SSEResponseWriter{
+				ResponseWriter: w,
+				start:          start,
+			}
+			next.ServeHTTP(sseWrapper, r)
+			return
+		}
+
+		// For regular HTTP requests, use the full wrapper
 		ww := NewResponseWriter(w)
-
-		// Log request
 		logger.Info("Request started")
-
-		// Call next handler
 		next.ServeHTTP(ww, r)
 
 		// Log response
@@ -58,11 +78,20 @@ func Middleware(next http.Handler) http.Handler {
 	})
 }
 
+// IsSSERequest checks if the request is for Server-Sent Events
+func IsSSERequest(r *http.Request) bool {
+	accept := r.Header.Get("Accept")
+	return accept == "text/event-stream" ||
+		r.Header.Get("Cache-Control") == "no-cache" ||
+		r.URL.Query().Get("stream") == "true"
+}
+
 // ResponseWriter is a wrapper around http.ResponseWriter that captures the status code
 type ResponseWriter struct {
 	http.ResponseWriter
-	status int
-	size   int
+	status        int
+	size          int
+	headerWritten bool
 }
 
 // NewResponseWriter creates a new response writer
@@ -70,17 +99,25 @@ func NewResponseWriter(w http.ResponseWriter) *ResponseWriter {
 	return &ResponseWriter{
 		ResponseWriter: w,
 		status:         http.StatusOK,
+		headerWritten:  false,
 	}
 }
 
 // WriteHeader captures the status code
 func (rw *ResponseWriter) WriteHeader(status int) {
+	if rw.headerWritten {
+		return // Prevent multiple calls
+	}
 	rw.status = status
+	rw.headerWritten = true
 	rw.ResponseWriter.WriteHeader(status)
 }
 
 // Write captures the size of the response
 func (rw *ResponseWriter) Write(b []byte) (int, error) {
+	if !rw.headerWritten {
+		rw.WriteHeader(http.StatusOK)
+	}
 	size, err := rw.ResponseWriter.Write(b)
 	rw.size += size
 	return size, err
@@ -104,11 +141,47 @@ func (rw *ResponseWriter) Flush() {
 }
 
 // Hijack implements http.Hijacker
-func (rw *ResponseWriter) Hijack() (interface{}, interface{}, error) {
+func (rw *ResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
 	if hj, ok := rw.ResponseWriter.(http.Hijacker); ok {
 		return hj.Hijack()
 	}
 	return nil, nil, http.ErrNotSupported
+}
+
+// SSEResponseWriter is a minimal wrapper for SSE that preserves all interfaces
+type SSEResponseWriter struct {
+	http.ResponseWriter
+	start time.Time
+}
+
+// Write tracks the response for SSE
+func (w *SSEResponseWriter) Write(b []byte) (int, error) {
+	return w.ResponseWriter.Write(b)
+}
+
+// Flush ensures flushing is available for SSE
+func (w *SSEResponseWriter) Flush() {
+	if f, ok := w.ResponseWriter.(http.Flusher); ok {
+		f.Flush()
+	}
+}
+
+// Hijack implements http.Hijacker for SSE
+func (w *SSEResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	if hj, ok := w.ResponseWriter.(http.Hijacker); ok {
+		return hj.Hijack()
+	}
+	return nil, nil, http.ErrNotSupported
+}
+
+// CloseNotify implements http.CloseNotifier for SSE
+func (w *SSEResponseWriter) CloseNotify() <-chan bool {
+	if cn, ok := w.ResponseWriter.(http.CloseNotifier); ok {
+		return cn.CloseNotify()
+	}
+	// Return a channel that never sends if CloseNotifier is not available
+	ch := make(chan bool)
+	return ch
 }
 
 // GetIPAddress extracts the client IP address from a request

@@ -5,6 +5,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 	"github.com/juicycleff/frank/pkg/entity"
+	"github.com/rs/xid"
 )
 
 // EmailTemplate holds the schema definition for the EmailTemplate entity.
@@ -27,6 +28,7 @@ func (EmailTemplate) Fields() []ent.Field {
 		field.String("text_content").
 			Optional(),
 		field.String("organization_id").
+			GoType(xid.ID{}).
 			Optional(),
 		field.Bool("active").
 			Default(true),
@@ -58,5 +60,6 @@ func (EmailTemplate) Indexes() []ent.Index {
 func (EmailTemplate) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		ModelBaseMixin{},
+		TimeMixin{},
 	}
 }

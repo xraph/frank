@@ -158,10 +158,10 @@ func (h *RBACHandler) DeletePermission(w http.ResponseWriter, r *http.Request) {
 // ListRoles retrieves and lists roles associated with the specified permission ID from the request context.
 func (h *RBACHandler) ListRoles(w http.ResponseWriter, r *http.Request) {
 	params := rbac.ListRolesParams{
-		Offset:         0,
-		Limit:          0,
-		Search:         "",
-		OrganizationID: "",
+		Offset: 0,
+		Limit:  0,
+		Search: "",
+		OrgID:  "",
 	}
 
 	// List roles
@@ -225,7 +225,7 @@ func (h *RBACHandler) UpdateRole(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Parse input
-	var input rbac.UpdateRoleInput
+	var input rbac.UpdateRoleBody
 	if err := utils.DecodeJSON(r, &input); err != nil {
 		utils.RespondError(w, err)
 		return

@@ -5,10 +5,10 @@ import (
 	"time"
 
 	"github.com/juicycleff/frank/config"
-	"github.com/juicycleff/frank/email"
 	"github.com/juicycleff/frank/ent"
 	"github.com/juicycleff/frank/ent/user"
 	"github.com/juicycleff/frank/internal/sms"
+	"github.com/juicycleff/frank/pkg/email"
 	appErrors "github.com/juicycleff/frank/pkg/errors"
 	"github.com/juicycleff/frank/pkg/logging"
 )

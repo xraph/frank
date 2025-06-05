@@ -8,57 +8,50 @@ import (
 	"github.com/juicycleff/frank/ent/predicate"
 	"github.com/juicycleff/frank/ent/webhook"
 	"github.com/juicycleff/frank/ent/webhookevent"
+	"github.com/juicycleff/frank/internal/model"
 	"github.com/juicycleff/frank/pkg/errors"
-	"github.com/juicycleff/frank/pkg/utils"
+	"github.com/rs/xid"
+)
+
+var (
+	ErrWebhookEventNotFound = errors.New(errors.CodeNotFound, "webhook event not found")
+	ErrEventDeliveryFailed  = errors.New(errors.CodeInternalServer, "webhook event delivery failed")
 )
 
 // EventRepository provides access to webhook event storage
 type EventRepository interface {
 	// Create creates a new webhook event
-	Create(ctx context.Context, input EventRepositoryCreateInput) (*ent.WebhookEvent, error)
+	Create(ctx context.Context, eventCreate *ent.WebhookEventCreate) (*ent.WebhookEvent, error)
 
 	// GetByID retrieves a webhook event by ID
-	GetByID(ctx context.Context, id string) (*ent.WebhookEvent, error)
+	GetByID(ctx context.Context, id xid.ID) (*ent.WebhookEvent, error)
 
 	// List retrieves webhook events with pagination
-	List(ctx context.Context, input EventRepositoryListInput) ([]*ent.WebhookEvent, int, error)
+	List(ctx context.Context, params ListWebhookEventsParams) (*model.PaginatedOutput[*ent.WebhookEvent], error)
 
 	// Update updates a webhook event
-	Update(ctx context.Context, id string, input EventRepositoryUpdateInput) (*ent.WebhookEvent, error)
+	Update(ctx context.Context, eventUpdate *ent.WebhookEventUpdateOne) (*ent.WebhookEvent, error)
+
+	// Delete deletes a webhook event
+	Delete(ctx context.Context, id xid.ID) error
 
 	// DeleteByWebhookID deletes all events for a webhook
-	DeleteByWebhookID(ctx context.Context, webhookID string) error
+	DeleteByWebhookID(ctx context.Context, webhookID xid.ID) error
 
 	// GetPendingEvents gets events that need to be retried
 	GetPendingEvents(ctx context.Context, limit int) ([]*ent.WebhookEvent, error)
-}
 
-// EventRepositoryCreateInput represents input for creating a webhook event
-type EventRepositoryCreateInput struct {
-	WebhookID string
-	EventType string
-	Payload   map[string]interface{}
-	Headers   map[string]string
-}
+	// BulkCreate creates multiple webhook events in a single operation
+	BulkCreate(ctx context.Context, events []*ent.WebhookEventCreate) ([]*ent.WebhookEvent, error)
 
-// EventRepositoryUpdateInput represents input for updating a webhook event
-type EventRepositoryUpdateInput struct {
-	Delivered    *bool
-	DeliveredAt  *time.Time
-	Attempts     *int
-	NextRetry    *time.Time
-	StatusCode   *int
-	ResponseBody *string
-	Error        *string
-}
+	// BulkUpdate updates multiple webhook events in a single operation
+	BulkUpdate(ctx context.Context, updates []*ent.WebhookEventUpdateOne) ([]*ent.WebhookEvent, error)
 
-// EventRepositoryListInput represents input for listing webhook events
-type EventRepositoryListInput struct {
-	WebhookID string
-	Offset    int
-	Limit     int
-	EventType string
-	Delivered *bool
+	// ExportAll exports all webhook events
+	ExportAll(ctx context.Context) ([]*ent.WebhookEvent, error)
+
+	// Client returns the database client
+	Client() *ent.Client
 }
 
 type eventRepository struct {
@@ -73,35 +66,30 @@ func NewEventRepository(client *ent.Client) EventRepository {
 }
 
 // Create creates a new webhook event
-func (r *eventRepository) Create(ctx context.Context, input EventRepositoryCreateInput) (*ent.WebhookEvent, error) {
-	// Generate UUID
-	id := utils.NewID()
-
+func (r *eventRepository) Create(ctx context.Context, eventCreate *ent.WebhookEventCreate) (*ent.WebhookEvent, error) {
 	// Check if webhook exists
-	exists, err := r.client.Webhook.
-		Query().
-		Where(webhook.ID(input.WebhookID)).
-		Exist(ctx)
+	webhookID, _ := eventCreate.Mutation().WebhookID()
+	if !webhookID.IsNil() {
+		exists, err := r.client.Webhook.
+			Query().
+			Where(webhook.ID(webhookID)).
+			Exist(ctx)
 
-	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to check webhook existence")
-	}
+		if err != nil {
+			return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to check webhook existence")
+		}
 
-	if !exists {
-		return nil, errors.New(errors.CodeNotFound, "webhook not found")
+		if !exists {
+			return nil, ErrWebhookNotFound
+		}
 	}
 
 	// Create webhook event
-	event, err := r.client.WebhookEvent.
-		Create().
-		SetID(id.String()).
-		SetWebhookID(input.WebhookID).
-		SetEventType(input.EventType).
-		SetPayload(input.Payload).
-		SetHeaders(input.Headers).
-		Save(ctx)
-
+	event, err := eventCreate.Save(ctx)
 	if err != nil {
+		if ent.IsConstraintError(err) {
+			return nil, errors.New(errors.CodeConflict, "webhook event already exists")
+		}
 		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to create webhook event")
 	}
 
@@ -109,7 +97,7 @@ func (r *eventRepository) Create(ctx context.Context, input EventRepositoryCreat
 }
 
 // GetByID retrieves a webhook event by ID
-func (r *eventRepository) GetByID(ctx context.Context, id string) (*ent.WebhookEvent, error) {
+func (r *eventRepository) GetByID(ctx context.Context, id xid.ID) (*ent.WebhookEvent, error) {
 	event, err := r.client.WebhookEvent.
 		Query().
 		Where(webhookevent.ID(id)).
@@ -117,7 +105,7 @@ func (r *eventRepository) GetByID(ctx context.Context, id string) (*ent.WebhookE
 
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, errors.New(errors.CodeNotFound, "webhook event not found")
+			return nil, ErrWebhookEventNotFound
 		}
 		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to get webhook event")
 	}
@@ -126,20 +114,20 @@ func (r *eventRepository) GetByID(ctx context.Context, id string) (*ent.WebhookE
 }
 
 // List retrieves webhook events with pagination
-func (r *eventRepository) List(ctx context.Context, input EventRepositoryListInput) ([]*ent.WebhookEvent, int, error) {
+func (r *eventRepository) List(ctx context.Context, params ListWebhookEventsParams) (*model.PaginatedOutput[*ent.WebhookEvent], error) {
 	// Build query predicates
 	var predicates []predicate.WebhookEvent
 
-	if input.WebhookID != "" {
-		predicates = append(predicates, webhookevent.WebhookID(input.WebhookID))
+	if params.WebhookID.IsSet {
+		predicates = append(predicates, webhookevent.WebhookID(params.WebhookID.Value))
 	}
 
-	if input.EventType != "" {
-		predicates = append(predicates, webhookevent.EventType(input.EventType))
+	if params.EventType != "" {
+		predicates = append(predicates, webhookevent.EventType(params.EventType))
 	}
 
-	if input.Delivered != nil {
-		predicates = append(predicates, webhookevent.Delivered(*input.Delivered))
+	if params.Delivered.IsSet {
+		predicates = append(predicates, webhookevent.Delivered(params.Delivered.Value))
 	}
 
 	// Create query with predicates
@@ -148,32 +136,27 @@ func (r *eventRepository) List(ctx context.Context, input EventRepositoryListInp
 		query = query.Where(webhookevent.And(predicates...))
 	}
 
-	// Count total results
-	total, err := query.Count(ctx)
-	if err != nil {
-		return nil, 0, errors.Wrap(errors.CodeDatabaseError, err, "failed to count webhook events")
+	// Apply ordering
+	for _, o := range model.GetOrdering(params.PaginationParams) {
+		if o.Desc {
+			query = query.Order(ent.Desc(o.Field))
+			continue
+		}
+		query = query.Order(ent.Asc(o.Field))
 	}
 
-	// Apply pagination
-	events, err := query.
-		Limit(input.Limit).
-		Offset(input.Offset).
-		Order(ent.Desc(webhookevent.FieldCreatedAt)).
-		All(ctx)
-
-	if err != nil {
-		return nil, 0, errors.Wrap(errors.CodeDatabaseError, err, "failed to list webhook events")
-	}
-
-	return events, total, nil
+	return model.WithPaginationAndOptions[*ent.WebhookEvent, *ent.WebhookEventQuery](ctx, query, params.PaginationParams)
 }
 
 // Update updates a webhook event
-func (r *eventRepository) Update(ctx context.Context, id string, input EventRepositoryUpdateInput) (*ent.WebhookEvent, error) {
+func (r *eventRepository) Update(ctx context.Context, eventUpdate *ent.WebhookEventUpdateOne) (*ent.WebhookEvent, error) {
+	// Get the event ID from the update mutation
+	eventID, _ := eventUpdate.Mutation().ID()
+
 	// Check if webhook event exists
 	exists, err := r.client.WebhookEvent.
 		Query().
-		Where(webhookevent.ID(id)).
+		Where(webhookevent.ID(eventID)).
 		Exist(ctx)
 
 	if err != nil {
@@ -181,53 +164,54 @@ func (r *eventRepository) Update(ctx context.Context, id string, input EventRepo
 	}
 
 	if !exists {
-		return nil, errors.New(errors.CodeNotFound, "webhook event not found")
-	}
-
-	// Build update query
-	update := r.client.WebhookEvent.
-		UpdateOneID(id)
-
-	// Apply updates
-	if input.Delivered != nil {
-		update = update.SetDelivered(*input.Delivered)
-	}
-
-	if input.DeliveredAt != nil {
-		update = update.SetDeliveredAt(*input.DeliveredAt)
-	}
-
-	if input.Attempts != nil {
-		update = update.SetAttempts(*input.Attempts)
-	}
-
-	if input.NextRetry != nil {
-		update = update.SetNextRetry(*input.NextRetry)
-	}
-
-	if input.StatusCode != nil {
-		update = update.SetStatusCode(*input.StatusCode)
-	}
-
-	if input.ResponseBody != nil {
-		update = update.SetResponseBody(*input.ResponseBody)
-	}
-
-	if input.Error != nil {
-		update = update.SetError(*input.Error)
+		return nil, ErrWebhookEventNotFound
 	}
 
 	// Execute update
-	event, err := update.Save(ctx)
+	event, err := eventUpdate.Save(ctx)
 	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, ErrWebhookEventNotFound
+		}
 		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to update webhook event")
 	}
 
 	return event, nil
 }
 
+// Delete deletes a webhook event
+func (r *eventRepository) Delete(ctx context.Context, id xid.ID) error {
+	// Check if webhook event exists
+	exists, err := r.client.WebhookEvent.
+		Query().
+		Where(webhookevent.ID(id)).
+		Exist(ctx)
+
+	if err != nil {
+		return errors.Wrap(errors.CodeDatabaseError, err, "failed to check webhook event existence")
+	}
+
+	if !exists {
+		return ErrWebhookEventNotFound
+	}
+
+	// Delete webhook event
+	err = r.client.WebhookEvent.
+		DeleteOneID(id).
+		Exec(ctx)
+
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return ErrWebhookEventNotFound
+		}
+		return errors.Wrap(errors.CodeDatabaseError, err, "failed to delete webhook event")
+	}
+
+	return nil
+}
+
 // DeleteByWebhookID deletes all events for a webhook
-func (r *eventRepository) DeleteByWebhookID(ctx context.Context, webhookID string) error {
+func (r *eventRepository) DeleteByWebhookID(ctx context.Context, webhookID xid.ID) error {
 	_, err := r.client.WebhookEvent.
 		Delete().
 		Where(webhookevent.WebhookID(webhookID)).
@@ -259,4 +243,156 @@ func (r *eventRepository) GetPendingEvents(ctx context.Context, limit int) ([]*e
 	}
 
 	return events, nil
+}
+
+// BulkCreate creates multiple webhook events in a single operation
+func (r *eventRepository) BulkCreate(ctx context.Context, events []*ent.WebhookEventCreate) ([]*ent.WebhookEvent, error) {
+	// Create events in a transaction
+	tx, err := r.client.Tx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	results := make([]*ent.WebhookEvent, 0, len(events))
+
+	for _, eventCreate := range events {
+		// Get fields from mutation
+		webhookID, _ := eventCreate.Mutation().WebhookID()
+		eventType, _ := eventCreate.Mutation().EventType()
+		payload, _ := eventCreate.Mutation().Payload()
+
+		// Clone the create action for transaction
+		creator := tx.WebhookEvent.Create().
+			SetWebhookID(webhookID).
+			SetEventType(eventType).
+			SetPayload(payload)
+
+		// Add optional fields
+		if headers, exists := eventCreate.Mutation().Headers(); exists {
+			creator.SetHeaders(headers)
+		}
+
+		if delivered, exists := eventCreate.Mutation().Delivered(); exists {
+			creator.SetDelivered(delivered)
+		} else {
+			creator.SetDelivered(false) // Default to not delivered
+		}
+
+		if attempts, exists := eventCreate.Mutation().Attempts(); exists {
+			creator.SetAttempts(attempts)
+		} else {
+			creator.SetAttempts(0) // Default to 0 attempts
+		}
+
+		if nextRetry, exists := eventCreate.Mutation().NextRetry(); exists {
+			creator.SetNextRetry(nextRetry)
+		}
+
+		if statusCode, exists := eventCreate.Mutation().StatusCode(); exists {
+			creator.SetStatusCode(statusCode)
+		}
+
+		if responseBody, exists := eventCreate.Mutation().ResponseBody(); exists {
+			creator.SetResponseBody(responseBody)
+		}
+
+		if errorMsg, exists := eventCreate.Mutation().Error(); exists {
+			creator.SetError(errorMsg)
+		}
+
+		// Create event
+		event, err := creator.Save(ctx)
+		if err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+
+		results = append(results, event)
+	}
+
+	// Commit transaction
+	if err := tx.Commit(); err != nil {
+		return nil, err
+	}
+
+	return results, nil
+}
+
+// BulkUpdate updates multiple webhook events in a single operation
+func (r *eventRepository) BulkUpdate(ctx context.Context, updates []*ent.WebhookEventUpdateOne) ([]*ent.WebhookEvent, error) {
+	// Update events in a transaction
+	tx, err := r.client.Tx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	results := make([]*ent.WebhookEvent, 0, len(updates))
+
+	for _, update := range updates {
+		// Get ID for the update
+		p := update.Mutation()
+		eventID, _ := p.ID()
+
+		// Create updater
+		updater := tx.WebhookEvent.UpdateOneID(eventID)
+
+		// Apply all updates from the original update
+		if delivered, exists := p.Delivered(); exists {
+			updater.SetDelivered(delivered)
+		}
+
+		if deliveredAt, exists := p.DeliveredAt(); exists {
+			updater.SetDeliveredAt(deliveredAt)
+		}
+
+		if attempts, exists := p.Attempts(); exists {
+			updater.SetAttempts(attempts)
+		}
+
+		if nextRetry, exists := p.NextRetry(); exists {
+			updater.SetNextRetry(nextRetry)
+		}
+
+		if statusCode, exists := p.StatusCode(); exists {
+			updater.SetStatusCode(statusCode)
+		}
+
+		if responseBody, exists := p.ResponseBody(); exists {
+			updater.SetResponseBody(responseBody)
+		}
+
+		if errorMsg, exists := p.Error(); exists {
+			updater.SetError(errorMsg)
+		}
+
+		// Update event
+		event, err := updater.Save(ctx)
+		if err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+
+		results = append(results, event)
+	}
+
+	// Commit transaction
+	if err := tx.Commit(); err != nil {
+		return nil, err
+	}
+
+	return results, nil
+}
+
+// ExportAll exports all webhook events
+func (r *eventRepository) ExportAll(ctx context.Context) ([]*ent.WebhookEvent, error) {
+	events, err := r.client.WebhookEvent.Query().All(ctx)
+	if err != nil {
+		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to export webhook events")
+	}
+	return events, nil
+}
+
+// Client returns the database client
+func (r *eventRepository) Client() *ent.Client {
+	return r.client
 }

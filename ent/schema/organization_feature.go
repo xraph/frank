@@ -6,6 +6,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 	"github.com/juicycleff/frank/pkg/entity"
+	"github.com/rs/xid"
 )
 
 // OrganizationFeature holds the schema definition for the OrganizationFeature entity.
@@ -17,8 +18,10 @@ type OrganizationFeature struct {
 func (OrganizationFeature) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("organization_id").
+			GoType(xid.ID{}).
 			NotEmpty(),
 		field.String("feature_id").
+			GoType(xid.ID{}).
 			NotEmpty(),
 		field.Bool("enabled").
 			Default(true),
@@ -34,9 +37,13 @@ func (OrganizationFeature) Edges() []ent.Edge {
 			Field("organization_id").
 			Unique().
 			Required(),
-		edge.To("feature", FeatureFlag.Type).
-			Unique().
+
+		// FIXED: Changed from edge.To() with Field() to edge.From() with Ref()
+		// This assumes your FeatureFlag entity has an edge called "organization_features"
+		edge.From("feature", FeatureFlag.Type).
+			Ref("organization_features").
 			Field("feature_id").
+			Unique().
 			Required(),
 	}
 }
@@ -55,5 +62,6 @@ func (OrganizationFeature) Indexes() []ent.Index {
 func (OrganizationFeature) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		ModelBaseMixin{},
+		TimeMixin{},
 	}
 }

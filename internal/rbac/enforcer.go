@@ -2,740 +2,319 @@ package rbac
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 
-	"github.com/juicycleff/frank/ent"
-	"github.com/juicycleff/frank/ent/permission"
-	"github.com/juicycleff/frank/ent/predicate"
-	"github.com/juicycleff/frank/ent/role"
-	"github.com/juicycleff/frank/ent/user"
 	"github.com/juicycleff/frank/pkg/errors"
-	"github.com/juicycleff/frank/pkg/utils"
+	"github.com/juicycleff/frank/pkg/logging"
+	"github.com/rs/xid"
 )
 
-// Repository provides access to RBAC storage
-type Repository interface {
-	// Role operations
-	CreateRole(ctx context.Context, input RepositoryCreateRoleInput) (*ent.Role, error)
-	GetRoleByID(ctx context.Context, id string) (*ent.Role, error)
-	GetRoleByName(ctx context.Context, name, organizationID string) (*ent.Role, error)
-	ListRoles(ctx context.Context, input RepositoryListRolesInput) ([]*ent.Role, int, error)
-	UpdateRole(ctx context.Context, id string, input RepositoryUpdateRoleInput) (*ent.Role, error)
-	DeleteRole(ctx context.Context, id string) error
+// Enforcer provides access control enforcement
+type Enforcer interface {
+	// Enforce checks if a user has permission to perform an action on a resource
+	Enforce(ctx context.Context, userID, resource, action string) (bool, error)
 
-	// Role-permission operations
-	AddPermissionToRole(ctx context.Context, roleID, permissionID string) error
-	RemovePermissionFromRole(ctx context.Context, roleID, permissionID string) error
-	GetRolePermissions(ctx context.Context, roleID string) ([]*ent.Permission, error)
+	// EnforceWithContext checks permission with additional context data
+	EnforceWithContext(ctx context.Context, userID, resource, action string, contextData map[string]interface{}) (bool, error)
 
-	// Permission operations
-	CreatePermission(ctx context.Context, input RepositoryCreatePermissionInput) (*ent.Permission, error)
-	GetPermissionByID(ctx context.Context, id string) (*ent.Permission, error)
-	GetPermissionByName(ctx context.Context, name string) (*ent.Permission, error)
-	ListPermissions(ctx context.Context, input RepositoryListPermissionsInput) ([]*ent.Permission, int, error)
-	UpdatePermission(ctx context.Context, id string, input RepositoryUpdatePermissionInput) (*ent.Permission, error)
-	DeletePermission(ctx context.Context, id string) error
-
-	// User role operations
-	GetUserRoles(ctx context.Context, userID string) ([]*ent.Role, error)
-	GetUserPermissions(ctx context.Context, userID string) ([]*ent.Permission, error)
-	HasRole(ctx context.Context, userID, roleName string, organizationID string) (bool, error)
+	// GetAllowedActions returns all actions a user can perform on a resource
+	GetAllowedActions(ctx context.Context, userID, resource string) ([]string, error)
 }
 
-// RepositoryCreateRoleInput represents input for creating a role
-type RepositoryCreateRoleInput struct {
-	Name           string
-	Description    string
-	OrganizationID string
-	IsDefault      bool
-	System         bool
+type enforcer struct {
+	repo   Repository
+	logger logging.Logger
 }
 
-// RepositoryUpdateRoleInput represents input for updating a role
-type RepositoryUpdateRoleInput struct {
-	Name        *string
-	Description *string
-	IsDefault   *bool
-}
-
-// RepositoryListRolesInput represents input for listing roles
-type RepositoryListRolesInput struct {
-	Offset         int
-	Limit          int
-	OrganizationID string
-	Search         string
-}
-
-// RepositoryCreatePermissionInput represents input for creating a permission
-type RepositoryCreatePermissionInput struct {
-	Name        string
-	Description string
-	Resource    string
-	Action      string
-	Conditions  string
-	System      bool
-}
-
-// RepositoryUpdatePermissionInput represents input for updating a permission
-type RepositoryUpdatePermissionInput struct {
-	Name        *string
-	Description *string
-	Conditions  *string
-}
-
-// RepositoryListPermissionsInput represents input for listing permissions
-type RepositoryListPermissionsInput struct {
-	Offset   int
-	Limit    int
-	Resource string
-	Action   string
-	Search   string
-}
-
-type repository struct {
-	client *ent.Client
-}
-
-// NewRepository creates a new RBAC repository
-func NewRepository(client *ent.Client) Repository {
-	return &repository{
-		client: client,
+// NewEnforcer creates a new RBAC enforcer
+func NewEnforcer(repo Repository, logger logging.Logger) Enforcer {
+	return &enforcer{
+		repo:   repo,
+		logger: logger,
 	}
 }
 
-// CreateRole creates a new role
-func (r *repository) CreateRole(ctx context.Context, input RepositoryCreateRoleInput) (*ent.Role, error) {
-	// Generate UUID
-	id := utils.NewID()
+// Enforce checks if a user has permission to perform an action on a resource
+func (e *enforcer) Enforce(ctx context.Context, userID, resource, action string) (bool, error) {
+	return e.EnforceWithContext(ctx, userID, resource, action, nil)
+}
 
-	// Check if role with the same name already exists in the organization
-	if input.OrganizationID != "" {
-		exists, err := r.client.Role.
-			Query().
-			Where(
-				role.Name(input.Name),
-				role.OrganizationIDEQ(input.OrganizationID),
-			).
-			Exist(ctx)
+// EnforceWithContext checks permission with additional context data
+func (e *enforcer) EnforceWithContext(ctx context.Context, userID, resource, action string, contextData map[string]interface{}) (bool, error) {
+	// Parse userID to xid.ID
+	uid, err := xid.FromString(userID)
+	if err != nil {
+		return false, errors.New(errors.CodeInvalidInput, "invalid user ID")
+	}
 
-		if err != nil {
-			return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to check role existence")
+	// Get all user's permissions
+	permissions, err := e.repo.GetUserPermissions(ctx, uid)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			// User not found, no permissions
+			return false, nil
 		}
+		return false, err
+	}
 
-		if exists {
-			return nil, errors.New(errors.CodeConflict, "role with this name already exists in the organization")
-		}
-	} else {
-		// Check for global role (no organization)
-		exists, err := r.client.Role.
-			Query().
-			Where(
-				role.Name(input.Name),
-				role.OrganizationIDIsNil(),
-			).
-			Exist(ctx)
+	// Get permission string in format "resource:action"
+	permString := fmt.Sprintf("%s:%s", resource, action)
+	fmt.Println(permString)
 
-		if err != nil {
-			return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to check role existence")
-		}
+	// Check for exact match or wildcard permissions
+	for _, perm := range permissions {
+		// Check for exact permission match
+		if (perm.Resource == resource && perm.Action == action) ||
+			(perm.Resource == resource && perm.Action == "*") ||
+			(perm.Resource == "*" && perm.Action == "*") {
 
-		if exists {
-			return nil, errors.New(errors.CodeConflict, "global role with this name already exists")
+			// If permission has conditions, evaluate them
+			if perm.Conditions != "" && contextData != nil {
+				allowed, err := e.evaluateConditions(perm.Conditions, contextData)
+				if err != nil {
+					e.logger.Warn("Failed to evaluate permission conditions",
+						logging.Error(err),
+						logging.String("permission_id", perm.ID.String()),
+						logging.String("user_id", userID),
+					)
+					continue
+				}
+
+				if allowed {
+					return true, nil
+				}
+
+				// Conditions not met, continue checking other permissions
+				continue
+			}
+
+			// No conditions or no context data, permission granted
+			return true, nil
 		}
 	}
 
-	// Create role builder
-	create := r.client.Role.
-		Create().
-		SetID(id.String()).
-		SetName(input.Name).
-		SetIsDefault(input.IsDefault).
-		SetSystem(input.System)
-
-	// Set optional fields
-	if input.Description != "" {
-		create = create.SetDescription(input.Description)
-	}
-
-	if input.OrganizationID != "" {
-		create = create.SetOrganizationID(input.OrganizationID)
-	}
-
-	// Execute create
-	role, err := create.Save(ctx)
-	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to create role")
-	}
-
-	return role, nil
+	// No matching permission found
+	return false, nil
 }
 
-// GetRoleByID retrieves a role by ID
-func (r *repository) GetRoleByID(ctx context.Context, id string) (*ent.Role, error) {
-	role, err := r.client.Role.
-		Query().
-		Where(role.ID(id)).
-		Only(ctx)
-
+// GetAllowedActions returns all actions a user can perform on a resource
+func (e *enforcer) GetAllowedActions(ctx context.Context, userID, resource string) ([]string, error) {
+	// Parse userID to xid.ID
+	uid, err := xid.FromString(userID)
 	if err != nil {
-		if ent.IsNotFound(err) {
-			return nil, errors.New(errors.CodeNotFound, "role not found")
+		return nil, errors.New(errors.CodeInvalidInput, "invalid user ID")
+	}
+
+	// Get all user's permissions
+	permissions, err := e.repo.GetUserPermissions(ctx, uid)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			// User not found, no permissions
+			return []string{}, nil
 		}
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to get role")
-	}
-
-	return role, nil
-}
-
-// GetRoleByName retrieves a role by name and organization
-func (r *repository) GetRoleByName(ctx context.Context, name, organizationID string) (*ent.Role, error) {
-	query := r.client.Role.
-		Query().
-		Where(role.Name(name))
-
-	if organizationID != "" {
-		query = query.Where(role.OrganizationIDEQ(organizationID))
-	} else {
-		query = query.Where(role.OrganizationIDIsNil())
-	}
-
-	role, err := query.Only(ctx)
-
-	if err != nil {
-		if ent.IsNotFound(err) {
-			return nil, errors.New(errors.CodeNotFound, "role not found")
-		}
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to get role by name")
-	}
-
-	return role, nil
-}
-
-// ListRoles retrieves roles with pagination
-func (r *repository) ListRoles(ctx context.Context, input RepositoryListRolesInput) ([]*ent.Role, int, error) {
-	// Build query predicates
-	var predicates []predicate.Role
-
-	if input.OrganizationID != "" {
-		predicates = append(predicates, role.OrganizationIDEQ(input.OrganizationID))
-	}
-
-	if input.Search != "" {
-		predicates = append(predicates,
-			role.Or(
-				role.NameContainsFold(input.Search),
-				role.DescriptionContainsFold(input.Search),
-			),
-		)
-	}
-
-	// Create query with predicates
-	query := r.client.Role.Query()
-	if len(predicates) > 0 {
-		query = query.Where(role.And(predicates...))
-	}
-
-	// Count total results
-	total, err := query.Count(ctx)
-	if err != nil {
-		return nil, 0, errors.Wrap(errors.CodeDatabaseError, err, "failed to count roles")
-	}
-
-	// Apply pagination
-	roles, err := query.
-		Limit(input.Limit).
-		Offset(input.Offset).
-		Order(ent.Asc(role.FieldName)).
-		All(ctx)
-
-	if err != nil {
-		return nil, 0, errors.Wrap(errors.CodeDatabaseError, err, "failed to list roles")
-	}
-
-	return roles, total, nil
-}
-
-// UpdateRole updates a role
-func (r *repository) UpdateRole(ctx context.Context, id string, input RepositoryUpdateRoleInput) (*ent.Role, error) {
-	// Get role to check existence
-	existingRole, err := r.GetRoleByID(ctx, id)
-	if err != nil {
 		return nil, err
 	}
 
-	// Build update query
-	update := r.client.Role.
-		UpdateOneID(id)
+	// Collect allowed actions
+	allowedActions := make(map[string]struct{})
 
-	// Apply updates
-	if input.Name != nil {
-		// Check for name uniqueness if changing the name
-		if *input.Name != existingRole.Name {
-			var exists bool
-			if existingRole.OrganizationID != "" {
-				// Check within organization
-				exists, err = r.client.Role.
-					Query().
-					Where(
-						role.Name(*input.Name),
-						role.OrganizationIDEQ(existingRole.OrganizationID),
-						role.IDNEQ(id),
-					).
-					Exist(ctx)
-			} else {
-				// Check global roles
-				exists, err = r.client.Role.
-					Query().
-					Where(
-						role.Name(*input.Name),
-						role.OrganizationIDIsNil(),
-						role.IDNEQ(id),
-					).
-					Exist(ctx)
+	for _, perm := range permissions {
+		// Check if permission applies to this resource
+		if perm.Resource == resource || perm.Resource == "*" {
+			// Add the action to allowed actions
+			allowedActions[perm.Action] = struct{}{}
+		}
+	}
+
+	// Convert map to slice
+	result := make([]string, 0, len(allowedActions))
+	for action := range allowedActions {
+		result = append(result, action)
+	}
+
+	return result, nil
+}
+
+// evaluateConditions evaluates permission conditions against context data
+func (e *enforcer) evaluateConditions(conditionsJSON string, contextData map[string]interface{}) (bool, error) {
+	// Parse conditions from JSON
+	var conditions map[string]interface{}
+	if err := json.Unmarshal([]byte(conditionsJSON), &conditions); err != nil {
+		return false, fmt.Errorf("failed to parse conditions: %w", err)
+	}
+
+	// Implement condition evaluation logic
+	// This is a simplified implementation that could be expanded with a full expression evaluator
+
+	// Example conditions format:
+	// {
+	//   "operator": "and",
+	//   "conditions": [
+	//     {"field": "resource.owner_id", "operator": "equals", "value": "{{user.id}}"},
+	//     {"field": "request.method", "operator": "in", "value": ["GET", "HEAD"]}
+	//   ]
+	// }
+
+	// For this implementation, we'll just check if all fields exist and have matching values
+	operator, ok := conditions["operator"].(string)
+	if !ok {
+		return false, fmt.Errorf("invalid conditions format, missing operator")
+	}
+
+	conditionsList, ok := conditions["conditions"].([]interface{})
+	if !ok {
+		return false, fmt.Errorf("invalid conditions format, missing conditions list")
+	}
+
+	// Process conditions based on operator
+	switch operator {
+	case "and":
+		// All conditions must be true
+		for _, conditionItem := range conditionsList {
+			condition, ok := conditionItem.(map[string]interface{})
+			if !ok {
+				return false, fmt.Errorf("invalid condition format")
 			}
 
+			match, err := e.evaluateCondition(condition, contextData)
 			if err != nil {
-				return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to check role name uniqueness")
+				return false, err
 			}
 
-			if exists {
-				return nil, errors.New(errors.CodeConflict, "role with this name already exists")
+			if !match {
+				// One condition is false, entire AND expression is false
+				return false, nil
 			}
 		}
+		// All conditions were true
+		return true, nil
 
-		update = update.SetName(*input.Name)
-	}
+	case "or":
+		// At least one condition must be true
+		for _, conditionItem := range conditionsList {
+			condition, ok := conditionItem.(map[string]interface{})
+			if !ok {
+				return false, fmt.Errorf("invalid condition format")
+			}
 
-	if input.Description != nil {
-		update = update.SetDescription(*input.Description)
-	}
-
-	if input.IsDefault != nil {
-		update = update.SetIsDefault(*input.IsDefault)
-	}
-
-	// Execute update
-	updatedRole, err := update.Save(ctx)
-	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to update role")
-	}
-
-	return updatedRole, nil
-}
-
-// DeleteRole deletes a role
-func (r *repository) DeleteRole(ctx context.Context, id string) error {
-	// Check if role exists
-	_, err := r.GetRoleByID(ctx, id)
-	if err != nil {
-		return err
-	}
-
-	// Delete role
-	err = r.client.Role.
-		DeleteOneID(id).
-		Exec(ctx)
-
-	if err != nil {
-		return errors.Wrap(errors.CodeDatabaseError, err, "failed to delete role")
-	}
-
-	return nil
-}
-
-// AddPermissionToRole adds a permission to a role
-func (r *repository) AddPermissionToRole(ctx context.Context, roleID, permissionID string) error {
-	// Check if role exists
-	_, err := r.GetRoleByID(ctx, roleID)
-	if err != nil {
-		return err
-	}
-
-	// Check if permission exists
-	_, err = r.GetPermissionByID(ctx, permissionID)
-	if err != nil {
-		return err
-	}
-
-	// Check if permission is already assigned to role
-	exists, err := r.client.Role.
-		Query().
-		Where(
-			role.ID(roleID),
-			role.HasPermissionsWith(permission.ID(permissionID)),
-		).
-		Exist(ctx)
-
-	if err != nil {
-		return errors.Wrap(errors.CodeDatabaseError, err, "failed to check permission assignment")
-	}
-
-	if exists {
-		// Permission already assigned, no need to do anything
-		return nil
-	}
-
-	// Add permission to role
-	err = r.client.Role.
-		UpdateOneID(roleID).
-		AddPermissionIDs(permissionID).
-		Exec(ctx)
-
-	if err != nil {
-		return errors.Wrap(errors.CodeDatabaseError, err, "failed to add permission to role")
-	}
-
-	return nil
-}
-
-// RemovePermissionFromRole removes a permission from a role
-func (r *repository) RemovePermissionFromRole(ctx context.Context, roleID, permissionID string) error {
-	// Check if role exists
-	_, err := r.GetRoleByID(ctx, roleID)
-	if err != nil {
-		return err
-	}
-
-	// Check if permission exists
-	_, err = r.GetPermissionByID(ctx, permissionID)
-	if err != nil {
-		return err
-	}
-
-	// Remove permission from role
-	err = r.client.Role.
-		UpdateOneID(roleID).
-		RemovePermissionIDs(permissionID).
-		Exec(ctx)
-
-	if err != nil {
-		return errors.Wrap(errors.CodeDatabaseError, err, "failed to remove permission from role")
-	}
-
-	return nil
-}
-
-// GetRolePermissions retrieves permissions assigned to a role
-func (r *repository) GetRolePermissions(ctx context.Context, roleID string) ([]*ent.Permission, error) {
-	// Check if role exists
-	_, err := r.GetRoleByID(ctx, roleID)
-	if err != nil {
-		return nil, err
-	}
-
-	// Get permissions
-	permissions, err := r.client.Role.
-		Query().
-		Where(role.ID(roleID)).
-		QueryPermissions().
-		All(ctx)
-
-	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to get role permissions")
-	}
-
-	return permissions, nil
-}
-
-// CreatePermission creates a new permission
-func (r *repository) CreatePermission(ctx context.Context, input RepositoryCreatePermissionInput) (*ent.Permission, error) {
-	// Generate UUID
-	id := utils.NewID()
-
-	// Check for unique resource:action combination
-	exists, err := r.client.Permission.
-		Query().
-		Where(
-			permission.Resource(input.Resource),
-			permission.Action(input.Action),
-		).
-		Exist(ctx)
-
-	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to check permission existence")
-	}
-
-	if exists {
-		return nil, errors.New(errors.CodeConflict, "permission for this resource and action already exists")
-	}
-
-	// Check for unique name
-	if input.Name != "" {
-		exists, err = r.client.Permission.
-			Query().
-			Where(permission.Name(input.Name)).
-			Exist(ctx)
-
-		if err != nil {
-			return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to check permission name uniqueness")
-		}
-
-		if exists {
-			return nil, errors.New(errors.CodeConflict, "permission with this name already exists")
-		}
-	}
-
-	// Create permission
-	create := r.client.Permission.
-		Create().
-		SetID(id.String()).
-		SetName(input.Name).
-		SetResource(input.Resource).
-		SetAction(input.Action).
-		SetSystem(input.System)
-
-	// Set optional fields
-	if input.Description != "" {
-		create = create.SetDescription(input.Description)
-	}
-
-	if input.Conditions != "" {
-		create = create.SetConditions(input.Conditions)
-	}
-
-	// Execute create
-	permission, err := create.Save(ctx)
-	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to create permission")
-	}
-
-	return permission, nil
-}
-
-// GetPermissionByID retrieves a permission by ID
-func (r *repository) GetPermissionByID(ctx context.Context, id string) (*ent.Permission, error) {
-	permission, err := r.client.Permission.
-		Query().
-		Where(permission.ID(id)).
-		Only(ctx)
-
-	if err != nil {
-		if ent.IsNotFound(err) {
-			return nil, errors.New(errors.CodeNotFound, "permission not found")
-		}
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to get permission")
-	}
-
-	return permission, nil
-}
-
-// GetPermissionByName retrieves a permission by name
-func (r *repository) GetPermissionByName(ctx context.Context, name string) (*ent.Permission, error) {
-	permission, err := r.client.Permission.
-		Query().
-		Where(permission.Name(name)).
-		Only(ctx)
-
-	if err != nil {
-		if ent.IsNotFound(err) {
-			return nil, errors.New(errors.CodeNotFound, "permission not found")
-		}
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to get permission by name")
-	}
-
-	return permission, nil
-}
-
-// ListPermissions retrieves permissions with pagination
-func (r *repository) ListPermissions(ctx context.Context, input RepositoryListPermissionsInput) ([]*ent.Permission, int, error) {
-	// Build query predicates
-	var predicates []predicate.Permission
-
-	if input.Resource != "" {
-		predicates = append(predicates, permission.Resource(input.Resource))
-	}
-
-	if input.Action != "" {
-		predicates = append(predicates, permission.Action(input.Action))
-	}
-
-	if input.Search != "" {
-		predicates = append(predicates,
-			permission.Or(
-				permission.NameContainsFold(input.Search),
-				permission.DescriptionContainsFold(input.Search),
-				permission.ResourceContainsFold(input.Search),
-				permission.ActionContainsFold(input.Search),
-			),
-		)
-	}
-
-	// Create query with predicates
-	query := r.client.Permission.Query()
-	if len(predicates) > 0 {
-		query = query.Where(permission.And(predicates...))
-	}
-
-	// Count total results
-	total, err := query.Count(ctx)
-	if err != nil {
-		return nil, 0, errors.Wrap(errors.CodeDatabaseError, err, "failed to count permissions")
-	}
-
-	// Apply pagination
-	permissions, err := query.
-		Limit(input.Limit).
-		Offset(input.Offset).
-		Order(ent.Asc(permission.FieldResource), ent.Asc(permission.FieldAction)).
-		All(ctx)
-
-	if err != nil {
-		return nil, 0, errors.Wrap(errors.CodeDatabaseError, err, "failed to list permissions")
-	}
-
-	return permissions, total, nil
-}
-
-// UpdatePermission updates a permission
-func (r *repository) UpdatePermission(ctx context.Context, id string, input RepositoryUpdatePermissionInput) (*ent.Permission, error) {
-	// Get permission to check existence
-	existingPermission, err := r.GetPermissionByID(ctx, id)
-	if err != nil {
-		return nil, err
-	}
-
-	// Build update query
-	update := r.client.Permission.
-		UpdateOneID(id)
-
-	// Apply updates
-	if input.Name != nil {
-		// Check for name uniqueness if changing the name
-		if *input.Name != existingPermission.Name {
-			exists, err := r.client.Permission.
-				Query().
-				Where(
-					permission.Name(*input.Name),
-					permission.IDNEQ(id),
-				).
-				Exist(ctx)
-
+			match, err := e.evaluateCondition(condition, contextData)
 			if err != nil {
-				return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to check permission name uniqueness")
+				return false, err
 			}
 
-			if exists {
-				return nil, errors.New(errors.CodeConflict, "permission with this name already exists")
+			if match {
+				// One condition is true, entire OR expression is true
+				return true, nil
 			}
 		}
+		// No conditions were true
+		return false, nil
 
-		update = update.SetName(*input.Name)
+	default:
+		return false, fmt.Errorf("unsupported operator: %s", operator)
 	}
-
-	if input.Description != nil {
-		update = update.SetDescription(*input.Description)
-	}
-
-	if input.Conditions != nil {
-		update = update.SetConditions(*input.Conditions)
-	}
-
-	// Execute update
-	updatedPermission, err := update.Save(ctx)
-	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to update permission")
-	}
-
-	return updatedPermission, nil
 }
 
-// DeletePermission deletes a permission
-func (r *repository) DeletePermission(ctx context.Context, id string) error {
-	// Check if permission exists
-	_, err := r.GetPermissionByID(ctx, id)
-	if err != nil {
-		return err
+// evaluateCondition evaluates a single condition against context data
+func (e *enforcer) evaluateCondition(condition map[string]interface{}, contextData map[string]interface{}) (bool, error) {
+	field, ok := condition["field"].(string)
+	if !ok {
+		return false, fmt.Errorf("missing field in condition")
 	}
 
-	// Delete permission
-	err = r.client.Permission.
-		DeleteOneID(id).
-		Exec(ctx)
-
-	if err != nil {
-		return errors.Wrap(errors.CodeDatabaseError, err, "failed to delete permission")
+	operator, ok := condition["operator"].(string)
+	if !ok {
+		return false, fmt.Errorf("missing operator in condition")
 	}
 
-	return nil
+	conditionValue := condition["value"]
+	if conditionValue == nil {
+		return false, fmt.Errorf("missing value in condition")
+	}
+
+	// Extract context value
+	contextValue, ok := getNestedValue(contextData, field)
+	if !ok {
+		// Field not found in context data
+		return false, nil
+	}
+
+	// Evaluate condition based on operator
+	switch operator {
+	case "equals":
+		return valueEquals(contextValue, conditionValue)
+
+	case "not_equals":
+		equals, err := valueEquals(contextValue, conditionValue)
+		return !equals, err
+
+	case "in":
+		return valueIn(contextValue, conditionValue)
+
+	case "not_in":
+		in, err := valueIn(contextValue, conditionValue)
+		return !in, err
+
+	case "greater_than":
+		return valueGreaterThan(contextValue, conditionValue)
+
+	case "less_than":
+		return valueLessThan(contextValue, conditionValue)
+
+	default:
+		return false, fmt.Errorf("unsupported condition operator: %s", operator)
+	}
 }
 
-// GetUserRoles retrieves roles assigned to a user
-func (r *repository) GetUserRoles(ctx context.Context, userID string) ([]*ent.Role, error) {
-	// Check if user exists
-	exists, err := r.client.User.
-		Query().
-		Where(user.ID(userID)).
-		Exist(ctx)
-
-	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to check user existence")
-	}
-
-	if !exists {
-		return nil, errors.New(errors.CodeNotFound, "user not found")
-	}
-
-	// Get user's roles
-	roles, err := r.client.User.
-		Query().
-		Where(user.ID(userID)).
-		QueryRoles().
-		All(ctx)
-
-	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to get user roles")
-	}
-
-	return roles, nil
+// getNestedValue retrieves a nested value from a map using a dot notation path
+func getNestedValue(data map[string]interface{}, path string) (interface{}, bool) {
+	// TODO: Implement nested value lookup with dot notation
+	// For now, just return the top-level value
+	value, ok := data[path]
+	return value, ok
 }
 
-// GetUserPermissions retrieves all permissions a user has through their roles
-func (r *repository) GetUserPermissions(ctx context.Context, userID string) ([]*ent.Permission, error) {
-	// Check if user exists
-	exists, err := r.client.User.
-		Query().
-		Where(user.ID(userID)).
-		Exist(ctx)
-
-	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to check user existence")
+// valueEquals checks if two values are equal
+func valueEquals(a, b interface{}) (bool, error) {
+	// Try to compare directly
+	if a == b {
+		return true, nil
 	}
 
-	if !exists {
-		return nil, errors.New(errors.CodeNotFound, "user not found")
-	}
-
-	// Get user's permissions through their roles
-	permissions, err := r.client.User.
-		Query().
-		Where(user.ID(userID)).
-		QueryRoles().
-		QueryPermissions().
-		All(ctx)
-
-	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to get user permissions")
-	}
-
-	return permissions, nil
+	// Try to convert to comparable types
+	// This is a simplified implementation
+	return false, nil
 }
 
-// HasRole checks if a user has a specific role
-func (r *repository) HasRole(ctx context.Context, userID, roleName string, organizationID string) (bool, error) {
-	// Build query to check if user has the role
-	query := r.client.User.
-		Query().
-		Where(
-			user.ID(userID),
-			user.HasRolesWith(role.Name(roleName)),
-		)
-
-	// Add organization constraint if provided
-	if organizationID != "" {
-		query = query.Where(
-			user.HasRolesWith(role.OrganizationIDEQ(organizationID)),
-		)
+// valueIn checks if a value is in a list
+func valueIn(value, list interface{}) (bool, error) {
+	// Convert list to slice if needed
+	listSlice, ok := list.([]interface{})
+	if !ok {
+		return false, fmt.Errorf("expected list value to be a slice")
 	}
 
-	// Execute query
-	return query.Exist(ctx)
+	// Check if value is in the list
+	for _, item := range listSlice {
+		if value == item {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+// valueGreaterThan checks if a value is greater than another
+func valueGreaterThan(a, b interface{}) (bool, error) {
+	// Try to convert to comparable numeric types
+	// This is a simplified implementation that would need to be expanded
+	return false, nil
+}
+
+// valueLessThan checks if a value is less than another
+func valueLessThan(a, b interface{}) (bool, error) {
+	// Try to convert to comparable numeric types
+	// This is a simplified implementation that would need to be expanded
+	return false, nil
 }

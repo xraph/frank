@@ -5,9 +5,9 @@ import (
 	"net/http"
 
 	"github.com/juicycleff/frank/config"
-	"github.com/juicycleff/frank/organization"
 	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/juicycleff/frank/pkg/logging"
+	"github.com/juicycleff/frank/pkg/organization"
 	"github.com/juicycleff/frank/pkg/utils"
 )
 

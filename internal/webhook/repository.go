@@ -8,62 +8,48 @@ import (
 	"github.com/juicycleff/frank/ent/predicate"
 	"github.com/juicycleff/frank/ent/webhook"
 	"github.com/juicycleff/frank/ent/webhookevent"
+	"github.com/juicycleff/frank/internal/model"
 	"github.com/juicycleff/frank/pkg/errors"
-	"github.com/juicycleff/frank/pkg/utils"
+	"github.com/rs/xid"
+)
+
+var (
+	ErrWebhookNotFound      = errors.New(errors.CodeNotFound, "webhook not found")
+	ErrOrganizationNotFound = errors.New(errors.CodeNotFound, "organization not found")
+	ErrWebhookInactive      = errors.New(errors.CodeBadRequest, "webhook is inactive")
 )
 
 // Repository provides access to webhook storage
 type Repository interface {
 	// Create creates a new webhook
-	Create(ctx context.Context, input RepositoryCreateInput) (*ent.Webhook, error)
+	Create(ctx context.Context, webhookCreate *ent.WebhookCreate) (*ent.Webhook, error)
 
 	// GetByID retrieves a webhook by ID
-	GetByID(ctx context.Context, id string) (*ent.Webhook, error)
+	GetByID(ctx context.Context, id xid.ID) (*ent.Webhook, error)
 
 	// List retrieves webhooks with pagination
-	List(ctx context.Context, input RepositoryListInput) ([]*ent.Webhook, int, error)
+	List(ctx context.Context, params ListWebhooksParams) (*model.PaginatedOutput[*ent.Webhook], error)
 
 	// Update updates a webhook
-	Update(ctx context.Context, id string, input RepositoryUpdateInput) (*ent.Webhook, error)
+	Update(ctx context.Context, webhookUpdate *ent.WebhookUpdateOne) (*ent.Webhook, error)
 
 	// Delete deletes a webhook
-	Delete(ctx context.Context, id string) error
+	Delete(ctx context.Context, id xid.ID) error
 
 	// FindByEventTypeAndOrganization finds webhooks by event type and organization
-	FindByEventTypeAndOrganization(ctx context.Context, eventType, organizationID string) ([]*ent.Webhook, error)
-}
+	FindByEventTypeAndOrganization(ctx context.Context, eventType string, organizationID xid.ID) ([]*ent.Webhook, error)
 
-// RepositoryCreateInput represents input for creating a webhook
-type RepositoryCreateInput struct {
-	Name           string
-	URL            string
-	OrganizationID string
-	Secret         string
-	EventTypes     []string
-	RetryCount     int
-	TimeoutMs      int
-	Format         string
-	Metadata       map[string]interface{}
-}
+	// BulkCreate creates multiple webhooks in a single operation
+	BulkCreate(ctx context.Context, webhooks []*ent.WebhookCreate) ([]*ent.Webhook, error)
 
-// RepositoryUpdateInput represents input for updating a webhook
-type RepositoryUpdateInput struct {
-	Name       *string
-	URL        *string
-	Active     *bool
-	EventTypes []string
-	RetryCount *int
-	TimeoutMs  *int
-	Format     *string
-	Metadata   map[string]interface{}
-}
+	// BulkUpdate updates multiple webhooks in a single operation
+	BulkUpdate(ctx context.Context, updates []*ent.WebhookUpdateOne) ([]*ent.Webhook, error)
 
-// RepositoryListInput represents input for listing webhooks
-type RepositoryListInput struct {
-	Offset         int
-	Limit          int
-	OrganizationID string
-	EventTypes     []string
+	// ExportAll exports all webhooks
+	ExportAll(ctx context.Context) ([]*ent.Webhook, error)
+
+	// Client returns the database client
+	Client() *ent.Client
 }
 
 type repository struct {
@@ -78,40 +64,30 @@ func NewRepository(client *ent.Client) Repository {
 }
 
 // Create creates a new webhook
-func (r *repository) Create(ctx context.Context, input RepositoryCreateInput) (*ent.Webhook, error) {
-	// Generate UUID
-	id := utils.NewID()
-
+func (r *repository) Create(ctx context.Context, webhookCreate *ent.WebhookCreate) (*ent.Webhook, error) {
 	// Check if organization exists
-	exists, err := r.client.Organization.
-		Query().
-		Where(organization.ID(input.OrganizationID)).
-		Exist(ctx)
+	organizationID, _ := webhookCreate.Mutation().OrganizationID()
+	if !organizationID.IsNil() {
+		exists, err := r.client.Organization.
+			Query().
+			Where(organization.ID(organizationID)).
+			Exist(ctx)
 
-	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to check organization existence")
-	}
+		if err != nil {
+			return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to check organization existence")
+		}
 
-	if !exists {
-		return nil, errors.New(errors.CodeNotFound, "organization not found")
+		if !exists {
+			return nil, ErrOrganizationNotFound
+		}
 	}
 
 	// Create webhook
-	hook, err := r.client.Webhook.
-		Create().
-		SetID(id.String()).
-		SetName(input.Name).
-		SetURL(input.URL).
-		SetOrganizationID(input.OrganizationID).
-		SetSecret(input.Secret).
-		SetEventTypes(input.EventTypes).
-		SetRetryCount(input.RetryCount).
-		SetTimeoutMs(input.TimeoutMs).
-		SetFormat(webhook.Format(input.Format)).
-		SetMetadata(input.Metadata).
-		Save(ctx)
-
+	hook, err := webhookCreate.Save(ctx)
 	if err != nil {
+		if ent.IsConstraintError(err) {
+			return nil, errors.New(errors.CodeConflict, "webhook already exists")
+		}
 		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to create webhook")
 	}
 
@@ -119,7 +95,7 @@ func (r *repository) Create(ctx context.Context, input RepositoryCreateInput) (*
 }
 
 // GetByID retrieves a webhook by ID
-func (r *repository) GetByID(ctx context.Context, id string) (*ent.Webhook, error) {
+func (r *repository) GetByID(ctx context.Context, id xid.ID) (*ent.Webhook, error) {
 	hook, err := r.client.Webhook.
 		Query().
 		Where(webhook.ID(id)).
@@ -127,7 +103,7 @@ func (r *repository) GetByID(ctx context.Context, id string) (*ent.Webhook, erro
 
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, errors.New(errors.CodeNotFound, "webhook not found")
+			return nil, ErrWebhookNotFound
 		}
 		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to get webhook")
 	}
@@ -136,21 +112,25 @@ func (r *repository) GetByID(ctx context.Context, id string) (*ent.Webhook, erro
 }
 
 // List retrieves webhooks with pagination
-func (r *repository) List(ctx context.Context, input RepositoryListInput) ([]*ent.Webhook, int, error) {
+func (r *repository) List(ctx context.Context, params ListWebhooksParams) (*model.PaginatedOutput[*ent.Webhook], error) {
 	// Build query predicates
 	var predicates []predicate.Webhook
 
-	if input.OrganizationID != "" {
-		predicates = append(predicates, webhook.OrganizationID(input.OrganizationID))
+	if params.OrgID.IsSet {
+		predicates = append(predicates, webhook.OrganizationID(params.OrgID.Value))
 	}
 
-	if len(input.EventTypes) > 0 {
+	if len(params.EventTypes) > 0 {
 		// Find webhooks that have any of the specified event types
-		eventTypePredicates := make([]predicate.Webhook, len(input.EventTypes))
-		for i, eventType := range input.EventTypes {
+		eventTypePredicates := make([]predicate.Webhook, len(params.EventTypes))
+		for i, eventType := range params.EventTypes {
 			eventTypePredicates[i] = webhook.HasEventsWith(webhookevent.EventTypeContains(eventType))
 		}
 		predicates = append(predicates, webhook.Or(eventTypePredicates...))
+	}
+
+	if params.Active.IsSet {
+		predicates = append(predicates, webhook.Active(params.Active.Value))
 	}
 
 	// Create query with predicates
@@ -159,32 +139,27 @@ func (r *repository) List(ctx context.Context, input RepositoryListInput) ([]*en
 		query = query.Where(webhook.And(predicates...))
 	}
 
-	// Count total results
-	total, err := query.Count(ctx)
-	if err != nil {
-		return nil, 0, errors.Wrap(errors.CodeDatabaseError, err, "failed to count webhooks")
+	// Apply ordering
+	for _, o := range model.GetOrdering(params.PaginationParams) {
+		if o.Desc {
+			query = query.Order(ent.Desc(o.Field))
+			continue
+		}
+		query = query.Order(ent.Asc(o.Field))
 	}
 
-	// Apply pagination
-	hooks, err := query.
-		Limit(input.Limit).
-		Offset(input.Offset).
-		Order(ent.Desc(webhook.FieldCreatedAt)).
-		All(ctx)
-
-	if err != nil {
-		return nil, 0, errors.Wrap(errors.CodeDatabaseError, err, "failed to list webhooks")
-	}
-
-	return hooks, total, nil
+	return model.WithPaginationAndOptions[*ent.Webhook, *ent.WebhookQuery](ctx, query, params.PaginationParams)
 }
 
 // Update updates a webhook
-func (r *repository) Update(ctx context.Context, id string, input RepositoryUpdateInput) (*ent.Webhook, error) {
+func (r *repository) Update(ctx context.Context, webhookUpdate *ent.WebhookUpdateOne) (*ent.Webhook, error) {
+	// Get the webhook ID from the update mutation
+	webhookID, _ := webhookUpdate.Mutation().ID()
+
 	// Check if webhook exists
 	exists, err := r.client.Webhook.
 		Query().
-		Where(webhook.ID(id)).
+		Where(webhook.ID(webhookID)).
 		Exist(ctx)
 
 	if err != nil {
@@ -192,49 +167,15 @@ func (r *repository) Update(ctx context.Context, id string, input RepositoryUpda
 	}
 
 	if !exists {
-		return nil, errors.New(errors.CodeNotFound, "webhook not found")
-	}
-
-	// Build update query
-	update := r.client.Webhook.
-		UpdateOneID(id)
-
-	// Apply updates
-	if input.Name != nil {
-		update = update.SetName(*input.Name)
-	}
-
-	if input.URL != nil {
-		update = update.SetURL(*input.URL)
-	}
-
-	if input.Active != nil {
-		update = update.SetActive(*input.Active)
-	}
-
-	if input.EventTypes != nil {
-		update = update.SetEventTypes(input.EventTypes)
-	}
-
-	if input.RetryCount != nil {
-		update = update.SetRetryCount(*input.RetryCount)
-	}
-
-	if input.TimeoutMs != nil {
-		update = update.SetTimeoutMs(*input.TimeoutMs)
-	}
-
-	if input.Format != nil {
-		update = update.SetFormat(webhook.Format(*input.Format))
-	}
-
-	if input.Metadata != nil {
-		update = update.SetMetadata(input.Metadata)
+		return nil, ErrWebhookNotFound
 	}
 
 	// Execute update
-	hook, err := update.Save(ctx)
+	hook, err := webhookUpdate.Save(ctx)
 	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, ErrWebhookNotFound
+		}
 		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to update webhook")
 	}
 
@@ -242,7 +183,7 @@ func (r *repository) Update(ctx context.Context, id string, input RepositoryUpda
 }
 
 // Delete deletes a webhook
-func (r *repository) Delete(ctx context.Context, id string) error {
+func (r *repository) Delete(ctx context.Context, id xid.ID) error {
 	// Check if webhook exists
 	exists, err := r.client.Webhook.
 		Query().
@@ -254,7 +195,7 @@ func (r *repository) Delete(ctx context.Context, id string) error {
 	}
 
 	if !exists {
-		return errors.New(errors.CodeNotFound, "webhook not found")
+		return ErrWebhookNotFound
 	}
 
 	// Delete webhook
@@ -263,6 +204,9 @@ func (r *repository) Delete(ctx context.Context, id string) error {
 		Exec(ctx)
 
 	if err != nil {
+		if ent.IsNotFound(err) {
+			return ErrWebhookNotFound
+		}
 		return errors.Wrap(errors.CodeDatabaseError, err, "failed to delete webhook")
 	}
 
@@ -270,11 +214,11 @@ func (r *repository) Delete(ctx context.Context, id string) error {
 }
 
 // FindByEventTypeAndOrganization finds webhooks by event type and organization
-func (r *repository) FindByEventTypeAndOrganization(ctx context.Context, eventType, organizationID string) ([]*ent.Webhook, error) {
+func (r *repository) FindByEventTypeAndOrganization(ctx context.Context, eventType string, orgID xid.ID) ([]*ent.Webhook, error) {
 	hooks, err := r.client.Webhook.
 		Query().
 		Where(
-			webhook.OrganizationID(organizationID),
+			webhook.OrganizationID(orgID),
 			webhook.HasEventsWith(webhookevent.EventTypeContains(eventType)),
 			webhook.Active(true),
 		).
@@ -285,4 +229,154 @@ func (r *repository) FindByEventTypeAndOrganization(ctx context.Context, eventTy
 	}
 
 	return hooks, nil
+}
+
+// BulkCreate creates multiple webhooks in a single operation
+func (r *repository) BulkCreate(ctx context.Context, webhooks []*ent.WebhookCreate) ([]*ent.Webhook, error) {
+	// Create webhooks in a transaction
+	tx, err := r.client.Tx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	results := make([]*ent.Webhook, 0, len(webhooks))
+
+	for _, webhookCreate := range webhooks {
+		// Get fields from mutation
+		name, _ := webhookCreate.Mutation().Name()
+		url, _ := webhookCreate.Mutation().URL()
+		organizationID, _ := webhookCreate.Mutation().OrganizationID()
+		secret, _ := webhookCreate.Mutation().Secret()
+		eventTypes, _ := webhookCreate.Mutation().EventTypes()
+
+		// Clone the create action for transaction
+		creator := tx.Webhook.Create().
+			SetName(name).
+			SetURL(url).
+			SetOrganizationID(organizationID).
+			SetSecret(secret).
+			SetEventTypes(eventTypes)
+
+		// Add optional fields
+		if retryCount, exists := webhookCreate.Mutation().RetryCount(); exists {
+			creator.SetRetryCount(retryCount)
+		}
+
+		if timeoutMs, exists := webhookCreate.Mutation().TimeoutMs(); exists {
+			creator.SetTimeoutMs(timeoutMs)
+		}
+
+		if format, exists := webhookCreate.Mutation().Format(); exists {
+			creator.SetFormat(format)
+		}
+
+		if active, exists := webhookCreate.Mutation().Active(); exists {
+			creator.SetActive(active)
+		} else {
+			creator.SetActive(true) // Default to active
+		}
+
+		if metadata, exists := webhookCreate.Mutation().Metadata(); exists {
+			creator.SetMetadata(metadata)
+		}
+
+		// Create webhook
+		hook, err := creator.Save(ctx)
+		if err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+
+		results = append(results, hook)
+	}
+
+	// Commit transaction
+	if err := tx.Commit(); err != nil {
+		return nil, err
+	}
+
+	return results, nil
+}
+
+// BulkUpdate updates multiple webhooks in a single operation
+func (r *repository) BulkUpdate(ctx context.Context, updates []*ent.WebhookUpdateOne) ([]*ent.Webhook, error) {
+	// Update webhooks in a transaction
+	tx, err := r.client.Tx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	results := make([]*ent.Webhook, 0, len(updates))
+
+	for _, update := range updates {
+		// Get ID for the update
+		p := update.Mutation()
+		webhookID, _ := p.ID()
+
+		// Create updater
+		updater := tx.Webhook.UpdateOneID(webhookID)
+
+		// Apply all updates from the original update
+		if name, exists := p.Name(); exists {
+			updater.SetName(name)
+		}
+
+		if url, exists := p.URL(); exists {
+			updater.SetURL(url)
+		}
+
+		if active, exists := p.Active(); exists {
+			updater.SetActive(active)
+		}
+
+		if eventTypes, exists := p.EventTypes(); exists {
+			updater.SetEventTypes(eventTypes)
+		}
+
+		if retryCount, exists := p.RetryCount(); exists {
+			updater.SetRetryCount(retryCount)
+		}
+
+		if timeoutMs, exists := p.TimeoutMs(); exists {
+			updater.SetTimeoutMs(timeoutMs)
+		}
+
+		if format, exists := p.Format(); exists {
+			updater.SetFormat(format)
+		}
+
+		if metadata, exists := p.Metadata(); exists {
+			updater.SetMetadata(metadata)
+		}
+
+		// Update webhook
+		hook, err := updater.Save(ctx)
+		if err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+
+		results = append(results, hook)
+	}
+
+	// Commit transaction
+	if err := tx.Commit(); err != nil {
+		return nil, err
+	}
+
+	return results, nil
+}
+
+// ExportAll exports all webhooks
+func (r *repository) ExportAll(ctx context.Context) ([]*ent.Webhook, error) {
+	hooks, err := r.client.Webhook.Query().All(ctx)
+	if err != nil {
+		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to export webhooks")
+	}
+	return hooks, nil
+}
+
+// Client returns the database client
+func (r *repository) Client() *ent.Client {
+	return r.client
 }

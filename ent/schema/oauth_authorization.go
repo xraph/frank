@@ -5,6 +5,7 @@ import (
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
+	"github.com/rs/xid"
 )
 
 // OAuthAuthorization holds the schema definition for the OAuthAuthorization entity.
@@ -16,10 +17,13 @@ type OAuthAuthorization struct {
 func (OAuthAuthorization) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("client_id").
+			GoType(xid.ID{}).
 			NotEmpty(),
 		field.String("user_id").
+			GoType(xid.ID{}).
 			NotEmpty(),
 		field.String("organization_id").
+			GoType(xid.ID{}).
 			Optional(),
 		field.String("code").
 			Unique().
@@ -77,5 +81,6 @@ func (OAuthAuthorization) Indexes() []ent.Index {
 func (OAuthAuthorization) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		ModelBaseMixin{},
+		TimeMixin{},
 	}
 }

@@ -204,6 +204,27 @@ func NewLogger(cfg *LoggerConfig) Logger {
 	return &logger{zap: zapLogger}
 }
 
+func NewDefaultLogger() Logger {
+	return NewLogger(&LoggerConfig{
+		Level:       "info",
+		Environment: "development",
+	})
+}
+
+func NewProductionLogger() Logger {
+	return NewLogger(&LoggerConfig{
+		Level:       "info",
+		Environment: "production",
+	})
+}
+
+func NewDevelopmentLogger() Logger {
+	return NewLogger(&LoggerConfig{
+		Level:       "debug",
+		Environment: "development",
+	})
+}
+
 // FromContext extracts a logger from the context
 func FromContext(ctx context.Context) Logger {
 	if ctx == nil {

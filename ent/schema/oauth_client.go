@@ -5,6 +5,7 @@ import (
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
+	"github.com/rs/xid"
 )
 
 // OAuthClient holds the schema definition for the OAuthClient entity.
@@ -33,6 +34,7 @@ func (OAuthClient) Fields() []ent.Field {
 		field.Strings("post_logout_redirect_uris").
 			Optional(),
 		field.String("organization_id").
+			GoType(xid.ID{}).
 			Optional(),
 		field.Bool("public").
 			Default(false).
@@ -83,5 +85,6 @@ func (OAuthClient) Indexes() []ent.Index {
 func (OAuthClient) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		ModelBaseMixin{},
+		TimeMixin{},
 	}
 }

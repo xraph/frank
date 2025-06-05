@@ -14,7 +14,7 @@ import (
 	"github.com/juicycleff/frank/pkg/automapper"
 	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/juicycleff/frank/pkg/logging"
-	"github.com/juicycleff/frank/user"
+	"github.com/juicycleff/frank/pkg/user"
 	"goa.design/clue/debug"
 	"goa.design/clue/log"
 	goahttp "goa.design/goa/v3/http"

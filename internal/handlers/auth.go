@@ -13,9 +13,9 @@ import (
 	"github.com/juicycleff/frank/pkg/crypto"
 	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/juicycleff/frank/pkg/logging"
+	"github.com/juicycleff/frank/pkg/user"
 	"github.com/juicycleff/frank/pkg/utils"
 	"github.com/juicycleff/frank/pkg/validator"
-	"github.com/juicycleff/frank/user"
 )
 
 // AuthHandler handles authentication operations
@@ -168,12 +168,12 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 	// Create user
 	createInput := user.CreateUserInput{
-		Email:          input.Email,
-		Password:       input.Password,
-		FirstName:      input.FirstName,
-		LastName:       input.LastName,
-		OrganizationID: input.OrganizationID,
-		Metadata:       input.Metadata,
+		Email:     input.Email,
+		Password:  input.Password,
+		FirstName: input.FirstName,
+		LastName:  input.LastName,
+		OrgID:     input.OrganizationID,
+		Metadata:  input.Metadata,
 	}
 
 	newUser, err := h.userService.Create(r.Context(), createInput)

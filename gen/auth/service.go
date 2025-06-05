@@ -10,8 +10,8 @@ package auth
 import (
 	"context"
 
-	designtypes "github.com/juicycleff/frank/gen/designtypes"
-	"github.com/juicycleff/frank/user"
+	"github.com/juicycleff/frank/gen/designtypes"
+	"github.com/juicycleff/frank/pkg/user"
 	"goa.design/goa/v3/security"
 )
 

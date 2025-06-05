@@ -5,7 +5,6 @@ import (
 
 	"github.com/gorilla/sessions"
 	"github.com/juicycleff/frank/config"
-	email2 "github.com/juicycleff/frank/email"
 	"github.com/juicycleff/frank/internal/apikeys"
 	"github.com/juicycleff/frank/internal/auth/mfa"
 	"github.com/juicycleff/frank/internal/auth/oauth2"
@@ -17,19 +16,20 @@ import (
 	"github.com/juicycleff/frank/internal/repo"
 	"github.com/juicycleff/frank/internal/sms"
 	"github.com/juicycleff/frank/internal/webhook"
-	"github.com/juicycleff/frank/organization"
 	"github.com/juicycleff/frank/pkg/data"
+	"github.com/juicycleff/frank/pkg/email"
 	"github.com/juicycleff/frank/pkg/logging"
-	user2 "github.com/juicycleff/frank/user"
+	"github.com/juicycleff/frank/pkg/organization"
+	"github.com/juicycleff/frank/pkg/user"
 )
 
 // Services contains all the service dependencies
 type Services struct {
 	APIKey              apikeys.Service
 	Organization        organization.Service
-	User                user2.Service
+	User                user.Service
 	Webhook             webhook.Service
-	Email               email2.Service
+	Email               email.Service
 	SMS                 sms.Service
 	Session             *session.Manager
 	SessionStore        sessions.Store
@@ -52,20 +52,20 @@ type OAuthServices struct {
 
 func New(repos *repo.Repo, cfg *config.Config, client *data.Clients, logger logging.Logger) (*Services, error) {
 	// Initialize services
-	sender := email2.SenderFactory(&cfg.Email, logger)
-	emailTemplateManager := email2.NewTemplateManager(repos.Template, &cfg.Email, logger)
-	emailService := email2.NewService(&cfg.Email, sender, emailTemplateManager, repos.Template, logger)
+	sender := email.SenderFactory(&cfg.Email, logger)
+	emailTemplateManager := email.NewTemplateManager(repos.Template, &cfg.Email, logger)
+	emailService := email.NewService(&cfg.Email, sender, emailTemplateManager, repos.Template, logger)
 
 	emailProvider := sms.SenderFactory(cfg, logger)
 	smsService := sms.NewService(cfg, emailProvider, logger)
 
 	orgService := organization.NewService(repos.Organization, logger)
-	pwdVerifyManger := user2.NewVerificationManager(client.DB, emailService, logger)
-	pwdManger := user2.NewPasswordManager(cfg, client.DB, pwdVerifyManger)
+	pwdVerifyManger := user.NewVerificationManager(client.DB, emailService, logger)
+	pwdManger := user.NewPasswordManager(cfg, client.DB, pwdVerifyManger)
 
 	enforce := rbac.NewEnforcer(repos.RBAC, logger)
 	rbacService := rbac.NewService(repos.RBAC, enforce, logger)
-	userService := user2.NewService(repos.User, pwdManger, pwdVerifyManger, orgService, cfg, logger)
+	userService := user.NewService(repos.User, pwdManger, pwdVerifyManger, orgService, cfg, logger)
 
 	// Initialize auth services
 	cookieHandler := session.NewCookieHandler(cfg, logger)

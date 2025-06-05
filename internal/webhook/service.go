@@ -6,83 +6,38 @@ import (
 
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/ent"
+	"github.com/juicycleff/frank/ent/webhook"
+	"github.com/juicycleff/frank/internal/model"
 	"github.com/juicycleff/frank/pkg/crypto"
 	"github.com/juicycleff/frank/pkg/logging"
+	"github.com/rs/xid"
 )
 
 // Service provides webhook operations
 type Service interface {
 	// Create creates a new webhook
-	Create(ctx context.Context, input CreateWebhookInput) (*ent.Webhook, error)
+	Create(ctx context.Context, input CreateWebhookInput) (*Webhook, error)
 
 	// Get retrieves a webhook by ID
-	Get(ctx context.Context, id string) (*ent.Webhook, error)
+	Get(ctx context.Context, id xid.ID) (*Webhook, error)
 
 	// List retrieves webhooks with pagination
-	List(ctx context.Context, params ListParams) ([]*ent.Webhook, int, error)
+	List(ctx context.Context, params ListWebhooksParams) (*model.PaginatedOutput[*Webhook], error)
 
 	// Update updates a webhook
-	Update(ctx context.Context, id string, input UpdateWebhookInput) (*ent.Webhook, error)
+	Update(ctx context.Context, id xid.ID, input UpdateWebhookInput) (*Webhook, error)
 
 	// Delete deletes a webhook
-	Delete(ctx context.Context, id string) error
+	Delete(ctx context.Context, id xid.ID) error
 
 	// TriggerEvent triggers a webhook event
-	TriggerEvent(ctx context.Context, input TriggerEventInput) (*ent.WebhookEvent, error)
+	TriggerEvent(ctx context.Context, input TriggerEventInput) (*WebhookEvent, error)
 
 	// GetEvents retrieves webhook events with pagination
-	GetEvents(ctx context.Context, webhookID string, params EventListParams) ([]*ent.WebhookEvent, int, error)
+	GetEvents(ctx context.Context, webhookID xid.ID, params ListWebhookEventsParams) (*model.PaginatedOutput[*WebhookEvent], error)
 
 	// ReplayEvent replays a webhook event
-	ReplayEvent(ctx context.Context, eventID string) (*ent.WebhookEvent, error)
-}
-
-// CreateWebhookInput represents input for creating a webhook
-type CreateWebhookInput struct {
-	Name           string                 `json:"name" validate:"required"`
-	URL            string                 `json:"url" validate:"required,url"`
-	OrganizationID string                 `json:"organization_id" validate:"required"`
-	EventTypes     []string               `json:"event_types" validate:"required"`
-	RetryCount     *int                   `json:"retry_count,omitempty"`
-	TimeoutMs      *int                   `json:"timeout_ms,omitempty"`
-	Format         string                 `json:"format,omitempty"`
-	Metadata       map[string]interface{} `json:"metadata,omitempty"`
-}
-
-// UpdateWebhookInput represents input for updating a webhook
-type UpdateWebhookInput struct {
-	Name       *string                `json:"name,omitempty"`
-	URL        *string                `json:"url,omitempty"`
-	Active     *bool                  `json:"active,omitempty"`
-	EventTypes []string               `json:"event_types,omitempty"`
-	RetryCount *int                   `json:"retry_count,omitempty"`
-	TimeoutMs  *int                   `json:"timeout_ms,omitempty"`
-	Format     *string                `json:"format,omitempty"`
-	Metadata   map[string]interface{} `json:"metadata,omitempty"`
-}
-
-// TriggerEventInput represents input for triggering a webhook event
-type TriggerEventInput struct {
-	EventType      string                 `json:"event_type" validate:"required"`
-	OrganizationID string                 `json:"organization_id" validate:"required"`
-	Payload        map[string]interface{} `json:"payload" validate:"required"`
-	Headers        map[string]string      `json:"headers,omitempty"`
-}
-
-// ListParams represents pagination parameters for webhooks
-type ListParams struct {
-	Offset         int      `json:"offset" query:"offset"`
-	Limit          int      `json:"limit" query:"limit"`
-	OrganizationID string   `json:"organization_id" query:"organization_id"`
-	EventTypes     []string `json:"event_types" query:"event_types"`
-}
-
-// EventListParams represents pagination parameters for webhook events
-type EventListParams struct {
-	Offset    int    `json:"offset" query:"offset"`
-	Limit     int    `json:"limit" query:"limit"`
-	EventType string `json:"event_type" query:"event_type"`
-	Delivered *bool  `json:"delivered" query:"delivered"`
+	ReplayEvent(ctx context.Context, eventID xid.ID) (*WebhookEvent, error)
 }
 
 type service struct {
@@ -111,12 +66,9 @@ func NewService(
 }
 
 // Create creates a new webhook
-func (s *service) Create(ctx context.Context, input CreateWebhookInput) (*ent.Webhook, error) {
+func (s *service) Create(ctx context.Context, input CreateWebhookInput) (*Webhook, error) {
 	// Generate a secret for signing webhook payloads
 	secret := crypto.GenerateWebhookSecret()
-	// if err != nil {
-	// 	return nil, errors.Wrap(errors.CodeCryptoError, err, "failed to generate webhook secret")
-	// }
 
 	// Set default values
 	retryCount := s.config.Webhooks.DefaultRetries
@@ -134,96 +86,116 @@ func (s *service) Create(ctx context.Context, input CreateWebhookInput) (*ent.We
 		format = input.Format
 	}
 
-	// Create webhook in repository
-	webhook, err := s.repo.Create(ctx, RepositoryCreateInput{
-		Name:           input.Name,
-		URL:            input.URL,
-		OrganizationID: input.OrganizationID,
-		Secret:         secret,
-		EventTypes:     input.EventTypes,
-		RetryCount:     retryCount,
-		TimeoutMs:      timeoutMs,
-		Format:         format,
-		Metadata:       input.Metadata,
-	})
+	// Create ent.WebhookCreate
+	webhookCreate := s.repo.Client().Webhook.Create().
+		SetName(input.Name).
+		SetURL(input.URL).
+		SetOrganizationID(input.OrganizationID).
+		SetSecret(secret).
+		SetEventTypes(input.EventTypes).
+		SetRetryCount(retryCount).
+		SetTimeoutMs(timeoutMs).
+		SetFormat(webhook.Format(format)).
+		SetActive(true)
 
+	// Set optional fields
+	if input.Metadata != nil {
+		webhookCreate = webhookCreate.SetMetadata(input.Metadata)
+	}
+
+	// Create webhook in repository
+	entWebhook, err := s.repo.Create(ctx, webhookCreate)
 	if err != nil {
 		return nil, err
 	}
 
-	return webhook, nil
+	return convertWebhookToDTO(entWebhook), nil
 }
 
 // Get retrieves a webhook by ID
-func (s *service) Get(ctx context.Context, id string) (*ent.Webhook, error) {
-	return s.repo.GetByID(ctx, id)
+func (s *service) Get(ctx context.Context, id xid.ID) (*Webhook, error) {
+	entWebhook, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return convertWebhookToDTO(entWebhook), nil
 }
 
 // List retrieves webhooks with pagination
-func (s *service) List(ctx context.Context, params ListParams) ([]*ent.Webhook, int, error) {
+func (s *service) List(ctx context.Context, params ListWebhooksParams) (*model.PaginatedOutput[*Webhook], error) {
 	// Set default limit if not provided
 	if params.Limit <= 0 {
 		params.Limit = 10
 	}
 
-	// Map service input to repository input
-	repoInput := RepositoryListInput{
-		Offset:         params.Offset,
-		Limit:          params.Limit,
-		OrganizationID: params.OrganizationID,
-		EventTypes:     params.EventTypes,
+	entResult, err := s.repo.List(ctx, params)
+	if err != nil {
+		return nil, err
 	}
 
-	return s.repo.List(ctx, repoInput)
+	// Convert the paginated result
+	webhooks := convertWebhooksToDTO(entResult.Data)
+
+	return &model.PaginatedOutput[*Webhook]{
+		Data:       webhooks,
+		Pagination: entResult.Pagination,
+	}, nil
 }
 
 // Update updates a webhook
-func (s *service) Update(ctx context.Context, id string, input UpdateWebhookInput) (*ent.Webhook, error) {
-	// Map service input to repository input
-	repoInput := RepositoryUpdateInput{}
+func (s *service) Update(ctx context.Context, id xid.ID, input UpdateWebhookInput) (*Webhook, error) {
+	// Create ent.WebhookUpdateOne
+	webhookUpdate := s.repo.Client().Webhook.UpdateOneID(id)
 
+	// Apply updates conditionally
 	if input.Name != nil {
-		repoInput.Name = input.Name
+		webhookUpdate = webhookUpdate.SetName(*input.Name)
 	}
 
 	if input.URL != nil {
-		repoInput.URL = input.URL
+		webhookUpdate = webhookUpdate.SetURL(*input.URL)
 	}
 
 	if input.Active != nil {
-		repoInput.Active = input.Active
+		webhookUpdate = webhookUpdate.SetActive(*input.Active)
 	}
 
 	if input.EventTypes != nil {
-		repoInput.EventTypes = input.EventTypes
+		webhookUpdate = webhookUpdate.SetEventTypes(input.EventTypes)
 	}
 
 	if input.RetryCount != nil {
-		repoInput.RetryCount = input.RetryCount
+		webhookUpdate = webhookUpdate.SetRetryCount(*input.RetryCount)
 	}
 
 	if input.TimeoutMs != nil {
-		repoInput.TimeoutMs = input.TimeoutMs
+		webhookUpdate = webhookUpdate.SetTimeoutMs(*input.TimeoutMs)
 	}
 
 	if input.Format != nil {
-		repoInput.Format = input.Format
+		webhookUpdate = webhookUpdate.SetFormat(webhook.Format(*input.Format))
 	}
 
 	if input.Metadata != nil {
-		repoInput.Metadata = input.Metadata
+		webhookUpdate = webhookUpdate.SetMetadata(input.Metadata)
 	}
 
-	return s.repo.Update(ctx, id, repoInput)
+	entWebhook, err := s.repo.Update(ctx, webhookUpdate)
+	if err != nil {
+		return nil, err
+	}
+
+	return convertWebhookToDTO(entWebhook), nil
 }
 
 // Delete deletes a webhook
-func (s *service) Delete(ctx context.Context, id string) error {
+func (s *service) Delete(ctx context.Context, id xid.ID) error {
 	return s.repo.Delete(ctx, id)
 }
 
 // TriggerEvent triggers a webhook event
-func (s *service) TriggerEvent(ctx context.Context, input TriggerEventInput) (*ent.WebhookEvent, error) {
+func (s *service) TriggerEvent(ctx context.Context, input TriggerEventInput) (*WebhookEvent, error) {
 	// Find webhooks that match the event type and organization
 	webhooks, err := s.repo.FindByEventTypeAndOrganization(
 		ctx,
@@ -244,14 +216,20 @@ func (s *service) TriggerEvent(ctx context.Context, input TriggerEventInput) (*e
 	// In a production system, you might want to create events for all matching webhooks
 	webhook := webhooks[0]
 
-	// Create webhook event
-	event, err := s.eventRepo.Create(ctx, EventRepositoryCreateInput{
-		WebhookID: webhook.ID,
-		EventType: input.EventType,
-		Payload:   input.Payload,
-		Headers:   input.Headers,
-	})
+	// Create webhook event using ent builder
+	eventCreate := s.eventRepo.Client().WebhookEvent.Create().
+		SetWebhookID(webhook.ID).
+		SetEventType(input.EventType).
+		SetPayload(input.Payload).
+		SetDelivered(false)
 
+	// Set optional fields
+	if input.Headers != nil {
+		eventCreate = eventCreate.SetHeaders(input.Headers)
+	}
+
+	// Create event
+	entEvent, err := s.eventRepo.Create(ctx, eventCreate)
 	if err != nil {
 		return nil, err
 	}
@@ -263,53 +241,61 @@ func (s *service) TriggerEvent(ctx context.Context, input TriggerEventInput) (*e
 		defer cancel()
 
 		// Deliver event
-		s.deliverer.DeliverEvent(deliveryCtx, event, webhook)
+		s.deliverer.DeliverEvent(deliveryCtx, entEvent, webhook)
 	}()
 
-	return event, nil
+	return convertWebhookEventToDTO(entEvent), nil
 }
 
 // GetEvents retrieves webhook events with pagination
-func (s *service) GetEvents(ctx context.Context, webhookID string, params EventListParams) ([]*ent.WebhookEvent, int, error) {
+func (s *service) GetEvents(ctx context.Context, webhookID xid.ID, params ListWebhookEventsParams) (*model.PaginatedOutput[*WebhookEvent], error) {
 	// Set default limit if not provided
 	if params.Limit <= 0 {
 		params.Limit = 10
 	}
 
-	// Map service input to repository input
-	repoInput := EventRepositoryListInput{
-		WebhookID: webhookID,
-		Offset:    params.Offset,
-		Limit:     params.Limit,
-		EventType: params.EventType,
-		Delivered: params.Delivered,
+	entResult, err := s.eventRepo.List(ctx, params)
+	if err != nil {
+		return nil, err
 	}
 
-	return s.eventRepo.List(ctx, repoInput)
+	// Convert the paginated result
+	events := convertWebhookEventsToDTO(entResult.Data)
+
+	return &model.PaginatedOutput[*WebhookEvent]{
+		Data:       events,
+		Pagination: entResult.Pagination,
+	}, nil
 }
 
 // ReplayEvent replays a webhook event
-func (s *service) ReplayEvent(ctx context.Context, eventID string) (*ent.WebhookEvent, error) {
+func (s *service) ReplayEvent(ctx context.Context, eventID xid.ID) (*WebhookEvent, error) {
 	// Get event
 	event, err := s.eventRepo.GetByID(ctx, eventID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Get webhook
 	webhook, err := s.repo.GetByID(ctx, event.WebhookID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Create a new event (copy of the original)
-	newEvent, err := s.eventRepo.Create(ctx, EventRepositoryCreateInput{
-		WebhookID: webhook.ID,
-		EventType: event.EventType,
-		Payload:   event.Payload,
-		Headers:   event.Headers,
-	})
+	// Create a new event using ent builder (copy of the original)
+	eventCreate := s.eventRepo.Client().WebhookEvent.Create().
+		SetID(xid.New()).
+		SetWebhookID(webhook.ID).
+		SetEventType(event.EventType).
+		SetPayload(event.Payload).
+		SetDelivered(false).
+		SetAttempts(0)
 
+	// Set optional fields
+	if event.Headers != nil {
+		eventCreate = eventCreate.SetHeaders(event.Headers)
+	}
+
+	newEntEvent, err := s.eventRepo.Create(ctx, eventCreate)
 	if err != nil {
 		return nil, err
 	}
@@ -321,8 +307,70 @@ func (s *service) ReplayEvent(ctx context.Context, eventID string) (*ent.Webhook
 		defer cancel()
 
 		// Deliver event
-		s.deliverer.DeliverEvent(deliveryCtx, newEvent, webhook)
+		s.deliverer.DeliverEvent(deliveryCtx, newEntEvent, webhook)
 	}()
 
-	return newEvent, nil
+	return convertWebhookEventToDTO(newEntEvent), nil
+}
+
+// convertWebhookToDTO converts an ent.Webhook to Webhook DTO
+func convertWebhookToDTO(entWebhook *ent.Webhook) *Webhook {
+	return &Webhook{
+		Base: model.Base{
+			ID:        entWebhook.ID,
+			CreatedAt: entWebhook.CreatedAt,
+			UpdatedAt: entWebhook.UpdatedAt,
+		},
+		Name:           entWebhook.Name,
+		URL:            entWebhook.URL,
+		OrganizationID: entWebhook.OrganizationID,
+		Secret:         entWebhook.Secret,
+		Active:         entWebhook.Active,
+		EventTypes:     entWebhook.EventTypes,
+		Version:        entWebhook.Version,
+		RetryCount:     entWebhook.RetryCount,
+		TimeoutMs:      entWebhook.TimeoutMs,
+		Format:         entWebhook.Format,
+		Metadata:       entWebhook.Metadata,
+	}
+}
+
+// convertWebhooksToDTO converts a slice of ent.Webhook to Webhook DTOs
+func convertWebhooksToDTO(entWebhooks []*ent.Webhook) []*Webhook {
+	webhooks := make([]*Webhook, len(entWebhooks))
+	for i, entWebhook := range entWebhooks {
+		webhooks[i] = convertWebhookToDTO(entWebhook)
+	}
+	return webhooks
+}
+
+// convertWebhookEventToDTO converts an ent.WebhookEvent to WebhookEvent DTO
+func convertWebhookEventToDTO(entEvent *ent.WebhookEvent) *WebhookEvent {
+	return &WebhookEvent{
+		Base: model.Base{
+			ID:        entEvent.ID,
+			CreatedAt: entEvent.CreatedAt,
+			UpdatedAt: entEvent.UpdatedAt,
+		},
+		WebhookID:    entEvent.WebhookID,
+		EventType:    entEvent.EventType,
+		Headers:      entEvent.Headers,
+		Payload:      entEvent.Payload,
+		Delivered:    entEvent.Delivered,
+		DeliveredAt:  entEvent.DeliveredAt,
+		Attempts:     entEvent.Attempts,
+		NextRetry:    entEvent.NextRetry,
+		StatusCode:   entEvent.StatusCode,
+		ResponseBody: entEvent.ResponseBody,
+		Error:        entEvent.Error,
+	}
+}
+
+// convertWebhookEventsToDTO converts a slice of ent.WebhookEvent to WebhookEvent DTOs
+func convertWebhookEventsToDTO(entEvents []*ent.WebhookEvent) []*WebhookEvent {
+	events := make([]*WebhookEvent, len(entEvents))
+	for i, entEvent := range entEvents {
+		events[i] = convertWebhookEventToDTO(entEvent)
+	}
+	return events
 }

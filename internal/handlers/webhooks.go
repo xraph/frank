@@ -75,7 +75,7 @@ func (h *WebhookHandler) ListWebhooks(w http.ResponseWriter, r *http.Request) {
 	eventTypes := r.URL.Query()["event_types"]
 
 	// Create list params
-	params := webhook.ListParams{
+	params := webhook.ListWebhooksParams{
 		Offset:         offset,
 		Limit:          limit,
 		OrganizationID: orgID,
@@ -253,7 +253,7 @@ func (h *WebhookHandler) ListWebhookEvents(w http.ResponseWriter, r *http.Reques
 	}
 
 	// Create list params
-	params := webhook.EventListParams{
+	params := webhook.WebhookEventListParams{
 		Offset:    offset,
 		Limit:     limit,
 		EventType: eventType,

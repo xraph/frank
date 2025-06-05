@@ -6,6 +6,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 	"github.com/juicycleff/frank/pkg/entity"
+	"github.com/rs/xid"
 )
 
 // Passkey holds the schema definition for the Passkey entity.
@@ -17,6 +18,7 @@ type Passkey struct {
 func (Passkey) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("user_id").
+			GoType(xid.ID{}).
 			NotEmpty(),
 		field.String("name").
 			NotEmpty(),
@@ -65,5 +67,6 @@ func (Passkey) Indexes() []ent.Index {
 func (Passkey) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		ModelBaseMixin{},
+		TimeMixin{},
 	}
 }

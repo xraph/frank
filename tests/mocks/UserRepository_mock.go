@@ -10,7 +10,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/juicycleff/frank/ent"
-	"github.com/juicycleff/frank/user"
+	"github.com/juicycleff/frank/pkg/user"
 )
 
 // MockUserRepository is a mock of Repository interface.
@@ -37,7 +37,7 @@ func (m *MockUserRepository) EXPECT() *MockUserRepositoryMockRecorder {
 }
 
 // Create mocks base method.
-func (m *MockUserRepository) Create(arg0 context.Context, arg1 user.RepositoryCreateInput) (*ent.User, error) {
+func (m *MockUserRepository) Create(arg0 context.Context, arg1 user.CreateUserInput) (*ent.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", arg0, arg1)
 	ret0, _ := ret[0].(*ent.User)

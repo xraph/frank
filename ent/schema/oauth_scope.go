@@ -52,5 +52,6 @@ func (OAuthScope) Indexes() []ent.Index {
 func (OAuthScope) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		ModelBaseMixin{},
+		TimeMixin{},
 	}
 }

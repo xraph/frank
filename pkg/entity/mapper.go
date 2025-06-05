@@ -26,7 +26,7 @@ func JSONMapField(name string, optional bool) ent.Field {
 					},
 				},
 			}),
-		)
+		).Comment("Additional membership metadata")
 
 	if optional {
 		f = f.Optional()

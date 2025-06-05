@@ -3,7 +3,7 @@ package hooks
 import (
 	"github.com/juicycleff/frank/ent"
 	"github.com/juicycleff/frank/gen/auth"
-	"github.com/juicycleff/frank/user"
+	"github.com/juicycleff/frank/pkg/user"
 )
 
 type AuthHooks interface {

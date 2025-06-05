@@ -10,7 +10,6 @@ import (
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/internal/auth/session"
 	"github.com/juicycleff/frank/internal/middleware"
-	"github.com/juicycleff/frank/internal/router"
 	"github.com/juicycleff/frank/internal/services"
 	"github.com/juicycleff/frank/pkg/astro_fs"
 	"github.com/juicycleff/frank/pkg/logging"
@@ -55,7 +54,7 @@ func FileServer(rootPath string, router chi.Router) http.Handler {
 func ProtectedFrontendFileServer(
 	rootFs http.FileSystem,
 	svcs *services.Services,
-	router router.FrankRouter,
+	router routes.FrankRouter,
 	protection *middleware.FrontendRouteProtection,
 	logger logging.Logger,
 ) http.Handler {
@@ -186,7 +185,7 @@ func ProtectedFrontendFileServer(
 
 // RegisterFrontendRoutes sets up protected frontend routes
 func RegisterFrontendRoutes(
-	router router.FrankRouter,
+	router routes.FrankRouter,
 	svcs *services.Services,
 	config *config.Config,
 	logger logging.Logger,

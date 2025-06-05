@@ -6,6 +6,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 	"github.com/juicycleff/frank/pkg/entity"
+	"github.com/rs/xid"
 )
 
 // Verification holds the schema definition for the Verification entity.
@@ -17,6 +18,7 @@ type Verification struct {
 func (Verification) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("user_id").
+			GoType(xid.ID{}).
 			NotEmpty(),
 		field.String("type").
 			NotEmpty().
@@ -73,5 +75,6 @@ func (Verification) Indexes() []ent.Index {
 func (Verification) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		ModelBaseMixin{},
+		TimeMixin{},
 	}
 }

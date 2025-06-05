@@ -10,7 +10,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/juicycleff/frank/ent"
-	"github.com/juicycleff/frank/user"
+	"github.com/juicycleff/frank/pkg/user"
 )
 
 // MockUserService is a mock of Service interface.

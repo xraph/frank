@@ -6,6 +6,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 	"github.com/juicycleff/frank/pkg/entity"
+	"github.com/rs/xid"
 )
 
 // ApiKey holds the schema definition for the ApiKey entity.
@@ -25,8 +26,10 @@ func (ApiKey) Fields() []ent.Field {
 			Unique().
 			NotEmpty(),
 		field.String("user_id").
+			GoType(xid.ID{}).
 			Optional(),
 		field.String("organization_id").
+			GoType(xid.ID{}).
 			Optional(),
 		field.String("type").
 			Default("server"),
@@ -73,5 +76,6 @@ func (ApiKey) Indexes() []ent.Index {
 func (ApiKey) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		ModelBaseMixin{},
+		TimeMixin{},
 	}
 }

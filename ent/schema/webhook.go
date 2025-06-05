@@ -6,6 +6,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 	"github.com/juicycleff/frank/pkg/entity"
+	"github.com/rs/xid"
 )
 
 // Webhook holds the schema definition for the Webhook entity.
@@ -21,6 +22,7 @@ func (Webhook) Fields() []ent.Field {
 		field.String("url").
 			NotEmpty(),
 		field.String("organization_id").
+			GoType(xid.ID{}).
 			NotEmpty(),
 		field.String("secret").
 			NotEmpty().
@@ -64,5 +66,6 @@ func (Webhook) Indexes() []ent.Index {
 func (Webhook) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		ModelBaseMixin{},
+		TimeMixin{},
 	}
 }

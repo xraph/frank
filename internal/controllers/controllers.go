@@ -14,7 +14,6 @@ import (
 	"github.com/juicycleff/frank/config"
 	genht "github.com/juicycleff/frank/gen/http"
 	middleware3 "github.com/juicycleff/frank/internal/middleware"
-	"github.com/juicycleff/frank/internal/router"
 	"github.com/juicycleff/frank/internal/services"
 	"github.com/juicycleff/frank/pkg/data"
 	"github.com/juicycleff/frank/pkg/hooks"
@@ -43,7 +42,7 @@ func NewControllers(
 	hooks *hooks.Hooks,
 	logger logging.Logger,
 	router chi.Router,
-) router.FrankRouter {
+) routes.FrankRouter {
 	// Create Chi r
 	var r chi.Router
 	if router != nil {

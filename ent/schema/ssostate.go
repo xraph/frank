@@ -45,5 +45,6 @@ func (SSOState) Indexes() []ent.Index {
 func (SSOState) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		ModelBaseMixin{},
+		TimeMixin{},
 	}
 }

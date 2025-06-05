@@ -20,8 +20,8 @@ import (
 	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/juicycleff/frank/pkg/hooks"
 	"github.com/juicycleff/frank/pkg/logging"
+	"github.com/juicycleff/frank/pkg/user"
 	"github.com/juicycleff/frank/pkg/utils"
-	"github.com/juicycleff/frank/user"
 	"goa.design/clue/debug"
 	"goa.design/clue/log"
 	goahttp "goa.design/goa/v3/http"
@@ -160,7 +160,7 @@ func (a *AuthService) Register(ctx context.Context, payload *auth.RegisterPayloa
 	}
 
 	if payload.OrganizationID != nil {
-		createInput.OrganizationID = *payload.OrganizationID
+		createInput.OrgID = *payload.OrganizationID
 	}
 
 	if payload.FirstName != nil {

@@ -5,6 +5,7 @@ import (
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
+	"github.com/rs/xid"
 )
 
 // OAuthToken holds the schema definition for the OAuthToken entity.
@@ -26,10 +27,13 @@ func (OAuthToken) Fields() []ent.Field {
 		field.String("token_type").
 			Default("bearer"),
 		field.String("client_id").
+			GoType(xid.ID{}).
 			NotEmpty(),
 		field.String("user_id").
+			GoType(xid.ID{}).
 			NotEmpty(),
 		field.String("organization_id").
+			GoType(xid.ID{}).
 			Optional(),
 		field.Strings("scope_names").
 			Optional().
@@ -85,5 +89,6 @@ func (OAuthToken) Indexes() []ent.Index {
 func (OAuthToken) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		ModelBaseMixin{},
+		TimeMixin{},
 	}
 }

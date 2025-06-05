@@ -2,16 +2,16 @@ package repo
 
 import (
 	"github.com/juicycleff/frank/config"
-	email2 "github.com/juicycleff/frank/email"
 	"github.com/juicycleff/frank/internal/apikeys"
 	"github.com/juicycleff/frank/internal/auth/passkeys"
 	"github.com/juicycleff/frank/internal/auth/session"
 	"github.com/juicycleff/frank/internal/rbac"
 	"github.com/juicycleff/frank/internal/webhook"
-	"github.com/juicycleff/frank/organization"
 	"github.com/juicycleff/frank/pkg/data"
+	"github.com/juicycleff/frank/pkg/email"
 	"github.com/juicycleff/frank/pkg/logging"
-	"github.com/juicycleff/frank/user"
+	"github.com/juicycleff/frank/pkg/organization"
+	"github.com/juicycleff/frank/pkg/user"
 )
 
 // Repo contains all the service dependencies
@@ -20,7 +20,7 @@ type Repo struct {
 	Organization organization.Repository
 	User         user.Repository
 	Webhook      webhook.Repository
-	Template     email2.TemplateRepository
+	Template     email.TemplateRepository
 	Passkeys     passkeys.Repository
 	WebhookEvent webhook.EventRepository
 	RBAC         rbac.Repository
@@ -34,7 +34,7 @@ func New(cfg *config.Config, client *data.Clients, logger logging.Logger) *Repo 
 	webhookRepo := webhook.NewRepository(client.DB)
 	webhookEventRepo := webhook.NewEventRepository(client.DB)
 	sessStore := session.NewRedisStore(client.Redis, "frank_", logger)
-	templateRepo := email2.NewTemplateRepository(client.DB)
+	templateRepo := email.NewTemplateRepository(client.DB)
 	rbacRepo := rbac.NewRepository(client.DB)
 	// templateRepo := passkeys.New(client)
 

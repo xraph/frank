@@ -14,7 +14,7 @@ import (
 	"github.com/juicycleff/frank/pkg/automapper"
 	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/juicycleff/frank/pkg/logging"
-	"github.com/juicycleff/frank/user"
+	"github.com/juicycleff/frank/pkg/user"
 	"github.com/samber/lo"
 	"goa.design/clue/debug"
 	"goa.design/clue/log"
@@ -111,7 +111,7 @@ func (s *userssrvc) Create(ctx context.Context, p *users.CreatePayload) (res *de
 		input.LastName = *p.LastName
 	}
 	if p.OrganizationID != nil {
-		input.OrganizationID = *p.OrganizationID
+		input.OrgID = *p.OrganizationID
 	}
 	if p.ProfileImageURL != nil {
 		input.ProfileImageURL = *p.ProfileImageURL
@@ -162,14 +162,14 @@ func (s *userssrvc) Update(ctx context.Context, p *users.UpdatePayload) (res *de
 
 	// Update user
 	updatedUser, err := s.userService.Update(ctx, p.ID, user.UpdateUserInput{
-		PhoneNumber:           p.User.PhoneNumber,
-		FirstName:             p.User.FirstName,
-		LastName:              p.User.LastName,
-		Metadata:              p.User.Metadata,
-		ProfileImageURL:       p.User.ProfileImageURL,
-		Locale:                p.User.Locale,
-		Active:                p.User.Active,
-		PrimaryOrganizationID: p.User.PrimaryOrganizationID,
+		PhoneNumber:     p.User.PhoneNumber,
+		FirstName:       p.User.FirstName,
+		LastName:        p.User.LastName,
+		Metadata:        p.User.Metadata,
+		ProfileImageURL: p.User.ProfileImageURL,
+		Locale:          p.User.Locale,
+		Active:          p.User.Active,
+		PrimaryOrgID:    p.User.PrimaryOrganizationID,
 	})
 	if err != nil {
 		return nil, err
@@ -209,14 +209,14 @@ func (s *userssrvc) UpdateMe(ctx context.Context, p *users.UpdateMePayload) (res
 	res = &designtypes.User{}
 
 	input := user.UpdateUserInput{
-		Locale:                p.Locale,
-		Metadata:              p.Metadata,
-		PhoneNumber:           p.PhoneNumber,
-		FirstName:             p.FirstName,
-		LastName:              p.LastName,
-		ProfileImageURL:       p.ProfileImageURL,
-		Active:                p.Active,
-		PrimaryOrganizationID: p.PrimaryOrganizationID,
+		Locale:          p.Locale,
+		Metadata:        p.Metadata,
+		PhoneNumber:     p.PhoneNumber,
+		FirstName:       p.FirstName,
+		LastName:        p.LastName,
+		ProfileImageURL: p.ProfileImageURL,
+		Active:          p.Active,
+		PrimaryOrgID:    p.PrimaryOrganizationID,
 	}
 
 	// Create user

@@ -9,8 +9,8 @@ import (
 	"reflect"
 
 	"github.com/golang/mock/gomock"
-	"github.com/juicycleff/frank/email"
 	"github.com/juicycleff/frank/ent"
+	"github.com/juicycleff/frank/pkg/email"
 )
 
 // MockEmailTemplateRepository is a mock of TemplateRepository interface.

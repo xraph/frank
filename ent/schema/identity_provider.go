@@ -6,6 +6,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 	"github.com/juicycleff/frank/pkg/entity"
+	"github.com/rs/xid"
 )
 
 // IdentityProvider holds the schema definition for the IdentityProvider entity.
@@ -19,6 +20,7 @@ func (IdentityProvider) Fields() []ent.Field {
 		field.String("name").
 			NotEmpty(),
 		field.String("organization_id").
+			GoType(xid.ID{}).
 			NotEmpty(),
 		field.String("provider_type").
 			NotEmpty().
@@ -82,5 +84,6 @@ func (IdentityProvider) Indexes() []ent.Index {
 func (IdentityProvider) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		ModelBaseMixin{},
+		TimeMixin{},
 	}
 }

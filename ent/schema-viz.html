@@ -1,0 +1,148 @@
+<html lang="en">
+
+<head>
+  <title>ent schema network</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/tonsky/FiraCode@5.2/distr/fira_code.css">
+  <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/randomcolor/0.6.1/randomColor.min.js" integrity="sha512-vPeZ7JCboHcfpqSx5ZD+/jpEhS4JpXxfz9orSvAPPj0EKUVShU2tgy7XkU+oujBJKnWmu4hU7r9MMQNWPfXsYw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <style type="text/css">
+    html * {
+      font-family: 'Fira Code', monospace !important;
+      font-size: 14px;
+    }
+
+    #schema {
+      width: 100%;
+      height: 100%;
+      border: 1px solid lightgray;
+    }
+
+    .var-type {
+      color: #4EC9B0;
+    }
+
+    table {
+      padding: 2px 3px;
+    }
+
+    .vis-tooltip,
+    .table-container {
+      background-color: #1e1e1e !important;
+      color: white;
+    }
+
+    tr {
+      color: white;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="schema"></div>
+  <br />
+  <script type="text/javascript">
+    
+    const fieldsToTable = fields => {
+      const container = document.createElement("div");
+      container.setAttribute("class", "table-container")
+      if (!fields) {
+        container.innerText = "no fields";
+        return container;
+      }
+      const tbl = document.createElement("table");
+      const tblBody = document.createElement("tbody");
+      for (const field of fields) {
+        const row = document.createElement("tr");
+        for (const key of ["name", "type"]) {
+          const cell = document.createElement("td");
+          const cellText = document.createTextNode(field[key]);
+          if (key === "type") {
+            cell.setAttribute("class", "var-type")
+          }
+          cell.appendChild(cellText);
+          row.appendChild(cell);
+        }
+        tblBody.appendChild(row);
+      }
+      tbl.appendChild(tblBody);
+      container.appendChild(tbl);
+      return container;
+    }
+
+    
+    const entGraph = JSON.parse("{\"nodes\":[{\"id\":\"ApiKey\",\"fields\":[{\"name\":\"created_at\",\"type\":\"time.Time\"},{\"name\":\"updated_at\",\"type\":\"time.Time\"},{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"key\",\"type\":\"string\"},{\"name\":\"hashed_key\",\"type\":\"string\"},{\"name\":\"user_id\",\"type\":\"xid.ID\"},{\"name\":\"organization_id\",\"type\":\"xid.ID\"},{\"name\":\"type\",\"type\":\"string\"},{\"name\":\"active\",\"type\":\"bool\"},{\"name\":\"permissions\",\"type\":\"[]string\"},{\"name\":\"scopes\",\"type\":\"[]string\"},{\"name\":\"metadata\",\"type\":\"map[string]interface {}\"},{\"name\":\"last_used\",\"type\":\"time.Time\"},{\"name\":\"expires_at\",\"type\":\"time.Time\"}]},{\"id\":\"EmailTemplate\",\"fields\":[{\"name\":\"created_at\",\"type\":\"time.Time\"},{\"name\":\"updated_at\",\"type\":\"time.Time\"},{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"subject\",\"type\":\"string\"},{\"name\":\"type\",\"type\":\"string\"},{\"name\":\"html_content\",\"type\":\"string\"},{\"name\":\"text_content\",\"type\":\"string\"},{\"name\":\"organization_id\",\"type\":\"xid.ID\"},{\"name\":\"active\",\"type\":\"bool\"},{\"name\":\"system\",\"type\":\"bool\"},{\"name\":\"locale\",\"type\":\"string\"},{\"name\":\"metadata\",\"type\":\"map[string]interface {}\"}]},{\"id\":\"FeatureFlag\",\"fields\":[{\"name\":\"created_at\",\"type\":\"time.Time\"},{\"name\":\"updated_at\",\"type\":\"time.Time\"},{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"key\",\"type\":\"string\"},{\"name\":\"description\",\"type\":\"string\"},{\"name\":\"enabled\",\"type\":\"bool\"},{\"name\":\"is_premium\",\"type\":\"bool\"},{\"name\":\"component\",\"type\":\"featureflag.Component\"}]},{\"id\":\"IdentityProvider\",\"fields\":[{\"name\":\"created_at\",\"type\":\"time.Time\"},{\"name\":\"updated_at\",\"type\":\"time.Time\"},{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"organization_id\",\"type\":\"xid.ID\"},{\"name\":\"provider_type\",\"type\":\"string\"},{\"name\":\"client_id\",\"type\":\"string\"},{\"name\":\"client_secret\",\"type\":\"string\"},{\"name\":\"issuer\",\"type\":\"string\"},{\"name\":\"authorization_endpoint\",\"type\":\"string\"},{\"name\":\"token_endpoint\",\"type\":\"string\"},{\"name\":\"userinfo_endpoint\",\"type\":\"string\"},{\"name\":\"jwks_uri\",\"type\":\"string\"},{\"name\":\"metadata_url\",\"type\":\"string\"},{\"name\":\"redirect_uri\",\"type\":\"string\"},{\"name\":\"certificate\",\"type\":\"string\"},{\"name\":\"private_key\",\"type\":\"string\"},{\"name\":\"active\",\"type\":\"bool\"},{\"name\":\"primary\",\"type\":\"bool\"},{\"name\":\"domains\",\"type\":\"[]string\"},{\"name\":\"attributes_mapping\",\"type\":\"map[string]string\"},{\"name\":\"metadata\",\"type\":\"map[string]interface {}\"}]},{\"id\":\"MFA\",\"fields\":[{\"name\":\"created_at\",\"type\":\"time.Time\"},{\"name\":\"updated_at\",\"type\":\"time.Time\"},{\"name\":\"user_id\",\"type\":\"xid.ID\"},{\"name\":\"method\",\"type\":\"string\"},{\"name\":\"secret\",\"type\":\"string\"},{\"name\":\"verified\",\"type\":\"bool\"},{\"name\":\"active\",\"type\":\"bool\"},{\"name\":\"backup_codes\",\"type\":\"[]string\"},{\"name\":\"phone_number\",\"type\":\"string\"},{\"name\":\"email\",\"type\":\"string\"},{\"name\":\"last_used\",\"type\":\"time.Time\"},{\"name\":\"metadata\",\"type\":\"map[string]interface {}\"}]},{\"id\":\"Membership\",\"fields\":[{\"name\":\"created_at\",\"type\":\"time.Time\"},{\"name\":\"updated_at\",\"type\":\"time.Time\"},{\"name\":\"user_id\",\"type\":\"xid.ID\"},{\"name\":\"organization_id\",\"type\":\"xid.ID\"},{\"name\":\"role_id\",\"type\":\"xid.ID\"},{\"name\":\"status\",\"type\":\"membership.Status\"},{\"name\":\"invited_by\",\"type\":\"xid.ID\"},{\"name\":\"invited_at\",\"type\":\"time.Time\"},{\"name\":\"joined_at\",\"type\":\"time.Time\"},{\"name\":\"expires_at\",\"type\":\"time.Time\"},{\"name\":\"invitation_token\",\"type\":\"string\"},{\"name\":\"is_billing_contact\",\"type\":\"bool\"},{\"name\":\"is_primary_contact\",\"type\":\"bool\"},{\"name\":\"metadata\",\"type\":\"map[string]interface {}\"}]},{\"id\":\"OAuthAuthorization\",\"fields\":[{\"name\":\"created_at\",\"type\":\"time.Time\"},{\"name\":\"updated_at\",\"type\":\"time.Time\"},{\"name\":\"client_id\",\"type\":\"xid.ID\"},{\"name\":\"user_id\",\"type\":\"xid.ID\"},{\"name\":\"organization_id\",\"type\":\"xid.ID\"},{\"name\":\"code\",\"type\":\"string\"},{\"name\":\"code_challenge\",\"type\":\"string\"},{\"name\":\"code_challenge_method\",\"type\":\"string\"},{\"name\":\"redirect_uri\",\"type\":\"string\"},{\"name\":\"scope_names\",\"type\":\"[]string\"},{\"name\":\"used\",\"type\":\"bool\"},{\"name\":\"used_at\",\"type\":\"time.Time\"},{\"name\":\"expires_at\",\"type\":\"time.Time\"},{\"name\":\"state\",\"type\":\"string\"},{\"name\":\"nonce\",\"type\":\"string\"}]},{\"id\":\"OAuthClient\",\"fields\":[{\"name\":\"created_at\",\"type\":\"time.Time\"},{\"name\":\"updated_at\",\"type\":\"time.Time\"},{\"name\":\"client_id\",\"type\":\"string\"},{\"name\":\"client_secret\",\"type\":\"string\"},{\"name\":\"client_name\",\"type\":\"string\"},{\"name\":\"client_description\",\"type\":\"string\"},{\"name\":\"client_uri\",\"type\":\"string\"},{\"name\":\"logo_uri\",\"type\":\"string\"},{\"name\":\"redirect_uris\",\"type\":\"[]string\"},{\"name\":\"post_logout_redirect_uris\",\"type\":\"[]string\"},{\"name\":\"organization_id\",\"type\":\"xid.ID\"},{\"name\":\"public\",\"type\":\"bool\"},{\"name\":\"active\",\"type\":\"bool\"},{\"name\":\"allowed_cors_origins\",\"type\":\"[]string\"},{\"name\":\"allowed_grant_types\",\"type\":\"[]string\"},{\"name\":\"token_expiry_seconds\",\"type\":\"int\"},{\"name\":\"refresh_token_expiry_seconds\",\"type\":\"int\"},{\"name\":\"auth_code_expiry_seconds\",\"type\":\"int\"},{\"name\":\"requires_pkce\",\"type\":\"bool\"},{\"name\":\"requires_consent\",\"type\":\"bool\"}]},{\"id\":\"OAuthScope\",\"fields\":[{\"name\":\"created_at\",\"type\":\"time.Time\"},{\"name\":\"updated_at\",\"type\":\"time.Time\"},{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"description\",\"type\":\"string\"},{\"name\":\"default_scope\",\"type\":\"bool\"},{\"name\":\"public\",\"type\":\"bool\"}]},{\"id\":\"OAuthToken\",\"fields\":[{\"name\":\"created_at\",\"type\":\"time.Time\"},{\"name\":\"updated_at\",\"type\":\"time.Time\"},{\"name\":\"access_token\",\"type\":\"string\"},{\"name\":\"refresh_token\",\"type\":\"string\"},{\"name\":\"token_type\",\"type\":\"string\"},{\"name\":\"client_id\",\"type\":\"xid.ID\"},{\"name\":\"user_id\",\"type\":\"xid.ID\"},{\"name\":\"organization_id\",\"type\":\"xid.ID\"},{\"name\":\"scope_names\",\"type\":\"[]string\"},{\"name\":\"expires_in\",\"type\":\"int\"},{\"name\":\"expires_at\",\"type\":\"time.Time\"},{\"name\":\"refresh_token_expires_at\",\"type\":\"time.Time\"},{\"name\":\"revoked\",\"type\":\"bool\"},{\"name\":\"revoked_at\",\"type\":\"time.Time\"},{\"name\":\"ip_address\",\"type\":\"string\"},{\"name\":\"user_agent\",\"type\":\"string\"}]},{\"id\":\"Organization\",\"fields\":[{\"name\":\"created_at\",\"type\":\"time.Time\"},{\"name\":\"updated_at\",\"type\":\"time.Time\"},{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"slug\",\"type\":\"string\"},{\"name\":\"domain\",\"type\":\"string\"},{\"name\":\"logo_url\",\"type\":\"string\"},{\"name\":\"plan\",\"type\":\"string\"},{\"name\":\"active\",\"type\":\"bool\"},{\"name\":\"metadata\",\"type\":\"map[string]interface {}\"},{\"name\":\"trial_ends_at\",\"type\":\"time.Time\"},{\"name\":\"trial_used\",\"type\":\"bool\"},{\"name\":\"owner_id\",\"type\":\"xid.ID\"},{\"name\":\"org_type\",\"type\":\"organization.OrgType\"},{\"name\":\"is_platform_organization\",\"type\":\"bool\"},{\"name\":\"external_user_limit\",\"type\":\"int\"},{\"name\":\"end_user_limit\",\"type\":\"int\"},{\"name\":\"sso_enabled\",\"type\":\"bool\"},{\"name\":\"sso_domain\",\"type\":\"string\"},{\"name\":\"subscription_id\",\"type\":\"string\"},{\"name\":\"customer_id\",\"type\":\"string\"},{\"name\":\"subscription_status\",\"type\":\"organization.SubscriptionStatus\"},{\"name\":\"auth_service_enabled\",\"type\":\"bool\"},{\"name\":\"auth_config\",\"type\":\"map[string]interface {}\"},{\"name\":\"auth_domain\",\"type\":\"string\"},{\"name\":\"api_request_limit\",\"type\":\"int\"},{\"name\":\"api_requests_used\",\"type\":\"int\"},{\"name\":\"current_external_users\",\"type\":\"int\"},{\"name\":\"current_end_users\",\"type\":\"int\"}]},{\"id\":\"OrganizationFeature\",\"fields\":[{\"name\":\"created_at\",\"type\":\"time.Time\"},{\"name\":\"updated_at\",\"type\":\"time.Time\"},{\"name\":\"organization_id\",\"type\":\"xid.ID\"},{\"name\":\"feature_id\",\"type\":\"xid.ID\"},{\"name\":\"enabled\",\"type\":\"bool\"},{\"name\":\"settings\",\"type\":\"map[string]interface {}\"}]},{\"id\":\"Passkey\",\"fields\":[{\"name\":\"created_at\",\"type\":\"time.Time\"},{\"name\":\"updated_at\",\"type\":\"time.Time\"},{\"name\":\"user_id\",\"type\":\"xid.ID\"},{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"credential_id\",\"type\":\"string\"},{\"name\":\"public_key\",\"type\":\"[]byte\"},{\"name\":\"sign_count\",\"type\":\"int\"},{\"name\":\"active\",\"type\":\"bool\"},{\"name\":\"device_type\",\"type\":\"string\"},{\"name\":\"aaguid\",\"type\":\"string\"},{\"name\":\"last_used\",\"type\":\"time.Time\"},{\"name\":\"transports\",\"type\":\"[]string\"},{\"name\":\"attestation\",\"type\":\"map[string]interface {}\"}]},{\"id\":\"Permission\",\"fields\":[{\"name\":\"created_at\",\"type\":\"time.Time\"},{\"name\":\"updated_at\",\"type\":\"time.Time\"},{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"display_name\",\"type\":\"string\"},{\"name\":\"description\",\"type\":\"string\"},{\"name\":\"resource\",\"type\":\"string\"},{\"name\":\"action\",\"type\":\"string\"},{\"name\":\"category\",\"type\":\"permission.Category\"},{\"name\":\"applicable_user_types\",\"type\":\"[]string\"},{\"name\":\"applicable_contexts\",\"type\":\"[]string\"},{\"name\":\"conditions\",\"type\":\"string\"},{\"name\":\"system\",\"type\":\"bool\"},{\"name\":\"dangerous\",\"type\":\"bool\"},{\"name\":\"risk_level\",\"type\":\"int\"},{\"name\":\"created_by\",\"type\":\"string\"},{\"name\":\"active\",\"type\":\"bool\"},{\"name\":\"permission_group\",\"type\":\"string\"}]},{\"id\":\"PermissionDependency\",\"fields\":[{\"name\":\"created_at\",\"type\":\"time.Time\"},{\"name\":\"updated_at\",\"type\":\"time.Time\"},{\"name\":\"permission_id\",\"type\":\"xid.ID\"},{\"name\":\"required_permission_id\",\"type\":\"xid.ID\"},{\"name\":\"dependency_type\",\"type\":\"permissiondependency.DependencyType\"},{\"name\":\"condition\",\"type\":\"string\"},{\"name\":\"active\",\"type\":\"bool\"},{\"name\":\"created_by\",\"type\":\"string\"}]},{\"id\":\"Role\",\"fields\":[{\"name\":\"created_at\",\"type\":\"time.Time\"},{\"name\":\"updated_at\",\"type\":\"time.Time\"},{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"display_name\",\"type\":\"string\"},{\"name\":\"description\",\"type\":\"string\"},{\"name\":\"role_type\",\"type\":\"role.RoleType\"},{\"name\":\"organization_id\",\"type\":\"xid.ID\"},{\"name\":\"application_id\",\"type\":\"xid.ID\"},{\"name\":\"system\",\"type\":\"bool\"},{\"name\":\"is_default\",\"type\":\"bool\"},{\"name\":\"priority\",\"type\":\"int\"},{\"name\":\"color\",\"type\":\"string\"},{\"name\":\"applicable_user_types\",\"type\":\"[]string\"},{\"name\":\"created_by\",\"type\":\"string\"},{\"name\":\"active\",\"type\":\"bool\"},{\"name\":\"parent_id\",\"type\":\"xid.ID\"}]},{\"id\":\"SSOState\",\"fields\":[{\"name\":\"created_at\",\"type\":\"time.Time\"},{\"name\":\"updated_at\",\"type\":\"time.Time\"},{\"name\":\"state\",\"type\":\"string\"},{\"name\":\"data\",\"type\":\"string\"},{\"name\":\"expires_at\",\"type\":\"time.Time\"}]},{\"id\":\"Session\",\"fields\":[{\"name\":\"created_at\",\"type\":\"time.Time\"},{\"name\":\"updated_at\",\"type\":\"time.Time\"},{\"name\":\"user_id\",\"type\":\"xid.ID\"},{\"name\":\"token\",\"type\":\"string\"},{\"name\":\"ip_address\",\"type\":\"string\"},{\"name\":\"user_agent\",\"type\":\"string\"},{\"name\":\"device_id\",\"type\":\"string\"},{\"name\":\"location\",\"type\":\"string\"},{\"name\":\"organization_id\",\"type\":\"xid.ID\"},{\"name\":\"active\",\"type\":\"bool\"},{\"name\":\"expires_at\",\"type\":\"time.Time\"},{\"name\":\"last_active_at\",\"type\":\"time.Time\"},{\"name\":\"metadata\",\"type\":\"map[string]interface {}\"}]},{\"id\":\"User\",\"fields\":[{\"name\":\"created_at\",\"type\":\"time.Time\"},{\"name\":\"updated_at\",\"type\":\"time.Time\"},{\"name\":\"email\",\"type\":\"string\"},{\"name\":\"phone_number\",\"type\":\"string\"},{\"name\":\"first_name\",\"type\":\"string\"},{\"name\":\"last_name\",\"type\":\"string\"},{\"name\":\"username\",\"type\":\"string\"},{\"name\":\"password_hash\",\"type\":\"string\"},{\"name\":\"email_verified\",\"type\":\"bool\"},{\"name\":\"phone_verified\",\"type\":\"bool\"},{\"name\":\"active\",\"type\":\"bool\"},{\"name\":\"blocked\",\"type\":\"bool\"},{\"name\":\"last_login\",\"type\":\"time.Time\"},{\"name\":\"last_password_change\",\"type\":\"time.Time\"},{\"name\":\"metadata\",\"type\":\"map[string]interface {}\"},{\"name\":\"profile_image_url\",\"type\":\"string\"},{\"name\":\"locale\",\"type\":\"string\"},{\"name\":\"timezone\",\"type\":\"string\"},{\"name\":\"user_type\",\"type\":\"user.UserType\"},{\"name\":\"organization_id\",\"type\":\"xid.ID\"},{\"name\":\"primary_organization_id\",\"type\":\"xid.ID\"},{\"name\":\"is_platform_admin\",\"type\":\"bool\"},{\"name\":\"auth_provider\",\"type\":\"string\"},{\"name\":\"external_id\",\"type\":\"string\"},{\"name\":\"customer_id\",\"type\":\"string\"},{\"name\":\"custom_attributes\",\"type\":\"map[string]interface {}\"},{\"name\":\"created_by\",\"type\":\"string\"},{\"name\":\"password_reset_token_expires\",\"type\":\"time.Time\"},{\"name\":\"password_reset_token\",\"type\":\"string\"},{\"name\":\"login_count\",\"type\":\"int\"},{\"name\":\"last_login_ip\",\"type\":\"string\"}]},{\"id\":\"UserPermission\",\"fields\":[{\"name\":\"created_at\",\"type\":\"time.Time\"},{\"name\":\"updated_at\",\"type\":\"time.Time\"},{\"name\":\"user_id\",\"type\":\"xid.ID\"},{\"name\":\"permission_id\",\"type\":\"xid.ID\"},{\"name\":\"context_type\",\"type\":\"userpermission.ContextType\"},{\"name\":\"context_id\",\"type\":\"xid.ID\"},{\"name\":\"resource_type\",\"type\":\"string\"},{\"name\":\"resource_id\",\"type\":\"xid.ID\"},{\"name\":\"permission_type\",\"type\":\"userpermission.PermissionType\"},{\"name\":\"assigned_by\",\"type\":\"xid.ID\"},{\"name\":\"assigned_at\",\"type\":\"time.Time\"},{\"name\":\"expires_at\",\"type\":\"time.Time\"},{\"name\":\"active\",\"type\":\"bool\"},{\"name\":\"conditions\",\"type\":\"map[string]interface {}\"},{\"name\":\"reason\",\"type\":\"string\"}]},{\"id\":\"UserRole\",\"fields\":[{\"name\":\"created_at\",\"type\":\"time.Time\"},{\"name\":\"updated_at\",\"type\":\"time.Time\"},{\"name\":\"user_id\",\"type\":\"xid.ID\"},{\"name\":\"role_id\",\"type\":\"xid.ID\"},{\"name\":\"context_type\",\"type\":\"userrole.ContextType\"},{\"name\":\"context_id\",\"type\":\"xid.ID\"},{\"name\":\"assigned_by\",\"type\":\"xid.ID\"},{\"name\":\"assigned_at\",\"type\":\"time.Time\"},{\"name\":\"expires_at\",\"type\":\"time.Time\"},{\"name\":\"active\",\"type\":\"bool\"},{\"name\":\"conditions\",\"type\":\"map[string]interface {}\"}]},{\"id\":\"Verification\",\"fields\":[{\"name\":\"created_at\",\"type\":\"time.Time\"},{\"name\":\"updated_at\",\"type\":\"time.Time\"},{\"name\":\"user_id\",\"type\":\"xid.ID\"},{\"name\":\"type\",\"type\":\"string\"},{\"name\":\"token\",\"type\":\"string\"},{\"name\":\"email\",\"type\":\"string\"},{\"name\":\"phone_number\",\"type\":\"string\"},{\"name\":\"redirect_url\",\"type\":\"string\"},{\"name\":\"used\",\"type\":\"bool\"},{\"name\":\"used_at\",\"type\":\"time.Time\"},{\"name\":\"attempts\",\"type\":\"int\"},{\"name\":\"expires_at\",\"type\":\"time.Time\"},{\"name\":\"ip_address\",\"type\":\"string\"},{\"name\":\"user_agent\",\"type\":\"string\"},{\"name\":\"attestation\",\"type\":\"map[string]interface {}\"}]},{\"id\":\"Webhook\",\"fields\":[{\"name\":\"created_at\",\"type\":\"time.Time\"},{\"name\":\"updated_at\",\"type\":\"time.Time\"},{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"url\",\"type\":\"string\"},{\"name\":\"organization_id\",\"type\":\"xid.ID\"},{\"name\":\"secret\",\"type\":\"string\"},{\"name\":\"active\",\"type\":\"bool\"},{\"name\":\"event_types\",\"type\":\"[]string\"},{\"name\":\"version\",\"type\":\"string\"},{\"name\":\"retry_count\",\"type\":\"int\"},{\"name\":\"timeout_ms\",\"type\":\"int\"},{\"name\":\"format\",\"type\":\"webhook.Format\"},{\"name\":\"metadata\",\"type\":\"map[string]interface {}\"}]},{\"id\":\"WebhookEvent\",\"fields\":[{\"name\":\"created_at\",\"type\":\"time.Time\"},{\"name\":\"updated_at\",\"type\":\"time.Time\"},{\"name\":\"webhook_id\",\"type\":\"xid.ID\"},{\"name\":\"event_type\",\"type\":\"string\"},{\"name\":\"headers\",\"type\":\"map[string]string\"},{\"name\":\"payload\",\"type\":\"map[string]interface {}\"},{\"name\":\"delivered\",\"type\":\"bool\"},{\"name\":\"delivered_at\",\"type\":\"time.Time\"},{\"name\":\"attempts\",\"type\":\"int\"},{\"name\":\"next_retry\",\"type\":\"time.Time\"},{\"name\":\"status_code\",\"type\":\"int\"},{\"name\":\"response_body\",\"type\":\"string\"},{\"name\":\"error\",\"type\":\"string\"}]}],\"edges\":[{\"from\":\"FeatureFlag\",\"to\":\"OrganizationFeature\",\"label\":\"organization_features\"},{\"from\":\"OAuthAuthorization\",\"to\":\"OAuthScope\",\"label\":\"scopes\"},{\"from\":\"OAuthClient\",\"to\":\"OAuthToken\",\"label\":\"tokens\"},{\"from\":\"OAuthClient\",\"to\":\"OAuthAuthorization\",\"label\":\"authorizations\"},{\"from\":\"OAuthClient\",\"to\":\"OAuthScope\",\"label\":\"scopes\"},{\"from\":\"OAuthToken\",\"to\":\"OAuthScope\",\"label\":\"scopes\"},{\"from\":\"Organization\",\"to\":\"User\",\"label\":\"users\"},{\"from\":\"Organization\",\"to\":\"Membership\",\"label\":\"memberships\"},{\"from\":\"Organization\",\"to\":\"ApiKey\",\"label\":\"api_keys\"},{\"from\":\"Organization\",\"to\":\"Webhook\",\"label\":\"webhooks\"},{\"from\":\"Organization\",\"to\":\"OrganizationFeature\",\"label\":\"feature_flags\"},{\"from\":\"Organization\",\"to\":\"IdentityProvider\",\"label\":\"identity_providers\"},{\"from\":\"Organization\",\"to\":\"OAuthClient\",\"label\":\"oauth_clients\"},{\"from\":\"Organization\",\"to\":\"Role\",\"label\":\"roles\"},{\"from\":\"Permission\",\"to\":\"UserPermission\",\"label\":\"user_assignments\"},{\"from\":\"Permission\",\"to\":\"PermissionDependency\",\"label\":\"dependencies\"},{\"from\":\"Permission\",\"to\":\"PermissionDependency\",\"label\":\"dependents\"},{\"from\":\"Permission\",\"to\":\"Permission\",\"label\":\"required_permissions\"},{\"from\":\"Role\",\"to\":\"UserRole\",\"label\":\"user_assignments\"},{\"from\":\"Role\",\"to\":\"Permission\",\"label\":\"permissions\"},{\"from\":\"Role\",\"to\":\"Membership\",\"label\":\"memberships\"},{\"from\":\"Role\",\"to\":\"Role\",\"label\":\"children\"},{\"from\":\"User\",\"to\":\"Membership\",\"label\":\"memberships\"},{\"from\":\"User\",\"to\":\"Session\",\"label\":\"sessions\"},{\"from\":\"User\",\"to\":\"ApiKey\",\"label\":\"api_keys\"},{\"from\":\"User\",\"to\":\"MFA\",\"label\":\"mfa_methods\"},{\"from\":\"User\",\"to\":\"Passkey\",\"label\":\"passkeys\"},{\"from\":\"User\",\"to\":\"OAuthToken\",\"label\":\"oauth_tokens\"},{\"from\":\"User\",\"to\":\"OAuthAuthorization\",\"label\":\"oauth_authorizations\"},{\"from\":\"User\",\"to\":\"Verification\",\"label\":\"verifications\"},{\"from\":\"User\",\"to\":\"UserRole\",\"label\":\"user_roles\"},{\"from\":\"User\",\"to\":\"UserPermission\",\"label\":\"user_permissions\"},{\"from\":\"User\",\"to\":\"Role\",\"label\":\"system_roles\"},{\"from\":\"User\",\"to\":\"UserRole\",\"label\":\"assigned_user_roles\"},{\"from\":\"User\",\"to\":\"UserPermission\",\"label\":\"assigned_user_permissions\"},{\"from\":\"UserPermission\",\"to\":\"Organization\",\"label\":\"organization_context\"},{\"from\":\"UserRole\",\"to\":\"Organization\",\"label\":\"organization_context\"},{\"from\":\"Webhook\",\"to\":\"WebhookEvent\",\"label\":\"events\"}]}");
+    const nodes = new vis.DataSet((entGraph.nodes || []).map(n =>
+    ({
+      id: n.id,
+      label: n.id,
+      color: randomColor({
+        luminosity: 'light',
+        hue: 'random',
+      }),
+      title: fieldsToTable(n.fields),
+    })
+    ));
+    edgesCounter = {};
+    
+    
+    const edgeKey = e => `${e.to}::${e.from}`
+    const edges = new vis.DataSet((entGraph.edges || []).map(e => {
+      const counter = (edgesCounter[edgeKey(e)] || 0) + 1;
+      edgesCounter[edgeKey(e)] = counter;
+      if (e.from === e.to) {
+        return {
+          ...e,
+          physics: false,
+          arrows: "to",
+          type: 'curvedCW',
+          selfReference: {
+            size: (counter + 1) * 10,
+            angle: (counter * 0.8) * Math.PI / 4,
+            renderBehindTheNode: false
+          }
+        }
+      }
+      return { ...e, type: 'curvedCW', physics: false, arrows: "to", smooth: { type: 'curvedCW', roundness: Math.pow(-1, counter) * 0.2 * counter } }
+    }));
+    const options = {
+      manipulation: false,
+      edges: {
+        physics: false,
+        smooth: { type: 'curvedCW', roundness: 0.2 },
+        arrows: "to",
+      },
+      nodes: {
+        widthConstraint: 60,
+        heightConstraint: 60,
+        shape: "box",
+        font: { align: "center" },
+      },
+      layout: {
+        improvedLayout: true,
+        hierarchical: {
+          enabled: true,
+          levelSeparation: 250,
+        },
+      },
+      physics: {
+        enabled: true,
+        barnesHut: {
+          springConstant: 0,
+          avoidOverlap: 1,
+          springConstant: 0
+        },
+        solver: "barnesHut",
+        repulsion: {
+          nodeDistance: 150,
+          springConstant: 0,
+          damping: 0,
+          springLength: 0
+        }
+      }
+    };
+    const container = document.getElementById("schema");
+    const gph = new vis.Network(container, { nodes, edges }, options);
+  </script>
+</body>
+
+</html>

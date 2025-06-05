@@ -8,9 +8,9 @@
 package client
 
 import (
-	auth "github.com/juicycleff/frank/gen/auth"
-	designtypes "github.com/juicycleff/frank/gen/designtypes"
-	"github.com/juicycleff/frank/user"
+	"github.com/juicycleff/frank/gen/auth"
+	"github.com/juicycleff/frank/gen/designtypes"
+	"github.com/juicycleff/frank/pkg/user"
 	goa "goa.design/goa/v3/pkg"
 )
 

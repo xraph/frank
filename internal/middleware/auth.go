@@ -16,6 +16,7 @@ import (
 	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/juicycleff/frank/pkg/logging"
 	"github.com/juicycleff/frank/pkg/utils"
+	"github.com/rs/xid"
 )
 
 // contextKey is a private type for context keys
@@ -190,22 +191,22 @@ func PrefillAuthWithOptions(
 		if apiKey != "" {
 			if apiKeyInfo, err := options.APIKeyService.Validate(ctx, apiKey); err == nil {
 				// API key is valid
-				if apiKeyInfo.UserID != "" {
+				if !apiKeyInfo.UserID.IsNil() {
 					ctx = context.WithValue(ctx, UserIDKey, apiKeyInfo.UserID)
 				}
-				if apiKeyInfo.OrganizationID != "" {
+				if !apiKeyInfo.OrganizationID.IsNil() {
 					ctx = context.WithValue(ctx, OrganizationIDKey, apiKeyInfo.OrganizationID)
 				}
 				authenticated = true
 				logger.Debug("Authenticated via API key")
 
 				// Update last used timestamp in a goroutine
-				go func(id string) {
+				go func(id xid.ID) {
 					bgCtx, cancel := context.WithTimeout(context.Background(), cfg.Server.ShutdownTimeout)
 					defer cancel()
-					if err := options.APIKeyService.UpdateLastUsed(bgCtx, id); err != nil {
+					if err := options.APIKeyService.UpdateLastUsed(bgCtx, id.String()); err != nil {
 						logger.Error("Failed to update API key last used timestamp",
-							logging.String("key_id", id),
+							logging.String("key_id", id.String()),
 							logging.Error(err))
 					}
 				}(apiKeyInfo.ID)
@@ -300,21 +301,21 @@ func AuthWithOptionsHuma(cfg *config.Config, logger logging.Logger, options Auth
 				if apiKey != "" {
 					if apiKeyInfo, err := options.APIKeyService.Validate(ctx, apiKey); err == nil {
 						// API key is valid, add info to context
-						if apiKeyInfo.UserID != "" {
+						if !apiKeyInfo.UserID.IsNil() {
 							ctx = context.WithValue(ctx, UserIDKey, apiKeyInfo.UserID)
 						}
-						if apiKeyInfo.OrganizationID != "" {
+						if !apiKeyInfo.OrganizationID.IsNil() {
 							ctx = context.WithValue(ctx, OrganizationIDKey, apiKeyInfo.OrganizationID)
 						}
 						authenticated = true
 
 						// Update last used timestamp in a goroutine
-						go func(id string) {
+						go func(id xid.ID) {
 							bgCtx, cancel := context.WithTimeout(context.Background(), cfg.Server.ShutdownTimeout)
 							defer cancel()
-							if err := options.APIKeyService.UpdateLastUsed(bgCtx, id); err != nil {
+							if err := options.APIKeyService.UpdateLastUsed(bgCtx, id.String()); err != nil {
 								logger.Error("Failed to update API key last used timestamp",
-									logging.String("key_id", id),
+									logging.String("key_id", id.String()),
 									logging.Error(err))
 							}
 						}(apiKeyInfo.ID)
@@ -510,21 +511,30 @@ func RequirePermission(permission string) func(http.Handler) http.Handler {
 }
 
 // GetUserIDReq gets the user ID from the request context
-func GetUserIDReq(r *http.Request) (string, bool) {
-	userID, ok := r.Context().Value(UserIDKey).(string)
+func GetUserIDReq(r *http.Request) (xid.ID, bool) {
+	userID, ok := r.Context().Value(UserIDKey).(xid.ID)
 	return userID, ok
 }
 
 // NewLoggedInUserIDCtx .
-func NewLoggedInUserIDCtx(ctx context.Context, userID string) context.Context {
+func NewLoggedInUserIDCtx(ctx context.Context, userID xid.ID) context.Context {
 	ctx = context.WithValue(ctx, UserIDKey, userID)
 	return ctx
 }
 
 // GetUserID gets the user ID from the request context
-func GetUserID(ctx context.Context) (string, bool) {
-	userID, ok := ctx.Value(UserIDKey).(string)
+func GetUserID(ctx context.Context) (xid.ID, bool) {
+	userID, ok := ctx.Value(UserIDKey).(xid.ID)
 	return userID, ok
+}
+
+// GetUserIDFromContext gets the user ID from the request context
+func GetUserIDFromContext(ctx context.Context) (xid.ID, error) {
+	userID, ok := ctx.Value(UserIDKey).(xid.ID)
+	if !ok {
+		return xid.NilID(), errors.New(errors.CodeForbidden, "user not logged in")
+	}
+	return userID, nil
 }
 
 // GetOrganizationIDReq gets the organization ID from the request context

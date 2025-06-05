@@ -11,7 +11,6 @@ import (
 	"syscall"
 
 	"github.com/juicycleff/frank/config"
-	"github.com/juicycleff/frank/internal/router"
 	"github.com/juicycleff/frank/pkg/astro_fs"
 	"github.com/juicycleff/frank/pkg/data"
 	"github.com/juicycleff/frank/pkg/logging"
@@ -22,7 +21,7 @@ type Server struct {
 	server *http.Server
 	config *config.ServerConfig
 	logger logging.Logger
-	router router.FrankRouter
+	router routes.FrankRouter
 }
 
 // NewServer creates a new HTTP server
@@ -157,6 +156,6 @@ func (s *Server) WaitForSignal(serverErrors chan error) {
 }
 
 // Router returns the router
-func (s *Server) Router() router.FrankRouter {
+func (s *Server) Router() routes.FrankRouter {
 	return s.router
 }

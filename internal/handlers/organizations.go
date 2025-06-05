@@ -7,9 +7,9 @@ import (
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/ent"
 	"github.com/juicycleff/frank/internal/middleware"
-	"github.com/juicycleff/frank/organization"
 	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/juicycleff/frank/pkg/logging"
+	"github.com/juicycleff/frank/pkg/organization"
 	"github.com/juicycleff/frank/pkg/utils"
 )
 

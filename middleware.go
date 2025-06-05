@@ -11,7 +11,7 @@ import (
 )
 
 func (f *Frank) AuthMiddleware() func(http.Handler) http.Handler {
-	authmw := middleware.AuthGoa(f.Config, f.Logger, f.Services.Session, f.Services.SessionStore, f.Services.APIKey, f.Services.CookieHandler)
+	authmw := middleware.AuthGoa(f.cfg, f.log, f.Services.Session, f.Services.SessionStore, f.Services.APIKey, f.Services.CookieHandler)
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx, err := authmw.AuthWithOptionsGoa()(r.Context(), "", nil)
@@ -26,7 +26,7 @@ func (f *Frank) AuthMiddleware() func(http.Handler) http.Handler {
 }
 
 func (f *Frank) AuthMiddlewareHuma(api huma.API) func(ctx huma.Context, next func(huma.Context)) {
-	authmw := middleware.AuthGoa(f.Config, f.Logger, f.Services.Session, f.Services.SessionStore, f.Services.APIKey, f.Services.CookieHandler)
+	authmw := middleware.AuthGoa(f.cfg, f.log, f.Services.Session, f.Services.SessionStore, f.Services.APIKey, f.Services.CookieHandler)
 	return func(ctx huma.Context, next func(huma.Context)) {
 		// Wrap the context to add a value.
 		octx, err := authmw.AuthWithOptionsGoa()(ctx.Context(), "", nil)

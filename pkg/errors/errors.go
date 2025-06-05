@@ -13,10 +13,12 @@ import (
 
 // Error represents a custom error with context information
 type Error struct {
-	Code       string `json:"code"`
-	StatusCode int    `json:"status_code"`
-	Message    string `json:"message"`
-	Err        error
+	Code       string                 `json:"code"`
+	ID         string                 `json:"id,omitempty"`
+	StatusCode int                    `json:"status_code"`
+	Message    string                 `json:"message"`
+	Err        error                  `json:"error,omitempty"`
+	Details    []string               `json:"details,omitempty"`
 	Metadata   map[string]interface{} `json:"metadata"`
 }
 
@@ -33,6 +35,15 @@ func (e *Error) Unwrap() error {
 	return e.Err
 }
 
+// Is implements the interface to work with errors.Is
+func (e *Error) Is(target error) bool {
+	t, ok := target.(*Error)
+	if !ok {
+		return false
+	}
+	return e.Code == t.Code
+}
+
 // WithMetadata adds metadata to the error
 func (e *Error) WithMetadata(key string, value interface{}) *Error {
 	if e.Metadata == nil {
@@ -40,6 +51,19 @@ func (e *Error) WithMetadata(key string, value interface{}) *Error {
 	}
 	e.Metadata[key] = value
 	return e
+}
+
+// WithDetails adds details to the error
+func (e *Error) WithDetails(value interface{}) *Error {
+	if e.Details == nil {
+		e.Details = []string{}
+	}
+	e.Details = append(e.Details, fmt.Sprintf("%v", value))
+	return e
+}
+
+func (e *Error) GetStatus() int {
+	return e.StatusCode
 }
 
 // New creates a new error with a message
@@ -51,12 +75,31 @@ func New(code string, message string) *Error {
 	}
 }
 
+// Newf creates a new error with a message
+func Newf(code string, message string, a ...any) *Error {
+	return &Error{
+		Code:       code,
+		StatusCode: GetStatusCode(code),
+		Message:    fmt.Sprintf(message, a),
+	}
+}
+
 // Wrap wraps an existing error with additional context
 func Wrap(code string, err error, message string) *Error {
 	return &Error{
 		Code:       code,
 		StatusCode: GetStatusCode(code),
 		Message:    message,
+		Err:        err,
+	}
+}
+
+// Wrapf wraps an existing error with additional context
+func Wrapf(code string, err error, message string, a ...any) *Error {
+	return &Error{
+		Code:       code,
+		StatusCode: GetStatusCode(code),
+		Message:    fmt.Sprintf(message, a),
 		Err:        err,
 	}
 }
@@ -397,4 +440,13 @@ func toUpperSnakeCase(s string) string {
 	}
 
 	return strings.ToUpper(processed)
+}
+
+// Is implements the interface to work with errors.Is
+func Is(target error, code string) bool {
+	t, ok := target.(*Error)
+	if !ok {
+		return false
+	}
+	return code == t.Code
 }

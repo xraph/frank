@@ -25,6 +25,7 @@ const (
 	// Resource error codes
 	CodeNotFound              = "not_found"
 	CodeAlreadyExists         = "already_exists"
+	CodeValidation            = "validation_error"
 	CodeConflict              = "conflict"
 	CodeUserNotFound          = "user_not_found"
 	CodeOrganizationNotFound  = "organization_not_found"
@@ -38,6 +39,7 @@ const (
 	CodeScopeNotFound         = "scope_not_found"
 	CodeTemplateNotFound      = "template_not_found"
 	CodeIdentityProviderError = "identity_provider_error"
+	CodeLimitExceeded         = "limit_exceeded"
 
 	// Input validation error codes
 	CodeBadRequest           = "bad_request"

@@ -59,8 +59,8 @@ func (d *deliverer) DeliverEvent(ctx context.Context, event *ent.WebhookEvent, w
 	// Check if webhook is active
 	if !webhook.Active {
 		d.logger.Warn("Attempted to deliver event to inactive webhook",
-			logging.String("webhook_id", webhook.ID),
-			logging.String("event_id", event.ID),
+			logging.String("webhook_id", webhook.ID.String()),
+			logging.String("event_id", event.ID.String()),
 			logging.String("event_type", event.EventType),
 		)
 		return nil
@@ -94,8 +94,8 @@ func (d *deliverer) DeliverEvent(ctx context.Context, event *ent.WebhookEvent, w
 	if err != nil {
 		d.logger.Error("Failed to marshal webhook payload",
 			logging.Error(err),
-			logging.String("webhook_id", webhook.ID),
-			logging.String("event_id", event.ID),
+			logging.String("webhook_id", webhook.ID.String()),
+			logging.String("event_id", event.ID.String()),
 		)
 
 		// Update event with error
@@ -108,8 +108,8 @@ func (d *deliverer) DeliverEvent(ctx context.Context, event *ent.WebhookEvent, w
 	if err != nil {
 		d.logger.Error("Failed to create webhook request",
 			logging.Error(err),
-			logging.String("webhook_id", webhook.ID),
-			logging.String("event_id", event.ID),
+			logging.String("webhook_id", webhook.ID.String()),
+			logging.String("event_id", event.ID.String()),
 		)
 
 		// Update event with error
@@ -138,8 +138,8 @@ func (d *deliverer) DeliverEvent(ctx context.Context, event *ent.WebhookEvent, w
 	// Set signature headers
 	req.Header.Set("X-Webhook-Signature", signature)
 	req.Header.Set("X-Webhook-Timestamp", fmt.Sprintf("%d", timestamp))
-	req.Header.Set("X-Webhook-ID", webhook.ID)
-	req.Header.Set("X-Event-ID", event.ID)
+	req.Header.Set("X-Webhook-ID", webhook.ID.String())
+	req.Header.Set("X-Event-ID", event.ID.String())
 	req.Header.Set("X-Event-Type", event.EventType)
 
 	// Create HTTP client with webhook-specific timeout
@@ -157,8 +157,8 @@ func (d *deliverer) DeliverEvent(ctx context.Context, event *ent.WebhookEvent, w
 	if err != nil {
 		d.logger.Warn("Webhook delivery failed",
 			logging.Error(err),
-			logging.String("webhook_id", webhook.ID),
-			logging.String("event_id", event.ID),
+			logging.String("webhook_id", webhook.ID.String()),
+			logging.String("event_id", event.ID.String()),
 			logging.Int("attempt", attempts),
 		)
 
@@ -187,8 +187,8 @@ func (d *deliverer) DeliverEvent(ctx context.Context, event *ent.WebhookEvent, w
 		d.updateEventAsDelivered(ctx, event, resp.StatusCode, string(body), attempts)
 
 		d.logger.Info("Webhook delivered successfully",
-			logging.String("webhook_id", webhook.ID),
-			logging.String("event_id", event.ID),
+			logging.String("webhook_id", webhook.ID.String()),
+			logging.String("event_id", event.ID.String()),
 			logging.Int("status_code", resp.StatusCode),
 			logging.Int("attempt", attempts),
 		)
@@ -200,8 +200,8 @@ func (d *deliverer) DeliverEvent(ctx context.Context, event *ent.WebhookEvent, w
 	errMsg := fmt.Sprintf("HTTP error %d: %s", resp.StatusCode, string(body))
 
 	d.logger.Warn("Webhook delivery failed with non-success status code",
-		logging.String("webhook_id", webhook.ID),
-		logging.String("event_id", event.ID),
+		logging.String("webhook_id", webhook.ID.String()),
+		logging.String("event_id", event.ID.String()),
 		logging.Int("status_code", resp.StatusCode),
 		logging.Int("attempt", attempts),
 		logging.String("response", string(body)),
@@ -240,8 +240,8 @@ func (d *deliverer) RetryPendingEvents(ctx context.Context) error {
 		if err != nil {
 			d.logger.Error("Failed to get webhook for pending event",
 				logging.Error(err),
-				logging.String("webhook_id", event.WebhookID),
-				logging.String("event_id", event.ID),
+				logging.String("webhook_id", event.WebhookID.String()),
+				logging.String("event_id", event.ID.String()),
 			)
 			continue
 		}
@@ -261,19 +261,19 @@ func (d *deliverer) RetryPendingEvents(ctx context.Context) error {
 // Helper functions for event status updates
 
 func (d *deliverer) updateEventAsDelivered(ctx context.Context, event *ent.WebhookEvent, statusCode int, responseBody string, attempts int) {
-	now := time.Now()
-	_, err := d.eventRepo.Update(ctx, event.ID, EventRepositoryUpdateInput{
-		Delivered:    boolPtr(true),
-		DeliveredAt:  &now,
-		Attempts:     &attempts,
-		StatusCode:   &statusCode,
-		ResponseBody: &responseBody,
-	})
+	webhookUpdate := d.eventRepo.Client().WebhookEvent.UpdateOne(event).
+		SetAttempts(attempts).
+		SetResponseBody(responseBody).
+		SetStatusCode(statusCode).
+		SetDeliveredAt(time.Now()).
+		SetDelivered(true)
+
+	_, err := d.eventRepo.Update(ctx, webhookUpdate)
 
 	if err != nil {
 		d.logger.Error("Failed to update webhook event as delivered",
 			logging.Error(err),
-			logging.String("event_id", event.ID),
+			logging.Any("event_id", event.ID),
 		)
 	}
 }
@@ -291,30 +291,32 @@ func (d *deliverer) updateEventWithError(ctx context.Context, event *ent.Webhook
 }
 
 func (d *deliverer) updateEventWithNextRetry(ctx context.Context, event *ent.WebhookEvent, errMsg string, attempts int, nextRetry time.Time) {
-	_, err := d.eventRepo.Update(ctx, event.ID, EventRepositoryUpdateInput{
-		Attempts:  &attempts,
-		NextRetry: &nextRetry,
-		Error:     &errMsg,
-	})
+	webhookUpdate := d.eventRepo.Client().WebhookEvent.UpdateOne(event).
+		SetAttempts(attempts).
+		SetNextRetry(nextRetry).
+		SetError(errMsg)
+
+	_, err := d.eventRepo.Update(ctx, webhookUpdate)
 
 	if err != nil {
 		d.logger.Error("Failed to update webhook event retry information",
 			logging.Error(err),
-			logging.String("event_id", event.ID),
+			logging.Any("event_id", event.ID),
 		)
 	}
 }
 
 func (d *deliverer) updateEventAsFailed(ctx context.Context, event *ent.WebhookEvent, errMsg string, attempts int) {
-	_, err := d.eventRepo.Update(ctx, event.ID, EventRepositoryUpdateInput{
-		Attempts: &attempts,
-		Error:    &errMsg,
-	})
+	webhookUpdate := d.eventRepo.Client().WebhookEvent.UpdateOne(event).
+		SetAttempts(attempts).
+		SetError(errMsg)
+
+	_, err := d.eventRepo.Update(ctx, webhookUpdate)
 
 	if err != nil {
 		d.logger.Error("Failed to update webhook event as failed",
 			logging.Error(err),
-			logging.String("event_id", event.ID),
+			logging.Any("event_id", event.ID),
 		)
 	}
 }

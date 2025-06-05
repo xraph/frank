@@ -8,6 +8,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 	"github.com/juicycleff/frank/pkg/entity"
+	"github.com/rs/xid"
 )
 
 // Session holds the schema definition for the Session entity.
@@ -19,6 +20,7 @@ type Session struct {
 func (Session) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("user_id").
+			GoType(xid.ID{}).
 			NotEmpty(),
 		field.String("token").
 			Unique().
@@ -32,6 +34,7 @@ func (Session) Fields() []ent.Field {
 		field.String("location").
 			Optional(),
 		field.String("organization_id").
+			GoType(xid.ID{}).
 			Optional(),
 		field.Bool("active").
 			Default(true),
@@ -68,5 +71,6 @@ func (Session) Indexes() []ent.Index {
 func (Session) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		ModelBaseMixin{},
+		TimeMixin{},
 	}
 }

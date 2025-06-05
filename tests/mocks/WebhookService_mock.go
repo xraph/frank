@@ -81,7 +81,7 @@ func (mr *MockWebhookServiceMockRecorder) Get(arg0, arg1 interface{}) *gomock.Ca
 }
 
 // GetEvents mocks base method.
-func (m *MockWebhookService) GetEvents(arg0 context.Context, arg1 string, arg2 webhook.EventListParams) ([]*ent.WebhookEvent, int, error) {
+func (m *MockWebhookService) GetEvents(arg0 context.Context, arg1 string, arg2 webhook.WebhookEventListParams) ([]*ent.WebhookEvent, int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetEvents", arg0, arg1, arg2)
 	ret0, _ := ret[0].([]*ent.WebhookEvent)
@@ -97,7 +97,7 @@ func (mr *MockWebhookServiceMockRecorder) GetEvents(arg0, arg1, arg2 interface{}
 }
 
 // List mocks base method.
-func (m *MockWebhookService) List(arg0 context.Context, arg1 webhook.ListParams) ([]*ent.Webhook, int, error) {
+func (m *MockWebhookService) List(arg0 context.Context, arg1 webhook.ListWebhooksParams) ([]*ent.Webhook, int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", arg0, arg1)
 	ret0, _ := ret[0].([]*ent.Webhook)

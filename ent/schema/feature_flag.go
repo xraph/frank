@@ -46,8 +46,7 @@ func (FeatureFlag) Fields() []ent.Field {
 // Edges of the FeatureFlag.
 func (FeatureFlag) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("organizations", OrganizationFeature.Type).
-			Ref("feature"),
+		edge.To("organization_features", OrganizationFeature.Type),
 	}
 }
 
@@ -63,5 +62,6 @@ func (FeatureFlag) Indexes() []ent.Index {
 func (FeatureFlag) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		ModelBaseMixin{},
+		TimeMixin{},
 	}
 }

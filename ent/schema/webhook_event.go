@@ -6,6 +6,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 	"github.com/juicycleff/frank/pkg/entity"
+	"github.com/rs/xid"
 )
 
 // WebhookEvent holds the schema definition for the WebhookEvent entity.
@@ -17,6 +18,7 @@ type WebhookEvent struct {
 func (WebhookEvent) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("webhook_id").
+			GoType(xid.ID{}).
 			NotEmpty(),
 		field.String("event_type").
 			NotEmpty(),
@@ -67,5 +69,6 @@ func (WebhookEvent) Indexes() []ent.Index {
 func (WebhookEvent) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		ModelBaseMixin{},
+		TimeMixin{},
 	}
 }

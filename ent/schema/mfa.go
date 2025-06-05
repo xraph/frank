@@ -6,6 +6,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 	"github.com/juicycleff/frank/pkg/entity"
+	"github.com/rs/xid"
 )
 
 // MFA holds the schema definition for the MFA entity.
@@ -17,6 +18,7 @@ type MFA struct {
 func (MFA) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("user_id").
+			GoType(xid.ID{}).
 			NotEmpty(),
 		field.String("method").
 			NotEmpty().
@@ -65,5 +67,6 @@ func (MFA) Indexes() []ent.Index {
 func (MFA) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		ModelBaseMixin{},
+		TimeMixin{},
 	}
 }
