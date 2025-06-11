@@ -69,6 +69,11 @@ func UpdatedAt(v time.Time) predicate.Passkey {
 	return predicate.Passkey(sql.FieldEQ(FieldUpdatedAt, v))
 }
 
+// DeletedAt applies equality check predicate on the "deleted_at" field. It's identical to DeletedAtEQ.
+func DeletedAt(v time.Time) predicate.Passkey {
+	return predicate.Passkey(sql.FieldEQ(FieldDeletedAt, v))
+}
+
 // UserID applies equality check predicate on the "user_id" field. It's identical to UserIDEQ.
 func UserID(v xid.ID) predicate.Passkey {
 	return predicate.Passkey(sql.FieldEQ(FieldUserID, v))
@@ -112,6 +117,26 @@ func Aaguid(v string) predicate.Passkey {
 // LastUsed applies equality check predicate on the "last_used" field. It's identical to LastUsedEQ.
 func LastUsed(v time.Time) predicate.Passkey {
 	return predicate.Passkey(sql.FieldEQ(FieldLastUsed, v))
+}
+
+// BackupState applies equality check predicate on the "backup_state" field. It's identical to BackupStateEQ.
+func BackupState(v bool) predicate.Passkey {
+	return predicate.Passkey(sql.FieldEQ(FieldBackupState, v))
+}
+
+// BackupEligible applies equality check predicate on the "backup_eligible" field. It's identical to BackupEligibleEQ.
+func BackupEligible(v bool) predicate.Passkey {
+	return predicate.Passkey(sql.FieldEQ(FieldBackupEligible, v))
+}
+
+// UserAgent applies equality check predicate on the "user_agent" field. It's identical to UserAgentEQ.
+func UserAgent(v string) predicate.Passkey {
+	return predicate.Passkey(sql.FieldEQ(FieldUserAgent, v))
+}
+
+// IPAddress applies equality check predicate on the "ip_address" field. It's identical to IPAddressEQ.
+func IPAddress(v string) predicate.Passkey {
+	return predicate.Passkey(sql.FieldEQ(FieldIPAddress, v))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
@@ -192,6 +217,56 @@ func UpdatedAtLT(v time.Time) predicate.Passkey {
 // UpdatedAtLTE applies the LTE predicate on the "updated_at" field.
 func UpdatedAtLTE(v time.Time) predicate.Passkey {
 	return predicate.Passkey(sql.FieldLTE(FieldUpdatedAt, v))
+}
+
+// DeletedAtEQ applies the EQ predicate on the "deleted_at" field.
+func DeletedAtEQ(v time.Time) predicate.Passkey {
+	return predicate.Passkey(sql.FieldEQ(FieldDeletedAt, v))
+}
+
+// DeletedAtNEQ applies the NEQ predicate on the "deleted_at" field.
+func DeletedAtNEQ(v time.Time) predicate.Passkey {
+	return predicate.Passkey(sql.FieldNEQ(FieldDeletedAt, v))
+}
+
+// DeletedAtIn applies the In predicate on the "deleted_at" field.
+func DeletedAtIn(vs ...time.Time) predicate.Passkey {
+	return predicate.Passkey(sql.FieldIn(FieldDeletedAt, vs...))
+}
+
+// DeletedAtNotIn applies the NotIn predicate on the "deleted_at" field.
+func DeletedAtNotIn(vs ...time.Time) predicate.Passkey {
+	return predicate.Passkey(sql.FieldNotIn(FieldDeletedAt, vs...))
+}
+
+// DeletedAtGT applies the GT predicate on the "deleted_at" field.
+func DeletedAtGT(v time.Time) predicate.Passkey {
+	return predicate.Passkey(sql.FieldGT(FieldDeletedAt, v))
+}
+
+// DeletedAtGTE applies the GTE predicate on the "deleted_at" field.
+func DeletedAtGTE(v time.Time) predicate.Passkey {
+	return predicate.Passkey(sql.FieldGTE(FieldDeletedAt, v))
+}
+
+// DeletedAtLT applies the LT predicate on the "deleted_at" field.
+func DeletedAtLT(v time.Time) predicate.Passkey {
+	return predicate.Passkey(sql.FieldLT(FieldDeletedAt, v))
+}
+
+// DeletedAtLTE applies the LTE predicate on the "deleted_at" field.
+func DeletedAtLTE(v time.Time) predicate.Passkey {
+	return predicate.Passkey(sql.FieldLTE(FieldDeletedAt, v))
+}
+
+// DeletedAtIsNil applies the IsNil predicate on the "deleted_at" field.
+func DeletedAtIsNil() predicate.Passkey {
+	return predicate.Passkey(sql.FieldIsNull(FieldDeletedAt))
+}
+
+// DeletedAtNotNil applies the NotNil predicate on the "deleted_at" field.
+func DeletedAtNotNil() predicate.Passkey {
+	return predicate.Passkey(sql.FieldNotNull(FieldDeletedAt))
 }
 
 // UserIDEQ applies the EQ predicate on the "user_id" field.
@@ -702,6 +777,196 @@ func AttestationIsNil() predicate.Passkey {
 // AttestationNotNil applies the NotNil predicate on the "attestation" field.
 func AttestationNotNil() predicate.Passkey {
 	return predicate.Passkey(sql.FieldNotNull(FieldAttestation))
+}
+
+// BackupStateEQ applies the EQ predicate on the "backup_state" field.
+func BackupStateEQ(v bool) predicate.Passkey {
+	return predicate.Passkey(sql.FieldEQ(FieldBackupState, v))
+}
+
+// BackupStateNEQ applies the NEQ predicate on the "backup_state" field.
+func BackupStateNEQ(v bool) predicate.Passkey {
+	return predicate.Passkey(sql.FieldNEQ(FieldBackupState, v))
+}
+
+// BackupStateIsNil applies the IsNil predicate on the "backup_state" field.
+func BackupStateIsNil() predicate.Passkey {
+	return predicate.Passkey(sql.FieldIsNull(FieldBackupState))
+}
+
+// BackupStateNotNil applies the NotNil predicate on the "backup_state" field.
+func BackupStateNotNil() predicate.Passkey {
+	return predicate.Passkey(sql.FieldNotNull(FieldBackupState))
+}
+
+// BackupEligibleEQ applies the EQ predicate on the "backup_eligible" field.
+func BackupEligibleEQ(v bool) predicate.Passkey {
+	return predicate.Passkey(sql.FieldEQ(FieldBackupEligible, v))
+}
+
+// BackupEligibleNEQ applies the NEQ predicate on the "backup_eligible" field.
+func BackupEligibleNEQ(v bool) predicate.Passkey {
+	return predicate.Passkey(sql.FieldNEQ(FieldBackupEligible, v))
+}
+
+// BackupEligibleIsNil applies the IsNil predicate on the "backup_eligible" field.
+func BackupEligibleIsNil() predicate.Passkey {
+	return predicate.Passkey(sql.FieldIsNull(FieldBackupEligible))
+}
+
+// BackupEligibleNotNil applies the NotNil predicate on the "backup_eligible" field.
+func BackupEligibleNotNil() predicate.Passkey {
+	return predicate.Passkey(sql.FieldNotNull(FieldBackupEligible))
+}
+
+// UserAgentEQ applies the EQ predicate on the "user_agent" field.
+func UserAgentEQ(v string) predicate.Passkey {
+	return predicate.Passkey(sql.FieldEQ(FieldUserAgent, v))
+}
+
+// UserAgentNEQ applies the NEQ predicate on the "user_agent" field.
+func UserAgentNEQ(v string) predicate.Passkey {
+	return predicate.Passkey(sql.FieldNEQ(FieldUserAgent, v))
+}
+
+// UserAgentIn applies the In predicate on the "user_agent" field.
+func UserAgentIn(vs ...string) predicate.Passkey {
+	return predicate.Passkey(sql.FieldIn(FieldUserAgent, vs...))
+}
+
+// UserAgentNotIn applies the NotIn predicate on the "user_agent" field.
+func UserAgentNotIn(vs ...string) predicate.Passkey {
+	return predicate.Passkey(sql.FieldNotIn(FieldUserAgent, vs...))
+}
+
+// UserAgentGT applies the GT predicate on the "user_agent" field.
+func UserAgentGT(v string) predicate.Passkey {
+	return predicate.Passkey(sql.FieldGT(FieldUserAgent, v))
+}
+
+// UserAgentGTE applies the GTE predicate on the "user_agent" field.
+func UserAgentGTE(v string) predicate.Passkey {
+	return predicate.Passkey(sql.FieldGTE(FieldUserAgent, v))
+}
+
+// UserAgentLT applies the LT predicate on the "user_agent" field.
+func UserAgentLT(v string) predicate.Passkey {
+	return predicate.Passkey(sql.FieldLT(FieldUserAgent, v))
+}
+
+// UserAgentLTE applies the LTE predicate on the "user_agent" field.
+func UserAgentLTE(v string) predicate.Passkey {
+	return predicate.Passkey(sql.FieldLTE(FieldUserAgent, v))
+}
+
+// UserAgentContains applies the Contains predicate on the "user_agent" field.
+func UserAgentContains(v string) predicate.Passkey {
+	return predicate.Passkey(sql.FieldContains(FieldUserAgent, v))
+}
+
+// UserAgentHasPrefix applies the HasPrefix predicate on the "user_agent" field.
+func UserAgentHasPrefix(v string) predicate.Passkey {
+	return predicate.Passkey(sql.FieldHasPrefix(FieldUserAgent, v))
+}
+
+// UserAgentHasSuffix applies the HasSuffix predicate on the "user_agent" field.
+func UserAgentHasSuffix(v string) predicate.Passkey {
+	return predicate.Passkey(sql.FieldHasSuffix(FieldUserAgent, v))
+}
+
+// UserAgentIsNil applies the IsNil predicate on the "user_agent" field.
+func UserAgentIsNil() predicate.Passkey {
+	return predicate.Passkey(sql.FieldIsNull(FieldUserAgent))
+}
+
+// UserAgentNotNil applies the NotNil predicate on the "user_agent" field.
+func UserAgentNotNil() predicate.Passkey {
+	return predicate.Passkey(sql.FieldNotNull(FieldUserAgent))
+}
+
+// UserAgentEqualFold applies the EqualFold predicate on the "user_agent" field.
+func UserAgentEqualFold(v string) predicate.Passkey {
+	return predicate.Passkey(sql.FieldEqualFold(FieldUserAgent, v))
+}
+
+// UserAgentContainsFold applies the ContainsFold predicate on the "user_agent" field.
+func UserAgentContainsFold(v string) predicate.Passkey {
+	return predicate.Passkey(sql.FieldContainsFold(FieldUserAgent, v))
+}
+
+// IPAddressEQ applies the EQ predicate on the "ip_address" field.
+func IPAddressEQ(v string) predicate.Passkey {
+	return predicate.Passkey(sql.FieldEQ(FieldIPAddress, v))
+}
+
+// IPAddressNEQ applies the NEQ predicate on the "ip_address" field.
+func IPAddressNEQ(v string) predicate.Passkey {
+	return predicate.Passkey(sql.FieldNEQ(FieldIPAddress, v))
+}
+
+// IPAddressIn applies the In predicate on the "ip_address" field.
+func IPAddressIn(vs ...string) predicate.Passkey {
+	return predicate.Passkey(sql.FieldIn(FieldIPAddress, vs...))
+}
+
+// IPAddressNotIn applies the NotIn predicate on the "ip_address" field.
+func IPAddressNotIn(vs ...string) predicate.Passkey {
+	return predicate.Passkey(sql.FieldNotIn(FieldIPAddress, vs...))
+}
+
+// IPAddressGT applies the GT predicate on the "ip_address" field.
+func IPAddressGT(v string) predicate.Passkey {
+	return predicate.Passkey(sql.FieldGT(FieldIPAddress, v))
+}
+
+// IPAddressGTE applies the GTE predicate on the "ip_address" field.
+func IPAddressGTE(v string) predicate.Passkey {
+	return predicate.Passkey(sql.FieldGTE(FieldIPAddress, v))
+}
+
+// IPAddressLT applies the LT predicate on the "ip_address" field.
+func IPAddressLT(v string) predicate.Passkey {
+	return predicate.Passkey(sql.FieldLT(FieldIPAddress, v))
+}
+
+// IPAddressLTE applies the LTE predicate on the "ip_address" field.
+func IPAddressLTE(v string) predicate.Passkey {
+	return predicate.Passkey(sql.FieldLTE(FieldIPAddress, v))
+}
+
+// IPAddressContains applies the Contains predicate on the "ip_address" field.
+func IPAddressContains(v string) predicate.Passkey {
+	return predicate.Passkey(sql.FieldContains(FieldIPAddress, v))
+}
+
+// IPAddressHasPrefix applies the HasPrefix predicate on the "ip_address" field.
+func IPAddressHasPrefix(v string) predicate.Passkey {
+	return predicate.Passkey(sql.FieldHasPrefix(FieldIPAddress, v))
+}
+
+// IPAddressHasSuffix applies the HasSuffix predicate on the "ip_address" field.
+func IPAddressHasSuffix(v string) predicate.Passkey {
+	return predicate.Passkey(sql.FieldHasSuffix(FieldIPAddress, v))
+}
+
+// IPAddressIsNil applies the IsNil predicate on the "ip_address" field.
+func IPAddressIsNil() predicate.Passkey {
+	return predicate.Passkey(sql.FieldIsNull(FieldIPAddress))
+}
+
+// IPAddressNotNil applies the NotNil predicate on the "ip_address" field.
+func IPAddressNotNil() predicate.Passkey {
+	return predicate.Passkey(sql.FieldNotNull(FieldIPAddress))
+}
+
+// IPAddressEqualFold applies the EqualFold predicate on the "ip_address" field.
+func IPAddressEqualFold(v string) predicate.Passkey {
+	return predicate.Passkey(sql.FieldEqualFold(FieldIPAddress, v))
+}
+
+// IPAddressContainsFold applies the ContainsFold predicate on the "ip_address" field.
+func IPAddressContainsFold(v string) predicate.Passkey {
+	return predicate.Passkey(sql.FieldContainsFold(FieldIPAddress, v))
 }
 
 // HasUser applies the HasEdge predicate on the "user" edge.

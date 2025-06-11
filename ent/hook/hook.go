@@ -24,6 +24,18 @@ func (f ApiKeyFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, erro
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ApiKeyMutation", m)
 }
 
+// The AuditFunc type is an adapter to allow the use of ordinary
+// function as Audit mutator.
+type AuditFunc func(context.Context, *ent.AuditMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f AuditFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.AuditMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AuditMutation", m)
+}
+
 // The EmailTemplateFunc type is an adapter to allow the use of ordinary
 // function as EmailTemplate mutator.
 type EmailTemplateFunc func(context.Context, *ent.EmailTemplateMutation) (ent.Value, error)
@@ -202,6 +214,18 @@ func (f RoleFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error)
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.RoleMutation", m)
+}
+
+// The SMSTemplateFunc type is an adapter to allow the use of ordinary
+// function as SMSTemplate mutator.
+type SMSTemplateFunc func(context.Context, *ent.SMSTemplateMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f SMSTemplateFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.SMSTemplateMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SMSTemplateMutation", m)
 }
 
 // The SSOStateFunc type is an adapter to allow the use of ordinary

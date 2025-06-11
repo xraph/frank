@@ -98,6 +98,8 @@ type UserEdges struct {
 	Organization *Organization `json:"organization,omitempty"`
 	// For external users - their memberships in organizations
 	Memberships []*Membership `json:"memberships,omitempty"`
+	// SentInvitations holds the value of the sent_invitations edge.
+	SentInvitations []*Membership `json:"sent_invitations,omitempty"`
 	// Sessions holds the value of the sessions edge.
 	Sessions []*Session `json:"sessions,omitempty"`
 	// APIKeys holds the value of the api_keys edge.
@@ -122,10 +124,13 @@ type UserEdges struct {
 	AssignedUserRoles []*UserRole `json:"assigned_user_roles,omitempty"`
 	// Permission assignments made by this user
 	AssignedUserPermissions []*UserPermission `json:"assigned_user_permissions,omitempty"`
+	// AuditLogs holds the value of the audit_logs edge.
+	AuditLogs []*Audit `json:"audit_logs,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes                  [14]bool
+	loadedTypes                  [16]bool
 	namedMemberships             map[string][]*Membership
+	namedSentInvitations         map[string][]*Membership
 	namedSessions                map[string][]*Session
 	namedAPIKeys                 map[string][]*ApiKey
 	namedMfaMethods              map[string][]*MFA
@@ -138,6 +143,7 @@ type UserEdges struct {
 	namedSystemRoles             map[string][]*Role
 	namedAssignedUserRoles       map[string][]*UserRole
 	namedAssignedUserPermissions map[string][]*UserPermission
+	namedAuditLogs               map[string][]*Audit
 }
 
 // OrganizationOrErr returns the Organization value or an error if the edge
@@ -160,10 +166,19 @@ func (e UserEdges) MembershipsOrErr() ([]*Membership, error) {
 	return nil, &NotLoadedError{edge: "memberships"}
 }
 
+// SentInvitationsOrErr returns the SentInvitations value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) SentInvitationsOrErr() ([]*Membership, error) {
+	if e.loadedTypes[2] {
+		return e.SentInvitations, nil
+	}
+	return nil, &NotLoadedError{edge: "sent_invitations"}
+}
+
 // SessionsOrErr returns the Sessions value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) SessionsOrErr() ([]*Session, error) {
-	if e.loadedTypes[2] {
+	if e.loadedTypes[3] {
 		return e.Sessions, nil
 	}
 	return nil, &NotLoadedError{edge: "sessions"}
@@ -172,7 +187,7 @@ func (e UserEdges) SessionsOrErr() ([]*Session, error) {
 // APIKeysOrErr returns the APIKeys value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) APIKeysOrErr() ([]*ApiKey, error) {
-	if e.loadedTypes[3] {
+	if e.loadedTypes[4] {
 		return e.APIKeys, nil
 	}
 	return nil, &NotLoadedError{edge: "api_keys"}
@@ -181,7 +196,7 @@ func (e UserEdges) APIKeysOrErr() ([]*ApiKey, error) {
 // MfaMethodsOrErr returns the MfaMethods value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) MfaMethodsOrErr() ([]*MFA, error) {
-	if e.loadedTypes[4] {
+	if e.loadedTypes[5] {
 		return e.MfaMethods, nil
 	}
 	return nil, &NotLoadedError{edge: "mfa_methods"}
@@ -190,7 +205,7 @@ func (e UserEdges) MfaMethodsOrErr() ([]*MFA, error) {
 // PasskeysOrErr returns the Passkeys value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) PasskeysOrErr() ([]*Passkey, error) {
-	if e.loadedTypes[5] {
+	if e.loadedTypes[6] {
 		return e.Passkeys, nil
 	}
 	return nil, &NotLoadedError{edge: "passkeys"}
@@ -199,7 +214,7 @@ func (e UserEdges) PasskeysOrErr() ([]*Passkey, error) {
 // OauthTokensOrErr returns the OauthTokens value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) OauthTokensOrErr() ([]*OAuthToken, error) {
-	if e.loadedTypes[6] {
+	if e.loadedTypes[7] {
 		return e.OauthTokens, nil
 	}
 	return nil, &NotLoadedError{edge: "oauth_tokens"}
@@ -208,7 +223,7 @@ func (e UserEdges) OauthTokensOrErr() ([]*OAuthToken, error) {
 // OauthAuthorizationsOrErr returns the OauthAuthorizations value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) OauthAuthorizationsOrErr() ([]*OAuthAuthorization, error) {
-	if e.loadedTypes[7] {
+	if e.loadedTypes[8] {
 		return e.OauthAuthorizations, nil
 	}
 	return nil, &NotLoadedError{edge: "oauth_authorizations"}
@@ -217,7 +232,7 @@ func (e UserEdges) OauthAuthorizationsOrErr() ([]*OAuthAuthorization, error) {
 // VerificationsOrErr returns the Verifications value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) VerificationsOrErr() ([]*Verification, error) {
-	if e.loadedTypes[8] {
+	if e.loadedTypes[9] {
 		return e.Verifications, nil
 	}
 	return nil, &NotLoadedError{edge: "verifications"}
@@ -226,7 +241,7 @@ func (e UserEdges) VerificationsOrErr() ([]*Verification, error) {
 // UserRolesOrErr returns the UserRoles value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) UserRolesOrErr() ([]*UserRole, error) {
-	if e.loadedTypes[9] {
+	if e.loadedTypes[10] {
 		return e.UserRoles, nil
 	}
 	return nil, &NotLoadedError{edge: "user_roles"}
@@ -235,7 +250,7 @@ func (e UserEdges) UserRolesOrErr() ([]*UserRole, error) {
 // UserPermissionsOrErr returns the UserPermissions value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) UserPermissionsOrErr() ([]*UserPermission, error) {
-	if e.loadedTypes[10] {
+	if e.loadedTypes[11] {
 		return e.UserPermissions, nil
 	}
 	return nil, &NotLoadedError{edge: "user_permissions"}
@@ -244,7 +259,7 @@ func (e UserEdges) UserPermissionsOrErr() ([]*UserPermission, error) {
 // SystemRolesOrErr returns the SystemRoles value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) SystemRolesOrErr() ([]*Role, error) {
-	if e.loadedTypes[11] {
+	if e.loadedTypes[12] {
 		return e.SystemRoles, nil
 	}
 	return nil, &NotLoadedError{edge: "system_roles"}
@@ -253,7 +268,7 @@ func (e UserEdges) SystemRolesOrErr() ([]*Role, error) {
 // AssignedUserRolesOrErr returns the AssignedUserRoles value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) AssignedUserRolesOrErr() ([]*UserRole, error) {
-	if e.loadedTypes[12] {
+	if e.loadedTypes[13] {
 		return e.AssignedUserRoles, nil
 	}
 	return nil, &NotLoadedError{edge: "assigned_user_roles"}
@@ -262,10 +277,19 @@ func (e UserEdges) AssignedUserRolesOrErr() ([]*UserRole, error) {
 // AssignedUserPermissionsOrErr returns the AssignedUserPermissions value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) AssignedUserPermissionsOrErr() ([]*UserPermission, error) {
-	if e.loadedTypes[13] {
+	if e.loadedTypes[14] {
 		return e.AssignedUserPermissions, nil
 	}
 	return nil, &NotLoadedError{edge: "assigned_user_permissions"}
+}
+
+// AuditLogsOrErr returns the AuditLogs value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) AuditLogsOrErr() ([]*Audit, error) {
+	if e.loadedTypes[15] {
+		return e.AuditLogs, nil
+	}
+	return nil, &NotLoadedError{edge: "audit_logs"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -522,6 +546,11 @@ func (u *User) QueryMemberships() *MembershipQuery {
 	return NewUserClient(u.config).QueryMemberships(u)
 }
 
+// QuerySentInvitations queries the "sent_invitations" edge of the User entity.
+func (u *User) QuerySentInvitations() *MembershipQuery {
+	return NewUserClient(u.config).QuerySentInvitations(u)
+}
+
 // QuerySessions queries the "sessions" edge of the User entity.
 func (u *User) QuerySessions() *SessionQuery {
 	return NewUserClient(u.config).QuerySessions(u)
@@ -580,6 +609,11 @@ func (u *User) QueryAssignedUserRoles() *UserRoleQuery {
 // QueryAssignedUserPermissions queries the "assigned_user_permissions" edge of the User entity.
 func (u *User) QueryAssignedUserPermissions() *UserPermissionQuery {
 	return NewUserClient(u.config).QueryAssignedUserPermissions(u)
+}
+
+// QueryAuditLogs queries the "audit_logs" edge of the User entity.
+func (u *User) QueryAuditLogs() *AuditQuery {
+	return NewUserClient(u.config).QueryAuditLogs(u)
 }
 
 // Update returns a builder for updating this User.
@@ -726,6 +760,30 @@ func (u *User) appendNamedMemberships(name string, edges ...*Membership) {
 		u.Edges.namedMemberships[name] = []*Membership{}
 	} else {
 		u.Edges.namedMemberships[name] = append(u.Edges.namedMemberships[name], edges...)
+	}
+}
+
+// NamedSentInvitations returns the SentInvitations named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (u *User) NamedSentInvitations(name string) ([]*Membership, error) {
+	if u.Edges.namedSentInvitations == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := u.Edges.namedSentInvitations[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (u *User) appendNamedSentInvitations(name string, edges ...*Membership) {
+	if u.Edges.namedSentInvitations == nil {
+		u.Edges.namedSentInvitations = make(map[string][]*Membership)
+	}
+	if len(edges) == 0 {
+		u.Edges.namedSentInvitations[name] = []*Membership{}
+	} else {
+		u.Edges.namedSentInvitations[name] = append(u.Edges.namedSentInvitations[name], edges...)
 	}
 }
 
@@ -1014,6 +1072,30 @@ func (u *User) appendNamedAssignedUserPermissions(name string, edges ...*UserPer
 		u.Edges.namedAssignedUserPermissions[name] = []*UserPermission{}
 	} else {
 		u.Edges.namedAssignedUserPermissions[name] = append(u.Edges.namedAssignedUserPermissions[name], edges...)
+	}
+}
+
+// NamedAuditLogs returns the AuditLogs named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (u *User) NamedAuditLogs(name string) ([]*Audit, error) {
+	if u.Edges.namedAuditLogs == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := u.Edges.namedAuditLogs[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (u *User) appendNamedAuditLogs(name string, edges ...*Audit) {
+	if u.Edges.namedAuditLogs == nil {
+		u.Edges.namedAuditLogs = make(map[string][]*Audit)
+	}
+	if len(edges) == 0 {
+		u.Edges.namedAuditLogs[name] = []*Audit{}
+	} else {
+		u.Edges.namedAuditLogs[name] = append(u.Edges.namedAuditLogs[name], edges...)
 	}
 }
 

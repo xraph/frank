@@ -4,780 +4,953 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/base64"
+	"strings"
 	"time"
 
 	"github.com/juicycleff/frank/ent"
-	"github.com/juicycleff/frank/ent/membership"
-	"github.com/juicycleff/frank/ent/organization"
-	"github.com/juicycleff/frank/ent/role"
 	"github.com/juicycleff/frank/ent/user"
-	"github.com/juicycleff/frank/ent/userrole"
-	"github.com/juicycleff/frank/pkg/crypto"
+	"github.com/juicycleff/frank/internal/model"
+	"github.com/juicycleff/frank/internal/repository"
 	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/juicycleff/frank/pkg/logging"
 	"github.com/rs/xid"
+	"github.com/samber/lo"
+	"golang.org/x/crypto/bcrypt"
 )
 
-// Service handles user operations across all user types
-type Service struct {
-	db     *ent.Client
-	logger logging.Logger
+// Service defines the user service interface
+type Service interface {
+	// User CRUD operations
+	CreateUser(ctx context.Context, req model.CreateUserRequest) (*model.User, error)
+	GetUser(ctx context.Context, id xid.ID) (*model.User, error)
+	GetUserByEmail(ctx context.Context, email string, userType user.UserType, organizationID *xid.ID) (*model.User, error)
+	GetUserByIdentifier(ctx context.Context, identifier string, userType user.UserType) (*model.User, error)
+	GetUserByUsername(ctx context.Context, username string, userType user.UserType, organizationID *xid.ID) (*model.User, error)
+	GetUserByPhone(ctx context.Context, phone string, userType user.UserType, organizationID *xid.ID) (*model.User, error)
+	UpdateUser(ctx context.Context, id xid.ID, req model.UpdateUserRequest) (*model.User, error)
+	DeleteUser(ctx context.Context, id xid.ID, req model.DeleteUserRequest) error
+	ListUsers(ctx context.Context, req model.UserListRequest) (*model.UserListResponse, error)
+	ExistsByEmail(ctx context.Context, email string, userType user.UserType, organizationID *xid.ID) (bool, error)
+	IncrementLoginCount(ctx context.Context, id xid.ID) error
+
+	// Authentication operations
+	AuthenticateUser(ctx context.Context, email, password string, userType user.UserType, organizationID *xid.ID) (*model.User, error)
+	ValidatePassword(ctx context.Context, userID xid.ID, password string) error
+	ChangePassword(ctx context.Context, userID xid.ID, req model.ChangePasswordRequest) error
+	SetPassword(ctx context.Context, userID xid.ID, req model.SetPasswordRequest) error
+	ResetPassword(ctx context.Context, email string, userType user.UserType, organizationID *xid.ID) (string, error)
+	ConfirmPasswordReset(ctx context.Context, token, newPassword string) error
+	UpdateLastLogin(ctx context.Context, id xid.ID, ipAddress string) error
+
+	// Email and phone verification
+	SendEmailVerification(ctx context.Context, userID xid.ID) (string, error)
+	VerifyEmail(ctx context.Context, token string) (*model.User, error)
+	SendPhoneVerification(ctx context.Context, userID xid.ID) (string, error)
+	VerifyPhone(ctx context.Context, token string) (*model.User, error)
+	ResendVerification(ctx context.Context, req model.ResendVerificationRequest) error
+
+	// User management
+	BlockUser(ctx context.Context, userID xid.ID, reason string) error
+	UnblockUser(ctx context.Context, userID xid.ID, reason string) error
+	ActivateUser(ctx context.Context, userID xid.ID, reason string) error
+	DeactivateUser(ctx context.Context, userID xid.ID, reason string) error
+
+	// Role and permission management
+	AssignRole(ctx context.Context, userID xid.ID, req model.AssignRoleRequest) error
+	RemoveRole(ctx context.Context, userID xid.ID, roleID xid.ID, contextType string, contextID *xid.ID) error
+	AssignPermission(ctx context.Context, userID xid.ID, req model.AssignPermissionRequest) error
+	RemovePermission(ctx context.Context, userID xid.ID, permissionID xid.ID, contextType string, contextID *xid.ID) error
+	GetUserPermissions(ctx context.Context, userID xid.ID, contextType string, contextID *xid.ID) ([]model.UserPermissionAssignment, error)
+	GetUserRoles(ctx context.Context, userID xid.ID, contextType string, contextID *xid.ID) ([]model.UserRoleAssignment, error)
+
+	// User analytics and activity
+	GetUserActivity(ctx context.Context, userID xid.ID, req model.UserActivityRequest) (*model.UserActivityResponse, error)
+	GetUserStats(ctx context.Context, organizationID *xid.ID) (*model.UserStats, error)
+	GetRecentLogins(ctx context.Context, userID xid.ID, limit int) ([]model.UserActivity, error)
+
+	// Bulk operations
+	BulkUpdateUsers(ctx context.Context, req model.BulkUserOperation) (*model.BulkUserOperationResponse, error)
+	BulkDeleteUsers(ctx context.Context, userIDs []xid.ID, transferDataTo *xid.ID) (*model.BulkUserOperationResponse, error)
+
+	// User validation
+	ValidateUserEmail(ctx context.Context, email string, userType user.UserType, organizationID *xid.ID, excludeUserID *xid.ID) error
+	ValidateUsername(ctx context.Context, username string, userType user.UserType, organizationID *xid.ID, excludeUserID *xid.ID) error
+	ValidatePasswordStrength(ctx context.Context, password string) error
+
+	// Platform admin operations
+	PromoteToPlatformAdmin(ctx context.Context, userID xid.ID) error
+	DemoteFromPlatformAdmin(ctx context.Context, userID xid.ID) error
+	GetPlatformAdmins(ctx context.Context) ([]model.UserSummary, error)
 }
 
-// NewService creates a new user service
-func NewService(db *ent.Client, logger logging.Logger) *Service {
-	return &Service{
-		db:     db,
-		logger: logger,
+// service implements the user service
+type service struct {
+	userRepo         repository.UserRepository
+	verificationRepo repository.VerificationRepository
+	auditRepo        repository.AuditRepository
+	logger           logging.Logger
+}
+
+// NewService creates a new user service instance
+func NewService(
+	userRepo repository.UserRepository,
+	verificationRepo repository.VerificationRepository,
+	auditRepo repository.AuditRepository,
+	logger logging.Logger,
+) Service {
+	return &service{
+		userRepo:         userRepo,
+		verificationRepo: verificationRepo,
+		auditRepo:        auditRepo,
+		logger:           logger,
 	}
 }
 
-// User Creation and Management
+// CreateUser creates a new user
+func (s *service) CreateUser(ctx context.Context, req model.CreateUserRequest) (*model.User, error) {
+	s.logger.Info("Creating new user", logging.String("email", req.Email), logging.String("user_type", string(req.UserType)))
 
-// CreateUserInput represents input for creating a user
-type CreateUserInput struct {
-	Email            string                 `json:"email" validate:"required,email"`
-	FirstName        *string                `json:"first_name,omitempty" validate:"omitempty,min=1,max=50"`
-	LastName         *string                `json:"last_name,omitempty" validate:"omitempty,min=1,max=50"`
-	Username         *string                `json:"username,omitempty" validate:"omitempty,min=3,max=50"`
-	Password         *string                `json:"password,omitempty" validate:"omitempty,min=8"`
-	PhoneNumber      *string                `json:"phone_number,omitempty" validate:"omitempty,e164"`
-	UserType         user.UserType          `json:"user_type" validate:"required,oneof=internal external end_user"`
-	OrganizationID   *xid.ID                `json:"organization_id,omitempty"`
-	AuthProvider     string                 `json:"auth_provider" validate:"omitempty,oneof=internal google github microsoft saml oidc"`
-	ExternalID       *string                `json:"external_id,omitempty"`
-	EmailVerified    bool                   `json:"email_verified"`
-	Active           bool                   `json:"active"`
-	Metadata         map[string]interface{} `json:"metadata,omitempty"`
-	CustomAttributes map[string]interface{} `json:"custom_attributes,omitempty"`
-	CreatedBy        *xid.ID                `json:"created_by,omitempty"`
-}
-
-// CreateUser creates a new user with proper validation and context
-func (s *Service) CreateUser(ctx context.Context, input CreateUserInput) (*ent.User, error) {
-	// Validate organization context for external users and end users
-	if input.UserType == user.UserTypeExternal || input.UserType == user.UserTypeEndUser {
-		if input.OrganizationID == nil {
-			return nil, errors.New(errors.CodeBadRequest, "organization_id is required for external and end users")
-		}
-
-		// Validate organization exists and is active
-		orgExists, err := s.db.Organization.Query().
-			Where(
-				organization.ID(*input.OrganizationID),
-				organization.Active(true),
-			).
-			Exist(ctx)
-		if err != nil {
-			return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to validate organization")
-		}
-		if !orgExists {
-			return nil, errors.New(errors.CodeNotFound, "organization not found or inactive")
-		}
-	}
-
-	// Check email uniqueness within context
-	if err := s.validateEmailUniqueness(ctx, input.Email, input.UserType, input.OrganizationID); err != nil {
+	// Validate user type
+	userType, err := s.parseUserType(string(req.UserType))
+	if err != nil {
 		return nil, err
 	}
 
-	// Check username uniqueness if provided
-	if input.Username != nil {
-		if err := s.validateUsernameUniqueness(ctx, *input.Username, input.UserType, input.OrganizationID); err != nil {
+	// Validate email uniqueness
+	if err := s.ValidateUserEmail(ctx, req.Email, userType, req.OrganizationID, nil); err != nil {
+		return nil, err
+	}
+
+	// Validate username uniqueness if provided
+	if req.Username != nil && *req.Username != "" {
+		if err := s.ValidateUsername(ctx, *req.Username, userType, req.OrganizationID, nil); err != nil {
 			return nil, err
 		}
 	}
 
-	// Hash password if provided
+	// Validate password strength if provided
 	var passwordHash *string
-	if input.Password != nil {
-		hash, err := crypto.HashPassword(*input.Password)
-		if err != nil {
-			return nil, errors.Wrap(errors.CodeCryptoError, err, "failed to hash password")
+	if len(req.PasswordHash) > 0 {
+		passwordHash = &req.PasswordHash
+	} else if req.Password != "" && !req.SkipPasswordValidation {
+		if err := s.ValidatePasswordStrength(ctx, req.Password); err != nil {
+			return nil, err
 		}
-		passwordHash = &hash
+		hsh, err := s.hashPassword(req.Password)
+		if err != nil {
+			return nil, errors.Wrap(err, errors.CodeInternalServer, "failed to hash password")
+		}
+		passwordHash = &hsh
 	}
 
-	// Set defaults
-	authProvider := input.AuthProvider
-	if authProvider == "" {
-		authProvider = "internal"
+	// Create user input
+	input := repository.CreateUserInput{
+		Email:            req.Email,
+		Username:         req.Username,
+		PhoneNumber:      req.PhoneNumber,
+		FirstName:        req.FirstName,
+		LastName:         req.LastName,
+		PasswordHash:     passwordHash,
+		UserType:         userType,
+		OrganizationID:   req.OrganizationID,
+		Locale:           req.Locale,
+		Timezone:         req.Timezone,
+		CustomAttributes: req.CustomAttributes,
+		EmailVerified:    req.EmailVerified,
+		PhoneVerified:    req.PhoneVerified,
+		AuthProvider:     req.AuthProvider,
+		ExternalID:       req.ExternalID,
+		Active:           true,
+		Blocked:          false,
 	}
-
-	// Start transaction
-	tx, err := s.db.Tx(ctx)
-	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to start transaction")
-	}
-	defer func() {
-		if err != nil {
-			tx.Rollback()
-		}
-	}()
 
 	// Create user
-	userCreate := tx.User.Create().
-		SetEmail(input.Email).
-		SetNillableFirstName(input.FirstName).
-		SetNillableLastName(input.LastName).
-		SetNillableUsername(input.Username).
-		SetNillablePasswordHash(passwordHash).
-		SetNillablePhoneNumber(input.PhoneNumber).
-		SetUserType(input.UserType).
-		SetNillableOrganizationID(input.OrganizationID).
-		SetAuthProvider(authProvider).
-		SetNillableExternalID(input.ExternalID).
-		SetEmailVerified(input.EmailVerified).
-		SetActive(input.Active).
-		SetMetadata(input.Metadata).
-		SetCustomAttributes(input.CustomAttributes)
-
-	if input.CreatedBy != nil {
-		userCreate.SetCreatedBy(input.CreatedBy.String())
-	}
-
-	newUser, err := userCreate.Save(ctx)
+	entUser, err := s.userRepo.Create(ctx, input)
 	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to create user")
+		s.logger.Error("Failed to create user", logging.Error(err))
+		return nil, errors.Wrap(err, errors.CodeInternalServer, "failed to create user")
 	}
 
-	// Assign default role based on user type and context
-	if err := s.assignDefaultRole(ctx, tx, newUser); err != nil {
-		return nil, err
-	}
+	// Convert to model
+	modelUser := s.convertEntUserToModel(entUser)
 
-	// Update organization user counts
-	if input.OrganizationID != nil {
-		if err := s.updateOrganizationUserCount(ctx, tx, *input.OrganizationID, input.UserType, 1); err != nil {
-			return nil, err
+	// Send verification email if required
+	if req.SendVerificationEmail && !req.EmailVerified {
+		if _, err := s.SendEmailVerification(ctx, modelUser.ID); err != nil {
+			s.logger.Warn("Failed to send verification email", logging.Error(err))
 		}
 	}
 
-	// Commit transaction
-	if err = tx.Commit(); err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to commit transaction")
-	}
+	// Create audit log
+	s.createAuditLog(ctx, &model.CreateAuditLogRequest{
+		Action:         "user.created",
+		Resource:       "user",
+		ResourceID:     &modelUser.ID,
+		Status:         "success",
+		OrganizationID: req.OrganizationID,
+		Details: map[string]interface{}{
+			"email":     req.Email,
+			"user_type": req.UserType,
+		},
+	})
 
-	s.logger.Info("User created",
-		logging.String("user_id", newUser.ID.String()),
-		logging.String("email", newUser.Email),
-		logging.String("user_type", string(newUser.UserType)),
-		logging.String("organization_id", func() string {
-			if input.OrganizationID != nil {
-				return input.OrganizationID.String()
-			}
-			return ""
-		}()),
-	)
-
-	return newUser, nil
+	s.logger.Info("User created successfully", logging.String("user_id", modelUser.ID.String()))
+	return modelUser, nil
 }
 
-// UpdateUserInput represents input for updating a user
-type UpdateUserInput struct {
-	FirstName        *string                `json:"first_name,omitempty" validate:"omitempty,min=1,max=50"`
-	LastName         *string                `json:"last_name,omitempty" validate:"omitempty,min=1,max=50"`
-	Username         *string                `json:"username,omitempty" validate:"omitempty,min=3,max=50"`
-	PhoneNumber      *string                `json:"phone_number,omitempty" validate:"omitempty,e164"`
-	ProfileImageURL  *string                `json:"profile_image_url,omitempty" validate:"omitempty,url"`
-	Locale           *string                `json:"locale,omitempty"`
-	Timezone         *string                `json:"timezone,omitempty"`
-	Active           *bool                  `json:"active,omitempty"`
-	Blocked          *bool                  `json:"blocked,omitempty"`
-	Metadata         map[string]interface{} `json:"metadata,omitempty"`
-	CustomAttributes map[string]interface{} `json:"custom_attributes,omitempty"`
-}
-
-// UpdateUser updates a user's information
-func (s *Service) UpdateUser(ctx context.Context, userID xid.ID, input UpdateUserInput) (*ent.User, error) {
-	// Get existing user for validation
-	existingUser, err := s.db.User.Query().
-		Where(user.ID(userID)).
-		First(ctx)
+// GetUser retrieves a user by ID
+func (s *service) GetUser(ctx context.Context, id xid.ID) (*model.User, error) {
+	entUser, err := s.userRepo.GetByID(ctx, id)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return nil, errors.New(errors.CodeNotFound, "user not found")
 		}
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to get user")
+		return nil, errors.Wrap(err, errors.CodeInternalServer, "failed to get user")
+	}
+
+	return s.convertEntUserToModel(entUser), nil
+}
+
+// GetUserByIdentifier retrieves a user by IDentifier
+func (s *service) GetUserByIdentifier(ctx context.Context, id string, userType user.UserType) (*model.User, error) {
+	uid, err := xid.FromString(id)
+	if err != nil {
+		userByEmail, err := s.GetUserByEmail(ctx, id, userType, nil)
+		if err != nil {
+			userByEmail, err = s.GetUserByUsername(ctx, id, userType, nil)
+			if err != nil {
+				if ent.IsNotFound(err) {
+					return nil, errors.New(errors.CodeNotFound, "user not found")
+				}
+				return nil, errors.Wrap(err, errors.CodeInternalServer, "failed to get user")
+			}
+		}
+
+		return userByEmail, nil
+	}
+	entUser, err := s.userRepo.GetByID(ctx, uid)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, errors.New(errors.CodeNotFound, "user not found")
+		}
+		return nil, errors.Wrap(err, errors.CodeInternalServer, "failed to get user")
+	}
+
+	return s.convertEntUserToModel(entUser), nil
+}
+
+// GetUserByEmail retrieves a user by email
+func (s *service) GetUserByEmail(ctx context.Context, email string, userType user.UserType, organizationID *xid.ID) (*model.User, error) {
+	entUser, err := s.userRepo.GetByEmail(ctx, email, userType, organizationID)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, errors.New(errors.CodeNotFound, "user not found")
+		}
+		return nil, errors.Wrap(err, errors.CodeInternalServer, "failed to get user by email")
+	}
+
+	return s.convertEntUserToModel(entUser), nil
+}
+
+// GetUserByPhone retrieves a user by username
+func (s *service) GetUserByPhone(ctx context.Context, phone string, userType user.UserType, organizationID *xid.ID) (*model.User, error) {
+	entUser, err := s.userRepo.GetUserByPhone(ctx, phone, userType, organizationID)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, errors.New(errors.CodeNotFound, "user not found")
+		}
+		return nil, errors.Wrap(err, errors.CodeInternalServer, "failed to get user by phone")
+	}
+
+	return s.convertEntUserToModel(entUser), nil
+}
+
+// GetUserByUsername retrieves a user by username
+func (s *service) GetUserByUsername(ctx context.Context, username string, userType user.UserType, organizationID *xid.ID) (*model.User, error) {
+	entUser, err := s.userRepo.GetByUsername(ctx, username, userType, organizationID)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, errors.New(errors.CodeNotFound, "user not found")
+		}
+		return nil, errors.Wrap(err, errors.CodeInternalServer, "failed to get user by username")
+	}
+
+	return s.convertEntUserToModel(entUser), nil
+}
+
+// UpdateUser updates a user
+func (s *service) UpdateUser(ctx context.Context, id xid.ID, req model.UpdateUserRequest) (*model.User, error) {
+	// Get existing user
+	existingUser, err := s.userRepo.GetByID(ctx, id)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, errors.New(errors.CodeNotFound, "user not found")
+		}
+		return nil, errors.Wrap(err, errors.CodeInternalServer, "failed to get user")
+	}
+
+	// Validate email uniqueness if changed
+	if req.Email != nil && *req.Email != existingUser.Email {
+		if err := s.ValidateUserEmail(ctx, *req.Email, existingUser.UserType, &existingUser.OrganizationID, &id); err != nil {
+			return nil, err
+		}
 	}
 
 	// Validate username uniqueness if changed
-	if input.Username != nil && existingUser.Username != *input.Username {
-		if err := s.validateUsernameUniqueness(ctx, *input.Username, existingUser.UserType, &existingUser.OrganizationID); err != nil {
+	if req.Username != nil && *req.Username != existingUser.Username {
+		if err := s.ValidateUsername(ctx, *req.Username, existingUser.UserType, &existingUser.OrganizationID, &id); err != nil {
 			return nil, err
 		}
 	}
 
-	// Build update query
-	update := s.db.User.UpdateOneID(userID)
-
-	if input.FirstName != nil {
-		update.SetNillableFirstName(input.FirstName)
-	}
-	if input.LastName != nil {
-		update.SetNillableLastName(input.LastName)
-	}
-	if input.Username != nil {
-		update.SetNillableUsername(input.Username)
-	}
-	if input.PhoneNumber != nil {
-		update.SetNillablePhoneNumber(input.PhoneNumber)
-	}
-	if input.ProfileImageURL != nil {
-		update.SetNillableProfileImageURL(input.ProfileImageURL)
-	}
-	if input.Locale != nil {
-		update.SetLocale(*input.Locale)
-	}
-	if input.Timezone != nil {
-		update.SetNillableTimezone(input.Timezone)
-	}
-	if input.Active != nil {
-		update.SetActive(*input.Active)
-	}
-	if input.Blocked != nil {
-		update.SetBlocked(*input.Blocked)
-	}
-	if input.Metadata != nil {
-		update.SetMetadata(input.Metadata)
-	}
-	if input.CustomAttributes != nil {
-		update.SetCustomAttributes(input.CustomAttributes)
-	}
-
-	updatedUser, err := update.Save(ctx)
+	// Update user
+	updatedUser, err := s.userRepo.Update(ctx, id, repository.UpdateUserInput{
+		UpdateUserRequest: req,
+	})
 	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to update user")
+		return nil, errors.Wrap(err, errors.CodeInternalServer, "failed to update user")
 	}
 
-	return updatedUser, nil
+	// Create audit log
+	s.createAuditLog(ctx, &model.CreateAuditLogRequest{
+		Action:         "user.updated",
+		Resource:       "user",
+		ResourceID:     &id,
+		Status:         "success",
+		OrganizationID: &updatedUser.OrganizationID,
+		Details: map[string]interface{}{
+			"updated_fields": s.getUpdatedFields(req),
+		},
+	})
+
+	return s.convertEntUserToModel(updatedUser), nil
 }
 
-// GetUser retrieves a user by ID with organization context validation
-func (s *Service) GetUser(ctx context.Context, userID xid.ID, requesterOrgID *xid.ID) (*ent.User, error) {
-	query := s.db.User.Query().
-		Where(user.ID(userID)).
-		WithMemberships(func(q *ent.MembershipQuery) {
-			q.WithRole().WithOrganization()
-		}).
-		WithUserRoles(func(q *ent.UserRoleQuery) {
-			q.WithRole()
-		})
-
-	// If requester has organization context, ensure user is accessible
-	if requesterOrgID != nil {
-		query.Where(
-			user.Or(
-				user.OrganizationID(*requesterOrgID),                                // User belongs to requester's org
-				user.HasMembershipsWith(membership.OrganizationID(*requesterOrgID)), // User is member of requester's org
-			),
-		)
-	}
-
-	foundUser, err := query.First(ctx)
-	if err != nil {
-		if ent.IsNotFound(err) {
-			return nil, errors.New(errors.CodeNotFound, "user not found")
-		}
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to get user")
-	}
-
-	return foundUser, nil
-}
-
-// ListUsersInput represents input for listing users
-type ListUsersInput struct {
-	OrganizationID *xid.ID        `json:"organization_id,omitempty"`
-	UserType       *user.UserType `json:"user_type,omitempty"`
-	Active         *bool          `json:"active,omitempty"`
-	Blocked        *bool          `json:"blocked,omitempty"`
-	AuthProvider   *string        `json:"auth_provider,omitempty"`
-	Search         *string        `json:"search,omitempty"`
-	Limit          int            `json:"limit" validate:"min=1,max=100"`
-	Offset         int            `json:"offset" validate:"min=0"`
-}
-
-// ListUsers lists users with filtering and pagination
-func (s *Service) ListUsers(ctx context.Context, input ListUsersInput) ([]*ent.User, int, error) {
-	query := s.db.User.Query()
-
-	// Apply filters
-	if input.OrganizationID != nil {
-		query.Where(
-			user.Or(
-				user.OrganizationID(*input.OrganizationID),
-				user.HasMembershipsWith(membership.OrganizationID(*input.OrganizationID)),
-			),
-		)
-	}
-
-	if input.UserType != nil {
-		query.Where(user.UserTypeEQ(*input.UserType))
-	}
-
-	if input.Active != nil {
-		query.Where(user.Active(*input.Active))
-	}
-
-	if input.Blocked != nil {
-		query.Where(user.Blocked(*input.Blocked))
-	}
-
-	if input.AuthProvider != nil {
-		query.Where(user.AuthProvider(*input.AuthProvider))
-	}
-
-	if input.Search != nil && *input.Search != "" {
-		// searchTerm := "%" + strings.ToLower(*input.Search) + "%"
-		query.Where(
-			user.Or(
-				user.EmailContainsFold(*input.Search),
-				user.FirstNameContainsFold(*input.Search),
-				user.LastNameContainsFold(*input.Search),
-				user.UsernameContainsFold(*input.Search),
-			),
-		)
-	}
-
-	// Get total count
-	totalCount, err := query.Count(ctx)
-	if err != nil {
-		return nil, 0, errors.Wrap(errors.CodeDatabaseError, err, "failed to count users")
-	}
-
-	// Apply pagination and get results
-	users, err := query.
-		Limit(input.Limit).
-		Offset(input.Offset).
-		Order(ent.Asc(user.FieldCreatedAt)).
-		WithMemberships(func(q *ent.MembershipQuery) {
-			q.WithRole().WithOrganization()
-		}).
-		All(ctx)
-	if err != nil {
-		return nil, 0, errors.Wrap(errors.CodeDatabaseError, err, "failed to list users")
-	}
-
-	return users, totalCount, nil
-}
-
-// DeleteUser soft deletes a user (sets active to false)
-func (s *Service) DeleteUser(ctx context.Context, userID xid.ID) error {
-	// Get user for organization context
-	existingUser, err := s.db.User.Query().
-		Where(user.ID(userID)).
-		First(ctx)
+// DeleteUser deletes a user
+func (s *service) DeleteUser(ctx context.Context, id xid.ID, req model.DeleteUserRequest) error {
+	// Get user to validate existence
+	existingUser, err := s.userRepo.GetByID(ctx, id)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return errors.New(errors.CodeNotFound, "user not found")
 		}
-		return errors.Wrap(errors.CodeDatabaseError, err, "failed to get user")
+		return errors.Wrap(err, errors.CodeInternalServer, "failed to get user")
 	}
 
-	// Start transaction
-	tx, err := s.db.Tx(ctx)
-	if err != nil {
-		return errors.Wrap(errors.CodeDatabaseError, err, "failed to start transaction")
-	}
-	defer func() {
-		if err != nil {
-			tx.Rollback()
-		}
-	}()
-
-	// Soft delete user
-	err = tx.User.UpdateOneID(userID).
-		SetActive(false).
-		SetBlocked(true).
-		Exec(ctx)
-	if err != nil {
-		return errors.Wrap(errors.CodeDatabaseError, err, "failed to delete user")
+	// TODO: Handle data transfer if requested
+	if req.TransferDataTo != nil {
+		// Implement data transfer logic
+		s.logger.Info("Data transfer requested but not implemented",
+			logging.String("from_user", id.String()),
+			logging.String("to_user", req.TransferDataTo.String()))
 	}
 
-	// Update organization user count
-	if !existingUser.OrganizationID.IsNil() {
-		if err := s.updateOrganizationUserCount(ctx, tx, existingUser.OrganizationID, existingUser.UserType, -1); err != nil {
-			return err
-		}
+	// Delete user
+	if err := s.userRepo.Delete(ctx, id); err != nil {
+		return errors.Wrap(err, errors.CodeInternalServer, "failed to delete user")
 	}
 
-	// Commit transaction
-	if err = tx.Commit(); err != nil {
-		return errors.Wrap(errors.CodeDatabaseError, err, "failed to commit transaction")
-	}
-
-	s.logger.Info("User deleted",
-		logging.String("user_id", userID.String()),
-		logging.String("email", existingUser.Email),
-	)
+	// Create audit log
+	s.createAuditLog(ctx, &model.CreateAuditLogRequest{
+		Action:         "user.deleted",
+		Resource:       "user",
+		ResourceID:     &id,
+		Status:         "success",
+		OrganizationID: &existingUser.OrganizationID,
+		Details: map[string]interface{}{
+			"reason":           req.Reason,
+			"transfer_data_to": req.TransferDataTo,
+		},
+	})
 
 	return nil
 }
 
-// Authentication Methods
+// AuthenticateUser authenticates a user with email/password
+func (s *service) AuthenticateUser(ctx context.Context, email, password string, userType user.UserType, organizationID *xid.ID) (*model.User, error) {
+	// Get user by email
+	entUser, err := s.userRepo.GetByEmail(ctx, email, userType, organizationID)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, errors.New(errors.CodeUnauthorized, "invalid credentials")
+		}
+		return nil, errors.Wrap(err, errors.CodeInternalServer, "failed to get user")
+	}
 
-// ChangePasswordInput represents input for changing password
-type ChangePasswordInput struct {
-	CurrentPassword string `json:"current_password" validate:"required"`
-	NewPassword     string `json:"new_password" validate:"required,min=8"`
+	// Check if user is active and not blocked
+	if !entUser.Active {
+		return nil, errors.New(errors.CodeUnauthorized, "user account is deactivated")
+	}
+	if entUser.Blocked {
+		return nil, errors.New(errors.CodeUnauthorized, "user account is blocked")
+	}
+
+	// Verify password
+	if entUser.PasswordHash == "" {
+		return nil, errors.New(errors.CodeUnauthorized, "password authentication not available")
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(entUser.PasswordHash), []byte(password)); err != nil {
+		// Create audit log for failed authentication
+		s.createAuditLog(ctx, &model.CreateAuditLogRequest{
+			UserID:         &entUser.ID,
+			Action:         "user.login_failed",
+			Resource:       "user",
+			ResourceID:     &entUser.ID,
+			Status:         "failure",
+			OrganizationID: &entUser.OrganizationID,
+			Error:          "invalid credentials",
+		})
+		return nil, errors.New(errors.CodeUnauthorized, "invalid credentials")
+	}
+
+	// Update last login
+	if err := s.userRepo.UpdateLastLogin(ctx, entUser.ID, ""); err != nil {
+		s.logger.Warn("Failed to update last login", logging.Error(err))
+	}
+
+	// Increment login count
+	if err := s.userRepo.IncrementLoginCount(ctx, entUser.ID); err != nil {
+		s.logger.Warn("Failed to increment login count", logging.Error(err))
+	}
+
+	// Create audit log for successful authentication
+	s.createAuditLog(ctx, &model.CreateAuditLogRequest{
+		UserID:         &entUser.ID,
+		Action:         "user.login_success",
+		Resource:       "user",
+		ResourceID:     &entUser.ID,
+		Status:         "success",
+		OrganizationID: &entUser.OrganizationID,
+	})
+
+	return s.convertEntUserToModel(entUser), nil
 }
 
 // ChangePassword changes a user's password
-func (s *Service) ChangePassword(ctx context.Context, userID xid.ID, input ChangePasswordInput) error {
+func (s *service) ChangePassword(ctx context.Context, userID xid.ID, req model.ChangePasswordRequest) error {
 	// Get user
-	existingUser, err := s.db.User.Query().
-		Where(user.ID(userID)).
-		First(ctx)
+	entUser, err := s.userRepo.GetByID(ctx, userID)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return errors.New(errors.CodeNotFound, "user not found")
 		}
-		return errors.Wrap(errors.CodeDatabaseError, err, "failed to get user")
+		return errors.Wrap(err, errors.CodeInternalServer, "failed to get user")
 	}
 
 	// Verify current password
-	if existingUser.PasswordHash != "" {
-		if crypto.VerifyPassword(input.CurrentPassword, existingUser.PasswordHash) != nil {
-			return errors.New(errors.CodeUnauthorized, "current password is incorrect")
-		}
+	if entUser.PasswordHash == "" {
+		return errors.New(errors.CodeBadRequest, "no password set for user")
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(entUser.PasswordHash), []byte(req.CurrentPassword)); err != nil {
+		return errors.New(errors.CodeUnauthorized, "current password is incorrect")
+	}
+
+	// Validate new password strength
+	if err := s.ValidatePasswordStrength(ctx, req.NewPassword); err != nil {
+		return err
 	}
 
 	// Hash new password
-	newHash, err := crypto.HashPassword(input.NewPassword)
+	newPasswordHash, err := s.hashPassword(req.NewPassword)
 	if err != nil {
-		return errors.Wrap(errors.CodeCryptoError, err, "failed to hash new password")
+		return errors.Wrap(err, errors.CodeInternalServer, "failed to hash new password")
 	}
 
 	// Update password
-	err = s.db.User.UpdateOneID(userID).
-		SetPasswordHash(newHash).
-		SetLastPasswordChange(time.Now()).
-		Exec(ctx)
-	if err != nil {
-		return errors.Wrap(errors.CodeDatabaseError, err, "failed to update password")
+	if err := s.userRepo.UpdatePassword(ctx, userID, newPasswordHash); err != nil {
+		return errors.Wrap(err, errors.CodeInternalServer, "failed to update password")
 	}
 
-	s.logger.Info("Password changed",
+	// Create audit log
+	s.createAuditLog(ctx, &model.CreateAuditLogRequest{
+		UserID:         &userID,
+		Action:         "user.password_changed",
+		Resource:       "user",
+		ResourceID:     &userID,
+		Status:         "success",
+		OrganizationID: &entUser.OrganizationID,
+	})
+
+	return nil
+}
+
+// SendEmailVerification sends an email verification
+func (s *service) SendEmailVerification(ctx context.Context, userID xid.ID) (string, error) {
+	// Get user
+	entUser, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return "", errors.New(errors.CodeNotFound, "user not found")
+		}
+		return "", errors.Wrap(err, errors.CodeInternalServer, "failed to get user")
+	}
+
+	if entUser.EmailVerified {
+		return "", errors.New(errors.CodeBadRequest, "email is already verified")
+	}
+
+	// Generate verification token
+	token, err := s.generateToken()
+	if err != nil {
+		return "", errors.Wrap(err, errors.CodeInternalServer, "failed to generate token")
+	}
+
+	// Create verification record
+	_, err = s.verificationRepo.Create(ctx, repository.CreateVerificationInput{
+		UserID:    userID,
+		Email:     entUser.Email,
+		Token:     token,
+		Type:      "email",
+		ExpiresAt: time.Now().Add(24 * time.Hour),
+	})
+	if err != nil {
+		return "", errors.Wrap(err, errors.CodeInternalServer, "failed to create verification")
+	}
+
+	// TODO: Send verification email
+	s.logger.Info("Email verification token generated",
 		logging.String("user_id", userID.String()),
-	)
+		logging.String("email", entUser.Email))
 
-	return nil
+	return token, nil
 }
 
-// ResetPasswordInput represents input for password reset
-type ResetPasswordInput struct {
-	Email string `json:"email" validate:"required,email"`
-}
-
-// InitiatePasswordReset initiates a password reset process
-func (s *Service) InitiatePasswordReset(ctx context.Context, input ResetPasswordInput) error {
-	// Find user by email
-	existingUser, err := s.db.User.Query().
-		Where(user.Email(input.Email), user.Active(true)).
-		First(ctx)
-	if err != nil {
-		// Don't reveal if email exists for security
-		if ent.IsNotFound(err) {
-			return nil
-		}
-		return errors.Wrap(errors.CodeDatabaseError, err, "failed to find user")
-	}
-
-	// Generate reset token
-	token, err := generateSecureToken(32)
-	if err != nil {
-		return errors.Wrap(errors.CodeCryptoError, err, "failed to generate reset token")
-	}
-
-	// Set token and expiry (15 minutes)
-	expiresAt := time.Now().Add(15 * time.Minute)
-	err = s.db.User.UpdateOneID(existingUser.ID).
-		SetPasswordResetToken(token).
-		SetPasswordResetTokenExpires(expiresAt).
-		Exec(ctx)
-	if err != nil {
-		return errors.Wrap(errors.CodeDatabaseError, err, "failed to set reset token")
-	}
-
-	// TODO: Send reset email
-	s.logger.Info("Password reset initiated",
-		logging.String("user_id", existingUser.ID.String()),
-		logging.String("email", input.Email),
-	)
-
-	return nil
-}
-
-// CompletePasswordResetInput represents input for completing password reset
-type CompletePasswordResetInput struct {
-	Token       string `json:"token" validate:"required"`
-	NewPassword string `json:"new_password" validate:"required,min=8"`
-}
-
-// CompletePasswordReset completes the password reset process
-func (s *Service) CompletePasswordReset(ctx context.Context, input CompletePasswordResetInput) error {
-	// Find user with valid reset token
-	existingUser, err := s.db.User.Query().
-		Where(
-			user.PasswordResetToken(input.Token),
-			user.PasswordResetTokenExpiresGT(time.Now()),
-			user.Active(true),
-		).
-		First(ctx)
+// VerifyEmail verifies an email with token
+func (s *service) VerifyEmail(ctx context.Context, token string) (*model.User, error) {
+	// Get verification record
+	verification, err := s.verificationRepo.GetValidToken(ctx, token)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return errors.New(errors.CodeUnauthorized, "invalid or expired reset token")
+			return nil, errors.New(errors.CodeBadRequest, "invalid or expired verification token")
 		}
-		return errors.Wrap(errors.CodeDatabaseError, err, "failed to find user with reset token")
+		return nil, errors.Wrap(err, errors.CodeInternalServer, "failed to get verification")
 	}
 
-	// Hash new password
-	newHash, err := crypto.HashPassword(input.NewPassword)
+	if verification.UserID.IsNil() || verification.Type != "email" {
+		return nil, errors.New(errors.CodeBadRequest, "invalid verification token")
+	}
+
+	// Mark email as verified
+	if err := s.userRepo.MarkEmailVerified(ctx, verification.UserID); err != nil {
+		return nil, errors.Wrap(err, errors.CodeInternalServer, "failed to mark email as verified")
+	}
+
+	// Mark verification as used
+	if err := s.verificationRepo.MarkAsUsed(ctx, verification.ID); err != nil {
+		s.logger.Warn("Failed to mark verification as used", logging.Error(err))
+	}
+
+	// Get updated user
+	entUser, err := s.userRepo.GetByID(ctx, verification.UserID)
 	if err != nil {
-		return errors.Wrap(errors.CodeCryptoError, err, "failed to hash new password")
+		return nil, errors.Wrap(err, errors.CodeInternalServer, "failed to get updated user")
 	}
 
-	// Update password and clear reset token
-	err = s.db.User.UpdateOneID(existingUser.ID).
-		SetPasswordHash(newHash).
-		SetLastPasswordChange(time.Now()).
-		ClearPasswordResetToken().
-		ClearPasswordResetTokenExpires().
-		Exec(ctx)
-	if err != nil {
-		return errors.Wrap(errors.CodeDatabaseError, err, "failed to update password")
-	}
+	// Create audit log
+	s.createAuditLog(ctx, &model.CreateAuditLogRequest{
+		UserID:         &verification.UserID,
+		Action:         "user.email_verified",
+		Resource:       "user",
+		ResourceID:     &verification.UserID,
+		Status:         "success",
+		OrganizationID: &entUser.OrganizationID,
+		Details: map[string]interface{}{
+			"email": entUser.Email,
+		},
+	})
 
-	s.logger.Info("Password reset completed",
-		logging.String("user_id", existingUser.ID.String()),
-	)
-
-	return nil
+	return s.convertEntUserToModel(entUser), nil
 }
 
-// Helper Functions
+func (s *service) UpdateLastLogin(ctx context.Context, id xid.ID, ipAddress string) error {
+	return s.userRepo.UpdateLastLogin(ctx, id, ipAddress)
+}
 
-// validateEmailUniqueness validates email uniqueness within the appropriate context
-func (s *Service) validateEmailUniqueness(ctx context.Context, email string, userType user.UserType, orgID *xid.ID) error {
-	query := s.db.User.Query().
-		Where(
-			user.Email(email),
-			user.UserTypeEQ(userType),
-		)
-
-	// For external and end users, check uniqueness within organization
-	if (userType == user.UserTypeExternal || userType == user.UserTypeEndUser) && orgID != nil {
-		query.Where(user.OrganizationID(*orgID))
+// ValidateUserEmail validates email uniqueness
+func (s *service) ValidateUserEmail(ctx context.Context, email string, userType user.UserType, organizationID *xid.ID, excludeUserID *xid.ID) error {
+	if email == "" {
+		return errors.New(errors.CodeBadRequest, "email is required")
 	}
 
-	exists, err := query.Exist(ctx)
+	// Check if email format is valid
+	if !s.isValidEmail(email) {
+		return errors.New(errors.CodeBadRequest, "invalid email format")
+	}
+
+	// Check uniqueness
+	exists, err := s.userRepo.ExistsByEmail(ctx, email, userType, organizationID)
 	if err != nil {
-		return errors.Wrap(errors.CodeDatabaseError, err, "failed to check email uniqueness")
+		return errors.Wrap(err, errors.CodeInternalServer, "failed to check email uniqueness")
 	}
 
 	if exists {
-		return errors.New(errors.CodeConflict, "email already exists in this context")
+		// If we're excluding a specific user (for updates), check if it's the same user
+		if excludeUserID != nil {
+			existingUser, err := s.userRepo.GetByEmail(ctx, email, userType, organizationID)
+			if err == nil && existingUser.ID == *excludeUserID {
+				return nil // Same user, allow update
+			}
+		}
+		return errors.New(errors.CodeConflict, "email already exists")
 	}
 
 	return nil
 }
 
-// validateUsernameUniqueness validates username uniqueness within the appropriate context
-func (s *Service) validateUsernameUniqueness(ctx context.Context, username string, userType user.UserType, orgID *xid.ID) error {
-	query := s.db.User.Query().
-		Where(
-			user.Username(username),
-			user.UserTypeEQ(userType),
-		)
-
-	// For external and end users, check uniqueness within organization
-	if (userType == user.UserTypeExternal || userType == user.UserTypeEndUser) && orgID != nil {
-		query.Where(user.OrganizationID(*orgID))
+// ValidateUsername validates username uniqueness
+func (s *service) ValidateUsername(ctx context.Context, username string, userType user.UserType, organizationID *xid.ID, excludeUserID *xid.ID) error {
+	if username == "" {
+		return nil // Username is optional
 	}
 
-	exists, err := query.Exist(ctx)
+	// Check if username meets requirements
+	if len(username) < 3 {
+		return errors.New(errors.CodeBadRequest, "username must be at least 3 characters")
+	}
+
+	// Check uniqueness
+	exists, err := s.userRepo.ExistsByUsername(ctx, username, userType, organizationID)
 	if err != nil {
-		return errors.Wrap(errors.CodeDatabaseError, err, "failed to check username uniqueness")
+		return errors.Wrap(err, errors.CodeInternalServer, "failed to check username uniqueness")
 	}
 
 	if exists {
-		return errors.New(errors.CodeConflict, "username already exists in this context")
+		// If we're excluding a specific user (for updates), check if it's the same user
+		if excludeUserID != nil {
+			existingUser, err := s.userRepo.GetByUsername(ctx, username, userType, organizationID)
+			if err == nil && existingUser.ID == *excludeUserID {
+				return nil // Same user, allow update
+			}
+		}
+		return errors.New(errors.CodeConflict, "username already exists")
 	}
 
 	return nil
 }
 
-// assignDefaultRole assigns default role to new user based on type and context
-func (s *Service) assignDefaultRole(ctx context.Context, tx *ent.Tx, newUser *ent.User) error {
-	var defaultRole *ent.Role
-
-	switch newUser.UserType {
-	case user.UserTypeInternal:
-		// Assign default platform role
-		defaultRole, _ = tx.Role.Query().
-			Where(
-				role.Name("platform_user"),
-				role.RoleTypeEQ(role.RoleTypeSystem),
-				role.IsDefault(true),
-			).
-			First(ctx)
-
-	case user.UserTypeExternal:
-		// Assign default organization member role
-		if !newUser.OrganizationID.IsNil() {
-			defaultRole, _ = tx.Role.Query().
-				Where(
-					role.Name("member"),
-					role.RoleTypeEQ(role.RoleTypeOrganization),
-					role.OrganizationID(newUser.OrganizationID),
-					role.IsDefault(true),
-				).
-				First(ctx)
-		}
-
-	case user.UserTypeEndUser:
-		// Assign default end user role
-		if !newUser.OrganizationID.IsNil() {
-			defaultRole, _ = tx.Role.Query().
-				Where(
-					role.Name("end_user"),
-					role.RoleTypeEQ(role.RoleTypeApplication),
-					role.OrganizationID(newUser.OrganizationID),
-					role.IsDefault(true),
-				).
-				First(ctx)
-		}
+// ValidatePasswordStrength validates password strength
+func (s *service) ValidatePasswordStrength(ctx context.Context, password string) error {
+	if len(password) < 8 {
+		return errors.New(errors.CodeBadRequest, "password must be at least 8 characters")
 	}
 
-	// Assign role if found
-	if defaultRole != nil {
-		contextType := userrole.ContextTypeSystem
-		var contextID *xid.ID
-
-		if defaultRole.RoleType == role.RoleTypeOrganization {
-			contextType = userrole.ContextTypeOrganization
-			contextID = &newUser.OrganizationID
-		} else if defaultRole.RoleType == role.RoleTypeApplication {
-			contextType = userrole.ContextTypeApplication
-			contextID = &newUser.OrganizationID
-		}
-
-		_, err := tx.UserRole.Create().
-			SetUserID(newUser.ID).
-			SetRoleID(defaultRole.ID).
-			SetContextType(contextType).
-			SetNillableContextID(contextID).
-			SetActive(true).
-			Save(ctx)
-		if err != nil {
-			return errors.Wrap(errors.CodeDatabaseError, err, "failed to assign default role")
-		}
-	}
-
+	// Add more password validation rules as needed
 	return nil
 }
 
-// updateOrganizationUserCount updates user count in organization
-func (s *Service) updateOrganizationUserCount(ctx context.Context, tx *ent.Tx, orgID xid.ID, userType user.UserType, delta int) error {
-	org, err := tx.Organization.Query().
-		Where(organization.ID(orgID)).
-		First(ctx)
-	if err != nil {
-		return errors.Wrap(errors.CodeDatabaseError, err, "failed to get organization")
+// Helper methods
+
+func (s *service) parseUserType(userTypeStr string) (user.UserType, error) {
+	switch strings.ToLower(userTypeStr) {
+	case "internal":
+		return user.UserTypeInternal, nil
+	case "external":
+		return user.UserTypeExternal, nil
+	case "end_user":
+		return user.UserTypeEndUser, nil
+	default:
+		return "", errors.New(errors.CodeBadRequest, "invalid user type")
 	}
-
-	update := tx.Organization.UpdateOneID(orgID)
-
-	switch userType {
-	case user.UserTypeExternal:
-		newCount := org.CurrentExternalUsers + delta
-		if newCount < 0 {
-			newCount = 0
-		}
-		update.SetCurrentExternalUsers(newCount)
-
-	case user.UserTypeEndUser:
-		newCount := org.CurrentEndUsers + delta
-		if newCount < 0 {
-			newCount = 0
-		}
-		update.SetCurrentEndUsers(newCount)
-	}
-
-	return update.Exec(ctx)
 }
 
-// generateSecureToken generates a cryptographically secure token
-func generateSecureToken(length int) (string, error) {
-	bytes := make([]byte, length)
-	_, err := rand.Read(bytes)
-	if err != nil {
+func (s *service) hashPassword(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	return string(bytes), err
+}
+
+func (s *service) generateToken() (string, error) {
+	bytes := make([]byte, 32)
+	if _, err := rand.Read(bytes); err != nil {
 		return "", err
 	}
 	return base64.URLEncoding.EncodeToString(bytes), nil
 }
 
-// GetUsersByOrganization returns all users in an organization
-func (s *Service) GetUsersByOrganization(ctx context.Context, orgID xid.ID, userType *user.UserType) ([]*ent.User, error) {
-	query := s.db.User.Query().
-		Where(
-			user.Or(
-				user.OrganizationID(orgID),
-				user.HasMembershipsWith(membership.OrganizationID(orgID)),
-			),
-			user.Active(true),
-		)
-
-	if userType != nil {
-		query.Where(user.UserTypeEQ(*userType))
-	}
-
-	users, err := query.All(ctx)
-	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to get users by organization")
-	}
-
-	return users, nil
+func (s *service) isValidEmail(email string) bool {
+	// Basic email validation - in production, use a proper email validation library
+	return strings.Contains(email, "@") && strings.Contains(email, ".")
 }
 
-// GetUserMemberships returns all memberships for a user
-func (s *Service) GetUserMemberships(ctx context.Context, userID xid.ID) ([]*ent.Membership, error) {
-	memberships, err := s.db.Membership.Query().
-		Where(
-			membership.UserID(userID),
-			membership.StatusEQ(membership.StatusActive),
-		).
-		WithOrganization().
-		WithRole().
-		All(ctx)
-	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to get user memberships")
+func (s *service) getUpdatedFields(req model.UpdateUserRequest) []string {
+	var fields []string
+	if req.Email != nil {
+		fields = append(fields, "email")
 	}
-
-	return memberships, nil
+	if req.PhoneNumber != nil {
+		fields = append(fields, "phone_number")
+	}
+	if req.FirstName != nil {
+		fields = append(fields, "first_name")
+	}
+	if req.LastName != nil {
+		fields = append(fields, "last_name")
+	}
+	if req.Username != nil {
+		fields = append(fields, "username")
+	}
+	if req.ProfileImageURL != nil {
+		fields = append(fields, "profile_image_url")
+	}
+	if req.Locale != nil {
+		fields = append(fields, "locale")
+	}
+	if req.Timezone != nil {
+		fields = append(fields, "timezone")
+	}
+	if req.CustomAttributes != nil {
+		fields = append(fields, "custom_attributes")
+	}
+	if req.Active != nil {
+		fields = append(fields, "active")
+	}
+	if req.Blocked != nil {
+		fields = append(fields, "blocked")
+	}
+	return fields
 }
 
-// VerifyUserAccess verifies if a user has access to a resource in an organization context
-func (s *Service) VerifyUserAccess(ctx context.Context, userID, orgID xid.ID) (bool, error) {
-	// Check if user belongs to organization directly or through membership
-	exists, err := s.db.User.Query().
-		Where(
-			user.ID(userID),
-			user.Active(true),
-			user.Or(
-				user.OrganizationID(orgID),
-				user.HasMembershipsWith(
-					membership.And(
-						membership.OrganizationID(orgID),
-						membership.StatusEQ(membership.StatusActive),
-					),
-				),
-			),
-		).
-		Exist(ctx)
-	if err != nil {
-		return false, errors.Wrap(errors.CodeDatabaseError, err, "failed to verify user access")
+func (s *service) convertEntUserToModel(entUser *ent.User) *model.User {
+	// Convert ent.User to model.User
+	modelUser := &model.User{
+		Base: model.Base{
+			ID:        entUser.ID,
+			CreatedAt: entUser.CreatedAt,
+			UpdatedAt: entUser.UpdatedAt,
+		},
+		Email:                 entUser.Email,
+		PhoneNumber:           entUser.PhoneNumber,
+		FirstName:             entUser.FirstName,
+		LastName:              entUser.LastName,
+		Username:              entUser.Username,
+		EmailVerified:         entUser.EmailVerified,
+		PhoneVerified:         entUser.PhoneVerified,
+		Active:                entUser.Active,
+		Blocked:               entUser.Blocked,
+		LastLogin:             entUser.LastLogin,
+		LastPasswordChange:    entUser.LastPasswordChange,
+		Metadata:              entUser.Metadata,
+		ProfileImageURL:       entUser.ProfileImageURL,
+		Locale:                entUser.Locale,
+		Timezone:              entUser.Timezone,
+		UserType:              entUser.UserType.String(),
+		OrganizationID:        &entUser.OrganizationID,
+		PrimaryOrganizationID: &entUser.PrimaryOrganizationID,
+		IsPlatformAdmin:       entUser.IsPlatformAdmin,
+		AuthProvider:          entUser.AuthProvider,
+		ExternalID:            entUser.ExternalID,
+		CustomerID:            entUser.CustomerID,
+		CustomAttributes:      entUser.CustomAttributes,
+		CreatedBy:             entUser.CreatedBy,
+		LoginCount:            entUser.LoginCount,
+		LastLoginIP:           entUser.LastLoginIP,
+		PasswordHash:          entUser.PasswordHash,
 	}
 
-	return exists, nil
+	return modelUser
+}
+
+func (s *service) convertEntUserToModelSummary(entUser *ent.User) *model.UserSummary {
+	// Convert ent.User to model.User
+	modelUser := &model.UserSummary{
+		ID:              entUser.ID,
+		CreatedAt:       entUser.CreatedAt,
+		Email:           entUser.Email,
+		PhoneNumber:     entUser.PhoneNumber,
+		FirstName:       entUser.FirstName,
+		LastName:        entUser.LastName,
+		Username:        entUser.Username,
+		Active:          entUser.Active,
+		LastLogin:       entUser.LastLogin,
+		ProfileImageURL: entUser.ProfileImageURL,
+		UserType:        entUser.UserType.String(),
+	}
+
+	return modelUser
+}
+
+func (s *service) createAuditLog(ctx context.Context, input *model.CreateAuditLogRequest) {
+	// Create audit log asynchronously to avoid blocking the main operation
+	go func() {
+		auditInput := repository.CreateAuditInput{
+			OrganizationID: input.OrganizationID,
+			UserID:         input.UserID,
+			SessionID:      input.SessionID,
+			Action:         input.Action,
+			ResourceType:   input.Resource,
+			ResourceID:     input.ResourceID,
+			Status:         input.Status,
+			IPAddress:      input.IPAddress,
+			UserAgent:      input.UserAgent,
+			Location:       input.Location,
+			Details:        input.Details,
+			Changes:        input.Changes,
+			Error:          input.Error,
+			Duration:       input.Duration,
+			RiskLevel:      input.RiskLevel,
+			Tags:           input.Tags,
+			Source:         input.Source,
+		}
+
+		if _, err := s.auditRepo.Create(context.Background(), auditInput); err != nil {
+			s.logger.Error("Failed to create audit log", logging.Error(err))
+		}
+	}()
+}
+
+func (s *service) ListUsers(ctx context.Context, req model.UserListRequest) (*model.UserListResponse, error) {
+	params := repository.ListUsersParams{
+		PaginationParams: req.PaginationParams,
+		UserType:         nil,
+		OrganizationID:   nil,
+		Active:           nil,
+		Blocked:          nil,
+		EmailVerified:    nil,
+		AuthProvider:     nil,
+	}
+	list, err := s.userRepo.List(ctx, params)
+	if err != nil {
+		return nil, err
+	}
+
+	users := lo.Map(list.Data, func(item *ent.User, index int) model.UserSummary {
+		return *s.convertEntUserToModelSummary(item)
+	})
+
+	return &model.UserListResponse{
+		Data: users,
+	}, nil
+}
+
+func (s *service) ExistsByEmail(ctx context.Context, email string, userType user.UserType, organizationID *xid.ID) (bool, error) {
+	return s.userRepo.ExistsByEmail(ctx, email, userType, organizationID)
+}
+func (s *service) IncrementLoginCount(ctx context.Context, id xid.ID) error {
+	return s.userRepo.IncrementLoginCount(ctx, id)
+}
+
+func (s *service) ValidatePassword(ctx context.Context, userID xid.ID, password string) error {
+	// TODO: Implement password validation
+	return nil
+}
+
+func (s *service) SetPassword(ctx context.Context, userID xid.ID, req model.SetPasswordRequest) error {
+	// TODO: Implement set password
+	return nil
+}
+
+func (s *service) ResetPassword(ctx context.Context, email string, userType user.UserType, organizationID *xid.ID) (string, error) {
+	// TODO: Implement password reset
+	return "", nil
+}
+
+func (s *service) ConfirmPasswordReset(ctx context.Context, token, newPassword string) error {
+	// TODO: Implement password reset confirmation
+	return nil
+}
+
+func (s *service) SendPhoneVerification(ctx context.Context, userID xid.ID) (string, error) {
+	// TODO: Implement phone verification
+	return "", nil
+}
+
+func (s *service) VerifyPhone(ctx context.Context, token string) (*model.User, error) {
+	// TODO: Implement phone verification
+	return nil, nil
+}
+
+func (s *service) ResendVerification(ctx context.Context, req model.ResendVerificationRequest) error {
+	// TODO: Implement resend verification
+	return nil
+}
+
+func (s *service) BlockUser(ctx context.Context, userID xid.ID, reason string) error {
+	// TODO: Implement user blocking
+	return nil
+}
+
+func (s *service) UnblockUser(ctx context.Context, userID xid.ID, reason string) error {
+	// TODO: Implement user unblocking
+	return nil
+}
+
+func (s *service) ActivateUser(ctx context.Context, userID xid.ID, reason string) error {
+	// TODO: Implement user activation
+	return nil
+}
+
+func (s *service) DeactivateUser(ctx context.Context, userID xid.ID, reason string) error {
+	// TODO: Implement user deactivation
+	return nil
+}
+
+func (s *service) AssignRole(ctx context.Context, userID xid.ID, req model.AssignRoleRequest) error {
+	// TODO: Implement role assignment
+	return nil
+}
+
+func (s *service) RemoveRole(ctx context.Context, userID xid.ID, roleID xid.ID, contextType string, contextID *xid.ID) error {
+	// TODO: Implement role removal
+	return nil
+}
+
+func (s *service) AssignPermission(ctx context.Context, userID xid.ID, req model.AssignPermissionRequest) error {
+	// TODO: Implement permission assignment
+	return nil
+}
+
+func (s *service) RemovePermission(ctx context.Context, userID xid.ID, permissionID xid.ID, contextType string, contextID *xid.ID) error {
+	// TODO: Implement permission removal
+	return nil
+}
+
+func (s *service) GetUserPermissions(ctx context.Context, userID xid.ID, contextType string, contextID *xid.ID) ([]model.UserPermissionAssignment, error) {
+	// TODO: Implement get user permissions
+	return nil, nil
+}
+
+func (s *service) GetUserRoles(ctx context.Context, userID xid.ID, contextType string, contextID *xid.ID) ([]model.UserRoleAssignment, error) {
+	// TODO: Implement get user roles
+	return nil, nil
+}
+
+func (s *service) GetUserActivity(ctx context.Context, userID xid.ID, req model.UserActivityRequest) (*model.UserActivityResponse, error) {
+	// TODO: Implement get user activity
+	return nil, nil
+}
+
+func (s *service) GetUserStats(ctx context.Context, organizationID *xid.ID) (*model.UserStats, error) {
+	// TODO: Implement get user stats
+	return nil, nil
+}
+
+func (s *service) GetRecentLogins(ctx context.Context, userID xid.ID, limit int) ([]model.UserActivity, error) {
+	// TODO: Implement get recent logins
+	return nil, nil
+}
+
+func (s *service) BulkUpdateUsers(ctx context.Context, req model.BulkUserOperation) (*model.BulkUserOperationResponse, error) {
+	// TODO: Implement bulk user update
+	return nil, nil
+}
+
+func (s *service) BulkDeleteUsers(ctx context.Context, userIDs []xid.ID, transferDataTo *xid.ID) (*model.BulkUserOperationResponse, error) {
+	// TODO: Implement bulk user deletion
+	return nil, nil
+}
+
+func (s *service) PromoteToPlatformAdmin(ctx context.Context, userID xid.ID) error {
+	// TODO: Implement promote to platform admin
+	return nil
+}
+
+func (s *service) DemoteFromPlatformAdmin(ctx context.Context, userID xid.ID) error {
+	// TODO: Implement demote from platform admin
+	return nil
+}
+
+func (s *service) GetPlatformAdmins(ctx context.Context) ([]model.UserSummary, error) {
+	// TODO: Implement get platform admins
+	return nil, nil
 }

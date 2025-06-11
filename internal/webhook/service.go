@@ -8,7 +8,7 @@ import (
 	"github.com/juicycleff/frank/ent"
 	"github.com/juicycleff/frank/ent/webhook"
 	"github.com/juicycleff/frank/internal/model"
-	"github.com/juicycleff/frank/pkg/crypto"
+	"github.com/juicycleff/frank/pkg/cryptoold"
 	"github.com/juicycleff/frank/pkg/logging"
 	"github.com/rs/xid"
 )
@@ -68,7 +68,7 @@ func NewService(
 // Create creates a new webhook
 func (s *service) Create(ctx context.Context, input CreateWebhookInput) (*Webhook, error) {
 	// Generate a secret for signing webhook payloads
-	secret := crypto.GenerateWebhookSecret()
+	secret := cryptoold.GenerateWebhookSecret()
 
 	// Set default values
 	retryCount := s.config.Webhooks.DefaultRetries

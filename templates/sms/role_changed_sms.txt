@@ -1,0 +1,1 @@
+{{.appName}}: Your role in {{.organizationName}} changed from {{.oldRole}} to {{.newRole}} by {{.changedBy}} on {{.timestamp}}.

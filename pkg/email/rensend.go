@@ -21,7 +21,7 @@ type ResendSender struct {
 }
 
 // NewResendSender creates a new Resend sender
-func NewResendSender(cfg *config.EmailConfig, logger logging.Logger) *ResendSender {
+func NewResendSender(cfg *config.EmailConfig, logger logging.Logger) Sender {
 	return &ResendSender{
 		config: cfg,
 		logger: logger,
@@ -94,13 +94,13 @@ func (s *ResendSender) Send(ctx context.Context, email Email) error {
 	// Convert payload to JSON
 	jsonPayload, err := json.Marshal(payload)
 	if err != nil {
-		return errors.Wrap(errors.CodeInternalServer, err, "failed to marshal email payload")
+		return errors.Wrap(err, errors.CodeInternalServer, "failed to marshal email payload")
 	}
 
 	// Create request
 	req, err := http.NewRequestWithContext(ctx, "POST", "https://api.resend.com/emails", bytes.NewBuffer(jsonPayload))
 	if err != nil {
-		return errors.Wrap(errors.CodeInternalServer, err, "failed to create HTTP request")
+		return errors.Wrap(err, errors.CodeInternalServer, "failed to create HTTP request")
 	}
 
 	// Add headers
@@ -110,7 +110,7 @@ func (s *ResendSender) Send(ctx context.Context, email Email) error {
 	// Execute request
 	resp, err := s.client.Do(req)
 	if err != nil {
-		return errors.Wrap(errors.CodeEmailDeliveryFail, err, "failed to send email via Resend")
+		return errors.Wrap(err, errors.CodeEmailDeliveryFail, "failed to send email via Resend")
 	}
 	defer resp.Body.Close()
 
@@ -129,4 +129,23 @@ func (s *ResendSender) Send(ctx context.Context, email Email) error {
 	)
 
 	return nil
+}
+
+func (s *ResendSender) SendBulkEmails(ctx context.Context, emails []Email) (*BulkEmailResult, error) {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (s *ResendSender) TestConnection(ctx context.Context) error {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (s *ResendSender) GetDeliveryStatus(ctx context.Context, messageID string) (*DeliveryInfo, error) {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (s *ResendSender) Name() string {
+	return "resend"
 }

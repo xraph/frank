@@ -1,0 +1,512 @@
+<!-- 1. Payment Method Expired Email Template -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Method Expired - {{.app_name}}</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; padding: 20px 0; border-bottom: 2px solid #f0f0f0; }
+        .content { padding: 30px 0; }
+        .payment-alert { background: #fff3cd; border: 1px solid #ffeaa7; padding: 25px; border-radius: 8px; margin: 20px 0; text-align: center; }
+        .billing-details { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .button { display: inline-block; padding: 15px 35px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }
+        .urgent { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .footer { text-align: center; padding: 20px 0; border-top: 1px solid #f0f0f0; color: #666; font-size: 14px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>{{.app_name}}</h1>
+        <h2>💳 Payment Method Update Required</h2>
+    </div>
+    <div class="content">
+        <div class="payment-alert {{if .urgent}}urgent{{end}}">
+            <h3>{{if .urgent}}⚠️ Urgent:{{end}} Your Payment Method Has Expired</h3>
+            <p>Update your payment information to continue service</p>
+        </div>
+
+        <p>Hello {{.user_name}},</p>
+
+        <p>We tried to process your payment for <strong>{{.organization_name}}</strong>, but your payment method has expired.</p>
+
+        <div class="billing-details">
+            <h4>💰 Billing Information:</h4>
+            <ul>
+                <li><strong>Organization:</strong> {{.organization_name}}</li>
+                <li><strong>Plan:</strong> {{.plan_name}}</li>
+                <li><strong>Amount Due:</strong> {{.currency}}{{.amount_due}}</li>
+                <li><strong>Due Date:</strong> {{.due_date}}</li>
+                <li><strong>Payment Method:</strong> {{.payment_method_type}} ending in {{.card_last_four}}</li>
+                <li><strong>Expiration:</strong> {{.card_expiry}}</li>
+            </ul>
+        </div>
+
+        {{if .service_interruption_date}}
+        <div class="payment-alert urgent">
+            <h4>🚨 Service Interruption Warning</h4>
+            <p>If payment is not updated by <strong>{{.service_interruption_date}}</strong>, your service may be interrupted.</p>
+        </div>
+        {{end}}
+
+        <h4>🔧 What you need to do:</h4>
+        <ol>
+            <li><strong>Update your payment method</strong> in your billing settings</li>
+            <li><strong>Verify the new payment information</strong></li>
+            <li><strong>Confirm successful payment processing</strong></li>
+        </ol>
+
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="{{.update_payment_url}}" class="button">Update Payment Method</a>
+        </div>
+
+        <div style="background: #e9ecef; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h4>💡 Billing Help</h4>
+            <p>Need assistance with billing or payment issues?</p>
+            <ul>
+                <li><a href="{{.billing_faq_url}}">Billing FAQ</a></li>
+                <li><a href="{{.contact_billing_url}}">Contact Billing Support</a></li>
+                <li><a href="{{.payment_methods_url}}">Accepted Payment Methods</a></li>
+            </ul>
+        </div>
+
+        <p>Thank you for keeping your account current!</p>
+    </div>
+    <div class="footer">
+        <p>Invoice #{{.invoice_number}} | <a href="{{.view_invoice_url}}">View Invoice</a></p>
+        <p><a href="{{.billing_settings_url}}">Billing Settings</a> | <a href="{{.support_url}}">Contact Support</a></p>
+    </div>
+</div>
+</body>
+</html>
+
+<!-- 2. Feature Announcement Email Template -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.feature_name}} is Here! - {{.app_name}}</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; padding: 20px 0; border-bottom: 2px solid #f0f0f0; }
+        .content { padding: 30px 0; }
+        .feature-banner { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 12px; margin: 20px 0; text-align: center; }
+        .feature-details { background: #f8f9fa; padding: 25px; border-radius: 8px; margin: 20px 0; }
+        .button { display: inline-block; padding: 15px 35px; background: #28a745; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }
+        .button.secondary { background: #007bff; }
+        .benefits { background: #e8f5e8; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .footer { text-align: center; padding: 20px 0; border-top: 1px solid #f0f0f0; color: #666; font-size: 14px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>{{.app_name}}</h1>
+        <h2>🚀 Exciting New Feature!</h2>
+    </div>
+    <div class="content">
+        <div class="feature-banner">
+            <h2>{{.feature_emoji}} Introducing {{.feature_name}}</h2>
+            <p>{{.feature_tagline}}</p>
+        </div>
+
+        <p>Hello {{.user_name}},</p>
+
+        <p>We're excited to announce the launch of <strong>{{.feature_name}}</strong> – a powerful new feature that will transform how you {{.feature_purpose}}.</p>
+
+        <div class="feature-details">
+            <h4>✨ What's New:</h4>
+            <p>{{.feature_description}}</p>
+
+            {{if .feature_screenshot}}
+            <div style="text-align: center; margin: 20px 0;">
+                <img src="{{.feature_screenshot}}" alt="{{.feature_name}} Screenshot" style="max-width: 100%; border-radius: 8px; border: 1px solid #dee2e6;">
+            </div>
+            {{end}}
+        </div>
+
+        <div class="benefits">
+            <h4>🎯 Key Benefits:</h4>
+            <ul>
+                {{range .feature_benefits}}
+                <li>{{.}}</li>
+                {{end}}
+            </ul>
+        </div>
+
+        <h4>🔧 How to Get Started:</h4>
+        <ol>
+            {{range .getting_started_steps}}
+            <li>{{.}}</li>
+            {{end}}
+        </ol>
+
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="{{.try_feature_url}}" class="button">Try {{.feature_name}} Now</a>
+            <a href="{{.learn_more_url}}" class="button secondary">Learn More</a>
+        </div>
+
+        {{if .availability_info}}
+        <div style="background: #d1ecf1; border: 1px solid #bee5eb; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h4>📋 Availability:</h4>
+            <p>{{.availability_info}}</p>
+            {{if .requires_upgrade}}
+            <p><a href="{{.upgrade_url}}">Upgrade your plan</a> to access this feature.</p>
+            {{end}}
+        </div>
+        {{end}}
+
+        <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h4>💬 We'd Love Your Feedback</h4>
+            <p>Try out {{.feature_name}} and let us know what you think! Your feedback helps us build better features.</p>
+            <p><a href="{{.feedback_url}}">Share Your Feedback</a></p>
+        </div>
+
+        <p>As always, if you have any questions or need help getting started, our support team is here for you.</p>
+
+        <p>Happy building!<br>
+            <strong>The {{.app_name}} Team</strong></p>
+    </div>
+    <div class="footer">
+        <p><a href="{{.changelog_url}}">Full Changelog</a> | <a href="{{.documentation_url}}">Documentation</a> | <a href="{{.roadmap_url}}">Feature Roadmap</a></p>
+        <p>Don't want feature announcements? <a href="{{.unsubscribe_url}}">Update preferences</a></p>
+    </div>
+</div>
+</body>
+</html>
+
+<!-- 3. Terms of Service Updated Email Template -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Updated Terms of Service - {{.app_name}}</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; padding: 20px 0; border-bottom: 2px solid #f0f0f0; }
+        .content { padding: 30px 0; }
+        .terms-notice { background: #d1ecf1; border: 1px solid #bee5eb; padding: 25px; border-radius: 8px; margin: 20px 0; text-align: center; }
+        .changes-summary { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #007bff; }
+        .button { display: inline-block; padding: 12px 30px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }
+        .important-note { background: #fff3cd; border: 1px solid #ffeaa7; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .footer { text-align: center; padding: 20px 0; border-top: 1px solid #f0f0f0; color: #666; font-size: 14px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>{{.app_name}}</h1>
+        <h2>📋 Terms of Service Update</h2>
+    </div>
+    <div class="content">
+        <div class="terms-notice">
+            <h3>We've Updated Our Terms of Service</h3>
+            <p>Effective {{.effective_date}}</p>
+        </div>
+
+        <p>Hello {{.user_name}},</p>
+
+        <p>We're writing to inform you that we've updated our Terms of Service. These changes will take effect on <strong>{{.effective_date}}</strong>.</p>
+
+        <div class="changes-summary">
+            <h4>📝 Summary of Changes:</h4>
+            <ul>
+                {{range .key_changes}}
+                <li>{{.}}</li>
+                {{end}}
+            </ul>
+        </div>
+
+        <h4>🔍 What's Changed:</h4>
+        <div style="background: white; border: 1px solid #dee2e6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            {{range .detailed_changes}}
+            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #e9ecef;">
+                <h5>{{.section_title}}</h5>
+                <p><strong>Change:</strong> {{.change_description}}</p>
+                <p><strong>Reason:</strong> {{.change_reason}}</p>
+            </div>
+            {{end}}
+        </div>
+
+        <div class="important-note">
+            <h4>⚠️ Important Information:</h4>
+            <ul>
+                <li><strong>Effective Date:</strong> {{.effective_date}}</li>
+                <li><strong>Previous Version:</strong> Available until {{.old_version_expires}}</li>
+                <li><strong>Action Required:</strong> {{if .requires_acceptance}}You must accept the new terms{{else}}No action required{{end}}</li>
+            </ul>
+        </div>
+
+        {{if .requires_acceptance}}
+        <div style="background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h4>✅ Acceptance Required</h4>
+            <p>You must accept the new Terms of Service to continue using {{.app_name}}. If you don't accept by {{.acceptance_deadline}}, your account access may be restricted.</p>
+
+            <div style="text-align: center; margin: 20px 0;">
+                <a href="{{.accept_terms_url}}" class="button">Accept New Terms</a>
+            </div>
+        </div>
+        {{end}}
+
+        <h4>📖 How to Review:</h4>
+        <ol>
+            <li>Read the <a href="{{.new_terms_url}}">full Terms of Service</a></li>
+            <li>Compare with the <a href="{{.old_terms_url}}">previous version</a></li>
+            <li>Review our <a href="{{.changes_explanation_url}}">detailed explanation of changes</a></li>
+            {{if .requires_acceptance}}
+            <li>Accept the new terms to continue service</li>
+            {{end}}
+        </ol>
+
+        <div style="background: #e9ecef; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h4>❓ Questions?</h4>
+            <p>If you have questions about these changes:</p>
+            <ul>
+                <li><a href="{{.legal_faq_url}}">Legal FAQ</a></li>
+                <li><a href="{{.contact_legal_url}}">Contact Legal Team</a></li>
+                <li><a href="{{.support_url}}">General Support</a></li>
+            </ul>
+        </div>
+
+        <p>We appreciate your continued trust in {{.app_name}}. These updates help us provide better, more secure service.</p>
+
+        <p>Best regards,<br>
+            <strong>The {{.app_name}} Legal Team</strong></p>
+    </div>
+    <div class="footer">
+        <p>Terms Version: {{.terms_version}} | Last Updated: {{.last_updated}}</p>
+        <p><a href="{{.new_terms_url}}">View Terms</a> | <a href="{{.privacy_policy_url}}">Privacy Policy</a> | <a href="{{.legal_center_url}}">Legal Center</a></p>
+    </div>
+</div>
+</body>
+</html>
+
+<!-- 4. Webhook Endpoint Failed Email Template -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webhook Endpoint Failure - {{.app_name}}</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; padding: 20px 0; border-bottom: 2px solid #f0f0f0; }
+        .content { padding: 30px 0; }
+        .webhook-alert { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 25px; border-radius: 8px; margin: 20px 0; text-align: center; }
+        .failure-details { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; font-family: monospace; font-size: 14px; }
+        .button { display: inline-block; padding: 12px 30px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }
+        .troubleshooting { background: #e9ecef; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .footer { text-align: center; padding: 20px 0; border-top: 1px solid #f0f0f0; color: #666; font-size: 14px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>{{.app_name}}</h1>
+        <h2>🚨 Webhook Delivery Failed</h2>
+    </div>
+    <div class="content">
+        <div class="webhook-alert">
+            <h3>Webhook Endpoint Not Responding</h3>
+            <p>{{.failure_count}} consecutive failures detected</p>
+        </div>
+
+        <p>Hello {{.user_name}},</p>
+
+        <p>We're unable to deliver webhook events to your endpoint. Your webhook has failed <strong>{{.failure_count}}</strong> times in a row.</p>
+
+        <div class="failure-details">
+            <h4>🔍 Failure Details:</h4>
+            <strong>Endpoint:</strong> {{.webhook_url}}<br>
+            <strong>Status:</strong> {{.webhook_status}}<br>
+            <strong>Last Attempt:</strong> {{.last_attempt_at}}<br>
+            <strong>Error Code:</strong> {{.error_code}}<br>
+            <strong>Error Message:</strong> {{.error_message}}<br>
+            <strong>Response Time:</strong> {{.response_time}}ms<br>
+            <strong>Event Type:</strong> {{.event_type}}<br>
+            <strong>Failed Events:</strong> {{.failed_events_count}}
+        </div>
+
+        {{if .webhook_disabled}}
+        <div style="background: #721c24; color: white; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
+            <h4>⚠️ Webhook Automatically Disabled</h4>
+            <p>Due to repeated failures, this webhook has been automatically disabled to prevent further issues.</p>
+        </div>
+        {{end}}
+
+        <div class="troubleshooting">
+            <h4>🔧 Troubleshooting Steps:</h4>
+            <ol>
+                <li><strong>Check your endpoint URL:</strong> Ensure {{.webhook_url}} is accessible</li>
+                <li><strong>Verify SSL certificate:</strong> Make sure HTTPS is properly configured</li>
+                <li><strong>Check response codes:</strong> Your endpoint should return 2xx status codes</li>
+                <li><strong>Review timeout settings:</strong> Respond within {{.timeout_seconds}} seconds</li>
+                <li><strong>Validate request handling:</strong> Process the webhook payload correctly</li>
+                <li><strong>Check server logs:</strong> Look for errors in your application logs</li>
+            </ol>
+        </div>
+
+        <h4>🔄 Next Steps:</h4>
+        <ul>
+            <li>Fix the issues with your webhook endpoint</li>
+            <li>Test your endpoint using our webhook tester</li>
+            <li>Re-enable the webhook once issues are resolved</li>
+            <li>Monitor delivery success in your dashboard</li>
+        </ul>
+
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="{{.webhook_settings_url}}" class="button">Manage Webhooks</a>
+            <a href="{{.test_webhook_url}}" class="button" style="background: #28a745;">Test Endpoint</a>
+        </div>
+
+        <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h4>📚 Resources:</h4>
+            <ul>
+                <li><a href="{{.webhook_docs_url}}">Webhook Documentation</a></li>
+                <li><a href="{{.webhook_troubleshooting_url}}">Troubleshooting Guide</a></li>
+                <li><a href="{{.webhook_examples_url}}">Code Examples</a></li>
+                <li><a href="{{.webhook_security_url}}">Security Best Practices</a></li>
+            </ul>
+        </div>
+
+        <p>Need help? Our technical support team can assist with webhook configuration and troubleshooting.</p>
+    </div>
+    <div class="footer">
+        <p>Webhook ID: {{.webhook_id}} | Organization: {{.organization_name}}</p>
+        <p><a href="{{.webhook_logs_url}}">View Logs</a> | <a href="{{.support_url}}">Contact Support</a></p>
+    </div>
+</div>
+</body>
+</html>
+
+<!-- 5. SSO Configuration Changed Email Template -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSO Configuration Changed - {{.app_name}}</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; padding: 20px 0; border-bottom: 2px solid #f0f0f0; }
+        .content { padding: 30px 0; }
+        .sso-notice { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 25px; border-radius: 8px; margin: 20px 0; text-align: center; }
+        .config-details { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #007bff; }
+        .security-impact { background: #fff3cd; border: 1px solid #ffeaa7; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .button { display: inline-block; padding: 12px 30px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }
+        .footer { text-align: center; padding: 20px 0; border-top: 1px solid #f0f0f0; color: #666; font-size: 14px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>{{.app_name}}</h1>
+        <h2>🔐 SSO Configuration Updated</h2>
+    </div>
+    <div class="content">
+        <div class="sso-notice">
+            <h3>Single Sign-On Settings Modified</h3>
+            <p>Important changes to {{.organization_name}}'s SSO configuration</p>
+        </div>
+
+        <p>Hello {{.user_name}},</p>
+
+        <p>This email confirms that the Single Sign-On (SSO) configuration for <strong>{{.organization_name}}</strong> has been modified.</p>
+
+        <div class="config-details">
+            <h4>🔧 Configuration Changes:</h4>
+            <ul>
+                <li><strong>Modified By:</strong> {{.modified_by}}</li>
+                <li><strong>Change Date:</strong> {{.modified_at}}</li>
+                <li><strong>Provider:</strong> {{.sso_provider}}</li>
+                <li><strong>Status:</strong> {{.sso_status}}</li>
+            </ul>
+
+            <h5>Specific Changes:</h5>
+            <ul>
+                {{range .config_changes}}
+                <li><strong>{{.field}}:</strong> {{.change_type}} - {{.description}}</li>
+                {{end}}
+            </ul>
+        </div>
+
+        <div class="security-impact">
+            <h4>🛡️ Security Impact:</h4>
+            <p><strong>Impact Level:</strong> {{.security_impact_level}}</p>
+            <ul>
+                {{range .security_implications}}
+                <li>{{.}}</li>
+                {{end}}
+            </ul>
+        </div>
+
+        <h4>👥 What this means for users:</h4>
+        <ul>
+            <li>{{if .sso_enforced}}SSO is now enforced for all organization members{{else}}SSO is available but not enforced{{end}}</li>
+            <li>Users will {{if .affects_existing_sessions}}need to sign in again{{else}}continue with current sessions{{end}}</li>
+            <li>{{if .domain_restriction}}Access is restricted to {{.allowed_domains}} domains{{else}}No domain restrictions{{end}}</li>
+            <li>{{if .provisioning_enabled}}User provisioning is enabled{{else}}Manual user management required{{end}}</li>
+        </ul>
+
+        {{if .affects_existing_sessions}}
+        <div style="background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h4>⚠️ Action Required</h4>
+            <p>All existing sessions will be terminated in <strong>{{.session_termination_time}}</strong>. Users will need to sign in again using the new SSO configuration.</p>
+        </div>
+        {{end}}
+
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="{{.sso_settings_url}}" class="button">View SSO Settings</a>
+            <a href="{{.test_sso_url}}" class="button" style="background: #28a745;">Test SSO Login</a>
+        </div>
+
+        <div style="background: #e9ecef; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h4>🔍 Audit Information:</h4>
+            <ul>
+                <li><strong>Change ID:</strong> {{.change_id}}</li>
+                <li><strong>IP Address:</strong> {{.ip_address}}</li>
+                <li><strong>User Agent:</strong> {{.user_agent}}</li>
+                <li><strong>Session ID:</strong> {{.session_id}}</li>
+            </ul>
+        </div>
+
+        <h4>📋 Next Steps:</h4>
+        <ol>
+            <li>Review the changes to ensure they're correct</li>
+            <li>Test SSO login to verify functionality</li>
+            <li>Communicate changes to your team if necessary</li>
+            <li>Monitor the audit logs for any issues</li>
+        </ol>
+
+        <div style="background: #d1ecf1; border: 1px solid #bee5eb; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h4>📚 SSO Resources:</h4>
+            <ul>
+                <li><a href="{{.sso_docs_url}}">SSO Documentation</a></li>
+                <li><a href="{{.provider_setup_guide_url}}">{{.sso_provider}} Setup Guide</a></li>
+                <li><a href="{{.troubleshooting_url}}">Troubleshooting Guide</a></li>
+                <li><a href="{{.security_best_practices_url}}">Security Best Practices</a></li>
+            </ul>
+        </div>
+
+        <p>If you didn't authorize these changes or have concerns about this modification, please contact our security team immediately.</p>
+
+        <p>Best regards,<br>
+            <strong>The {{.app_name}} Security Team</strong></p>
+    </div>
+    <div class="footer">
+        <p>Organization: {{.organization_name}} | Change ID: {{.change_id}}</p>
+        <p><a href="{{.audit_logs_url}}">View Audit Logs</a> | <a href="{{.security_support_url}}">Security Support</a></p>
+        <p>If you didn't make this change, <a href="{{.report_security_issue_url}}">report it immediately</a>.</p>
+    </div>
+</div>
+</body>
+</html>

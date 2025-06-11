@@ -14,7 +14,7 @@ import (
 
 // twilioProvider implements the Twilio SMS provider
 type twilioProvider struct {
-	config     *config.Config
+	config     *config.SMSConfig
 	logger     logging.Logger
 	accountSID string
 	authToken  string
@@ -22,12 +22,12 @@ type twilioProvider struct {
 }
 
 // NewTwilioProvider creates a new Twilio SMS provider
-func NewTwilioProvider(cfg *config.Config, logger logging.Logger) Provider {
+func NewTwilioProvider(cfg *config.SMSConfig, logger logging.Logger) Provider {
 	return &twilioProvider{
 		config:     cfg,
 		logger:     logger,
-		accountSID: cfg.SMS.Twilio.AccountSID,
-		authToken:  cfg.SMS.Twilio.AuthToken,
+		accountSID: cfg.Twilio.AccountSID,
+		authToken:  cfg.Twilio.AuthToken,
 		client:     &http.Client{},
 	}
 }
@@ -42,7 +42,7 @@ func (p *twilioProvider) Send(ctx context.Context, input SMS) error {
 	// Set sender (From) if not provided
 	from := input.From
 	if from == "" {
-		from = p.config.SMS.FromPhone
+		from = p.config.FromPhone
 	}
 
 	// Prepare request data
@@ -65,7 +65,7 @@ func (p *twilioProvider) Send(ctx context.Context, input SMS) error {
 	apiURL := fmt.Sprintf("https://api.twilio.com/2010-04-01/Accounts/%s/Messages.json", p.accountSID)
 	req, err := http.NewRequestWithContext(ctx, "POST", apiURL, strings.NewReader(data.Encode()))
 	if err != nil {
-		return errors.Wrap(errors.CodeSMSDeliveryFail, err, "failed to create Twilio request")
+		return errors.Wrap(err, errors.CodeSMSDeliveryFail, "failed to create Twilio request")
 	}
 
 	// Set headers
@@ -75,7 +75,7 @@ func (p *twilioProvider) Send(ctx context.Context, input SMS) error {
 	// Execute request
 	resp, err := p.client.Do(req)
 	if err != nil {
-		return errors.Wrap(errors.CodeSMSDeliveryFail, err, "failed to send Twilio request")
+		return errors.Wrap(err, errors.CodeSMSDeliveryFail, "failed to send Twilio request")
 	}
 	defer resp.Body.Close()
 

@@ -22,6 +22,10 @@ func (Organization) Fields() []ent.Field {
 		field.String("slug").
 			Unique().
 			NotEmpty(),
+		field.Strings("domains").
+			Optional(),
+		field.Strings("verified_domains").
+			Optional(),
 		field.String("domain").
 			Optional(),
 		field.String("logo_url").
@@ -118,6 +122,10 @@ func (Organization) Edges() []ent.Edge {
 		// Membership relationships for external users
 		edge.To("memberships", Membership.Type),
 
+		// Notification templates
+		edge.To("sms_templates", SMSTemplate.Type),
+		edge.To("email_templates", EmailTemplate.Type),
+
 		// Organization-scoped resources
 		edge.To("api_keys", ApiKey.Type),
 		edge.To("webhooks", Webhook.Type),
@@ -140,6 +148,7 @@ func (Organization) Edges() []ent.Edge {
 		edge.From("user_permission_contexts", UserPermission.Type).
 			Ref("organization_context"),
 
+		edge.To("audit_logs", Audit.Type),
 		// edge.To("user_role_contexts", UserRole.Type).
 		// 	From("organization_context"),
 		// edge.To("user_permission_contexts", UserPermission.Type).
@@ -172,5 +181,6 @@ func (Organization) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		ModelBaseMixin{},
 		TimeMixin{},
+		SoftDeleteMixin{},
 	}
 }

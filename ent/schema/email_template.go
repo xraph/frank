@@ -2,6 +2,7 @@ package schema
 
 import (
 	"entgo.io/ent"
+	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 	"github.com/juicycleff/frank/pkg/entity"
@@ -43,7 +44,12 @@ func (EmailTemplate) Fields() []ent.Field {
 
 // Edges of the EmailTemplate.
 func (EmailTemplate) Edges() []ent.Edge {
-	return []ent.Edge{}
+	return []ent.Edge{
+		edge.From("organization", Organization.Type).
+			Ref("email_templates").
+			Field("organization_id").
+			Unique(),
+	}
 }
 
 // Indexes of the EmailTemplate.
@@ -61,5 +67,6 @@ func (EmailTemplate) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		ModelBaseMixin{},
 		TimeMixin{},
+		SoftDeleteMixin{},
 	}
 }

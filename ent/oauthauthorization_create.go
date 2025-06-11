@@ -58,6 +58,20 @@ func (oac *OAuthAuthorizationCreate) SetNillableUpdatedAt(t *time.Time) *OAuthAu
 	return oac
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (oac *OAuthAuthorizationCreate) SetDeletedAt(t time.Time) *OAuthAuthorizationCreate {
+	oac.mutation.SetDeletedAt(t)
+	return oac
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (oac *OAuthAuthorizationCreate) SetNillableDeletedAt(t *time.Time) *OAuthAuthorizationCreate {
+	if t != nil {
+		oac.SetDeletedAt(*t)
+	}
+	return oac
+}
+
 // SetClientID sets the "client_id" field.
 func (oac *OAuthAuthorizationCreate) SetClientID(x xid.ID) *OAuthAuthorizationCreate {
 	oac.mutation.SetClientID(x)
@@ -188,6 +202,34 @@ func (oac *OAuthAuthorizationCreate) SetNonce(s string) *OAuthAuthorizationCreat
 func (oac *OAuthAuthorizationCreate) SetNillableNonce(s *string) *OAuthAuthorizationCreate {
 	if s != nil {
 		oac.SetNonce(*s)
+	}
+	return oac
+}
+
+// SetUserAgent sets the "user_agent" field.
+func (oac *OAuthAuthorizationCreate) SetUserAgent(s string) *OAuthAuthorizationCreate {
+	oac.mutation.SetUserAgent(s)
+	return oac
+}
+
+// SetNillableUserAgent sets the "user_agent" field if the given value is not nil.
+func (oac *OAuthAuthorizationCreate) SetNillableUserAgent(s *string) *OAuthAuthorizationCreate {
+	if s != nil {
+		oac.SetUserAgent(*s)
+	}
+	return oac
+}
+
+// SetIPAddress sets the "ip_address" field.
+func (oac *OAuthAuthorizationCreate) SetIPAddress(s string) *OAuthAuthorizationCreate {
+	oac.mutation.SetIPAddress(s)
+	return oac
+}
+
+// SetNillableIPAddress sets the "ip_address" field if the given value is not nil.
+func (oac *OAuthAuthorizationCreate) SetNillableIPAddress(s *string) *OAuthAuthorizationCreate {
+	if s != nil {
+		oac.SetIPAddress(*s)
 	}
 	return oac
 }
@@ -375,6 +417,10 @@ func (oac *OAuthAuthorizationCreate) createSpec() (*OAuthAuthorization, *sqlgrap
 		_spec.SetField(oauthauthorization.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
+	if value, ok := oac.mutation.DeletedAt(); ok {
+		_spec.SetField(oauthauthorization.FieldDeletedAt, field.TypeTime, value)
+		_node.DeletedAt = value
+	}
 	if value, ok := oac.mutation.OrganizationID(); ok {
 		_spec.SetField(oauthauthorization.FieldOrganizationID, field.TypeString, value)
 		_node.OrganizationID = value
@@ -418,6 +464,14 @@ func (oac *OAuthAuthorizationCreate) createSpec() (*OAuthAuthorization, *sqlgrap
 	if value, ok := oac.mutation.Nonce(); ok {
 		_spec.SetField(oauthauthorization.FieldNonce, field.TypeString, value)
 		_node.Nonce = value
+	}
+	if value, ok := oac.mutation.UserAgent(); ok {
+		_spec.SetField(oauthauthorization.FieldUserAgent, field.TypeString, value)
+		_node.UserAgent = value
+	}
+	if value, ok := oac.mutation.IPAddress(); ok {
+		_spec.SetField(oauthauthorization.FieldIPAddress, field.TypeString, value)
+		_node.IPAddress = value
 	}
 	if nodes := oac.mutation.ClientIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -530,6 +584,24 @@ func (u *OAuthAuthorizationUpsert) SetUpdatedAt(v time.Time) *OAuthAuthorization
 // UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
 func (u *OAuthAuthorizationUpsert) UpdateUpdatedAt() *OAuthAuthorizationUpsert {
 	u.SetExcluded(oauthauthorization.FieldUpdatedAt)
+	return u
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *OAuthAuthorizationUpsert) SetDeletedAt(v time.Time) *OAuthAuthorizationUpsert {
+	u.Set(oauthauthorization.FieldDeletedAt, v)
+	return u
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *OAuthAuthorizationUpsert) UpdateDeletedAt() *OAuthAuthorizationUpsert {
+	u.SetExcluded(oauthauthorization.FieldDeletedAt)
+	return u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *OAuthAuthorizationUpsert) ClearDeletedAt() *OAuthAuthorizationUpsert {
+	u.SetNull(oauthauthorization.FieldDeletedAt)
 	return u
 }
 
@@ -731,6 +803,42 @@ func (u *OAuthAuthorizationUpsert) ClearNonce() *OAuthAuthorizationUpsert {
 	return u
 }
 
+// SetUserAgent sets the "user_agent" field.
+func (u *OAuthAuthorizationUpsert) SetUserAgent(v string) *OAuthAuthorizationUpsert {
+	u.Set(oauthauthorization.FieldUserAgent, v)
+	return u
+}
+
+// UpdateUserAgent sets the "user_agent" field to the value that was provided on create.
+func (u *OAuthAuthorizationUpsert) UpdateUserAgent() *OAuthAuthorizationUpsert {
+	u.SetExcluded(oauthauthorization.FieldUserAgent)
+	return u
+}
+
+// ClearUserAgent clears the value of the "user_agent" field.
+func (u *OAuthAuthorizationUpsert) ClearUserAgent() *OAuthAuthorizationUpsert {
+	u.SetNull(oauthauthorization.FieldUserAgent)
+	return u
+}
+
+// SetIPAddress sets the "ip_address" field.
+func (u *OAuthAuthorizationUpsert) SetIPAddress(v string) *OAuthAuthorizationUpsert {
+	u.Set(oauthauthorization.FieldIPAddress, v)
+	return u
+}
+
+// UpdateIPAddress sets the "ip_address" field to the value that was provided on create.
+func (u *OAuthAuthorizationUpsert) UpdateIPAddress() *OAuthAuthorizationUpsert {
+	u.SetExcluded(oauthauthorization.FieldIPAddress)
+	return u
+}
+
+// ClearIPAddress clears the value of the "ip_address" field.
+func (u *OAuthAuthorizationUpsert) ClearIPAddress() *OAuthAuthorizationUpsert {
+	u.SetNull(oauthauthorization.FieldIPAddress)
+	return u
+}
+
 // UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
 // Using this option is equivalent to using:
 //
@@ -793,6 +901,27 @@ func (u *OAuthAuthorizationUpsertOne) SetUpdatedAt(v time.Time) *OAuthAuthorizat
 func (u *OAuthAuthorizationUpsertOne) UpdateUpdatedAt() *OAuthAuthorizationUpsertOne {
 	return u.Update(func(s *OAuthAuthorizationUpsert) {
 		s.UpdateUpdatedAt()
+	})
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *OAuthAuthorizationUpsertOne) SetDeletedAt(v time.Time) *OAuthAuthorizationUpsertOne {
+	return u.Update(func(s *OAuthAuthorizationUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *OAuthAuthorizationUpsertOne) UpdateDeletedAt() *OAuthAuthorizationUpsertOne {
+	return u.Update(func(s *OAuthAuthorizationUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *OAuthAuthorizationUpsertOne) ClearDeletedAt() *OAuthAuthorizationUpsertOne {
+	return u.Update(func(s *OAuthAuthorizationUpsert) {
+		s.ClearDeletedAt()
 	})
 }
 
@@ -1024,6 +1153,48 @@ func (u *OAuthAuthorizationUpsertOne) UpdateNonce() *OAuthAuthorizationUpsertOne
 func (u *OAuthAuthorizationUpsertOne) ClearNonce() *OAuthAuthorizationUpsertOne {
 	return u.Update(func(s *OAuthAuthorizationUpsert) {
 		s.ClearNonce()
+	})
+}
+
+// SetUserAgent sets the "user_agent" field.
+func (u *OAuthAuthorizationUpsertOne) SetUserAgent(v string) *OAuthAuthorizationUpsertOne {
+	return u.Update(func(s *OAuthAuthorizationUpsert) {
+		s.SetUserAgent(v)
+	})
+}
+
+// UpdateUserAgent sets the "user_agent" field to the value that was provided on create.
+func (u *OAuthAuthorizationUpsertOne) UpdateUserAgent() *OAuthAuthorizationUpsertOne {
+	return u.Update(func(s *OAuthAuthorizationUpsert) {
+		s.UpdateUserAgent()
+	})
+}
+
+// ClearUserAgent clears the value of the "user_agent" field.
+func (u *OAuthAuthorizationUpsertOne) ClearUserAgent() *OAuthAuthorizationUpsertOne {
+	return u.Update(func(s *OAuthAuthorizationUpsert) {
+		s.ClearUserAgent()
+	})
+}
+
+// SetIPAddress sets the "ip_address" field.
+func (u *OAuthAuthorizationUpsertOne) SetIPAddress(v string) *OAuthAuthorizationUpsertOne {
+	return u.Update(func(s *OAuthAuthorizationUpsert) {
+		s.SetIPAddress(v)
+	})
+}
+
+// UpdateIPAddress sets the "ip_address" field to the value that was provided on create.
+func (u *OAuthAuthorizationUpsertOne) UpdateIPAddress() *OAuthAuthorizationUpsertOne {
+	return u.Update(func(s *OAuthAuthorizationUpsert) {
+		s.UpdateIPAddress()
+	})
+}
+
+// ClearIPAddress clears the value of the "ip_address" field.
+func (u *OAuthAuthorizationUpsertOne) ClearIPAddress() *OAuthAuthorizationUpsertOne {
+	return u.Update(func(s *OAuthAuthorizationUpsert) {
+		s.ClearIPAddress()
 	})
 }
 
@@ -1259,6 +1430,27 @@ func (u *OAuthAuthorizationUpsertBulk) UpdateUpdatedAt() *OAuthAuthorizationUpse
 	})
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (u *OAuthAuthorizationUpsertBulk) SetDeletedAt(v time.Time) *OAuthAuthorizationUpsertBulk {
+	return u.Update(func(s *OAuthAuthorizationUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *OAuthAuthorizationUpsertBulk) UpdateDeletedAt() *OAuthAuthorizationUpsertBulk {
+	return u.Update(func(s *OAuthAuthorizationUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *OAuthAuthorizationUpsertBulk) ClearDeletedAt() *OAuthAuthorizationUpsertBulk {
+	return u.Update(func(s *OAuthAuthorizationUpsert) {
+		s.ClearDeletedAt()
+	})
+}
+
 // SetClientID sets the "client_id" field.
 func (u *OAuthAuthorizationUpsertBulk) SetClientID(v xid.ID) *OAuthAuthorizationUpsertBulk {
 	return u.Update(func(s *OAuthAuthorizationUpsert) {
@@ -1487,6 +1679,48 @@ func (u *OAuthAuthorizationUpsertBulk) UpdateNonce() *OAuthAuthorizationUpsertBu
 func (u *OAuthAuthorizationUpsertBulk) ClearNonce() *OAuthAuthorizationUpsertBulk {
 	return u.Update(func(s *OAuthAuthorizationUpsert) {
 		s.ClearNonce()
+	})
+}
+
+// SetUserAgent sets the "user_agent" field.
+func (u *OAuthAuthorizationUpsertBulk) SetUserAgent(v string) *OAuthAuthorizationUpsertBulk {
+	return u.Update(func(s *OAuthAuthorizationUpsert) {
+		s.SetUserAgent(v)
+	})
+}
+
+// UpdateUserAgent sets the "user_agent" field to the value that was provided on create.
+func (u *OAuthAuthorizationUpsertBulk) UpdateUserAgent() *OAuthAuthorizationUpsertBulk {
+	return u.Update(func(s *OAuthAuthorizationUpsert) {
+		s.UpdateUserAgent()
+	})
+}
+
+// ClearUserAgent clears the value of the "user_agent" field.
+func (u *OAuthAuthorizationUpsertBulk) ClearUserAgent() *OAuthAuthorizationUpsertBulk {
+	return u.Update(func(s *OAuthAuthorizationUpsert) {
+		s.ClearUserAgent()
+	})
+}
+
+// SetIPAddress sets the "ip_address" field.
+func (u *OAuthAuthorizationUpsertBulk) SetIPAddress(v string) *OAuthAuthorizationUpsertBulk {
+	return u.Update(func(s *OAuthAuthorizationUpsert) {
+		s.SetIPAddress(v)
+	})
+}
+
+// UpdateIPAddress sets the "ip_address" field to the value that was provided on create.
+func (u *OAuthAuthorizationUpsertBulk) UpdateIPAddress() *OAuthAuthorizationUpsertBulk {
+	return u.Update(func(s *OAuthAuthorizationUpsert) {
+		s.UpdateIPAddress()
+	})
+}
+
+// ClearIPAddress clears the value of the "ip_address" field.
+func (u *OAuthAuthorizationUpsertBulk) ClearIPAddress() *OAuthAuthorizationUpsertBulk {
+	return u.Update(func(s *OAuthAuthorizationUpsert) {
+		s.ClearIPAddress()
 	})
 }
 

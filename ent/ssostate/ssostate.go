@@ -21,12 +21,16 @@ const (
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
+	// FieldDeletedAt holds the string denoting the deleted_at field in the database.
+	FieldDeletedAt = "deleted_at"
 	// FieldState holds the string denoting the state field in the database.
 	FieldState = "state"
 	// FieldData holds the string denoting the data field in the database.
 	FieldData = "data"
 	// FieldExpiresAt holds the string denoting the expires_at field in the database.
 	FieldExpiresAt = "expires_at"
+	// FieldRedirectURL holds the string denoting the redirect_url field in the database.
+	FieldRedirectURL = "redirect_url"
 	// Table holds the table name of the ssostate in the database.
 	Table = "sso_states"
 )
@@ -36,9 +40,11 @@ var Columns = []string{
 	FieldID,
 	FieldCreatedAt,
 	FieldUpdatedAt,
+	FieldDeletedAt,
 	FieldState,
 	FieldData,
 	FieldExpiresAt,
+	FieldRedirectURL,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -82,6 +88,11 @@ func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
 }
 
+// ByDeletedAt orders the results by the deleted_at field.
+func ByDeletedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDeletedAt, opts...).ToFunc()
+}
+
 // ByState orders the results by the state field.
 func ByState(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldState, opts...).ToFunc()
@@ -95,4 +106,9 @@ func ByData(opts ...sql.OrderTermOption) OrderOption {
 // ByExpiresAt orders the results by the expires_at field.
 func ByExpiresAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldExpiresAt, opts...).ToFunc()
+}
+
+// ByRedirectURL orders the results by the redirect_url field.
+func ByRedirectURL(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRedirectURL, opts...).ToFunc()
 }

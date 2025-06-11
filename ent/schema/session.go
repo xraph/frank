@@ -54,6 +54,8 @@ func (Session) Edges() []ent.Edge {
 			Field("user_id").
 			Unique().
 			Required(),
+
+		edge.To("audit_logs", Audit.Type),
 	}
 }
 

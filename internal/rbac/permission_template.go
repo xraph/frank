@@ -75,7 +75,7 @@ func (pts *PermissionTemplateService) CreateTemplate(ctx context.Context, input 
 	for _, perm := range input.Permissions {
 		err := pts.discovery.ValidatePermission(perm.Resource, perm.Action, input.OrganizationID)
 		if err != nil {
-			return nil, errors.Wrap(errors.CodeValidation, err,
+			return nil, errors.Wrap(err, errors.CodeValidationError,
 				fmt.Sprintf("invalid permission %s:%s", perm.Resource, perm.Action))
 		}
 	}
@@ -88,7 +88,7 @@ func (pts *PermissionTemplateService) CreateTemplate(ctx context.Context, input 
 	}
 	for _, userType := range input.TargetUserTypes {
 		if !validUserTypes[userType] {
-			return nil, errors.New(errors.CodeValidation,
+			return nil, errors.New(errors.CodeValidationError,
 				fmt.Sprintf("invalid user type: %s", userType))
 		}
 	}
@@ -342,7 +342,7 @@ func (pts *PermissionTemplateService) createPermissionFromTemplate(ctx context.C
 
 	action, exists := resource.Actions[templatePerm.Action]
 	if !exists {
-		return nil, errors.New(errors.CodeValidation, "action not found in resource definition")
+		return nil, errors.New(errors.CodeValidationError, "action not found in resource definition")
 	}
 
 	permissionCreate := pts.repo.Client().Permission.Create().

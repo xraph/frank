@@ -28,6 +28,8 @@ type OAuthClient struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// DeletedAt holds the value of the "deleted_at" field.
+	DeletedAt time.Time `json:"deleted_at,omitempty"`
 	// ClientID holds the value of the "client_id" field.
 	ClientID string `json:"client_id,omitempty"`
 	// ClientSecret holds the value of the "client_secret" field.
@@ -139,7 +141,7 @@ func (*OAuthClient) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullInt64)
 		case oauthclient.FieldClientID, oauthclient.FieldClientSecret, oauthclient.FieldClientName, oauthclient.FieldClientDescription, oauthclient.FieldClientURI, oauthclient.FieldLogoURI:
 			values[i] = new(sql.NullString)
-		case oauthclient.FieldCreatedAt, oauthclient.FieldUpdatedAt:
+		case oauthclient.FieldCreatedAt, oauthclient.FieldUpdatedAt, oauthclient.FieldDeletedAt:
 			values[i] = new(sql.NullTime)
 		case oauthclient.FieldID, oauthclient.FieldOrganizationID:
 			values[i] = new(xid.ID)
@@ -175,6 +177,12 @@ func (oc *OAuthClient) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
 				oc.UpdatedAt = value.Time
+			}
+		case oauthclient.FieldDeletedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field deleted_at", values[i])
+			} else if value.Valid {
+				oc.DeletedAt = value.Time
 			}
 		case oauthclient.FieldClientID:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -353,6 +361,9 @@ func (oc *OAuthClient) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
 	builder.WriteString(oc.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("deleted_at=")
+	builder.WriteString(oc.DeletedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("client_id=")
 	builder.WriteString(oc.ClientID)

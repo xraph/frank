@@ -15,7 +15,7 @@ import (
 
 // plivoProvider implements the Plivo SMS provider
 type plivoProvider struct {
-	config    *config.Config
+	config    *config.SMSConfig
 	logger    logging.Logger
 	client    *http.Client
 	authID    string
@@ -23,13 +23,13 @@ type plivoProvider struct {
 }
 
 // NewPlivoProvider creates a new Plivo SMS provider
-func NewPlivoProvider(cfg *config.Config, logger logging.Logger) Provider {
+func NewPlivoProvider(cfg *config.SMSConfig, logger logging.Logger) Provider {
 	return &plivoProvider{
 		config:    cfg,
 		logger:    logger,
 		client:    &http.Client{},
-		authID:    cfg.SMS.Plivo.AuthID,
-		authToken: cfg.SMS.Plivo.AuthToken,
+		authID:    cfg.Plivo.AuthID,
+		authToken: cfg.Plivo.AuthToken,
 	}
 }
 
@@ -43,7 +43,7 @@ func (p *plivoProvider) Send(ctx context.Context, input SMS) error {
 	// Set sender (From) if not provided
 	from := input.From
 	if from == "" {
-		from = p.config.SMS.FromNumber
+		from = p.config.FromNumber
 	}
 
 	// Prepare request body
@@ -69,14 +69,14 @@ func (p *plivoProvider) Send(ctx context.Context, input SMS) error {
 	// Marshal request body to JSON
 	jsonBody, err := json.Marshal(requestBody)
 	if err != nil {
-		return errors.Wrap(errors.CodeSMSDeliveryFail, err, "failed to marshal Plivo request")
+		return errors.Wrap(err, errors.CodeSMSDeliveryFail, "failed to marshal Plivo request")
 	}
 
 	// Create request URL
 	apiURL := fmt.Sprintf("https://api.plivo.com/v1/Account/%s/Message/", p.authID)
 	req, err := http.NewRequestWithContext(ctx, "POST", apiURL, bytes.NewBuffer(jsonBody))
 	if err != nil {
-		return errors.Wrap(errors.CodeSMSDeliveryFail, err, "failed to create Plivo request")
+		return errors.Wrap(err, errors.CodeSMSDeliveryFail, "failed to create Plivo request")
 	}
 
 	// Set headers
@@ -86,7 +86,7 @@ func (p *plivoProvider) Send(ctx context.Context, input SMS) error {
 	// Execute request
 	resp, err := p.client.Do(req)
 	if err != nil {
-		return errors.Wrap(errors.CodeSMSDeliveryFail, err, "failed to send Plivo request")
+		return errors.Wrap(err, errors.CodeSMSDeliveryFail, "failed to send Plivo request")
 	}
 	defer resp.Body.Close()
 

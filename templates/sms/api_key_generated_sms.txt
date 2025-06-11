@@ -1,0 +1,1 @@
+{{.appName}}: New API key created for {{.keyName}}. If you didn't do this, review your security settings.

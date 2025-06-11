@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/juicycleff/frank/ent"
 	"github.com/juicycleff/frank/ent/apikey"
+	"github.com/juicycleff/frank/ent/audit"
 	"github.com/juicycleff/frank/ent/emailtemplate"
 	"github.com/juicycleff/frank/ent/featureflag"
 	"github.com/juicycleff/frank/ent/identityprovider"
@@ -29,6 +30,7 @@ import (
 	"github.com/juicycleff/frank/ent/predicate"
 	"github.com/juicycleff/frank/ent/role"
 	"github.com/juicycleff/frank/ent/session"
+	"github.com/juicycleff/frank/ent/smstemplate"
 	"github.com/juicycleff/frank/ent/ssostate"
 	"github.com/juicycleff/frank/ent/user"
 	"github.com/juicycleff/frank/ent/userpermission"
@@ -119,6 +121,33 @@ func (f TraverseApiKey) Traverse(ctx context.Context, q ent.Query) error {
 		return f(ctx, q)
 	}
 	return fmt.Errorf("unexpected query type %T. expect *ent.ApiKeyQuery", q)
+}
+
+// The AuditFunc type is an adapter to allow the use of ordinary function as a Querier.
+type AuditFunc func(context.Context, *ent.AuditQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f AuditFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.AuditQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.AuditQuery", q)
+}
+
+// The TraverseAudit type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseAudit func(context.Context, *ent.AuditQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseAudit) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseAudit) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.AuditQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.AuditQuery", q)
 }
 
 // The EmailTemplateFunc type is an adapter to allow the use of ordinary function as a Querier.
@@ -526,6 +555,33 @@ func (f TraverseRole) Traverse(ctx context.Context, q ent.Query) error {
 	return fmt.Errorf("unexpected query type %T. expect *ent.RoleQuery", q)
 }
 
+// The SMSTemplateFunc type is an adapter to allow the use of ordinary function as a Querier.
+type SMSTemplateFunc func(context.Context, *ent.SMSTemplateQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f SMSTemplateFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.SMSTemplateQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.SMSTemplateQuery", q)
+}
+
+// The TraverseSMSTemplate type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseSMSTemplate func(context.Context, *ent.SMSTemplateQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseSMSTemplate) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseSMSTemplate) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.SMSTemplateQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.SMSTemplateQuery", q)
+}
+
 // The SSOStateFunc type is an adapter to allow the use of ordinary function as a Querier.
 type SSOStateFunc func(context.Context, *ent.SSOStateQuery) (ent.Value, error)
 
@@ -747,6 +803,8 @@ func NewQuery(q ent.Query) (Query, error) {
 	switch q := q.(type) {
 	case *ent.ApiKeyQuery:
 		return &query[*ent.ApiKeyQuery, predicate.ApiKey, apikey.OrderOption]{typ: ent.TypeApiKey, tq: q}, nil
+	case *ent.AuditQuery:
+		return &query[*ent.AuditQuery, predicate.Audit, audit.OrderOption]{typ: ent.TypeAudit, tq: q}, nil
 	case *ent.EmailTemplateQuery:
 		return &query[*ent.EmailTemplateQuery, predicate.EmailTemplate, emailtemplate.OrderOption]{typ: ent.TypeEmailTemplate, tq: q}, nil
 	case *ent.FeatureFlagQuery:
@@ -777,6 +835,8 @@ func NewQuery(q ent.Query) (Query, error) {
 		return &query[*ent.PermissionDependencyQuery, predicate.PermissionDependency, permissiondependency.OrderOption]{typ: ent.TypePermissionDependency, tq: q}, nil
 	case *ent.RoleQuery:
 		return &query[*ent.RoleQuery, predicate.Role, role.OrderOption]{typ: ent.TypeRole, tq: q}, nil
+	case *ent.SMSTemplateQuery:
+		return &query[*ent.SMSTemplateQuery, predicate.SMSTemplate, smstemplate.OrderOption]{typ: ent.TypeSMSTemplate, tq: q}, nil
 	case *ent.SSOStateQuery:
 		return &query[*ent.SSOStateQuery, predicate.SSOState, ssostate.OrderOption]{typ: ent.TypeSSOState, tq: q}, nil
 	case *ent.SessionQuery:

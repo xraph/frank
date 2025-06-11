@@ -16,6 +16,7 @@ var (
 		{Name: "id", Type: field.TypeString, Unique: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "name", Type: field.TypeString},
 		{Name: "key", Type: field.TypeString, Unique: true},
 		{Name: "hashed_key", Type: field.TypeString, Unique: true},
@@ -37,13 +38,13 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "api_keys_organizations_api_keys",
-				Columns:    []*schema.Column{APIKeysColumns[13]},
+				Columns:    []*schema.Column{APIKeysColumns[14]},
 				RefColumns: []*schema.Column{OrganizationsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "api_keys_users_api_keys",
-				Columns:    []*schema.Column{APIKeysColumns[14]},
+				Columns:    []*schema.Column{APIKeysColumns[15]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -52,17 +53,136 @@ var (
 			{
 				Name:    "apikey_user_id",
 				Unique:  false,
-				Columns: []*schema.Column{APIKeysColumns[14]},
+				Columns: []*schema.Column{APIKeysColumns[15]},
 			},
 			{
 				Name:    "apikey_organization_id",
 				Unique:  false,
-				Columns: []*schema.Column{APIKeysColumns[13]},
+				Columns: []*schema.Column{APIKeysColumns[14]},
 			},
 			{
 				Name:    "apikey_hashed_key",
 				Unique:  false,
-				Columns: []*schema.Column{APIKeysColumns[5]},
+				Columns: []*schema.Column{APIKeysColumns[6]},
+			},
+		},
+	}
+	// AuditsColumns holds the columns for the "audits" table.
+	AuditsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "action", Type: field.TypeString},
+		{Name: "resource_type", Type: field.TypeString},
+		{Name: "resource_id", Type: field.TypeString, Nullable: true},
+		{Name: "status", Type: field.TypeString},
+		{Name: "ip_address", Type: field.TypeString, Nullable: true},
+		{Name: "user_agent", Type: field.TypeString, Nullable: true},
+		{Name: "location", Type: field.TypeString, Nullable: true},
+		{Name: "device_id", Type: field.TypeString, Nullable: true},
+		{Name: "request_id", Type: field.TypeString, Nullable: true},
+		{Name: "error_code", Type: field.TypeString, Nullable: true},
+		{Name: "error_message", Type: field.TypeString, Nullable: true},
+		{Name: "description", Type: field.TypeString, Nullable: true},
+		{Name: "metadata", Type: field.TypeJSON, Nullable: true, SchemaType: map[string]string{"mysql": "json", "postgres": "jsonb", "sqlite3": "text"}},
+		{Name: "old_values", Type: field.TypeJSON, Nullable: true, SchemaType: map[string]string{"mysql": "json", "postgres": "jsonb", "sqlite3": "text"}},
+		{Name: "current_values", Type: field.TypeJSON, Nullable: true, SchemaType: map[string]string{"mysql": "json", "postgres": "jsonb", "sqlite3": "text"}},
+		{Name: "timestamp", Type: field.TypeTime},
+		{Name: "organization_id", Type: field.TypeString, Nullable: true},
+		{Name: "session_id", Type: field.TypeString, Nullable: true},
+		{Name: "user_id", Type: field.TypeString, Nullable: true},
+	}
+	// AuditsTable holds the schema information for the "audits" table.
+	AuditsTable = &schema.Table{
+		Name:       "audits",
+		Columns:    AuditsColumns,
+		PrimaryKey: []*schema.Column{AuditsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "audits_organizations_audit_logs",
+				Columns:    []*schema.Column{AuditsColumns[20]},
+				RefColumns: []*schema.Column{OrganizationsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "audits_sessions_audit_logs",
+				Columns:    []*schema.Column{AuditsColumns[21]},
+				RefColumns: []*schema.Column{SessionsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "audits_users_audit_logs",
+				Columns:    []*schema.Column{AuditsColumns[22]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "audit_user_id",
+				Unique:  false,
+				Columns: []*schema.Column{AuditsColumns[22]},
+			},
+			{
+				Name:    "audit_organization_id",
+				Unique:  false,
+				Columns: []*schema.Column{AuditsColumns[20]},
+			},
+			{
+				Name:    "audit_session_id",
+				Unique:  false,
+				Columns: []*schema.Column{AuditsColumns[21]},
+			},
+			{
+				Name:    "audit_action",
+				Unique:  false,
+				Columns: []*schema.Column{AuditsColumns[4]},
+			},
+			{
+				Name:    "audit_resource_type",
+				Unique:  false,
+				Columns: []*schema.Column{AuditsColumns[5]},
+			},
+			{
+				Name:    "audit_resource_id",
+				Unique:  false,
+				Columns: []*schema.Column{AuditsColumns[6]},
+			},
+			{
+				Name:    "audit_status",
+				Unique:  false,
+				Columns: []*schema.Column{AuditsColumns[7]},
+			},
+			{
+				Name:    "audit_timestamp",
+				Unique:  false,
+				Columns: []*schema.Column{AuditsColumns[19]},
+			},
+			{
+				Name:    "audit_organization_id_timestamp",
+				Unique:  false,
+				Columns: []*schema.Column{AuditsColumns[20], AuditsColumns[19]},
+			},
+			{
+				Name:    "audit_user_id_timestamp",
+				Unique:  false,
+				Columns: []*schema.Column{AuditsColumns[22], AuditsColumns[19]},
+			},
+			{
+				Name:    "audit_action_timestamp",
+				Unique:  false,
+				Columns: []*schema.Column{AuditsColumns[4], AuditsColumns[19]},
+			},
+			{
+				Name:    "audit_resource_type_resource_id",
+				Unique:  false,
+				Columns: []*schema.Column{AuditsColumns[5], AuditsColumns[6]},
+			},
+			{
+				Name:    "audit_ip_address_timestamp",
+				Unique:  false,
+				Columns: []*schema.Column{AuditsColumns[8], AuditsColumns[19]},
 			},
 		},
 	}
@@ -71,37 +191,46 @@ var (
 		{Name: "id", Type: field.TypeString, Unique: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "name", Type: field.TypeString},
 		{Name: "subject", Type: field.TypeString},
 		{Name: "type", Type: field.TypeString},
 		{Name: "html_content", Type: field.TypeString},
 		{Name: "text_content", Type: field.TypeString, Nullable: true},
-		{Name: "organization_id", Type: field.TypeString, Nullable: true},
 		{Name: "active", Type: field.TypeBool, Default: true},
 		{Name: "system", Type: field.TypeBool, Default: false},
 		{Name: "locale", Type: field.TypeString, Default: "en"},
 		{Name: "metadata", Type: field.TypeJSON, Nullable: true, SchemaType: map[string]string{"mysql": "json", "postgres": "jsonb", "sqlite3": "text"}},
+		{Name: "organization_id", Type: field.TypeString, Nullable: true},
 	}
 	// EmailTemplatesTable holds the schema information for the "email_templates" table.
 	EmailTemplatesTable = &schema.Table{
 		Name:       "email_templates",
 		Columns:    EmailTemplatesColumns,
 		PrimaryKey: []*schema.Column{EmailTemplatesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "email_templates_organizations_email_templates",
+				Columns:    []*schema.Column{EmailTemplatesColumns[13]},
+				RefColumns: []*schema.Column{OrganizationsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
 		Indexes: []*schema.Index{
 			{
 				Name:    "emailtemplate_organization_id",
 				Unique:  false,
-				Columns: []*schema.Column{EmailTemplatesColumns[8]},
+				Columns: []*schema.Column{EmailTemplatesColumns[13]},
 			},
 			{
 				Name:    "emailtemplate_type",
 				Unique:  false,
-				Columns: []*schema.Column{EmailTemplatesColumns[5]},
+				Columns: []*schema.Column{EmailTemplatesColumns[6]},
 			},
 			{
 				Name:    "emailtemplate_organization_id_type_locale",
 				Unique:  true,
-				Columns: []*schema.Column{EmailTemplatesColumns[8], EmailTemplatesColumns[5], EmailTemplatesColumns[11]},
+				Columns: []*schema.Column{EmailTemplatesColumns[13], EmailTemplatesColumns[6], EmailTemplatesColumns[11]},
 			},
 		},
 	}
@@ -110,6 +239,7 @@ var (
 		{Name: "id", Type: field.TypeString, Unique: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "name", Type: field.TypeString, Unique: true},
 		{Name: "key", Type: field.TypeString, Unique: true},
 		{Name: "description", Type: field.TypeString, Nullable: true},
@@ -126,12 +256,12 @@ var (
 			{
 				Name:    "featureflag_key",
 				Unique:  false,
-				Columns: []*schema.Column{FeatureFlagsColumns[4]},
+				Columns: []*schema.Column{FeatureFlagsColumns[5]},
 			},
 			{
 				Name:    "featureflag_component",
 				Unique:  false,
-				Columns: []*schema.Column{FeatureFlagsColumns[8]},
+				Columns: []*schema.Column{FeatureFlagsColumns[9]},
 			},
 		},
 	}
@@ -140,6 +270,7 @@ var (
 		{Name: "id", Type: field.TypeString, Unique: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "name", Type: field.TypeString},
 		{Name: "provider_type", Type: field.TypeString},
 		{Name: "client_id", Type: field.TypeString, Nullable: true},
@@ -154,7 +285,14 @@ var (
 		{Name: "certificate", Type: field.TypeString, Nullable: true},
 		{Name: "private_key", Type: field.TypeString, Nullable: true},
 		{Name: "active", Type: field.TypeBool, Default: true},
+		{Name: "enabled", Type: field.TypeBool, Default: true},
 		{Name: "primary", Type: field.TypeBool, Default: false},
+		{Name: "auto_provision", Type: field.TypeBool, Default: false},
+		{Name: "default_role", Type: field.TypeString, Nullable: true},
+		{Name: "domain", Type: field.TypeString, Nullable: true},
+		{Name: "icon_url", Type: field.TypeString, Nullable: true},
+		{Name: "button_text", Type: field.TypeString, Nullable: true},
+		{Name: "protocol", Type: field.TypeString, Nullable: true},
 		{Name: "domains", Type: field.TypeJSON, Nullable: true},
 		{Name: "attributes_mapping", Type: field.TypeJSON, Nullable: true, SchemaType: map[string]string{"mysql": "json", "postgres": "jsonb", "sqlite3": "text"}},
 		{Name: "metadata", Type: field.TypeJSON, Nullable: true, SchemaType: map[string]string{"mysql": "json", "postgres": "jsonb", "sqlite3": "text"}},
@@ -168,7 +306,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "identity_providers_organizations_identity_providers",
-				Columns:    []*schema.Column{IdentityProvidersColumns[21]},
+				Columns:    []*schema.Column{IdentityProvidersColumns[29]},
 				RefColumns: []*schema.Column{OrganizationsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -177,12 +315,12 @@ var (
 			{
 				Name:    "identityprovider_organization_id",
 				Unique:  false,
-				Columns: []*schema.Column{IdentityProvidersColumns[21]},
+				Columns: []*schema.Column{IdentityProvidersColumns[29]},
 			},
 			{
 				Name:    "identityprovider_provider_type",
 				Unique:  false,
-				Columns: []*schema.Column{IdentityProvidersColumns[4]},
+				Columns: []*schema.Column{IdentityProvidersColumns[5]},
 			},
 		},
 	}
@@ -191,6 +329,7 @@ var (
 		{Name: "id", Type: field.TypeString, Unique: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "method", Type: field.TypeString},
 		{Name: "secret", Type: field.TypeString},
 		{Name: "verified", Type: field.TypeBool, Default: false},
@@ -210,7 +349,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "mf_as_users_mfa_methods",
-				Columns:    []*schema.Column{MfAsColumns[12]},
+				Columns:    []*schema.Column{MfAsColumns[13]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -219,12 +358,12 @@ var (
 			{
 				Name:    "mfa_user_id",
 				Unique:  false,
-				Columns: []*schema.Column{MfAsColumns[12]},
+				Columns: []*schema.Column{MfAsColumns[13]},
 			},
 			{
 				Name:    "mfa_method_user_id",
 				Unique:  true,
-				Columns: []*schema.Column{MfAsColumns[3], MfAsColumns[12]},
+				Columns: []*schema.Column{MfAsColumns[4], MfAsColumns[13]},
 			},
 		},
 	}
@@ -233,18 +372,22 @@ var (
 		{Name: "id", Type: field.TypeString, Unique: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "email", Type: field.TypeString},
 		{Name: "status", Type: field.TypeEnum, Enums: []string{"pending", "active", "inactive", "suspended"}, Default: "pending"},
-		{Name: "invited_by", Type: field.TypeString, Nullable: true},
 		{Name: "invited_at", Type: field.TypeTime},
 		{Name: "joined_at", Type: field.TypeTime, Nullable: true},
 		{Name: "expires_at", Type: field.TypeTime, Nullable: true},
 		{Name: "invitation_token", Type: field.TypeString, Nullable: true},
 		{Name: "is_billing_contact", Type: field.TypeBool, Default: false},
 		{Name: "is_primary_contact", Type: field.TypeBool, Default: false},
+		{Name: "left_at", Type: field.TypeTime, Nullable: true},
 		{Name: "metadata", Type: field.TypeJSON, Nullable: true, SchemaType: map[string]string{"mysql": "json", "postgres": "jsonb", "sqlite3": "text"}},
+		{Name: "custom_fields", Type: field.TypeJSON, Nullable: true, SchemaType: map[string]string{"mysql": "json", "postgres": "jsonb", "sqlite3": "text"}},
 		{Name: "organization_id", Type: field.TypeString},
 		{Name: "role_id", Type: field.TypeString},
 		{Name: "user_id", Type: field.TypeString},
+		{Name: "invited_by", Type: field.TypeString, Nullable: true},
 	}
 	// MembershipsTable holds the schema information for the "memberships" table.
 	MembershipsTable = &schema.Table{
@@ -254,63 +397,69 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "memberships_organizations_memberships",
-				Columns:    []*schema.Column{MembershipsColumns[12]},
+				Columns:    []*schema.Column{MembershipsColumns[15]},
 				RefColumns: []*schema.Column{OrganizationsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "memberships_roles_memberships",
-				Columns:    []*schema.Column{MembershipsColumns[13]},
+				Columns:    []*schema.Column{MembershipsColumns[16]},
 				RefColumns: []*schema.Column{RolesColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "memberships_users_memberships",
-				Columns:    []*schema.Column{MembershipsColumns[14]},
+				Columns:    []*schema.Column{MembershipsColumns[17]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "memberships_users_sent_invitations",
+				Columns:    []*schema.Column{MembershipsColumns[18]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.SetNull,
 			},
 		},
 		Indexes: []*schema.Index{
 			{
 				Name:    "membership_user_id_organization_id",
 				Unique:  true,
-				Columns: []*schema.Column{MembershipsColumns[14], MembershipsColumns[12]},
+				Columns: []*schema.Column{MembershipsColumns[17], MembershipsColumns[15]},
 			},
 			{
 				Name:    "membership_organization_id",
 				Unique:  false,
-				Columns: []*schema.Column{MembershipsColumns[12]},
+				Columns: []*schema.Column{MembershipsColumns[15]},
 			},
 			{
 				Name:    "membership_user_id",
 				Unique:  false,
-				Columns: []*schema.Column{MembershipsColumns[14]},
+				Columns: []*schema.Column{MembershipsColumns[17]},
 			},
 			{
 				Name:    "membership_role_id",
 				Unique:  false,
-				Columns: []*schema.Column{MembershipsColumns[13]},
+				Columns: []*schema.Column{MembershipsColumns[16]},
 			},
 			{
 				Name:    "membership_status",
 				Unique:  false,
-				Columns: []*schema.Column{MembershipsColumns[3]},
+				Columns: []*schema.Column{MembershipsColumns[5]},
 			},
 			{
 				Name:    "membership_invitation_token",
 				Unique:  false,
-				Columns: []*schema.Column{MembershipsColumns[8]},
+				Columns: []*schema.Column{MembershipsColumns[9]},
 			},
 			{
 				Name:    "membership_expires_at",
 				Unique:  false,
-				Columns: []*schema.Column{MembershipsColumns[7]},
+				Columns: []*schema.Column{MembershipsColumns[8]},
 			},
 			{
 				Name:    "membership_invited_by",
 				Unique:  false,
-				Columns: []*schema.Column{MembershipsColumns[4]},
+				Columns: []*schema.Column{MembershipsColumns[18]},
 			},
 		},
 	}
@@ -319,6 +468,7 @@ var (
 		{Name: "id", Type: field.TypeString, Unique: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "organization_id", Type: field.TypeString, Nullable: true},
 		{Name: "code", Type: field.TypeString, Unique: true, Nullable: true},
 		{Name: "code_challenge", Type: field.TypeString, Nullable: true},
@@ -330,6 +480,8 @@ var (
 		{Name: "expires_at", Type: field.TypeTime},
 		{Name: "state", Type: field.TypeString, Nullable: true},
 		{Name: "nonce", Type: field.TypeString, Nullable: true},
+		{Name: "user_agent", Type: field.TypeString, Nullable: true},
+		{Name: "ip_address", Type: field.TypeString, Nullable: true},
 		{Name: "client_id", Type: field.TypeString},
 		{Name: "user_id", Type: field.TypeString},
 	}
@@ -341,13 +493,13 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "oauth_authorizations_oauth_clients_authorizations",
-				Columns:    []*schema.Column{OauthAuthorizationsColumns[14]},
+				Columns:    []*schema.Column{OauthAuthorizationsColumns[17]},
 				RefColumns: []*schema.Column{OauthClientsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "oauth_authorizations_users_oauth_authorizations",
-				Columns:    []*schema.Column{OauthAuthorizationsColumns[15]},
+				Columns:    []*schema.Column{OauthAuthorizationsColumns[18]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -356,27 +508,27 @@ var (
 			{
 				Name:    "oauthauthorization_code",
 				Unique:  false,
-				Columns: []*schema.Column{OauthAuthorizationsColumns[4]},
+				Columns: []*schema.Column{OauthAuthorizationsColumns[5]},
 			},
 			{
 				Name:    "oauthauthorization_client_id",
 				Unique:  false,
-				Columns: []*schema.Column{OauthAuthorizationsColumns[14]},
+				Columns: []*schema.Column{OauthAuthorizationsColumns[17]},
 			},
 			{
 				Name:    "oauthauthorization_user_id",
 				Unique:  false,
-				Columns: []*schema.Column{OauthAuthorizationsColumns[15]},
+				Columns: []*schema.Column{OauthAuthorizationsColumns[18]},
 			},
 			{
 				Name:    "oauthauthorization_organization_id",
 				Unique:  false,
-				Columns: []*schema.Column{OauthAuthorizationsColumns[3]},
+				Columns: []*schema.Column{OauthAuthorizationsColumns[4]},
 			},
 			{
 				Name:    "oauthauthorization_expires_at",
 				Unique:  false,
-				Columns: []*schema.Column{OauthAuthorizationsColumns[11]},
+				Columns: []*schema.Column{OauthAuthorizationsColumns[12]},
 			},
 		},
 	}
@@ -385,6 +537,7 @@ var (
 		{Name: "id", Type: field.TypeString, Unique: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "client_id", Type: field.TypeString, Unique: true},
 		{Name: "client_secret", Type: field.TypeString},
 		{Name: "client_name", Type: field.TypeString},
@@ -412,7 +565,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "oauth_clients_organizations_oauth_clients",
-				Columns:    []*schema.Column{OauthClientsColumns[20]},
+				Columns:    []*schema.Column{OauthClientsColumns[21]},
 				RefColumns: []*schema.Column{OrganizationsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -421,12 +574,12 @@ var (
 			{
 				Name:    "oauthclient_client_id",
 				Unique:  false,
-				Columns: []*schema.Column{OauthClientsColumns[3]},
+				Columns: []*schema.Column{OauthClientsColumns[4]},
 			},
 			{
 				Name:    "oauthclient_organization_id",
 				Unique:  false,
-				Columns: []*schema.Column{OauthClientsColumns[20]},
+				Columns: []*schema.Column{OauthClientsColumns[21]},
 			},
 		},
 	}
@@ -435,6 +588,7 @@ var (
 		{Name: "id", Type: field.TypeString, Unique: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "name", Type: field.TypeString, Unique: true},
 		{Name: "description", Type: field.TypeString},
 		{Name: "default_scope", Type: field.TypeBool, Default: false},
@@ -449,7 +603,7 @@ var (
 			{
 				Name:    "oauthscope_name",
 				Unique:  false,
-				Columns: []*schema.Column{OauthScopesColumns[3]},
+				Columns: []*schema.Column{OauthScopesColumns[4]},
 			},
 		},
 	}
@@ -458,6 +612,7 @@ var (
 		{Name: "id", Type: field.TypeString, Unique: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "access_token", Type: field.TypeString, Unique: true},
 		{Name: "refresh_token", Type: field.TypeString, Unique: true, Nullable: true},
 		{Name: "token_type", Type: field.TypeString, Default: "bearer"},
@@ -481,13 +636,13 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "oauth_tokens_oauth_clients_tokens",
-				Columns:    []*schema.Column{OauthTokensColumns[15]},
+				Columns:    []*schema.Column{OauthTokensColumns[16]},
 				RefColumns: []*schema.Column{OauthClientsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "oauth_tokens_users_oauth_tokens",
-				Columns:    []*schema.Column{OauthTokensColumns[16]},
+				Columns:    []*schema.Column{OauthTokensColumns[17]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -496,32 +651,32 @@ var (
 			{
 				Name:    "oauthtoken_access_token",
 				Unique:  false,
-				Columns: []*schema.Column{OauthTokensColumns[3]},
+				Columns: []*schema.Column{OauthTokensColumns[4]},
 			},
 			{
 				Name:    "oauthtoken_refresh_token",
 				Unique:  false,
-				Columns: []*schema.Column{OauthTokensColumns[4]},
+				Columns: []*schema.Column{OauthTokensColumns[5]},
 			},
 			{
 				Name:    "oauthtoken_client_id",
 				Unique:  false,
-				Columns: []*schema.Column{OauthTokensColumns[15]},
+				Columns: []*schema.Column{OauthTokensColumns[16]},
 			},
 			{
 				Name:    "oauthtoken_user_id",
 				Unique:  false,
-				Columns: []*schema.Column{OauthTokensColumns[16]},
+				Columns: []*schema.Column{OauthTokensColumns[17]},
 			},
 			{
 				Name:    "oauthtoken_organization_id",
 				Unique:  false,
-				Columns: []*schema.Column{OauthTokensColumns[6]},
+				Columns: []*schema.Column{OauthTokensColumns[7]},
 			},
 			{
 				Name:    "oauthtoken_expires_at",
 				Unique:  false,
-				Columns: []*schema.Column{OauthTokensColumns[9]},
+				Columns: []*schema.Column{OauthTokensColumns[10]},
 			},
 		},
 	}
@@ -530,8 +685,11 @@ var (
 		{Name: "id", Type: field.TypeString, Unique: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "name", Type: field.TypeString},
 		{Name: "slug", Type: field.TypeString, Unique: true},
+		{Name: "domains", Type: field.TypeJSON, Nullable: true},
+		{Name: "verified_domains", Type: field.TypeJSON, Nullable: true},
 		{Name: "domain", Type: field.TypeString, Nullable: true},
 		{Name: "logo_url", Type: field.TypeString, Nullable: true},
 		{Name: "plan", Type: field.TypeString, Default: "free"},
@@ -566,62 +724,62 @@ var (
 			{
 				Name:    "organization_domain",
 				Unique:  false,
-				Columns: []*schema.Column{OrganizationsColumns[5]},
+				Columns: []*schema.Column{OrganizationsColumns[8]},
 			},
 			{
 				Name:    "organization_slug",
 				Unique:  false,
-				Columns: []*schema.Column{OrganizationsColumns[4]},
+				Columns: []*schema.Column{OrganizationsColumns[5]},
 			},
 			{
 				Name:    "organization_owner_id",
 				Unique:  false,
-				Columns: []*schema.Column{OrganizationsColumns[12]},
+				Columns: []*schema.Column{OrganizationsColumns[15]},
 			},
 			{
 				Name:    "organization_sso_domain",
 				Unique:  false,
-				Columns: []*schema.Column{OrganizationsColumns[18]},
+				Columns: []*schema.Column{OrganizationsColumns[21]},
 			},
 			{
 				Name:    "organization_org_type",
 				Unique:  false,
-				Columns: []*schema.Column{OrganizationsColumns[13]},
+				Columns: []*schema.Column{OrganizationsColumns[16]},
 			},
 			{
 				Name:    "organization_is_platform_organization",
 				Unique:  false,
-				Columns: []*schema.Column{OrganizationsColumns[14]},
+				Columns: []*schema.Column{OrganizationsColumns[17]},
 			},
 			{
 				Name:    "organization_subscription_status",
 				Unique:  false,
-				Columns: []*schema.Column{OrganizationsColumns[21]},
+				Columns: []*schema.Column{OrganizationsColumns[24]},
 			},
 			{
 				Name:    "organization_auth_service_enabled",
 				Unique:  false,
-				Columns: []*schema.Column{OrganizationsColumns[22]},
+				Columns: []*schema.Column{OrganizationsColumns[25]},
 			},
 			{
 				Name:    "organization_auth_domain",
 				Unique:  true,
-				Columns: []*schema.Column{OrganizationsColumns[24]},
+				Columns: []*schema.Column{OrganizationsColumns[27]},
 			},
 			{
 				Name:    "organization_customer_id",
 				Unique:  false,
-				Columns: []*schema.Column{OrganizationsColumns[20]},
+				Columns: []*schema.Column{OrganizationsColumns[23]},
 			},
 			{
 				Name:    "organization_subscription_id",
 				Unique:  false,
-				Columns: []*schema.Column{OrganizationsColumns[19]},
+				Columns: []*schema.Column{OrganizationsColumns[22]},
 			},
 			{
 				Name:    "organization_active",
 				Unique:  false,
-				Columns: []*schema.Column{OrganizationsColumns[8]},
+				Columns: []*schema.Column{OrganizationsColumns[11]},
 			},
 		},
 	}
@@ -630,6 +788,7 @@ var (
 		{Name: "id", Type: field.TypeString, Unique: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "enabled", Type: field.TypeBool, Default: true},
 		{Name: "settings", Type: field.TypeJSON, Nullable: true, SchemaType: map[string]string{"mysql": "json", "postgres": "jsonb", "sqlite3": "text"}},
 		{Name: "feature_id", Type: field.TypeString},
@@ -643,13 +802,13 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "organization_features_feature_flags_organization_features",
-				Columns:    []*schema.Column{OrganizationFeaturesColumns[5]},
+				Columns:    []*schema.Column{OrganizationFeaturesColumns[6]},
 				RefColumns: []*schema.Column{FeatureFlagsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "organization_features_organizations_feature_flags",
-				Columns:    []*schema.Column{OrganizationFeaturesColumns[6]},
+				Columns:    []*schema.Column{OrganizationFeaturesColumns[7]},
 				RefColumns: []*schema.Column{OrganizationsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -658,17 +817,17 @@ var (
 			{
 				Name:    "organizationfeature_organization_id",
 				Unique:  false,
-				Columns: []*schema.Column{OrganizationFeaturesColumns[6]},
+				Columns: []*schema.Column{OrganizationFeaturesColumns[7]},
 			},
 			{
 				Name:    "organizationfeature_feature_id",
 				Unique:  false,
-				Columns: []*schema.Column{OrganizationFeaturesColumns[5]},
+				Columns: []*schema.Column{OrganizationFeaturesColumns[6]},
 			},
 			{
 				Name:    "organizationfeature_organization_id_feature_id",
 				Unique:  true,
-				Columns: []*schema.Column{OrganizationFeaturesColumns[6], OrganizationFeaturesColumns[5]},
+				Columns: []*schema.Column{OrganizationFeaturesColumns[7], OrganizationFeaturesColumns[6]},
 			},
 		},
 	}
@@ -677,6 +836,7 @@ var (
 		{Name: "id", Type: field.TypeString, Unique: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "name", Type: field.TypeString},
 		{Name: "credential_id", Type: field.TypeString, Unique: true},
 		{Name: "public_key", Type: field.TypeBytes},
@@ -687,6 +847,10 @@ var (
 		{Name: "last_used", Type: field.TypeTime, Nullable: true},
 		{Name: "transports", Type: field.TypeJSON, Nullable: true},
 		{Name: "attestation", Type: field.TypeJSON, Nullable: true, SchemaType: map[string]string{"mysql": "json", "postgres": "jsonb", "sqlite3": "text"}},
+		{Name: "backup_state", Type: field.TypeBool, Nullable: true},
+		{Name: "backup_eligible", Type: field.TypeBool, Nullable: true},
+		{Name: "user_agent", Type: field.TypeString, Nullable: true},
+		{Name: "ip_address", Type: field.TypeString, Nullable: true},
 		{Name: "user_id", Type: field.TypeString},
 	}
 	// PasskeysTable holds the schema information for the "passkeys" table.
@@ -697,7 +861,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "passkeys_users_passkeys",
-				Columns:    []*schema.Column{PasskeysColumns[13]},
+				Columns:    []*schema.Column{PasskeysColumns[18]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -706,12 +870,12 @@ var (
 			{
 				Name:    "passkey_user_id",
 				Unique:  false,
-				Columns: []*schema.Column{PasskeysColumns[13]},
+				Columns: []*schema.Column{PasskeysColumns[18]},
 			},
 			{
 				Name:    "passkey_credential_id",
 				Unique:  false,
-				Columns: []*schema.Column{PasskeysColumns[4]},
+				Columns: []*schema.Column{PasskeysColumns[5]},
 			},
 		},
 	}
@@ -720,6 +884,7 @@ var (
 		{Name: "id", Type: field.TypeString, Unique: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "name", Type: field.TypeString, Unique: true},
 		{Name: "display_name", Type: field.TypeString, Nullable: true},
 		{Name: "description", Type: field.TypeString},
@@ -745,47 +910,47 @@ var (
 			{
 				Name:    "permission_name",
 				Unique:  false,
-				Columns: []*schema.Column{PermissionsColumns[3]},
+				Columns: []*schema.Column{PermissionsColumns[4]},
 			},
 			{
 				Name:    "permission_resource_action",
 				Unique:  true,
-				Columns: []*schema.Column{PermissionsColumns[6], PermissionsColumns[7]},
+				Columns: []*schema.Column{PermissionsColumns[7], PermissionsColumns[8]},
 			},
 			{
 				Name:    "permission_category",
 				Unique:  false,
-				Columns: []*schema.Column{PermissionsColumns[8]},
+				Columns: []*schema.Column{PermissionsColumns[9]},
 			},
 			{
 				Name:    "permission_system",
 				Unique:  false,
-				Columns: []*schema.Column{PermissionsColumns[12]},
+				Columns: []*schema.Column{PermissionsColumns[13]},
 			},
 			{
 				Name:    "permission_dangerous",
 				Unique:  false,
-				Columns: []*schema.Column{PermissionsColumns[13]},
+				Columns: []*schema.Column{PermissionsColumns[14]},
 			},
 			{
 				Name:    "permission_risk_level",
 				Unique:  false,
-				Columns: []*schema.Column{PermissionsColumns[14]},
+				Columns: []*schema.Column{PermissionsColumns[15]},
 			},
 			{
 				Name:    "permission_active",
 				Unique:  false,
-				Columns: []*schema.Column{PermissionsColumns[16]},
+				Columns: []*schema.Column{PermissionsColumns[17]},
 			},
 			{
 				Name:    "permission_permission_group",
 				Unique:  false,
-				Columns: []*schema.Column{PermissionsColumns[17]},
+				Columns: []*schema.Column{PermissionsColumns[18]},
 			},
 			{
 				Name:    "permission_created_by",
 				Unique:  false,
-				Columns: []*schema.Column{PermissionsColumns[15]},
+				Columns: []*schema.Column{PermissionsColumns[16]},
 			},
 		},
 	}
@@ -794,6 +959,7 @@ var (
 		{Name: "id", Type: field.TypeString, Unique: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "dependency_type", Type: field.TypeEnum, Enums: []string{"required", "implied", "conditional"}, Default: "required"},
 		{Name: "condition", Type: field.TypeString, Nullable: true},
 		{Name: "active", Type: field.TypeBool, Default: true},
@@ -809,13 +975,13 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "permission_dependencies_permissions_dependencies",
-				Columns:    []*schema.Column{PermissionDependenciesColumns[7]},
+				Columns:    []*schema.Column{PermissionDependenciesColumns[8]},
 				RefColumns: []*schema.Column{PermissionsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "permission_dependencies_permissions_dependents",
-				Columns:    []*schema.Column{PermissionDependenciesColumns[8]},
+				Columns:    []*schema.Column{PermissionDependenciesColumns[9]},
 				RefColumns: []*schema.Column{PermissionsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -824,32 +990,32 @@ var (
 			{
 				Name:    "permissiondependency_permission_id_required_permission_id",
 				Unique:  true,
-				Columns: []*schema.Column{PermissionDependenciesColumns[7], PermissionDependenciesColumns[8]},
+				Columns: []*schema.Column{PermissionDependenciesColumns[8], PermissionDependenciesColumns[9]},
 			},
 			{
 				Name:    "permissiondependency_permission_id",
 				Unique:  false,
-				Columns: []*schema.Column{PermissionDependenciesColumns[7]},
+				Columns: []*schema.Column{PermissionDependenciesColumns[8]},
 			},
 			{
 				Name:    "permissiondependency_required_permission_id",
 				Unique:  false,
-				Columns: []*schema.Column{PermissionDependenciesColumns[8]},
+				Columns: []*schema.Column{PermissionDependenciesColumns[9]},
 			},
 			{
 				Name:    "permissiondependency_dependency_type",
 				Unique:  false,
-				Columns: []*schema.Column{PermissionDependenciesColumns[3]},
+				Columns: []*schema.Column{PermissionDependenciesColumns[4]},
 			},
 			{
 				Name:    "permissiondependency_active",
 				Unique:  false,
-				Columns: []*schema.Column{PermissionDependenciesColumns[5]},
+				Columns: []*schema.Column{PermissionDependenciesColumns[6]},
 			},
 			{
 				Name:    "permissiondependency_created_by",
 				Unique:  false,
-				Columns: []*schema.Column{PermissionDependenciesColumns[6]},
+				Columns: []*schema.Column{PermissionDependenciesColumns[7]},
 			},
 		},
 	}
@@ -858,6 +1024,7 @@ var (
 		{Name: "id", Type: field.TypeString, Unique: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "name", Type: field.TypeString},
 		{Name: "display_name", Type: field.TypeString, Nullable: true},
 		{Name: "description", Type: field.TypeString, Nullable: true},
@@ -881,13 +1048,13 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "roles_organizations_roles",
-				Columns:    []*schema.Column{RolesColumns[15]},
+				Columns:    []*schema.Column{RolesColumns[16]},
 				RefColumns: []*schema.Column{OrganizationsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "roles_roles_children",
-				Columns:    []*schema.Column{RolesColumns[16]},
+				Columns:    []*schema.Column{RolesColumns[17]},
 				RefColumns: []*schema.Column{RolesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -896,72 +1063,156 @@ var (
 			{
 				Name:    "role_name_role_type_organization_id_application_id",
 				Unique:  true,
-				Columns: []*schema.Column{RolesColumns[3], RolesColumns[6], RolesColumns[15], RolesColumns[7]},
+				Columns: []*schema.Column{RolesColumns[4], RolesColumns[7], RolesColumns[16], RolesColumns[8]},
 			},
 			{
 				Name:    "role_organization_id",
 				Unique:  false,
-				Columns: []*schema.Column{RolesColumns[15]},
+				Columns: []*schema.Column{RolesColumns[16]},
 			},
 			{
 				Name:    "role_application_id",
 				Unique:  false,
-				Columns: []*schema.Column{RolesColumns[7]},
+				Columns: []*schema.Column{RolesColumns[8]},
 			},
 			{
 				Name:    "role_role_type",
 				Unique:  false,
-				Columns: []*schema.Column{RolesColumns[6]},
+				Columns: []*schema.Column{RolesColumns[7]},
 			},
 			{
 				Name:    "role_system",
 				Unique:  false,
-				Columns: []*schema.Column{RolesColumns[8]},
+				Columns: []*schema.Column{RolesColumns[9]},
 			},
 			{
 				Name:    "role_is_default",
 				Unique:  false,
-				Columns: []*schema.Column{RolesColumns[9]},
+				Columns: []*schema.Column{RolesColumns[10]},
 			},
 			{
 				Name:    "role_priority",
 				Unique:  false,
-				Columns: []*schema.Column{RolesColumns[10]},
+				Columns: []*schema.Column{RolesColumns[11]},
 			},
 			{
 				Name:    "role_active",
 				Unique:  false,
-				Columns: []*schema.Column{RolesColumns[14]},
+				Columns: []*schema.Column{RolesColumns[15]},
 			},
 			{
 				Name:    "role_created_by",
 				Unique:  false,
-				Columns: []*schema.Column{RolesColumns[13]},
+				Columns: []*schema.Column{RolesColumns[14]},
 			},
 			{
 				Name:    "role_parent_id",
 				Unique:  false,
-				Columns: []*schema.Column{RolesColumns[16]},
+				Columns: []*schema.Column{RolesColumns[17]},
 			},
 			{
 				Name:    "role_role_type_organization_id",
 				Unique:  false,
-				Columns: []*schema.Column{RolesColumns[6], RolesColumns[15]},
+				Columns: []*schema.Column{RolesColumns[7], RolesColumns[16]},
 			},
 			{
 				Name:    "role_role_type_application_id",
 				Unique:  false,
-				Columns: []*schema.Column{RolesColumns[6], RolesColumns[7]},
+				Columns: []*schema.Column{RolesColumns[7], RolesColumns[8]},
 			},
 			{
 				Name:    "role_organization_id_is_default",
 				Unique:  false,
-				Columns: []*schema.Column{RolesColumns[15], RolesColumns[9]},
+				Columns: []*schema.Column{RolesColumns[16], RolesColumns[10]},
 			},
 			{
 				Name:    "role_parent_id_active",
 				Unique:  false,
-				Columns: []*schema.Column{RolesColumns[16], RolesColumns[14]},
+				Columns: []*schema.Column{RolesColumns[17], RolesColumns[15]},
+			},
+		},
+	}
+	// SmsTemplatesColumns holds the columns for the "sms_templates" table.
+	SmsTemplatesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "content", Type: field.TypeString},
+		{Name: "type", Type: field.TypeString},
+		{Name: "active", Type: field.TypeBool, Default: true},
+		{Name: "system", Type: field.TypeBool, Default: false},
+		{Name: "locale", Type: field.TypeString, Default: "en"},
+		{Name: "max_length", Type: field.TypeInt, Default: 160},
+		{Name: "message_type", Type: field.TypeString, Default: "transactional"},
+		{Name: "estimated_segments", Type: field.TypeInt, Nullable: true, Default: 1},
+		{Name: "estimated_cost", Type: field.TypeFloat64, Nullable: true, Default: 0},
+		{Name: "currency", Type: field.TypeString, Nullable: true, Default: "USD"},
+		{Name: "variables", Type: field.TypeJSON, Nullable: true},
+		{Name: "metadata", Type: field.TypeJSON, Nullable: true, SchemaType: map[string]string{"mysql": "json", "postgres": "jsonb", "sqlite3": "text"}},
+		{Name: "last_used_at", Type: field.TypeTime, Nullable: true},
+		{Name: "usage_count", Type: field.TypeInt, Default: 0},
+		{Name: "organization_id", Type: field.TypeString, Nullable: true},
+	}
+	// SmsTemplatesTable holds the schema information for the "sms_templates" table.
+	SmsTemplatesTable = &schema.Table{
+		Name:       "sms_templates",
+		Columns:    SmsTemplatesColumns,
+		PrimaryKey: []*schema.Column{SmsTemplatesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "sms_templates_organizations_sms_templates",
+				Columns:    []*schema.Column{SmsTemplatesColumns[19]},
+				RefColumns: []*schema.Column{OrganizationsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "smstemplate_organization_id",
+				Unique:  false,
+				Columns: []*schema.Column{SmsTemplatesColumns[19]},
+			},
+			{
+				Name:    "smstemplate_type",
+				Unique:  false,
+				Columns: []*schema.Column{SmsTemplatesColumns[6]},
+			},
+			{
+				Name:    "smstemplate_message_type",
+				Unique:  false,
+				Columns: []*schema.Column{SmsTemplatesColumns[11]},
+			},
+			{
+				Name:    "smstemplate_active",
+				Unique:  false,
+				Columns: []*schema.Column{SmsTemplatesColumns[7]},
+			},
+			{
+				Name:    "smstemplate_system",
+				Unique:  false,
+				Columns: []*schema.Column{SmsTemplatesColumns[8]},
+			},
+			{
+				Name:    "smstemplate_organization_id_type",
+				Unique:  false,
+				Columns: []*schema.Column{SmsTemplatesColumns[19], SmsTemplatesColumns[6]},
+			},
+			{
+				Name:    "smstemplate_organization_id_type_locale",
+				Unique:  true,
+				Columns: []*schema.Column{SmsTemplatesColumns[19], SmsTemplatesColumns[6], SmsTemplatesColumns[9]},
+			},
+			{
+				Name:    "smstemplate_usage_count",
+				Unique:  false,
+				Columns: []*schema.Column{SmsTemplatesColumns[18]},
+			},
+			{
+				Name:    "smstemplate_last_used_at",
+				Unique:  false,
+				Columns: []*schema.Column{SmsTemplatesColumns[17]},
 			},
 		},
 	}
@@ -970,9 +1221,11 @@ var (
 		{Name: "id", Type: field.TypeString, Unique: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "state", Type: field.TypeString, Unique: true},
 		{Name: "data", Type: field.TypeString, Size: 4096},
 		{Name: "expires_at", Type: field.TypeTime},
+		{Name: "redirect_url", Type: field.TypeString, Nullable: true},
 	}
 	// SSOStatesTable holds the schema information for the "sso_states" table.
 	SSOStatesTable = &schema.Table{
@@ -983,7 +1236,7 @@ var (
 			{
 				Name:    "ssostate_expires_at",
 				Unique:  false,
-				Columns: []*schema.Column{SSOStatesColumns[5]},
+				Columns: []*schema.Column{SSOStatesColumns[6]},
 			},
 		},
 	}
@@ -1196,6 +1449,7 @@ var (
 		{Name: "id", Type: field.TypeString, Unique: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "context_type", Type: field.TypeEnum, Enums: []string{"system", "organization", "application", "resource"}},
 		{Name: "resource_type", Type: field.TypeString, Nullable: true},
 		{Name: "resource_id", Type: field.TypeString, Nullable: true},
@@ -1218,25 +1472,25 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "user_permissions_permissions_user_assignments",
-				Columns:    []*schema.Column{UserPermissionsColumns[12]},
+				Columns:    []*schema.Column{UserPermissionsColumns[13]},
 				RefColumns: []*schema.Column{PermissionsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "user_permissions_users_user_permissions",
-				Columns:    []*schema.Column{UserPermissionsColumns[13]},
+				Columns:    []*schema.Column{UserPermissionsColumns[14]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "user_permissions_users_assigned_user_permissions",
-				Columns:    []*schema.Column{UserPermissionsColumns[14]},
+				Columns:    []*schema.Column{UserPermissionsColumns[15]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "user_permissions_organizations_organization_context",
-				Columns:    []*schema.Column{UserPermissionsColumns[15]},
+				Columns:    []*schema.Column{UserPermissionsColumns[16]},
 				RefColumns: []*schema.Column{OrganizationsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -1245,72 +1499,72 @@ var (
 			{
 				Name:    "userpermission_user_id_permission_id_context_type_context_id_resource_type_resource_id",
 				Unique:  true,
-				Columns: []*schema.Column{UserPermissionsColumns[13], UserPermissionsColumns[12], UserPermissionsColumns[3], UserPermissionsColumns[15], UserPermissionsColumns[4], UserPermissionsColumns[5]},
+				Columns: []*schema.Column{UserPermissionsColumns[14], UserPermissionsColumns[13], UserPermissionsColumns[4], UserPermissionsColumns[16], UserPermissionsColumns[5], UserPermissionsColumns[6]},
 			},
 			{
 				Name:    "userpermission_user_id",
 				Unique:  false,
-				Columns: []*schema.Column{UserPermissionsColumns[13]},
+				Columns: []*schema.Column{UserPermissionsColumns[14]},
 			},
 			{
 				Name:    "userpermission_permission_id",
 				Unique:  false,
-				Columns: []*schema.Column{UserPermissionsColumns[12]},
+				Columns: []*schema.Column{UserPermissionsColumns[13]},
 			},
 			{
 				Name:    "userpermission_context_type",
 				Unique:  false,
-				Columns: []*schema.Column{UserPermissionsColumns[3]},
+				Columns: []*schema.Column{UserPermissionsColumns[4]},
 			},
 			{
 				Name:    "userpermission_context_id",
 				Unique:  false,
-				Columns: []*schema.Column{UserPermissionsColumns[15]},
+				Columns: []*schema.Column{UserPermissionsColumns[16]},
 			},
 			{
 				Name:    "userpermission_resource_type",
 				Unique:  false,
-				Columns: []*schema.Column{UserPermissionsColumns[4]},
+				Columns: []*schema.Column{UserPermissionsColumns[5]},
 			},
 			{
 				Name:    "userpermission_resource_id",
 				Unique:  false,
-				Columns: []*schema.Column{UserPermissionsColumns[5]},
+				Columns: []*schema.Column{UserPermissionsColumns[6]},
 			},
 			{
 				Name:    "userpermission_permission_type",
 				Unique:  false,
-				Columns: []*schema.Column{UserPermissionsColumns[6]},
+				Columns: []*schema.Column{UserPermissionsColumns[7]},
 			},
 			{
 				Name:    "userpermission_active",
 				Unique:  false,
-				Columns: []*schema.Column{UserPermissionsColumns[9]},
+				Columns: []*schema.Column{UserPermissionsColumns[10]},
 			},
 			{
 				Name:    "userpermission_expires_at",
 				Unique:  false,
-				Columns: []*schema.Column{UserPermissionsColumns[8]},
+				Columns: []*schema.Column{UserPermissionsColumns[9]},
 			},
 			{
 				Name:    "userpermission_assigned_by",
 				Unique:  false,
-				Columns: []*schema.Column{UserPermissionsColumns[14]},
+				Columns: []*schema.Column{UserPermissionsColumns[15]},
 			},
 			{
 				Name:    "userpermission_user_id_context_type_context_id",
 				Unique:  false,
-				Columns: []*schema.Column{UserPermissionsColumns[13], UserPermissionsColumns[3], UserPermissionsColumns[15]},
+				Columns: []*schema.Column{UserPermissionsColumns[14], UserPermissionsColumns[4], UserPermissionsColumns[16]},
 			},
 			{
 				Name:    "userpermission_user_id_resource_type_resource_id",
 				Unique:  false,
-				Columns: []*schema.Column{UserPermissionsColumns[13], UserPermissionsColumns[4], UserPermissionsColumns[5]},
+				Columns: []*schema.Column{UserPermissionsColumns[14], UserPermissionsColumns[5], UserPermissionsColumns[6]},
 			},
 			{
 				Name:    "userpermission_context_type_context_id_active",
 				Unique:  false,
-				Columns: []*schema.Column{UserPermissionsColumns[3], UserPermissionsColumns[15], UserPermissionsColumns[9]},
+				Columns: []*schema.Column{UserPermissionsColumns[4], UserPermissionsColumns[16], UserPermissionsColumns[10]},
 			},
 		},
 	}
@@ -1319,6 +1573,7 @@ var (
 		{Name: "id", Type: field.TypeString, Unique: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "context_type", Type: field.TypeEnum, Enums: []string{"system", "organization", "application"}},
 		{Name: "assigned_at", Type: field.TypeTime},
 		{Name: "expires_at", Type: field.TypeTime, Nullable: true},
@@ -1337,25 +1592,25 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "user_roles_roles_user_assignments",
-				Columns:    []*schema.Column{UserRolesColumns[8]},
+				Columns:    []*schema.Column{UserRolesColumns[9]},
 				RefColumns: []*schema.Column{RolesColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "user_roles_users_user_roles",
-				Columns:    []*schema.Column{UserRolesColumns[9]},
+				Columns:    []*schema.Column{UserRolesColumns[10]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "user_roles_users_assigned_user_roles",
-				Columns:    []*schema.Column{UserRolesColumns[10]},
+				Columns:    []*schema.Column{UserRolesColumns[11]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "user_roles_organizations_organization_context",
-				Columns:    []*schema.Column{UserRolesColumns[11]},
+				Columns:    []*schema.Column{UserRolesColumns[12]},
 				RefColumns: []*schema.Column{OrganizationsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -1364,52 +1619,52 @@ var (
 			{
 				Name:    "userrole_user_id_role_id_context_type_context_id",
 				Unique:  true,
-				Columns: []*schema.Column{UserRolesColumns[9], UserRolesColumns[8], UserRolesColumns[3], UserRolesColumns[11]},
+				Columns: []*schema.Column{UserRolesColumns[10], UserRolesColumns[9], UserRolesColumns[4], UserRolesColumns[12]},
 			},
 			{
 				Name:    "userrole_user_id",
 				Unique:  false,
-				Columns: []*schema.Column{UserRolesColumns[9]},
+				Columns: []*schema.Column{UserRolesColumns[10]},
 			},
 			{
 				Name:    "userrole_role_id",
 				Unique:  false,
-				Columns: []*schema.Column{UserRolesColumns[8]},
+				Columns: []*schema.Column{UserRolesColumns[9]},
 			},
 			{
 				Name:    "userrole_context_type",
 				Unique:  false,
-				Columns: []*schema.Column{UserRolesColumns[3]},
+				Columns: []*schema.Column{UserRolesColumns[4]},
 			},
 			{
 				Name:    "userrole_context_id",
 				Unique:  false,
-				Columns: []*schema.Column{UserRolesColumns[11]},
+				Columns: []*schema.Column{UserRolesColumns[12]},
 			},
 			{
 				Name:    "userrole_active",
 				Unique:  false,
-				Columns: []*schema.Column{UserRolesColumns[6]},
+				Columns: []*schema.Column{UserRolesColumns[7]},
 			},
 			{
 				Name:    "userrole_expires_at",
 				Unique:  false,
-				Columns: []*schema.Column{UserRolesColumns[5]},
+				Columns: []*schema.Column{UserRolesColumns[6]},
 			},
 			{
 				Name:    "userrole_assigned_by",
 				Unique:  false,
-				Columns: []*schema.Column{UserRolesColumns[10]},
+				Columns: []*schema.Column{UserRolesColumns[11]},
 			},
 			{
 				Name:    "userrole_user_id_context_type_context_id",
 				Unique:  false,
-				Columns: []*schema.Column{UserRolesColumns[9], UserRolesColumns[3], UserRolesColumns[11]},
+				Columns: []*schema.Column{UserRolesColumns[10], UserRolesColumns[4], UserRolesColumns[12]},
 			},
 			{
 				Name:    "userrole_context_type_context_id",
 				Unique:  false,
-				Columns: []*schema.Column{UserRolesColumns[3], UserRolesColumns[11]},
+				Columns: []*schema.Column{UserRolesColumns[4], UserRolesColumns[12]},
 			},
 		},
 	}
@@ -1418,6 +1673,7 @@ var (
 		{Name: "id", Type: field.TypeString, Unique: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "type", Type: field.TypeString},
 		{Name: "token", Type: field.TypeString, Unique: true},
 		{Name: "email", Type: field.TypeString, Nullable: true},
@@ -1430,6 +1686,7 @@ var (
 		{Name: "ip_address", Type: field.TypeString, Nullable: true},
 		{Name: "user_agent", Type: field.TypeString, Nullable: true},
 		{Name: "attestation", Type: field.TypeJSON, Nullable: true, SchemaType: map[string]string{"mysql": "json", "postgres": "jsonb", "sqlite3": "text"}},
+		{Name: "metadata", Type: field.TypeJSON, Nullable: true, SchemaType: map[string]string{"mysql": "json", "postgres": "jsonb", "sqlite3": "text"}},
 		{Name: "user_id", Type: field.TypeString},
 	}
 	// VerificationsTable holds the schema information for the "verifications" table.
@@ -1440,7 +1697,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "verifications_users_verifications",
-				Columns:    []*schema.Column{VerificationsColumns[15]},
+				Columns:    []*schema.Column{VerificationsColumns[17]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -1449,27 +1706,27 @@ var (
 			{
 				Name:    "verification_user_id",
 				Unique:  false,
-				Columns: []*schema.Column{VerificationsColumns[15]},
+				Columns: []*schema.Column{VerificationsColumns[17]},
 			},
 			{
 				Name:    "verification_token",
 				Unique:  false,
-				Columns: []*schema.Column{VerificationsColumns[4]},
+				Columns: []*schema.Column{VerificationsColumns[5]},
 			},
 			{
 				Name:    "verification_email",
 				Unique:  false,
-				Columns: []*schema.Column{VerificationsColumns[5]},
+				Columns: []*schema.Column{VerificationsColumns[6]},
 			},
 			{
 				Name:    "verification_phone_number",
 				Unique:  false,
-				Columns: []*schema.Column{VerificationsColumns[6]},
+				Columns: []*schema.Column{VerificationsColumns[7]},
 			},
 			{
 				Name:    "verification_expires_at",
 				Unique:  false,
-				Columns: []*schema.Column{VerificationsColumns[11]},
+				Columns: []*schema.Column{VerificationsColumns[12]},
 			},
 		},
 	}
@@ -1478,6 +1735,7 @@ var (
 		{Name: "id", Type: field.TypeString, Unique: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "name", Type: field.TypeString},
 		{Name: "url", Type: field.TypeString},
 		{Name: "secret", Type: field.TypeString},
@@ -1488,6 +1746,7 @@ var (
 		{Name: "timeout_ms", Type: field.TypeInt, Default: 5000},
 		{Name: "format", Type: field.TypeEnum, Enums: []string{"json", "form"}, Default: "json"},
 		{Name: "metadata", Type: field.TypeJSON, Nullable: true, SchemaType: map[string]string{"mysql": "json", "postgres": "jsonb", "sqlite3": "text"}},
+		{Name: "headers", Type: field.TypeJSON, Nullable: true, SchemaType: map[string]string{"mysql": "json", "postgres": "jsonb", "sqlite3": "text"}},
 		{Name: "organization_id", Type: field.TypeString},
 	}
 	// WebhooksTable holds the schema information for the "webhooks" table.
@@ -1498,7 +1757,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "webhooks_organizations_webhooks",
-				Columns:    []*schema.Column{WebhooksColumns[13]},
+				Columns:    []*schema.Column{WebhooksColumns[15]},
 				RefColumns: []*schema.Column{OrganizationsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -1507,7 +1766,7 @@ var (
 			{
 				Name:    "webhook_organization_id",
 				Unique:  false,
-				Columns: []*schema.Column{WebhooksColumns[13]},
+				Columns: []*schema.Column{WebhooksColumns[15]},
 			},
 		},
 	}
@@ -1516,6 +1775,7 @@ var (
 		{Name: "id", Type: field.TypeString, Unique: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "event_type", Type: field.TypeString},
 		{Name: "headers", Type: field.TypeJSON, Nullable: true, SchemaType: map[string]string{"mysql": "json", "postgres": "jsonb", "sqlite3": "text"}},
 		{Name: "payload", Type: field.TypeJSON, Nullable: true, SchemaType: map[string]string{"mysql": "json", "postgres": "jsonb", "sqlite3": "text"}},
@@ -1536,7 +1796,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "webhook_events_webhooks_events",
-				Columns:    []*schema.Column{WebhookEventsColumns[13]},
+				Columns:    []*schema.Column{WebhookEventsColumns[14]},
 				RefColumns: []*schema.Column{WebhooksColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -1545,22 +1805,22 @@ var (
 			{
 				Name:    "webhookevent_webhook_id",
 				Unique:  false,
-				Columns: []*schema.Column{WebhookEventsColumns[13]},
+				Columns: []*schema.Column{WebhookEventsColumns[14]},
 			},
 			{
 				Name:    "webhookevent_event_type",
 				Unique:  false,
-				Columns: []*schema.Column{WebhookEventsColumns[3]},
+				Columns: []*schema.Column{WebhookEventsColumns[4]},
 			},
 			{
 				Name:    "webhookevent_delivered",
 				Unique:  false,
-				Columns: []*schema.Column{WebhookEventsColumns[6]},
+				Columns: []*schema.Column{WebhookEventsColumns[7]},
 			},
 			{
 				Name:    "webhookevent_next_retry",
 				Unique:  false,
-				Columns: []*schema.Column{WebhookEventsColumns[9]},
+				Columns: []*schema.Column{WebhookEventsColumns[10]},
 			},
 		},
 	}
@@ -1717,6 +1977,7 @@ var (
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		APIKeysTable,
+		AuditsTable,
 		EmailTemplatesTable,
 		FeatureFlagsTable,
 		IdentityProvidersTable,
@@ -1732,6 +1993,7 @@ var (
 		PermissionsTable,
 		PermissionDependenciesTable,
 		RolesTable,
+		SmsTemplatesTable,
 		SSOStatesTable,
 		SessionsTable,
 		UsersTable,
@@ -1752,11 +2014,16 @@ var (
 func init() {
 	APIKeysTable.ForeignKeys[0].RefTable = OrganizationsTable
 	APIKeysTable.ForeignKeys[1].RefTable = UsersTable
+	AuditsTable.ForeignKeys[0].RefTable = OrganizationsTable
+	AuditsTable.ForeignKeys[1].RefTable = SessionsTable
+	AuditsTable.ForeignKeys[2].RefTable = UsersTable
+	EmailTemplatesTable.ForeignKeys[0].RefTable = OrganizationsTable
 	IdentityProvidersTable.ForeignKeys[0].RefTable = OrganizationsTable
 	MfAsTable.ForeignKeys[0].RefTable = UsersTable
 	MembershipsTable.ForeignKeys[0].RefTable = OrganizationsTable
 	MembershipsTable.ForeignKeys[1].RefTable = RolesTable
 	MembershipsTable.ForeignKeys[2].RefTable = UsersTable
+	MembershipsTable.ForeignKeys[3].RefTable = UsersTable
 	OauthAuthorizationsTable.ForeignKeys[0].RefTable = OauthClientsTable
 	OauthAuthorizationsTable.ForeignKeys[1].RefTable = UsersTable
 	OauthClientsTable.ForeignKeys[0].RefTable = OrganizationsTable
@@ -1769,6 +2036,7 @@ func init() {
 	PermissionDependenciesTable.ForeignKeys[1].RefTable = PermissionsTable
 	RolesTable.ForeignKeys[0].RefTable = OrganizationsTable
 	RolesTable.ForeignKeys[1].RefTable = RolesTable
+	SmsTemplatesTable.ForeignKeys[0].RefTable = OrganizationsTable
 	SessionsTable.ForeignKeys[0].RefTable = UsersTable
 	UsersTable.ForeignKeys[0].RefTable = OrganizationsTable
 	UserPermissionsTable.ForeignKeys[0].RefTable = PermissionsTable

@@ -26,6 +26,8 @@ type OAuthScope struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// DeletedAt holds the value of the "deleted_at" field.
+	DeletedAt time.Time `json:"deleted_at,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
 	// Description holds the value of the "description" field.
@@ -92,7 +94,7 @@ func (*OAuthScope) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case oauthscope.FieldName, oauthscope.FieldDescription:
 			values[i] = new(sql.NullString)
-		case oauthscope.FieldCreatedAt, oauthscope.FieldUpdatedAt:
+		case oauthscope.FieldCreatedAt, oauthscope.FieldUpdatedAt, oauthscope.FieldDeletedAt:
 			values[i] = new(sql.NullTime)
 		case oauthscope.FieldID:
 			values[i] = new(xid.ID)
@@ -128,6 +130,12 @@ func (os *OAuthScope) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
 				os.UpdatedAt = value.Time
+			}
+		case oauthscope.FieldDeletedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field deleted_at", values[i])
+			} else if value.Valid {
+				os.DeletedAt = value.Time
 			}
 		case oauthscope.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -209,6 +217,9 @@ func (os *OAuthScope) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
 	builder.WriteString(os.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("deleted_at=")
+	builder.WriteString(os.DeletedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(os.Name)

@@ -24,7 +24,7 @@ type AmazonSESSender struct {
 }
 
 // NewAmazonSESSender creates a new SNS SES sender
-func NewAmazonSESSender(cfg *frankconfig.EmailConfig, logger logging.Logger) *AmazonSESSender {
+func NewAmazonSESSender(cfg *frankconfig.EmailConfig, logger logging.Logger) Sender {
 	// Create SNS config
 	var awsCfg aws.Config
 	var err error
@@ -139,7 +139,7 @@ func (s *AmazonSESSender) Send(ctx context.Context, email Email) error {
 	// Send email
 	_, err := s.client.SendEmail(ctx, input)
 	if err != nil {
-		return errors.Wrap(errors.CodeEmailDeliveryFail, err, "failed to send email via SNS SES")
+		return errors.Wrap(err, errors.CodeEmailDeliveryFail, "failed to send email via SNS SES")
 	}
 
 	// If there are attachments, we need to use the SendRawEmail API
@@ -259,7 +259,7 @@ func (s *AmazonSESSender) sendWithAttachments(ctx context.Context, email Email) 
 	// Send raw email
 	_, err := s.client.SendRawEmail(ctx, rawEmailInput)
 	if err != nil {
-		return errors.Wrap(errors.CodeEmailDeliveryFail, err, "failed to send raw email via SNS SES")
+		return errors.Wrap(err, errors.CodeEmailDeliveryFail, "failed to send raw email via SNS SES")
 	}
 
 	s.logger.Info("Email with attachments sent successfully via SNS SES",
@@ -269,4 +269,23 @@ func (s *AmazonSESSender) sendWithAttachments(ctx context.Context, email Email) 
 	)
 
 	return nil
+}
+
+func (s *AmazonSESSender) SendBulkEmails(ctx context.Context, emails []Email) (*BulkEmailResult, error) {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (s *AmazonSESSender) TestConnection(ctx context.Context) error {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (s *AmazonSESSender) GetDeliveryStatus(ctx context.Context, messageID string) (*DeliveryInfo, error) {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (s *AmazonSESSender) Name() string {
+	return "ses"
 }

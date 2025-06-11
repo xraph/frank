@@ -13,8 +13,11 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
 	"github.com/juicycleff/frank/ent/apikey"
+	"github.com/juicycleff/frank/ent/audit"
+	"github.com/juicycleff/frank/ent/emailtemplate"
 	"github.com/juicycleff/frank/ent/identityprovider"
 	"github.com/juicycleff/frank/ent/membership"
 	"github.com/juicycleff/frank/ent/oauthclient"
@@ -22,6 +25,7 @@ import (
 	"github.com/juicycleff/frank/ent/organizationfeature"
 	"github.com/juicycleff/frank/ent/predicate"
 	"github.com/juicycleff/frank/ent/role"
+	"github.com/juicycleff/frank/ent/smstemplate"
 	"github.com/juicycleff/frank/ent/user"
 	"github.com/juicycleff/frank/ent/userpermission"
 	"github.com/juicycleff/frank/ent/userrole"
@@ -46,6 +50,26 @@ func (ou *OrganizationUpdate) Where(ps ...predicate.Organization) *OrganizationU
 // SetUpdatedAt sets the "updated_at" field.
 func (ou *OrganizationUpdate) SetUpdatedAt(t time.Time) *OrganizationUpdate {
 	ou.mutation.SetUpdatedAt(t)
+	return ou
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (ou *OrganizationUpdate) SetDeletedAt(t time.Time) *OrganizationUpdate {
+	ou.mutation.SetDeletedAt(t)
+	return ou
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (ou *OrganizationUpdate) SetNillableDeletedAt(t *time.Time) *OrganizationUpdate {
+	if t != nil {
+		ou.SetDeletedAt(*t)
+	}
+	return ou
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (ou *OrganizationUpdate) ClearDeletedAt() *OrganizationUpdate {
+	ou.mutation.ClearDeletedAt()
 	return ou
 }
 
@@ -74,6 +98,42 @@ func (ou *OrganizationUpdate) SetNillableSlug(s *string) *OrganizationUpdate {
 	if s != nil {
 		ou.SetSlug(*s)
 	}
+	return ou
+}
+
+// SetDomains sets the "domains" field.
+func (ou *OrganizationUpdate) SetDomains(s []string) *OrganizationUpdate {
+	ou.mutation.SetDomains(s)
+	return ou
+}
+
+// AppendDomains appends s to the "domains" field.
+func (ou *OrganizationUpdate) AppendDomains(s []string) *OrganizationUpdate {
+	ou.mutation.AppendDomains(s)
+	return ou
+}
+
+// ClearDomains clears the value of the "domains" field.
+func (ou *OrganizationUpdate) ClearDomains() *OrganizationUpdate {
+	ou.mutation.ClearDomains()
+	return ou
+}
+
+// SetVerifiedDomains sets the "verified_domains" field.
+func (ou *OrganizationUpdate) SetVerifiedDomains(s []string) *OrganizationUpdate {
+	ou.mutation.SetVerifiedDomains(s)
+	return ou
+}
+
+// AppendVerifiedDomains appends s to the "verified_domains" field.
+func (ou *OrganizationUpdate) AppendVerifiedDomains(s []string) *OrganizationUpdate {
+	ou.mutation.AppendVerifiedDomains(s)
+	return ou
+}
+
+// ClearVerifiedDomains clears the value of the "verified_domains" field.
+func (ou *OrganizationUpdate) ClearVerifiedDomains() *OrganizationUpdate {
+	ou.mutation.ClearVerifiedDomains()
 	return ou
 }
 
@@ -529,6 +589,36 @@ func (ou *OrganizationUpdate) AddMemberships(m ...*Membership) *OrganizationUpda
 	return ou.AddMembershipIDs(ids...)
 }
 
+// AddSmsTemplateIDs adds the "sms_templates" edge to the SMSTemplate entity by IDs.
+func (ou *OrganizationUpdate) AddSmsTemplateIDs(ids ...xid.ID) *OrganizationUpdate {
+	ou.mutation.AddSmsTemplateIDs(ids...)
+	return ou
+}
+
+// AddSmsTemplates adds the "sms_templates" edges to the SMSTemplate entity.
+func (ou *OrganizationUpdate) AddSmsTemplates(s ...*SMSTemplate) *OrganizationUpdate {
+	ids := make([]xid.ID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return ou.AddSmsTemplateIDs(ids...)
+}
+
+// AddEmailTemplateIDs adds the "email_templates" edge to the EmailTemplate entity by IDs.
+func (ou *OrganizationUpdate) AddEmailTemplateIDs(ids ...xid.ID) *OrganizationUpdate {
+	ou.mutation.AddEmailTemplateIDs(ids...)
+	return ou
+}
+
+// AddEmailTemplates adds the "email_templates" edges to the EmailTemplate entity.
+func (ou *OrganizationUpdate) AddEmailTemplates(e ...*EmailTemplate) *OrganizationUpdate {
+	ids := make([]xid.ID, len(e))
+	for i := range e {
+		ids[i] = e[i].ID
+	}
+	return ou.AddEmailTemplateIDs(ids...)
+}
+
 // AddAPIKeyIDs adds the "api_keys" edge to the ApiKey entity by IDs.
 func (ou *OrganizationUpdate) AddAPIKeyIDs(ids ...xid.ID) *OrganizationUpdate {
 	ou.mutation.AddAPIKeyIDs(ids...)
@@ -649,6 +739,21 @@ func (ou *OrganizationUpdate) AddUserPermissionContexts(u ...*UserPermission) *O
 	return ou.AddUserPermissionContextIDs(ids...)
 }
 
+// AddAuditLogIDs adds the "audit_logs" edge to the Audit entity by IDs.
+func (ou *OrganizationUpdate) AddAuditLogIDs(ids ...xid.ID) *OrganizationUpdate {
+	ou.mutation.AddAuditLogIDs(ids...)
+	return ou
+}
+
+// AddAuditLogs adds the "audit_logs" edges to the Audit entity.
+func (ou *OrganizationUpdate) AddAuditLogs(a ...*Audit) *OrganizationUpdate {
+	ids := make([]xid.ID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return ou.AddAuditLogIDs(ids...)
+}
+
 // Mutation returns the OrganizationMutation object of the builder.
 func (ou *OrganizationUpdate) Mutation() *OrganizationMutation {
 	return ou.mutation
@@ -694,6 +799,48 @@ func (ou *OrganizationUpdate) RemoveMemberships(m ...*Membership) *OrganizationU
 		ids[i] = m[i].ID
 	}
 	return ou.RemoveMembershipIDs(ids...)
+}
+
+// ClearSmsTemplates clears all "sms_templates" edges to the SMSTemplate entity.
+func (ou *OrganizationUpdate) ClearSmsTemplates() *OrganizationUpdate {
+	ou.mutation.ClearSmsTemplates()
+	return ou
+}
+
+// RemoveSmsTemplateIDs removes the "sms_templates" edge to SMSTemplate entities by IDs.
+func (ou *OrganizationUpdate) RemoveSmsTemplateIDs(ids ...xid.ID) *OrganizationUpdate {
+	ou.mutation.RemoveSmsTemplateIDs(ids...)
+	return ou
+}
+
+// RemoveSmsTemplates removes "sms_templates" edges to SMSTemplate entities.
+func (ou *OrganizationUpdate) RemoveSmsTemplates(s ...*SMSTemplate) *OrganizationUpdate {
+	ids := make([]xid.ID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return ou.RemoveSmsTemplateIDs(ids...)
+}
+
+// ClearEmailTemplates clears all "email_templates" edges to the EmailTemplate entity.
+func (ou *OrganizationUpdate) ClearEmailTemplates() *OrganizationUpdate {
+	ou.mutation.ClearEmailTemplates()
+	return ou
+}
+
+// RemoveEmailTemplateIDs removes the "email_templates" edge to EmailTemplate entities by IDs.
+func (ou *OrganizationUpdate) RemoveEmailTemplateIDs(ids ...xid.ID) *OrganizationUpdate {
+	ou.mutation.RemoveEmailTemplateIDs(ids...)
+	return ou
+}
+
+// RemoveEmailTemplates removes "email_templates" edges to EmailTemplate entities.
+func (ou *OrganizationUpdate) RemoveEmailTemplates(e ...*EmailTemplate) *OrganizationUpdate {
+	ids := make([]xid.ID, len(e))
+	for i := range e {
+		ids[i] = e[i].ID
+	}
+	return ou.RemoveEmailTemplateIDs(ids...)
 }
 
 // ClearAPIKeys clears all "api_keys" edges to the ApiKey entity.
@@ -864,6 +1011,27 @@ func (ou *OrganizationUpdate) RemoveUserPermissionContexts(u ...*UserPermission)
 	return ou.RemoveUserPermissionContextIDs(ids...)
 }
 
+// ClearAuditLogs clears all "audit_logs" edges to the Audit entity.
+func (ou *OrganizationUpdate) ClearAuditLogs() *OrganizationUpdate {
+	ou.mutation.ClearAuditLogs()
+	return ou
+}
+
+// RemoveAuditLogIDs removes the "audit_logs" edge to Audit entities by IDs.
+func (ou *OrganizationUpdate) RemoveAuditLogIDs(ids ...xid.ID) *OrganizationUpdate {
+	ou.mutation.RemoveAuditLogIDs(ids...)
+	return ou
+}
+
+// RemoveAuditLogs removes "audit_logs" edges to Audit entities.
+func (ou *OrganizationUpdate) RemoveAuditLogs(a ...*Audit) *OrganizationUpdate {
+	ids := make([]xid.ID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return ou.RemoveAuditLogIDs(ids...)
+}
+
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (ou *OrganizationUpdate) Save(ctx context.Context) (int, error) {
 	ou.defaults()
@@ -946,11 +1114,39 @@ func (ou *OrganizationUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := ou.mutation.UpdatedAt(); ok {
 		_spec.SetField(organization.FieldUpdatedAt, field.TypeTime, value)
 	}
+	if value, ok := ou.mutation.DeletedAt(); ok {
+		_spec.SetField(organization.FieldDeletedAt, field.TypeTime, value)
+	}
+	if ou.mutation.DeletedAtCleared() {
+		_spec.ClearField(organization.FieldDeletedAt, field.TypeTime)
+	}
 	if value, ok := ou.mutation.Name(); ok {
 		_spec.SetField(organization.FieldName, field.TypeString, value)
 	}
 	if value, ok := ou.mutation.Slug(); ok {
 		_spec.SetField(organization.FieldSlug, field.TypeString, value)
+	}
+	if value, ok := ou.mutation.Domains(); ok {
+		_spec.SetField(organization.FieldDomains, field.TypeJSON, value)
+	}
+	if value, ok := ou.mutation.AppendedDomains(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, organization.FieldDomains, value)
+		})
+	}
+	if ou.mutation.DomainsCleared() {
+		_spec.ClearField(organization.FieldDomains, field.TypeJSON)
+	}
+	if value, ok := ou.mutation.VerifiedDomains(); ok {
+		_spec.SetField(organization.FieldVerifiedDomains, field.TypeJSON, value)
+	}
+	if value, ok := ou.mutation.AppendedVerifiedDomains(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, organization.FieldVerifiedDomains, value)
+		})
+	}
+	if ou.mutation.VerifiedDomainsCleared() {
+		_spec.ClearField(organization.FieldVerifiedDomains, field.TypeJSON)
 	}
 	if value, ok := ou.mutation.Domain(); ok {
 		_spec.SetField(organization.FieldDomain, field.TypeString, value)
@@ -1155,6 +1351,96 @@ func (ou *OrganizationUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(membership.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if ou.mutation.SmsTemplatesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   organization.SmsTemplatesTable,
+			Columns: []string{organization.SmsTemplatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(smstemplate.FieldID, field.TypeString),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ou.mutation.RemovedSmsTemplatesIDs(); len(nodes) > 0 && !ou.mutation.SmsTemplatesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   organization.SmsTemplatesTable,
+			Columns: []string{organization.SmsTemplatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(smstemplate.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ou.mutation.SmsTemplatesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   organization.SmsTemplatesTable,
+			Columns: []string{organization.SmsTemplatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(smstemplate.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if ou.mutation.EmailTemplatesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   organization.EmailTemplatesTable,
+			Columns: []string{organization.EmailTemplatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(emailtemplate.FieldID, field.TypeString),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ou.mutation.RemovedEmailTemplatesIDs(); len(nodes) > 0 && !ou.mutation.EmailTemplatesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   organization.EmailTemplatesTable,
+			Columns: []string{organization.EmailTemplatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(emailtemplate.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ou.mutation.EmailTemplatesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   organization.EmailTemplatesTable,
+			Columns: []string{organization.EmailTemplatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(emailtemplate.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -1522,6 +1808,51 @@ func (ou *OrganizationUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if ou.mutation.AuditLogsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   organization.AuditLogsTable,
+			Columns: []string{organization.AuditLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(audit.FieldID, field.TypeString),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ou.mutation.RemovedAuditLogsIDs(); len(nodes) > 0 && !ou.mutation.AuditLogsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   organization.AuditLogsTable,
+			Columns: []string{organization.AuditLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(audit.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ou.mutation.AuditLogsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   organization.AuditLogsTable,
+			Columns: []string{organization.AuditLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(audit.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	_spec.AddModifiers(ou.modifiers...)
 	if n, err = sqlgraph.UpdateNodes(ctx, ou.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -1550,6 +1881,26 @@ func (ouo *OrganizationUpdateOne) SetUpdatedAt(t time.Time) *OrganizationUpdateO
 	return ouo
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (ouo *OrganizationUpdateOne) SetDeletedAt(t time.Time) *OrganizationUpdateOne {
+	ouo.mutation.SetDeletedAt(t)
+	return ouo
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (ouo *OrganizationUpdateOne) SetNillableDeletedAt(t *time.Time) *OrganizationUpdateOne {
+	if t != nil {
+		ouo.SetDeletedAt(*t)
+	}
+	return ouo
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (ouo *OrganizationUpdateOne) ClearDeletedAt() *OrganizationUpdateOne {
+	ouo.mutation.ClearDeletedAt()
+	return ouo
+}
+
 // SetName sets the "name" field.
 func (ouo *OrganizationUpdateOne) SetName(s string) *OrganizationUpdateOne {
 	ouo.mutation.SetName(s)
@@ -1575,6 +1926,42 @@ func (ouo *OrganizationUpdateOne) SetNillableSlug(s *string) *OrganizationUpdate
 	if s != nil {
 		ouo.SetSlug(*s)
 	}
+	return ouo
+}
+
+// SetDomains sets the "domains" field.
+func (ouo *OrganizationUpdateOne) SetDomains(s []string) *OrganizationUpdateOne {
+	ouo.mutation.SetDomains(s)
+	return ouo
+}
+
+// AppendDomains appends s to the "domains" field.
+func (ouo *OrganizationUpdateOne) AppendDomains(s []string) *OrganizationUpdateOne {
+	ouo.mutation.AppendDomains(s)
+	return ouo
+}
+
+// ClearDomains clears the value of the "domains" field.
+func (ouo *OrganizationUpdateOne) ClearDomains() *OrganizationUpdateOne {
+	ouo.mutation.ClearDomains()
+	return ouo
+}
+
+// SetVerifiedDomains sets the "verified_domains" field.
+func (ouo *OrganizationUpdateOne) SetVerifiedDomains(s []string) *OrganizationUpdateOne {
+	ouo.mutation.SetVerifiedDomains(s)
+	return ouo
+}
+
+// AppendVerifiedDomains appends s to the "verified_domains" field.
+func (ouo *OrganizationUpdateOne) AppendVerifiedDomains(s []string) *OrganizationUpdateOne {
+	ouo.mutation.AppendVerifiedDomains(s)
+	return ouo
+}
+
+// ClearVerifiedDomains clears the value of the "verified_domains" field.
+func (ouo *OrganizationUpdateOne) ClearVerifiedDomains() *OrganizationUpdateOne {
+	ouo.mutation.ClearVerifiedDomains()
 	return ouo
 }
 
@@ -2030,6 +2417,36 @@ func (ouo *OrganizationUpdateOne) AddMemberships(m ...*Membership) *Organization
 	return ouo.AddMembershipIDs(ids...)
 }
 
+// AddSmsTemplateIDs adds the "sms_templates" edge to the SMSTemplate entity by IDs.
+func (ouo *OrganizationUpdateOne) AddSmsTemplateIDs(ids ...xid.ID) *OrganizationUpdateOne {
+	ouo.mutation.AddSmsTemplateIDs(ids...)
+	return ouo
+}
+
+// AddSmsTemplates adds the "sms_templates" edges to the SMSTemplate entity.
+func (ouo *OrganizationUpdateOne) AddSmsTemplates(s ...*SMSTemplate) *OrganizationUpdateOne {
+	ids := make([]xid.ID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return ouo.AddSmsTemplateIDs(ids...)
+}
+
+// AddEmailTemplateIDs adds the "email_templates" edge to the EmailTemplate entity by IDs.
+func (ouo *OrganizationUpdateOne) AddEmailTemplateIDs(ids ...xid.ID) *OrganizationUpdateOne {
+	ouo.mutation.AddEmailTemplateIDs(ids...)
+	return ouo
+}
+
+// AddEmailTemplates adds the "email_templates" edges to the EmailTemplate entity.
+func (ouo *OrganizationUpdateOne) AddEmailTemplates(e ...*EmailTemplate) *OrganizationUpdateOne {
+	ids := make([]xid.ID, len(e))
+	for i := range e {
+		ids[i] = e[i].ID
+	}
+	return ouo.AddEmailTemplateIDs(ids...)
+}
+
 // AddAPIKeyIDs adds the "api_keys" edge to the ApiKey entity by IDs.
 func (ouo *OrganizationUpdateOne) AddAPIKeyIDs(ids ...xid.ID) *OrganizationUpdateOne {
 	ouo.mutation.AddAPIKeyIDs(ids...)
@@ -2150,6 +2567,21 @@ func (ouo *OrganizationUpdateOne) AddUserPermissionContexts(u ...*UserPermission
 	return ouo.AddUserPermissionContextIDs(ids...)
 }
 
+// AddAuditLogIDs adds the "audit_logs" edge to the Audit entity by IDs.
+func (ouo *OrganizationUpdateOne) AddAuditLogIDs(ids ...xid.ID) *OrganizationUpdateOne {
+	ouo.mutation.AddAuditLogIDs(ids...)
+	return ouo
+}
+
+// AddAuditLogs adds the "audit_logs" edges to the Audit entity.
+func (ouo *OrganizationUpdateOne) AddAuditLogs(a ...*Audit) *OrganizationUpdateOne {
+	ids := make([]xid.ID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return ouo.AddAuditLogIDs(ids...)
+}
+
 // Mutation returns the OrganizationMutation object of the builder.
 func (ouo *OrganizationUpdateOne) Mutation() *OrganizationMutation {
 	return ouo.mutation
@@ -2195,6 +2627,48 @@ func (ouo *OrganizationUpdateOne) RemoveMemberships(m ...*Membership) *Organizat
 		ids[i] = m[i].ID
 	}
 	return ouo.RemoveMembershipIDs(ids...)
+}
+
+// ClearSmsTemplates clears all "sms_templates" edges to the SMSTemplate entity.
+func (ouo *OrganizationUpdateOne) ClearSmsTemplates() *OrganizationUpdateOne {
+	ouo.mutation.ClearSmsTemplates()
+	return ouo
+}
+
+// RemoveSmsTemplateIDs removes the "sms_templates" edge to SMSTemplate entities by IDs.
+func (ouo *OrganizationUpdateOne) RemoveSmsTemplateIDs(ids ...xid.ID) *OrganizationUpdateOne {
+	ouo.mutation.RemoveSmsTemplateIDs(ids...)
+	return ouo
+}
+
+// RemoveSmsTemplates removes "sms_templates" edges to SMSTemplate entities.
+func (ouo *OrganizationUpdateOne) RemoveSmsTemplates(s ...*SMSTemplate) *OrganizationUpdateOne {
+	ids := make([]xid.ID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return ouo.RemoveSmsTemplateIDs(ids...)
+}
+
+// ClearEmailTemplates clears all "email_templates" edges to the EmailTemplate entity.
+func (ouo *OrganizationUpdateOne) ClearEmailTemplates() *OrganizationUpdateOne {
+	ouo.mutation.ClearEmailTemplates()
+	return ouo
+}
+
+// RemoveEmailTemplateIDs removes the "email_templates" edge to EmailTemplate entities by IDs.
+func (ouo *OrganizationUpdateOne) RemoveEmailTemplateIDs(ids ...xid.ID) *OrganizationUpdateOne {
+	ouo.mutation.RemoveEmailTemplateIDs(ids...)
+	return ouo
+}
+
+// RemoveEmailTemplates removes "email_templates" edges to EmailTemplate entities.
+func (ouo *OrganizationUpdateOne) RemoveEmailTemplates(e ...*EmailTemplate) *OrganizationUpdateOne {
+	ids := make([]xid.ID, len(e))
+	for i := range e {
+		ids[i] = e[i].ID
+	}
+	return ouo.RemoveEmailTemplateIDs(ids...)
 }
 
 // ClearAPIKeys clears all "api_keys" edges to the ApiKey entity.
@@ -2365,6 +2839,27 @@ func (ouo *OrganizationUpdateOne) RemoveUserPermissionContexts(u ...*UserPermiss
 	return ouo.RemoveUserPermissionContextIDs(ids...)
 }
 
+// ClearAuditLogs clears all "audit_logs" edges to the Audit entity.
+func (ouo *OrganizationUpdateOne) ClearAuditLogs() *OrganizationUpdateOne {
+	ouo.mutation.ClearAuditLogs()
+	return ouo
+}
+
+// RemoveAuditLogIDs removes the "audit_logs" edge to Audit entities by IDs.
+func (ouo *OrganizationUpdateOne) RemoveAuditLogIDs(ids ...xid.ID) *OrganizationUpdateOne {
+	ouo.mutation.RemoveAuditLogIDs(ids...)
+	return ouo
+}
+
+// RemoveAuditLogs removes "audit_logs" edges to Audit entities.
+func (ouo *OrganizationUpdateOne) RemoveAuditLogs(a ...*Audit) *OrganizationUpdateOne {
+	ids := make([]xid.ID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return ouo.RemoveAuditLogIDs(ids...)
+}
+
 // Where appends a list predicates to the OrganizationUpdate builder.
 func (ouo *OrganizationUpdateOne) Where(ps ...predicate.Organization) *OrganizationUpdateOne {
 	ouo.mutation.Where(ps...)
@@ -2477,11 +2972,39 @@ func (ouo *OrganizationUpdateOne) sqlSave(ctx context.Context) (_node *Organizat
 	if value, ok := ouo.mutation.UpdatedAt(); ok {
 		_spec.SetField(organization.FieldUpdatedAt, field.TypeTime, value)
 	}
+	if value, ok := ouo.mutation.DeletedAt(); ok {
+		_spec.SetField(organization.FieldDeletedAt, field.TypeTime, value)
+	}
+	if ouo.mutation.DeletedAtCleared() {
+		_spec.ClearField(organization.FieldDeletedAt, field.TypeTime)
+	}
 	if value, ok := ouo.mutation.Name(); ok {
 		_spec.SetField(organization.FieldName, field.TypeString, value)
 	}
 	if value, ok := ouo.mutation.Slug(); ok {
 		_spec.SetField(organization.FieldSlug, field.TypeString, value)
+	}
+	if value, ok := ouo.mutation.Domains(); ok {
+		_spec.SetField(organization.FieldDomains, field.TypeJSON, value)
+	}
+	if value, ok := ouo.mutation.AppendedDomains(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, organization.FieldDomains, value)
+		})
+	}
+	if ouo.mutation.DomainsCleared() {
+		_spec.ClearField(organization.FieldDomains, field.TypeJSON)
+	}
+	if value, ok := ouo.mutation.VerifiedDomains(); ok {
+		_spec.SetField(organization.FieldVerifiedDomains, field.TypeJSON, value)
+	}
+	if value, ok := ouo.mutation.AppendedVerifiedDomains(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, organization.FieldVerifiedDomains, value)
+		})
+	}
+	if ouo.mutation.VerifiedDomainsCleared() {
+		_spec.ClearField(organization.FieldVerifiedDomains, field.TypeJSON)
 	}
 	if value, ok := ouo.mutation.Domain(); ok {
 		_spec.SetField(organization.FieldDomain, field.TypeString, value)
@@ -2686,6 +3209,96 @@ func (ouo *OrganizationUpdateOne) sqlSave(ctx context.Context) (_node *Organizat
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(membership.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if ouo.mutation.SmsTemplatesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   organization.SmsTemplatesTable,
+			Columns: []string{organization.SmsTemplatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(smstemplate.FieldID, field.TypeString),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ouo.mutation.RemovedSmsTemplatesIDs(); len(nodes) > 0 && !ouo.mutation.SmsTemplatesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   organization.SmsTemplatesTable,
+			Columns: []string{organization.SmsTemplatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(smstemplate.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ouo.mutation.SmsTemplatesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   organization.SmsTemplatesTable,
+			Columns: []string{organization.SmsTemplatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(smstemplate.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if ouo.mutation.EmailTemplatesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   organization.EmailTemplatesTable,
+			Columns: []string{organization.EmailTemplatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(emailtemplate.FieldID, field.TypeString),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ouo.mutation.RemovedEmailTemplatesIDs(); len(nodes) > 0 && !ouo.mutation.EmailTemplatesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   organization.EmailTemplatesTable,
+			Columns: []string{organization.EmailTemplatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(emailtemplate.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ouo.mutation.EmailTemplatesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   organization.EmailTemplatesTable,
+			Columns: []string{organization.EmailTemplatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(emailtemplate.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -3046,6 +3659,51 @@ func (ouo *OrganizationUpdateOne) sqlSave(ctx context.Context) (_node *Organizat
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(userpermission.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if ouo.mutation.AuditLogsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   organization.AuditLogsTable,
+			Columns: []string{organization.AuditLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(audit.FieldID, field.TypeString),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ouo.mutation.RemovedAuditLogsIDs(); len(nodes) > 0 && !ouo.mutation.AuditLogsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   organization.AuditLogsTable,
+			Columns: []string{organization.AuditLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(audit.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ouo.mutation.AuditLogsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   organization.AuditLogsTable,
+			Columns: []string{organization.AuditLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(audit.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {

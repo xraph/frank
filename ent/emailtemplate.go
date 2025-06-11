@@ -14,6 +14,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/juicycleff/frank/ent/emailtemplate"
+	"github.com/juicycleff/frank/ent/organization"
 	"github.com/rs/xid"
 )
 
@@ -27,6 +28,8 @@ type EmailTemplate struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// DeletedAt holds the value of the "deleted_at" field.
+	DeletedAt time.Time `json:"deleted_at,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
 	// Subject holds the value of the "subject" field.
@@ -46,8 +49,31 @@ type EmailTemplate struct {
 	// Locale holds the value of the "locale" field.
 	Locale string `json:"locale,omitempty"`
 	// Additional membership metadata
-	Metadata     map[string]interface{} `json:"metadata,omitempty"`
+	Metadata map[string]interface{} `json:"metadata,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the EmailTemplateQuery when eager-loading is set.
+	Edges        EmailTemplateEdges `json:"edges"`
 	selectValues sql.SelectValues
+}
+
+// EmailTemplateEdges holds the relations/edges for other nodes in the graph.
+type EmailTemplateEdges struct {
+	// Organization holds the value of the organization edge.
+	Organization *Organization `json:"organization,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [1]bool
+}
+
+// OrganizationOrErr returns the Organization value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e EmailTemplateEdges) OrganizationOrErr() (*Organization, error) {
+	if e.Organization != nil {
+		return e.Organization, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: organization.Label}
+	}
+	return nil, &NotLoadedError{edge: "organization"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -61,7 +87,7 @@ func (*EmailTemplate) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case emailtemplate.FieldName, emailtemplate.FieldSubject, emailtemplate.FieldType, emailtemplate.FieldHTMLContent, emailtemplate.FieldTextContent, emailtemplate.FieldLocale:
 			values[i] = new(sql.NullString)
-		case emailtemplate.FieldCreatedAt, emailtemplate.FieldUpdatedAt:
+		case emailtemplate.FieldCreatedAt, emailtemplate.FieldUpdatedAt, emailtemplate.FieldDeletedAt:
 			values[i] = new(sql.NullTime)
 		case emailtemplate.FieldID, emailtemplate.FieldOrganizationID:
 			values[i] = new(xid.ID)
@@ -97,6 +123,12 @@ func (et *EmailTemplate) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
 				et.UpdatedAt = value.Time
+			}
+		case emailtemplate.FieldDeletedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field deleted_at", values[i])
+			} else if value.Valid {
+				et.DeletedAt = value.Time
 			}
 		case emailtemplate.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -173,6 +205,11 @@ func (et *EmailTemplate) Value(name string) (ent.Value, error) {
 	return et.selectValues.Get(name)
 }
 
+// QueryOrganization queries the "organization" edge of the EmailTemplate entity.
+func (et *EmailTemplate) QueryOrganization() *OrganizationQuery {
+	return NewEmailTemplateClient(et.config).QueryOrganization(et)
+}
+
 // Update returns a builder for updating this EmailTemplate.
 // Note that you need to call EmailTemplate.Unwrap() before calling this method if this EmailTemplate
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -201,6 +238,9 @@ func (et *EmailTemplate) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
 	builder.WriteString(et.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("deleted_at=")
+	builder.WriteString(et.DeletedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(et.Name)

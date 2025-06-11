@@ -42,6 +42,26 @@ func (aku *ApiKeyUpdate) SetUpdatedAt(t time.Time) *ApiKeyUpdate {
 	return aku
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (aku *ApiKeyUpdate) SetDeletedAt(t time.Time) *ApiKeyUpdate {
+	aku.mutation.SetDeletedAt(t)
+	return aku
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (aku *ApiKeyUpdate) SetNillableDeletedAt(t *time.Time) *ApiKeyUpdate {
+	if t != nil {
+		aku.SetDeletedAt(*t)
+	}
+	return aku
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (aku *ApiKeyUpdate) ClearDeletedAt() *ApiKeyUpdate {
+	aku.mutation.ClearDeletedAt()
+	return aku
+}
+
 // SetName sets the "name" field.
 func (aku *ApiKeyUpdate) SetName(s string) *ApiKeyUpdate {
 	aku.mutation.SetName(s)
@@ -339,6 +359,12 @@ func (aku *ApiKeyUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := aku.mutation.UpdatedAt(); ok {
 		_spec.SetField(apikey.FieldUpdatedAt, field.TypeTime, value)
 	}
+	if value, ok := aku.mutation.DeletedAt(); ok {
+		_spec.SetField(apikey.FieldDeletedAt, field.TypeTime, value)
+	}
+	if aku.mutation.DeletedAtCleared() {
+		_spec.ClearField(apikey.FieldDeletedAt, field.TypeTime)
+	}
 	if value, ok := aku.mutation.Name(); ok {
 		_spec.SetField(apikey.FieldName, field.TypeString, value)
 	}
@@ -477,6 +503,26 @@ type ApiKeyUpdateOne struct {
 // SetUpdatedAt sets the "updated_at" field.
 func (akuo *ApiKeyUpdateOne) SetUpdatedAt(t time.Time) *ApiKeyUpdateOne {
 	akuo.mutation.SetUpdatedAt(t)
+	return akuo
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (akuo *ApiKeyUpdateOne) SetDeletedAt(t time.Time) *ApiKeyUpdateOne {
+	akuo.mutation.SetDeletedAt(t)
+	return akuo
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (akuo *ApiKeyUpdateOne) SetNillableDeletedAt(t *time.Time) *ApiKeyUpdateOne {
+	if t != nil {
+		akuo.SetDeletedAt(*t)
+	}
+	return akuo
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (akuo *ApiKeyUpdateOne) ClearDeletedAt() *ApiKeyUpdateOne {
+	akuo.mutation.ClearDeletedAt()
 	return akuo
 }
 
@@ -806,6 +852,12 @@ func (akuo *ApiKeyUpdateOne) sqlSave(ctx context.Context) (_node *ApiKey, err er
 	}
 	if value, ok := akuo.mutation.UpdatedAt(); ok {
 		_spec.SetField(apikey.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if value, ok := akuo.mutation.DeletedAt(); ok {
+		_spec.SetField(apikey.FieldDeletedAt, field.TypeTime, value)
+	}
+	if akuo.mutation.DeletedAtCleared() {
+		_spec.ClearField(apikey.FieldDeletedAt, field.TypeTime)
 	}
 	if value, ok := akuo.mutation.Name(); ok {
 		_spec.SetField(apikey.FieldName, field.TypeString, value)

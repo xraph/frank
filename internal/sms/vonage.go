@@ -15,7 +15,7 @@ import (
 
 // vonageProvider implements the Vonage (formerly Nexmo) SMS provider
 type vonageProvider struct {
-	config    *config.Config
+	config    *config.SMSConfig
 	logger    logging.Logger
 	client    *http.Client
 	apiKey    string
@@ -23,13 +23,13 @@ type vonageProvider struct {
 }
 
 // NewVonageProvider creates a new Vonage SMS provider
-func NewVonageProvider(cfg *config.Config, logger logging.Logger) Provider {
+func NewVonageProvider(cfg *config.SMSConfig, logger logging.Logger) Provider {
 	return &vonageProvider{
 		config:    cfg,
 		logger:    logger,
 		client:    &http.Client{},
-		apiKey:    cfg.SMS.Vonage.APIKey,
-		apiSecret: cfg.SMS.Vonage.APISecret,
+		apiKey:    cfg.Vonage.APIKey,
+		apiSecret: cfg.Vonage.APISecret,
 	}
 }
 
@@ -43,7 +43,7 @@ func (p *vonageProvider) Send(ctx context.Context, input SMS) error {
 	// Set sender (From) if not provided
 	from := input.From
 	if from == "" {
-		from = p.config.SMS.FromNumber
+		from = p.config.FromNumber
 	}
 
 	// Prepare request data
@@ -71,7 +71,7 @@ func (p *vonageProvider) Send(ctx context.Context, input SMS) error {
 	// Create request
 	req, err := http.NewRequestWithContext(ctx, "POST", "https://rest.nexmo.com/sms/json", strings.NewReader(data.Encode()))
 	if err != nil {
-		return errors.Wrap(errors.CodeSMSDeliveryFail, err, "failed to create Vonage request")
+		return errors.Wrap(err, errors.CodeSMSDeliveryFail, "failed to create Vonage request")
 	}
 
 	// Set headers
@@ -80,7 +80,7 @@ func (p *vonageProvider) Send(ctx context.Context, input SMS) error {
 	// Execute request
 	resp, err := p.client.Do(req)
 	if err != nil {
-		return errors.Wrap(errors.CodeSMSDeliveryFail, err, "failed to send Vonage request")
+		return errors.Wrap(err, errors.CodeSMSDeliveryFail, "failed to send Vonage request")
 	}
 	defer resp.Body.Close()
 
@@ -93,7 +93,7 @@ func (p *vonageProvider) Send(ctx context.Context, input SMS) error {
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return errors.Wrap(errors.CodeSMSDeliveryFail, err, "failed to parse Vonage response")
+		return errors.Wrap(err, errors.CodeSMSDeliveryFail, "failed to parse Vonage response")
 	}
 
 	// Check for errors in response

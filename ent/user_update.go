@@ -15,6 +15,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/juicycleff/frank/ent/apikey"
+	"github.com/juicycleff/frank/ent/audit"
 	"github.com/juicycleff/frank/ent/membership"
 	"github.com/juicycleff/frank/ent/mfa"
 	"github.com/juicycleff/frank/ent/oauthauthorization"
@@ -582,6 +583,21 @@ func (uu *UserUpdate) AddMemberships(m ...*Membership) *UserUpdate {
 	return uu.AddMembershipIDs(ids...)
 }
 
+// AddSentInvitationIDs adds the "sent_invitations" edge to the Membership entity by IDs.
+func (uu *UserUpdate) AddSentInvitationIDs(ids ...xid.ID) *UserUpdate {
+	uu.mutation.AddSentInvitationIDs(ids...)
+	return uu
+}
+
+// AddSentInvitations adds the "sent_invitations" edges to the Membership entity.
+func (uu *UserUpdate) AddSentInvitations(m ...*Membership) *UserUpdate {
+	ids := make([]xid.ID, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return uu.AddSentInvitationIDs(ids...)
+}
+
 // AddSessionIDs adds the "sessions" edge to the Session entity by IDs.
 func (uu *UserUpdate) AddSessionIDs(ids ...xid.ID) *UserUpdate {
 	uu.mutation.AddSessionIDs(ids...)
@@ -762,6 +778,21 @@ func (uu *UserUpdate) AddAssignedUserPermissions(u ...*UserPermission) *UserUpda
 	return uu.AddAssignedUserPermissionIDs(ids...)
 }
 
+// AddAuditLogIDs adds the "audit_logs" edge to the Audit entity by IDs.
+func (uu *UserUpdate) AddAuditLogIDs(ids ...xid.ID) *UserUpdate {
+	uu.mutation.AddAuditLogIDs(ids...)
+	return uu
+}
+
+// AddAuditLogs adds the "audit_logs" edges to the Audit entity.
+func (uu *UserUpdate) AddAuditLogs(a ...*Audit) *UserUpdate {
+	ids := make([]xid.ID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return uu.AddAuditLogIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uu *UserUpdate) Mutation() *UserMutation {
 	return uu.mutation
@@ -792,6 +823,27 @@ func (uu *UserUpdate) RemoveMemberships(m ...*Membership) *UserUpdate {
 		ids[i] = m[i].ID
 	}
 	return uu.RemoveMembershipIDs(ids...)
+}
+
+// ClearSentInvitations clears all "sent_invitations" edges to the Membership entity.
+func (uu *UserUpdate) ClearSentInvitations() *UserUpdate {
+	uu.mutation.ClearSentInvitations()
+	return uu
+}
+
+// RemoveSentInvitationIDs removes the "sent_invitations" edge to Membership entities by IDs.
+func (uu *UserUpdate) RemoveSentInvitationIDs(ids ...xid.ID) *UserUpdate {
+	uu.mutation.RemoveSentInvitationIDs(ids...)
+	return uu
+}
+
+// RemoveSentInvitations removes "sent_invitations" edges to Membership entities.
+func (uu *UserUpdate) RemoveSentInvitations(m ...*Membership) *UserUpdate {
+	ids := make([]xid.ID, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return uu.RemoveSentInvitationIDs(ids...)
 }
 
 // ClearSessions clears all "sessions" edges to the Session entity.
@@ -1044,6 +1096,27 @@ func (uu *UserUpdate) RemoveAssignedUserPermissions(u ...*UserPermission) *UserU
 		ids[i] = u[i].ID
 	}
 	return uu.RemoveAssignedUserPermissionIDs(ids...)
+}
+
+// ClearAuditLogs clears all "audit_logs" edges to the Audit entity.
+func (uu *UserUpdate) ClearAuditLogs() *UserUpdate {
+	uu.mutation.ClearAuditLogs()
+	return uu
+}
+
+// RemoveAuditLogIDs removes the "audit_logs" edge to Audit entities by IDs.
+func (uu *UserUpdate) RemoveAuditLogIDs(ids ...xid.ID) *UserUpdate {
+	uu.mutation.RemoveAuditLogIDs(ids...)
+	return uu
+}
+
+// RemoveAuditLogs removes "audit_logs" edges to Audit entities.
+func (uu *UserUpdate) RemoveAuditLogs(a ...*Audit) *UserUpdate {
+	ids := make([]xid.ID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return uu.RemoveAuditLogIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -1323,6 +1396,51 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Inverse: false,
 			Table:   user.MembershipsTable,
 			Columns: []string{user.MembershipsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(membership.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uu.mutation.SentInvitationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.SentInvitationsTable,
+			Columns: []string{user.SentInvitationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(membership.FieldID, field.TypeString),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.RemovedSentInvitationsIDs(); len(nodes) > 0 && !uu.mutation.SentInvitationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.SentInvitationsTable,
+			Columns: []string{user.SentInvitationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(membership.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.SentInvitationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.SentInvitationsTable,
+			Columns: []string{user.SentInvitationsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(membership.FieldID, field.TypeString),
@@ -1866,6 +1984,51 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(userpermission.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uu.mutation.AuditLogsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AuditLogsTable,
+			Columns: []string{user.AuditLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(audit.FieldID, field.TypeString),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.RemovedAuditLogsIDs(); len(nodes) > 0 && !uu.mutation.AuditLogsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AuditLogsTable,
+			Columns: []string{user.AuditLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(audit.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.AuditLogsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AuditLogsTable,
+			Columns: []string{user.AuditLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(audit.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -2432,6 +2595,21 @@ func (uuo *UserUpdateOne) AddMemberships(m ...*Membership) *UserUpdateOne {
 	return uuo.AddMembershipIDs(ids...)
 }
 
+// AddSentInvitationIDs adds the "sent_invitations" edge to the Membership entity by IDs.
+func (uuo *UserUpdateOne) AddSentInvitationIDs(ids ...xid.ID) *UserUpdateOne {
+	uuo.mutation.AddSentInvitationIDs(ids...)
+	return uuo
+}
+
+// AddSentInvitations adds the "sent_invitations" edges to the Membership entity.
+func (uuo *UserUpdateOne) AddSentInvitations(m ...*Membership) *UserUpdateOne {
+	ids := make([]xid.ID, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return uuo.AddSentInvitationIDs(ids...)
+}
+
 // AddSessionIDs adds the "sessions" edge to the Session entity by IDs.
 func (uuo *UserUpdateOne) AddSessionIDs(ids ...xid.ID) *UserUpdateOne {
 	uuo.mutation.AddSessionIDs(ids...)
@@ -2612,6 +2790,21 @@ func (uuo *UserUpdateOne) AddAssignedUserPermissions(u ...*UserPermission) *User
 	return uuo.AddAssignedUserPermissionIDs(ids...)
 }
 
+// AddAuditLogIDs adds the "audit_logs" edge to the Audit entity by IDs.
+func (uuo *UserUpdateOne) AddAuditLogIDs(ids ...xid.ID) *UserUpdateOne {
+	uuo.mutation.AddAuditLogIDs(ids...)
+	return uuo
+}
+
+// AddAuditLogs adds the "audit_logs" edges to the Audit entity.
+func (uuo *UserUpdateOne) AddAuditLogs(a ...*Audit) *UserUpdateOne {
+	ids := make([]xid.ID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return uuo.AddAuditLogIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uuo *UserUpdateOne) Mutation() *UserMutation {
 	return uuo.mutation
@@ -2642,6 +2835,27 @@ func (uuo *UserUpdateOne) RemoveMemberships(m ...*Membership) *UserUpdateOne {
 		ids[i] = m[i].ID
 	}
 	return uuo.RemoveMembershipIDs(ids...)
+}
+
+// ClearSentInvitations clears all "sent_invitations" edges to the Membership entity.
+func (uuo *UserUpdateOne) ClearSentInvitations() *UserUpdateOne {
+	uuo.mutation.ClearSentInvitations()
+	return uuo
+}
+
+// RemoveSentInvitationIDs removes the "sent_invitations" edge to Membership entities by IDs.
+func (uuo *UserUpdateOne) RemoveSentInvitationIDs(ids ...xid.ID) *UserUpdateOne {
+	uuo.mutation.RemoveSentInvitationIDs(ids...)
+	return uuo
+}
+
+// RemoveSentInvitations removes "sent_invitations" edges to Membership entities.
+func (uuo *UserUpdateOne) RemoveSentInvitations(m ...*Membership) *UserUpdateOne {
+	ids := make([]xid.ID, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return uuo.RemoveSentInvitationIDs(ids...)
 }
 
 // ClearSessions clears all "sessions" edges to the Session entity.
@@ -2894,6 +3108,27 @@ func (uuo *UserUpdateOne) RemoveAssignedUserPermissions(u ...*UserPermission) *U
 		ids[i] = u[i].ID
 	}
 	return uuo.RemoveAssignedUserPermissionIDs(ids...)
+}
+
+// ClearAuditLogs clears all "audit_logs" edges to the Audit entity.
+func (uuo *UserUpdateOne) ClearAuditLogs() *UserUpdateOne {
+	uuo.mutation.ClearAuditLogs()
+	return uuo
+}
+
+// RemoveAuditLogIDs removes the "audit_logs" edge to Audit entities by IDs.
+func (uuo *UserUpdateOne) RemoveAuditLogIDs(ids ...xid.ID) *UserUpdateOne {
+	uuo.mutation.RemoveAuditLogIDs(ids...)
+	return uuo
+}
+
+// RemoveAuditLogs removes "audit_logs" edges to Audit entities.
+func (uuo *UserUpdateOne) RemoveAuditLogs(a ...*Audit) *UserUpdateOne {
+	ids := make([]xid.ID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return uuo.RemoveAuditLogIDs(ids...)
 }
 
 // Where appends a list predicates to the UserUpdate builder.
@@ -3203,6 +3438,51 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Inverse: false,
 			Table:   user.MembershipsTable,
 			Columns: []string{user.MembershipsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(membership.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uuo.mutation.SentInvitationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.SentInvitationsTable,
+			Columns: []string{user.SentInvitationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(membership.FieldID, field.TypeString),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.RemovedSentInvitationsIDs(); len(nodes) > 0 && !uuo.mutation.SentInvitationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.SentInvitationsTable,
+			Columns: []string{user.SentInvitationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(membership.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.SentInvitationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.SentInvitationsTable,
+			Columns: []string{user.SentInvitationsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(membership.FieldID, field.TypeString),
@@ -3746,6 +4026,51 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(userpermission.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uuo.mutation.AuditLogsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AuditLogsTable,
+			Columns: []string{user.AuditLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(audit.FieldID, field.TypeString),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.RemovedAuditLogsIDs(); len(nodes) > 0 && !uuo.mutation.AuditLogsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AuditLogsTable,
+			Columns: []string{user.AuditLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(audit.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.AuditLogsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AuditLogsTable,
+			Columns: []string{user.AuditLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(audit.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {

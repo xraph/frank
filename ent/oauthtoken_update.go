@@ -43,6 +43,26 @@ func (otu *OAuthTokenUpdate) SetUpdatedAt(t time.Time) *OAuthTokenUpdate {
 	return otu
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (otu *OAuthTokenUpdate) SetDeletedAt(t time.Time) *OAuthTokenUpdate {
+	otu.mutation.SetDeletedAt(t)
+	return otu
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (otu *OAuthTokenUpdate) SetNillableDeletedAt(t *time.Time) *OAuthTokenUpdate {
+	if t != nil {
+		otu.SetDeletedAt(*t)
+	}
+	return otu
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (otu *OAuthTokenUpdate) ClearDeletedAt() *OAuthTokenUpdate {
+	otu.mutation.ClearDeletedAt()
+	return otu
+}
+
 // SetAccessToken sets the "access_token" field.
 func (otu *OAuthTokenUpdate) SetAccessToken(s string) *OAuthTokenUpdate {
 	otu.mutation.SetAccessToken(s)
@@ -432,6 +452,12 @@ func (otu *OAuthTokenUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := otu.mutation.UpdatedAt(); ok {
 		_spec.SetField(oauthtoken.FieldUpdatedAt, field.TypeTime, value)
 	}
+	if value, ok := otu.mutation.DeletedAt(); ok {
+		_spec.SetField(oauthtoken.FieldDeletedAt, field.TypeTime, value)
+	}
+	if otu.mutation.DeletedAtCleared() {
+		_spec.ClearField(oauthtoken.FieldDeletedAt, field.TypeTime)
+	}
 	if value, ok := otu.mutation.AccessToken(); ok {
 		_spec.SetField(oauthtoken.FieldAccessToken, field.TypeString, value)
 	}
@@ -625,6 +651,26 @@ type OAuthTokenUpdateOne struct {
 // SetUpdatedAt sets the "updated_at" field.
 func (otuo *OAuthTokenUpdateOne) SetUpdatedAt(t time.Time) *OAuthTokenUpdateOne {
 	otuo.mutation.SetUpdatedAt(t)
+	return otuo
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (otuo *OAuthTokenUpdateOne) SetDeletedAt(t time.Time) *OAuthTokenUpdateOne {
+	otuo.mutation.SetDeletedAt(t)
+	return otuo
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (otuo *OAuthTokenUpdateOne) SetNillableDeletedAt(t *time.Time) *OAuthTokenUpdateOne {
+	if t != nil {
+		otuo.SetDeletedAt(*t)
+	}
+	return otuo
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (otuo *OAuthTokenUpdateOne) ClearDeletedAt() *OAuthTokenUpdateOne {
+	otuo.mutation.ClearDeletedAt()
 	return otuo
 }
 
@@ -1046,6 +1092,12 @@ func (otuo *OAuthTokenUpdateOne) sqlSave(ctx context.Context) (_node *OAuthToken
 	}
 	if value, ok := otuo.mutation.UpdatedAt(); ok {
 		_spec.SetField(oauthtoken.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if value, ok := otuo.mutation.DeletedAt(); ok {
+		_spec.SetField(oauthtoken.FieldDeletedAt, field.TypeTime, value)
+	}
+	if otuo.mutation.DeletedAtCleared() {
+		_spec.ClearField(oauthtoken.FieldDeletedAt, field.TypeTime)
 	}
 	if value, ok := otuo.mutation.AccessToken(); ok {
 		_spec.SetField(oauthtoken.FieldAccessToken, field.TypeString, value)

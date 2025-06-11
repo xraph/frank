@@ -56,6 +56,20 @@ func (ipc *IdentityProviderCreate) SetNillableUpdatedAt(t *time.Time) *IdentityP
 	return ipc
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (ipc *IdentityProviderCreate) SetDeletedAt(t time.Time) *IdentityProviderCreate {
+	ipc.mutation.SetDeletedAt(t)
+	return ipc
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (ipc *IdentityProviderCreate) SetNillableDeletedAt(t *time.Time) *IdentityProviderCreate {
+	if t != nil {
+		ipc.SetDeletedAt(*t)
+	}
+	return ipc
+}
+
 // SetName sets the "name" field.
 func (ipc *IdentityProviderCreate) SetName(s string) *IdentityProviderCreate {
 	ipc.mutation.SetName(s)
@@ -242,6 +256,20 @@ func (ipc *IdentityProviderCreate) SetNillableActive(b *bool) *IdentityProviderC
 	return ipc
 }
 
+// SetEnabled sets the "enabled" field.
+func (ipc *IdentityProviderCreate) SetEnabled(b bool) *IdentityProviderCreate {
+	ipc.mutation.SetEnabled(b)
+	return ipc
+}
+
+// SetNillableEnabled sets the "enabled" field if the given value is not nil.
+func (ipc *IdentityProviderCreate) SetNillableEnabled(b *bool) *IdentityProviderCreate {
+	if b != nil {
+		ipc.SetEnabled(*b)
+	}
+	return ipc
+}
+
 // SetPrimary sets the "primary" field.
 func (ipc *IdentityProviderCreate) SetPrimary(b bool) *IdentityProviderCreate {
 	ipc.mutation.SetPrimary(b)
@@ -252,6 +280,90 @@ func (ipc *IdentityProviderCreate) SetPrimary(b bool) *IdentityProviderCreate {
 func (ipc *IdentityProviderCreate) SetNillablePrimary(b *bool) *IdentityProviderCreate {
 	if b != nil {
 		ipc.SetPrimary(*b)
+	}
+	return ipc
+}
+
+// SetAutoProvision sets the "auto_provision" field.
+func (ipc *IdentityProviderCreate) SetAutoProvision(b bool) *IdentityProviderCreate {
+	ipc.mutation.SetAutoProvision(b)
+	return ipc
+}
+
+// SetNillableAutoProvision sets the "auto_provision" field if the given value is not nil.
+func (ipc *IdentityProviderCreate) SetNillableAutoProvision(b *bool) *IdentityProviderCreate {
+	if b != nil {
+		ipc.SetAutoProvision(*b)
+	}
+	return ipc
+}
+
+// SetDefaultRole sets the "default_role" field.
+func (ipc *IdentityProviderCreate) SetDefaultRole(s string) *IdentityProviderCreate {
+	ipc.mutation.SetDefaultRole(s)
+	return ipc
+}
+
+// SetNillableDefaultRole sets the "default_role" field if the given value is not nil.
+func (ipc *IdentityProviderCreate) SetNillableDefaultRole(s *string) *IdentityProviderCreate {
+	if s != nil {
+		ipc.SetDefaultRole(*s)
+	}
+	return ipc
+}
+
+// SetDomain sets the "domain" field.
+func (ipc *IdentityProviderCreate) SetDomain(s string) *IdentityProviderCreate {
+	ipc.mutation.SetDomain(s)
+	return ipc
+}
+
+// SetNillableDomain sets the "domain" field if the given value is not nil.
+func (ipc *IdentityProviderCreate) SetNillableDomain(s *string) *IdentityProviderCreate {
+	if s != nil {
+		ipc.SetDomain(*s)
+	}
+	return ipc
+}
+
+// SetIconURL sets the "icon_url" field.
+func (ipc *IdentityProviderCreate) SetIconURL(s string) *IdentityProviderCreate {
+	ipc.mutation.SetIconURL(s)
+	return ipc
+}
+
+// SetNillableIconURL sets the "icon_url" field if the given value is not nil.
+func (ipc *IdentityProviderCreate) SetNillableIconURL(s *string) *IdentityProviderCreate {
+	if s != nil {
+		ipc.SetIconURL(*s)
+	}
+	return ipc
+}
+
+// SetButtonText sets the "button_text" field.
+func (ipc *IdentityProviderCreate) SetButtonText(s string) *IdentityProviderCreate {
+	ipc.mutation.SetButtonText(s)
+	return ipc
+}
+
+// SetNillableButtonText sets the "button_text" field if the given value is not nil.
+func (ipc *IdentityProviderCreate) SetNillableButtonText(s *string) *IdentityProviderCreate {
+	if s != nil {
+		ipc.SetButtonText(*s)
+	}
+	return ipc
+}
+
+// SetProtocol sets the "protocol" field.
+func (ipc *IdentityProviderCreate) SetProtocol(s string) *IdentityProviderCreate {
+	ipc.mutation.SetProtocol(s)
+	return ipc
+}
+
+// SetNillableProtocol sets the "protocol" field if the given value is not nil.
+func (ipc *IdentityProviderCreate) SetNillableProtocol(s *string) *IdentityProviderCreate {
+	if s != nil {
+		ipc.SetProtocol(*s)
 	}
 	return ipc
 }
@@ -340,9 +452,17 @@ func (ipc *IdentityProviderCreate) defaults() {
 		v := identityprovider.DefaultActive
 		ipc.mutation.SetActive(v)
 	}
+	if _, ok := ipc.mutation.Enabled(); !ok {
+		v := identityprovider.DefaultEnabled
+		ipc.mutation.SetEnabled(v)
+	}
 	if _, ok := ipc.mutation.Primary(); !ok {
 		v := identityprovider.DefaultPrimary
 		ipc.mutation.SetPrimary(v)
+	}
+	if _, ok := ipc.mutation.AutoProvision(); !ok {
+		v := identityprovider.DefaultAutoProvision
+		ipc.mutation.SetAutoProvision(v)
 	}
 	if _, ok := ipc.mutation.ID(); !ok {
 		v := identityprovider.DefaultID()
@@ -385,8 +505,14 @@ func (ipc *IdentityProviderCreate) check() error {
 	if _, ok := ipc.mutation.Active(); !ok {
 		return &ValidationError{Name: "active", err: errors.New(`ent: missing required field "IdentityProvider.active"`)}
 	}
+	if _, ok := ipc.mutation.Enabled(); !ok {
+		return &ValidationError{Name: "enabled", err: errors.New(`ent: missing required field "IdentityProvider.enabled"`)}
+	}
 	if _, ok := ipc.mutation.Primary(); !ok {
 		return &ValidationError{Name: "primary", err: errors.New(`ent: missing required field "IdentityProvider.primary"`)}
+	}
+	if _, ok := ipc.mutation.AutoProvision(); !ok {
+		return &ValidationError{Name: "auto_provision", err: errors.New(`ent: missing required field "IdentityProvider.auto_provision"`)}
 	}
 	if len(ipc.mutation.OrganizationIDs()) == 0 {
 		return &ValidationError{Name: "organization", err: errors.New(`ent: missing required edge "IdentityProvider.organization"`)}
@@ -434,6 +560,10 @@ func (ipc *IdentityProviderCreate) createSpec() (*IdentityProvider, *sqlgraph.Cr
 	if value, ok := ipc.mutation.UpdatedAt(); ok {
 		_spec.SetField(identityprovider.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
+	}
+	if value, ok := ipc.mutation.DeletedAt(); ok {
+		_spec.SetField(identityprovider.FieldDeletedAt, field.TypeTime, value)
+		_node.DeletedAt = value
 	}
 	if value, ok := ipc.mutation.Name(); ok {
 		_spec.SetField(identityprovider.FieldName, field.TypeString, value)
@@ -491,9 +621,37 @@ func (ipc *IdentityProviderCreate) createSpec() (*IdentityProvider, *sqlgraph.Cr
 		_spec.SetField(identityprovider.FieldActive, field.TypeBool, value)
 		_node.Active = value
 	}
+	if value, ok := ipc.mutation.Enabled(); ok {
+		_spec.SetField(identityprovider.FieldEnabled, field.TypeBool, value)
+		_node.Enabled = value
+	}
 	if value, ok := ipc.mutation.Primary(); ok {
 		_spec.SetField(identityprovider.FieldPrimary, field.TypeBool, value)
 		_node.Primary = value
+	}
+	if value, ok := ipc.mutation.AutoProvision(); ok {
+		_spec.SetField(identityprovider.FieldAutoProvision, field.TypeBool, value)
+		_node.AutoProvision = value
+	}
+	if value, ok := ipc.mutation.DefaultRole(); ok {
+		_spec.SetField(identityprovider.FieldDefaultRole, field.TypeString, value)
+		_node.DefaultRole = value
+	}
+	if value, ok := ipc.mutation.Domain(); ok {
+		_spec.SetField(identityprovider.FieldDomain, field.TypeString, value)
+		_node.Domain = value
+	}
+	if value, ok := ipc.mutation.IconURL(); ok {
+		_spec.SetField(identityprovider.FieldIconURL, field.TypeString, value)
+		_node.IconURL = value
+	}
+	if value, ok := ipc.mutation.ButtonText(); ok {
+		_spec.SetField(identityprovider.FieldButtonText, field.TypeString, value)
+		_node.ButtonText = value
+	}
+	if value, ok := ipc.mutation.Protocol(); ok {
+		_spec.SetField(identityprovider.FieldProtocol, field.TypeString, value)
+		_node.Protocol = value
 	}
 	if value, ok := ipc.mutation.Domains(); ok {
 		_spec.SetField(identityprovider.FieldDomains, field.TypeJSON, value)
@@ -585,6 +743,24 @@ func (u *IdentityProviderUpsert) SetUpdatedAt(v time.Time) *IdentityProviderUpse
 // UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
 func (u *IdentityProviderUpsert) UpdateUpdatedAt() *IdentityProviderUpsert {
 	u.SetExcluded(identityprovider.FieldUpdatedAt)
+	return u
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *IdentityProviderUpsert) SetDeletedAt(v time.Time) *IdentityProviderUpsert {
+	u.Set(identityprovider.FieldDeletedAt, v)
+	return u
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *IdentityProviderUpsert) UpdateDeletedAt() *IdentityProviderUpsert {
+	u.SetExcluded(identityprovider.FieldDeletedAt)
+	return u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *IdentityProviderUpsert) ClearDeletedAt() *IdentityProviderUpsert {
+	u.SetNull(identityprovider.FieldDeletedAt)
 	return u
 }
 
@@ -834,6 +1010,18 @@ func (u *IdentityProviderUpsert) UpdateActive() *IdentityProviderUpsert {
 	return u
 }
 
+// SetEnabled sets the "enabled" field.
+func (u *IdentityProviderUpsert) SetEnabled(v bool) *IdentityProviderUpsert {
+	u.Set(identityprovider.FieldEnabled, v)
+	return u
+}
+
+// UpdateEnabled sets the "enabled" field to the value that was provided on create.
+func (u *IdentityProviderUpsert) UpdateEnabled() *IdentityProviderUpsert {
+	u.SetExcluded(identityprovider.FieldEnabled)
+	return u
+}
+
 // SetPrimary sets the "primary" field.
 func (u *IdentityProviderUpsert) SetPrimary(v bool) *IdentityProviderUpsert {
 	u.Set(identityprovider.FieldPrimary, v)
@@ -843,6 +1031,108 @@ func (u *IdentityProviderUpsert) SetPrimary(v bool) *IdentityProviderUpsert {
 // UpdatePrimary sets the "primary" field to the value that was provided on create.
 func (u *IdentityProviderUpsert) UpdatePrimary() *IdentityProviderUpsert {
 	u.SetExcluded(identityprovider.FieldPrimary)
+	return u
+}
+
+// SetAutoProvision sets the "auto_provision" field.
+func (u *IdentityProviderUpsert) SetAutoProvision(v bool) *IdentityProviderUpsert {
+	u.Set(identityprovider.FieldAutoProvision, v)
+	return u
+}
+
+// UpdateAutoProvision sets the "auto_provision" field to the value that was provided on create.
+func (u *IdentityProviderUpsert) UpdateAutoProvision() *IdentityProviderUpsert {
+	u.SetExcluded(identityprovider.FieldAutoProvision)
+	return u
+}
+
+// SetDefaultRole sets the "default_role" field.
+func (u *IdentityProviderUpsert) SetDefaultRole(v string) *IdentityProviderUpsert {
+	u.Set(identityprovider.FieldDefaultRole, v)
+	return u
+}
+
+// UpdateDefaultRole sets the "default_role" field to the value that was provided on create.
+func (u *IdentityProviderUpsert) UpdateDefaultRole() *IdentityProviderUpsert {
+	u.SetExcluded(identityprovider.FieldDefaultRole)
+	return u
+}
+
+// ClearDefaultRole clears the value of the "default_role" field.
+func (u *IdentityProviderUpsert) ClearDefaultRole() *IdentityProviderUpsert {
+	u.SetNull(identityprovider.FieldDefaultRole)
+	return u
+}
+
+// SetDomain sets the "domain" field.
+func (u *IdentityProviderUpsert) SetDomain(v string) *IdentityProviderUpsert {
+	u.Set(identityprovider.FieldDomain, v)
+	return u
+}
+
+// UpdateDomain sets the "domain" field to the value that was provided on create.
+func (u *IdentityProviderUpsert) UpdateDomain() *IdentityProviderUpsert {
+	u.SetExcluded(identityprovider.FieldDomain)
+	return u
+}
+
+// ClearDomain clears the value of the "domain" field.
+func (u *IdentityProviderUpsert) ClearDomain() *IdentityProviderUpsert {
+	u.SetNull(identityprovider.FieldDomain)
+	return u
+}
+
+// SetIconURL sets the "icon_url" field.
+func (u *IdentityProviderUpsert) SetIconURL(v string) *IdentityProviderUpsert {
+	u.Set(identityprovider.FieldIconURL, v)
+	return u
+}
+
+// UpdateIconURL sets the "icon_url" field to the value that was provided on create.
+func (u *IdentityProviderUpsert) UpdateIconURL() *IdentityProviderUpsert {
+	u.SetExcluded(identityprovider.FieldIconURL)
+	return u
+}
+
+// ClearIconURL clears the value of the "icon_url" field.
+func (u *IdentityProviderUpsert) ClearIconURL() *IdentityProviderUpsert {
+	u.SetNull(identityprovider.FieldIconURL)
+	return u
+}
+
+// SetButtonText sets the "button_text" field.
+func (u *IdentityProviderUpsert) SetButtonText(v string) *IdentityProviderUpsert {
+	u.Set(identityprovider.FieldButtonText, v)
+	return u
+}
+
+// UpdateButtonText sets the "button_text" field to the value that was provided on create.
+func (u *IdentityProviderUpsert) UpdateButtonText() *IdentityProviderUpsert {
+	u.SetExcluded(identityprovider.FieldButtonText)
+	return u
+}
+
+// ClearButtonText clears the value of the "button_text" field.
+func (u *IdentityProviderUpsert) ClearButtonText() *IdentityProviderUpsert {
+	u.SetNull(identityprovider.FieldButtonText)
+	return u
+}
+
+// SetProtocol sets the "protocol" field.
+func (u *IdentityProviderUpsert) SetProtocol(v string) *IdentityProviderUpsert {
+	u.Set(identityprovider.FieldProtocol, v)
+	return u
+}
+
+// UpdateProtocol sets the "protocol" field to the value that was provided on create.
+func (u *IdentityProviderUpsert) UpdateProtocol() *IdentityProviderUpsert {
+	u.SetExcluded(identityprovider.FieldProtocol)
+	return u
+}
+
+// ClearProtocol clears the value of the "protocol" field.
+func (u *IdentityProviderUpsert) ClearProtocol() *IdentityProviderUpsert {
+	u.SetNull(identityprovider.FieldProtocol)
 	return u
 }
 
@@ -962,6 +1252,27 @@ func (u *IdentityProviderUpsertOne) SetUpdatedAt(v time.Time) *IdentityProviderU
 func (u *IdentityProviderUpsertOne) UpdateUpdatedAt() *IdentityProviderUpsertOne {
 	return u.Update(func(s *IdentityProviderUpsert) {
 		s.UpdateUpdatedAt()
+	})
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *IdentityProviderUpsertOne) SetDeletedAt(v time.Time) *IdentityProviderUpsertOne {
+	return u.Update(func(s *IdentityProviderUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *IdentityProviderUpsertOne) UpdateDeletedAt() *IdentityProviderUpsertOne {
+	return u.Update(func(s *IdentityProviderUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *IdentityProviderUpsertOne) ClearDeletedAt() *IdentityProviderUpsertOne {
+	return u.Update(func(s *IdentityProviderUpsert) {
+		s.ClearDeletedAt()
 	})
 }
 
@@ -1252,6 +1563,20 @@ func (u *IdentityProviderUpsertOne) UpdateActive() *IdentityProviderUpsertOne {
 	})
 }
 
+// SetEnabled sets the "enabled" field.
+func (u *IdentityProviderUpsertOne) SetEnabled(v bool) *IdentityProviderUpsertOne {
+	return u.Update(func(s *IdentityProviderUpsert) {
+		s.SetEnabled(v)
+	})
+}
+
+// UpdateEnabled sets the "enabled" field to the value that was provided on create.
+func (u *IdentityProviderUpsertOne) UpdateEnabled() *IdentityProviderUpsertOne {
+	return u.Update(func(s *IdentityProviderUpsert) {
+		s.UpdateEnabled()
+	})
+}
+
 // SetPrimary sets the "primary" field.
 func (u *IdentityProviderUpsertOne) SetPrimary(v bool) *IdentityProviderUpsertOne {
 	return u.Update(func(s *IdentityProviderUpsert) {
@@ -1263,6 +1588,125 @@ func (u *IdentityProviderUpsertOne) SetPrimary(v bool) *IdentityProviderUpsertOn
 func (u *IdentityProviderUpsertOne) UpdatePrimary() *IdentityProviderUpsertOne {
 	return u.Update(func(s *IdentityProviderUpsert) {
 		s.UpdatePrimary()
+	})
+}
+
+// SetAutoProvision sets the "auto_provision" field.
+func (u *IdentityProviderUpsertOne) SetAutoProvision(v bool) *IdentityProviderUpsertOne {
+	return u.Update(func(s *IdentityProviderUpsert) {
+		s.SetAutoProvision(v)
+	})
+}
+
+// UpdateAutoProvision sets the "auto_provision" field to the value that was provided on create.
+func (u *IdentityProviderUpsertOne) UpdateAutoProvision() *IdentityProviderUpsertOne {
+	return u.Update(func(s *IdentityProviderUpsert) {
+		s.UpdateAutoProvision()
+	})
+}
+
+// SetDefaultRole sets the "default_role" field.
+func (u *IdentityProviderUpsertOne) SetDefaultRole(v string) *IdentityProviderUpsertOne {
+	return u.Update(func(s *IdentityProviderUpsert) {
+		s.SetDefaultRole(v)
+	})
+}
+
+// UpdateDefaultRole sets the "default_role" field to the value that was provided on create.
+func (u *IdentityProviderUpsertOne) UpdateDefaultRole() *IdentityProviderUpsertOne {
+	return u.Update(func(s *IdentityProviderUpsert) {
+		s.UpdateDefaultRole()
+	})
+}
+
+// ClearDefaultRole clears the value of the "default_role" field.
+func (u *IdentityProviderUpsertOne) ClearDefaultRole() *IdentityProviderUpsertOne {
+	return u.Update(func(s *IdentityProviderUpsert) {
+		s.ClearDefaultRole()
+	})
+}
+
+// SetDomain sets the "domain" field.
+func (u *IdentityProviderUpsertOne) SetDomain(v string) *IdentityProviderUpsertOne {
+	return u.Update(func(s *IdentityProviderUpsert) {
+		s.SetDomain(v)
+	})
+}
+
+// UpdateDomain sets the "domain" field to the value that was provided on create.
+func (u *IdentityProviderUpsertOne) UpdateDomain() *IdentityProviderUpsertOne {
+	return u.Update(func(s *IdentityProviderUpsert) {
+		s.UpdateDomain()
+	})
+}
+
+// ClearDomain clears the value of the "domain" field.
+func (u *IdentityProviderUpsertOne) ClearDomain() *IdentityProviderUpsertOne {
+	return u.Update(func(s *IdentityProviderUpsert) {
+		s.ClearDomain()
+	})
+}
+
+// SetIconURL sets the "icon_url" field.
+func (u *IdentityProviderUpsertOne) SetIconURL(v string) *IdentityProviderUpsertOne {
+	return u.Update(func(s *IdentityProviderUpsert) {
+		s.SetIconURL(v)
+	})
+}
+
+// UpdateIconURL sets the "icon_url" field to the value that was provided on create.
+func (u *IdentityProviderUpsertOne) UpdateIconURL() *IdentityProviderUpsertOne {
+	return u.Update(func(s *IdentityProviderUpsert) {
+		s.UpdateIconURL()
+	})
+}
+
+// ClearIconURL clears the value of the "icon_url" field.
+func (u *IdentityProviderUpsertOne) ClearIconURL() *IdentityProviderUpsertOne {
+	return u.Update(func(s *IdentityProviderUpsert) {
+		s.ClearIconURL()
+	})
+}
+
+// SetButtonText sets the "button_text" field.
+func (u *IdentityProviderUpsertOne) SetButtonText(v string) *IdentityProviderUpsertOne {
+	return u.Update(func(s *IdentityProviderUpsert) {
+		s.SetButtonText(v)
+	})
+}
+
+// UpdateButtonText sets the "button_text" field to the value that was provided on create.
+func (u *IdentityProviderUpsertOne) UpdateButtonText() *IdentityProviderUpsertOne {
+	return u.Update(func(s *IdentityProviderUpsert) {
+		s.UpdateButtonText()
+	})
+}
+
+// ClearButtonText clears the value of the "button_text" field.
+func (u *IdentityProviderUpsertOne) ClearButtonText() *IdentityProviderUpsertOne {
+	return u.Update(func(s *IdentityProviderUpsert) {
+		s.ClearButtonText()
+	})
+}
+
+// SetProtocol sets the "protocol" field.
+func (u *IdentityProviderUpsertOne) SetProtocol(v string) *IdentityProviderUpsertOne {
+	return u.Update(func(s *IdentityProviderUpsert) {
+		s.SetProtocol(v)
+	})
+}
+
+// UpdateProtocol sets the "protocol" field to the value that was provided on create.
+func (u *IdentityProviderUpsertOne) UpdateProtocol() *IdentityProviderUpsertOne {
+	return u.Update(func(s *IdentityProviderUpsert) {
+		s.UpdateProtocol()
+	})
+}
+
+// ClearProtocol clears the value of the "protocol" field.
+func (u *IdentityProviderUpsertOne) ClearProtocol() *IdentityProviderUpsertOne {
+	return u.Update(func(s *IdentityProviderUpsert) {
+		s.ClearProtocol()
 	})
 }
 
@@ -1561,6 +2005,27 @@ func (u *IdentityProviderUpsertBulk) UpdateUpdatedAt() *IdentityProviderUpsertBu
 	})
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (u *IdentityProviderUpsertBulk) SetDeletedAt(v time.Time) *IdentityProviderUpsertBulk {
+	return u.Update(func(s *IdentityProviderUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *IdentityProviderUpsertBulk) UpdateDeletedAt() *IdentityProviderUpsertBulk {
+	return u.Update(func(s *IdentityProviderUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *IdentityProviderUpsertBulk) ClearDeletedAt() *IdentityProviderUpsertBulk {
+	return u.Update(func(s *IdentityProviderUpsert) {
+		s.ClearDeletedAt()
+	})
+}
+
 // SetName sets the "name" field.
 func (u *IdentityProviderUpsertBulk) SetName(v string) *IdentityProviderUpsertBulk {
 	return u.Update(func(s *IdentityProviderUpsert) {
@@ -1848,6 +2313,20 @@ func (u *IdentityProviderUpsertBulk) UpdateActive() *IdentityProviderUpsertBulk 
 	})
 }
 
+// SetEnabled sets the "enabled" field.
+func (u *IdentityProviderUpsertBulk) SetEnabled(v bool) *IdentityProviderUpsertBulk {
+	return u.Update(func(s *IdentityProviderUpsert) {
+		s.SetEnabled(v)
+	})
+}
+
+// UpdateEnabled sets the "enabled" field to the value that was provided on create.
+func (u *IdentityProviderUpsertBulk) UpdateEnabled() *IdentityProviderUpsertBulk {
+	return u.Update(func(s *IdentityProviderUpsert) {
+		s.UpdateEnabled()
+	})
+}
+
 // SetPrimary sets the "primary" field.
 func (u *IdentityProviderUpsertBulk) SetPrimary(v bool) *IdentityProviderUpsertBulk {
 	return u.Update(func(s *IdentityProviderUpsert) {
@@ -1859,6 +2338,125 @@ func (u *IdentityProviderUpsertBulk) SetPrimary(v bool) *IdentityProviderUpsertB
 func (u *IdentityProviderUpsertBulk) UpdatePrimary() *IdentityProviderUpsertBulk {
 	return u.Update(func(s *IdentityProviderUpsert) {
 		s.UpdatePrimary()
+	})
+}
+
+// SetAutoProvision sets the "auto_provision" field.
+func (u *IdentityProviderUpsertBulk) SetAutoProvision(v bool) *IdentityProviderUpsertBulk {
+	return u.Update(func(s *IdentityProviderUpsert) {
+		s.SetAutoProvision(v)
+	})
+}
+
+// UpdateAutoProvision sets the "auto_provision" field to the value that was provided on create.
+func (u *IdentityProviderUpsertBulk) UpdateAutoProvision() *IdentityProviderUpsertBulk {
+	return u.Update(func(s *IdentityProviderUpsert) {
+		s.UpdateAutoProvision()
+	})
+}
+
+// SetDefaultRole sets the "default_role" field.
+func (u *IdentityProviderUpsertBulk) SetDefaultRole(v string) *IdentityProviderUpsertBulk {
+	return u.Update(func(s *IdentityProviderUpsert) {
+		s.SetDefaultRole(v)
+	})
+}
+
+// UpdateDefaultRole sets the "default_role" field to the value that was provided on create.
+func (u *IdentityProviderUpsertBulk) UpdateDefaultRole() *IdentityProviderUpsertBulk {
+	return u.Update(func(s *IdentityProviderUpsert) {
+		s.UpdateDefaultRole()
+	})
+}
+
+// ClearDefaultRole clears the value of the "default_role" field.
+func (u *IdentityProviderUpsertBulk) ClearDefaultRole() *IdentityProviderUpsertBulk {
+	return u.Update(func(s *IdentityProviderUpsert) {
+		s.ClearDefaultRole()
+	})
+}
+
+// SetDomain sets the "domain" field.
+func (u *IdentityProviderUpsertBulk) SetDomain(v string) *IdentityProviderUpsertBulk {
+	return u.Update(func(s *IdentityProviderUpsert) {
+		s.SetDomain(v)
+	})
+}
+
+// UpdateDomain sets the "domain" field to the value that was provided on create.
+func (u *IdentityProviderUpsertBulk) UpdateDomain() *IdentityProviderUpsertBulk {
+	return u.Update(func(s *IdentityProviderUpsert) {
+		s.UpdateDomain()
+	})
+}
+
+// ClearDomain clears the value of the "domain" field.
+func (u *IdentityProviderUpsertBulk) ClearDomain() *IdentityProviderUpsertBulk {
+	return u.Update(func(s *IdentityProviderUpsert) {
+		s.ClearDomain()
+	})
+}
+
+// SetIconURL sets the "icon_url" field.
+func (u *IdentityProviderUpsertBulk) SetIconURL(v string) *IdentityProviderUpsertBulk {
+	return u.Update(func(s *IdentityProviderUpsert) {
+		s.SetIconURL(v)
+	})
+}
+
+// UpdateIconURL sets the "icon_url" field to the value that was provided on create.
+func (u *IdentityProviderUpsertBulk) UpdateIconURL() *IdentityProviderUpsertBulk {
+	return u.Update(func(s *IdentityProviderUpsert) {
+		s.UpdateIconURL()
+	})
+}
+
+// ClearIconURL clears the value of the "icon_url" field.
+func (u *IdentityProviderUpsertBulk) ClearIconURL() *IdentityProviderUpsertBulk {
+	return u.Update(func(s *IdentityProviderUpsert) {
+		s.ClearIconURL()
+	})
+}
+
+// SetButtonText sets the "button_text" field.
+func (u *IdentityProviderUpsertBulk) SetButtonText(v string) *IdentityProviderUpsertBulk {
+	return u.Update(func(s *IdentityProviderUpsert) {
+		s.SetButtonText(v)
+	})
+}
+
+// UpdateButtonText sets the "button_text" field to the value that was provided on create.
+func (u *IdentityProviderUpsertBulk) UpdateButtonText() *IdentityProviderUpsertBulk {
+	return u.Update(func(s *IdentityProviderUpsert) {
+		s.UpdateButtonText()
+	})
+}
+
+// ClearButtonText clears the value of the "button_text" field.
+func (u *IdentityProviderUpsertBulk) ClearButtonText() *IdentityProviderUpsertBulk {
+	return u.Update(func(s *IdentityProviderUpsert) {
+		s.ClearButtonText()
+	})
+}
+
+// SetProtocol sets the "protocol" field.
+func (u *IdentityProviderUpsertBulk) SetProtocol(v string) *IdentityProviderUpsertBulk {
+	return u.Update(func(s *IdentityProviderUpsert) {
+		s.SetProtocol(v)
+	})
+}
+
+// UpdateProtocol sets the "protocol" field to the value that was provided on create.
+func (u *IdentityProviderUpsertBulk) UpdateProtocol() *IdentityProviderUpsertBulk {
+	return u.Update(func(s *IdentityProviderUpsert) {
+		s.UpdateProtocol()
+	})
+}
+
+// ClearProtocol clears the value of the "protocol" field.
+func (u *IdentityProviderUpsertBulk) ClearProtocol() *IdentityProviderUpsertBulk {
+	return u.Update(func(s *IdentityProviderUpsert) {
+		s.ClearProtocol()
 	})
 }
 

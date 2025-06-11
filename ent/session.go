@@ -60,9 +60,12 @@ type Session struct {
 type SessionEdges struct {
 	// User holds the value of the user edge.
 	User *User `json:"user,omitempty"`
+	// AuditLogs holds the value of the audit_logs edge.
+	AuditLogs []*Audit `json:"audit_logs,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes    [2]bool
+	namedAuditLogs map[string][]*Audit
 }
 
 // UserOrErr returns the User value or an error if the edge
@@ -74,6 +77,15 @@ func (e SessionEdges) UserOrErr() (*User, error) {
 		return nil, &NotFoundError{label: user.Label}
 	}
 	return nil, &NotLoadedError{edge: "user"}
+}
+
+// AuditLogsOrErr returns the AuditLogs value or an error if the edge
+// was not loaded in eager-loading.
+func (e SessionEdges) AuditLogsOrErr() ([]*Audit, error) {
+	if e.loadedTypes[1] {
+		return e.AuditLogs, nil
+	}
+	return nil, &NotLoadedError{edge: "audit_logs"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -210,6 +222,11 @@ func (s *Session) QueryUser() *UserQuery {
 	return NewSessionClient(s.config).QueryUser(s)
 }
 
+// QueryAuditLogs queries the "audit_logs" edge of the Session entity.
+func (s *Session) QueryAuditLogs() *AuditQuery {
+	return NewSessionClient(s.config).QueryAuditLogs(s)
+}
+
 // Update returns a builder for updating this Session.
 // Note that you need to call Session.Unwrap() before calling this method if this Session
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -272,6 +289,30 @@ func (s *Session) String() string {
 	builder.WriteString(fmt.Sprintf("%v", s.Metadata))
 	builder.WriteByte(')')
 	return builder.String()
+}
+
+// NamedAuditLogs returns the AuditLogs named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (s *Session) NamedAuditLogs(name string) ([]*Audit, error) {
+	if s.Edges.namedAuditLogs == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := s.Edges.namedAuditLogs[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (s *Session) appendNamedAuditLogs(name string, edges ...*Audit) {
+	if s.Edges.namedAuditLogs == nil {
+		s.Edges.namedAuditLogs = make(map[string][]*Audit)
+	}
+	if len(edges) == 0 {
+		s.Edges.namedAuditLogs[name] = []*Audit{}
+	} else {
+		s.Edges.namedAuditLogs[name] = append(s.Edges.namedAuditLogs[name], edges...)
+	}
 }
 
 // Sessions is a parsable slice of Session.

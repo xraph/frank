@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Your Email Address</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; padding: 20px 0; border-bottom: 2px solid #f0f0f0; }
+        .content { padding: 30px 0; }
+        .verification-methods { background: #f9f9f9; padding: 25px; border-radius: 8px; margin: 20px 0; }
+        .method { margin: 20px 0; }
+        .button { display: inline-block; padding: 12px 30px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }
+        .code-box { background: #e9ecef; padding: 15px; border-radius: 5px; text-align: center; font-family: monospace; font-size: 24px; font-weight: bold; letter-spacing: 2px; margin: 10px 0; }
+        .footer { text-align: center; padding: 20px 0; border-top: 1px solid #f0f0f0; color: #666; font-size: 14px; }
+        .divider { text-align: center; margin: 25px 0; color: #666; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>{{.app_name}}</h1>
+        <h2>Verify Your Email Address</h2>
+    </div>
+
+    <div class="content">
+        <p>Hello {{.user_name}},</p>
+
+        <p>Welcome to {{.app_name}}! To complete your account setup, please verify your email address.</p>
+
+        {{if .has_both}}
+        <div class="verification-methods">
+            <h3>Choose your preferred verification method:</h3>
+
+            <div class="method">
+                <h4>Option 1: Click the verification link</h4>
+                <p>Click the button below to verify your email instantly:</p>
+                <p style="text-align: center;">
+                    <a href="{{.verification_url}}" class="button">Verify Email Address</a>
+                </p>
+            </div>
+
+            <div class="divider">
+                <strong>OR</strong>
+            </div>
+
+            <div class="method">
+                <h4>Option 2: Enter the verification code</h4>
+                <p>Copy and paste this verification code in the app:</p>
+                <div class="code-box">{{.verification_code}}</div>
+            </div>
+        </div>
+        {{else if .code_only}}
+        <div class="verification-methods">
+            <h3>Enter your verification code:</h3>
+            <p>Copy and paste this verification code in the app:</p>
+            <div class="code-box">{{.verification_code}}</div>
+        </div>
+        {{else}}
+        <div class="verification-methods">
+            <h3>Click to verify:</h3>
+            <p>Click the button below to verify your email address:</p>
+            <p style="text-align: center;">
+                <a href="{{.verification_url}}" class="button">Verify Email Address</a>
+            </p>
+            {{if .verification_code}}
+            <div class="divider">
+                <strong>OR enter this code:</strong>
+            </div>
+            <div class="code-box">{{.verification_code}}</div>
+            {{end}}
+        </div>
+        {{end}}
+
+        <p><strong>Important:</strong> This verification will expire in {{.expires_in}}.</p>
+
+        <p>If you didn't create an account with {{.app_name}}, you can safely ignore this email.</p>
+    </div>
+
+    <div class="footer">
+        <p>This is an automated message from {{.app_name}}.</p>
+        <p>If you're having trouble with the verification link, copy and paste the URL below into your web browser:</p>
+        <p style="word-break: break-all; color: #007bff;">{{.verification_url}}</p>
+    </div>
+</div>
+</body>
+</html>

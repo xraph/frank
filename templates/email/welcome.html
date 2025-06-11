@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to {{.app_name}}</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; padding: 20px 0; border-bottom: 2px solid #f0f0f0; }
+        .content { padding: 30px 0; }
+        .welcome-section { background: #f8f9fa; padding: 25px; border-radius: 8px; margin: 20px 0; text-align: center; }
+        .feature-list { background: #fff; padding: 20px; border-left: 4px solid #007bff; margin: 20px 0; }
+        .button { display: inline-block; padding: 12px 30px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 10px 5px; }
+        .button.secondary { background: #6c757d; }
+        .footer { text-align: center; padding: 20px 0; border-top: 1px solid #f0f0f0; color: #666; font-size: 14px; }
+        .highlight { color: #007bff; font-weight: bold; }
+        .stats { display: flex; justify-content: space-around; margin: 20px 0; }
+        .stat { text-align: center; }
+        .stat-number { font-size: 24px; font-weight: bold; color: #007bff; }
+        @media (max-width: 600px) {
+            .stats { flex-direction: column; }
+            .stat { margin: 10px 0; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>{{.app_name}}</h1>
+        <h2>🎉 Welcome to the Family!</h2>
+    </div>
+
+    <div class="content">
+        <div class="welcome-section">
+            <h3>Hello {{.user_name}}!</h3>
+            <p>Welcome to <span class="highlight">{{.app_name}}</span>! We're thrilled to have you join our community.</p>
+            {{if .organization_name}}
+            <p>You're now part of <strong>{{.organization_name}}</strong> and ready to get started.</p>
+            {{end}}
+        </div>
+
+        <div class="feature-list">
+            <h4>🚀 What you can do now:</h4>
+            <ul>
+                <li><strong>Secure Authentication:</strong> Multi-factor authentication and passwordless login options</li>
+                <li><strong>Team Collaboration:</strong> Invite team members and manage organization settings</li>
+                <li><strong>API Access:</strong> Generate API keys and integrate with your applications</li>
+                <li><strong>Advanced Security:</strong> Monitor sessions, review audit logs, and control access</li>
+            </ul>
+        </div>
+
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-number">99.9%</div>
+                <div>Uptime</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number">24/7</div>
+                <div>Support</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number">256-bit</div>
+                <div>Encryption</div>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin: 30px 0;">
+            <p><strong>Ready to get started?</strong></p>
+            <a href="{{.login_url}}" class="button">Access Your Dashboard</a>
+            <a href="{{.docs_url}}" class="button secondary">View Documentation</a>
+        </div>
+
+        <div class="feature-list">
+            <h4>🎯 Next Steps:</h4>
+            <ol>
+                <li>Complete your profile setup</li>
+                <li>Configure two-factor authentication for enhanced security</li>
+                <li>Explore our API documentation</li>
+                <li>Invite your team members</li>
+            </ol>
+        </div>
+
+        <p>If you have any questions or need assistance, our support team is here to help 24/7.</p>
+
+        <p>Welcome aboard!<br>
+            <strong>The {{.app_name}} Team</strong></p>
+    </div>
+
+    <div class="footer">
+        <p>This welcome message was sent to {{.user_email}}.</p>
+        <p>If you didn't create an account with {{.app_name}}, please contact our support team.</p>
+        <p><a href="{{.support_url}}">Contact Support</a> | <a href="{{.docs_url}}">Documentation</a> | <a href="{{.unsubscribe_url}}">Unsubscribe</a></p>
+    </div>
+</div>
+</body>
+</html>

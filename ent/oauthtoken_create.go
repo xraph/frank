@@ -58,6 +58,20 @@ func (otc *OAuthTokenCreate) SetNillableUpdatedAt(t *time.Time) *OAuthTokenCreat
 	return otc
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (otc *OAuthTokenCreate) SetDeletedAt(t time.Time) *OAuthTokenCreate {
+	otc.mutation.SetDeletedAt(t)
+	return otc
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (otc *OAuthTokenCreate) SetNillableDeletedAt(t *time.Time) *OAuthTokenCreate {
+	if t != nil {
+		otc.SetDeletedAt(*t)
+	}
+	return otc
+}
+
 // SetAccessToken sets the "access_token" field.
 func (otc *OAuthTokenCreate) SetAccessToken(s string) *OAuthTokenCreate {
 	otc.mutation.SetAccessToken(s)
@@ -408,6 +422,10 @@ func (otc *OAuthTokenCreate) createSpec() (*OAuthToken, *sqlgraph.CreateSpec) {
 		_spec.SetField(oauthtoken.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
+	if value, ok := otc.mutation.DeletedAt(); ok {
+		_spec.SetField(oauthtoken.FieldDeletedAt, field.TypeTime, value)
+		_node.DeletedAt = value
+	}
 	if value, ok := otc.mutation.AccessToken(); ok {
 		_spec.SetField(oauthtoken.FieldAccessToken, field.TypeString, value)
 		_node.AccessToken = value
@@ -567,6 +585,24 @@ func (u *OAuthTokenUpsert) SetUpdatedAt(v time.Time) *OAuthTokenUpsert {
 // UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
 func (u *OAuthTokenUpsert) UpdateUpdatedAt() *OAuthTokenUpsert {
 	u.SetExcluded(oauthtoken.FieldUpdatedAt)
+	return u
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *OAuthTokenUpsert) SetDeletedAt(v time.Time) *OAuthTokenUpsert {
+	u.Set(oauthtoken.FieldDeletedAt, v)
+	return u
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *OAuthTokenUpsert) UpdateDeletedAt() *OAuthTokenUpsert {
+	u.SetExcluded(oauthtoken.FieldDeletedAt)
+	return u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *OAuthTokenUpsert) ClearDeletedAt() *OAuthTokenUpsert {
+	u.SetNull(oauthtoken.FieldDeletedAt)
 	return u
 }
 
@@ -848,6 +884,27 @@ func (u *OAuthTokenUpsertOne) SetUpdatedAt(v time.Time) *OAuthTokenUpsertOne {
 func (u *OAuthTokenUpsertOne) UpdateUpdatedAt() *OAuthTokenUpsertOne {
 	return u.Update(func(s *OAuthTokenUpsert) {
 		s.UpdateUpdatedAt()
+	})
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *OAuthTokenUpsertOne) SetDeletedAt(v time.Time) *OAuthTokenUpsertOne {
+	return u.Update(func(s *OAuthTokenUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *OAuthTokenUpsertOne) UpdateDeletedAt() *OAuthTokenUpsertOne {
+	return u.Update(func(s *OAuthTokenUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *OAuthTokenUpsertOne) ClearDeletedAt() *OAuthTokenUpsertOne {
+	return u.Update(func(s *OAuthTokenUpsert) {
+		s.ClearDeletedAt()
 	})
 }
 
@@ -1332,6 +1389,27 @@ func (u *OAuthTokenUpsertBulk) SetUpdatedAt(v time.Time) *OAuthTokenUpsertBulk {
 func (u *OAuthTokenUpsertBulk) UpdateUpdatedAt() *OAuthTokenUpsertBulk {
 	return u.Update(func(s *OAuthTokenUpsert) {
 		s.UpdateUpdatedAt()
+	})
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *OAuthTokenUpsertBulk) SetDeletedAt(v time.Time) *OAuthTokenUpsertBulk {
+	return u.Update(func(s *OAuthTokenUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *OAuthTokenUpsertBulk) UpdateDeletedAt() *OAuthTokenUpsertBulk {
+	return u.Update(func(s *OAuthTokenUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *OAuthTokenUpsertBulk) ClearDeletedAt() *OAuthTokenUpsertBulk {
+	return u.Update(func(s *OAuthTokenUpsert) {
+		s.ClearDeletedAt()
 	})
 }
 

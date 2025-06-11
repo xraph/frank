@@ -114,5 +114,6 @@ func (UserRole) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		ModelBaseMixin{},
 		TimeMixin{},
+		SoftDeleteMixin{},
 	}
 }

@@ -23,10 +23,16 @@ const (
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
+	// FieldDeletedAt holds the string denoting the deleted_at field in the database.
+	FieldDeletedAt = "deleted_at"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
 	// FieldSlug holds the string denoting the slug field in the database.
 	FieldSlug = "slug"
+	// FieldDomains holds the string denoting the domains field in the database.
+	FieldDomains = "domains"
+	// FieldVerifiedDomains holds the string denoting the verified_domains field in the database.
+	FieldVerifiedDomains = "verified_domains"
 	// FieldDomain holds the string denoting the domain field in the database.
 	FieldDomain = "domain"
 	// FieldLogoURL holds the string denoting the logo_url field in the database.
@@ -79,6 +85,10 @@ const (
 	EdgeUsers = "users"
 	// EdgeMemberships holds the string denoting the memberships edge name in mutations.
 	EdgeMemberships = "memberships"
+	// EdgeSmsTemplates holds the string denoting the sms_templates edge name in mutations.
+	EdgeSmsTemplates = "sms_templates"
+	// EdgeEmailTemplates holds the string denoting the email_templates edge name in mutations.
+	EdgeEmailTemplates = "email_templates"
 	// EdgeAPIKeys holds the string denoting the api_keys edge name in mutations.
 	EdgeAPIKeys = "api_keys"
 	// EdgeWebhooks holds the string denoting the webhooks edge name in mutations.
@@ -95,6 +105,8 @@ const (
 	EdgeUserRoleContexts = "user_role_contexts"
 	// EdgeUserPermissionContexts holds the string denoting the user_permission_contexts edge name in mutations.
 	EdgeUserPermissionContexts = "user_permission_contexts"
+	// EdgeAuditLogs holds the string denoting the audit_logs edge name in mutations.
+	EdgeAuditLogs = "audit_logs"
 	// Table holds the table name of the organization in the database.
 	Table = "organizations"
 	// UsersTable is the table that holds the users relation/edge.
@@ -111,6 +123,20 @@ const (
 	MembershipsInverseTable = "memberships"
 	// MembershipsColumn is the table column denoting the memberships relation/edge.
 	MembershipsColumn = "organization_id"
+	// SmsTemplatesTable is the table that holds the sms_templates relation/edge.
+	SmsTemplatesTable = "sms_templates"
+	// SmsTemplatesInverseTable is the table name for the SMSTemplate entity.
+	// It exists in this package in order to avoid circular dependency with the "smstemplate" package.
+	SmsTemplatesInverseTable = "sms_templates"
+	// SmsTemplatesColumn is the table column denoting the sms_templates relation/edge.
+	SmsTemplatesColumn = "organization_id"
+	// EmailTemplatesTable is the table that holds the email_templates relation/edge.
+	EmailTemplatesTable = "email_templates"
+	// EmailTemplatesInverseTable is the table name for the EmailTemplate entity.
+	// It exists in this package in order to avoid circular dependency with the "emailtemplate" package.
+	EmailTemplatesInverseTable = "email_templates"
+	// EmailTemplatesColumn is the table column denoting the email_templates relation/edge.
+	EmailTemplatesColumn = "organization_id"
 	// APIKeysTable is the table that holds the api_keys relation/edge.
 	APIKeysTable = "api_keys"
 	// APIKeysInverseTable is the table name for the ApiKey entity.
@@ -167,6 +193,13 @@ const (
 	UserPermissionContextsInverseTable = "user_permissions"
 	// UserPermissionContextsColumn is the table column denoting the user_permission_contexts relation/edge.
 	UserPermissionContextsColumn = "context_id"
+	// AuditLogsTable is the table that holds the audit_logs relation/edge.
+	AuditLogsTable = "audits"
+	// AuditLogsInverseTable is the table name for the Audit entity.
+	// It exists in this package in order to avoid circular dependency with the "audit" package.
+	AuditLogsInverseTable = "audits"
+	// AuditLogsColumn is the table column denoting the audit_logs relation/edge.
+	AuditLogsColumn = "organization_id"
 )
 
 // Columns holds all SQL columns for organization fields.
@@ -174,8 +207,11 @@ var Columns = []string{
 	FieldID,
 	FieldCreatedAt,
 	FieldUpdatedAt,
+	FieldDeletedAt,
 	FieldName,
 	FieldSlug,
+	FieldDomains,
+	FieldVerifiedDomains,
 	FieldDomain,
 	FieldLogoURL,
 	FieldPlan,
@@ -322,6 +358,11 @@ func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByUpdatedAt orders the results by the updated_at field.
 func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
+}
+
+// ByDeletedAt orders the results by the deleted_at field.
+func ByDeletedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDeletedAt, opts...).ToFunc()
 }
 
 // ByName orders the results by the name field.
@@ -472,6 +513,34 @@ func ByMemberships(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
+// BySmsTemplatesCount orders the results by sms_templates count.
+func BySmsTemplatesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newSmsTemplatesStep(), opts...)
+	}
+}
+
+// BySmsTemplates orders the results by sms_templates terms.
+func BySmsTemplates(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newSmsTemplatesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByEmailTemplatesCount orders the results by email_templates count.
+func ByEmailTemplatesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newEmailTemplatesStep(), opts...)
+	}
+}
+
+// ByEmailTemplates orders the results by email_templates terms.
+func ByEmailTemplates(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newEmailTemplatesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByAPIKeysCount orders the results by api_keys count.
 func ByAPIKeysCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -583,6 +652,20 @@ func ByUserPermissionContexts(term sql.OrderTerm, terms ...sql.OrderTerm) OrderO
 		sqlgraph.OrderByNeighborTerms(s, newUserPermissionContextsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByAuditLogsCount orders the results by audit_logs count.
+func ByAuditLogsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newAuditLogsStep(), opts...)
+	}
+}
+
+// ByAuditLogs orders the results by audit_logs terms.
+func ByAuditLogs(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAuditLogsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newUsersStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -595,6 +678,20 @@ func newMembershipsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(MembershipsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, MembershipsTable, MembershipsColumn),
+	)
+}
+func newSmsTemplatesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(SmsTemplatesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, SmsTemplatesTable, SmsTemplatesColumn),
+	)
+}
+func newEmailTemplatesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(EmailTemplatesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, EmailTemplatesTable, EmailTemplatesColumn),
 	)
 }
 func newAPIKeysStep() *sqlgraph.Step {
@@ -651,5 +748,12 @@ func newUserPermissionContextsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(UserPermissionContextsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, true, UserPermissionContextsTable, UserPermissionContextsColumn),
+	)
+}
+func newAuditLogsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(AuditLogsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, AuditLogsTable, AuditLogsColumn),
 	)
 }

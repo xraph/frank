@@ -22,6 +22,8 @@ const (
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
+	// FieldDeletedAt holds the string denoting the deleted_at field in the database.
+	FieldDeletedAt = "deleted_at"
 	// FieldClientID holds the string denoting the client_id field in the database.
 	FieldClientID = "client_id"
 	// FieldUserID holds the string denoting the user_id field in the database.
@@ -48,6 +50,10 @@ const (
 	FieldState = "state"
 	// FieldNonce holds the string denoting the nonce field in the database.
 	FieldNonce = "nonce"
+	// FieldUserAgent holds the string denoting the user_agent field in the database.
+	FieldUserAgent = "user_agent"
+	// FieldIPAddress holds the string denoting the ip_address field in the database.
+	FieldIPAddress = "ip_address"
 	// EdgeClient holds the string denoting the client edge name in mutations.
 	EdgeClient = "client"
 	// EdgeUser holds the string denoting the user edge name in mutations.
@@ -82,6 +88,7 @@ var Columns = []string{
 	FieldID,
 	FieldCreatedAt,
 	FieldUpdatedAt,
+	FieldDeletedAt,
 	FieldClientID,
 	FieldUserID,
 	FieldOrganizationID,
@@ -95,6 +102,8 @@ var Columns = []string{
 	FieldExpiresAt,
 	FieldState,
 	FieldNonce,
+	FieldUserAgent,
+	FieldIPAddress,
 }
 
 var (
@@ -148,6 +157,11 @@ func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByUpdatedAt orders the results by the updated_at field.
 func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
+}
+
+// ByDeletedAt orders the results by the deleted_at field.
+func ByDeletedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDeletedAt, opts...).ToFunc()
 }
 
 // ByClientID orders the results by the client_id field.
@@ -208,6 +222,16 @@ func ByState(opts ...sql.OrderTermOption) OrderOption {
 // ByNonce orders the results by the nonce field.
 func ByNonce(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldNonce, opts...).ToFunc()
+}
+
+// ByUserAgent orders the results by the user_agent field.
+func ByUserAgent(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUserAgent, opts...).ToFunc()
+}
+
+// ByIPAddress orders the results by the ip_address field.
+func ByIPAddress(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldIPAddress, opts...).ToFunc()
 }
 
 // ByClientField orders the results by client field.

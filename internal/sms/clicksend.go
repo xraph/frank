@@ -15,7 +15,7 @@ import (
 
 // clickSendProvider implements the ClickSend SMS provider
 type clickSendProvider struct {
-	config   *config.Config
+	config   *config.SMSConfig
 	logger   logging.Logger
 	client   *http.Client
 	username string
@@ -23,13 +23,13 @@ type clickSendProvider struct {
 }
 
 // NewClickSendProvider creates a new ClickSend SMS provider
-func NewClickSendProvider(cfg *config.Config, logger logging.Logger) Provider {
+func NewClickSendProvider(cfg *config.SMSConfig, logger logging.Logger) Provider {
 	return &clickSendProvider{
 		config:   cfg,
 		logger:   logger,
 		client:   &http.Client{},
-		username: cfg.SMS.ClickSend.Username,
-		apiKey:   cfg.SMS.ClickSend.APIKey,
+		username: cfg.ClickSend.Username,
+		apiKey:   cfg.ClickSend.APIKey,
 	}
 }
 
@@ -43,7 +43,7 @@ func (p *clickSendProvider) Send(ctx context.Context, input SMS) error {
 	// Set sender (From) if not provided
 	from := input.From
 	if from == "" {
-		from = p.config.SMS.FromNumber
+		from = p.config.FromNumber
 	}
 
 	// Prepare message
@@ -62,13 +62,13 @@ func (p *clickSendProvider) Send(ctx context.Context, input SMS) error {
 	// Marshal request body to JSON
 	jsonBody, err := json.Marshal(requestBody)
 	if err != nil {
-		return errors.Wrap(errors.CodeSMSDeliveryFail, err, "failed to marshal ClickSend request")
+		return errors.Wrap(err, errors.CodeSMSDeliveryFail, "failed to marshal ClickSend request")
 	}
 
 	// Create request
 	req, err := http.NewRequestWithContext(ctx, "POST", "https://rest.clicksend.com/v3/sms/send", bytes.NewBuffer(jsonBody))
 	if err != nil {
-		return errors.Wrap(errors.CodeSMSDeliveryFail, err, "failed to create ClickSend request")
+		return errors.Wrap(err, errors.CodeSMSDeliveryFail, "failed to create ClickSend request")
 	}
 
 	// Set headers
@@ -78,7 +78,7 @@ func (p *clickSendProvider) Send(ctx context.Context, input SMS) error {
 	// Execute request
 	resp, err := p.client.Do(req)
 	if err != nil {
-		return errors.Wrap(errors.CodeSMSDeliveryFail, err, "failed to send ClickSend request")
+		return errors.Wrap(err, errors.CodeSMSDeliveryFail, "failed to send ClickSend request")
 	}
 	defer resp.Body.Close()
 

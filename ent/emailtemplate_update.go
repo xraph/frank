@@ -15,6 +15,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/juicycleff/frank/ent/emailtemplate"
+	"github.com/juicycleff/frank/ent/organization"
 	"github.com/juicycleff/frank/ent/predicate"
 	"github.com/rs/xid"
 )
@@ -36,6 +37,26 @@ func (etu *EmailTemplateUpdate) Where(ps ...predicate.EmailTemplate) *EmailTempl
 // SetUpdatedAt sets the "updated_at" field.
 func (etu *EmailTemplateUpdate) SetUpdatedAt(t time.Time) *EmailTemplateUpdate {
 	etu.mutation.SetUpdatedAt(t)
+	return etu
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (etu *EmailTemplateUpdate) SetDeletedAt(t time.Time) *EmailTemplateUpdate {
+	etu.mutation.SetDeletedAt(t)
+	return etu
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (etu *EmailTemplateUpdate) SetNillableDeletedAt(t *time.Time) *EmailTemplateUpdate {
+	if t != nil {
+		etu.SetDeletedAt(*t)
+	}
+	return etu
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (etu *EmailTemplateUpdate) ClearDeletedAt() *EmailTemplateUpdate {
+	etu.mutation.ClearDeletedAt()
 	return etu
 }
 
@@ -189,9 +210,20 @@ func (etu *EmailTemplateUpdate) ClearMetadata() *EmailTemplateUpdate {
 	return etu
 }
 
+// SetOrganization sets the "organization" edge to the Organization entity.
+func (etu *EmailTemplateUpdate) SetOrganization(o *Organization) *EmailTemplateUpdate {
+	return etu.SetOrganizationID(o.ID)
+}
+
 // Mutation returns the EmailTemplateMutation object of the builder.
 func (etu *EmailTemplateUpdate) Mutation() *EmailTemplateMutation {
 	return etu.mutation
+}
+
+// ClearOrganization clears the "organization" edge to the Organization entity.
+func (etu *EmailTemplateUpdate) ClearOrganization() *EmailTemplateUpdate {
+	etu.mutation.ClearOrganization()
+	return etu
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -276,6 +308,12 @@ func (etu *EmailTemplateUpdate) sqlSave(ctx context.Context) (n int, err error) 
 	if value, ok := etu.mutation.UpdatedAt(); ok {
 		_spec.SetField(emailtemplate.FieldUpdatedAt, field.TypeTime, value)
 	}
+	if value, ok := etu.mutation.DeletedAt(); ok {
+		_spec.SetField(emailtemplate.FieldDeletedAt, field.TypeTime, value)
+	}
+	if etu.mutation.DeletedAtCleared() {
+		_spec.ClearField(emailtemplate.FieldDeletedAt, field.TypeTime)
+	}
 	if value, ok := etu.mutation.Name(); ok {
 		_spec.SetField(emailtemplate.FieldName, field.TypeString, value)
 	}
@@ -294,12 +332,6 @@ func (etu *EmailTemplateUpdate) sqlSave(ctx context.Context) (n int, err error) 
 	if etu.mutation.TextContentCleared() {
 		_spec.ClearField(emailtemplate.FieldTextContent, field.TypeString)
 	}
-	if value, ok := etu.mutation.OrganizationID(); ok {
-		_spec.SetField(emailtemplate.FieldOrganizationID, field.TypeString, value)
-	}
-	if etu.mutation.OrganizationIDCleared() {
-		_spec.ClearField(emailtemplate.FieldOrganizationID, field.TypeString)
-	}
 	if value, ok := etu.mutation.Active(); ok {
 		_spec.SetField(emailtemplate.FieldActive, field.TypeBool, value)
 	}
@@ -314,6 +346,35 @@ func (etu *EmailTemplateUpdate) sqlSave(ctx context.Context) (n int, err error) 
 	}
 	if etu.mutation.MetadataCleared() {
 		_spec.ClearField(emailtemplate.FieldMetadata, field.TypeJSON)
+	}
+	if etu.mutation.OrganizationCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   emailtemplate.OrganizationTable,
+			Columns: []string{emailtemplate.OrganizationColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(organization.FieldID, field.TypeString),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := etu.mutation.OrganizationIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   emailtemplate.OrganizationTable,
+			Columns: []string{emailtemplate.OrganizationColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(organization.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_spec.AddModifiers(etu.modifiers...)
 	if n, err = sqlgraph.UpdateNodes(ctx, etu.driver, _spec); err != nil {
@@ -340,6 +401,26 @@ type EmailTemplateUpdateOne struct {
 // SetUpdatedAt sets the "updated_at" field.
 func (etuo *EmailTemplateUpdateOne) SetUpdatedAt(t time.Time) *EmailTemplateUpdateOne {
 	etuo.mutation.SetUpdatedAt(t)
+	return etuo
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (etuo *EmailTemplateUpdateOne) SetDeletedAt(t time.Time) *EmailTemplateUpdateOne {
+	etuo.mutation.SetDeletedAt(t)
+	return etuo
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (etuo *EmailTemplateUpdateOne) SetNillableDeletedAt(t *time.Time) *EmailTemplateUpdateOne {
+	if t != nil {
+		etuo.SetDeletedAt(*t)
+	}
+	return etuo
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (etuo *EmailTemplateUpdateOne) ClearDeletedAt() *EmailTemplateUpdateOne {
+	etuo.mutation.ClearDeletedAt()
 	return etuo
 }
 
@@ -493,9 +574,20 @@ func (etuo *EmailTemplateUpdateOne) ClearMetadata() *EmailTemplateUpdateOne {
 	return etuo
 }
 
+// SetOrganization sets the "organization" edge to the Organization entity.
+func (etuo *EmailTemplateUpdateOne) SetOrganization(o *Organization) *EmailTemplateUpdateOne {
+	return etuo.SetOrganizationID(o.ID)
+}
+
 // Mutation returns the EmailTemplateMutation object of the builder.
 func (etuo *EmailTemplateUpdateOne) Mutation() *EmailTemplateMutation {
 	return etuo.mutation
+}
+
+// ClearOrganization clears the "organization" edge to the Organization entity.
+func (etuo *EmailTemplateUpdateOne) ClearOrganization() *EmailTemplateUpdateOne {
+	etuo.mutation.ClearOrganization()
+	return etuo
 }
 
 // Where appends a list predicates to the EmailTemplateUpdate builder.
@@ -610,6 +702,12 @@ func (etuo *EmailTemplateUpdateOne) sqlSave(ctx context.Context) (_node *EmailTe
 	if value, ok := etuo.mutation.UpdatedAt(); ok {
 		_spec.SetField(emailtemplate.FieldUpdatedAt, field.TypeTime, value)
 	}
+	if value, ok := etuo.mutation.DeletedAt(); ok {
+		_spec.SetField(emailtemplate.FieldDeletedAt, field.TypeTime, value)
+	}
+	if etuo.mutation.DeletedAtCleared() {
+		_spec.ClearField(emailtemplate.FieldDeletedAt, field.TypeTime)
+	}
 	if value, ok := etuo.mutation.Name(); ok {
 		_spec.SetField(emailtemplate.FieldName, field.TypeString, value)
 	}
@@ -628,12 +726,6 @@ func (etuo *EmailTemplateUpdateOne) sqlSave(ctx context.Context) (_node *EmailTe
 	if etuo.mutation.TextContentCleared() {
 		_spec.ClearField(emailtemplate.FieldTextContent, field.TypeString)
 	}
-	if value, ok := etuo.mutation.OrganizationID(); ok {
-		_spec.SetField(emailtemplate.FieldOrganizationID, field.TypeString, value)
-	}
-	if etuo.mutation.OrganizationIDCleared() {
-		_spec.ClearField(emailtemplate.FieldOrganizationID, field.TypeString)
-	}
 	if value, ok := etuo.mutation.Active(); ok {
 		_spec.SetField(emailtemplate.FieldActive, field.TypeBool, value)
 	}
@@ -648,6 +740,35 @@ func (etuo *EmailTemplateUpdateOne) sqlSave(ctx context.Context) (_node *EmailTe
 	}
 	if etuo.mutation.MetadataCleared() {
 		_spec.ClearField(emailtemplate.FieldMetadata, field.TypeJSON)
+	}
+	if etuo.mutation.OrganizationCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   emailtemplate.OrganizationTable,
+			Columns: []string{emailtemplate.OrganizationColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(organization.FieldID, field.TypeString),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := etuo.mutation.OrganizationIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   emailtemplate.OrganizationTable,
+			Columns: []string{emailtemplate.OrganizationColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(organization.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_spec.AddModifiers(etuo.modifiers...)
 	_node = &EmailTemplate{config: etuo.config}

@@ -41,6 +41,26 @@ func (ipu *IdentityProviderUpdate) SetUpdatedAt(t time.Time) *IdentityProviderUp
 	return ipu
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (ipu *IdentityProviderUpdate) SetDeletedAt(t time.Time) *IdentityProviderUpdate {
+	ipu.mutation.SetDeletedAt(t)
+	return ipu
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (ipu *IdentityProviderUpdate) SetNillableDeletedAt(t *time.Time) *IdentityProviderUpdate {
+	if t != nil {
+		ipu.SetDeletedAt(*t)
+	}
+	return ipu
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (ipu *IdentityProviderUpdate) ClearDeletedAt() *IdentityProviderUpdate {
+	ipu.mutation.ClearDeletedAt()
+	return ipu
+}
+
 // SetName sets the "name" field.
 func (ipu *IdentityProviderUpdate) SetName(s string) *IdentityProviderUpdate {
 	ipu.mutation.SetName(s)
@@ -317,6 +337,20 @@ func (ipu *IdentityProviderUpdate) SetNillableActive(b *bool) *IdentityProviderU
 	return ipu
 }
 
+// SetEnabled sets the "enabled" field.
+func (ipu *IdentityProviderUpdate) SetEnabled(b bool) *IdentityProviderUpdate {
+	ipu.mutation.SetEnabled(b)
+	return ipu
+}
+
+// SetNillableEnabled sets the "enabled" field if the given value is not nil.
+func (ipu *IdentityProviderUpdate) SetNillableEnabled(b *bool) *IdentityProviderUpdate {
+	if b != nil {
+		ipu.SetEnabled(*b)
+	}
+	return ipu
+}
+
 // SetPrimary sets the "primary" field.
 func (ipu *IdentityProviderUpdate) SetPrimary(b bool) *IdentityProviderUpdate {
 	ipu.mutation.SetPrimary(b)
@@ -328,6 +362,120 @@ func (ipu *IdentityProviderUpdate) SetNillablePrimary(b *bool) *IdentityProvider
 	if b != nil {
 		ipu.SetPrimary(*b)
 	}
+	return ipu
+}
+
+// SetAutoProvision sets the "auto_provision" field.
+func (ipu *IdentityProviderUpdate) SetAutoProvision(b bool) *IdentityProviderUpdate {
+	ipu.mutation.SetAutoProvision(b)
+	return ipu
+}
+
+// SetNillableAutoProvision sets the "auto_provision" field if the given value is not nil.
+func (ipu *IdentityProviderUpdate) SetNillableAutoProvision(b *bool) *IdentityProviderUpdate {
+	if b != nil {
+		ipu.SetAutoProvision(*b)
+	}
+	return ipu
+}
+
+// SetDefaultRole sets the "default_role" field.
+func (ipu *IdentityProviderUpdate) SetDefaultRole(s string) *IdentityProviderUpdate {
+	ipu.mutation.SetDefaultRole(s)
+	return ipu
+}
+
+// SetNillableDefaultRole sets the "default_role" field if the given value is not nil.
+func (ipu *IdentityProviderUpdate) SetNillableDefaultRole(s *string) *IdentityProviderUpdate {
+	if s != nil {
+		ipu.SetDefaultRole(*s)
+	}
+	return ipu
+}
+
+// ClearDefaultRole clears the value of the "default_role" field.
+func (ipu *IdentityProviderUpdate) ClearDefaultRole() *IdentityProviderUpdate {
+	ipu.mutation.ClearDefaultRole()
+	return ipu
+}
+
+// SetDomain sets the "domain" field.
+func (ipu *IdentityProviderUpdate) SetDomain(s string) *IdentityProviderUpdate {
+	ipu.mutation.SetDomain(s)
+	return ipu
+}
+
+// SetNillableDomain sets the "domain" field if the given value is not nil.
+func (ipu *IdentityProviderUpdate) SetNillableDomain(s *string) *IdentityProviderUpdate {
+	if s != nil {
+		ipu.SetDomain(*s)
+	}
+	return ipu
+}
+
+// ClearDomain clears the value of the "domain" field.
+func (ipu *IdentityProviderUpdate) ClearDomain() *IdentityProviderUpdate {
+	ipu.mutation.ClearDomain()
+	return ipu
+}
+
+// SetIconURL sets the "icon_url" field.
+func (ipu *IdentityProviderUpdate) SetIconURL(s string) *IdentityProviderUpdate {
+	ipu.mutation.SetIconURL(s)
+	return ipu
+}
+
+// SetNillableIconURL sets the "icon_url" field if the given value is not nil.
+func (ipu *IdentityProviderUpdate) SetNillableIconURL(s *string) *IdentityProviderUpdate {
+	if s != nil {
+		ipu.SetIconURL(*s)
+	}
+	return ipu
+}
+
+// ClearIconURL clears the value of the "icon_url" field.
+func (ipu *IdentityProviderUpdate) ClearIconURL() *IdentityProviderUpdate {
+	ipu.mutation.ClearIconURL()
+	return ipu
+}
+
+// SetButtonText sets the "button_text" field.
+func (ipu *IdentityProviderUpdate) SetButtonText(s string) *IdentityProviderUpdate {
+	ipu.mutation.SetButtonText(s)
+	return ipu
+}
+
+// SetNillableButtonText sets the "button_text" field if the given value is not nil.
+func (ipu *IdentityProviderUpdate) SetNillableButtonText(s *string) *IdentityProviderUpdate {
+	if s != nil {
+		ipu.SetButtonText(*s)
+	}
+	return ipu
+}
+
+// ClearButtonText clears the value of the "button_text" field.
+func (ipu *IdentityProviderUpdate) ClearButtonText() *IdentityProviderUpdate {
+	ipu.mutation.ClearButtonText()
+	return ipu
+}
+
+// SetProtocol sets the "protocol" field.
+func (ipu *IdentityProviderUpdate) SetProtocol(s string) *IdentityProviderUpdate {
+	ipu.mutation.SetProtocol(s)
+	return ipu
+}
+
+// SetNillableProtocol sets the "protocol" field if the given value is not nil.
+func (ipu *IdentityProviderUpdate) SetNillableProtocol(s *string) *IdentityProviderUpdate {
+	if s != nil {
+		ipu.SetProtocol(*s)
+	}
+	return ipu
+}
+
+// ClearProtocol clears the value of the "protocol" field.
+func (ipu *IdentityProviderUpdate) ClearProtocol() *IdentityProviderUpdate {
+	ipu.mutation.ClearProtocol()
 	return ipu
 }
 
@@ -469,6 +617,12 @@ func (ipu *IdentityProviderUpdate) sqlSave(ctx context.Context) (n int, err erro
 	if value, ok := ipu.mutation.UpdatedAt(); ok {
 		_spec.SetField(identityprovider.FieldUpdatedAt, field.TypeTime, value)
 	}
+	if value, ok := ipu.mutation.DeletedAt(); ok {
+		_spec.SetField(identityprovider.FieldDeletedAt, field.TypeTime, value)
+	}
+	if ipu.mutation.DeletedAtCleared() {
+		_spec.ClearField(identityprovider.FieldDeletedAt, field.TypeTime)
+	}
 	if value, ok := ipu.mutation.Name(); ok {
 		_spec.SetField(identityprovider.FieldName, field.TypeString, value)
 	}
@@ -544,8 +698,44 @@ func (ipu *IdentityProviderUpdate) sqlSave(ctx context.Context) (n int, err erro
 	if value, ok := ipu.mutation.Active(); ok {
 		_spec.SetField(identityprovider.FieldActive, field.TypeBool, value)
 	}
+	if value, ok := ipu.mutation.Enabled(); ok {
+		_spec.SetField(identityprovider.FieldEnabled, field.TypeBool, value)
+	}
 	if value, ok := ipu.mutation.Primary(); ok {
 		_spec.SetField(identityprovider.FieldPrimary, field.TypeBool, value)
+	}
+	if value, ok := ipu.mutation.AutoProvision(); ok {
+		_spec.SetField(identityprovider.FieldAutoProvision, field.TypeBool, value)
+	}
+	if value, ok := ipu.mutation.DefaultRole(); ok {
+		_spec.SetField(identityprovider.FieldDefaultRole, field.TypeString, value)
+	}
+	if ipu.mutation.DefaultRoleCleared() {
+		_spec.ClearField(identityprovider.FieldDefaultRole, field.TypeString)
+	}
+	if value, ok := ipu.mutation.Domain(); ok {
+		_spec.SetField(identityprovider.FieldDomain, field.TypeString, value)
+	}
+	if ipu.mutation.DomainCleared() {
+		_spec.ClearField(identityprovider.FieldDomain, field.TypeString)
+	}
+	if value, ok := ipu.mutation.IconURL(); ok {
+		_spec.SetField(identityprovider.FieldIconURL, field.TypeString, value)
+	}
+	if ipu.mutation.IconURLCleared() {
+		_spec.ClearField(identityprovider.FieldIconURL, field.TypeString)
+	}
+	if value, ok := ipu.mutation.ButtonText(); ok {
+		_spec.SetField(identityprovider.FieldButtonText, field.TypeString, value)
+	}
+	if ipu.mutation.ButtonTextCleared() {
+		_spec.ClearField(identityprovider.FieldButtonText, field.TypeString)
+	}
+	if value, ok := ipu.mutation.Protocol(); ok {
+		_spec.SetField(identityprovider.FieldProtocol, field.TypeString, value)
+	}
+	if ipu.mutation.ProtocolCleared() {
+		_spec.ClearField(identityprovider.FieldProtocol, field.TypeString)
 	}
 	if value, ok := ipu.mutation.Domains(); ok {
 		_spec.SetField(identityprovider.FieldDomains, field.TypeJSON, value)
@@ -624,6 +814,26 @@ type IdentityProviderUpdateOne struct {
 // SetUpdatedAt sets the "updated_at" field.
 func (ipuo *IdentityProviderUpdateOne) SetUpdatedAt(t time.Time) *IdentityProviderUpdateOne {
 	ipuo.mutation.SetUpdatedAt(t)
+	return ipuo
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (ipuo *IdentityProviderUpdateOne) SetDeletedAt(t time.Time) *IdentityProviderUpdateOne {
+	ipuo.mutation.SetDeletedAt(t)
+	return ipuo
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (ipuo *IdentityProviderUpdateOne) SetNillableDeletedAt(t *time.Time) *IdentityProviderUpdateOne {
+	if t != nil {
+		ipuo.SetDeletedAt(*t)
+	}
+	return ipuo
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (ipuo *IdentityProviderUpdateOne) ClearDeletedAt() *IdentityProviderUpdateOne {
+	ipuo.mutation.ClearDeletedAt()
 	return ipuo
 }
 
@@ -903,6 +1113,20 @@ func (ipuo *IdentityProviderUpdateOne) SetNillableActive(b *bool) *IdentityProvi
 	return ipuo
 }
 
+// SetEnabled sets the "enabled" field.
+func (ipuo *IdentityProviderUpdateOne) SetEnabled(b bool) *IdentityProviderUpdateOne {
+	ipuo.mutation.SetEnabled(b)
+	return ipuo
+}
+
+// SetNillableEnabled sets the "enabled" field if the given value is not nil.
+func (ipuo *IdentityProviderUpdateOne) SetNillableEnabled(b *bool) *IdentityProviderUpdateOne {
+	if b != nil {
+		ipuo.SetEnabled(*b)
+	}
+	return ipuo
+}
+
 // SetPrimary sets the "primary" field.
 func (ipuo *IdentityProviderUpdateOne) SetPrimary(b bool) *IdentityProviderUpdateOne {
 	ipuo.mutation.SetPrimary(b)
@@ -914,6 +1138,120 @@ func (ipuo *IdentityProviderUpdateOne) SetNillablePrimary(b *bool) *IdentityProv
 	if b != nil {
 		ipuo.SetPrimary(*b)
 	}
+	return ipuo
+}
+
+// SetAutoProvision sets the "auto_provision" field.
+func (ipuo *IdentityProviderUpdateOne) SetAutoProvision(b bool) *IdentityProviderUpdateOne {
+	ipuo.mutation.SetAutoProvision(b)
+	return ipuo
+}
+
+// SetNillableAutoProvision sets the "auto_provision" field if the given value is not nil.
+func (ipuo *IdentityProviderUpdateOne) SetNillableAutoProvision(b *bool) *IdentityProviderUpdateOne {
+	if b != nil {
+		ipuo.SetAutoProvision(*b)
+	}
+	return ipuo
+}
+
+// SetDefaultRole sets the "default_role" field.
+func (ipuo *IdentityProviderUpdateOne) SetDefaultRole(s string) *IdentityProviderUpdateOne {
+	ipuo.mutation.SetDefaultRole(s)
+	return ipuo
+}
+
+// SetNillableDefaultRole sets the "default_role" field if the given value is not nil.
+func (ipuo *IdentityProviderUpdateOne) SetNillableDefaultRole(s *string) *IdentityProviderUpdateOne {
+	if s != nil {
+		ipuo.SetDefaultRole(*s)
+	}
+	return ipuo
+}
+
+// ClearDefaultRole clears the value of the "default_role" field.
+func (ipuo *IdentityProviderUpdateOne) ClearDefaultRole() *IdentityProviderUpdateOne {
+	ipuo.mutation.ClearDefaultRole()
+	return ipuo
+}
+
+// SetDomain sets the "domain" field.
+func (ipuo *IdentityProviderUpdateOne) SetDomain(s string) *IdentityProviderUpdateOne {
+	ipuo.mutation.SetDomain(s)
+	return ipuo
+}
+
+// SetNillableDomain sets the "domain" field if the given value is not nil.
+func (ipuo *IdentityProviderUpdateOne) SetNillableDomain(s *string) *IdentityProviderUpdateOne {
+	if s != nil {
+		ipuo.SetDomain(*s)
+	}
+	return ipuo
+}
+
+// ClearDomain clears the value of the "domain" field.
+func (ipuo *IdentityProviderUpdateOne) ClearDomain() *IdentityProviderUpdateOne {
+	ipuo.mutation.ClearDomain()
+	return ipuo
+}
+
+// SetIconURL sets the "icon_url" field.
+func (ipuo *IdentityProviderUpdateOne) SetIconURL(s string) *IdentityProviderUpdateOne {
+	ipuo.mutation.SetIconURL(s)
+	return ipuo
+}
+
+// SetNillableIconURL sets the "icon_url" field if the given value is not nil.
+func (ipuo *IdentityProviderUpdateOne) SetNillableIconURL(s *string) *IdentityProviderUpdateOne {
+	if s != nil {
+		ipuo.SetIconURL(*s)
+	}
+	return ipuo
+}
+
+// ClearIconURL clears the value of the "icon_url" field.
+func (ipuo *IdentityProviderUpdateOne) ClearIconURL() *IdentityProviderUpdateOne {
+	ipuo.mutation.ClearIconURL()
+	return ipuo
+}
+
+// SetButtonText sets the "button_text" field.
+func (ipuo *IdentityProviderUpdateOne) SetButtonText(s string) *IdentityProviderUpdateOne {
+	ipuo.mutation.SetButtonText(s)
+	return ipuo
+}
+
+// SetNillableButtonText sets the "button_text" field if the given value is not nil.
+func (ipuo *IdentityProviderUpdateOne) SetNillableButtonText(s *string) *IdentityProviderUpdateOne {
+	if s != nil {
+		ipuo.SetButtonText(*s)
+	}
+	return ipuo
+}
+
+// ClearButtonText clears the value of the "button_text" field.
+func (ipuo *IdentityProviderUpdateOne) ClearButtonText() *IdentityProviderUpdateOne {
+	ipuo.mutation.ClearButtonText()
+	return ipuo
+}
+
+// SetProtocol sets the "protocol" field.
+func (ipuo *IdentityProviderUpdateOne) SetProtocol(s string) *IdentityProviderUpdateOne {
+	ipuo.mutation.SetProtocol(s)
+	return ipuo
+}
+
+// SetNillableProtocol sets the "protocol" field if the given value is not nil.
+func (ipuo *IdentityProviderUpdateOne) SetNillableProtocol(s *string) *IdentityProviderUpdateOne {
+	if s != nil {
+		ipuo.SetProtocol(*s)
+	}
+	return ipuo
+}
+
+// ClearProtocol clears the value of the "protocol" field.
+func (ipuo *IdentityProviderUpdateOne) ClearProtocol() *IdentityProviderUpdateOne {
+	ipuo.mutation.ClearProtocol()
 	return ipuo
 }
 
@@ -1085,6 +1423,12 @@ func (ipuo *IdentityProviderUpdateOne) sqlSave(ctx context.Context) (_node *Iden
 	if value, ok := ipuo.mutation.UpdatedAt(); ok {
 		_spec.SetField(identityprovider.FieldUpdatedAt, field.TypeTime, value)
 	}
+	if value, ok := ipuo.mutation.DeletedAt(); ok {
+		_spec.SetField(identityprovider.FieldDeletedAt, field.TypeTime, value)
+	}
+	if ipuo.mutation.DeletedAtCleared() {
+		_spec.ClearField(identityprovider.FieldDeletedAt, field.TypeTime)
+	}
 	if value, ok := ipuo.mutation.Name(); ok {
 		_spec.SetField(identityprovider.FieldName, field.TypeString, value)
 	}
@@ -1160,8 +1504,44 @@ func (ipuo *IdentityProviderUpdateOne) sqlSave(ctx context.Context) (_node *Iden
 	if value, ok := ipuo.mutation.Active(); ok {
 		_spec.SetField(identityprovider.FieldActive, field.TypeBool, value)
 	}
+	if value, ok := ipuo.mutation.Enabled(); ok {
+		_spec.SetField(identityprovider.FieldEnabled, field.TypeBool, value)
+	}
 	if value, ok := ipuo.mutation.Primary(); ok {
 		_spec.SetField(identityprovider.FieldPrimary, field.TypeBool, value)
+	}
+	if value, ok := ipuo.mutation.AutoProvision(); ok {
+		_spec.SetField(identityprovider.FieldAutoProvision, field.TypeBool, value)
+	}
+	if value, ok := ipuo.mutation.DefaultRole(); ok {
+		_spec.SetField(identityprovider.FieldDefaultRole, field.TypeString, value)
+	}
+	if ipuo.mutation.DefaultRoleCleared() {
+		_spec.ClearField(identityprovider.FieldDefaultRole, field.TypeString)
+	}
+	if value, ok := ipuo.mutation.Domain(); ok {
+		_spec.SetField(identityprovider.FieldDomain, field.TypeString, value)
+	}
+	if ipuo.mutation.DomainCleared() {
+		_spec.ClearField(identityprovider.FieldDomain, field.TypeString)
+	}
+	if value, ok := ipuo.mutation.IconURL(); ok {
+		_spec.SetField(identityprovider.FieldIconURL, field.TypeString, value)
+	}
+	if ipuo.mutation.IconURLCleared() {
+		_spec.ClearField(identityprovider.FieldIconURL, field.TypeString)
+	}
+	if value, ok := ipuo.mutation.ButtonText(); ok {
+		_spec.SetField(identityprovider.FieldButtonText, field.TypeString, value)
+	}
+	if ipuo.mutation.ButtonTextCleared() {
+		_spec.ClearField(identityprovider.FieldButtonText, field.TypeString)
+	}
+	if value, ok := ipuo.mutation.Protocol(); ok {
+		_spec.SetField(identityprovider.FieldProtocol, field.TypeString, value)
+	}
+	if ipuo.mutation.ProtocolCleared() {
+		_spec.ClearField(identityprovider.FieldProtocol, field.TypeString)
 	}
 	if value, ok := ipuo.mutation.Domains(); ok {
 		_spec.SetField(identityprovider.FieldDomains, field.TypeJSON, value)

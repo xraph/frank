@@ -1,0 +1,1 @@
+{{.appName}}: You successfully signed in via magic link at {{.timestamp}}. Welcome back, {{.userName}}!

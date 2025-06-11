@@ -8,7 +8,7 @@ import (
 	entOrganization "github.com/juicycleff/frank/ent/organization"
 	entRole "github.com/juicycleff/frank/ent/role"
 	entUser "github.com/juicycleff/frank/ent/user"
-	"github.com/juicycleff/frank/internal/middleware"
+	"github.com/juicycleff/frank/internal/contexts"
 	"github.com/juicycleff/frank/pkg/data"
 	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/rs/xid"
@@ -126,11 +126,11 @@ func (pc *DefaultPermissionChecker) HasPermissionsWithUserIDString(ctx context.C
 // HasAnyPermission checks if the current user has any of the specified permissions
 func (pc *DefaultPermissionChecker) HasAnyPermission(ctx context.Context, permissions []Permission, resourceType ResourceType, resourceID xid.ID) (bool, error) {
 	// Get user from context
-	userId, ok := middleware.GetUserID(ctx)
-	if !ok {
+	userId := contexts.GetUserIDFromContext(ctx)
+	if userId == nil {
 		return false, errors.New(errors.CodeResourceNotFound, "logged in user resource not found")
 	}
-	return pc.HasAnyPermissionWithUserID(ctx, permissions, resourceType, resourceID, userId)
+	return pc.HasAnyPermissionWithUserID(ctx, permissions, resourceType, resourceID, *userId)
 }
 
 // HasAnyPermissionWithUserID checks if the specified user has any of the specified permissions

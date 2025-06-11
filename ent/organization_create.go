@@ -16,12 +16,15 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/juicycleff/frank/ent/apikey"
+	"github.com/juicycleff/frank/ent/audit"
+	"github.com/juicycleff/frank/ent/emailtemplate"
 	"github.com/juicycleff/frank/ent/identityprovider"
 	"github.com/juicycleff/frank/ent/membership"
 	"github.com/juicycleff/frank/ent/oauthclient"
 	"github.com/juicycleff/frank/ent/organization"
 	"github.com/juicycleff/frank/ent/organizationfeature"
 	"github.com/juicycleff/frank/ent/role"
+	"github.com/juicycleff/frank/ent/smstemplate"
 	"github.com/juicycleff/frank/ent/user"
 	"github.com/juicycleff/frank/ent/userpermission"
 	"github.com/juicycleff/frank/ent/userrole"
@@ -65,6 +68,20 @@ func (oc *OrganizationCreate) SetNillableUpdatedAt(t *time.Time) *OrganizationCr
 	return oc
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (oc *OrganizationCreate) SetDeletedAt(t time.Time) *OrganizationCreate {
+	oc.mutation.SetDeletedAt(t)
+	return oc
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (oc *OrganizationCreate) SetNillableDeletedAt(t *time.Time) *OrganizationCreate {
+	if t != nil {
+		oc.SetDeletedAt(*t)
+	}
+	return oc
+}
+
 // SetName sets the "name" field.
 func (oc *OrganizationCreate) SetName(s string) *OrganizationCreate {
 	oc.mutation.SetName(s)
@@ -74,6 +91,18 @@ func (oc *OrganizationCreate) SetName(s string) *OrganizationCreate {
 // SetSlug sets the "slug" field.
 func (oc *OrganizationCreate) SetSlug(s string) *OrganizationCreate {
 	oc.mutation.SetSlug(s)
+	return oc
+}
+
+// SetDomains sets the "domains" field.
+func (oc *OrganizationCreate) SetDomains(s []string) *OrganizationCreate {
+	oc.mutation.SetDomains(s)
+	return oc
+}
+
+// SetVerifiedDomains sets the "verified_domains" field.
+func (oc *OrganizationCreate) SetVerifiedDomains(s []string) *OrganizationCreate {
+	oc.mutation.SetVerifiedDomains(s)
 	return oc
 }
 
@@ -441,6 +470,36 @@ func (oc *OrganizationCreate) AddMemberships(m ...*Membership) *OrganizationCrea
 	return oc.AddMembershipIDs(ids...)
 }
 
+// AddSmsTemplateIDs adds the "sms_templates" edge to the SMSTemplate entity by IDs.
+func (oc *OrganizationCreate) AddSmsTemplateIDs(ids ...xid.ID) *OrganizationCreate {
+	oc.mutation.AddSmsTemplateIDs(ids...)
+	return oc
+}
+
+// AddSmsTemplates adds the "sms_templates" edges to the SMSTemplate entity.
+func (oc *OrganizationCreate) AddSmsTemplates(s ...*SMSTemplate) *OrganizationCreate {
+	ids := make([]xid.ID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return oc.AddSmsTemplateIDs(ids...)
+}
+
+// AddEmailTemplateIDs adds the "email_templates" edge to the EmailTemplate entity by IDs.
+func (oc *OrganizationCreate) AddEmailTemplateIDs(ids ...xid.ID) *OrganizationCreate {
+	oc.mutation.AddEmailTemplateIDs(ids...)
+	return oc
+}
+
+// AddEmailTemplates adds the "email_templates" edges to the EmailTemplate entity.
+func (oc *OrganizationCreate) AddEmailTemplates(e ...*EmailTemplate) *OrganizationCreate {
+	ids := make([]xid.ID, len(e))
+	for i := range e {
+		ids[i] = e[i].ID
+	}
+	return oc.AddEmailTemplateIDs(ids...)
+}
+
 // AddAPIKeyIDs adds the "api_keys" edge to the ApiKey entity by IDs.
 func (oc *OrganizationCreate) AddAPIKeyIDs(ids ...xid.ID) *OrganizationCreate {
 	oc.mutation.AddAPIKeyIDs(ids...)
@@ -559,6 +618,21 @@ func (oc *OrganizationCreate) AddUserPermissionContexts(u ...*UserPermission) *O
 		ids[i] = u[i].ID
 	}
 	return oc.AddUserPermissionContextIDs(ids...)
+}
+
+// AddAuditLogIDs adds the "audit_logs" edge to the Audit entity by IDs.
+func (oc *OrganizationCreate) AddAuditLogIDs(ids ...xid.ID) *OrganizationCreate {
+	oc.mutation.AddAuditLogIDs(ids...)
+	return oc
+}
+
+// AddAuditLogs adds the "audit_logs" edges to the Audit entity.
+func (oc *OrganizationCreate) AddAuditLogs(a ...*Audit) *OrganizationCreate {
+	ids := make([]xid.ID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return oc.AddAuditLogIDs(ids...)
 }
 
 // Mutation returns the OrganizationMutation object of the builder.
@@ -786,6 +860,10 @@ func (oc *OrganizationCreate) createSpec() (*Organization, *sqlgraph.CreateSpec)
 		_spec.SetField(organization.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
+	if value, ok := oc.mutation.DeletedAt(); ok {
+		_spec.SetField(organization.FieldDeletedAt, field.TypeTime, value)
+		_node.DeletedAt = value
+	}
 	if value, ok := oc.mutation.Name(); ok {
 		_spec.SetField(organization.FieldName, field.TypeString, value)
 		_node.Name = value
@@ -793,6 +871,14 @@ func (oc *OrganizationCreate) createSpec() (*Organization, *sqlgraph.CreateSpec)
 	if value, ok := oc.mutation.Slug(); ok {
 		_spec.SetField(organization.FieldSlug, field.TypeString, value)
 		_node.Slug = value
+	}
+	if value, ok := oc.mutation.Domains(); ok {
+		_spec.SetField(organization.FieldDomains, field.TypeJSON, value)
+		_node.Domains = value
+	}
+	if value, ok := oc.mutation.VerifiedDomains(); ok {
+		_spec.SetField(organization.FieldVerifiedDomains, field.TypeJSON, value)
+		_node.VerifiedDomains = value
 	}
 	if value, ok := oc.mutation.Domain(); ok {
 		_spec.SetField(organization.FieldDomain, field.TypeString, value)
@@ -915,6 +1001,38 @@ func (oc *OrganizationCreate) createSpec() (*Organization, *sqlgraph.CreateSpec)
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(membership.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := oc.mutation.SmsTemplatesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   organization.SmsTemplatesTable,
+			Columns: []string{organization.SmsTemplatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(smstemplate.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := oc.mutation.EmailTemplatesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   organization.EmailTemplatesTable,
+			Columns: []string{organization.EmailTemplatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(emailtemplate.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -1050,6 +1168,22 @@ func (oc *OrganizationCreate) createSpec() (*Organization, *sqlgraph.CreateSpec)
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
+	if nodes := oc.mutation.AuditLogsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   organization.AuditLogsTable,
+			Columns: []string{organization.AuditLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(audit.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
 	return _node, _spec
 }
 
@@ -1114,6 +1248,24 @@ func (u *OrganizationUpsert) UpdateUpdatedAt() *OrganizationUpsert {
 	return u
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (u *OrganizationUpsert) SetDeletedAt(v time.Time) *OrganizationUpsert {
+	u.Set(organization.FieldDeletedAt, v)
+	return u
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *OrganizationUpsert) UpdateDeletedAt() *OrganizationUpsert {
+	u.SetExcluded(organization.FieldDeletedAt)
+	return u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *OrganizationUpsert) ClearDeletedAt() *OrganizationUpsert {
+	u.SetNull(organization.FieldDeletedAt)
+	return u
+}
+
 // SetName sets the "name" field.
 func (u *OrganizationUpsert) SetName(v string) *OrganizationUpsert {
 	u.Set(organization.FieldName, v)
@@ -1135,6 +1287,42 @@ func (u *OrganizationUpsert) SetSlug(v string) *OrganizationUpsert {
 // UpdateSlug sets the "slug" field to the value that was provided on create.
 func (u *OrganizationUpsert) UpdateSlug() *OrganizationUpsert {
 	u.SetExcluded(organization.FieldSlug)
+	return u
+}
+
+// SetDomains sets the "domains" field.
+func (u *OrganizationUpsert) SetDomains(v []string) *OrganizationUpsert {
+	u.Set(organization.FieldDomains, v)
+	return u
+}
+
+// UpdateDomains sets the "domains" field to the value that was provided on create.
+func (u *OrganizationUpsert) UpdateDomains() *OrganizationUpsert {
+	u.SetExcluded(organization.FieldDomains)
+	return u
+}
+
+// ClearDomains clears the value of the "domains" field.
+func (u *OrganizationUpsert) ClearDomains() *OrganizationUpsert {
+	u.SetNull(organization.FieldDomains)
+	return u
+}
+
+// SetVerifiedDomains sets the "verified_domains" field.
+func (u *OrganizationUpsert) SetVerifiedDomains(v []string) *OrganizationUpsert {
+	u.Set(organization.FieldVerifiedDomains, v)
+	return u
+}
+
+// UpdateVerifiedDomains sets the "verified_domains" field to the value that was provided on create.
+func (u *OrganizationUpsert) UpdateVerifiedDomains() *OrganizationUpsert {
+	u.SetExcluded(organization.FieldVerifiedDomains)
+	return u
+}
+
+// ClearVerifiedDomains clears the value of the "verified_domains" field.
+func (u *OrganizationUpsert) ClearVerifiedDomains() *OrganizationUpsert {
+	u.SetNull(organization.FieldVerifiedDomains)
 	return u
 }
 
@@ -1587,6 +1775,27 @@ func (u *OrganizationUpsertOne) UpdateUpdatedAt() *OrganizationUpsertOne {
 	})
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (u *OrganizationUpsertOne) SetDeletedAt(v time.Time) *OrganizationUpsertOne {
+	return u.Update(func(s *OrganizationUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *OrganizationUpsertOne) UpdateDeletedAt() *OrganizationUpsertOne {
+	return u.Update(func(s *OrganizationUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *OrganizationUpsertOne) ClearDeletedAt() *OrganizationUpsertOne {
+	return u.Update(func(s *OrganizationUpsert) {
+		s.ClearDeletedAt()
+	})
+}
+
 // SetName sets the "name" field.
 func (u *OrganizationUpsertOne) SetName(v string) *OrganizationUpsertOne {
 	return u.Update(func(s *OrganizationUpsert) {
@@ -1612,6 +1821,48 @@ func (u *OrganizationUpsertOne) SetSlug(v string) *OrganizationUpsertOne {
 func (u *OrganizationUpsertOne) UpdateSlug() *OrganizationUpsertOne {
 	return u.Update(func(s *OrganizationUpsert) {
 		s.UpdateSlug()
+	})
+}
+
+// SetDomains sets the "domains" field.
+func (u *OrganizationUpsertOne) SetDomains(v []string) *OrganizationUpsertOne {
+	return u.Update(func(s *OrganizationUpsert) {
+		s.SetDomains(v)
+	})
+}
+
+// UpdateDomains sets the "domains" field to the value that was provided on create.
+func (u *OrganizationUpsertOne) UpdateDomains() *OrganizationUpsertOne {
+	return u.Update(func(s *OrganizationUpsert) {
+		s.UpdateDomains()
+	})
+}
+
+// ClearDomains clears the value of the "domains" field.
+func (u *OrganizationUpsertOne) ClearDomains() *OrganizationUpsertOne {
+	return u.Update(func(s *OrganizationUpsert) {
+		s.ClearDomains()
+	})
+}
+
+// SetVerifiedDomains sets the "verified_domains" field.
+func (u *OrganizationUpsertOne) SetVerifiedDomains(v []string) *OrganizationUpsertOne {
+	return u.Update(func(s *OrganizationUpsert) {
+		s.SetVerifiedDomains(v)
+	})
+}
+
+// UpdateVerifiedDomains sets the "verified_domains" field to the value that was provided on create.
+func (u *OrganizationUpsertOne) UpdateVerifiedDomains() *OrganizationUpsertOne {
+	return u.Update(func(s *OrganizationUpsert) {
+		s.UpdateVerifiedDomains()
+	})
+}
+
+// ClearVerifiedDomains clears the value of the "verified_domains" field.
+func (u *OrganizationUpsertOne) ClearVerifiedDomains() *OrganizationUpsertOne {
+	return u.Update(func(s *OrganizationUpsert) {
+		s.ClearVerifiedDomains()
 	})
 }
 
@@ -2295,6 +2546,27 @@ func (u *OrganizationUpsertBulk) UpdateUpdatedAt() *OrganizationUpsertBulk {
 	})
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (u *OrganizationUpsertBulk) SetDeletedAt(v time.Time) *OrganizationUpsertBulk {
+	return u.Update(func(s *OrganizationUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *OrganizationUpsertBulk) UpdateDeletedAt() *OrganizationUpsertBulk {
+	return u.Update(func(s *OrganizationUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *OrganizationUpsertBulk) ClearDeletedAt() *OrganizationUpsertBulk {
+	return u.Update(func(s *OrganizationUpsert) {
+		s.ClearDeletedAt()
+	})
+}
+
 // SetName sets the "name" field.
 func (u *OrganizationUpsertBulk) SetName(v string) *OrganizationUpsertBulk {
 	return u.Update(func(s *OrganizationUpsert) {
@@ -2320,6 +2592,48 @@ func (u *OrganizationUpsertBulk) SetSlug(v string) *OrganizationUpsertBulk {
 func (u *OrganizationUpsertBulk) UpdateSlug() *OrganizationUpsertBulk {
 	return u.Update(func(s *OrganizationUpsert) {
 		s.UpdateSlug()
+	})
+}
+
+// SetDomains sets the "domains" field.
+func (u *OrganizationUpsertBulk) SetDomains(v []string) *OrganizationUpsertBulk {
+	return u.Update(func(s *OrganizationUpsert) {
+		s.SetDomains(v)
+	})
+}
+
+// UpdateDomains sets the "domains" field to the value that was provided on create.
+func (u *OrganizationUpsertBulk) UpdateDomains() *OrganizationUpsertBulk {
+	return u.Update(func(s *OrganizationUpsert) {
+		s.UpdateDomains()
+	})
+}
+
+// ClearDomains clears the value of the "domains" field.
+func (u *OrganizationUpsertBulk) ClearDomains() *OrganizationUpsertBulk {
+	return u.Update(func(s *OrganizationUpsert) {
+		s.ClearDomains()
+	})
+}
+
+// SetVerifiedDomains sets the "verified_domains" field.
+func (u *OrganizationUpsertBulk) SetVerifiedDomains(v []string) *OrganizationUpsertBulk {
+	return u.Update(func(s *OrganizationUpsert) {
+		s.SetVerifiedDomains(v)
+	})
+}
+
+// UpdateVerifiedDomains sets the "verified_domains" field to the value that was provided on create.
+func (u *OrganizationUpsertBulk) UpdateVerifiedDomains() *OrganizationUpsertBulk {
+	return u.Update(func(s *OrganizationUpsert) {
+		s.UpdateVerifiedDomains()
+	})
+}
+
+// ClearVerifiedDomains clears the value of the "verified_domains" field.
+func (u *OrganizationUpsertBulk) ClearVerifiedDomains() *OrganizationUpsertBulk {
+	return u.Update(func(s *OrganizationUpsert) {
+		s.ClearVerifiedDomains()
 	})
 }
 

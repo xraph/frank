@@ -23,12 +23,16 @@ const (
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
+	// FieldDeletedAt holds the string denoting the deleted_at field in the database.
+	FieldDeletedAt = "deleted_at"
 	// FieldUserID holds the string denoting the user_id field in the database.
 	FieldUserID = "user_id"
 	// FieldOrganizationID holds the string denoting the organization_id field in the database.
 	FieldOrganizationID = "organization_id"
 	// FieldRoleID holds the string denoting the role_id field in the database.
 	FieldRoleID = "role_id"
+	// FieldEmail holds the string denoting the email field in the database.
+	FieldEmail = "email"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
 	// FieldInvitedBy holds the string denoting the invited_by field in the database.
@@ -45,14 +49,20 @@ const (
 	FieldIsBillingContact = "is_billing_contact"
 	// FieldIsPrimaryContact holds the string denoting the is_primary_contact field in the database.
 	FieldIsPrimaryContact = "is_primary_contact"
+	// FieldLeftAt holds the string denoting the left_at field in the database.
+	FieldLeftAt = "left_at"
 	// FieldMetadata holds the string denoting the metadata field in the database.
 	FieldMetadata = "metadata"
+	// FieldCustomFields holds the string denoting the custom_fields field in the database.
+	FieldCustomFields = "custom_fields"
 	// EdgeUser holds the string denoting the user edge name in mutations.
 	EdgeUser = "user"
 	// EdgeOrganization holds the string denoting the organization edge name in mutations.
 	EdgeOrganization = "organization"
 	// EdgeRole holds the string denoting the role edge name in mutations.
 	EdgeRole = "role"
+	// EdgeInviter holds the string denoting the inviter edge name in mutations.
+	EdgeInviter = "inviter"
 	// Table holds the table name of the membership in the database.
 	Table = "memberships"
 	// UserTable is the table that holds the user relation/edge.
@@ -76,6 +86,13 @@ const (
 	RoleInverseTable = "roles"
 	// RoleColumn is the table column denoting the role relation/edge.
 	RoleColumn = "role_id"
+	// InviterTable is the table that holds the inviter relation/edge.
+	InviterTable = "memberships"
+	// InviterInverseTable is the table name for the User entity.
+	// It exists in this package in order to avoid circular dependency with the "user" package.
+	InviterInverseTable = "users"
+	// InviterColumn is the table column denoting the inviter relation/edge.
+	InviterColumn = "invited_by"
 )
 
 // Columns holds all SQL columns for membership fields.
@@ -83,9 +100,11 @@ var Columns = []string{
 	FieldID,
 	FieldCreatedAt,
 	FieldUpdatedAt,
+	FieldDeletedAt,
 	FieldUserID,
 	FieldOrganizationID,
 	FieldRoleID,
+	FieldEmail,
 	FieldStatus,
 	FieldInvitedBy,
 	FieldInvitedAt,
@@ -94,7 +113,9 @@ var Columns = []string{
 	FieldInvitationToken,
 	FieldIsBillingContact,
 	FieldIsPrimaryContact,
+	FieldLeftAt,
 	FieldMetadata,
+	FieldCustomFields,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -120,6 +141,8 @@ var (
 	OrganizationIDValidator func(string) error
 	// RoleIDValidator is a validator for the "role_id" field. It is called by the builders before save.
 	RoleIDValidator func(string) error
+	// EmailValidator is a validator for the "email" field. It is called by the builders before save.
+	EmailValidator func(string) error
 	// DefaultInvitedAt holds the default value on creation for the "invited_at" field.
 	DefaultInvitedAt func() time.Time
 	// DefaultIsBillingContact holds the default value on creation for the "is_billing_contact" field.
@@ -176,6 +199,11 @@ func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
 }
 
+// ByDeletedAt orders the results by the deleted_at field.
+func ByDeletedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDeletedAt, opts...).ToFunc()
+}
+
 // ByUserID orders the results by the user_id field.
 func ByUserID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUserID, opts...).ToFunc()
@@ -189,6 +217,11 @@ func ByOrganizationID(opts ...sql.OrderTermOption) OrderOption {
 // ByRoleID orders the results by the role_id field.
 func ByRoleID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldRoleID, opts...).ToFunc()
+}
+
+// ByEmail orders the results by the email field.
+func ByEmail(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldEmail, opts...).ToFunc()
 }
 
 // ByStatus orders the results by the status field.
@@ -231,6 +264,11 @@ func ByIsPrimaryContact(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldIsPrimaryContact, opts...).ToFunc()
 }
 
+// ByLeftAt orders the results by the left_at field.
+func ByLeftAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLeftAt, opts...).ToFunc()
+}
+
 // ByUserField orders the results by user field.
 func ByUserField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -249,6 +287,13 @@ func ByOrganizationField(field string, opts ...sql.OrderTermOption) OrderOption 
 func ByRoleField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
 		sqlgraph.OrderByNeighborTerms(s, newRoleStep(), sql.OrderByField(field, opts...))
+	}
+}
+
+// ByInviterField orders the results by inviter field.
+func ByInviterField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newInviterStep(), sql.OrderByField(field, opts...))
 	}
 }
 func newUserStep() *sqlgraph.Step {
@@ -270,5 +315,12 @@ func newRoleStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(RoleInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, RoleTable, RoleColumn),
+	)
+}
+func newInviterStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(InviterInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, InviterTable, InviterColumn),
 	)
 }

@@ -3,6 +3,7 @@ package authz
 import (
 	"context"
 
+	entUser "github.com/juicycleff/frank/ent/user"
 	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/rs/xid"
 )
@@ -10,46 +11,14 @@ import (
 // Permission represents a single, atomic permission
 type Permission string
 
-// Organization permissions
-const (
-	// Organization viewing and management
-	PermissionViewOrganization   Permission = "view:organization"
-	PermissionListOrganizations  Permission = "list:organizations"
-	PermissionCreateOrganization Permission = "create:organization"
-	PermissionUpdateOrganization Permission = "update:organization"
-	PermissionDeleteOrganization Permission = "delete:organization"
-
-	// Organization membership management
-	PermissionViewOrganizationMembers   Permission = "view:organization:members"
-	PermissionAddOrganizationMember     Permission = "add:organization:member"
-	PermissionUpdateOrganizationMember  Permission = "update:organization:member"
-	PermissionRemoveOrganizationMember  Permission = "remove:organization:member"
-	PermissionManageOrganizationInvites Permission = "manage:organization:invites"
-)
-
-// User management permissions
-const (
-	PermissionViewUser   Permission = "view:user"
-	PermissionListUsers  Permission = "list:users"
-	PermissionCreateUser Permission = "create:user"
-	PermissionUpdateUser Permission = "update:user"
-	PermissionDeleteUser Permission = "delete:user"
-
-	// User self-management permissions
-	PermissionViewSelf   Permission = "view:self"
-	PermissionUpdateSelf Permission = "update:self"
-	PermissionDeleteSelf Permission = "delete:self"
-	PermissionManageSelf Permission = "manage:self"
-)
-
 // API Key permissions
 const (
-	PermissionViewAPIKeys           Permission = "view:api:keys"
-	PermissionListAPIKeys           Permission = "list:api:keys"
-	PermissionCreateAPIKey          Permission = "create:api:key"
-	PermissionUpdateAPIKey          Permission = "update:api:key"
-	PermissionDeleteAPIKey          Permission = "delete:api:key"
-	PermissionManageAPIKeys         Permission = "manage:api:keys"
+	PermissionViewAPIKeys  Permission = "view:api:keys"
+	PermissionListAPIKeys  Permission = "list:api:keys"
+	PermissionCreateAPIKey Permission = "create:api:key"
+	PermissionUpdateAPIKey Permission = "update:api:key"
+	PermissionDeleteAPIKey Permission = "delete:api:key"
+	// PermissionManageAPIKeys         Permission = "manage:api:keys"
 	PermissionViewPersonalAPIKeys   Permission = "view:personal:api:keys"
 	PermissionManagePersonalAPIKeys Permission = "manage:personal:api:keys"
 )
@@ -90,12 +59,12 @@ const (
 
 // Webhook permissions
 const (
-	PermissionViewWebhooks   Permission = "view:webhooks"
-	PermissionListWebhooks   Permission = "list:webhooks"
-	PermissionCreateWebhook  Permission = "create:webhook"
-	PermissionUpdateWebhook  Permission = "update:webhook"
-	PermissionDeleteWebhook  Permission = "delete:webhook"
-	PermissionManageWebhooks Permission = "manage:webhooks"
+	PermissionViewWebhooks  Permission = "view:webhooks"
+	PermissionListWebhooks  Permission = "list:webhooks"
+	PermissionCreateWebhook Permission = "create:webhook"
+	PermissionUpdateWebhook Permission = "update:webhook"
+	PermissionDeleteWebhook Permission = "delete:webhook"
+	// PermissionManageWebhooks Permission = "manage:webhooks"
 
 	// Webhook events
 	PermissionViewWebhookEvents   Permission = "view:webhook:events"
@@ -137,16 +106,20 @@ const (
 
 // System admin permissions
 const (
-	PermissionSystemAdmin            Permission = "system:admin"
-	PermissionManageSystemSettings   Permission = "manage:system:settings"
-	PermissionViewSystemSettings     Permission = "view:system:settings"
-	PermissionManageAllOrganizations Permission = "manage:all:organizations"
-	PermissionViewAllOrganizations   Permission = "view:all:organizations"
-	PermissionManageAllUsers         Permission = "manage:all:users"
-	PermissionViewAllUsers           Permission = "view:all:users"
-	PermissionManageSystemRoles      Permission = "manage:system:roles"
-	PermissionViewSystemRoles        Permission = "view:system:roles"
+	PermissionSystemAdmin          Permission = "system:admin"
+	PermissionManageSystemSettings Permission = "manage:system:settings"
+	PermissionViewSystemSettings   Permission = "view:system:settings"
+	// PermissionManageAllOrganizations Permission = "manage:all:organizations"
+	// PermissionViewAllOrganizations   Permission = "view:all:organizations"
+	// PermissionManageAllUsers         Permission = "manage:all:users"
+	// PermissionViewAllUsers           Permission = "view:all:users"
+	// PermissionManageSystemRoles      Permission = "manage:system:roles"
+	PermissionViewSystemRoles Permission = "view:system:roles"
 )
+
+func (p Permission) String() string {
+	return string(p)
+}
 
 // PermissionChecker defines the interface for checking permissions
 type PermissionChecker interface {
@@ -167,6 +140,31 @@ type PermissionChecker interface {
 
 	// HasAnyPermissionWithUserID checks if the specified user has any of the specified permissions for the given resource
 	HasAnyPermissionWithUserID(ctx context.Context, permissions []Permission, resourceType ResourceType, resourceID xid.ID, userID xid.ID) (bool, error)
+}
+
+// PermissionCheckerWithContext defines the interface for checking permissions
+type PermissionCheckerWithContext interface {
+	PermissionChecker
+
+	// IsInternalUser checks if user is internal platform staff
+	IsInternalUser(ctx context.Context, userID xid.ID) (bool, error)
+
+	// IsPlatformAdmin checks if user is platform administrator
+	IsPlatformAdmin(ctx context.Context, userID xid.ID) (bool, error)
+
+	// IsExternalUser checks if user is external customer organization member
+	IsExternalUser(ctx context.Context, userID xid.ID) (bool, error)
+
+	// GetUserType returns the user's type
+	GetUserType(ctx context.Context, userID xid.ID) (entUser.UserType, error)
+
+	// CanAccessCustomerData checks if user can access customer organization data
+	CanAccessCustomerData(ctx context.Context, userID xid.ID, customerOrgID xid.ID) (bool, error)
+	// HasPermissionForUserType checks permissions with user type context
+	HasPermissionForUserType(ctx context.Context, permission Permission, resourceType ResourceType, resourceID xid.ID, userID xid.ID) (bool, error)
+
+	// CheckContextualPermission Context-aware permission checking
+	CheckContextualPermission(ctx context.Context, permission Permission, resourceType ResourceType, resourceID xid.ID) (bool, error)
 }
 
 // ErrNoPermission is returned when a user doesn't have the required permission

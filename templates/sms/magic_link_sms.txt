@@ -1,0 +1,1 @@
+{{.appName}}: Sign in instantly with your magic link: {{.magicLinkUrl}} Link expires in {{.expiresIn}}. Don't share this link.

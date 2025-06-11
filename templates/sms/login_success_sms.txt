@@ -1,0 +1,1 @@
+{{.appName}}: New sign-in from {{.location}} at {{.timestamp}}. If this wasn't you, visit {{.securityUrl}}

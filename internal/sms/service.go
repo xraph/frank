@@ -27,13 +27,13 @@ type SendSMSInput struct {
 }
 
 type service struct {
-	config *config.Config
+	config *config.SMSConfig
 	sender Provider
 	logger logging.Logger
 }
 
 // NewService creates a new SMS service
-func NewService(cfg *config.Config, sender Provider, logger logging.Logger) Service {
+func NewService(cfg *config.SMSConfig, sender Provider, logger logging.Logger) Service {
 	return &service{
 		config: cfg,
 		sender: sender,
@@ -55,7 +55,7 @@ func (s *service) Send(ctx context.Context, input SendSMSInput) error {
 	// Use default from number if not provided
 	from := input.From
 	if from == "" {
-		from = s.config.SMS.FromPhone
+		from = s.config.FromPhone
 	}
 
 	// Create SMS
@@ -73,7 +73,7 @@ func (s *service) Send(ctx context.Context, input SendSMSInput) error {
 			logging.Error(err),
 			logging.String("to", input.To),
 		)
-		return errors.Wrap(errors.CodeSMSDeliveryFail, err, "failed to send SMS")
+		return errors.Wrap(err, errors.CodeSMSDeliveryFail, "failed to send SMS")
 	}
 
 	return nil

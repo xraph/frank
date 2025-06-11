@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/juicycleff/frank/ent/apikey"
+	"github.com/juicycleff/frank/ent/audit"
 	"github.com/juicycleff/frank/ent/emailtemplate"
 	"github.com/juicycleff/frank/ent/featureflag"
 	"github.com/juicycleff/frank/ent/identityprovider"
@@ -26,6 +27,7 @@ import (
 	"github.com/juicycleff/frank/ent/role"
 	"github.com/juicycleff/frank/ent/schema"
 	"github.com/juicycleff/frank/ent/session"
+	"github.com/juicycleff/frank/ent/smstemplate"
 	"github.com/juicycleff/frank/ent/ssostate"
 	"github.com/juicycleff/frank/ent/user"
 	"github.com/juicycleff/frank/ent/userpermission"
@@ -77,6 +79,39 @@ func init() {
 	apikeyDescID := apikeyMixinFields0[0].Descriptor()
 	// apikey.DefaultID holds the default value on creation for the id field.
 	apikey.DefaultID = apikeyDescID.Default.(func() xid.ID)
+	auditMixin := schema.Audit{}.Mixin()
+	auditMixinFields0 := auditMixin[0].Fields()
+	_ = auditMixinFields0
+	auditMixinFields2 := auditMixin[2].Fields()
+	_ = auditMixinFields2
+	auditFields := schema.Audit{}.Fields()
+	_ = auditFields
+	// auditDescCreatedAt is the schema descriptor for created_at field.
+	auditDescCreatedAt := auditMixinFields2[0].Descriptor()
+	// audit.DefaultCreatedAt holds the default value on creation for the created_at field.
+	audit.DefaultCreatedAt = auditDescCreatedAt.Default.(func() time.Time)
+	// auditDescUpdatedAt is the schema descriptor for updated_at field.
+	auditDescUpdatedAt := auditMixinFields2[1].Descriptor()
+	// audit.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	audit.DefaultUpdatedAt = auditDescUpdatedAt.Default.(func() time.Time)
+	// audit.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	audit.UpdateDefaultUpdatedAt = auditDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// auditDescAction is the schema descriptor for action field.
+	auditDescAction := auditFields[3].Descriptor()
+	// audit.ActionValidator is a validator for the "action" field. It is called by the builders before save.
+	audit.ActionValidator = auditDescAction.Validators[0].(func(string) error)
+	// auditDescResourceType is the schema descriptor for resource_type field.
+	auditDescResourceType := auditFields[4].Descriptor()
+	// audit.ResourceTypeValidator is a validator for the "resource_type" field. It is called by the builders before save.
+	audit.ResourceTypeValidator = auditDescResourceType.Validators[0].(func(string) error)
+	// auditDescStatus is the schema descriptor for status field.
+	auditDescStatus := auditFields[6].Descriptor()
+	// audit.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	audit.StatusValidator = auditDescStatus.Validators[0].(func(string) error)
+	// auditDescID is the schema descriptor for id field.
+	auditDescID := auditMixinFields0[0].Descriptor()
+	// audit.DefaultID holds the default value on creation for the id field.
+	audit.DefaultID = auditDescID.Default.(func() xid.ID)
 	emailtemplateMixin := schema.EmailTemplate{}.Mixin()
 	emailtemplateMixinFields0 := emailtemplateMixin[0].Fields()
 	_ = emailtemplateMixinFields0
@@ -196,10 +231,18 @@ func init() {
 	identityproviderDescActive := identityproviderFields[14].Descriptor()
 	// identityprovider.DefaultActive holds the default value on creation for the active field.
 	identityprovider.DefaultActive = identityproviderDescActive.Default.(bool)
+	// identityproviderDescEnabled is the schema descriptor for enabled field.
+	identityproviderDescEnabled := identityproviderFields[15].Descriptor()
+	// identityprovider.DefaultEnabled holds the default value on creation for the enabled field.
+	identityprovider.DefaultEnabled = identityproviderDescEnabled.Default.(bool)
 	// identityproviderDescPrimary is the schema descriptor for primary field.
-	identityproviderDescPrimary := identityproviderFields[15].Descriptor()
+	identityproviderDescPrimary := identityproviderFields[16].Descriptor()
 	// identityprovider.DefaultPrimary holds the default value on creation for the primary field.
 	identityprovider.DefaultPrimary = identityproviderDescPrimary.Default.(bool)
+	// identityproviderDescAutoProvision is the schema descriptor for auto_provision field.
+	identityproviderDescAutoProvision := identityproviderFields[17].Descriptor()
+	// identityprovider.DefaultAutoProvision holds the default value on creation for the auto_provision field.
+	identityprovider.DefaultAutoProvision = identityproviderDescAutoProvision.Default.(bool)
 	// identityproviderDescID is the schema descriptor for id field.
 	identityproviderDescID := identityproviderMixinFields0[0].Descriptor()
 	// identityprovider.DefaultID holds the default value on creation for the id field.
@@ -274,16 +317,20 @@ func init() {
 	membershipDescRoleID := membershipFields[2].Descriptor()
 	// membership.RoleIDValidator is a validator for the "role_id" field. It is called by the builders before save.
 	membership.RoleIDValidator = membershipDescRoleID.Validators[0].(func(string) error)
+	// membershipDescEmail is the schema descriptor for email field.
+	membershipDescEmail := membershipFields[3].Descriptor()
+	// membership.EmailValidator is a validator for the "email" field. It is called by the builders before save.
+	membership.EmailValidator = membershipDescEmail.Validators[0].(func(string) error)
 	// membershipDescInvitedAt is the schema descriptor for invited_at field.
-	membershipDescInvitedAt := membershipFields[5].Descriptor()
+	membershipDescInvitedAt := membershipFields[6].Descriptor()
 	// membership.DefaultInvitedAt holds the default value on creation for the invited_at field.
 	membership.DefaultInvitedAt = membershipDescInvitedAt.Default.(func() time.Time)
 	// membershipDescIsBillingContact is the schema descriptor for is_billing_contact field.
-	membershipDescIsBillingContact := membershipFields[9].Descriptor()
+	membershipDescIsBillingContact := membershipFields[10].Descriptor()
 	// membership.DefaultIsBillingContact holds the default value on creation for the is_billing_contact field.
 	membership.DefaultIsBillingContact = membershipDescIsBillingContact.Default.(bool)
 	// membershipDescIsPrimaryContact is the schema descriptor for is_primary_contact field.
-	membershipDescIsPrimaryContact := membershipFields[10].Descriptor()
+	membershipDescIsPrimaryContact := membershipFields[11].Descriptor()
 	// membership.DefaultIsPrimaryContact holds the default value on creation for the is_primary_contact field.
 	membership.DefaultIsPrimaryContact = membershipDescIsPrimaryContact.Default.(bool)
 	// membershipDescID is the schema descriptor for id field.
@@ -500,51 +547,51 @@ func init() {
 	// organization.SlugValidator is a validator for the "slug" field. It is called by the builders before save.
 	organization.SlugValidator = organizationDescSlug.Validators[0].(func(string) error)
 	// organizationDescPlan is the schema descriptor for plan field.
-	organizationDescPlan := organizationFields[4].Descriptor()
+	organizationDescPlan := organizationFields[6].Descriptor()
 	// organization.DefaultPlan holds the default value on creation for the plan field.
 	organization.DefaultPlan = organizationDescPlan.Default.(string)
 	// organizationDescActive is the schema descriptor for active field.
-	organizationDescActive := organizationFields[5].Descriptor()
+	organizationDescActive := organizationFields[7].Descriptor()
 	// organization.DefaultActive holds the default value on creation for the active field.
 	organization.DefaultActive = organizationDescActive.Default.(bool)
 	// organizationDescTrialUsed is the schema descriptor for trial_used field.
-	organizationDescTrialUsed := organizationFields[8].Descriptor()
+	organizationDescTrialUsed := organizationFields[10].Descriptor()
 	// organization.DefaultTrialUsed holds the default value on creation for the trial_used field.
 	organization.DefaultTrialUsed = organizationDescTrialUsed.Default.(bool)
 	// organizationDescIsPlatformOrganization is the schema descriptor for is_platform_organization field.
-	organizationDescIsPlatformOrganization := organizationFields[11].Descriptor()
+	organizationDescIsPlatformOrganization := organizationFields[13].Descriptor()
 	// organization.DefaultIsPlatformOrganization holds the default value on creation for the is_platform_organization field.
 	organization.DefaultIsPlatformOrganization = organizationDescIsPlatformOrganization.Default.(bool)
 	// organizationDescExternalUserLimit is the schema descriptor for external_user_limit field.
-	organizationDescExternalUserLimit := organizationFields[12].Descriptor()
+	organizationDescExternalUserLimit := organizationFields[14].Descriptor()
 	// organization.DefaultExternalUserLimit holds the default value on creation for the external_user_limit field.
 	organization.DefaultExternalUserLimit = organizationDescExternalUserLimit.Default.(int)
 	// organizationDescEndUserLimit is the schema descriptor for end_user_limit field.
-	organizationDescEndUserLimit := organizationFields[13].Descriptor()
+	organizationDescEndUserLimit := organizationFields[15].Descriptor()
 	// organization.DefaultEndUserLimit holds the default value on creation for the end_user_limit field.
 	organization.DefaultEndUserLimit = organizationDescEndUserLimit.Default.(int)
 	// organizationDescSSOEnabled is the schema descriptor for sso_enabled field.
-	organizationDescSSOEnabled := organizationFields[14].Descriptor()
+	organizationDescSSOEnabled := organizationFields[16].Descriptor()
 	// organization.DefaultSSOEnabled holds the default value on creation for the sso_enabled field.
 	organization.DefaultSSOEnabled = organizationDescSSOEnabled.Default.(bool)
 	// organizationDescAuthServiceEnabled is the schema descriptor for auth_service_enabled field.
-	organizationDescAuthServiceEnabled := organizationFields[19].Descriptor()
+	organizationDescAuthServiceEnabled := organizationFields[21].Descriptor()
 	// organization.DefaultAuthServiceEnabled holds the default value on creation for the auth_service_enabled field.
 	organization.DefaultAuthServiceEnabled = organizationDescAuthServiceEnabled.Default.(bool)
 	// organizationDescAPIRequestLimit is the schema descriptor for api_request_limit field.
-	organizationDescAPIRequestLimit := organizationFields[22].Descriptor()
+	organizationDescAPIRequestLimit := organizationFields[24].Descriptor()
 	// organization.DefaultAPIRequestLimit holds the default value on creation for the api_request_limit field.
 	organization.DefaultAPIRequestLimit = organizationDescAPIRequestLimit.Default.(int)
 	// organizationDescAPIRequestsUsed is the schema descriptor for api_requests_used field.
-	organizationDescAPIRequestsUsed := organizationFields[23].Descriptor()
+	organizationDescAPIRequestsUsed := organizationFields[25].Descriptor()
 	// organization.DefaultAPIRequestsUsed holds the default value on creation for the api_requests_used field.
 	organization.DefaultAPIRequestsUsed = organizationDescAPIRequestsUsed.Default.(int)
 	// organizationDescCurrentExternalUsers is the schema descriptor for current_external_users field.
-	organizationDescCurrentExternalUsers := organizationFields[24].Descriptor()
+	organizationDescCurrentExternalUsers := organizationFields[26].Descriptor()
 	// organization.DefaultCurrentExternalUsers holds the default value on creation for the current_external_users field.
 	organization.DefaultCurrentExternalUsers = organizationDescCurrentExternalUsers.Default.(int)
 	// organizationDescCurrentEndUsers is the schema descriptor for current_end_users field.
-	organizationDescCurrentEndUsers := organizationFields[25].Descriptor()
+	organizationDescCurrentEndUsers := organizationFields[27].Descriptor()
 	// organization.DefaultCurrentEndUsers holds the default value on creation for the current_end_users field.
 	organization.DefaultCurrentEndUsers = organizationDescCurrentEndUsers.Default.(int)
 	// organizationDescID is the schema descriptor for id field.
@@ -756,6 +803,75 @@ func init() {
 	roleDescID := roleMixinFields0[0].Descriptor()
 	// role.DefaultID holds the default value on creation for the id field.
 	role.DefaultID = roleDescID.Default.(func() xid.ID)
+	smstemplateMixin := schema.SMSTemplate{}.Mixin()
+	smstemplateMixinFields0 := smstemplateMixin[0].Fields()
+	_ = smstemplateMixinFields0
+	smstemplateMixinFields1 := smstemplateMixin[1].Fields()
+	_ = smstemplateMixinFields1
+	smstemplateFields := schema.SMSTemplate{}.Fields()
+	_ = smstemplateFields
+	// smstemplateDescCreatedAt is the schema descriptor for created_at field.
+	smstemplateDescCreatedAt := smstemplateMixinFields1[0].Descriptor()
+	// smstemplate.DefaultCreatedAt holds the default value on creation for the created_at field.
+	smstemplate.DefaultCreatedAt = smstemplateDescCreatedAt.Default.(func() time.Time)
+	// smstemplateDescUpdatedAt is the schema descriptor for updated_at field.
+	smstemplateDescUpdatedAt := smstemplateMixinFields1[1].Descriptor()
+	// smstemplate.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	smstemplate.DefaultUpdatedAt = smstemplateDescUpdatedAt.Default.(func() time.Time)
+	// smstemplate.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	smstemplate.UpdateDefaultUpdatedAt = smstemplateDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// smstemplateDescName is the schema descriptor for name field.
+	smstemplateDescName := smstemplateFields[0].Descriptor()
+	// smstemplate.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	smstemplate.NameValidator = smstemplateDescName.Validators[0].(func(string) error)
+	// smstemplateDescContent is the schema descriptor for content field.
+	smstemplateDescContent := smstemplateFields[1].Descriptor()
+	// smstemplate.ContentValidator is a validator for the "content" field. It is called by the builders before save.
+	smstemplate.ContentValidator = smstemplateDescContent.Validators[0].(func(string) error)
+	// smstemplateDescType is the schema descriptor for type field.
+	smstemplateDescType := smstemplateFields[2].Descriptor()
+	// smstemplate.TypeValidator is a validator for the "type" field. It is called by the builders before save.
+	smstemplate.TypeValidator = smstemplateDescType.Validators[0].(func(string) error)
+	// smstemplateDescActive is the schema descriptor for active field.
+	smstemplateDescActive := smstemplateFields[4].Descriptor()
+	// smstemplate.DefaultActive holds the default value on creation for the active field.
+	smstemplate.DefaultActive = smstemplateDescActive.Default.(bool)
+	// smstemplateDescSystem is the schema descriptor for system field.
+	smstemplateDescSystem := smstemplateFields[5].Descriptor()
+	// smstemplate.DefaultSystem holds the default value on creation for the system field.
+	smstemplate.DefaultSystem = smstemplateDescSystem.Default.(bool)
+	// smstemplateDescLocale is the schema descriptor for locale field.
+	smstemplateDescLocale := smstemplateFields[6].Descriptor()
+	// smstemplate.DefaultLocale holds the default value on creation for the locale field.
+	smstemplate.DefaultLocale = smstemplateDescLocale.Default.(string)
+	// smstemplateDescMaxLength is the schema descriptor for max_length field.
+	smstemplateDescMaxLength := smstemplateFields[7].Descriptor()
+	// smstemplate.DefaultMaxLength holds the default value on creation for the max_length field.
+	smstemplate.DefaultMaxLength = smstemplateDescMaxLength.Default.(int)
+	// smstemplateDescMessageType is the schema descriptor for message_type field.
+	smstemplateDescMessageType := smstemplateFields[8].Descriptor()
+	// smstemplate.DefaultMessageType holds the default value on creation for the message_type field.
+	smstemplate.DefaultMessageType = smstemplateDescMessageType.Default.(string)
+	// smstemplateDescEstimatedSegments is the schema descriptor for estimated_segments field.
+	smstemplateDescEstimatedSegments := smstemplateFields[9].Descriptor()
+	// smstemplate.DefaultEstimatedSegments holds the default value on creation for the estimated_segments field.
+	smstemplate.DefaultEstimatedSegments = smstemplateDescEstimatedSegments.Default.(int)
+	// smstemplateDescEstimatedCost is the schema descriptor for estimated_cost field.
+	smstemplateDescEstimatedCost := smstemplateFields[10].Descriptor()
+	// smstemplate.DefaultEstimatedCost holds the default value on creation for the estimated_cost field.
+	smstemplate.DefaultEstimatedCost = smstemplateDescEstimatedCost.Default.(float64)
+	// smstemplateDescCurrency is the schema descriptor for currency field.
+	smstemplateDescCurrency := smstemplateFields[11].Descriptor()
+	// smstemplate.DefaultCurrency holds the default value on creation for the currency field.
+	smstemplate.DefaultCurrency = smstemplateDescCurrency.Default.(string)
+	// smstemplateDescUsageCount is the schema descriptor for usage_count field.
+	smstemplateDescUsageCount := smstemplateFields[15].Descriptor()
+	// smstemplate.DefaultUsageCount holds the default value on creation for the usage_count field.
+	smstemplate.DefaultUsageCount = smstemplateDescUsageCount.Default.(int)
+	// smstemplateDescID is the schema descriptor for id field.
+	smstemplateDescID := smstemplateMixinFields0[0].Descriptor()
+	// smstemplate.DefaultID holds the default value on creation for the id field.
+	smstemplate.DefaultID = smstemplateDescID.Default.(func() xid.ID)
 	ssostateMixin := schema.SSOState{}.Mixin()
 	ssostateMixinFields0 := ssostateMixin[0].Fields()
 	_ = ssostateMixinFields0

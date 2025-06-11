@@ -56,6 +56,20 @@ func (ffc *FeatureFlagCreate) SetNillableUpdatedAt(t *time.Time) *FeatureFlagCre
 	return ffc
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (ffc *FeatureFlagCreate) SetDeletedAt(t time.Time) *FeatureFlagCreate {
+	ffc.mutation.SetDeletedAt(t)
+	return ffc
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (ffc *FeatureFlagCreate) SetNillableDeletedAt(t *time.Time) *FeatureFlagCreate {
+	if t != nil {
+		ffc.SetDeletedAt(*t)
+	}
+	return ffc
+}
+
 // SetName sets the "name" field.
 func (ffc *FeatureFlagCreate) SetName(s string) *FeatureFlagCreate {
 	ffc.mutation.SetName(s)
@@ -284,6 +298,10 @@ func (ffc *FeatureFlagCreate) createSpec() (*FeatureFlag, *sqlgraph.CreateSpec) 
 		_spec.SetField(featureflag.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
+	if value, ok := ffc.mutation.DeletedAt(); ok {
+		_spec.SetField(featureflag.FieldDeletedAt, field.TypeTime, value)
+		_node.DeletedAt = value
+	}
 	if value, ok := ffc.mutation.Name(); ok {
 		_spec.SetField(featureflag.FieldName, field.TypeString, value)
 		_node.Name = value
@@ -385,6 +403,24 @@ func (u *FeatureFlagUpsert) SetUpdatedAt(v time.Time) *FeatureFlagUpsert {
 // UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
 func (u *FeatureFlagUpsert) UpdateUpdatedAt() *FeatureFlagUpsert {
 	u.SetExcluded(featureflag.FieldUpdatedAt)
+	return u
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *FeatureFlagUpsert) SetDeletedAt(v time.Time) *FeatureFlagUpsert {
+	u.Set(featureflag.FieldDeletedAt, v)
+	return u
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *FeatureFlagUpsert) UpdateDeletedAt() *FeatureFlagUpsert {
+	u.SetExcluded(featureflag.FieldDeletedAt)
+	return u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *FeatureFlagUpsert) ClearDeletedAt() *FeatureFlagUpsert {
+	u.SetNull(featureflag.FieldDeletedAt)
 	return u
 }
 
@@ -528,6 +564,27 @@ func (u *FeatureFlagUpsertOne) SetUpdatedAt(v time.Time) *FeatureFlagUpsertOne {
 func (u *FeatureFlagUpsertOne) UpdateUpdatedAt() *FeatureFlagUpsertOne {
 	return u.Update(func(s *FeatureFlagUpsert) {
 		s.UpdateUpdatedAt()
+	})
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *FeatureFlagUpsertOne) SetDeletedAt(v time.Time) *FeatureFlagUpsertOne {
+	return u.Update(func(s *FeatureFlagUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *FeatureFlagUpsertOne) UpdateDeletedAt() *FeatureFlagUpsertOne {
+	return u.Update(func(s *FeatureFlagUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *FeatureFlagUpsertOne) ClearDeletedAt() *FeatureFlagUpsertOne {
+	return u.Update(func(s *FeatureFlagUpsert) {
+		s.ClearDeletedAt()
 	})
 }
 
@@ -851,6 +908,27 @@ func (u *FeatureFlagUpsertBulk) SetUpdatedAt(v time.Time) *FeatureFlagUpsertBulk
 func (u *FeatureFlagUpsertBulk) UpdateUpdatedAt() *FeatureFlagUpsertBulk {
 	return u.Update(func(s *FeatureFlagUpsert) {
 		s.UpdateUpdatedAt()
+	})
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *FeatureFlagUpsertBulk) SetDeletedAt(v time.Time) *FeatureFlagUpsertBulk {
+	return u.Update(func(s *FeatureFlagUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *FeatureFlagUpsertBulk) UpdateDeletedAt() *FeatureFlagUpsertBulk {
+	return u.Update(func(s *FeatureFlagUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *FeatureFlagUpsertBulk) ClearDeletedAt() *FeatureFlagUpsertBulk {
+	return u.Update(func(s *FeatureFlagUpsert) {
+		s.ClearDeletedAt()
 	})
 }
 

@@ -58,6 +58,20 @@ func (upc *UserPermissionCreate) SetNillableUpdatedAt(t *time.Time) *UserPermiss
 	return upc
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (upc *UserPermissionCreate) SetDeletedAt(t time.Time) *UserPermissionCreate {
+	upc.mutation.SetDeletedAt(t)
+	return upc
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (upc *UserPermissionCreate) SetNillableDeletedAt(t *time.Time) *UserPermissionCreate {
+	if t != nil {
+		upc.SetDeletedAt(*t)
+	}
+	return upc
+}
+
 // SetUserID sets the "user_id" field.
 func (upc *UserPermissionCreate) SetUserID(x xid.ID) *UserPermissionCreate {
 	upc.mutation.SetUserID(x)
@@ -427,6 +441,10 @@ func (upc *UserPermissionCreate) createSpec() (*UserPermission, *sqlgraph.Create
 		_spec.SetField(userpermission.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
+	if value, ok := upc.mutation.DeletedAt(); ok {
+		_spec.SetField(userpermission.FieldDeletedAt, field.TypeTime, value)
+		_node.DeletedAt = value
+	}
 	if value, ok := upc.mutation.ContextType(); ok {
 		_spec.SetField(userpermission.FieldContextType, field.TypeEnum, value)
 		_node.ContextType = value
@@ -592,6 +610,24 @@ func (u *UserPermissionUpsert) SetUpdatedAt(v time.Time) *UserPermissionUpsert {
 // UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
 func (u *UserPermissionUpsert) UpdateUpdatedAt() *UserPermissionUpsert {
 	u.SetExcluded(userpermission.FieldUpdatedAt)
+	return u
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *UserPermissionUpsert) SetDeletedAt(v time.Time) *UserPermissionUpsert {
+	u.Set(userpermission.FieldDeletedAt, v)
+	return u
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *UserPermissionUpsert) UpdateDeletedAt() *UserPermissionUpsert {
+	u.SetExcluded(userpermission.FieldDeletedAt)
+	return u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *UserPermissionUpsert) ClearDeletedAt() *UserPermissionUpsert {
+	u.SetNull(userpermission.FieldDeletedAt)
 	return u
 }
 
@@ -855,6 +891,27 @@ func (u *UserPermissionUpsertOne) SetUpdatedAt(v time.Time) *UserPermissionUpser
 func (u *UserPermissionUpsertOne) UpdateUpdatedAt() *UserPermissionUpsertOne {
 	return u.Update(func(s *UserPermissionUpsert) {
 		s.UpdateUpdatedAt()
+	})
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *UserPermissionUpsertOne) SetDeletedAt(v time.Time) *UserPermissionUpsertOne {
+	return u.Update(func(s *UserPermissionUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *UserPermissionUpsertOne) UpdateDeletedAt() *UserPermissionUpsertOne {
+	return u.Update(func(s *UserPermissionUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *UserPermissionUpsertOne) ClearDeletedAt() *UserPermissionUpsertOne {
+	return u.Update(func(s *UserPermissionUpsert) {
+		s.ClearDeletedAt()
 	})
 }
 
@@ -1318,6 +1375,27 @@ func (u *UserPermissionUpsertBulk) SetUpdatedAt(v time.Time) *UserPermissionUpse
 func (u *UserPermissionUpsertBulk) UpdateUpdatedAt() *UserPermissionUpsertBulk {
 	return u.Update(func(s *UserPermissionUpsert) {
 		s.UpdateUpdatedAt()
+	})
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *UserPermissionUpsertBulk) SetDeletedAt(v time.Time) *UserPermissionUpsertBulk {
+	return u.Update(func(s *UserPermissionUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *UserPermissionUpsertBulk) UpdateDeletedAt() *UserPermissionUpsertBulk {
+	return u.Update(func(s *UserPermissionUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *UserPermissionUpsertBulk) ClearDeletedAt() *UserPermissionUpsertBulk {
+	return u.Update(func(s *UserPermissionUpsert) {
+		s.ClearDeletedAt()
 	})
 }
 

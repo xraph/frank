@@ -30,6 +30,8 @@ type UserPermission struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// DeletedAt holds the value of the "deleted_at" field.
+	DeletedAt time.Time `json:"deleted_at,omitempty"`
 	// UserID holds the value of the "user_id" field.
 	UserID xid.ID `json:"user_id,omitempty"`
 	// PermissionID holds the value of the "permission_id" field.
@@ -132,7 +134,7 @@ func (*UserPermission) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case userpermission.FieldContextType, userpermission.FieldResourceType, userpermission.FieldPermissionType, userpermission.FieldReason:
 			values[i] = new(sql.NullString)
-		case userpermission.FieldCreatedAt, userpermission.FieldUpdatedAt, userpermission.FieldAssignedAt, userpermission.FieldExpiresAt:
+		case userpermission.FieldCreatedAt, userpermission.FieldUpdatedAt, userpermission.FieldDeletedAt, userpermission.FieldAssignedAt, userpermission.FieldExpiresAt:
 			values[i] = new(sql.NullTime)
 		case userpermission.FieldID, userpermission.FieldUserID, userpermission.FieldPermissionID, userpermission.FieldContextID, userpermission.FieldResourceID, userpermission.FieldAssignedBy:
 			values[i] = new(xid.ID)
@@ -168,6 +170,12 @@ func (up *UserPermission) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
 				up.UpdatedAt = value.Time
+			}
+		case userpermission.FieldDeletedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field deleted_at", values[i])
+			} else if value.Valid {
+				up.DeletedAt = value.Time
 			}
 		case userpermission.FieldUserID:
 			if value, ok := values[i].(*xid.ID); !ok {
@@ -311,6 +319,9 @@ func (up *UserPermission) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
 	builder.WriteString(up.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("deleted_at=")
+	builder.WriteString(up.DeletedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("user_id=")
 	builder.WriteString(fmt.Sprintf("%v", up.UserID))

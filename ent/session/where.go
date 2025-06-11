@@ -837,6 +837,29 @@ func HasUserWith(preds ...predicate.User) predicate.Session {
 	})
 }
 
+// HasAuditLogs applies the HasEdge predicate on the "audit_logs" edge.
+func HasAuditLogs() predicate.Session {
+	return predicate.Session(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, AuditLogsTable, AuditLogsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasAuditLogsWith applies the HasEdge predicate on the "audit_logs" edge with a given conditions (other predicates).
+func HasAuditLogsWith(preds ...predicate.Audit) predicate.Session {
+	return predicate.Session(func(s *sql.Selector) {
+		step := newAuditLogsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Session) predicate.Session {
 	return predicate.Session(sql.AndPredicates(predicates...))

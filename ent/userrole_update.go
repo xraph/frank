@@ -42,6 +42,26 @@ func (uru *UserRoleUpdate) SetUpdatedAt(t time.Time) *UserRoleUpdate {
 	return uru
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (uru *UserRoleUpdate) SetDeletedAt(t time.Time) *UserRoleUpdate {
+	uru.mutation.SetDeletedAt(t)
+	return uru
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (uru *UserRoleUpdate) SetNillableDeletedAt(t *time.Time) *UserRoleUpdate {
+	if t != nil {
+		uru.SetDeletedAt(*t)
+	}
+	return uru
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (uru *UserRoleUpdate) ClearDeletedAt() *UserRoleUpdate {
+	uru.mutation.ClearDeletedAt()
+	return uru
+}
+
 // SetUserID sets the "user_id" field.
 func (uru *UserRoleUpdate) SetUserID(x xid.ID) *UserRoleUpdate {
 	uru.mutation.SetUserID(x)
@@ -344,6 +364,12 @@ func (uru *UserRoleUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := uru.mutation.UpdatedAt(); ok {
 		_spec.SetField(userrole.FieldUpdatedAt, field.TypeTime, value)
 	}
+	if value, ok := uru.mutation.DeletedAt(); ok {
+		_spec.SetField(userrole.FieldDeletedAt, field.TypeTime, value)
+	}
+	if uru.mutation.DeletedAtCleared() {
+		_spec.ClearField(userrole.FieldDeletedAt, field.TypeTime)
+	}
 	if value, ok := uru.mutation.ContextType(); ok {
 		_spec.SetField(userrole.FieldContextType, field.TypeEnum, value)
 	}
@@ -506,6 +532,26 @@ type UserRoleUpdateOne struct {
 // SetUpdatedAt sets the "updated_at" field.
 func (uruo *UserRoleUpdateOne) SetUpdatedAt(t time.Time) *UserRoleUpdateOne {
 	uruo.mutation.SetUpdatedAt(t)
+	return uruo
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (uruo *UserRoleUpdateOne) SetDeletedAt(t time.Time) *UserRoleUpdateOne {
+	uruo.mutation.SetDeletedAt(t)
+	return uruo
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (uruo *UserRoleUpdateOne) SetNillableDeletedAt(t *time.Time) *UserRoleUpdateOne {
+	if t != nil {
+		uruo.SetDeletedAt(*t)
+	}
+	return uruo
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (uruo *UserRoleUpdateOne) ClearDeletedAt() *UserRoleUpdateOne {
+	uruo.mutation.ClearDeletedAt()
 	return uruo
 }
 
@@ -840,6 +886,12 @@ func (uruo *UserRoleUpdateOne) sqlSave(ctx context.Context) (_node *UserRole, er
 	}
 	if value, ok := uruo.mutation.UpdatedAt(); ok {
 		_spec.SetField(userrole.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if value, ok := uruo.mutation.DeletedAt(); ok {
+		_spec.SetField(userrole.FieldDeletedAt, field.TypeTime, value)
+	}
+	if uruo.mutation.DeletedAtCleared() {
+		_spec.ClearField(userrole.FieldDeletedAt, field.TypeTime)
 	}
 	if value, ok := uruo.mutation.ContextType(); ok {
 		_spec.SetField(userrole.FieldContextType, field.TypeEnum, value)

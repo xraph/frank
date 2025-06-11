@@ -19,6 +19,8 @@ type Tx struct {
 	config
 	// ApiKey is the client for interacting with the ApiKey builders.
 	ApiKey *ApiKeyClient
+	// Audit is the client for interacting with the Audit builders.
+	Audit *AuditClient
 	// EmailTemplate is the client for interacting with the EmailTemplate builders.
 	EmailTemplate *EmailTemplateClient
 	// FeatureFlag is the client for interacting with the FeatureFlag builders.
@@ -49,6 +51,8 @@ type Tx struct {
 	PermissionDependency *PermissionDependencyClient
 	// Role is the client for interacting with the Role builders.
 	Role *RoleClient
+	// SMSTemplate is the client for interacting with the SMSTemplate builders.
+	SMSTemplate *SMSTemplateClient
 	// SSOState is the client for interacting with the SSOState builders.
 	SSOState *SSOStateClient
 	// Session is the client for interacting with the Session builders.
@@ -197,6 +201,7 @@ func (tx *Tx) Client() *Client {
 
 func (tx *Tx) init() {
 	tx.ApiKey = NewApiKeyClient(tx.config)
+	tx.Audit = NewAuditClient(tx.config)
 	tx.EmailTemplate = NewEmailTemplateClient(tx.config)
 	tx.FeatureFlag = NewFeatureFlagClient(tx.config)
 	tx.IdentityProvider = NewIdentityProviderClient(tx.config)
@@ -212,6 +217,7 @@ func (tx *Tx) init() {
 	tx.Permission = NewPermissionClient(tx.config)
 	tx.PermissionDependency = NewPermissionDependencyClient(tx.config)
 	tx.Role = NewRoleClient(tx.config)
+	tx.SMSTemplate = NewSMSTemplateClient(tx.config)
 	tx.SSOState = NewSSOStateClient(tx.config)
 	tx.Session = NewSessionClient(tx.config)
 	tx.User = NewUserClient(tx.config)

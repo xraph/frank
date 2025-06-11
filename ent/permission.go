@@ -27,6 +27,8 @@ type Permission struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// DeletedAt holds the value of the "deleted_at" field.
+	DeletedAt time.Time `json:"deleted_at,omitempty"`
 	// Permission identifier (e.g., 'create:user', 'view:billing')
 	Name string `json:"name,omitempty"`
 	// Human-readable permission name
@@ -155,7 +157,7 @@ func (*Permission) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullInt64)
 		case permission.FieldName, permission.FieldDisplayName, permission.FieldDescription, permission.FieldResource, permission.FieldAction, permission.FieldCategory, permission.FieldConditions, permission.FieldCreatedBy, permission.FieldPermissionGroup:
 			values[i] = new(sql.NullString)
-		case permission.FieldCreatedAt, permission.FieldUpdatedAt:
+		case permission.FieldCreatedAt, permission.FieldUpdatedAt, permission.FieldDeletedAt:
 			values[i] = new(sql.NullTime)
 		case permission.FieldID:
 			values[i] = new(xid.ID)
@@ -191,6 +193,12 @@ func (pe *Permission) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
 				pe.UpdatedAt = value.Time
+			}
+		case permission.FieldDeletedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field deleted_at", values[i])
+			} else if value.Valid {
+				pe.DeletedAt = value.Time
 			}
 		case permission.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -357,6 +365,9 @@ func (pe *Permission) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
 	builder.WriteString(pe.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("deleted_at=")
+	builder.WriteString(pe.DeletedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(pe.Name)

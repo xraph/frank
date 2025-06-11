@@ -69,6 +69,11 @@ func UpdatedAt(v time.Time) predicate.Verification {
 	return predicate.Verification(sql.FieldEQ(FieldUpdatedAt, v))
 }
 
+// DeletedAt applies equality check predicate on the "deleted_at" field. It's identical to DeletedAtEQ.
+func DeletedAt(v time.Time) predicate.Verification {
+	return predicate.Verification(sql.FieldEQ(FieldDeletedAt, v))
+}
+
 // UserID applies equality check predicate on the "user_id" field. It's identical to UserIDEQ.
 func UserID(v xid.ID) predicate.Verification {
 	return predicate.Verification(sql.FieldEQ(FieldUserID, v))
@@ -207,6 +212,56 @@ func UpdatedAtLT(v time.Time) predicate.Verification {
 // UpdatedAtLTE applies the LTE predicate on the "updated_at" field.
 func UpdatedAtLTE(v time.Time) predicate.Verification {
 	return predicate.Verification(sql.FieldLTE(FieldUpdatedAt, v))
+}
+
+// DeletedAtEQ applies the EQ predicate on the "deleted_at" field.
+func DeletedAtEQ(v time.Time) predicate.Verification {
+	return predicate.Verification(sql.FieldEQ(FieldDeletedAt, v))
+}
+
+// DeletedAtNEQ applies the NEQ predicate on the "deleted_at" field.
+func DeletedAtNEQ(v time.Time) predicate.Verification {
+	return predicate.Verification(sql.FieldNEQ(FieldDeletedAt, v))
+}
+
+// DeletedAtIn applies the In predicate on the "deleted_at" field.
+func DeletedAtIn(vs ...time.Time) predicate.Verification {
+	return predicate.Verification(sql.FieldIn(FieldDeletedAt, vs...))
+}
+
+// DeletedAtNotIn applies the NotIn predicate on the "deleted_at" field.
+func DeletedAtNotIn(vs ...time.Time) predicate.Verification {
+	return predicate.Verification(sql.FieldNotIn(FieldDeletedAt, vs...))
+}
+
+// DeletedAtGT applies the GT predicate on the "deleted_at" field.
+func DeletedAtGT(v time.Time) predicate.Verification {
+	return predicate.Verification(sql.FieldGT(FieldDeletedAt, v))
+}
+
+// DeletedAtGTE applies the GTE predicate on the "deleted_at" field.
+func DeletedAtGTE(v time.Time) predicate.Verification {
+	return predicate.Verification(sql.FieldGTE(FieldDeletedAt, v))
+}
+
+// DeletedAtLT applies the LT predicate on the "deleted_at" field.
+func DeletedAtLT(v time.Time) predicate.Verification {
+	return predicate.Verification(sql.FieldLT(FieldDeletedAt, v))
+}
+
+// DeletedAtLTE applies the LTE predicate on the "deleted_at" field.
+func DeletedAtLTE(v time.Time) predicate.Verification {
+	return predicate.Verification(sql.FieldLTE(FieldDeletedAt, v))
+}
+
+// DeletedAtIsNil applies the IsNil predicate on the "deleted_at" field.
+func DeletedAtIsNil() predicate.Verification {
+	return predicate.Verification(sql.FieldIsNull(FieldDeletedAt))
+}
+
+// DeletedAtNotNil applies the NotNil predicate on the "deleted_at" field.
+func DeletedAtNotNil() predicate.Verification {
+	return predicate.Verification(sql.FieldNotNull(FieldDeletedAt))
 }
 
 // UserIDEQ applies the EQ predicate on the "user_id" field.
@@ -932,6 +987,16 @@ func AttestationIsNil() predicate.Verification {
 // AttestationNotNil applies the NotNil predicate on the "attestation" field.
 func AttestationNotNil() predicate.Verification {
 	return predicate.Verification(sql.FieldNotNull(FieldAttestation))
+}
+
+// MetadataIsNil applies the IsNil predicate on the "metadata" field.
+func MetadataIsNil() predicate.Verification {
+	return predicate.Verification(sql.FieldIsNull(FieldMetadata))
+}
+
+// MetadataNotNil applies the NotNil predicate on the "metadata" field.
+func MetadataNotNil() predicate.Verification {
+	return predicate.Verification(sql.FieldNotNull(FieldMetadata))
 }
 
 // HasUser applies the HasEdge predicate on the "user" edge.

@@ -56,6 +56,20 @@ func (mc *MFACreate) SetNillableUpdatedAt(t *time.Time) *MFACreate {
 	return mc
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (mc *MFACreate) SetDeletedAt(t time.Time) *MFACreate {
+	mc.mutation.SetDeletedAt(t)
+	return mc
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (mc *MFACreate) SetNillableDeletedAt(t *time.Time) *MFACreate {
+	if t != nil {
+		mc.SetDeletedAt(*t)
+	}
+	return mc
+}
+
 // SetUserID sets the "user_id" field.
 func (mc *MFACreate) SetUserID(x xid.ID) *MFACreate {
 	mc.mutation.SetUserID(x)
@@ -317,6 +331,10 @@ func (mc *MFACreate) createSpec() (*MFA, *sqlgraph.CreateSpec) {
 		_spec.SetField(mfa.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
+	if value, ok := mc.mutation.DeletedAt(); ok {
+		_spec.SetField(mfa.FieldDeletedAt, field.TypeTime, value)
+		_node.DeletedAt = value
+	}
 	if value, ok := mc.mutation.Method(); ok {
 		_spec.SetField(mfa.FieldMethod, field.TypeString, value)
 		_node.Method = value
@@ -431,6 +449,24 @@ func (u *MFAUpsert) SetUpdatedAt(v time.Time) *MFAUpsert {
 // UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
 func (u *MFAUpsert) UpdateUpdatedAt() *MFAUpsert {
 	u.SetExcluded(mfa.FieldUpdatedAt)
+	return u
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *MFAUpsert) SetDeletedAt(v time.Time) *MFAUpsert {
+	u.Set(mfa.FieldDeletedAt, v)
+	return u
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *MFAUpsert) UpdateDeletedAt() *MFAUpsert {
+	u.SetExcluded(mfa.FieldDeletedAt)
+	return u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *MFAUpsert) ClearDeletedAt() *MFAUpsert {
+	u.SetNull(mfa.FieldDeletedAt)
 	return u
 }
 
@@ -646,6 +682,27 @@ func (u *MFAUpsertOne) SetUpdatedAt(v time.Time) *MFAUpsertOne {
 func (u *MFAUpsertOne) UpdateUpdatedAt() *MFAUpsertOne {
 	return u.Update(func(s *MFAUpsert) {
 		s.UpdateUpdatedAt()
+	})
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *MFAUpsertOne) SetDeletedAt(v time.Time) *MFAUpsertOne {
+	return u.Update(func(s *MFAUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *MFAUpsertOne) UpdateDeletedAt() *MFAUpsertOne {
+	return u.Update(func(s *MFAUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *MFAUpsertOne) ClearDeletedAt() *MFAUpsertOne {
+	return u.Update(func(s *MFAUpsert) {
+		s.ClearDeletedAt()
 	})
 }
 
@@ -1053,6 +1110,27 @@ func (u *MFAUpsertBulk) SetUpdatedAt(v time.Time) *MFAUpsertBulk {
 func (u *MFAUpsertBulk) UpdateUpdatedAt() *MFAUpsertBulk {
 	return u.Update(func(s *MFAUpsert) {
 		s.UpdateUpdatedAt()
+	})
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *MFAUpsertBulk) SetDeletedAt(v time.Time) *MFAUpsertBulk {
+	return u.Update(func(s *MFAUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *MFAUpsertBulk) UpdateDeletedAt() *MFAUpsertBulk {
+	return u.Update(func(s *MFAUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *MFAUpsertBulk) ClearDeletedAt() *MFAUpsertBulk {
+	return u.Update(func(s *MFAUpsert) {
+		s.ClearDeletedAt()
 	})
 }
 

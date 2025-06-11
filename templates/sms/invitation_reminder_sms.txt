@@ -1,0 +1,1 @@
+Reminder: {{.inviterName}} invited you to {{.organizationName}} on {{.appName}}. Invitation expires in {{.timeLeft}}: {{.invitationUrl}}

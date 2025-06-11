@@ -125,5 +125,6 @@ func (Permission) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		ModelBaseMixin{},
 		TimeMixin{},
+		SoftDeleteMixin{},
 	}
 }

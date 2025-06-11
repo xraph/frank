@@ -29,6 +29,8 @@ type OrganizationFeature struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// DeletedAt holds the value of the "deleted_at" field.
+	DeletedAt time.Time `json:"deleted_at,omitempty"`
 	// OrganizationID holds the value of the "organization_id" field.
 	OrganizationID xid.ID `json:"organization_id,omitempty"`
 	// FeatureID holds the value of the "feature_id" field.
@@ -85,7 +87,7 @@ func (*OrganizationFeature) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case organizationfeature.FieldEnabled:
 			values[i] = new(sql.NullBool)
-		case organizationfeature.FieldCreatedAt, organizationfeature.FieldUpdatedAt:
+		case organizationfeature.FieldCreatedAt, organizationfeature.FieldUpdatedAt, organizationfeature.FieldDeletedAt:
 			values[i] = new(sql.NullTime)
 		case organizationfeature.FieldID, organizationfeature.FieldOrganizationID, organizationfeature.FieldFeatureID:
 			values[i] = new(xid.ID)
@@ -121,6 +123,12 @@ func (of *OrganizationFeature) assignValues(columns []string, values []any) erro
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
 				of.UpdatedAt = value.Time
+			}
+		case organizationfeature.FieldDeletedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field deleted_at", values[i])
+			} else if value.Valid {
+				of.DeletedAt = value.Time
 			}
 		case organizationfeature.FieldOrganizationID:
 			if value, ok := values[i].(*xid.ID); !ok {
@@ -199,6 +207,9 @@ func (of *OrganizationFeature) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
 	builder.WriteString(of.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("deleted_at=")
+	builder.WriteString(of.DeletedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("organization_id=")
 	builder.WriteString(fmt.Sprintf("%v", of.OrganizationID))

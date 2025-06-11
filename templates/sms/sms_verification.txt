@@ -1,0 +1,1 @@
+{{.appName}}: Your verification code is {{.code}}. Enter this code to verify your account. Code expires in {{.expiresIn}}. Don't share this code with anyone.

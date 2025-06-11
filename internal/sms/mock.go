@@ -9,12 +9,12 @@ import (
 
 // mockProvider implements a mock SMS provider for testing
 type mockProvider struct {
-	config *config.Config
+	config *config.SMSConfig
 	logger logging.Logger
 }
 
 // NewMockProvider creates a new mock SMS provider
-func NewMockProvider(cfg *config.Config, logger logging.Logger) Provider {
+func NewMockProvider(cfg *config.SMSConfig, logger logging.Logger) Provider {
 	return &mockProvider{
 		config: cfg,
 		logger: logger,

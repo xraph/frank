@@ -8,8 +8,8 @@ import (
 )
 
 // SenderFactory creates an SMS sender based on configuration
-func SenderFactory(cfg *config.Config, logger logging.Logger) Provider {
-	provider := strings.ToLower(cfg.SMS.Provider)
+func SenderFactory(cfg *config.SMSConfig, logger logging.Logger) Provider {
+	provider := strings.ToLower(cfg.Provider)
 
 	switch provider {
 	case "twilio":

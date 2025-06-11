@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/juicycleff/frank/ent/predicate"
 	"github.com/rs/xid"
 )
@@ -66,6 +67,11 @@ func CreatedAt(v time.Time) predicate.EmailTemplate {
 // UpdatedAt applies equality check predicate on the "updated_at" field. It's identical to UpdatedAtEQ.
 func UpdatedAt(v time.Time) predicate.EmailTemplate {
 	return predicate.EmailTemplate(sql.FieldEQ(FieldUpdatedAt, v))
+}
+
+// DeletedAt applies equality check predicate on the "deleted_at" field. It's identical to DeletedAtEQ.
+func DeletedAt(v time.Time) predicate.EmailTemplate {
+	return predicate.EmailTemplate(sql.FieldEQ(FieldDeletedAt, v))
 }
 
 // Name applies equality check predicate on the "name" field. It's identical to NameEQ.
@@ -191,6 +197,56 @@ func UpdatedAtLT(v time.Time) predicate.EmailTemplate {
 // UpdatedAtLTE applies the LTE predicate on the "updated_at" field.
 func UpdatedAtLTE(v time.Time) predicate.EmailTemplate {
 	return predicate.EmailTemplate(sql.FieldLTE(FieldUpdatedAt, v))
+}
+
+// DeletedAtEQ applies the EQ predicate on the "deleted_at" field.
+func DeletedAtEQ(v time.Time) predicate.EmailTemplate {
+	return predicate.EmailTemplate(sql.FieldEQ(FieldDeletedAt, v))
+}
+
+// DeletedAtNEQ applies the NEQ predicate on the "deleted_at" field.
+func DeletedAtNEQ(v time.Time) predicate.EmailTemplate {
+	return predicate.EmailTemplate(sql.FieldNEQ(FieldDeletedAt, v))
+}
+
+// DeletedAtIn applies the In predicate on the "deleted_at" field.
+func DeletedAtIn(vs ...time.Time) predicate.EmailTemplate {
+	return predicate.EmailTemplate(sql.FieldIn(FieldDeletedAt, vs...))
+}
+
+// DeletedAtNotIn applies the NotIn predicate on the "deleted_at" field.
+func DeletedAtNotIn(vs ...time.Time) predicate.EmailTemplate {
+	return predicate.EmailTemplate(sql.FieldNotIn(FieldDeletedAt, vs...))
+}
+
+// DeletedAtGT applies the GT predicate on the "deleted_at" field.
+func DeletedAtGT(v time.Time) predicate.EmailTemplate {
+	return predicate.EmailTemplate(sql.FieldGT(FieldDeletedAt, v))
+}
+
+// DeletedAtGTE applies the GTE predicate on the "deleted_at" field.
+func DeletedAtGTE(v time.Time) predicate.EmailTemplate {
+	return predicate.EmailTemplate(sql.FieldGTE(FieldDeletedAt, v))
+}
+
+// DeletedAtLT applies the LT predicate on the "deleted_at" field.
+func DeletedAtLT(v time.Time) predicate.EmailTemplate {
+	return predicate.EmailTemplate(sql.FieldLT(FieldDeletedAt, v))
+}
+
+// DeletedAtLTE applies the LTE predicate on the "deleted_at" field.
+func DeletedAtLTE(v time.Time) predicate.EmailTemplate {
+	return predicate.EmailTemplate(sql.FieldLTE(FieldDeletedAt, v))
+}
+
+// DeletedAtIsNil applies the IsNil predicate on the "deleted_at" field.
+func DeletedAtIsNil() predicate.EmailTemplate {
+	return predicate.EmailTemplate(sql.FieldIsNull(FieldDeletedAt))
+}
+
+// DeletedAtNotNil applies the NotNil predicate on the "deleted_at" field.
+func DeletedAtNotNil() predicate.EmailTemplate {
+	return predicate.EmailTemplate(sql.FieldNotNull(FieldDeletedAt))
 }
 
 // NameEQ applies the EQ predicate on the "name" field.
@@ -701,6 +757,29 @@ func MetadataIsNil() predicate.EmailTemplate {
 // MetadataNotNil applies the NotNil predicate on the "metadata" field.
 func MetadataNotNil() predicate.EmailTemplate {
 	return predicate.EmailTemplate(sql.FieldNotNull(FieldMetadata))
+}
+
+// HasOrganization applies the HasEdge predicate on the "organization" edge.
+func HasOrganization() predicate.EmailTemplate {
+	return predicate.EmailTemplate(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, OrganizationTable, OrganizationColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasOrganizationWith applies the HasEdge predicate on the "organization" edge with a given conditions (other predicates).
+func HasOrganizationWith(preds ...predicate.Organization) predicate.EmailTemplate {
+	return predicate.EmailTemplate(func(s *sql.Selector) {
+		step := newOrganizationStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
 }
 
 // And groups predicates with the AND operator between them.

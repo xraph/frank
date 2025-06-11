@@ -43,6 +43,26 @@ func (oau *OAuthAuthorizationUpdate) SetUpdatedAt(t time.Time) *OAuthAuthorizati
 	return oau
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (oau *OAuthAuthorizationUpdate) SetDeletedAt(t time.Time) *OAuthAuthorizationUpdate {
+	oau.mutation.SetDeletedAt(t)
+	return oau
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (oau *OAuthAuthorizationUpdate) SetNillableDeletedAt(t *time.Time) *OAuthAuthorizationUpdate {
+	if t != nil {
+		oau.SetDeletedAt(*t)
+	}
+	return oau
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (oau *OAuthAuthorizationUpdate) ClearDeletedAt() *OAuthAuthorizationUpdate {
+	oau.mutation.ClearDeletedAt()
+	return oau
+}
+
 // SetClientID sets the "client_id" field.
 func (oau *OAuthAuthorizationUpdate) SetClientID(x xid.ID) *OAuthAuthorizationUpdate {
 	oau.mutation.SetClientID(x)
@@ -265,6 +285,46 @@ func (oau *OAuthAuthorizationUpdate) ClearNonce() *OAuthAuthorizationUpdate {
 	return oau
 }
 
+// SetUserAgent sets the "user_agent" field.
+func (oau *OAuthAuthorizationUpdate) SetUserAgent(s string) *OAuthAuthorizationUpdate {
+	oau.mutation.SetUserAgent(s)
+	return oau
+}
+
+// SetNillableUserAgent sets the "user_agent" field if the given value is not nil.
+func (oau *OAuthAuthorizationUpdate) SetNillableUserAgent(s *string) *OAuthAuthorizationUpdate {
+	if s != nil {
+		oau.SetUserAgent(*s)
+	}
+	return oau
+}
+
+// ClearUserAgent clears the value of the "user_agent" field.
+func (oau *OAuthAuthorizationUpdate) ClearUserAgent() *OAuthAuthorizationUpdate {
+	oau.mutation.ClearUserAgent()
+	return oau
+}
+
+// SetIPAddress sets the "ip_address" field.
+func (oau *OAuthAuthorizationUpdate) SetIPAddress(s string) *OAuthAuthorizationUpdate {
+	oau.mutation.SetIPAddress(s)
+	return oau
+}
+
+// SetNillableIPAddress sets the "ip_address" field if the given value is not nil.
+func (oau *OAuthAuthorizationUpdate) SetNillableIPAddress(s *string) *OAuthAuthorizationUpdate {
+	if s != nil {
+		oau.SetIPAddress(*s)
+	}
+	return oau
+}
+
+// ClearIPAddress clears the value of the "ip_address" field.
+func (oau *OAuthAuthorizationUpdate) ClearIPAddress() *OAuthAuthorizationUpdate {
+	oau.mutation.ClearIPAddress()
+	return oau
+}
+
 // SetClient sets the "client" edge to the OAuthClient entity.
 func (oau *OAuthAuthorizationUpdate) SetClient(o *OAuthClient) *OAuthAuthorizationUpdate {
 	return oau.SetClientID(o.ID)
@@ -411,6 +471,12 @@ func (oau *OAuthAuthorizationUpdate) sqlSave(ctx context.Context) (n int, err er
 	if value, ok := oau.mutation.UpdatedAt(); ok {
 		_spec.SetField(oauthauthorization.FieldUpdatedAt, field.TypeTime, value)
 	}
+	if value, ok := oau.mutation.DeletedAt(); ok {
+		_spec.SetField(oauthauthorization.FieldDeletedAt, field.TypeTime, value)
+	}
+	if oau.mutation.DeletedAtCleared() {
+		_spec.ClearField(oauthauthorization.FieldDeletedAt, field.TypeTime)
+	}
 	if value, ok := oau.mutation.OrganizationID(); ok {
 		_spec.SetField(oauthauthorization.FieldOrganizationID, field.TypeString, value)
 	}
@@ -469,6 +535,18 @@ func (oau *OAuthAuthorizationUpdate) sqlSave(ctx context.Context) (n int, err er
 	}
 	if oau.mutation.NonceCleared() {
 		_spec.ClearField(oauthauthorization.FieldNonce, field.TypeString)
+	}
+	if value, ok := oau.mutation.UserAgent(); ok {
+		_spec.SetField(oauthauthorization.FieldUserAgent, field.TypeString, value)
+	}
+	if oau.mutation.UserAgentCleared() {
+		_spec.ClearField(oauthauthorization.FieldUserAgent, field.TypeString)
+	}
+	if value, ok := oau.mutation.IPAddress(); ok {
+		_spec.SetField(oauthauthorization.FieldIPAddress, field.TypeString, value)
+	}
+	if oau.mutation.IPAddressCleared() {
+		_spec.ClearField(oauthauthorization.FieldIPAddress, field.TypeString)
 	}
 	if oau.mutation.ClientCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -598,6 +676,26 @@ type OAuthAuthorizationUpdateOne struct {
 // SetUpdatedAt sets the "updated_at" field.
 func (oauo *OAuthAuthorizationUpdateOne) SetUpdatedAt(t time.Time) *OAuthAuthorizationUpdateOne {
 	oauo.mutation.SetUpdatedAt(t)
+	return oauo
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (oauo *OAuthAuthorizationUpdateOne) SetDeletedAt(t time.Time) *OAuthAuthorizationUpdateOne {
+	oauo.mutation.SetDeletedAt(t)
+	return oauo
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (oauo *OAuthAuthorizationUpdateOne) SetNillableDeletedAt(t *time.Time) *OAuthAuthorizationUpdateOne {
+	if t != nil {
+		oauo.SetDeletedAt(*t)
+	}
+	return oauo
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (oauo *OAuthAuthorizationUpdateOne) ClearDeletedAt() *OAuthAuthorizationUpdateOne {
+	oauo.mutation.ClearDeletedAt()
 	return oauo
 }
 
@@ -823,6 +921,46 @@ func (oauo *OAuthAuthorizationUpdateOne) ClearNonce() *OAuthAuthorizationUpdateO
 	return oauo
 }
 
+// SetUserAgent sets the "user_agent" field.
+func (oauo *OAuthAuthorizationUpdateOne) SetUserAgent(s string) *OAuthAuthorizationUpdateOne {
+	oauo.mutation.SetUserAgent(s)
+	return oauo
+}
+
+// SetNillableUserAgent sets the "user_agent" field if the given value is not nil.
+func (oauo *OAuthAuthorizationUpdateOne) SetNillableUserAgent(s *string) *OAuthAuthorizationUpdateOne {
+	if s != nil {
+		oauo.SetUserAgent(*s)
+	}
+	return oauo
+}
+
+// ClearUserAgent clears the value of the "user_agent" field.
+func (oauo *OAuthAuthorizationUpdateOne) ClearUserAgent() *OAuthAuthorizationUpdateOne {
+	oauo.mutation.ClearUserAgent()
+	return oauo
+}
+
+// SetIPAddress sets the "ip_address" field.
+func (oauo *OAuthAuthorizationUpdateOne) SetIPAddress(s string) *OAuthAuthorizationUpdateOne {
+	oauo.mutation.SetIPAddress(s)
+	return oauo
+}
+
+// SetNillableIPAddress sets the "ip_address" field if the given value is not nil.
+func (oauo *OAuthAuthorizationUpdateOne) SetNillableIPAddress(s *string) *OAuthAuthorizationUpdateOne {
+	if s != nil {
+		oauo.SetIPAddress(*s)
+	}
+	return oauo
+}
+
+// ClearIPAddress clears the value of the "ip_address" field.
+func (oauo *OAuthAuthorizationUpdateOne) ClearIPAddress() *OAuthAuthorizationUpdateOne {
+	oauo.mutation.ClearIPAddress()
+	return oauo
+}
+
 // SetClient sets the "client" edge to the OAuthClient entity.
 func (oauo *OAuthAuthorizationUpdateOne) SetClient(o *OAuthClient) *OAuthAuthorizationUpdateOne {
 	return oauo.SetClientID(o.ID)
@@ -999,6 +1137,12 @@ func (oauo *OAuthAuthorizationUpdateOne) sqlSave(ctx context.Context) (_node *OA
 	if value, ok := oauo.mutation.UpdatedAt(); ok {
 		_spec.SetField(oauthauthorization.FieldUpdatedAt, field.TypeTime, value)
 	}
+	if value, ok := oauo.mutation.DeletedAt(); ok {
+		_spec.SetField(oauthauthorization.FieldDeletedAt, field.TypeTime, value)
+	}
+	if oauo.mutation.DeletedAtCleared() {
+		_spec.ClearField(oauthauthorization.FieldDeletedAt, field.TypeTime)
+	}
 	if value, ok := oauo.mutation.OrganizationID(); ok {
 		_spec.SetField(oauthauthorization.FieldOrganizationID, field.TypeString, value)
 	}
@@ -1057,6 +1201,18 @@ func (oauo *OAuthAuthorizationUpdateOne) sqlSave(ctx context.Context) (_node *OA
 	}
 	if oauo.mutation.NonceCleared() {
 		_spec.ClearField(oauthauthorization.FieldNonce, field.TypeString)
+	}
+	if value, ok := oauo.mutation.UserAgent(); ok {
+		_spec.SetField(oauthauthorization.FieldUserAgent, field.TypeString, value)
+	}
+	if oauo.mutation.UserAgentCleared() {
+		_spec.ClearField(oauthauthorization.FieldUserAgent, field.TypeString)
+	}
+	if value, ok := oauo.mutation.IPAddress(); ok {
+		_spec.SetField(oauthauthorization.FieldIPAddress, field.TypeString, value)
+	}
+	if oauo.mutation.IPAddressCleared() {
+		_spec.ClearField(oauthauthorization.FieldIPAddress, field.TypeString)
 	}
 	if oauo.mutation.ClientCleared() {
 		edge := &sqlgraph.EdgeSpec{

@@ -28,6 +28,8 @@ func (Membership) Fields() []ent.Field {
 		field.String("role_id").
 			GoType(xid.ID{}).
 			NotEmpty(),
+		field.String("email").
+			NotEmpty(),
 		field.Enum("status").
 			Values("pending", "active", "inactive", "suspended").
 			Default("pending"),
@@ -55,7 +57,12 @@ func (Membership) Fields() []ent.Field {
 		field.Bool("is_primary_contact").
 			Default(false).
 			Comment("Primary contact for the organization"),
+		field.Time("left_at").
+			Optional().
+			Nillable().
+			Comment("Datetime when the invitation left"),
 		entity.JSONMapField("metadata", true),
+		entity.JSONMapField("custom_fields", true),
 	}
 }
 
@@ -77,8 +84,10 @@ func (Membership) Edges() []ent.Edge {
 			Field("role_id").
 			Unique().
 			Required(),
-		// Note: We don't create an inverse edge for invited_by to avoid conflicts
-		// You can query the inviter using the invited_by field directly
+		edge.From("inviter", User.Type).
+			Ref("sent_invitations").
+			Field("invited_by").
+			Unique(),
 	}
 }
 
@@ -102,5 +111,6 @@ func (Membership) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		ModelBaseMixin{},
 		TimeMixin{},
+		SoftDeleteMixin{},
 	}
 }

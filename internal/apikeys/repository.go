@@ -85,7 +85,7 @@ func (r *repository) Create(ctx context.Context, input RepositoryCreateInput) (*
 	// Build API key creation query
 	create := r.client.ApiKey.
 		Create().
-		SetID(id.String()).
+		SetID(id).
 		SetName(input.Name).
 		SetKey(input.Key).
 		SetHashedKey(input.HashedKey).
@@ -119,7 +119,7 @@ func (r *repository) Create(ctx context.Context, input RepositoryCreateInput) (*
 	// Create API key
 	apiKey, err := create.Save(ctx)
 	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to create API key")
+		return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to create API key")
 	}
 
 	return apiKey, nil
@@ -136,7 +136,7 @@ func (r *repository) GetByID(ctx context.Context, id string) (*ent.ApiKey, error
 		if ent.IsNotFound(err) {
 			return nil, errors.New(errors.CodeNotFound, "API key not found")
 		}
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to get API key")
+		return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to get API key")
 	}
 
 	return apiKey, nil
@@ -153,7 +153,7 @@ func (r *repository) GetByHashedKey(ctx context.Context, hashedKey string) (*ent
 		if ent.IsNotFound(err) {
 			return nil, errors.New(errors.CodeInvalidAPIKey, "invalid API key")
 		}
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to get API key by hash")
+		return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to get API key by hash")
 	}
 
 	return apiKey, nil
@@ -185,7 +185,7 @@ func (r *repository) List(ctx context.Context, input RepositoryListInput) ([]*en
 	// Count total results
 	total, err := query.Count(ctx)
 	if err != nil {
-		return nil, 0, errors.Wrap(errors.CodeDatabaseError, err, "failed to count API keys")
+		return nil, 0, errors.Wrap(err, errors.CodeDatabaseError, "failed to count API keys")
 	}
 
 	// Apply pagination
@@ -196,7 +196,7 @@ func (r *repository) List(ctx context.Context, input RepositoryListInput) ([]*en
 		All(ctx)
 
 	if err != nil {
-		return nil, 0, errors.Wrap(errors.CodeDatabaseError, err, "failed to list API keys")
+		return nil, 0, errors.Wrap(err, errors.CodeDatabaseError, "failed to list API keys")
 	}
 
 	return apiKeys, total, nil
@@ -211,7 +211,7 @@ func (r *repository) Update(ctx context.Context, id string, input RepositoryUpda
 		Exist(ctx)
 
 	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to check API key existence")
+		return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to check API key existence")
 	}
 
 	if !exists {
@@ -254,7 +254,7 @@ func (r *repository) Update(ctx context.Context, id string, input RepositoryUpda
 	// Execute update
 	apiKey, err := update.Save(ctx)
 	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to update API key")
+		return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to update API key")
 	}
 
 	return apiKey, nil
@@ -269,7 +269,7 @@ func (r *repository) Delete(ctx context.Context, id string) error {
 		Exist(ctx)
 
 	if err != nil {
-		return errors.Wrap(errors.CodeDatabaseError, err, "failed to check API key existence")
+		return errors.Wrap(err, errors.CodeDatabaseError, "failed to check API key existence")
 	}
 
 	if !exists {
@@ -282,7 +282,7 @@ func (r *repository) Delete(ctx context.Context, id string) error {
 		Exec(ctx)
 
 	if err != nil {
-		return errors.Wrap(errors.CodeDatabaseError, err, "failed to delete API key")
+		return errors.Wrap(err, errors.CodeDatabaseError, "failed to delete API key")
 	}
 
 	return nil

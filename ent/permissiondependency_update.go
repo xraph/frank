@@ -40,6 +40,26 @@ func (pdu *PermissionDependencyUpdate) SetUpdatedAt(t time.Time) *PermissionDepe
 	return pdu
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (pdu *PermissionDependencyUpdate) SetDeletedAt(t time.Time) *PermissionDependencyUpdate {
+	pdu.mutation.SetDeletedAt(t)
+	return pdu
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (pdu *PermissionDependencyUpdate) SetNillableDeletedAt(t *time.Time) *PermissionDependencyUpdate {
+	if t != nil {
+		pdu.SetDeletedAt(*t)
+	}
+	return pdu
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (pdu *PermissionDependencyUpdate) ClearDeletedAt() *PermissionDependencyUpdate {
+	pdu.mutation.ClearDeletedAt()
+	return pdu
+}
+
 // SetPermissionID sets the "permission_id" field.
 func (pdu *PermissionDependencyUpdate) SetPermissionID(x xid.ID) *PermissionDependencyUpdate {
 	pdu.mutation.SetPermissionID(x)
@@ -246,6 +266,12 @@ func (pdu *PermissionDependencyUpdate) sqlSave(ctx context.Context) (n int, err 
 	if value, ok := pdu.mutation.UpdatedAt(); ok {
 		_spec.SetField(permissiondependency.FieldUpdatedAt, field.TypeTime, value)
 	}
+	if value, ok := pdu.mutation.DeletedAt(); ok {
+		_spec.SetField(permissiondependency.FieldDeletedAt, field.TypeTime, value)
+	}
+	if pdu.mutation.DeletedAtCleared() {
+		_spec.ClearField(permissiondependency.FieldDeletedAt, field.TypeTime)
+	}
 	if value, ok := pdu.mutation.DependencyType(); ok {
 		_spec.SetField(permissiondependency.FieldDependencyType, field.TypeEnum, value)
 	}
@@ -347,6 +373,26 @@ type PermissionDependencyUpdateOne struct {
 // SetUpdatedAt sets the "updated_at" field.
 func (pduo *PermissionDependencyUpdateOne) SetUpdatedAt(t time.Time) *PermissionDependencyUpdateOne {
 	pduo.mutation.SetUpdatedAt(t)
+	return pduo
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (pduo *PermissionDependencyUpdateOne) SetDeletedAt(t time.Time) *PermissionDependencyUpdateOne {
+	pduo.mutation.SetDeletedAt(t)
+	return pduo
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (pduo *PermissionDependencyUpdateOne) SetNillableDeletedAt(t *time.Time) *PermissionDependencyUpdateOne {
+	if t != nil {
+		pduo.SetDeletedAt(*t)
+	}
+	return pduo
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (pduo *PermissionDependencyUpdateOne) ClearDeletedAt() *PermissionDependencyUpdateOne {
+	pduo.mutation.ClearDeletedAt()
 	return pduo
 }
 
@@ -585,6 +631,12 @@ func (pduo *PermissionDependencyUpdateOne) sqlSave(ctx context.Context) (_node *
 	}
 	if value, ok := pduo.mutation.UpdatedAt(); ok {
 		_spec.SetField(permissiondependency.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if value, ok := pduo.mutation.DeletedAt(); ok {
+		_spec.SetField(permissiondependency.FieldDeletedAt, field.TypeTime, value)
+	}
+	if pduo.mutation.DeletedAtCleared() {
+		_spec.ClearField(permissiondependency.FieldDeletedAt, field.TypeTime)
 	}
 	if value, ok := pduo.mutation.DependencyType(); ok {
 		_spec.SetField(permissiondependency.FieldDependencyType, field.TypeEnum, value)

@@ -69,6 +69,11 @@ func UpdatedAt(v time.Time) predicate.IdentityProvider {
 	return predicate.IdentityProvider(sql.FieldEQ(FieldUpdatedAt, v))
 }
 
+// DeletedAt applies equality check predicate on the "deleted_at" field. It's identical to DeletedAtEQ.
+func DeletedAt(v time.Time) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldEQ(FieldDeletedAt, v))
+}
+
 // Name applies equality check predicate on the "name" field. It's identical to NameEQ.
 func Name(v string) predicate.IdentityProvider {
 	return predicate.IdentityProvider(sql.FieldEQ(FieldName, v))
@@ -144,9 +149,44 @@ func Active(v bool) predicate.IdentityProvider {
 	return predicate.IdentityProvider(sql.FieldEQ(FieldActive, v))
 }
 
+// Enabled applies equality check predicate on the "enabled" field. It's identical to EnabledEQ.
+func Enabled(v bool) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldEQ(FieldEnabled, v))
+}
+
 // Primary applies equality check predicate on the "primary" field. It's identical to PrimaryEQ.
 func Primary(v bool) predicate.IdentityProvider {
 	return predicate.IdentityProvider(sql.FieldEQ(FieldPrimary, v))
+}
+
+// AutoProvision applies equality check predicate on the "auto_provision" field. It's identical to AutoProvisionEQ.
+func AutoProvision(v bool) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldEQ(FieldAutoProvision, v))
+}
+
+// DefaultRole applies equality check predicate on the "default_role" field. It's identical to DefaultRoleEQ.
+func DefaultRole(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldEQ(FieldDefaultRole, v))
+}
+
+// Domain applies equality check predicate on the "domain" field. It's identical to DomainEQ.
+func Domain(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldEQ(FieldDomain, v))
+}
+
+// IconURL applies equality check predicate on the "icon_url" field. It's identical to IconURLEQ.
+func IconURL(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldEQ(FieldIconURL, v))
+}
+
+// ButtonText applies equality check predicate on the "button_text" field. It's identical to ButtonTextEQ.
+func ButtonText(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldEQ(FieldButtonText, v))
+}
+
+// Protocol applies equality check predicate on the "protocol" field. It's identical to ProtocolEQ.
+func Protocol(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldEQ(FieldProtocol, v))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
@@ -227,6 +267,56 @@ func UpdatedAtLT(v time.Time) predicate.IdentityProvider {
 // UpdatedAtLTE applies the LTE predicate on the "updated_at" field.
 func UpdatedAtLTE(v time.Time) predicate.IdentityProvider {
 	return predicate.IdentityProvider(sql.FieldLTE(FieldUpdatedAt, v))
+}
+
+// DeletedAtEQ applies the EQ predicate on the "deleted_at" field.
+func DeletedAtEQ(v time.Time) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldEQ(FieldDeletedAt, v))
+}
+
+// DeletedAtNEQ applies the NEQ predicate on the "deleted_at" field.
+func DeletedAtNEQ(v time.Time) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldNEQ(FieldDeletedAt, v))
+}
+
+// DeletedAtIn applies the In predicate on the "deleted_at" field.
+func DeletedAtIn(vs ...time.Time) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldIn(FieldDeletedAt, vs...))
+}
+
+// DeletedAtNotIn applies the NotIn predicate on the "deleted_at" field.
+func DeletedAtNotIn(vs ...time.Time) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldNotIn(FieldDeletedAt, vs...))
+}
+
+// DeletedAtGT applies the GT predicate on the "deleted_at" field.
+func DeletedAtGT(v time.Time) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldGT(FieldDeletedAt, v))
+}
+
+// DeletedAtGTE applies the GTE predicate on the "deleted_at" field.
+func DeletedAtGTE(v time.Time) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldGTE(FieldDeletedAt, v))
+}
+
+// DeletedAtLT applies the LT predicate on the "deleted_at" field.
+func DeletedAtLT(v time.Time) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldLT(FieldDeletedAt, v))
+}
+
+// DeletedAtLTE applies the LTE predicate on the "deleted_at" field.
+func DeletedAtLTE(v time.Time) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldLTE(FieldDeletedAt, v))
+}
+
+// DeletedAtIsNil applies the IsNil predicate on the "deleted_at" field.
+func DeletedAtIsNil() predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldIsNull(FieldDeletedAt))
+}
+
+// DeletedAtNotNil applies the NotNil predicate on the "deleted_at" field.
+func DeletedAtNotNil() predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldNotNull(FieldDeletedAt))
 }
 
 // NameEQ applies the EQ predicate on the "name" field.
@@ -1264,6 +1354,16 @@ func ActiveNEQ(v bool) predicate.IdentityProvider {
 	return predicate.IdentityProvider(sql.FieldNEQ(FieldActive, v))
 }
 
+// EnabledEQ applies the EQ predicate on the "enabled" field.
+func EnabledEQ(v bool) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldEQ(FieldEnabled, v))
+}
+
+// EnabledNEQ applies the NEQ predicate on the "enabled" field.
+func EnabledNEQ(v bool) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldNEQ(FieldEnabled, v))
+}
+
 // PrimaryEQ applies the EQ predicate on the "primary" field.
 func PrimaryEQ(v bool) predicate.IdentityProvider {
 	return predicate.IdentityProvider(sql.FieldEQ(FieldPrimary, v))
@@ -1272,6 +1372,391 @@ func PrimaryEQ(v bool) predicate.IdentityProvider {
 // PrimaryNEQ applies the NEQ predicate on the "primary" field.
 func PrimaryNEQ(v bool) predicate.IdentityProvider {
 	return predicate.IdentityProvider(sql.FieldNEQ(FieldPrimary, v))
+}
+
+// AutoProvisionEQ applies the EQ predicate on the "auto_provision" field.
+func AutoProvisionEQ(v bool) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldEQ(FieldAutoProvision, v))
+}
+
+// AutoProvisionNEQ applies the NEQ predicate on the "auto_provision" field.
+func AutoProvisionNEQ(v bool) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldNEQ(FieldAutoProvision, v))
+}
+
+// DefaultRoleEQ applies the EQ predicate on the "default_role" field.
+func DefaultRoleEQ(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldEQ(FieldDefaultRole, v))
+}
+
+// DefaultRoleNEQ applies the NEQ predicate on the "default_role" field.
+func DefaultRoleNEQ(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldNEQ(FieldDefaultRole, v))
+}
+
+// DefaultRoleIn applies the In predicate on the "default_role" field.
+func DefaultRoleIn(vs ...string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldIn(FieldDefaultRole, vs...))
+}
+
+// DefaultRoleNotIn applies the NotIn predicate on the "default_role" field.
+func DefaultRoleNotIn(vs ...string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldNotIn(FieldDefaultRole, vs...))
+}
+
+// DefaultRoleGT applies the GT predicate on the "default_role" field.
+func DefaultRoleGT(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldGT(FieldDefaultRole, v))
+}
+
+// DefaultRoleGTE applies the GTE predicate on the "default_role" field.
+func DefaultRoleGTE(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldGTE(FieldDefaultRole, v))
+}
+
+// DefaultRoleLT applies the LT predicate on the "default_role" field.
+func DefaultRoleLT(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldLT(FieldDefaultRole, v))
+}
+
+// DefaultRoleLTE applies the LTE predicate on the "default_role" field.
+func DefaultRoleLTE(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldLTE(FieldDefaultRole, v))
+}
+
+// DefaultRoleContains applies the Contains predicate on the "default_role" field.
+func DefaultRoleContains(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldContains(FieldDefaultRole, v))
+}
+
+// DefaultRoleHasPrefix applies the HasPrefix predicate on the "default_role" field.
+func DefaultRoleHasPrefix(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldHasPrefix(FieldDefaultRole, v))
+}
+
+// DefaultRoleHasSuffix applies the HasSuffix predicate on the "default_role" field.
+func DefaultRoleHasSuffix(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldHasSuffix(FieldDefaultRole, v))
+}
+
+// DefaultRoleIsNil applies the IsNil predicate on the "default_role" field.
+func DefaultRoleIsNil() predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldIsNull(FieldDefaultRole))
+}
+
+// DefaultRoleNotNil applies the NotNil predicate on the "default_role" field.
+func DefaultRoleNotNil() predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldNotNull(FieldDefaultRole))
+}
+
+// DefaultRoleEqualFold applies the EqualFold predicate on the "default_role" field.
+func DefaultRoleEqualFold(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldEqualFold(FieldDefaultRole, v))
+}
+
+// DefaultRoleContainsFold applies the ContainsFold predicate on the "default_role" field.
+func DefaultRoleContainsFold(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldContainsFold(FieldDefaultRole, v))
+}
+
+// DomainEQ applies the EQ predicate on the "domain" field.
+func DomainEQ(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldEQ(FieldDomain, v))
+}
+
+// DomainNEQ applies the NEQ predicate on the "domain" field.
+func DomainNEQ(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldNEQ(FieldDomain, v))
+}
+
+// DomainIn applies the In predicate on the "domain" field.
+func DomainIn(vs ...string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldIn(FieldDomain, vs...))
+}
+
+// DomainNotIn applies the NotIn predicate on the "domain" field.
+func DomainNotIn(vs ...string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldNotIn(FieldDomain, vs...))
+}
+
+// DomainGT applies the GT predicate on the "domain" field.
+func DomainGT(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldGT(FieldDomain, v))
+}
+
+// DomainGTE applies the GTE predicate on the "domain" field.
+func DomainGTE(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldGTE(FieldDomain, v))
+}
+
+// DomainLT applies the LT predicate on the "domain" field.
+func DomainLT(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldLT(FieldDomain, v))
+}
+
+// DomainLTE applies the LTE predicate on the "domain" field.
+func DomainLTE(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldLTE(FieldDomain, v))
+}
+
+// DomainContains applies the Contains predicate on the "domain" field.
+func DomainContains(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldContains(FieldDomain, v))
+}
+
+// DomainHasPrefix applies the HasPrefix predicate on the "domain" field.
+func DomainHasPrefix(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldHasPrefix(FieldDomain, v))
+}
+
+// DomainHasSuffix applies the HasSuffix predicate on the "domain" field.
+func DomainHasSuffix(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldHasSuffix(FieldDomain, v))
+}
+
+// DomainIsNil applies the IsNil predicate on the "domain" field.
+func DomainIsNil() predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldIsNull(FieldDomain))
+}
+
+// DomainNotNil applies the NotNil predicate on the "domain" field.
+func DomainNotNil() predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldNotNull(FieldDomain))
+}
+
+// DomainEqualFold applies the EqualFold predicate on the "domain" field.
+func DomainEqualFold(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldEqualFold(FieldDomain, v))
+}
+
+// DomainContainsFold applies the ContainsFold predicate on the "domain" field.
+func DomainContainsFold(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldContainsFold(FieldDomain, v))
+}
+
+// IconURLEQ applies the EQ predicate on the "icon_url" field.
+func IconURLEQ(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldEQ(FieldIconURL, v))
+}
+
+// IconURLNEQ applies the NEQ predicate on the "icon_url" field.
+func IconURLNEQ(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldNEQ(FieldIconURL, v))
+}
+
+// IconURLIn applies the In predicate on the "icon_url" field.
+func IconURLIn(vs ...string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldIn(FieldIconURL, vs...))
+}
+
+// IconURLNotIn applies the NotIn predicate on the "icon_url" field.
+func IconURLNotIn(vs ...string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldNotIn(FieldIconURL, vs...))
+}
+
+// IconURLGT applies the GT predicate on the "icon_url" field.
+func IconURLGT(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldGT(FieldIconURL, v))
+}
+
+// IconURLGTE applies the GTE predicate on the "icon_url" field.
+func IconURLGTE(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldGTE(FieldIconURL, v))
+}
+
+// IconURLLT applies the LT predicate on the "icon_url" field.
+func IconURLLT(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldLT(FieldIconURL, v))
+}
+
+// IconURLLTE applies the LTE predicate on the "icon_url" field.
+func IconURLLTE(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldLTE(FieldIconURL, v))
+}
+
+// IconURLContains applies the Contains predicate on the "icon_url" field.
+func IconURLContains(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldContains(FieldIconURL, v))
+}
+
+// IconURLHasPrefix applies the HasPrefix predicate on the "icon_url" field.
+func IconURLHasPrefix(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldHasPrefix(FieldIconURL, v))
+}
+
+// IconURLHasSuffix applies the HasSuffix predicate on the "icon_url" field.
+func IconURLHasSuffix(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldHasSuffix(FieldIconURL, v))
+}
+
+// IconURLIsNil applies the IsNil predicate on the "icon_url" field.
+func IconURLIsNil() predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldIsNull(FieldIconURL))
+}
+
+// IconURLNotNil applies the NotNil predicate on the "icon_url" field.
+func IconURLNotNil() predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldNotNull(FieldIconURL))
+}
+
+// IconURLEqualFold applies the EqualFold predicate on the "icon_url" field.
+func IconURLEqualFold(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldEqualFold(FieldIconURL, v))
+}
+
+// IconURLContainsFold applies the ContainsFold predicate on the "icon_url" field.
+func IconURLContainsFold(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldContainsFold(FieldIconURL, v))
+}
+
+// ButtonTextEQ applies the EQ predicate on the "button_text" field.
+func ButtonTextEQ(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldEQ(FieldButtonText, v))
+}
+
+// ButtonTextNEQ applies the NEQ predicate on the "button_text" field.
+func ButtonTextNEQ(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldNEQ(FieldButtonText, v))
+}
+
+// ButtonTextIn applies the In predicate on the "button_text" field.
+func ButtonTextIn(vs ...string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldIn(FieldButtonText, vs...))
+}
+
+// ButtonTextNotIn applies the NotIn predicate on the "button_text" field.
+func ButtonTextNotIn(vs ...string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldNotIn(FieldButtonText, vs...))
+}
+
+// ButtonTextGT applies the GT predicate on the "button_text" field.
+func ButtonTextGT(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldGT(FieldButtonText, v))
+}
+
+// ButtonTextGTE applies the GTE predicate on the "button_text" field.
+func ButtonTextGTE(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldGTE(FieldButtonText, v))
+}
+
+// ButtonTextLT applies the LT predicate on the "button_text" field.
+func ButtonTextLT(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldLT(FieldButtonText, v))
+}
+
+// ButtonTextLTE applies the LTE predicate on the "button_text" field.
+func ButtonTextLTE(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldLTE(FieldButtonText, v))
+}
+
+// ButtonTextContains applies the Contains predicate on the "button_text" field.
+func ButtonTextContains(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldContains(FieldButtonText, v))
+}
+
+// ButtonTextHasPrefix applies the HasPrefix predicate on the "button_text" field.
+func ButtonTextHasPrefix(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldHasPrefix(FieldButtonText, v))
+}
+
+// ButtonTextHasSuffix applies the HasSuffix predicate on the "button_text" field.
+func ButtonTextHasSuffix(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldHasSuffix(FieldButtonText, v))
+}
+
+// ButtonTextIsNil applies the IsNil predicate on the "button_text" field.
+func ButtonTextIsNil() predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldIsNull(FieldButtonText))
+}
+
+// ButtonTextNotNil applies the NotNil predicate on the "button_text" field.
+func ButtonTextNotNil() predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldNotNull(FieldButtonText))
+}
+
+// ButtonTextEqualFold applies the EqualFold predicate on the "button_text" field.
+func ButtonTextEqualFold(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldEqualFold(FieldButtonText, v))
+}
+
+// ButtonTextContainsFold applies the ContainsFold predicate on the "button_text" field.
+func ButtonTextContainsFold(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldContainsFold(FieldButtonText, v))
+}
+
+// ProtocolEQ applies the EQ predicate on the "protocol" field.
+func ProtocolEQ(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldEQ(FieldProtocol, v))
+}
+
+// ProtocolNEQ applies the NEQ predicate on the "protocol" field.
+func ProtocolNEQ(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldNEQ(FieldProtocol, v))
+}
+
+// ProtocolIn applies the In predicate on the "protocol" field.
+func ProtocolIn(vs ...string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldIn(FieldProtocol, vs...))
+}
+
+// ProtocolNotIn applies the NotIn predicate on the "protocol" field.
+func ProtocolNotIn(vs ...string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldNotIn(FieldProtocol, vs...))
+}
+
+// ProtocolGT applies the GT predicate on the "protocol" field.
+func ProtocolGT(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldGT(FieldProtocol, v))
+}
+
+// ProtocolGTE applies the GTE predicate on the "protocol" field.
+func ProtocolGTE(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldGTE(FieldProtocol, v))
+}
+
+// ProtocolLT applies the LT predicate on the "protocol" field.
+func ProtocolLT(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldLT(FieldProtocol, v))
+}
+
+// ProtocolLTE applies the LTE predicate on the "protocol" field.
+func ProtocolLTE(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldLTE(FieldProtocol, v))
+}
+
+// ProtocolContains applies the Contains predicate on the "protocol" field.
+func ProtocolContains(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldContains(FieldProtocol, v))
+}
+
+// ProtocolHasPrefix applies the HasPrefix predicate on the "protocol" field.
+func ProtocolHasPrefix(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldHasPrefix(FieldProtocol, v))
+}
+
+// ProtocolHasSuffix applies the HasSuffix predicate on the "protocol" field.
+func ProtocolHasSuffix(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldHasSuffix(FieldProtocol, v))
+}
+
+// ProtocolIsNil applies the IsNil predicate on the "protocol" field.
+func ProtocolIsNil() predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldIsNull(FieldProtocol))
+}
+
+// ProtocolNotNil applies the NotNil predicate on the "protocol" field.
+func ProtocolNotNil() predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldNotNull(FieldProtocol))
+}
+
+// ProtocolEqualFold applies the EqualFold predicate on the "protocol" field.
+func ProtocolEqualFold(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldEqualFold(FieldProtocol, v))
+}
+
+// ProtocolContainsFold applies the ContainsFold predicate on the "protocol" field.
+func ProtocolContainsFold(v string) predicate.IdentityProvider {
+	return predicate.IdentityProvider(sql.FieldContainsFold(FieldProtocol, v))
 }
 
 // DomainsIsNil applies the IsNil predicate on the "domains" field.

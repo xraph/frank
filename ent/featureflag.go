@@ -26,6 +26,8 @@ type FeatureFlag struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// DeletedAt holds the value of the "deleted_at" field.
+	DeletedAt time.Time `json:"deleted_at,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
 	// Key holds the value of the "key" field.
@@ -72,7 +74,7 @@ func (*FeatureFlag) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case featureflag.FieldName, featureflag.FieldKey, featureflag.FieldDescription, featureflag.FieldComponent:
 			values[i] = new(sql.NullString)
-		case featureflag.FieldCreatedAt, featureflag.FieldUpdatedAt:
+		case featureflag.FieldCreatedAt, featureflag.FieldUpdatedAt, featureflag.FieldDeletedAt:
 			values[i] = new(sql.NullTime)
 		case featureflag.FieldID:
 			values[i] = new(xid.ID)
@@ -108,6 +110,12 @@ func (ff *FeatureFlag) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
 				ff.UpdatedAt = value.Time
+			}
+		case featureflag.FieldDeletedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field deleted_at", values[i])
+			} else if value.Valid {
+				ff.DeletedAt = value.Time
 			}
 		case featureflag.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -191,6 +199,9 @@ func (ff *FeatureFlag) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
 	builder.WriteString(ff.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("deleted_at=")
+	builder.WriteString(ff.DeletedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(ff.Name)

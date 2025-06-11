@@ -15,7 +15,7 @@ import (
 
 // sinchProvider implements the Sinch SMS provider
 type sinchProvider struct {
-	config    *config.Config
+	config    *config.SMSConfig
 	logger    logging.Logger
 	client    *http.Client
 	apiKey    string
@@ -24,14 +24,14 @@ type sinchProvider struct {
 }
 
 // NewSinchProvider creates a new Sinch SMS provider
-func NewSinchProvider(cfg *config.Config, logger logging.Logger) Provider {
+func NewSinchProvider(cfg *config.SMSConfig, logger logging.Logger) Provider {
 	return &sinchProvider{
 		config:    cfg,
 		logger:    logger,
 		client:    &http.Client{},
-		apiKey:    cfg.SMS.Sinch.APIKey,
-		apiSecret: cfg.SMS.Sinch.APISecret,
-		serviceID: cfg.SMS.Sinch.ServiceID,
+		apiKey:    cfg.Sinch.APIKey,
+		apiSecret: cfg.Sinch.APISecret,
+		serviceID: cfg.Sinch.ServiceID,
 	}
 }
 
@@ -45,7 +45,7 @@ func (p *sinchProvider) Send(ctx context.Context, input SMS) error {
 	// Set sender (From) if not provided
 	from := input.From
 	if from == "" {
-		from = p.config.SMS.FromNumber
+		from = p.config.FromNumber
 	}
 
 	// Prepare request body
@@ -71,14 +71,14 @@ func (p *sinchProvider) Send(ctx context.Context, input SMS) error {
 	// Marshal request body to JSON
 	jsonBody, err := json.Marshal(requestBody)
 	if err != nil {
-		return errors.Wrap(errors.CodeSMSDeliveryFail, err, "failed to marshal Sinch request")
+		return errors.Wrap(err, errors.CodeSMSDeliveryFail, "failed to marshal Sinch request")
 	}
 
 	// Create request URL
 	apiURL := fmt.Sprintf("https://eu.sms.api.sinch.com/xms/v1/%s/batches", p.serviceID)
 	req, err := http.NewRequestWithContext(ctx, "POST", apiURL, bytes.NewBuffer(jsonBody))
 	if err != nil {
-		return errors.Wrap(errors.CodeSMSDeliveryFail, err, "failed to create Sinch request")
+		return errors.Wrap(err, errors.CodeSMSDeliveryFail, "failed to create Sinch request")
 	}
 
 	// Set headers
@@ -88,7 +88,7 @@ func (p *sinchProvider) Send(ctx context.Context, input SMS) error {
 	// Execute request
 	resp, err := p.client.Do(req)
 	if err != nil {
-		return errors.Wrap(errors.CodeSMSDeliveryFail, err, "failed to send Sinch request")
+		return errors.Wrap(err, errors.CodeSMSDeliveryFail, "failed to send Sinch request")
 	}
 	defer resp.Body.Close()
 

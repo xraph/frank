@@ -6,7 +6,7 @@ import (
 
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/ent"
-	"github.com/juicycleff/frank/pkg/crypto"
+	"github.com/juicycleff/frank/pkg/cryptoold"
 	"github.com/juicycleff/frank/pkg/errors"
 )
 
@@ -99,7 +99,7 @@ func (s *service) Create(ctx context.Context, input CreateAPIKeyRequest) (*APIKe
 	}
 
 	// Generate API key
-	key, hashedKey, err := crypto.GenerateHashedAPIKey("key")
+	key, hashedKey, err := cryptoold.GenerateHashedAPIKey("key")
 	if err != nil {
 		return nil, errors.Wrap(errors.CodeCryptoError, err, "failed to generate API key")
 	}
@@ -204,7 +204,7 @@ func (s *service) Validate(ctx context.Context, key string) (*ent.ApiKey, error)
 	}
 
 	// Hash the key to look up in the database
-	hashedKey := crypto.HashAPIKey(key)
+	hashedKey := cryptoold.HashAPIKey(key)
 
 	// Get the API key
 	apiKey, err := s.repo.GetByHashedKey(ctx, hashedKey)

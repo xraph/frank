@@ -58,6 +58,20 @@ func (mc *MembershipCreate) SetNillableUpdatedAt(t *time.Time) *MembershipCreate
 	return mc
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (mc *MembershipCreate) SetDeletedAt(t time.Time) *MembershipCreate {
+	mc.mutation.SetDeletedAt(t)
+	return mc
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (mc *MembershipCreate) SetNillableDeletedAt(t *time.Time) *MembershipCreate {
+	if t != nil {
+		mc.SetDeletedAt(*t)
+	}
+	return mc
+}
+
 // SetUserID sets the "user_id" field.
 func (mc *MembershipCreate) SetUserID(x xid.ID) *MembershipCreate {
 	mc.mutation.SetUserID(x)
@@ -73,6 +87,12 @@ func (mc *MembershipCreate) SetOrganizationID(x xid.ID) *MembershipCreate {
 // SetRoleID sets the "role_id" field.
 func (mc *MembershipCreate) SetRoleID(x xid.ID) *MembershipCreate {
 	mc.mutation.SetRoleID(x)
+	return mc
+}
+
+// SetEmail sets the "email" field.
+func (mc *MembershipCreate) SetEmail(s string) *MembershipCreate {
+	mc.mutation.SetEmail(s)
 	return mc
 }
 
@@ -188,9 +208,29 @@ func (mc *MembershipCreate) SetNillableIsPrimaryContact(b *bool) *MembershipCrea
 	return mc
 }
 
+// SetLeftAt sets the "left_at" field.
+func (mc *MembershipCreate) SetLeftAt(t time.Time) *MembershipCreate {
+	mc.mutation.SetLeftAt(t)
+	return mc
+}
+
+// SetNillableLeftAt sets the "left_at" field if the given value is not nil.
+func (mc *MembershipCreate) SetNillableLeftAt(t *time.Time) *MembershipCreate {
+	if t != nil {
+		mc.SetLeftAt(*t)
+	}
+	return mc
+}
+
 // SetMetadata sets the "metadata" field.
 func (mc *MembershipCreate) SetMetadata(m map[string]interface{}) *MembershipCreate {
 	mc.mutation.SetMetadata(m)
+	return mc
+}
+
+// SetCustomFields sets the "custom_fields" field.
+func (mc *MembershipCreate) SetCustomFields(m map[string]interface{}) *MembershipCreate {
+	mc.mutation.SetCustomFields(m)
 	return mc
 }
 
@@ -221,6 +261,25 @@ func (mc *MembershipCreate) SetOrganization(o *Organization) *MembershipCreate {
 // SetRole sets the "role" edge to the Role entity.
 func (mc *MembershipCreate) SetRole(r *Role) *MembershipCreate {
 	return mc.SetRoleID(r.ID)
+}
+
+// SetInviterID sets the "inviter" edge to the User entity by ID.
+func (mc *MembershipCreate) SetInviterID(id xid.ID) *MembershipCreate {
+	mc.mutation.SetInviterID(id)
+	return mc
+}
+
+// SetNillableInviterID sets the "inviter" edge to the User entity by ID if the given value is not nil.
+func (mc *MembershipCreate) SetNillableInviterID(id *xid.ID) *MembershipCreate {
+	if id != nil {
+		mc = mc.SetInviterID(*id)
+	}
+	return mc
+}
+
+// SetInviter sets the "inviter" edge to the User entity.
+func (mc *MembershipCreate) SetInviter(u *User) *MembershipCreate {
+	return mc.SetInviterID(u.ID)
 }
 
 // Mutation returns the MembershipMutation object of the builder.
@@ -320,6 +379,14 @@ func (mc *MembershipCreate) check() error {
 			return &ValidationError{Name: "role_id", err: fmt.Errorf(`ent: validator failed for field "Membership.role_id": %w`, err)}
 		}
 	}
+	if _, ok := mc.mutation.Email(); !ok {
+		return &ValidationError{Name: "email", err: errors.New(`ent: missing required field "Membership.email"`)}
+	}
+	if v, ok := mc.mutation.Email(); ok {
+		if err := membership.EmailValidator(v); err != nil {
+			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "Membership.email": %w`, err)}
+		}
+	}
 	if _, ok := mc.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "Membership.status"`)}
 	}
@@ -390,13 +457,17 @@ func (mc *MembershipCreate) createSpec() (*Membership, *sqlgraph.CreateSpec) {
 		_spec.SetField(membership.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
+	if value, ok := mc.mutation.DeletedAt(); ok {
+		_spec.SetField(membership.FieldDeletedAt, field.TypeTime, value)
+		_node.DeletedAt = value
+	}
+	if value, ok := mc.mutation.Email(); ok {
+		_spec.SetField(membership.FieldEmail, field.TypeString, value)
+		_node.Email = value
+	}
 	if value, ok := mc.mutation.Status(); ok {
 		_spec.SetField(membership.FieldStatus, field.TypeEnum, value)
 		_node.Status = value
-	}
-	if value, ok := mc.mutation.InvitedBy(); ok {
-		_spec.SetField(membership.FieldInvitedBy, field.TypeString, value)
-		_node.InvitedBy = value
 	}
 	if value, ok := mc.mutation.InvitedAt(); ok {
 		_spec.SetField(membership.FieldInvitedAt, field.TypeTime, value)
@@ -422,9 +493,17 @@ func (mc *MembershipCreate) createSpec() (*Membership, *sqlgraph.CreateSpec) {
 		_spec.SetField(membership.FieldIsPrimaryContact, field.TypeBool, value)
 		_node.IsPrimaryContact = value
 	}
+	if value, ok := mc.mutation.LeftAt(); ok {
+		_spec.SetField(membership.FieldLeftAt, field.TypeTime, value)
+		_node.LeftAt = &value
+	}
 	if value, ok := mc.mutation.Metadata(); ok {
 		_spec.SetField(membership.FieldMetadata, field.TypeJSON, value)
 		_node.Metadata = value
+	}
+	if value, ok := mc.mutation.CustomFields(); ok {
+		_spec.SetField(membership.FieldCustomFields, field.TypeJSON, value)
+		_node.CustomFields = value
 	}
 	if nodes := mc.mutation.UserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -475,6 +554,23 @@ func (mc *MembershipCreate) createSpec() (*Membership, *sqlgraph.CreateSpec) {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.RoleID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := mc.mutation.InviterIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   membership.InviterTable,
+			Columns: []string{membership.InviterColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.InvitedBy = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
@@ -541,6 +637,24 @@ func (u *MembershipUpsert) UpdateUpdatedAt() *MembershipUpsert {
 	return u
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (u *MembershipUpsert) SetDeletedAt(v time.Time) *MembershipUpsert {
+	u.Set(membership.FieldDeletedAt, v)
+	return u
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *MembershipUpsert) UpdateDeletedAt() *MembershipUpsert {
+	u.SetExcluded(membership.FieldDeletedAt)
+	return u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *MembershipUpsert) ClearDeletedAt() *MembershipUpsert {
+	u.SetNull(membership.FieldDeletedAt)
+	return u
+}
+
 // SetUserID sets the "user_id" field.
 func (u *MembershipUpsert) SetUserID(v xid.ID) *MembershipUpsert {
 	u.Set(membership.FieldUserID, v)
@@ -574,6 +688,18 @@ func (u *MembershipUpsert) SetRoleID(v xid.ID) *MembershipUpsert {
 // UpdateRoleID sets the "role_id" field to the value that was provided on create.
 func (u *MembershipUpsert) UpdateRoleID() *MembershipUpsert {
 	u.SetExcluded(membership.FieldRoleID)
+	return u
+}
+
+// SetEmail sets the "email" field.
+func (u *MembershipUpsert) SetEmail(v string) *MembershipUpsert {
+	u.Set(membership.FieldEmail, v)
+	return u
+}
+
+// UpdateEmail sets the "email" field to the value that was provided on create.
+func (u *MembershipUpsert) UpdateEmail() *MembershipUpsert {
+	u.SetExcluded(membership.FieldEmail)
 	return u
 }
 
@@ -697,6 +823,24 @@ func (u *MembershipUpsert) UpdateIsPrimaryContact() *MembershipUpsert {
 	return u
 }
 
+// SetLeftAt sets the "left_at" field.
+func (u *MembershipUpsert) SetLeftAt(v time.Time) *MembershipUpsert {
+	u.Set(membership.FieldLeftAt, v)
+	return u
+}
+
+// UpdateLeftAt sets the "left_at" field to the value that was provided on create.
+func (u *MembershipUpsert) UpdateLeftAt() *MembershipUpsert {
+	u.SetExcluded(membership.FieldLeftAt)
+	return u
+}
+
+// ClearLeftAt clears the value of the "left_at" field.
+func (u *MembershipUpsert) ClearLeftAt() *MembershipUpsert {
+	u.SetNull(membership.FieldLeftAt)
+	return u
+}
+
 // SetMetadata sets the "metadata" field.
 func (u *MembershipUpsert) SetMetadata(v map[string]interface{}) *MembershipUpsert {
 	u.Set(membership.FieldMetadata, v)
@@ -712,6 +856,24 @@ func (u *MembershipUpsert) UpdateMetadata() *MembershipUpsert {
 // ClearMetadata clears the value of the "metadata" field.
 func (u *MembershipUpsert) ClearMetadata() *MembershipUpsert {
 	u.SetNull(membership.FieldMetadata)
+	return u
+}
+
+// SetCustomFields sets the "custom_fields" field.
+func (u *MembershipUpsert) SetCustomFields(v map[string]interface{}) *MembershipUpsert {
+	u.Set(membership.FieldCustomFields, v)
+	return u
+}
+
+// UpdateCustomFields sets the "custom_fields" field to the value that was provided on create.
+func (u *MembershipUpsert) UpdateCustomFields() *MembershipUpsert {
+	u.SetExcluded(membership.FieldCustomFields)
+	return u
+}
+
+// ClearCustomFields clears the value of the "custom_fields" field.
+func (u *MembershipUpsert) ClearCustomFields() *MembershipUpsert {
+	u.SetNull(membership.FieldCustomFields)
 	return u
 }
 
@@ -780,6 +942,27 @@ func (u *MembershipUpsertOne) UpdateUpdatedAt() *MembershipUpsertOne {
 	})
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (u *MembershipUpsertOne) SetDeletedAt(v time.Time) *MembershipUpsertOne {
+	return u.Update(func(s *MembershipUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *MembershipUpsertOne) UpdateDeletedAt() *MembershipUpsertOne {
+	return u.Update(func(s *MembershipUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *MembershipUpsertOne) ClearDeletedAt() *MembershipUpsertOne {
+	return u.Update(func(s *MembershipUpsert) {
+		s.ClearDeletedAt()
+	})
+}
+
 // SetUserID sets the "user_id" field.
 func (u *MembershipUpsertOne) SetUserID(v xid.ID) *MembershipUpsertOne {
 	return u.Update(func(s *MembershipUpsert) {
@@ -819,6 +1002,20 @@ func (u *MembershipUpsertOne) SetRoleID(v xid.ID) *MembershipUpsertOne {
 func (u *MembershipUpsertOne) UpdateRoleID() *MembershipUpsertOne {
 	return u.Update(func(s *MembershipUpsert) {
 		s.UpdateRoleID()
+	})
+}
+
+// SetEmail sets the "email" field.
+func (u *MembershipUpsertOne) SetEmail(v string) *MembershipUpsertOne {
+	return u.Update(func(s *MembershipUpsert) {
+		s.SetEmail(v)
+	})
+}
+
+// UpdateEmail sets the "email" field to the value that was provided on create.
+func (u *MembershipUpsertOne) UpdateEmail() *MembershipUpsertOne {
+	return u.Update(func(s *MembershipUpsert) {
+		s.UpdateEmail()
 	})
 }
 
@@ -962,6 +1159,27 @@ func (u *MembershipUpsertOne) UpdateIsPrimaryContact() *MembershipUpsertOne {
 	})
 }
 
+// SetLeftAt sets the "left_at" field.
+func (u *MembershipUpsertOne) SetLeftAt(v time.Time) *MembershipUpsertOne {
+	return u.Update(func(s *MembershipUpsert) {
+		s.SetLeftAt(v)
+	})
+}
+
+// UpdateLeftAt sets the "left_at" field to the value that was provided on create.
+func (u *MembershipUpsertOne) UpdateLeftAt() *MembershipUpsertOne {
+	return u.Update(func(s *MembershipUpsert) {
+		s.UpdateLeftAt()
+	})
+}
+
+// ClearLeftAt clears the value of the "left_at" field.
+func (u *MembershipUpsertOne) ClearLeftAt() *MembershipUpsertOne {
+	return u.Update(func(s *MembershipUpsert) {
+		s.ClearLeftAt()
+	})
+}
+
 // SetMetadata sets the "metadata" field.
 func (u *MembershipUpsertOne) SetMetadata(v map[string]interface{}) *MembershipUpsertOne {
 	return u.Update(func(s *MembershipUpsert) {
@@ -980,6 +1198,27 @@ func (u *MembershipUpsertOne) UpdateMetadata() *MembershipUpsertOne {
 func (u *MembershipUpsertOne) ClearMetadata() *MembershipUpsertOne {
 	return u.Update(func(s *MembershipUpsert) {
 		s.ClearMetadata()
+	})
+}
+
+// SetCustomFields sets the "custom_fields" field.
+func (u *MembershipUpsertOne) SetCustomFields(v map[string]interface{}) *MembershipUpsertOne {
+	return u.Update(func(s *MembershipUpsert) {
+		s.SetCustomFields(v)
+	})
+}
+
+// UpdateCustomFields sets the "custom_fields" field to the value that was provided on create.
+func (u *MembershipUpsertOne) UpdateCustomFields() *MembershipUpsertOne {
+	return u.Update(func(s *MembershipUpsert) {
+		s.UpdateCustomFields()
+	})
+}
+
+// ClearCustomFields clears the value of the "custom_fields" field.
+func (u *MembershipUpsertOne) ClearCustomFields() *MembershipUpsertOne {
+	return u.Update(func(s *MembershipUpsert) {
+		s.ClearCustomFields()
 	})
 }
 
@@ -1215,6 +1454,27 @@ func (u *MembershipUpsertBulk) UpdateUpdatedAt() *MembershipUpsertBulk {
 	})
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (u *MembershipUpsertBulk) SetDeletedAt(v time.Time) *MembershipUpsertBulk {
+	return u.Update(func(s *MembershipUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *MembershipUpsertBulk) UpdateDeletedAt() *MembershipUpsertBulk {
+	return u.Update(func(s *MembershipUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *MembershipUpsertBulk) ClearDeletedAt() *MembershipUpsertBulk {
+	return u.Update(func(s *MembershipUpsert) {
+		s.ClearDeletedAt()
+	})
+}
+
 // SetUserID sets the "user_id" field.
 func (u *MembershipUpsertBulk) SetUserID(v xid.ID) *MembershipUpsertBulk {
 	return u.Update(func(s *MembershipUpsert) {
@@ -1254,6 +1514,20 @@ func (u *MembershipUpsertBulk) SetRoleID(v xid.ID) *MembershipUpsertBulk {
 func (u *MembershipUpsertBulk) UpdateRoleID() *MembershipUpsertBulk {
 	return u.Update(func(s *MembershipUpsert) {
 		s.UpdateRoleID()
+	})
+}
+
+// SetEmail sets the "email" field.
+func (u *MembershipUpsertBulk) SetEmail(v string) *MembershipUpsertBulk {
+	return u.Update(func(s *MembershipUpsert) {
+		s.SetEmail(v)
+	})
+}
+
+// UpdateEmail sets the "email" field to the value that was provided on create.
+func (u *MembershipUpsertBulk) UpdateEmail() *MembershipUpsertBulk {
+	return u.Update(func(s *MembershipUpsert) {
+		s.UpdateEmail()
 	})
 }
 
@@ -1397,6 +1671,27 @@ func (u *MembershipUpsertBulk) UpdateIsPrimaryContact() *MembershipUpsertBulk {
 	})
 }
 
+// SetLeftAt sets the "left_at" field.
+func (u *MembershipUpsertBulk) SetLeftAt(v time.Time) *MembershipUpsertBulk {
+	return u.Update(func(s *MembershipUpsert) {
+		s.SetLeftAt(v)
+	})
+}
+
+// UpdateLeftAt sets the "left_at" field to the value that was provided on create.
+func (u *MembershipUpsertBulk) UpdateLeftAt() *MembershipUpsertBulk {
+	return u.Update(func(s *MembershipUpsert) {
+		s.UpdateLeftAt()
+	})
+}
+
+// ClearLeftAt clears the value of the "left_at" field.
+func (u *MembershipUpsertBulk) ClearLeftAt() *MembershipUpsertBulk {
+	return u.Update(func(s *MembershipUpsert) {
+		s.ClearLeftAt()
+	})
+}
+
 // SetMetadata sets the "metadata" field.
 func (u *MembershipUpsertBulk) SetMetadata(v map[string]interface{}) *MembershipUpsertBulk {
 	return u.Update(func(s *MembershipUpsert) {
@@ -1415,6 +1710,27 @@ func (u *MembershipUpsertBulk) UpdateMetadata() *MembershipUpsertBulk {
 func (u *MembershipUpsertBulk) ClearMetadata() *MembershipUpsertBulk {
 	return u.Update(func(s *MembershipUpsert) {
 		s.ClearMetadata()
+	})
+}
+
+// SetCustomFields sets the "custom_fields" field.
+func (u *MembershipUpsertBulk) SetCustomFields(v map[string]interface{}) *MembershipUpsertBulk {
+	return u.Update(func(s *MembershipUpsert) {
+		s.SetCustomFields(v)
+	})
+}
+
+// UpdateCustomFields sets the "custom_fields" field to the value that was provided on create.
+func (u *MembershipUpsertBulk) UpdateCustomFields() *MembershipUpsertBulk {
+	return u.Update(func(s *MembershipUpsert) {
+		s.UpdateCustomFields()
+	})
+}
+
+// ClearCustomFields clears the value of the "custom_fields" field.
+func (u *MembershipUpsertBulk) ClearCustomFields() *MembershipUpsertBulk {
+	return u.Update(func(s *MembershipUpsert) {
+		s.ClearCustomFields()
 	})
 }
 

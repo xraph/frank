@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Successful Login to {{.app_name}}</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; padding: 20px 0; border-bottom: 2px solid #f0f0f0; }
+        .content { padding: 30px 0; }
+        .login-success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center; }
+        .login-details { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #28a745; }
+        .security-info { background: #e2e3e5; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .suspicious { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .button { display: inline-block; padding: 12px 30px; background: #dc3545; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 10px 5px; }
+        .button.secondary { background: #6c757d; }
+        .footer { text-align: center; padding: 20px 0; border-top: 1px solid #f0f0f0; color: #666; font-size: 14px; }
+        .device-badge { background: #007bff; color: white; padding: 4px 8px; border-radius: 10px; font-size: 11px; display: inline-block; }
+        .location-info { background: white; padding: 15px; border-radius: 5px; margin: 10px 0; border: 1px solid #dee2e6; }
+        .session-actions { text-align: center; margin: 20px 0; }
+        .warning-icon { color: #ffc107; font-size: 20px; }
+        .success-icon { color: #28a745; font-size: 20px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>{{.app_name}}</h1>
+        <h2>🔐 Login Notification</h2>
+    </div>
+
+    <div class="content">
+        <div class="login-success {{if .suspicious}}suspicious{{end}}">
+            {{if .suspicious}}
+            <span class="warning-icon">⚠️</span>
+            <h3>Suspicious Login Detected</h3>
+            <p>We detected a login from an unusual location or device.</p>
+            {{else}}
+            <span class="success-icon">✅</span>
+            <h3>Successful Login</h3>
+            <p>Hello <strong>{{.user_name}}</strong>, you successfully signed in to your account.</p>
+            {{end}}
+        </div>
+
+        <div class="login-details">
+            <h4>📋 Login Details</h4>
+            <div class="location-info">
+                <p><strong>🕒 Time:</strong> {{.timestamp}}</p>
+                <p><strong>🌍 Location:</strong> {{.location}}{{if not .location}}Unknown{{end}}</p>
+                <p><strong>🌐 IP Address:</strong> {{.ip_address}}</p>
+                <p><strong>💻 Device:</strong>
+                    <span class="device-badge">{{.device_type}}</span>
+                    {{.browser}}
+                </p>
+                {{if .is_new_device}}
+                <p><strong>🆕 New Device:</strong> <span style="color: #ffc107;">Yes - First time seeing this device</span></p>
+                {{end}}
+                {{if .is_new_location}}
+                <p><strong>📍 New Location:</strong> <span style="color: #ffc107;">Yes - First time from this location</span></p>
+                {{end}}
+            </div>
+        </div>
+
+        {{if .suspicious}}
+        <div class="security-info suspicious">
+            <h4>🚨 Immediate Action Required</h4>
+            <p><strong>If this was you:</strong></p>
+            <ul>
+                <li>No action needed - your account is secure</li>
+                <li>Consider adding this location to your trusted locations</li>
+            </ul>
+            <p><strong>If this wasn't you:</strong></p>
+            <ul>
+                <li>Change your password immediately</li>
+                <li>Enable two-factor authentication</li>
+                <li>Review your recent account activity</li>
+                <li>Contact our security team</li>
+            </ul>
+            <div class="session-actions">
+                <a href="{{.secure_account_url}}" class="button">Secure My Account</a>
+                <a href="{{.change_password_url}}" class="button">Change Password</a>
+            </div>
+        </div>
+        {{else}}
+        <div class="security-info">
+            <h4>🛡️ Security Status</h4>
+            <p><strong>Account Security Level:</strong>
+                {{if .mfa_enabled}}
+                <span style="color: #28a745;">High (MFA Enabled)</span>
+                {{else}}
+                <span style="color: #ffc107;">Medium (Consider enabling MFA)</span>
+                {{end}}
+            </p>
+            <ul>
+                <li><strong>Active Sessions:</strong> {{.active_sessions}} devices</li>
+                <li><strong>Last Password Change:</strong> {{.last_password_change}}</li>
+                <li><strong>MFA Status:</strong> {{if .mfa_enabled}}Enabled ✅{{else}}Disabled ⚠️{{end}}</li>
+            </ul>
+
+            {{if not .mfa_enabled}}
+            <div style="background: #fff3cd; padding: 15px; border-radius: 5px; margin: 15px 0;">
+                <p><strong>💡 Security Tip:</strong> Enable two-factor authentication for enhanced security.</p>
+                <div style="text-align: center;">
+                    <a href="{{.enable_mfa_url}}" class="button secondary">Enable MFA</a>
+                </div>
+            </div>
+            {{end}}
+        </div>
+        {{end}}
+
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h4>🔍 Session Management</h4>
+            <p>You can view and manage all your active sessions:</p>
+            <div class="session-actions">
+                <a href="{{.session_management_url}}" class="button secondary">Manage Sessions</a>
+                <a href="{{.security_settings_url}}" class="button secondary">Security Settings</a>
+            </div>
+        </div>
+
+        {{if not .suspicious}}
+        <p>Thank you for keeping your account secure!</p>
+        {{end}}
+
+        <p>Stay safe,<br>
+            <strong>The {{.app_name}} Security Team</strong></p>
+    </div>
+
+    <div class="footer">
+        <p>This security notification was sent to {{.user_email}}.</p>
+        {{if .suspicious}}
+        <p><strong>Urgent:</strong> If you didn't perform this login, secure your account immediately.</p>
+        {{end}}
+        <p>To adjust your login notification preferences, <a href="{{.notification_settings_url}}">click here</a>.</p>
+        <p><a href="{{.security_center_url}}">Security Center</a> | <a href="{{.support_url}}">Contact Support</a> | <a href="{{.privacy_url}}">Privacy Policy</a></p>
+
+        {{if .action_url}}
+        <p style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+            <strong>Quick Actions:</strong><br>
+            <a href="{{.action_url}}">Review Account Security</a>
+        </p>
+        {{end}}
+    </div>
+</div>
+</body>
+</html>

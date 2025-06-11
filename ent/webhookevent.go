@@ -28,6 +28,8 @@ type WebhookEvent struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// DeletedAt holds the value of the "deleted_at" field.
+	DeletedAt time.Time `json:"deleted_at,omitempty"`
 	// WebhookID holds the value of the "webhook_id" field.
 	WebhookID xid.ID `json:"webhook_id,omitempty"`
 	// EventType holds the value of the "event_type" field.
@@ -89,7 +91,7 @@ func (*WebhookEvent) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullInt64)
 		case webhookevent.FieldEventType, webhookevent.FieldResponseBody, webhookevent.FieldError:
 			values[i] = new(sql.NullString)
-		case webhookevent.FieldCreatedAt, webhookevent.FieldUpdatedAt, webhookevent.FieldDeliveredAt, webhookevent.FieldNextRetry:
+		case webhookevent.FieldCreatedAt, webhookevent.FieldUpdatedAt, webhookevent.FieldDeletedAt, webhookevent.FieldDeliveredAt, webhookevent.FieldNextRetry:
 			values[i] = new(sql.NullTime)
 		case webhookevent.FieldID, webhookevent.FieldWebhookID:
 			values[i] = new(xid.ID)
@@ -125,6 +127,12 @@ func (we *WebhookEvent) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
 				we.UpdatedAt = value.Time
+			}
+		case webhookevent.FieldDeletedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field deleted_at", values[i])
+			} else if value.Valid {
+				we.DeletedAt = value.Time
 			}
 		case webhookevent.FieldWebhookID:
 			if value, ok := values[i].(*xid.ID); !ok {
@@ -245,6 +253,9 @@ func (we *WebhookEvent) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
 	builder.WriteString(we.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("deleted_at=")
+	builder.WriteString(we.DeletedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("webhook_id=")
 	builder.WriteString(fmt.Sprintf("%v", we.WebhookID))

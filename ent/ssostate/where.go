@@ -68,6 +68,11 @@ func UpdatedAt(v time.Time) predicate.SSOState {
 	return predicate.SSOState(sql.FieldEQ(FieldUpdatedAt, v))
 }
 
+// DeletedAt applies equality check predicate on the "deleted_at" field. It's identical to DeletedAtEQ.
+func DeletedAt(v time.Time) predicate.SSOState {
+	return predicate.SSOState(sql.FieldEQ(FieldDeletedAt, v))
+}
+
 // State applies equality check predicate on the "state" field. It's identical to StateEQ.
 func State(v string) predicate.SSOState {
 	return predicate.SSOState(sql.FieldEQ(FieldState, v))
@@ -81,6 +86,11 @@ func Data(v string) predicate.SSOState {
 // ExpiresAt applies equality check predicate on the "expires_at" field. It's identical to ExpiresAtEQ.
 func ExpiresAt(v time.Time) predicate.SSOState {
 	return predicate.SSOState(sql.FieldEQ(FieldExpiresAt, v))
+}
+
+// RedirectURL applies equality check predicate on the "redirect_url" field. It's identical to RedirectURLEQ.
+func RedirectURL(v string) predicate.SSOState {
+	return predicate.SSOState(sql.FieldEQ(FieldRedirectURL, v))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
@@ -161,6 +171,56 @@ func UpdatedAtLT(v time.Time) predicate.SSOState {
 // UpdatedAtLTE applies the LTE predicate on the "updated_at" field.
 func UpdatedAtLTE(v time.Time) predicate.SSOState {
 	return predicate.SSOState(sql.FieldLTE(FieldUpdatedAt, v))
+}
+
+// DeletedAtEQ applies the EQ predicate on the "deleted_at" field.
+func DeletedAtEQ(v time.Time) predicate.SSOState {
+	return predicate.SSOState(sql.FieldEQ(FieldDeletedAt, v))
+}
+
+// DeletedAtNEQ applies the NEQ predicate on the "deleted_at" field.
+func DeletedAtNEQ(v time.Time) predicate.SSOState {
+	return predicate.SSOState(sql.FieldNEQ(FieldDeletedAt, v))
+}
+
+// DeletedAtIn applies the In predicate on the "deleted_at" field.
+func DeletedAtIn(vs ...time.Time) predicate.SSOState {
+	return predicate.SSOState(sql.FieldIn(FieldDeletedAt, vs...))
+}
+
+// DeletedAtNotIn applies the NotIn predicate on the "deleted_at" field.
+func DeletedAtNotIn(vs ...time.Time) predicate.SSOState {
+	return predicate.SSOState(sql.FieldNotIn(FieldDeletedAt, vs...))
+}
+
+// DeletedAtGT applies the GT predicate on the "deleted_at" field.
+func DeletedAtGT(v time.Time) predicate.SSOState {
+	return predicate.SSOState(sql.FieldGT(FieldDeletedAt, v))
+}
+
+// DeletedAtGTE applies the GTE predicate on the "deleted_at" field.
+func DeletedAtGTE(v time.Time) predicate.SSOState {
+	return predicate.SSOState(sql.FieldGTE(FieldDeletedAt, v))
+}
+
+// DeletedAtLT applies the LT predicate on the "deleted_at" field.
+func DeletedAtLT(v time.Time) predicate.SSOState {
+	return predicate.SSOState(sql.FieldLT(FieldDeletedAt, v))
+}
+
+// DeletedAtLTE applies the LTE predicate on the "deleted_at" field.
+func DeletedAtLTE(v time.Time) predicate.SSOState {
+	return predicate.SSOState(sql.FieldLTE(FieldDeletedAt, v))
+}
+
+// DeletedAtIsNil applies the IsNil predicate on the "deleted_at" field.
+func DeletedAtIsNil() predicate.SSOState {
+	return predicate.SSOState(sql.FieldIsNull(FieldDeletedAt))
+}
+
+// DeletedAtNotNil applies the NotNil predicate on the "deleted_at" field.
+func DeletedAtNotNil() predicate.SSOState {
+	return predicate.SSOState(sql.FieldNotNull(FieldDeletedAt))
 }
 
 // StateEQ applies the EQ predicate on the "state" field.
@@ -331,6 +391,81 @@ func ExpiresAtLT(v time.Time) predicate.SSOState {
 // ExpiresAtLTE applies the LTE predicate on the "expires_at" field.
 func ExpiresAtLTE(v time.Time) predicate.SSOState {
 	return predicate.SSOState(sql.FieldLTE(FieldExpiresAt, v))
+}
+
+// RedirectURLEQ applies the EQ predicate on the "redirect_url" field.
+func RedirectURLEQ(v string) predicate.SSOState {
+	return predicate.SSOState(sql.FieldEQ(FieldRedirectURL, v))
+}
+
+// RedirectURLNEQ applies the NEQ predicate on the "redirect_url" field.
+func RedirectURLNEQ(v string) predicate.SSOState {
+	return predicate.SSOState(sql.FieldNEQ(FieldRedirectURL, v))
+}
+
+// RedirectURLIn applies the In predicate on the "redirect_url" field.
+func RedirectURLIn(vs ...string) predicate.SSOState {
+	return predicate.SSOState(sql.FieldIn(FieldRedirectURL, vs...))
+}
+
+// RedirectURLNotIn applies the NotIn predicate on the "redirect_url" field.
+func RedirectURLNotIn(vs ...string) predicate.SSOState {
+	return predicate.SSOState(sql.FieldNotIn(FieldRedirectURL, vs...))
+}
+
+// RedirectURLGT applies the GT predicate on the "redirect_url" field.
+func RedirectURLGT(v string) predicate.SSOState {
+	return predicate.SSOState(sql.FieldGT(FieldRedirectURL, v))
+}
+
+// RedirectURLGTE applies the GTE predicate on the "redirect_url" field.
+func RedirectURLGTE(v string) predicate.SSOState {
+	return predicate.SSOState(sql.FieldGTE(FieldRedirectURL, v))
+}
+
+// RedirectURLLT applies the LT predicate on the "redirect_url" field.
+func RedirectURLLT(v string) predicate.SSOState {
+	return predicate.SSOState(sql.FieldLT(FieldRedirectURL, v))
+}
+
+// RedirectURLLTE applies the LTE predicate on the "redirect_url" field.
+func RedirectURLLTE(v string) predicate.SSOState {
+	return predicate.SSOState(sql.FieldLTE(FieldRedirectURL, v))
+}
+
+// RedirectURLContains applies the Contains predicate on the "redirect_url" field.
+func RedirectURLContains(v string) predicate.SSOState {
+	return predicate.SSOState(sql.FieldContains(FieldRedirectURL, v))
+}
+
+// RedirectURLHasPrefix applies the HasPrefix predicate on the "redirect_url" field.
+func RedirectURLHasPrefix(v string) predicate.SSOState {
+	return predicate.SSOState(sql.FieldHasPrefix(FieldRedirectURL, v))
+}
+
+// RedirectURLHasSuffix applies the HasSuffix predicate on the "redirect_url" field.
+func RedirectURLHasSuffix(v string) predicate.SSOState {
+	return predicate.SSOState(sql.FieldHasSuffix(FieldRedirectURL, v))
+}
+
+// RedirectURLIsNil applies the IsNil predicate on the "redirect_url" field.
+func RedirectURLIsNil() predicate.SSOState {
+	return predicate.SSOState(sql.FieldIsNull(FieldRedirectURL))
+}
+
+// RedirectURLNotNil applies the NotNil predicate on the "redirect_url" field.
+func RedirectURLNotNil() predicate.SSOState {
+	return predicate.SSOState(sql.FieldNotNull(FieldRedirectURL))
+}
+
+// RedirectURLEqualFold applies the EqualFold predicate on the "redirect_url" field.
+func RedirectURLEqualFold(v string) predicate.SSOState {
+	return predicate.SSOState(sql.FieldEqualFold(FieldRedirectURL, v))
+}
+
+// RedirectURLContainsFold applies the ContainsFold predicate on the "redirect_url" field.
+func RedirectURLContainsFold(v string) predicate.SSOState {
+	return predicate.SSOState(sql.FieldContainsFold(FieldRedirectURL, v))
 }
 
 // And groups predicates with the AND operator between them.

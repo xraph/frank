@@ -104,3 +104,28 @@ func (c *Clients) RunAutoMigration() error {
 	c.log.Infof("Completed running auto migration")
 	return nil
 }
+
+// RunMigration Run the auto migration tool.
+func (c *Clients) RunMigration() error {
+	c.log.Infof("Running migration")
+
+	ctx := context.Background()
+	if err := c.DB.Schema.Create(
+		ctx,
+		migrate.WithDropIndex(true),
+		migrate.WithDropColumn(true),
+		migrate.WithForeignKeys(true),
+		migrate.WithGlobalUniqueID(true),
+		schema.WithHooks(func(next schema.Creator) schema.Creator {
+			return schema.CreateFunc(func(ctx context.Context, tables ...*schema.Table) error {
+				return next.Create(ctx, tables...)
+			})
+		}),
+	); err != nil {
+		c.log.Errorf("failed creating schema resources: %v", err)
+		return err
+	}
+
+	c.log.Infof("Completed running auto migration")
+	return nil
+}

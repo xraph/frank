@@ -136,7 +136,7 @@ func (rds *ResourceDiscoveryService) RegisterResource(ctx context.Context, input
 	for _, dep := range input.Dependencies {
 		depKey := rds.getResourceKey(dep, input.OrganizationID)
 		if _, exists := rds.resources[depKey]; !exists {
-			return nil, errors.New(errors.CodeValidation, fmt.Sprintf("dependency resource %s not found", dep))
+			return nil, errors.New(errors.CodeValidationError, fmt.Sprintf("dependency resource %s not found", dep))
 		}
 	}
 
@@ -281,7 +281,7 @@ func (rds *ResourceDiscoveryService) ValidatePermission(resourceName, actionName
 	}
 
 	if _, exists := resource.Actions[actionName]; !exists {
-		return errors.New(errors.CodeValidation, fmt.Sprintf("action %s not available for resource %s", actionName, resourceName))
+		return errors.New(errors.CodeValidationError, fmt.Sprintf("action %s not available for resource %s", actionName, resourceName))
 	}
 
 	return nil

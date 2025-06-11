@@ -15,6 +15,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/juicycleff/frank/ent/audit"
 	"github.com/juicycleff/frank/ent/session"
 	"github.com/juicycleff/frank/ent/user"
 	"github.com/rs/xid"
@@ -195,6 +196,21 @@ func (sc *SessionCreate) SetNillableID(x *xid.ID) *SessionCreate {
 // SetUser sets the "user" edge to the User entity.
 func (sc *SessionCreate) SetUser(u *User) *SessionCreate {
 	return sc.SetUserID(u.ID)
+}
+
+// AddAuditLogIDs adds the "audit_logs" edge to the Audit entity by IDs.
+func (sc *SessionCreate) AddAuditLogIDs(ids ...xid.ID) *SessionCreate {
+	sc.mutation.AddAuditLogIDs(ids...)
+	return sc
+}
+
+// AddAuditLogs adds the "audit_logs" edges to the Audit entity.
+func (sc *SessionCreate) AddAuditLogs(a ...*Audit) *SessionCreate {
+	ids := make([]xid.ID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return sc.AddAuditLogIDs(ids...)
 }
 
 // Mutation returns the SessionMutation object of the builder.
@@ -384,6 +400,22 @@ func (sc *SessionCreate) createSpec() (*Session, *sqlgraph.CreateSpec) {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.UserID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := sc.mutation.AuditLogsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   session.AuditLogsTable,
+			Columns: []string{session.AuditLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(audit.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

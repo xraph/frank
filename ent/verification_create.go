@@ -56,6 +56,20 @@ func (vc *VerificationCreate) SetNillableUpdatedAt(t *time.Time) *VerificationCr
 	return vc
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (vc *VerificationCreate) SetDeletedAt(t time.Time) *VerificationCreate {
+	vc.mutation.SetDeletedAt(t)
+	return vc
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (vc *VerificationCreate) SetNillableDeletedAt(t *time.Time) *VerificationCreate {
+	if t != nil {
+		vc.SetDeletedAt(*t)
+	}
+	return vc
+}
+
 // SetUserID sets the "user_id" field.
 func (vc *VerificationCreate) SetUserID(x xid.ID) *VerificationCreate {
 	vc.mutation.SetUserID(x)
@@ -195,6 +209,12 @@ func (vc *VerificationCreate) SetNillableUserAgent(s *string) *VerificationCreat
 // SetAttestation sets the "attestation" field.
 func (vc *VerificationCreate) SetAttestation(m map[string]interface{}) *VerificationCreate {
 	vc.mutation.SetAttestation(m)
+	return vc
+}
+
+// SetMetadata sets the "metadata" field.
+func (vc *VerificationCreate) SetMetadata(m map[string]interface{}) *VerificationCreate {
+	vc.mutation.SetMetadata(m)
 	return vc
 }
 
@@ -362,6 +382,10 @@ func (vc *VerificationCreate) createSpec() (*Verification, *sqlgraph.CreateSpec)
 		_spec.SetField(verification.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
+	if value, ok := vc.mutation.DeletedAt(); ok {
+		_spec.SetField(verification.FieldDeletedAt, field.TypeTime, value)
+		_node.DeletedAt = value
+	}
 	if value, ok := vc.mutation.GetType(); ok {
 		_spec.SetField(verification.FieldType, field.TypeString, value)
 		_node.Type = value
@@ -409,6 +433,10 @@ func (vc *VerificationCreate) createSpec() (*Verification, *sqlgraph.CreateSpec)
 	if value, ok := vc.mutation.Attestation(); ok {
 		_spec.SetField(verification.FieldAttestation, field.TypeJSON, value)
 		_node.Attestation = value
+	}
+	if value, ok := vc.mutation.Metadata(); ok {
+		_spec.SetField(verification.FieldMetadata, field.TypeJSON, value)
+		_node.Metadata = value
 	}
 	if nodes := vc.mutation.UserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -488,6 +516,24 @@ func (u *VerificationUpsert) SetUpdatedAt(v time.Time) *VerificationUpsert {
 // UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
 func (u *VerificationUpsert) UpdateUpdatedAt() *VerificationUpsert {
 	u.SetExcluded(verification.FieldUpdatedAt)
+	return u
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *VerificationUpsert) SetDeletedAt(v time.Time) *VerificationUpsert {
+	u.Set(verification.FieldDeletedAt, v)
+	return u
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *VerificationUpsert) UpdateDeletedAt() *VerificationUpsert {
+	u.SetExcluded(verification.FieldDeletedAt)
+	return u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *VerificationUpsert) ClearDeletedAt() *VerificationUpsert {
+	u.SetNull(verification.FieldDeletedAt)
 	return u
 }
 
@@ -695,6 +741,24 @@ func (u *VerificationUpsert) ClearAttestation() *VerificationUpsert {
 	return u
 }
 
+// SetMetadata sets the "metadata" field.
+func (u *VerificationUpsert) SetMetadata(v map[string]interface{}) *VerificationUpsert {
+	u.Set(verification.FieldMetadata, v)
+	return u
+}
+
+// UpdateMetadata sets the "metadata" field to the value that was provided on create.
+func (u *VerificationUpsert) UpdateMetadata() *VerificationUpsert {
+	u.SetExcluded(verification.FieldMetadata)
+	return u
+}
+
+// ClearMetadata clears the value of the "metadata" field.
+func (u *VerificationUpsert) ClearMetadata() *VerificationUpsert {
+	u.SetNull(verification.FieldMetadata)
+	return u
+}
+
 // UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
 // Using this option is equivalent to using:
 //
@@ -757,6 +821,27 @@ func (u *VerificationUpsertOne) SetUpdatedAt(v time.Time) *VerificationUpsertOne
 func (u *VerificationUpsertOne) UpdateUpdatedAt() *VerificationUpsertOne {
 	return u.Update(func(s *VerificationUpsert) {
 		s.UpdateUpdatedAt()
+	})
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *VerificationUpsertOne) SetDeletedAt(v time.Time) *VerificationUpsertOne {
+	return u.Update(func(s *VerificationUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *VerificationUpsertOne) UpdateDeletedAt() *VerificationUpsertOne {
+	return u.Update(func(s *VerificationUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *VerificationUpsertOne) ClearDeletedAt() *VerificationUpsertOne {
+	return u.Update(func(s *VerificationUpsert) {
+		s.ClearDeletedAt()
 	})
 }
 
@@ -998,6 +1083,27 @@ func (u *VerificationUpsertOne) ClearAttestation() *VerificationUpsertOne {
 	})
 }
 
+// SetMetadata sets the "metadata" field.
+func (u *VerificationUpsertOne) SetMetadata(v map[string]interface{}) *VerificationUpsertOne {
+	return u.Update(func(s *VerificationUpsert) {
+		s.SetMetadata(v)
+	})
+}
+
+// UpdateMetadata sets the "metadata" field to the value that was provided on create.
+func (u *VerificationUpsertOne) UpdateMetadata() *VerificationUpsertOne {
+	return u.Update(func(s *VerificationUpsert) {
+		s.UpdateMetadata()
+	})
+}
+
+// ClearMetadata clears the value of the "metadata" field.
+func (u *VerificationUpsertOne) ClearMetadata() *VerificationUpsertOne {
+	return u.Update(func(s *VerificationUpsert) {
+		s.ClearMetadata()
+	})
+}
+
 // Exec executes the query.
 func (u *VerificationUpsertOne) Exec(ctx context.Context) error {
 	if len(u.create.conflict) == 0 {
@@ -1227,6 +1333,27 @@ func (u *VerificationUpsertBulk) SetUpdatedAt(v time.Time) *VerificationUpsertBu
 func (u *VerificationUpsertBulk) UpdateUpdatedAt() *VerificationUpsertBulk {
 	return u.Update(func(s *VerificationUpsert) {
 		s.UpdateUpdatedAt()
+	})
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *VerificationUpsertBulk) SetDeletedAt(v time.Time) *VerificationUpsertBulk {
+	return u.Update(func(s *VerificationUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *VerificationUpsertBulk) UpdateDeletedAt() *VerificationUpsertBulk {
+	return u.Update(func(s *VerificationUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *VerificationUpsertBulk) ClearDeletedAt() *VerificationUpsertBulk {
+	return u.Update(func(s *VerificationUpsert) {
+		s.ClearDeletedAt()
 	})
 }
 
@@ -1465,6 +1592,27 @@ func (u *VerificationUpsertBulk) UpdateAttestation() *VerificationUpsertBulk {
 func (u *VerificationUpsertBulk) ClearAttestation() *VerificationUpsertBulk {
 	return u.Update(func(s *VerificationUpsert) {
 		s.ClearAttestation()
+	})
+}
+
+// SetMetadata sets the "metadata" field.
+func (u *VerificationUpsertBulk) SetMetadata(v map[string]interface{}) *VerificationUpsertBulk {
+	return u.Update(func(s *VerificationUpsert) {
+		s.SetMetadata(v)
+	})
+}
+
+// UpdateMetadata sets the "metadata" field to the value that was provided on create.
+func (u *VerificationUpsertBulk) UpdateMetadata() *VerificationUpsertBulk {
+	return u.Update(func(s *VerificationUpsert) {
+		s.UpdateMetadata()
+	})
+}
+
+// ClearMetadata clears the value of the "metadata" field.
+func (u *VerificationUpsertBulk) ClearMetadata() *VerificationUpsertBulk {
+	return u.Update(func(s *VerificationUpsert) {
+		s.ClearMetadata()
 	})
 }
 

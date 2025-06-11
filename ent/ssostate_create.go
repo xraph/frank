@@ -55,6 +55,20 @@ func (ssc *SSOStateCreate) SetNillableUpdatedAt(t *time.Time) *SSOStateCreate {
 	return ssc
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (ssc *SSOStateCreate) SetDeletedAt(t time.Time) *SSOStateCreate {
+	ssc.mutation.SetDeletedAt(t)
+	return ssc
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (ssc *SSOStateCreate) SetNillableDeletedAt(t *time.Time) *SSOStateCreate {
+	if t != nil {
+		ssc.SetDeletedAt(*t)
+	}
+	return ssc
+}
+
 // SetState sets the "state" field.
 func (ssc *SSOStateCreate) SetState(s string) *SSOStateCreate {
 	ssc.mutation.SetState(s)
@@ -70,6 +84,20 @@ func (ssc *SSOStateCreate) SetData(s string) *SSOStateCreate {
 // SetExpiresAt sets the "expires_at" field.
 func (ssc *SSOStateCreate) SetExpiresAt(t time.Time) *SSOStateCreate {
 	ssc.mutation.SetExpiresAt(t)
+	return ssc
+}
+
+// SetRedirectURL sets the "redirect_url" field.
+func (ssc *SSOStateCreate) SetRedirectURL(s string) *SSOStateCreate {
+	ssc.mutation.SetRedirectURL(s)
+	return ssc
+}
+
+// SetNillableRedirectURL sets the "redirect_url" field if the given value is not nil.
+func (ssc *SSOStateCreate) SetNillableRedirectURL(s *string) *SSOStateCreate {
+	if s != nil {
+		ssc.SetRedirectURL(*s)
+	}
 	return ssc
 }
 
@@ -202,6 +230,10 @@ func (ssc *SSOStateCreate) createSpec() (*SSOState, *sqlgraph.CreateSpec) {
 		_spec.SetField(ssostate.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
+	if value, ok := ssc.mutation.DeletedAt(); ok {
+		_spec.SetField(ssostate.FieldDeletedAt, field.TypeTime, value)
+		_node.DeletedAt = value
+	}
 	if value, ok := ssc.mutation.State(); ok {
 		_spec.SetField(ssostate.FieldState, field.TypeString, value)
 		_node.State = value
@@ -213,6 +245,10 @@ func (ssc *SSOStateCreate) createSpec() (*SSOState, *sqlgraph.CreateSpec) {
 	if value, ok := ssc.mutation.ExpiresAt(); ok {
 		_spec.SetField(ssostate.FieldExpiresAt, field.TypeTime, value)
 		_node.ExpiresAt = value
+	}
+	if value, ok := ssc.mutation.RedirectURL(); ok {
+		_spec.SetField(ssostate.FieldRedirectURL, field.TypeString, value)
+		_node.RedirectURL = value
 	}
 	return _node, _spec
 }
@@ -278,6 +314,24 @@ func (u *SSOStateUpsert) UpdateUpdatedAt() *SSOStateUpsert {
 	return u
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (u *SSOStateUpsert) SetDeletedAt(v time.Time) *SSOStateUpsert {
+	u.Set(ssostate.FieldDeletedAt, v)
+	return u
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *SSOStateUpsert) UpdateDeletedAt() *SSOStateUpsert {
+	u.SetExcluded(ssostate.FieldDeletedAt)
+	return u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *SSOStateUpsert) ClearDeletedAt() *SSOStateUpsert {
+	u.SetNull(ssostate.FieldDeletedAt)
+	return u
+}
+
 // SetState sets the "state" field.
 func (u *SSOStateUpsert) SetState(v string) *SSOStateUpsert {
 	u.Set(ssostate.FieldState, v)
@@ -311,6 +365,24 @@ func (u *SSOStateUpsert) SetExpiresAt(v time.Time) *SSOStateUpsert {
 // UpdateExpiresAt sets the "expires_at" field to the value that was provided on create.
 func (u *SSOStateUpsert) UpdateExpiresAt() *SSOStateUpsert {
 	u.SetExcluded(ssostate.FieldExpiresAt)
+	return u
+}
+
+// SetRedirectURL sets the "redirect_url" field.
+func (u *SSOStateUpsert) SetRedirectURL(v string) *SSOStateUpsert {
+	u.Set(ssostate.FieldRedirectURL, v)
+	return u
+}
+
+// UpdateRedirectURL sets the "redirect_url" field to the value that was provided on create.
+func (u *SSOStateUpsert) UpdateRedirectURL() *SSOStateUpsert {
+	u.SetExcluded(ssostate.FieldRedirectURL)
+	return u
+}
+
+// ClearRedirectURL clears the value of the "redirect_url" field.
+func (u *SSOStateUpsert) ClearRedirectURL() *SSOStateUpsert {
+	u.SetNull(ssostate.FieldRedirectURL)
 	return u
 }
 
@@ -379,6 +451,27 @@ func (u *SSOStateUpsertOne) UpdateUpdatedAt() *SSOStateUpsertOne {
 	})
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (u *SSOStateUpsertOne) SetDeletedAt(v time.Time) *SSOStateUpsertOne {
+	return u.Update(func(s *SSOStateUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *SSOStateUpsertOne) UpdateDeletedAt() *SSOStateUpsertOne {
+	return u.Update(func(s *SSOStateUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *SSOStateUpsertOne) ClearDeletedAt() *SSOStateUpsertOne {
+	return u.Update(func(s *SSOStateUpsert) {
+		s.ClearDeletedAt()
+	})
+}
+
 // SetState sets the "state" field.
 func (u *SSOStateUpsertOne) SetState(v string) *SSOStateUpsertOne {
 	return u.Update(func(s *SSOStateUpsert) {
@@ -418,6 +511,27 @@ func (u *SSOStateUpsertOne) SetExpiresAt(v time.Time) *SSOStateUpsertOne {
 func (u *SSOStateUpsertOne) UpdateExpiresAt() *SSOStateUpsertOne {
 	return u.Update(func(s *SSOStateUpsert) {
 		s.UpdateExpiresAt()
+	})
+}
+
+// SetRedirectURL sets the "redirect_url" field.
+func (u *SSOStateUpsertOne) SetRedirectURL(v string) *SSOStateUpsertOne {
+	return u.Update(func(s *SSOStateUpsert) {
+		s.SetRedirectURL(v)
+	})
+}
+
+// UpdateRedirectURL sets the "redirect_url" field to the value that was provided on create.
+func (u *SSOStateUpsertOne) UpdateRedirectURL() *SSOStateUpsertOne {
+	return u.Update(func(s *SSOStateUpsert) {
+		s.UpdateRedirectURL()
+	})
+}
+
+// ClearRedirectURL clears the value of the "redirect_url" field.
+func (u *SSOStateUpsertOne) ClearRedirectURL() *SSOStateUpsertOne {
+	return u.Update(func(s *SSOStateUpsert) {
+		s.ClearRedirectURL()
 	})
 }
 
@@ -653,6 +767,27 @@ func (u *SSOStateUpsertBulk) UpdateUpdatedAt() *SSOStateUpsertBulk {
 	})
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (u *SSOStateUpsertBulk) SetDeletedAt(v time.Time) *SSOStateUpsertBulk {
+	return u.Update(func(s *SSOStateUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *SSOStateUpsertBulk) UpdateDeletedAt() *SSOStateUpsertBulk {
+	return u.Update(func(s *SSOStateUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *SSOStateUpsertBulk) ClearDeletedAt() *SSOStateUpsertBulk {
+	return u.Update(func(s *SSOStateUpsert) {
+		s.ClearDeletedAt()
+	})
+}
+
 // SetState sets the "state" field.
 func (u *SSOStateUpsertBulk) SetState(v string) *SSOStateUpsertBulk {
 	return u.Update(func(s *SSOStateUpsert) {
@@ -692,6 +827,27 @@ func (u *SSOStateUpsertBulk) SetExpiresAt(v time.Time) *SSOStateUpsertBulk {
 func (u *SSOStateUpsertBulk) UpdateExpiresAt() *SSOStateUpsertBulk {
 	return u.Update(func(s *SSOStateUpsert) {
 		s.UpdateExpiresAt()
+	})
+}
+
+// SetRedirectURL sets the "redirect_url" field.
+func (u *SSOStateUpsertBulk) SetRedirectURL(v string) *SSOStateUpsertBulk {
+	return u.Update(func(s *SSOStateUpsert) {
+		s.SetRedirectURL(v)
+	})
+}
+
+// UpdateRedirectURL sets the "redirect_url" field to the value that was provided on create.
+func (u *SSOStateUpsertBulk) UpdateRedirectURL() *SSOStateUpsertBulk {
+	return u.Update(func(s *SSOStateUpsert) {
+		s.UpdateRedirectURL()
+	})
+}
+
+// ClearRedirectURL clears the value of the "redirect_url" field.
+func (u *SSOStateUpsertBulk) ClearRedirectURL() *SSOStateUpsertBulk {
+	return u.Update(func(s *SSOStateUpsert) {
+		s.ClearRedirectURL()
 	})
 }
 

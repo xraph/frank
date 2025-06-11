@@ -2,632 +2,1090 @@ package organization
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/base64"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/juicycleff/frank/ent"
-	"github.com/juicycleff/frank/ent/membership"
 	"github.com/juicycleff/frank/ent/organization"
-	"github.com/juicycleff/frank/ent/role"
 	"github.com/juicycleff/frank/ent/user"
+	"github.com/juicycleff/frank/internal/model"
+	"github.com/juicycleff/frank/internal/repository"
 	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/juicycleff/frank/pkg/logging"
 	"github.com/rs/xid"
 )
 
-// Service handles organization and membership operations
-type Service struct {
-	db     *ent.Client
-	logger logging.Logger
+// Service defines the organization service interface
+type Service interface {
+	// Organization CRUD operations
+	CreateOrganization(ctx context.Context, req model.CreateOrganizationRequest) (*model.Organization, error)
+	GetOrganization(ctx context.Context, id xid.ID) (*model.Organization, error)
+	GetOrganizationBySlug(ctx context.Context, slug string) (*model.Organization, error)
+	GetOrganizationByDomain(ctx context.Context, domain string) (*model.Organization, error)
+	UpdateOrganization(ctx context.Context, id xid.ID, req model.UpdateOrganizationRequest) (*model.Organization, error)
+	DeleteOrganization(ctx context.Context, id xid.ID, req model.DeleteOrganizationRequest) error
+	ListOrganizations(ctx context.Context, req model.OrganizationListRequest) (*model.OrganizationListResponse, error)
+
+	// Domain management
+	AddDomain(ctx context.Context, orgID xid.ID, domain string) error
+	RemoveDomain(ctx context.Context, orgID xid.ID, domain string) error
+	VerifyDomain(ctx context.Context, req model.DomainVerificationRequest) (*model.DomainVerificationResponse, error)
+	ListDomains(ctx context.Context, orgID xid.ID) ([]string, error)
+	GetDomainVerificationStatus(ctx context.Context, orgID xid.ID, domain string) (*model.DomainVerificationResponse, error)
+
+	// Organization settings
+	GetOrganizationSettings(ctx context.Context, orgID xid.ID) (*model.OrganizationSettings, error)
+	UpdateOrganizationSettings(ctx context.Context, orgID xid.ID, req model.UpdateOrganizationSettingsRequest) (*model.OrganizationSettings, error)
+
+	// Subscription and billing management
+	GetOrganizationBilling(ctx context.Context, orgID xid.ID) (*model.OrganizationBilling, error)
+	UpdateBilling(ctx context.Context, orgID xid.ID, req model.UpdateBillingRequest) (*model.OrganizationBilling, error)
+	GetOrganizationUsage(ctx context.Context, orgID xid.ID) (*model.OrganizationUsage, error)
+	UpdateUsage(ctx context.Context, orgID xid.ID, usage model.OrganizationUsage) error
+
+	// Trial management
+	StartTrial(ctx context.Context, orgID xid.ID, duration time.Duration) error
+	EndTrial(ctx context.Context, orgID xid.ID) error
+	ExtendTrial(ctx context.Context, orgID xid.ID, extension time.Duration) error
+	GetTrialStatus(ctx context.Context, orgID xid.ID) (*TrialStatus, error)
+
+	// Feature management
+	EnableFeature(ctx context.Context, orgID xid.ID, featureName string, config map[string]interface{}) error
+	DisableFeature(ctx context.Context, orgID xid.ID, featureName string) error
+	IsFeatureEnabled(ctx context.Context, orgID xid.ID, featureName string) (bool, error)
+	GetFeatureConfig(ctx context.Context, orgID xid.ID, featureKey string) (map[string]interface{}, error)
+	ListEnabledFeatures(ctx context.Context, orgID xid.ID) ([]model.FeatureSummary, error)
+
+	// Auth service management
+	EnableAuthService(ctx context.Context, orgID xid.ID, config map[string]interface{}) error
+	DisableAuthService(ctx context.Context, orgID xid.ID) error
+	UpdateAuthConfig(ctx context.Context, orgID xid.ID, config map[string]interface{}) error
+	GetAuthConfig(ctx context.Context, orgID xid.ID) (map[string]interface{}, error)
+
+	// SSO management
+	EnableSSO(ctx context.Context, orgID xid.ID, domain string, config map[string]interface{}) error
+	DisableSSO(ctx context.Context, orgID xid.ID) error
+	UpdateSSOConfig(ctx context.Context, orgID xid.ID, config map[string]interface{}) error
+
+	// User limits and quotas
+	GetUserLimits(ctx context.Context, orgID xid.ID) (*UserLimits, error)
+	UpdateUserLimits(ctx context.Context, orgID xid.ID, limits UserLimits) error
+	CheckUserLimit(ctx context.Context, orgID xid.ID, userType string) (bool, error)
+	GetCurrentUserCounts(ctx context.Context, orgID xid.ID) (*UserCounts, error)
+
+	// Ownership management
+	TransferOwnership(ctx context.Context, orgID xid.ID, req model.TransferUserOwnershipRequest) error
+	GetOwner(ctx context.Context, orgID xid.ID) (*model.UserSummary, error)
+	GetOwnershipHistory(ctx context.Context, orgID xid.ID) ([]OwnershipTransfer, error)
+
+	// Organization analytics
+	GetOrganizationStats(ctx context.Context, orgID xid.ID) (*model.OrgStats, error)
+	GetOrganizationActivity(ctx context.Context, orgID xid.ID, days int) (*OrganizationActivity, error)
+	GetGrowthMetrics(ctx context.Context, orgID xid.ID, period string) (*GrowthMetrics, error)
+	GetOrganizationAnalytics(ctx context.Context, orgID xid.ID, days int) (*OrganizationAnalytics, error)
+	GetComplianceReport(ctx context.Context, orgID xid.ID) (*ComplianceReport, error)
+
+	// Platform operations
+	GetPlatformOrganization(ctx context.Context) (*model.Organization, error)
+	GetCustomerOrganizations(ctx context.Context, req model.OrganizationListRequest) (*model.OrganizationListResponse, error)
+
+	// Validation and helpers
+	ValidateOrganizationName(ctx context.Context, name string, excludeOrgID *xid.ID) error
+	ValidateSlug(ctx context.Context, slug string, excludeOrgID *xid.ID) error
+	ValidateDomain(ctx context.Context, domain string, excludeOrgID *xid.ID) error
+	GenerateSlug(ctx context.Context, name string) (string, error)
+	SuggestSimilarOrganizations(ctx context.Context, name string, limit int) ([]model.OrganizationSummary, error)
+
+	// Plan and subscription management
+	UpdatePlan(ctx context.Context, orgID xid.ID, plan string) (*model.Organization, error)
+	GetPlanLimits(ctx context.Context, orgID xid.ID) (*PlanLimits, error)
+	CheckPlanLimit(ctx context.Context, orgID xid.ID, resource string, requestedCount int) (*PlanLimitCheck, error)
+	UpdateSubscriptionStatus(ctx context.Context, orgID xid.ID, status organization.SubscriptionStatus) error
+
+	// Organization settings
+	GetSettings(ctx context.Context, orgID xid.ID) (*model.OrganizationSettings, error)
+	UpdateSettings(ctx context.Context, orgID xid.ID, req model.UpdateOrganizationSettingsRequest) (*model.OrganizationSettings, error)
+
+	// Billing and customer management
+	UpdateBillingInfo(ctx context.Context, orgID xid.ID, req model.UpdateBillingRequest) (*model.OrganizationBilling, error)
+	GetBillingInfo(ctx context.Context, orgID xid.ID) (*model.OrganizationBilling, error)
+	SetCustomerID(ctx context.Context, orgID xid.ID, customerID string) error
+	SetSubscriptionID(ctx context.Context, orgID xid.ID, subscriptionID string) error
 }
 
-// NewService creates a new organization service
-func NewService(db *ent.Client, logger logging.Logger) *Service {
-	return &Service{
-		db:     db,
-		logger: logger,
+// service implements the organization service
+type service struct {
+	orgRepo        repository.OrganizationRepository
+	membershipRepo repository.MembershipRepository
+	userRepo       repository.UserRepository
+	auditRepo      repository.AuditRepository
+	logger         logging.Logger
+}
+
+// NewService creates a new organization service instance
+func NewService(
+	orgRepo repository.OrganizationRepository,
+	membershipRepo repository.MembershipRepository,
+	userRepo repository.UserRepository,
+	auditRepo repository.AuditRepository,
+	logger logging.Logger,
+) Service {
+	return &service{
+		orgRepo:        orgRepo,
+		membershipRepo: membershipRepo,
+		userRepo:       userRepo,
+		auditRepo:      auditRepo,
+		logger:         logger,
 	}
 }
 
-// Organization Management
+// CreateOrganization creates a new organization
+func (s *service) CreateOrganization(ctx context.Context, req model.CreateOrganizationRequest) (*model.Organization, error) {
+	s.logger.Info("Creating new organization", logging.String("name", req.Name))
 
-// CreateOrganizationInput represents input for creating an organization
-type CreateOrganizationInput struct {
-	Name     string                 `json:"name" validate:"required,min=2,max=100"`
-	Slug     string                 `json:"slug" validate:"required,min=2,max=50,alphanum"`
-	Domain   *string                `json:"domain,omitempty" validate:"omitempty,fqdn"`
-	LogoURL  *string                `json:"logo_url,omitempty" validate:"omitempty,url"`
-	Plan     string                 `json:"plan" validate:"omitempty,oneof=free pro enterprise"`
-	OwnerID  xid.ID                 `json:"owner_id" validate:"required"`
-	OrgType  organization.OrgType   `json:"org_type" validate:"omitempty,oneof=platform customer"`
-	Metadata map[string]interface{} `json:"metadata,omitempty"`
-}
-
-// CreateOrganization creates a new organization with the owner as the first member
-func (s *Service) CreateOrganization(ctx context.Context, input CreateOrganizationInput) (*ent.Organization, error) {
-	// Validate owner exists and is active
-	ownerExists, err := s.db.User.Query().
-		Where(user.ID(input.OwnerID), user.Active(true)).
-		Exist(ctx)
-	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to validate owner")
-	}
-	if !ownerExists {
-		return nil, errors.New(errors.CodeNotFound, "owner user not found or inactive")
+	// Validate organization name
+	if err := s.ValidateOrganizationName(ctx, req.Name, nil); err != nil {
+		return nil, err
 	}
 
-	// Check if slug is unique
-	slugExists, err := s.db.Organization.Query().
-		Where(organization.Slug(input.Slug)).
-		Exist(ctx)
-	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to check slug uniqueness")
-	}
-	if slugExists {
-		return nil, errors.New(errors.CodeConflict, "organization slug already exists")
+	// Generate slug if not provided
+	slug := req.Slug
+	if slug == "" {
+		slug = s.generateSlug(req.Name)
 	}
 
-	// Start transaction
-	tx, err := s.db.Tx(ctx)
-	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to start transaction")
+	// Validate slug uniqueness
+	if err := s.ValidateOrganizationSlug(ctx, slug, nil); err != nil {
+		return nil, err
 	}
-	defer func() {
-		if err != nil {
-			tx.Rollback()
+
+	// Validate domain if provided
+	if req.Domain != nil {
+		if err := s.ValidateDomain(ctx, *req.Domain, nil); err != nil {
+			return nil, err
 		}
-	}()
-
-	// Create organization
-	org, err := tx.Organization.Create().
-		SetName(input.Name).
-		SetSlug(input.Slug).
-		SetNillableDomain(input.Domain).
-		SetNillableLogoURL(input.LogoURL).
-		SetPlan(input.Plan).
-		SetOwnerID(input.OwnerID).
-		SetOrgType(input.OrgType).
-		SetMetadata(input.Metadata).
-		SetActive(true).
-		Save(ctx)
-	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to create organization")
 	}
 
-	// Create default organization owner role if it doesn't exist
-	ownerRole, err := tx.Role.Query().
-		Where(
-			role.Name("owner"),
-			role.RoleTypeEQ(role.RoleTypeOrganization),
-			role.OrganizationID(org.ID),
-		).
-		First(ctx)
-	if err != nil {
-		if ent.IsNotFound(err) {
-			// Create owner role
-			ownerRole, err = tx.Role.Create().
-				SetName("owner").
-				SetDisplayName("Organization Owner").
-				SetDescription("Full access to organization").
-				SetRoleType(role.RoleTypeOrganization).
-				SetOrganizationID(org.ID).
-				SetIsDefault(false).
-				SetPriority(100).
-				SetApplicableUserTypes([]string{"external"}).
-				SetSystem(true).
-				Save(ctx)
-			if err != nil {
-				return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to create owner role")
-			}
-		} else {
-			return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to query owner role")
-		}
-	}
-
-	// Add owner as first member with owner role
-	_, err = tx.Membership.Create().
-		SetUserID(input.OwnerID).
-		SetOrganizationID(org.ID).
-		SetRoleID(ownerRole.ID).
-		SetStatus(membership.StatusActive).
-		SetJoinedAt(time.Now()).
-		SetIsPrimaryContact(true).
-		Save(ctx)
-	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to create owner membership")
-	}
-
-	// Update organization member count
-	err = tx.Organization.UpdateOne(org).
-		SetCurrentExternalUsers(1).
-		Exec(ctx)
-	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to update member count")
-	}
-
-	// Commit transaction
-	if err = tx.Commit(); err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to commit transaction")
-	}
-
-	s.logger.Info("Organization created",
-		logging.String("org_id", org.ID.String()),
-		logging.String("name", org.Name),
-		logging.String("owner_id", input.OwnerID.String()),
-	)
-
-	return org, nil
-}
-
-// UpdateOrganizationInput represents input for updating an organization
-type UpdateOrganizationInput struct {
-	Name     *string                `json:"name,omitempty" validate:"omitempty,min=2,max=100"`
-	Domain   *string                `json:"domain,omitempty" validate:"omitempty,fqdn"`
-	LogoURL  *string                `json:"logo_url,omitempty" validate:"omitempty,url"`
-	Plan     *string                `json:"plan,omitempty" validate:"omitempty,oneof=free pro enterprise"`
-	Metadata map[string]interface{} `json:"metadata,omitempty"`
-}
-
-// UpdateOrganization updates an organization
-func (s *Service) UpdateOrganization(ctx context.Context, orgID xid.ID, input UpdateOrganizationInput) (*ent.Organization, error) {
-	update := s.db.Organization.UpdateOneID(orgID)
-
-	if input.Name != nil {
-		update.SetName(*input.Name)
-	}
-	if input.Domain != nil {
-		update.SetNillableDomain(input.Domain)
-	}
-	if input.LogoURL != nil {
-		update.SetNillableLogoURL(input.LogoURL)
-	}
-	if input.Plan != nil {
-		update.SetPlan(*input.Plan)
-	}
-	if input.Metadata != nil {
-		update.SetMetadata(input.Metadata)
-	}
-
-	org, err := update.Save(ctx)
-	if err != nil {
-		if ent.IsNotFound(err) {
-			return nil, errors.New(errors.CodeNotFound, "organization not found")
-		}
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to update organization")
-	}
-
-	return org, nil
-}
-
-// GetOrganization retrieves an organization by ID
-func (s *Service) GetOrganization(ctx context.Context, orgID xid.ID) (*ent.Organization, error) {
-	org, err := s.db.Organization.Query().
-		Where(organization.ID(orgID), organization.Active(true)).
-		WithMemberships(func(q *ent.MembershipQuery) {
-			q.WithUser().WithRole().Where(membership.StatusEQ(membership.StatusActive))
-		}).
-		First(ctx)
-	if err != nil {
-		if ent.IsNotFound(err) {
-			return nil, errors.New(errors.CodeNotFound, "organization not found")
-		}
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to get organization")
-	}
-
-	return org, nil
-}
-
-// Membership Management
-
-// InviteMemberInput represents input for inviting a member
-type InviteMemberInput struct {
-	OrganizationID xid.ID         `json:"organization_id" validate:"required"`
-	Email          string         `json:"email" validate:"required,email"`
-	RoleID         xid.ID         `json:"role_id" validate:"required"`
-	InvitedBy      xid.ID         `json:"invited_by" validate:"required"`
-	ExpiresIn      *time.Duration `json:"expires_in,omitempty"`
-	Message        *string        `json:"message,omitempty"`
-}
-
-// InviteMember invites a user to join an organization
-func (s *Service) InviteMember(ctx context.Context, input InviteMemberInput) (*ent.Membership, error) {
-	// Check organization limits
-	org, err := s.GetOrganization(ctx, input.OrganizationID)
+	// Parse organization type
+	orgType, err := s.parseOrgType(req.OrgType)
 	if err != nil {
 		return nil, err
 	}
 
-	if org.CurrentExternalUsers >= org.ExternalUserLimit {
-		return nil, errors.New(errors.CodeConflict, "organization has reached its member limit")
+	// Set default limits based on plan
+	limits := s.getDefaultLimitsForPlan(req.Plan)
+
+	// Create organization input
+	input := repository.CreateOrganizationInput{
+		Name:                 req.Name,
+		Slug:                 slug,
+		Domain:               req.Domain,
+		LogoURL:              req.LogoURL,
+		Plan:                 req.Plan,
+		OrgType:              orgType,
+		ExternalUserLimit:    req.ExternalUserLimit,
+		EndUserLimit:         req.EndUserLimit,
+		AuthServiceEnabled:   req.EnableAuthService,
+		AuthConfig:           req.AuthConfig,
+		Metadata:             req.Metadata,
+		Active:               true,
+		TrialUsed:            false,
+		SubscriptionStatus:   organization.SubscriptionStatusActive,
+		APIRequestLimit:      limits.APIRequestLimit,
+		CurrentExternalUsers: 0,
+		CurrentEndUsers:      0,
 	}
 
-	// Check if role exists and is valid for this organization
-	roleExists, err := s.db.Role.Query().
-		Where(
-			role.ID(input.RoleID),
-			role.OrganizationID(input.OrganizationID),
-			role.Active(true),
-		).
-		Exist(ctx)
+	// Set trial period if requested
+	if req.CreateTrialPeriod {
+		trialEnd := time.Now().Add(14 * 24 * time.Hour) // 14 days trial
+		input.TrialEndsAt = &trialEnd
+	}
+
+	// Create organization
+	entOrg, err := s.orgRepo.Create(ctx, input)
 	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to validate role")
-	}
-	if !roleExists {
-		return nil, errors.New(errors.CodeNotFound, "role not found or not valid for organization")
+		s.logger.Error("Failed to create organization", logging.Error(err))
+		return nil, errors.Wrap(err, errors.CodeInternalServer, "failed to create organization")
 	}
 
-	// Check if user exists, create if not
-	var targetUser *ent.User
-	targetUser, err = s.db.User.Query().
-		Where(
-			user.Email(input.Email),
-			user.UserTypeEQ(user.UserTypeExternal),
-		).
-		First(ctx)
+	// Create owner if email provided
+	if req.OwnerEmail != "" {
+		if err := s.createOrganizationOwner(ctx, entOrg.ID, req.OwnerEmail); err != nil {
+			s.logger.Warn("Failed to create organization owner", logging.Error(err))
+			// Don't fail the organization creation for owner creation failure
+		}
+	}
+
+	// Convert to model
+	modelOrg := s.convertEntOrgToModel(entOrg)
+
+	// Create audit log
+	s.createAuditLog(ctx, &model.CreateAuditLogRequest{
+		Action:         "organization.created",
+		Resource:       "organization",
+		ResourceID:     &modelOrg.ID,
+		Status:         "success",
+		OrganizationID: &modelOrg.ID,
+		Details: map[string]interface{}{
+			"name":     req.Name,
+			"slug":     slug,
+			"org_type": req.OrgType,
+			"plan":     req.Plan,
+		},
+	})
+
+	s.logger.Info("Organization created successfully",
+		logging.String("org_id", modelOrg.ID.String()),
+		logging.String("name", modelOrg.Name))
+
+	return modelOrg, nil
+}
+
+// GetOrganization retrieves an organization by ID
+func (s *service) GetOrganization(ctx context.Context, id xid.ID) (*model.Organization, error) {
+	entOrg, err := s.orgRepo.GetByID(ctx, id)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			// Create user as external user
-			targetUser, err = s.db.User.Create().
-				SetEmail(input.Email).
-				SetUserType(user.UserTypeExternal).
-				SetActive(true).
-				Save(ctx)
-			if err != nil {
-				return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to create user")
+			return nil, errors.New(errors.CodeNotFound, "organization not found")
+		}
+		return nil, errors.Wrap(err, errors.CodeInternalServer, "failed to get organization")
+	}
+
+	return s.convertEntOrgToModel(entOrg), nil
+}
+
+// GetOrganizationBySlug retrieves an organization by slug
+func (s *service) GetOrganizationBySlug(ctx context.Context, slug string) (*model.Organization, error) {
+	entOrg, err := s.orgRepo.GetBySlug(ctx, slug)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, errors.New(errors.CodeNotFound, "organization not found")
+		}
+		return nil, errors.Wrap(err, errors.CodeInternalServer, "failed to get organization by slug")
+	}
+
+	return s.convertEntOrgToModel(entOrg), nil
+}
+
+// GetOrganizationByDomain retrieves an organization by domain
+func (s *service) GetOrganizationByDomain(ctx context.Context, domain string) (*model.Organization, error) {
+	entOrg, err := s.orgRepo.GetByDomain(ctx, domain)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, errors.New(errors.CodeNotFound, "organization not found")
+		}
+		return nil, errors.Wrap(err, errors.CodeInternalServer, "failed to get organization by domain")
+	}
+
+	return s.convertEntOrgToModel(entOrg), nil
+}
+
+// UpdateOrganization updates an organization
+func (s *service) UpdateOrganization(ctx context.Context, id xid.ID, req model.UpdateOrganizationRequest) (*model.Organization, error) {
+	s.logger.Info("Updating organization", logging.String("org_id", id.String()))
+
+	// Get existing organization
+	existingOrg, err := s.orgRepo.GetByID(ctx, id)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, errors.New(errors.CodeNotFound, "organization not found")
+		}
+		return nil, errors.Wrap(err, errors.CodeInternalServer, "failed to get organization")
+	}
+
+	// Track changes for audit log
+	changes := make(map[string]interface{})
+
+	// Create update input
+	input := repository.UpdateOrganizationInput{}
+
+	if req.Name != nil && *req.Name != existingOrg.Name {
+		if err := s.ValidateOrganizationName(ctx, *req.Name, &id); err != nil {
+			return nil, err
+		}
+		input.Name = req.Name
+		changes["name"] = map[string]interface{}{
+			"old": existingOrg.Name,
+			"new": *req.Name,
+		}
+	}
+
+	if req.Slug != nil && *req.Slug != existingOrg.Slug {
+		if err := s.ValidateOrganizationSlug(ctx, *req.Slug, &id); err != nil {
+			return nil, err
+		}
+		input.Slug = req.Slug
+		changes["slug"] = map[string]interface{}{
+			"old": existingOrg.Slug,
+			"new": *req.Slug,
+		}
+	}
+
+	if req.Domain != nil && *req.Domain != existingOrg.Domain {
+		if *req.Domain != "" {
+			if err := s.ValidateDomain(ctx, *req.Domain, nil); err != nil {
+				return nil, err
 			}
-		} else {
-			return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to query user")
+		}
+		input.Domain = req.Domain
+		changes["domain"] = map[string]interface{}{
+			"old": existingOrg.Domain,
+			"new": *req.Domain,
 		}
 	}
 
-	// Check if membership already exists
-	existingMembership, err := s.db.Membership.Query().
-		Where(
-			membership.UserID(targetUser.ID),
-			membership.OrganizationID(input.OrganizationID),
-		).
-		First(ctx)
-	if err != nil && !ent.IsNotFound(err) {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to check existing membership")
+	if req.LogoURL != nil {
+		input.LogoURL = req.LogoURL
+		changes["logo_url"] = map[string]interface{}{
+			"old": existingOrg.LogoURL,
+			"new": *req.LogoURL,
+		}
 	}
 
-	if existingMembership != nil {
-		if existingMembership.Status == membership.StatusActive {
-			return nil, errors.New(errors.CodeConflict, "user is already a member of this organization")
-		}
-		// Update existing pending membership
-		token, err := generateInvitationToken()
-		if err != nil {
-			return nil, errors.Wrap(errors.CodeCryptoError, err, "failed to generate invitation token")
+	if req.Plan != nil {
+		input.Plan = req.Plan
+		changes["plan"] = map[string]interface{}{
+			"old": existingOrg.Plan,
+			"new": *req.Plan,
 		}
 
-		expiresAt := time.Now().Add(7 * 24 * time.Hour) // 7 days default
-		if input.ExpiresIn != nil {
-			expiresAt = time.Now().Add(*input.ExpiresIn)
-		}
-
-		return existingMembership.Update().
-			SetRoleID(input.RoleID).
-			SetStatus(membership.StatusPending).
-			SetInvitedBy(input.InvitedBy).
-			SetInvitedAt(time.Now()).
-			SetInvitationToken(token).
-			SetExpiresAt(expiresAt).
-			Save(ctx)
+		// Update limits based on new plan
+		limits := s.getDefaultLimitsForPlan(*req.Plan)
+		input.ExternalUserLimit = &limits.ExternalUserLimit
+		input.EndUserLimit = &limits.EndUserLimit
+		input.APIRequestLimit = &limits.APIRequestLimit
 	}
 
-	// Create new membership invitation
-	token, err := generateInvitationToken()
+	if req.ExternalUserLimit != nil {
+		input.ExternalUserLimit = req.ExternalUserLimit
+		changes["external_user_limit"] = map[string]interface{}{
+			"old": existingOrg.ExternalUserLimit,
+			"new": *req.ExternalUserLimit,
+		}
+	}
+
+	if req.EndUserLimit != nil {
+		input.EndUserLimit = req.EndUserLimit
+		changes["end_user_limit"] = map[string]interface{}{
+			"old": existingOrg.EndUserLimit,
+			"new": *req.EndUserLimit,
+		}
+	}
+
+	if req.SSOEnabled != nil {
+		input.SSOEnabled = req.SSOEnabled
+		changes["sso_enabled"] = map[string]interface{}{
+			"old": existingOrg.SSOEnabled,
+			"new": *req.SSOEnabled,
+		}
+	}
+
+	if req.SSODomain != nil {
+		input.SSODomain = req.SSODomain
+		changes["sso_domain"] = map[string]interface{}{
+			"old": existingOrg.SSODomain,
+			"new": *req.SSODomain,
+		}
+	}
+
+	if req.AuthServiceEnabled != nil {
+		input.AuthServiceEnabled = req.AuthServiceEnabled
+		changes["auth_service_enabled"] = map[string]interface{}{
+			"old": existingOrg.AuthServiceEnabled,
+			"new": *req.AuthServiceEnabled,
+		}
+	}
+
+	if req.AuthConfig != nil {
+		input.AuthConfig = req.AuthConfig
+		changes["auth_config"] = map[string]interface{}{
+			"old": existingOrg.AuthConfig,
+			"new": req.AuthConfig,
+		}
+	}
+
+	if req.AuthDomain != nil {
+		input.AuthDomain = req.AuthDomain
+		changes["auth_domain"] = map[string]interface{}{
+			"old": existingOrg.AuthDomain,
+			"new": *req.AuthDomain,
+		}
+	}
+
+	if req.APIRequestLimit != nil {
+		input.APIRequestLimit = req.APIRequestLimit
+		changes["api_request_limit"] = map[string]interface{}{
+			"old": existingOrg.APIRequestLimit,
+			"new": *req.APIRequestLimit,
+		}
+	}
+
+	if req.Active != nil {
+		input.Active = req.Active
+		changes["active"] = map[string]interface{}{
+			"old": existingOrg.Active,
+			"new": *req.Active,
+		}
+	}
+
+	if req.Metadata != nil {
+		input.Metadata = req.Metadata
+		changes["metadata"] = map[string]interface{}{
+			"old": existingOrg.Metadata,
+			"new": req.Metadata,
+		}
+	}
+
+	// Update organization if there are changes
+	if len(changes) == 0 {
+		return s.convertEntOrgToModel(existingOrg), nil
+	}
+
+	updatedOrg, err := s.orgRepo.Update(ctx, id, input)
 	if err != nil {
-		return nil, errors.Wrap(errors.CodeCryptoError, err, "failed to generate invitation token")
+		return nil, errors.Wrap(err, errors.CodeInternalServer, "failed to update organization")
 	}
 
-	expiresAt := time.Now().Add(7 * 24 * time.Hour) // 7 days default
-	if input.ExpiresIn != nil {
-		expiresAt = time.Now().Add(*input.ExpiresIn)
-	}
+	// Create audit log
+	s.createAuditLog(ctx, &model.CreateAuditLogRequest{
+		Action:         "organization.updated",
+		Resource:       "organization",
+		ResourceID:     &id,
+		Status:         "success",
+		OrganizationID: &id,
+		Changes:        changes,
+		Details: map[string]interface{}{
+			"updated_fields": s.getUpdatedFieldsList(changes),
+		},
+	})
 
-	membership, err := s.db.Membership.Create().
-		SetUserID(targetUser.ID).
-		SetOrganizationID(input.OrganizationID).
-		SetRoleID(input.RoleID).
-		SetStatus(membership.StatusPending).
-		SetInvitedBy(input.InvitedBy).
-		SetInvitedAt(time.Now()).
-		SetInvitationToken(token).
-		SetExpiresAt(expiresAt).
-		Save(ctx)
-	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to create membership")
-	}
+	s.logger.Info("Organization updated successfully",
+		logging.String("org_id", id.String()),
+		logging.Int("fields_updated", len(changes)))
 
-	s.logger.Info("Member invited",
-		logging.String("org_id", input.OrganizationID.String()),
-		logging.String("email", input.Email),
-		logging.String("invited_by", input.InvitedBy.String()),
-	)
-
-	return membership, nil
+	return s.convertEntOrgToModel(updatedOrg), nil
 }
 
-// AcceptInvitationInput represents input for accepting an invitation
-type AcceptInvitationInput struct {
-	Token  string `json:"token" validate:"required"`
-	UserID xid.ID `json:"user_id" validate:"required"`
-}
+// DeleteOrganization deletes an organization
+func (s *service) DeleteOrganization(ctx context.Context, id xid.ID, req model.DeleteOrganizationRequest) error {
+	s.logger.Info("Deleting organization", logging.String("org_id", id.String()))
 
-// AcceptInvitation accepts a membership invitation
-func (s *Service) AcceptInvitation(ctx context.Context, input AcceptInvitationInput) (*ent.Membership, error) {
-	// Find the invitation
-	member, err := s.db.Membership.Query().
-		Where(
-			membership.InvitationToken(input.Token),
-			membership.StatusEQ(membership.StatusPending),
-			membership.ExpiresAtGT(time.Now()),
-		).
-		WithUser().
-		WithOrganization().
-		First(ctx)
+	if !req.Confirm {
+		return errors.New(errors.CodeBadRequest, "organization deletion must be confirmed")
+	}
+
+	// Get organization to validate existence
+	existingOrg, err := s.orgRepo.GetByID(ctx, id)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, errors.New(errors.CodeNotFound, "invitation not found or expired")
+			return errors.New(errors.CodeNotFound, "organization not found")
 		}
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to find invitation")
+		return errors.Wrap(err, errors.CodeInternalServer, "failed to get organization")
 	}
 
-	// Verify the user is the intended recipient
-	if member.Edges.User.ID != input.UserID {
-		return nil, errors.New(errors.CodeForbidden, "invitation is not for this user")
+	// Check if organization can be deleted (not platform org, no dependencies, etc.)
+	if existingOrg.IsPlatformOrganization {
+		return errors.New(errors.CodeBadRequest, "cannot delete platform organization")
 	}
 
-	// Check organization limits
-	org := member.Edges.Organization
-	if org.CurrentExternalUsers >= org.ExternalUserLimit {
-		return nil, errors.New(errors.CodeConflict, "organization has reached its member limit")
+	// TODO: Check for active subscriptions, members, etc.
+	// TODO: Handle data retention requirements
+	// TODO: Notify members if requested
+
+	// Soft delete organization
+	if err := s.orgRepo.SoftDelete(ctx, id); err != nil {
+		return errors.Wrap(err, errors.CodeInternalServer, "failed to delete organization")
 	}
 
-	// Start transaction
-	tx, err := s.db.Tx(ctx)
-	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to start transaction")
-	}
-	defer func() {
-		if err != nil {
-			tx.Rollback()
-		}
-	}()
+	// Create audit log
+	s.createAuditLog(ctx, &model.CreateAuditLogRequest{
+		Action:         "organization.deleted",
+		Resource:       "organization",
+		ResourceID:     &id,
+		Status:         "success",
+		OrganizationID: &id,
+		Details: map[string]interface{}{
+			"reason":         req.Reason,
+			"data_retention": req.DataRetention,
+			"notify_members": req.NotifyMembers,
+		},
+	})
 
-	// Accept the invitation
-	member, err = tx.Membership.UpdateOne(member).
-		SetStatus(membership.StatusActive).
-		SetJoinedAt(time.Now()).
-		ClearInvitationToken().
-		ClearExpiresAt().
-		Save(ctx)
-	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to accept invitation")
-	}
-
-	// Update organization member count
-	err = tx.Organization.UpdateOneID(org.ID).
-		SetCurrentExternalUsers(org.CurrentExternalUsers + 1).
-		Exec(ctx)
-	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to update member count")
-	}
-
-	// Commit transaction
-	if err = tx.Commit(); err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to commit transaction")
-	}
-
-	s.logger.Info("Invitation accepted",
-		logging.String("org_id", org.ID.String()),
-		logging.String("user_id", input.UserID.String()),
-	)
-
-	return member, nil
+	s.logger.Info("Organization deleted successfully", logging.String("org_id", id.String()))
+	return nil
 }
 
-// RemoveMember removes a member from an organization
-func (s *Service) RemoveMember(ctx context.Context, orgID, userID xid.ID) error {
-	// Get the membership
-	member, err := s.db.Membership.Query().
-		Where(
-			membership.OrganizationID(orgID),
-			membership.UserID(userID),
-		).
-		WithOrganization().
-		First(ctx)
+// ValidateOrganizationName validates organization name
+func (s *service) ValidateOrganizationName(ctx context.Context, name string, excludeOrgID *xid.ID) error {
+	if name == "" {
+		return errors.New(errors.CodeBadRequest, "organization name is required")
+	}
+
+	if len(strings.TrimSpace(name)) < 2 {
+		return errors.New(errors.CodeBadRequest, "organization name must be at least 2 characters")
+	}
+
+	if len(name) > 100 {
+		return errors.New(errors.CodeBadRequest, "organization name is too long")
+	}
+
+	// Additional validation rules can be added here
+	return nil
+}
+
+// ValidateOrganizationSlug validates organization slug
+func (s *service) ValidateOrganizationSlug(ctx context.Context, slug string, excludeOrgID *xid.ID) error {
+	if slug == "" {
+		return errors.New(errors.CodeBadRequest, "organization slug is required")
+	}
+
+	if len(slug) < 2 {
+		return errors.New(errors.CodeBadRequest, "organization slug must be at least 2 characters")
+	}
+
+	if len(slug) > 50 {
+		return errors.New(errors.CodeBadRequest, "organization slug is too long")
+	}
+
+	// Validate slug format (alphanumeric, hyphens, underscores)
+	if !s.isValidSlug(slug) {
+		return errors.New(errors.CodeBadRequest, "organization slug contains invalid characters")
+	}
+
+	// Check reserved slugs
+	if s.isReservedSlug(slug) {
+		return errors.New(errors.CodeBadRequest, "organization slug is reserved")
+	}
+
+	// Check uniqueness
+	exists, err := s.orgRepo.ExistsBySlug(ctx, slug)
 	if err != nil {
-		if ent.IsNotFound(err) {
-			return errors.New(errors.CodeNotFound, "membership not found")
+		return errors.Wrap(err, errors.CodeInternalServer, "failed to check slug uniqueness")
+	}
+
+	if exists {
+		if excludeOrgID != nil {
+			existingOrg, err := s.orgRepo.GetBySlug(ctx, slug)
+			if err == nil && existingOrg.ID == *excludeOrgID {
+				return nil // Same organization, allow update
+			}
 		}
-		return errors.Wrap(errors.CodeDatabaseError, err, "failed to find membership")
+		return errors.New(errors.CodeConflict, "organization slug already exists")
 	}
-
-	// Check if user is the owner
-	if !member.Edges.Organization.OwnerID.IsNil() && member.Edges.Organization.OwnerID == userID {
-		return errors.New(errors.CodeForbidden, "cannot remove organization owner")
-	}
-
-	// Start transaction
-	tx, err := s.db.Tx(ctx)
-	if err != nil {
-		return errors.Wrap(errors.CodeDatabaseError, err, "failed to start transaction")
-	}
-	defer func() {
-		if err != nil {
-			tx.Rollback()
-		}
-	}()
-
-	// Remove membership
-	err = tx.Membership.DeleteOne(member).Exec(ctx)
-	if err != nil {
-		return errors.Wrap(errors.CodeDatabaseError, err, "failed to remove membership")
-	}
-
-	// Update organization member count if membership was active
-	if member.Status == membership.StatusActive {
-		org := member.Edges.Organization
-		err = tx.Organization.UpdateOneID(orgID).
-			SetCurrentExternalUsers(org.CurrentExternalUsers - 1).
-			Exec(ctx)
-		if err != nil {
-			return errors.Wrap(errors.CodeDatabaseError, err, "failed to update member count")
-		}
-	}
-
-	// Commit transaction
-	if err = tx.Commit(); err != nil {
-		return errors.Wrap(errors.CodeDatabaseError, err, "failed to commit transaction")
-	}
-
-	s.logger.Info("Member removed",
-		logging.String("org_id", orgID.String()),
-		logging.String("user_id", userID.String()),
-	)
 
 	return nil
 }
 
-// UpdateMemberRole updates a member's role in an organization
-func (s *Service) UpdateMemberRole(ctx context.Context, orgID, userID, roleID xid.ID) (*ent.Membership, error) {
-	// Validate role exists for this organization
-	roleExists, err := s.db.Role.Query().
-		Where(
-			role.ID(roleID),
-			role.OrganizationID(orgID),
-			role.Active(true),
-		).
-		Exist(ctx)
-	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to validate role")
-	}
-	if !roleExists {
-		return nil, errors.New(errors.CodeNotFound, "role not found for organization")
+// ValidateDomain validates domain format
+func (s *service) ValidateDomain(ctx context.Context, domain string, excludeOrgID *xid.ID) error {
+	if domain == "" {
+		return nil // Domain is optional
 	}
 
-	membershipQuery := s.db.Membership.Query().
-		Where(
-			membership.OrganizationID(orgID),
-			membership.UserID(userID),
-			membership.StatusEQ(membership.StatusActive),
-		)
+	// Basic domain validation
+	if len(domain) < 3 || len(domain) > 255 {
+		return errors.New(errors.CodeBadRequest, "invalid domain length")
+	}
 
-	// Update membership
-	_, err = s.db.Membership.Update().
-		Where(
-			membership.OrganizationID(orgID),
-			membership.UserID(userID),
-			membership.StatusEQ(membership.StatusActive),
-		).
-		SetRoleID(roleID).
-		Save(ctx)
-	if err != nil {
-		if ent.IsNotFound(err) {
-			return nil, errors.New(errors.CodeNotFound, "active membership not found")
+	// Simple domain format validation
+	matched, err := regexp.MatchString(`^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$`, domain)
+	if err != nil || !matched {
+		return errors.New(errors.CodeBadRequest, "invalid domain format")
+	}
+
+	return nil
+}
+
+func (s *service) ListDomains(ctx context.Context, orgID xid.ID) ([]string, error) {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (s *service) GetFeatureConfig(ctx context.Context, orgID xid.ID, featureKey string) (map[string]interface{}, error) {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (s *service) ListEnabledFeatures(ctx context.Context, orgID xid.ID) ([]model.FeatureSummary, error) {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (s *service) GetOwnershipHistory(ctx context.Context, orgID xid.ID) ([]OwnershipTransfer, error) {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (s *service) GetOrganizationAnalytics(ctx context.Context, orgID xid.ID, days int) (*OrganizationAnalytics, error) {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (s *service) GetComplianceReport(ctx context.Context, orgID xid.ID) (*ComplianceReport, error) {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (s *service) ValidateSlug(ctx context.Context, slug string, excludeOrgID *xid.ID) error {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (s *service) GenerateSlug(ctx context.Context, name string) (string, error) {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (s *service) SuggestSimilarOrganizations(ctx context.Context, name string, limit int) ([]model.OrganizationSummary, error) {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (s *service) UpdatePlan(ctx context.Context, orgID xid.ID, plan string) (*model.Organization, error) {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (s *service) GetPlanLimits(ctx context.Context, orgID xid.ID) (*PlanLimits, error) {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (s *service) CheckPlanLimit(ctx context.Context, orgID xid.ID, resource string, requestedCount int) (*PlanLimitCheck, error) {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (s *service) UpdateSubscriptionStatus(ctx context.Context, orgID xid.ID, status organization.SubscriptionStatus) error {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (s *service) GetSettings(ctx context.Context, orgID xid.ID) (*model.OrganizationSettings, error) {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (s *service) UpdateSettings(ctx context.Context, orgID xid.ID, req model.UpdateOrganizationSettingsRequest) (*model.OrganizationSettings, error) {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (s *service) UpdateBillingInfo(ctx context.Context, orgID xid.ID, req model.UpdateBillingRequest) (*model.OrganizationBilling, error) {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (s *service) GetBillingInfo(ctx context.Context, orgID xid.ID) (*model.OrganizationBilling, error) {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (s *service) SetCustomerID(ctx context.Context, orgID xid.ID, customerID string) error {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (s *service) SetSubscriptionID(ctx context.Context, orgID xid.ID, subscriptionID string) error {
+	// TODO implement me
+	panic("implement me")
+}
+
+// Helper methods
+
+func (s *service) parseOrgType(orgTypeStr organization.OrgType) (organization.OrgType, error) {
+	switch orgTypeStr {
+	case organization.OrgTypePlatform:
+		return organization.OrgTypePlatform, nil
+	case organization.OrgTypeCustomer:
+		return organization.OrgTypeCustomer, nil
+	default:
+		return organization.OrgTypeCustomer, nil // Default to customer
+	}
+}
+
+func (s *service) generateSlug(name string) string {
+	// Convert to lowercase and replace spaces/special chars with hyphens
+	slug := strings.ToLower(name)
+	slug = regexp.MustCompile(`[^a-z0-9\-_]`).ReplaceAllString(slug, "-")
+	slug = regexp.MustCompile(`-+`).ReplaceAllString(slug, "-")
+	slug = strings.Trim(slug, "-")
+
+	// Ensure minimum length
+	if len(slug) < 2 {
+		slug = "org-" + slug
+	}
+
+	// Truncate if too long
+	if len(slug) > 50 {
+		slug = slug[:50]
+	}
+
+	return slug
+}
+
+func (s *service) isValidSlug(slug string) bool {
+	matched, _ := regexp.MatchString(`^[a-z0-9\-_]+$`, slug)
+	return matched
+}
+
+func (s *service) isReservedSlug(slug string) bool {
+	reserved := []string{
+		"api", "www", "admin", "root", "support", "help", "docs", "blog",
+		"app", "dashboard", "settings", "profile", "account", "billing",
+		"security", "privacy", "terms", "about", "contact", "status",
+	}
+
+	for _, reserved := range reserved {
+		if slug == reserved {
+			return true
 		}
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to update member role")
 	}
-
-	return membershipQuery.First(ctx)
+	return false
 }
 
-// ListMembers lists all members of an organization
-func (s *Service) ListMembers(ctx context.Context, orgID xid.ID, status *membership.Status) ([]*ent.Membership, error) {
-	query := s.db.Membership.Query().
-		Where(membership.OrganizationID(orgID)).
-		WithUser().
-		WithRole()
-
-	if status != nil {
-		query.Where(membership.StatusEQ(*status))
-	}
-
-	members, err := query.All(ctx)
-	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to list members")
-	}
-
-	return members, nil
-}
-
-// GetMembershipByUser gets a user's membership in an organization
-func (s *Service) GetMembershipByUser(ctx context.Context, orgID, userID xid.ID) (*ent.Membership, error) {
-	membership, err := s.db.Membership.Query().
-		Where(
-			membership.OrganizationID(orgID),
-			membership.UserID(userID),
-		).
-		WithUser().
-		WithRole().
-		First(ctx)
-	if err != nil {
-		if ent.IsNotFound(err) {
-			return nil, errors.New(errors.CodeNotFound, "membership not found")
+func (s *service) getDefaultLimitsForPlan(plan string) UserLimits {
+	switch strings.ToLower(plan) {
+	case "free":
+		return UserLimits{
+			ExternalUserLimit: 5,
+			EndUserLimit:      100,
+			APIRequestLimit:   10000,
+			StorageLimit:      1073741824, // 1GB
+			EmailLimit:        500,
+			SMSLimit:          100,
 		}
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to get membership")
+	case "starter":
+		return UserLimits{
+			ExternalUserLimit: 25,
+			EndUserLimit:      1000,
+			APIRequestLimit:   50000,
+			StorageLimit:      5368709120, // 5GB
+			EmailLimit:        2500,
+			SMSLimit:          500,
+		}
+	case "pro":
+		return UserLimits{
+			ExternalUserLimit: 100,
+			EndUserLimit:      10000,
+			APIRequestLimit:   200000,
+			StorageLimit:      21474836480, // 20GB
+			EmailLimit:        10000,
+			SMSLimit:          2000,
+		}
+	case "enterprise":
+		return UserLimits{
+			ExternalUserLimit: 1000,
+			EndUserLimit:      100000,
+			APIRequestLimit:   1000000,
+			StorageLimit:      107374182400, // 100GB
+			EmailLimit:        50000,
+			SMSLimit:          10000,
+		}
+	default:
+		return s.getDefaultLimitsForPlan("free")
 	}
-
-	return membership, nil
 }
 
-// Helper Functions
-
-// generateInvitationToken generates a secure invitation token
-func generateInvitationToken() (string, error) {
-	bytes := make([]byte, 32)
-	_, err := rand.Read(bytes)
-	if err != nil {
-		return "", err
+func (s *service) getUpdatedFieldsList(changes map[string]interface{}) []string {
+	var fields []string
+	for field := range changes {
+		fields = append(fields, field)
 	}
-	return base64.URLEncoding.EncodeToString(bytes), nil
+	return fields
 }
 
-// GetOrganizationStats returns organization statistics
-func (s *Service) GetOrganizationStats(ctx context.Context, orgID xid.ID) (*OrganizationStats, error) {
-	org, err := s.GetOrganization(ctx, orgID)
-	if err != nil {
-		return nil, err
+func (s *service) createOrganizationOwner(ctx context.Context, orgID xid.ID, ownerEmail string) error {
+	// Check if user already exists
+	existingUser, err := s.userRepo.GetByEmail(ctx, ownerEmail, user.UserTypeExternal, &orgID)
+	if err != nil && !ent.IsNotFound(err) {
+		return errors.Wrap(err, errors.CodeInternalServer, "failed to check existing user")
 	}
 
-	activeMembers, err := s.db.Membership.Query().
-		Where(
-			membership.OrganizationID(orgID),
-			membership.StatusEQ(membership.StatusActive),
-		).
-		Count(ctx)
-	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to count active members")
+	var userID xid.ID
+	if existingUser != nil {
+		userID = existingUser.ID
+	} else {
+		// Create new user
+		createUserInput := repository.CreateUserInput{
+			Email:          ownerEmail,
+			UserType:       user.UserTypeExternal,
+			OrganizationID: &orgID,
+			EmailVerified:  false,
+			Active:         true,
+			Blocked:        false,
+		}
+
+		newUser, err := s.userRepo.Create(ctx, createUserInput)
+		if err != nil {
+			return errors.Wrap(err, errors.CodeInternalServer, "failed to create owner user")
+		}
+		userID = newUser.ID
 	}
 
-	pendingInvitations, err := s.db.Membership.Query().
-		Where(
-			membership.OrganizationID(orgID),
-			membership.StatusEQ(membership.StatusPending),
-		).
-		Count(ctx)
-	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to count pending invitations")
+	// Set as organization owner
+	input := repository.UpdateOrganizationInput{
+		OwnerID: &userID,
 	}
 
-	return &OrganizationStats{
-		Organization:       org,
-		ActiveMembers:      activeMembers,
-		PendingInvitations: pendingInvitations,
-		MemberLimit:        org.ExternalUserLimit,
-		UsagePercentage:    float64(activeMembers) / float64(org.ExternalUserLimit) * 100,
-	}, nil
+	if _, err := s.orgRepo.Update(ctx, orgID, input); err != nil {
+		return errors.Wrap(err, errors.CodeInternalServer, "failed to set organization owner")
+	}
+
+	return nil
 }
 
-// OrganizationStats represents organization statistics
-type OrganizationStats struct {
-	Organization       *ent.Organization `json:"organization"`
-	ActiveMembers      int               `json:"active_members"`
-	PendingInvitations int               `json:"pending_invitations"`
-	MemberLimit        int               `json:"member_limit"`
-	UsagePercentage    float64           `json:"usage_percentage"`
+func (s *service) convertEntOrgToModel(entOrg *ent.Organization) *model.Organization {
+	return &model.Organization{
+		Base: model.Base{
+			ID:        entOrg.ID,
+			CreatedAt: entOrg.CreatedAt,
+			UpdatedAt: entOrg.UpdatedAt,
+		},
+		Name:                   entOrg.Name,
+		Slug:                   entOrg.Slug,
+		Domains:                entOrg.Domains,
+		VerifiedDomains:        entOrg.VerifiedDomains,
+		Domain:                 entOrg.Domain,
+		LogoURL:                entOrg.LogoURL,
+		Plan:                   entOrg.Plan,
+		Active:                 entOrg.Active,
+		Metadata:               entOrg.Metadata,
+		TrialEndsAt:            entOrg.TrialEndsAt,
+		TrialUsed:              entOrg.TrialUsed,
+		OwnerID:                &entOrg.OwnerID,
+		OrgType:                entOrg.OrgType,
+		IsPlatformOrganization: entOrg.IsPlatformOrganization,
+		ExternalUserLimit:      entOrg.ExternalUserLimit,
+		EndUserLimit:           entOrg.EndUserLimit,
+		SSOEnabled:             entOrg.SSOEnabled,
+		SSODomain:              entOrg.SSODomain,
+		SubscriptionID:         entOrg.SubscriptionID,
+		CustomerID:             entOrg.CustomerID,
+		SubscriptionStatus:     entOrg.SubscriptionStatus.String(),
+		AuthServiceEnabled:     entOrg.AuthServiceEnabled,
+		AuthConfig:             entOrg.AuthConfig,
+		AuthDomain:             entOrg.AuthDomain,
+		APIRequestLimit:        entOrg.APIRequestLimit,
+		APIRequestsUsed:        entOrg.APIRequestsUsed,
+		CurrentExternalUsers:   entOrg.CurrentExternalUsers,
+		CurrentEndUsers:        entOrg.CurrentEndUsers,
+	}
+}
+
+func (s *service) createAuditLog(ctx context.Context, input *model.CreateAuditLogRequest) {
+	// Create audit log asynchronously
+	go func() {
+		auditInput := repository.CreateAuditInput{
+			OrganizationID: input.OrganizationID,
+			UserID:         input.UserID,
+			SessionID:      input.SessionID,
+			Action:         input.Action,
+			ResourceType:   input.Resource,
+			ResourceID:     input.ResourceID,
+			Status:         input.Status,
+			IPAddress:      input.IPAddress,
+			UserAgent:      input.UserAgent,
+			Location:       input.Location,
+			Details:        input.Details,
+			Changes:        input.Changes,
+			Error:          input.Error,
+			Duration:       input.Duration,
+			RiskLevel:      input.RiskLevel,
+			Tags:           input.Tags,
+			Source:         input.Source,
+		}
+
+		if _, err := s.auditRepo.Create(context.Background(), auditInput); err != nil {
+			s.logger.Error("Failed to create audit log", logging.Error(err))
+		}
+	}()
+}
+
+// Placeholder implementations for remaining methods
+func (s *service) ListOrganizations(ctx context.Context, req model.OrganizationListRequest) (*model.OrganizationListResponse, error) {
+	// TODO: Implement organization listing with pagination and filtering
+	return &model.OrganizationListResponse{}, nil
+}
+
+func (s *service) AddDomain(ctx context.Context, orgID xid.ID, domain string) error {
+	// TODO: Implement domain addition
+	return nil
+}
+
+func (s *service) RemoveDomain(ctx context.Context, orgID xid.ID, domain string) error {
+	// TODO: Implement domain removal
+	return nil
+}
+
+func (s *service) VerifyDomain(ctx context.Context, req model.DomainVerificationRequest) (*model.DomainVerificationResponse, error) {
+	// TODO: Implement domain verification
+	return nil, nil
+}
+
+func (s *service) GetDomainVerificationStatus(ctx context.Context, orgID xid.ID, domain string) (*model.DomainVerificationResponse, error) {
+	// TODO: Implement get domain verification status
+	return nil, nil
+}
+
+func (s *service) GetOrganizationSettings(ctx context.Context, orgID xid.ID) (*model.OrganizationSettings, error) {
+	// TODO: Implement get organization settings
+	return nil, nil
+}
+
+func (s *service) UpdateOrganizationSettings(ctx context.Context, orgID xid.ID, req model.UpdateOrganizationSettingsRequest) (*model.OrganizationSettings, error) {
+	// TODO: Implement update organization settings
+	return nil, nil
+}
+
+func (s *service) GetOrganizationBilling(ctx context.Context, orgID xid.ID) (*model.OrganizationBilling, error) {
+	// TODO: Implement get organization billing
+	return nil, nil
+}
+
+func (s *service) UpdateBilling(ctx context.Context, orgID xid.ID, req model.UpdateBillingRequest) (*model.OrganizationBilling, error) {
+	// TODO: Implement update billing
+	return nil, nil
+}
+
+func (s *service) GetOrganizationUsage(ctx context.Context, orgID xid.ID) (*model.OrganizationUsage, error) {
+	// TODO: Implement get organization usage
+	return nil, nil
+}
+
+func (s *service) UpdateUsage(ctx context.Context, orgID xid.ID, usage model.OrganizationUsage) error {
+	// TODO: Implement update usage
+	return nil
+}
+
+func (s *service) StartTrial(ctx context.Context, orgID xid.ID, duration time.Duration) error {
+	// TODO: Implement start trial
+	return nil
+}
+
+func (s *service) EndTrial(ctx context.Context, orgID xid.ID) error {
+	// TODO: Implement end trial
+	return nil
+}
+
+func (s *service) ExtendTrial(ctx context.Context, orgID xid.ID, extension time.Duration) error {
+	// TODO: Implement extend trial
+	return nil
+}
+
+func (s *service) GetTrialStatus(ctx context.Context, orgID xid.ID) (*TrialStatus, error) {
+	// TODO: Implement get trial status
+	return nil, nil
+}
+
+func (s *service) EnableFeature(ctx context.Context, orgID xid.ID, featureName string, config map[string]interface{}) error {
+	// TODO: Implement enable feature
+	return nil
+}
+
+func (s *service) DisableFeature(ctx context.Context, orgID xid.ID, featureName string) error {
+	// TODO: Implement disable feature
+	return nil
+}
+
+func (s *service) IsFeatureEnabled(ctx context.Context, orgID xid.ID, featureName string) (bool, error) {
+	// TODO: Implement is feature enabled
+	return false, nil
+}
+
+func (s *service) GetEnabledFeatures(ctx context.Context, orgID xid.ID) ([]model.FeatureSummary, error) {
+	// TODO: Implement get enabled features
+	return nil, nil
+}
+
+func (s *service) EnableAuthService(ctx context.Context, orgID xid.ID, config map[string]interface{}) error {
+	// TODO: Implement enable auth service
+	return nil
+}
+
+func (s *service) DisableAuthService(ctx context.Context, orgID xid.ID) error {
+	// TODO: Implement disable auth service
+	return nil
+}
+
+func (s *service) UpdateAuthConfig(ctx context.Context, orgID xid.ID, config map[string]interface{}) error {
+	// TODO: Implement update auth config
+	return nil
+}
+
+func (s *service) GetAuthConfig(ctx context.Context, orgID xid.ID) (map[string]interface{}, error) {
+	// TODO: Implement get auth config
+	return nil, nil
+}
+
+func (s *service) EnableSSO(ctx context.Context, orgID xid.ID, domain string, config map[string]interface{}) error {
+	// TODO: Implement enable SSO
+	return nil
+}
+
+func (s *service) DisableSSO(ctx context.Context, orgID xid.ID) error {
+	// TODO: Implement disable SSO
+	return nil
+}
+
+func (s *service) UpdateSSOConfig(ctx context.Context, orgID xid.ID, config map[string]interface{}) error {
+	// TODO: Implement update SSO config
+	return nil
+}
+
+func (s *service) GetUserLimits(ctx context.Context, orgID xid.ID) (*UserLimits, error) {
+	// TODO: Implement get user limits
+	return nil, nil
+}
+
+func (s *service) UpdateUserLimits(ctx context.Context, orgID xid.ID, limits UserLimits) error {
+	// TODO: Implement update user limits
+	return nil
+}
+
+func (s *service) CheckUserLimit(ctx context.Context, orgID xid.ID, userType string) (bool, error) {
+	// TODO: Implement check user limit
+	return true, nil
+}
+
+func (s *service) GetCurrentUserCounts(ctx context.Context, orgID xid.ID) (*UserCounts, error) {
+	// TODO: Implement get current user counts
+	return nil, nil
+}
+
+func (s *service) TransferOwnership(ctx context.Context, orgID xid.ID, req model.TransferUserOwnershipRequest) error {
+	// TODO: Implement transfer ownership
+	return nil
+}
+
+func (s *service) GetOwner(ctx context.Context, orgID xid.ID) (*model.UserSummary, error) {
+	// TODO: Implement get owner
+	return nil, nil
+}
+
+func (s *service) GetOrganizationStats(ctx context.Context, orgID xid.ID) (*model.OrgStats, error) {
+	// TODO: Implement get organization stats
+	return nil, nil
+}
+
+func (s *service) GetOrganizationActivity(ctx context.Context, orgID xid.ID, days int) (*OrganizationActivity, error) {
+	// TODO: Implement get organization activity
+	return nil, nil
+}
+
+func (s *service) GetGrowthMetrics(ctx context.Context, orgID xid.ID, period string) (*GrowthMetrics, error) {
+	// TODO: Implement get growth metrics
+	return nil, nil
+}
+
+func (s *service) GetPlatformOrganization(ctx context.Context) (*model.Organization, error) {
+	// TODO: Implement get platform organization
+	return nil, nil
+}
+
+func (s *service) GetCustomerOrganizations(ctx context.Context, req model.OrganizationListRequest) (*model.OrganizationListResponse, error) {
+	// TODO: Implement get customer organizations
+	return nil, nil
 }

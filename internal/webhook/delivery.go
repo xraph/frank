@@ -12,7 +12,7 @@ import (
 
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/ent"
-	"github.com/juicycleff/frank/pkg/crypto"
+	"github.com/juicycleff/frank/pkg/cryptoold"
 	"github.com/juicycleff/frank/pkg/logging"
 )
 
@@ -327,7 +327,7 @@ func (d *deliverer) createSignature(secret string, timestamp int64, payload []by
 	signatureData := fmt.Sprintf("%d.%s", timestamp, string(payload))
 
 	// Create HMAC signature
-	return crypto.HMAC(signatureData, []byte(secret))
+	return cryptoold.HMAC(signatureData, []byte(secret))
 }
 
 // Helper function to create bool pointer

@@ -29,6 +29,8 @@ type ApiKey struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// DeletedAt holds the value of the "deleted_at" field.
+	DeletedAt time.Time `json:"deleted_at,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
 	// Key holds the value of the "key" field.
@@ -103,7 +105,7 @@ func (*ApiKey) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case apikey.FieldName, apikey.FieldKey, apikey.FieldHashedKey, apikey.FieldType:
 			values[i] = new(sql.NullString)
-		case apikey.FieldCreatedAt, apikey.FieldUpdatedAt, apikey.FieldLastUsed, apikey.FieldExpiresAt:
+		case apikey.FieldCreatedAt, apikey.FieldUpdatedAt, apikey.FieldDeletedAt, apikey.FieldLastUsed, apikey.FieldExpiresAt:
 			values[i] = new(sql.NullTime)
 		case apikey.FieldID, apikey.FieldUserID, apikey.FieldOrganizationID:
 			values[i] = new(xid.ID)
@@ -139,6 +141,12 @@ func (ak *ApiKey) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
 				ak.UpdatedAt = value.Time
+			}
+		case apikey.FieldDeletedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field deleted_at", values[i])
+			} else if value.Valid {
+				ak.DeletedAt = value.Time
 			}
 		case apikey.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -271,6 +279,9 @@ func (ak *ApiKey) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
 	builder.WriteString(ak.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("deleted_at=")
+	builder.WriteString(ak.DeletedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(ak.Name)

@@ -7,6 +7,7 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"math"
 
@@ -15,6 +16,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/juicycleff/frank/ent/audit"
 	"github.com/juicycleff/frank/ent/predicate"
 	"github.com/juicycleff/frank/ent/session"
 	"github.com/juicycleff/frank/ent/user"
@@ -24,12 +26,14 @@ import (
 // SessionQuery is the builder for querying Session entities.
 type SessionQuery struct {
 	config
-	ctx        *QueryContext
-	order      []session.OrderOption
-	inters     []Interceptor
-	predicates []predicate.Session
-	withUser   *UserQuery
-	modifiers  []func(*sql.Selector)
+	ctx                *QueryContext
+	order              []session.OrderOption
+	inters             []Interceptor
+	predicates         []predicate.Session
+	withUser           *UserQuery
+	withAuditLogs      *AuditQuery
+	modifiers          []func(*sql.Selector)
+	withNamedAuditLogs map[string]*AuditQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -81,6 +85,28 @@ func (sq *SessionQuery) QueryUser() *UserQuery {
 			sqlgraph.From(session.Table, session.FieldID, selector),
 			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, session.UserTable, session.UserColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(sq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryAuditLogs chains the current query on the "audit_logs" edge.
+func (sq *SessionQuery) QueryAuditLogs() *AuditQuery {
+	query := (&AuditClient{config: sq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := sq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := sq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(session.Table, session.FieldID, selector),
+			sqlgraph.To(audit.Table, audit.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, session.AuditLogsTable, session.AuditLogsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(sq.driver.Dialect(), step)
 		return fromU, nil
@@ -275,12 +301,13 @@ func (sq *SessionQuery) Clone() *SessionQuery {
 		return nil
 	}
 	return &SessionQuery{
-		config:     sq.config,
-		ctx:        sq.ctx.Clone(),
-		order:      append([]session.OrderOption{}, sq.order...),
-		inters:     append([]Interceptor{}, sq.inters...),
-		predicates: append([]predicate.Session{}, sq.predicates...),
-		withUser:   sq.withUser.Clone(),
+		config:        sq.config,
+		ctx:           sq.ctx.Clone(),
+		order:         append([]session.OrderOption{}, sq.order...),
+		inters:        append([]Interceptor{}, sq.inters...),
+		predicates:    append([]predicate.Session{}, sq.predicates...),
+		withUser:      sq.withUser.Clone(),
+		withAuditLogs: sq.withAuditLogs.Clone(),
 		// clone intermediate query.
 		sql:       sq.sql.Clone(),
 		path:      sq.path,
@@ -296,6 +323,17 @@ func (sq *SessionQuery) WithUser(opts ...func(*UserQuery)) *SessionQuery {
 		opt(query)
 	}
 	sq.withUser = query
+	return sq
+}
+
+// WithAuditLogs tells the query-builder to eager-load the nodes that are connected to
+// the "audit_logs" edge. The optional arguments are used to configure the query builder of the edge.
+func (sq *SessionQuery) WithAuditLogs(opts ...func(*AuditQuery)) *SessionQuery {
+	query := (&AuditClient{config: sq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	sq.withAuditLogs = query
 	return sq
 }
 
@@ -377,8 +415,9 @@ func (sq *SessionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Sess
 	var (
 		nodes       = []*Session{}
 		_spec       = sq.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [2]bool{
 			sq.withUser != nil,
+			sq.withAuditLogs != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -405,6 +444,30 @@ func (sq *SessionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Sess
 	if query := sq.withUser; query != nil {
 		if err := sq.loadUser(ctx, query, nodes, nil,
 			func(n *Session, e *User) { n.Edges.User = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := sq.withAuditLogs; query != nil {
+		if err := sq.loadAuditLogs(ctx, query, nodes,
+			func(n *Session) { n.Edges.AuditLogs = []*Audit{} },
+			func(n *Session, e *Audit) {
+				n.Edges.AuditLogs = append(n.Edges.AuditLogs, e)
+				if !e.Edges.loadedTypes[2] {
+					e.Edges.Session = n
+				}
+			}); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range sq.withNamedAuditLogs {
+		if err := sq.loadAuditLogs(ctx, query, nodes,
+			func(n *Session) { n.appendNamedAuditLogs(name) },
+			func(n *Session, e *Audit) {
+				n.appendNamedAuditLogs(name, e)
+				if !e.Edges.loadedTypes[2] {
+					e.Edges.Session = n
+				}
+			}); err != nil {
 			return nil, err
 		}
 	}
@@ -437,6 +500,36 @@ func (sq *SessionQuery) loadUser(ctx context.Context, query *UserQuery, nodes []
 		for i := range nodes {
 			assign(nodes[i], n)
 		}
+	}
+	return nil
+}
+func (sq *SessionQuery) loadAuditLogs(ctx context.Context, query *AuditQuery, nodes []*Session, init func(*Session), assign func(*Session, *Audit)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[xid.ID]*Session)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(audit.FieldSessionID)
+	}
+	query.Where(predicate.Audit(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(session.AuditLogsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.SessionID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "session_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
 	}
 	return nil
 }
@@ -561,6 +654,20 @@ func (sq *SessionQuery) ForShare(opts ...sql.LockOption) *SessionQuery {
 func (sq *SessionQuery) Modify(modifiers ...func(s *sql.Selector)) *SessionSelect {
 	sq.modifiers = append(sq.modifiers, modifiers...)
 	return sq.Select()
+}
+
+// WithNamedAuditLogs tells the query-builder to eager-load the nodes that are connected to the "audit_logs"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (sq *SessionQuery) WithNamedAuditLogs(name string, opts ...func(*AuditQuery)) *SessionQuery {
+	query := (&AuditClient{config: sq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if sq.withNamedAuditLogs == nil {
+		sq.withNamedAuditLogs = make(map[string]*AuditQuery)
+	}
+	sq.withNamedAuditLogs[name] = query
+	return sq
 }
 
 // SessionGroupBy is the group-by builder for Session entities.

@@ -41,6 +41,26 @@ func (mu *MFAUpdate) SetUpdatedAt(t time.Time) *MFAUpdate {
 	return mu
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (mu *MFAUpdate) SetDeletedAt(t time.Time) *MFAUpdate {
+	mu.mutation.SetDeletedAt(t)
+	return mu
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (mu *MFAUpdate) SetNillableDeletedAt(t *time.Time) *MFAUpdate {
+	if t != nil {
+		mu.SetDeletedAt(*t)
+	}
+	return mu
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (mu *MFAUpdate) ClearDeletedAt() *MFAUpdate {
+	mu.mutation.ClearDeletedAt()
+	return mu
+}
+
 // SetUserID sets the "user_id" field.
 func (mu *MFAUpdate) SetUserID(x xid.ID) *MFAUpdate {
 	mu.mutation.SetUserID(x)
@@ -297,6 +317,12 @@ func (mu *MFAUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := mu.mutation.UpdatedAt(); ok {
 		_spec.SetField(mfa.FieldUpdatedAt, field.TypeTime, value)
 	}
+	if value, ok := mu.mutation.DeletedAt(); ok {
+		_spec.SetField(mfa.FieldDeletedAt, field.TypeTime, value)
+	}
+	if mu.mutation.DeletedAtCleared() {
+		_spec.ClearField(mfa.FieldDeletedAt, field.TypeTime)
+	}
 	if value, ok := mu.mutation.Method(); ok {
 		_spec.SetField(mfa.FieldMethod, field.TypeString, value)
 	}
@@ -398,6 +424,26 @@ type MFAUpdateOne struct {
 // SetUpdatedAt sets the "updated_at" field.
 func (muo *MFAUpdateOne) SetUpdatedAt(t time.Time) *MFAUpdateOne {
 	muo.mutation.SetUpdatedAt(t)
+	return muo
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (muo *MFAUpdateOne) SetDeletedAt(t time.Time) *MFAUpdateOne {
+	muo.mutation.SetDeletedAt(t)
+	return muo
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (muo *MFAUpdateOne) SetNillableDeletedAt(t *time.Time) *MFAUpdateOne {
+	if t != nil {
+		muo.SetDeletedAt(*t)
+	}
+	return muo
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (muo *MFAUpdateOne) ClearDeletedAt() *MFAUpdateOne {
+	muo.mutation.ClearDeletedAt()
 	return muo
 }
 
@@ -686,6 +732,12 @@ func (muo *MFAUpdateOne) sqlSave(ctx context.Context) (_node *MFA, err error) {
 	}
 	if value, ok := muo.mutation.UpdatedAt(); ok {
 		_spec.SetField(mfa.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if value, ok := muo.mutation.DeletedAt(); ok {
+		_spec.SetField(mfa.FieldDeletedAt, field.TypeTime, value)
+	}
+	if muo.mutation.DeletedAtCleared() {
+		_spec.ClearField(mfa.FieldDeletedAt, field.TypeTime)
 	}
 	if value, ok := muo.mutation.Method(); ok {
 		_spec.SetField(mfa.FieldMethod, field.TypeString, value)

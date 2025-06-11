@@ -1,0 +1,679 @@
+name: Security Scanning & Monitoring
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run security scans daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      scan_type:
+        description: 'Type of security scan to run'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - code
+          - dependencies
+          - secrets
+          - container
+          - infrastructure
+
+env:
+  GO_VERSION: '1.21'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Code Security Analysis
+  code-security:
+    name: Code Security Analysis
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.scan_type == 'all' || github.event.inputs.scan_type == 'code' || github.event_name != 'workflow_dispatch' }}
+
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-security-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-security-
+            ${{ runner.os }}-go-
+
+      - name: Download dependencies
+        run: go mod download
+
+      # Static Application Security Testing (SAST)
+      - name: Run Gosec Security Scanner
+        uses: securecodewarrior/github-action-gosec@master
+        with:
+          args: '-fmt sarif -out gosec-results.sarif -severity medium ./...'
+
+      - name: Upload Gosec SARIF results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: gosec-results.sarif
+          category: gosec
+
+      # Additional Go security tools
+      - name: Install security tools
+        run: |
+          go install github.com/securego/gosec/v2/cmd/gosec@latest
+          go install github.com/golang/vuln/cmd/govulncheck@latest
+          go install github.com/quasilyte/go-consistent@latest
+
+      - name: Run Go vulnerability check
+        run: |
+          govulncheck -json ./... > govulncheck-results.json || true
+
+      - name: Upload vulnerability check results
+        uses: actions/upload-artifact@v4
+        with:
+          name: govulncheck-results
+          path: govulncheck-results.json
+
+      # CodeQL Analysis
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: go
+          config-file: ./.github/codeql/codeql-config.yml
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "codeql-go"
+
+      # Semgrep SAST
+      - name: Run Semgrep
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: >-
+            p/security-audit
+            p/golang
+            p/owasp-top-ten
+            p/cwe-top-25
+        env:
+          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+
+  # Dependency Security Scanning
+  dependency-security:
+    name: Dependency Security Scanning
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.scan_type == 'all' || github.event.inputs.scan_type == 'dependencies' || github.event_name != 'workflow_dispatch' }}
+
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-deps-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-deps-
+
+      # Snyk vulnerability scanning
+      - name: Run Snyk to check for vulnerabilities
+        uses: snyk/actions/golang@master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=medium --sarif-file-output=snyk-results.sarif
+
+      - name: Upload Snyk SARIF results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: snyk-results.sarif
+          category: snyk-go
+
+      # Nancy vulnerability scanning for Go modules
+      - name: Install Nancy
+        run: |
+          go install github.com/sonatypecommunity/nancy@latest
+
+      - name: Run Nancy vulnerability check
+        run: |
+          go list -json -deps ./... | nancy sleuth --format json > nancy-results.json || true
+
+      - name: Upload Nancy results
+        uses: actions/upload-artifact@v4
+        with:
+          name: nancy-results
+          path: nancy-results.json
+
+      # FOSSA license and vulnerability scanning
+      - name: Run FOSSA scan
+        if: ${{ secrets.FOSSA_API_KEY }}
+        uses: fossas/fossa-action@main
+        with:
+          api-key: ${{ secrets.FOSSA_API_KEY }}
+          run-tests: true
+
+      # Audit Go modules
+      - name: Audit Go modules
+        run: |
+          go mod download
+          go mod verify
+          go mod tidy -v
+
+      - name: Check for Go module vulnerabilities
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          govulncheck ./...
+
+  # Secret Detection
+  secret-detection:
+    name: Secret Detection
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.scan_type == 'all' || github.event.inputs.scan_type == 'secrets' || github.event_name != 'workflow_dispatch' }}
+
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # TruffleHog secret detection
+      - name: Run TruffleHog
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: main
+          head: HEAD
+          extra_args: --debug --only-verified
+
+      # GitLeaks secret detection
+      - name: Run GitLeaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+
+      # detect-secrets
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install detect-secrets
+        run: |
+          pip install detect-secrets
+
+      - name: Run detect-secrets scan
+        run: |
+          detect-secrets scan --all-files --baseline .secrets.baseline > secrets-results.json || true
+
+      - name: Upload secrets scan results
+        uses: actions/upload-artifact@v4
+        with:
+          name: secrets-scan-results
+          path: |
+            secrets-results.json
+            .secrets.baseline
+
+  # Container Security Scanning
+  container-security:
+    name: Container Security Scanning
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.scan_type == 'all' || github.event.inputs.scan_type == 'container' || github.event_name != 'workflow_dispatch' }}
+
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+      packages: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Docker image for scanning
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          load: true
+          tags: frank-auth-security-scan:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Trivy container scanning
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'frank-auth-security-scan:latest'
+          format: 'sarif'
+          output: 'trivy-container-results.sarif'
+
+      - name: Upload Trivy SARIF results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-container-results.sarif'
+          category: trivy-container
+
+      # Grype container scanning
+      - name: Install Grype
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin
+
+      - name: Run Grype container scan
+        run: |
+          grype frank-auth-security-scan:latest -o json > grype-container-results.json
+
+      - name: Upload Grype results
+        uses: actions/upload-artifact@v4
+        with:
+          name: grype-container-results
+          path: grype-container-results.json
+
+      # Docker Scout (if available)
+      - name: Docker Scout CVEs
+        if: ${{ secrets.DOCKER_SCOUT_TOKEN }}
+        uses: docker/scout-action@v1
+        with:
+          command: cves
+          image: frank-auth-security-scan:latest
+          sarif-file: scout-results.sarif
+          dockerhub-user: ${{ secrets.DOCKERHUB_USERNAME }}
+          dockerhub-password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Upload Scout SARIF results
+        if: ${{ secrets.DOCKER_SCOUT_TOKEN }}
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: scout-results.sarif
+          category: docker-scout
+
+      # Hadolint Dockerfile linting
+      - name: Run Hadolint
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile
+          format: sarif
+          output-file: hadolint-results.sarif
+
+      - name: Upload Hadolint SARIF results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: hadolint-results.sarif
+          category: hadolint
+
+  # Infrastructure Security
+  infrastructure-security:
+    name: Infrastructure Security Scanning
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.scan_type == 'all' || github.event.inputs.scan_type == 'infrastructure' || github.event_name != 'workflow_dispatch' }}
+
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Checkov Infrastructure as Code scanning
+      - name: Run Checkov
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: .
+          framework: dockerfile,github,secrets
+          output_format: sarif
+          output_file_path: checkov-results.sarif
+
+      - name: Upload Checkov SARIF results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: checkov-results.sarif
+          category: checkov
+
+      # Terraform/Terragrunt scanning (if applicable)
+      - name: Setup Terraform
+        if: hashFiles('**/*.tf') != ''
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Run TFSec
+        if: hashFiles('**/*.tf') != ''
+        uses: aquasecurity/tfsec-sarif-action@v0.1.4
+        with:
+          sarif_file: tfsec-results.sarif
+
+      - name: Upload TFSec SARIF results
+        if: hashFiles('**/*.tf') != ''
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: tfsec-results.sarif
+          category: tfsec
+
+      # Kubernetes security scanning (if applicable)
+      - name: Run Kubesec
+        if: hashFiles('**/*.yaml', '**/*.yml') != ''
+        run: |
+          curl -sSL https://github.com/controlplaneio/kubesec/releases/latest/download/kubesec_linux_amd64.tar.gz | tar -zx
+          find . -name "*.yaml" -o -name "*.yml" | xargs -I {} ./kubesec scan {} > kubesec-results.json || true
+
+      - name: Upload Kubesec results
+        if: hashFiles('**/*.yaml', '**/*.yml') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: kubesec-results
+          path: kubesec-results.json
+
+  # License Compliance
+  license-compliance:
+    name: License Compliance Check
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.scan_type == 'all' || github.event_name != 'workflow_dispatch' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      # License compliance with go-licenses
+      - name: Install go-licenses
+        run: go install github.com/google/go-licenses@latest
+
+      - name: Check licenses
+        run: |
+          go-licenses check ./...
+          go-licenses csv ./... > licenses.csv
+
+      - name: Upload license report
+        uses: actions/upload-artifact@v4
+        with:
+          name: license-report
+          path: licenses.csv
+
+      # FOSSA license scanning (if token available)
+      - name: Run FOSSA license scan
+        if: ${{ secrets.FOSSA_API_KEY }}
+        uses: fossas/fossa-action@main
+        with:
+          api-key: ${{ secrets.FOSSA_API_KEY }}
+
+  # Security Benchmark
+  security-benchmark:
+    name: Security Benchmark
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.scan_type == 'all' || github.event_name == 'schedule' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build application
+        run: |
+          docker build -t frank-auth-benchmark .
+
+      # CIS Benchmark scanning
+      - name: Run Docker Bench Security
+        run: |
+          docker run --rm --net host --pid host --userns host --cap-add audit_control \
+            -e DOCKER_CONTENT_TRUST=$DOCKER_CONTENT_TRUST \
+            -v /etc:/etc:ro \
+            -v /usr/bin/containerd:/usr/bin/containerd:ro \
+            -v /usr/bin/runc:/usr/bin/runc:ro \
+            -v /usr/lib/systemd:/usr/lib/systemd:ro \
+            -v /var/lib:/var/lib:ro \
+            -v /var/run/docker.sock:/var/run/docker.sock:ro \
+            --label docker_bench_security \
+            docker/docker-bench-security:latest > docker-bench-results.txt || true
+
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-benchmark-results
+          path: docker-bench-results.txt
+
+  # Security Report Generation
+  security-report:
+    name: Generate Security Report
+    runs-on: ubuntu-latest
+    needs: [code-security, dependency-security, secret-detection, container-security, infrastructure-security, license-compliance]
+    if: always()
+
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+      issues: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Generate security summary report
+        run: |
+          cat > security-report.md << 'EOF'
+          # Security Scan Report
+          
+          **Scan Date:** $(date -u)
+          **Repository:** ${{ github.repository }}
+          **Branch:** ${{ github.ref_name }}
+          **Commit:** ${{ github.sha }}
+          
+          ## Summary
+          
+          | Security Check | Status | Critical | High | Medium | Low |
+          |---------------|--------|----------|------|--------|-----|
+          | Code Security | ${{ needs.code-security.result }} | - | - | - | - |
+          | Dependencies | ${{ needs.dependency-security.result }} | - | - | - | - |
+          | Secrets | ${{ needs.secret-detection.result }} | - | - | - | - |
+          | Container | ${{ needs.container-security.result }} | - | - | - | - |
+          | Infrastructure | ${{ needs.infrastructure-security.result }} | - | - | - | - |
+          | License Compliance | ${{ needs.license-compliance.result }} | - | - | - | - |
+          
+          ## Recommendations
+          
+          1. Review all high and critical severity vulnerabilities
+          2. Update dependencies with known vulnerabilities
+          3. Rotate any exposed secrets immediately
+          4. Apply security patches to container base images
+          5. Review and update security policies
+          
+          ## Next Steps
+          
+          - [ ] Address critical vulnerabilities within 24 hours
+          - [ ] Address high vulnerabilities within 7 days
+          - [ ] Update security documentation
+          - [ ] Schedule follow-up security review
+          
+          EOF
+
+      - name: Upload security report
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-report
+          path: security-report.md
+
+      - name: Create security issue
+        if: ${{ failure() || contains(needs.*.result, 'failure') }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const title = `🚨 Security Scan Failed - ${new Date().toISOString().split('T')[0]}`;
+            const body = `
+            Security scan failed for commit ${context.sha}.
+            
+            **Failed Jobs:**
+            ${{ toJSON(needs.*.result) }}
+            
+            Please review the security scan results and address any critical vulnerabilities immediately.
+            
+            **Action Items:**
+            - [ ] Review failed security scans
+            - [ ] Address critical vulnerabilities
+            - [ ] Update dependencies
+            - [ ] Verify security configurations
+            
+            Auto-generated by GitHub Actions security workflow.
+            `;
+            
+            await github.rest.issues.create({
+              owner,
+              repo,
+              title,
+              body,
+              labels: ['security', 'critical', 'automated']
+            });
+
+  # Notification
+  security-notification:
+    name: Security Notifications
+    runs-on: ubuntu-latest
+    needs: [security-report]
+    if: always()
+
+    steps:
+      - name: Notify security team on Slack
+        if: ${{ failure() || contains(needs.*.result, 'failure') }}
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          channel: '#security-alerts'
+          title: '🚨 Security Scan Alert'
+          message: |
+            Security scan failed for ${{ github.repository }}
+            Branch: ${{ github.ref_name }}
+            Commit: ${{ github.sha }}
+            
+            Please review immediately: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SECURITY_SLACK_WEBHOOK }}
+
+      - name: Send email notification
+        if: ${{ failure() || contains(needs.*.result, 'failure') }}
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.SMTP_SERVER }}
+          server_port: ${{ secrets.SMTP_PORT }}
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: "🚨 Security Alert: ${{ github.repository }}"
+          to: ${{ secrets.SECURITY_EMAIL }}
+          from: "GitHub Actions <noreply@frankauth.com>"
+          body: |
+            Security scan failed for repository ${{ github.repository }}.
+            
+            Branch: ${{ github.ref_name }}
+            Commit: ${{ github.sha }}
+            Workflow: ${{ github.workflow }}
+            
+            Please review the security scan results immediately:
+            ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            
+            Failed security checks may indicate vulnerabilities that need immediate attention.
+
+  # Cleanup
+  cleanup:
+    name: Cleanup
+    runs-on: ubuntu-latest
+    needs: [security-report, security-notification]
+    if: always()
+
+    steps:
+      - name: Clean up old security artifacts
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            
+            // Keep only the latest 20 security scan artifacts
+            const artifacts = await github.rest.actions.listArtifactsForRepo({
+              owner,
+              repo,
+              per_page: 100
+            });
+            
+            const securityArtifacts = artifacts.data.artifacts
+              .filter(artifact => artifact.name.includes('security') || 
+                                 artifact.name.includes('scan') ||
+                                 artifact.name.includes('vulnerability'))
+              .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+              .slice(20);
+            
+            for (const artifact of securityArtifacts) {
+              if (artifact.expires_at && new Date(artifact.expires_at) < new Date()) {
+                await github.rest.actions.deleteArtifact({
+                  owner,
+                  repo,
+                  artifact_id: artifact.id
+                });
+              }
+            }

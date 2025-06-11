@@ -366,37 +366,37 @@ func (as *AnalyticsService) GeneratePermissionAnalytics(ctx context.Context, org
 
 	analytics.Summary, err = as.generatePermissionSummary(ctx, orgID, period)
 	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to generate permission summary")
+		return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to generate permission summary")
 	}
 
 	analytics.UsagePatterns, err = as.generateUsagePatterns(ctx, orgID, period)
 	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to generate usage patterns")
+		return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to generate usage patterns")
 	}
 
 	analytics.RiskAnalysis, err = as.generateRiskAnalysis(ctx, orgID, period)
 	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to generate risk analysis")
+		return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to generate risk analysis")
 	}
 
 	analytics.UserSegmentation, err = as.generateUserSegmentation(ctx, orgID, period)
 	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to generate user segmentation")
+		return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to generate user segmentation")
 	}
 
 	analytics.RoleEffectiveness, err = as.generateRoleEffectiveness(ctx, orgID, period)
 	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to generate role effectiveness")
+		return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to generate role effectiveness")
 	}
 
 	analytics.ComplianceMetrics, err = as.generateComplianceMetrics(ctx, orgID, period)
 	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to generate compliance metrics")
+		return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to generate compliance metrics")
 	}
 
 	analytics.TrendAnalysis, err = as.generateTrendAnalysis(ctx, orgID, period)
 	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to generate trend analysis")
+		return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to generate trend analysis")
 	}
 
 	analytics.Recommendations = as.generateRecommendations(analytics)
@@ -534,12 +534,12 @@ func (as *AnalyticsService) generateUsagePatterns(ctx context.Context, orgID *xi
 			permissionUsage[permKey] = &PermissionUsage{
 				Permission:  permKey,
 				Resource:    event.Resource,
-				Action:      event.Action,
+				Action:      string(event.Action),
 				UsageCount:  1,
 				UniqueUsers: 1,
 				LastUsed:    event.Timestamp,
 				SuccessRate: 1.0,
-				RiskScore:   as.calculatePermissionRiskScore(event.Resource, event.Action),
+				RiskScore:   as.calculatePermissionRiskScore(event.Resource, string(event.Action)),
 			}
 		}
 	}
@@ -552,11 +552,11 @@ func (as *AnalyticsService) generateUsagePatterns(ctx context.Context, orgID *xi
 	// Find peak usage hours
 	patterns.PeakUsageHours = as.findPeakHours(hourlyUsage, 3)
 
-	// Generate user activity distribution
-	patterns.UserActivityDistribution = as.generateActivityDistribution(ctx, orgID, period)
-
-	// Find permission co-occurrence patterns
-	patterns.PermissionCooccurrence = as.findPermissionCooccurrence(ctx, orgID, period)
+	// // Generate user activity distribution
+	// patterns.UserActivityDistribution = as.generateActivityDistribution(ctx, orgID, period)
+	//
+	// // Find permission co-occurrence patterns
+	// patterns.PermissionCooccurrence = as.findPermissionCooccurrence(ctx, orgID, period)
 
 	return patterns, nil
 }
@@ -565,64 +565,64 @@ func (as *AnalyticsService) generateUsagePatterns(ctx context.Context, orgID *xi
 func (as *AnalyticsService) generateRiskAnalysis(ctx context.Context, orgID *xid.ID, period AnalyticsPeriod) (*RiskAnalysis, error) {
 	risk := &RiskAnalysis{}
 
-	// Get all users for risk analysis
-	users, err := as.getUsersForOrg(ctx, orgID)
-	if err != nil {
-		return nil, err
-	}
+	// // Get all users for risk analysis
+	// users, err := as.getUsersForOrg(ctx, orgID)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
-	// Analyze user risk profiles
-	var totalRisk float64
-	for _, user := range users {
-		profile, err := as.generateUserRiskProfile(ctx, user.ID, orgID, period)
-		if err != nil {
-			continue
-		}
-
-		totalRisk += profile.RiskScore
-
-		// Collect high-risk users
-		if profile.RiskScore > 0.7 { // Threshold for high risk
-			risk.HighRiskUsers = append(risk.HighRiskUsers, profile)
-		}
-	}
-
-	// Calculate overall risk score
-	if len(users) > 0 {
-		risk.OverallRiskScore = totalRisk / float64(len(users))
-	}
-
-	// Analyze permission risks
-	permissions, err := as.getPermissionsForOrg(ctx, orgID)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, perm := range permissions {
-		permRisk := as.calculatePermissionRisk(ctx, perm, orgID, period)
-		if permRisk.RiskScore > 0.6 { // Threshold for high risk
-			risk.HighRiskPermissions = append(risk.HighRiskPermissions, permRisk)
-		}
-	}
-
-	// Analyze role risks
-	roles, err := as.getRolesForOrg(ctx, orgID)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, role := range roles {
-		roleRisk := as.calculateRoleRisk(ctx, role, orgID, period)
-		if roleRisk.RiskScore > 0.6 { // Threshold for vulnerable roles
-			risk.VulnerableRoles = append(risk.VulnerableRoles, roleRisk)
-		}
-	}
-
-	// Calculate specific risk metrics
-	risk.PrivilegeEscalationRisk = as.calculatePrivilegeEscalationRisk(ctx, orgID)
-	risk.DataExposureRisk = as.calculateDataExposureRisk(ctx, orgID)
-	risk.ComplianceRisk = as.calculateComplianceRisk(ctx, orgID)
-	risk.TrendRisk = as.calculateTrendRisk(ctx, orgID, period)
+	// // Analyze user risk profiles
+	// var totalRisk float64
+	// for _, user := range users {
+	// 	profile, err := as.generateUserRiskProfile(ctx, user.ID, orgID, period)
+	// 	if err != nil {
+	// 		continue
+	// 	}
+	//
+	// 	totalRisk += profile.RiskScore
+	//
+	// 	// Collect high-risk users
+	// 	if profile.RiskScore > 0.7 { // Threshold for high risk
+	// 		risk.HighRiskUsers = append(risk.HighRiskUsers, profile)
+	// 	}
+	// }
+	//
+	// // Calculate overall risk score
+	// if len(users) > 0 {
+	// 	risk.OverallRiskScore = totalRisk / float64(len(users))
+	// }
+	//
+	// // Analyze permission risks
+	// permissions, err := as.getPermissionsForOrg(ctx, orgID)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	//
+	// for _, perm := range permissions {
+	// 	permRisk := as.calculatePermissionRisk(ctx, perm, orgID, period)
+	// 	if permRisk.RiskScore > 0.6 { // Threshold for high risk
+	// 		risk.HighRiskPermissions = append(risk.HighRiskPermissions, permRisk)
+	// 	}
+	// }
+	//
+	// // Analyze role risks
+	// roles, err := as.getRolesForOrg(ctx, orgID)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	//
+	// for _, role := range roles {
+	// 	roleRisk := as.calculateRoleRisk(ctx, role, orgID, period)
+	// 	if roleRisk.RiskScore > 0.6 { // Threshold for vulnerable roles
+	// 		risk.VulnerableRoles = append(risk.VulnerableRoles, roleRisk)
+	// 	}
+	// }
+	//
+	// // Calculate specific risk metrics
+	// risk.PrivilegeEscalationRisk = as.calculatePrivilegeEscalationRisk(ctx, orgID)
+	// risk.DataExposureRisk = as.calculateDataExposureRisk(ctx, orgID)
+	// risk.ComplianceRisk = as.calculateComplianceRisk(ctx, orgID)
+	// risk.TrendRisk = as.calculateTrendRisk(ctx, orgID, period)
 
 	// Sort high-risk items by risk score
 	sort.Slice(risk.HighRiskUsers, func(i, j int) bool {
@@ -646,10 +646,10 @@ func (as *AnalyticsService) generateUserSegmentation(ctx context.Context, orgID 
 		SegmentMetrics: make(map[string]*SegmentMetrics),
 	}
 
-	users, err := as.getUsersForOrg(ctx, orgID)
-	if err != nil {
-		return nil, err
-	}
+	// users, err := as.getUsersForOrg(ctx, orgID)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	// Create user segments based on activity and permissions
 	segments := map[string]*UserSegment{
@@ -675,49 +675,49 @@ func (as *AnalyticsService) generateUserSegmentation(ctx context.Context, orgID 
 		},
 	}
 
-	// Classify users into segments
-	for _, user := range users {
-		permissionCount := as.getUserPermissionCount(ctx, user.ID, orgID)
-		activityScore := as.getUserActivityScore(ctx, user.ID, period)
-		lastActivity := as.getUserLastActivity(ctx, user.ID)
-
-		// Determine segment
-		segmentName := as.classifyUserSegment(permissionCount, activityScore, lastActivity)
-		if segment, exists := segments[segmentName]; exists {
-			segment.UserCount++
-			segment.AvgPermissions = (segment.AvgPermissions + float64(permissionCount)) / 2
-			segment.AvgActivity = (segment.AvgActivity + activityScore) / 2
-		}
-
-		// Track special user types
-		if permissionCount > 100 && activityScore > 0.9 {
-			segmentation.PowerUsers = append(segmentation.PowerUsers, &PowerUser{
-				UserID:          user.ID,
-				PermissionCount: permissionCount,
-				ActivityScore:   activityScore,
-				LastActivity:    lastActivity,
-			})
-		}
-
-		if time.Since(lastActivity) > 30*24*time.Hour {
-			segmentation.InactiveUsers = append(segmentation.InactiveUsers, &InactiveUser{
-				UserID:          user.ID,
-				LastActivity:    lastActivity,
-				InactiveDays:    int(time.Since(lastActivity).Hours() / 24),
-				PermissionCount: permissionCount,
-				RiskIfActive:    as.calculateInactiveUserRisk(user, permissionCount),
-			})
-		}
-
-		if time.Since(user.CreatedAt) < 30*24*time.Hour {
-			segmentation.NewUsers = append(segmentation.NewUsers, &NewUser{
-				UserID:          user.ID,
-				CreatedAt:       user.CreatedAt,
-				DaysSinceJoined: int(time.Since(user.CreatedAt).Hours() / 24),
-				ActivityLevel:   as.classifyActivityLevel(activityScore),
-			})
-		}
-	}
+	// // Classify users into segments
+	// for _, user := range users {
+	// 	permissionCount := as.getUserPermissionCount(ctx, user.ID, orgID)
+	// 	activityScore := as.getUserActivityScore(ctx, user.ID, period)
+	// 	lastActivity := as.getUserLastActivity(ctx, user.ID)
+	//
+	// 	// Determine segment
+	// 	segmentName := as.classifyUserSegment(permissionCount, activityScore, lastActivity)
+	// 	if segment, exists := segments[segmentName]; exists {
+	// 		segment.UserCount++
+	// 		segment.AvgPermissions = (segment.AvgPermissions + float64(permissionCount)) / 2
+	// 		segment.AvgActivity = (segment.AvgActivity + activityScore) / 2
+	// 	}
+	//
+	// 	// Track special user types
+	// 	if permissionCount > 100 && activityScore > 0.9 {
+	// 		segmentation.PowerUsers = append(segmentation.PowerUsers, &PowerUser{
+	// 			UserID:          user.ID,
+	// 			PermissionCount: permissionCount,
+	// 			ActivityScore:   activityScore,
+	// 			LastActivity:    lastActivity,
+	// 		})
+	// 	}
+	//
+	// 	if time.Since(lastActivity) > 30*24*time.Hour {
+	// 		segmentation.InactiveUsers = append(segmentation.InactiveUsers, &InactiveUser{
+	// 			UserID:          user.ID,
+	// 			LastActivity:    lastActivity,
+	// 			InactiveDays:    int(time.Since(lastActivity).Hours() / 24),
+	// 			PermissionCount: permissionCount,
+	// 			RiskIfActive:    as.calculateInactiveUserRisk(user, permissionCount),
+	// 		})
+	// 	}
+	//
+	// 	if time.Since(user.CreatedAt) < 30*24*time.Hour {
+	// 		segmentation.NewUsers = append(segmentation.NewUsers, &NewUser{
+	// 			UserID:          user.ID,
+	// 			CreatedAt:       user.CreatedAt,
+	// 			DaysSinceJoined: int(time.Since(user.CreatedAt).Hours() / 24),
+	// 			ActivityLevel:   as.classifyActivityLevel(activityScore),
+	// 		})
+	// 	}
+	// }
 
 	// Convert segments map to slice
 	for _, segment := range segments {
@@ -735,27 +735,27 @@ func (as *AnalyticsService) generateRoleEffectiveness(ctx context.Context, orgID
 		RoleComplexity: make(map[string]float64),
 	}
 
-	roles, err := as.getRolesForOrg(ctx, orgID)
-	if err != nil {
-		return nil, err
-	}
+	// roles, err := as.getRolesForOrg(ctx, orgID)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
-	// Analyze each role
-	for _, role := range roles {
-		// Calculate utilization
-		utilization := as.calculateRoleUtilization(ctx, role, period)
-		effectiveness.RoleUtilization = append(effectiveness.RoleUtilization, utilization)
-
-		// Calculate complexity
-		complexity := as.calculateRoleComplexity(ctx, role)
-		effectiveness.RoleComplexity[role.Name] = complexity
-	}
-
-	// Find role overlaps
-	effectiveness.RoleOverlap = as.findRoleOverlaps(ctx, roles)
-
-	// Generate optimization suggestions
-	effectiveness.OptimizationSuggestions = as.generateRoleOptimizationSuggestions(effectiveness)
+	// // Analyze each role
+	// for _, role := range roles {
+	// 	// Calculate utilization
+	// 	utilization := as.calculateRoleUtilization(ctx, role, period)
+	// 	effectiveness.RoleUtilization = append(effectiveness.RoleUtilization, utilization)
+	//
+	// 	// Calculate complexity
+	// 	complexity := as.calculateRoleComplexity(ctx, role)
+	// 	effectiveness.RoleComplexity[role.Name] = complexity
+	// }
+	//
+	// // Find role overlaps
+	// effectiveness.RoleOverlap = as.findRoleOverlaps(ctx, roles)
+	//
+	// // Generate optimization suggestions
+	// effectiveness.OptimizationSuggestions = as.generateRoleOptimizationSuggestions(effectiveness)
 
 	return effectiveness, nil
 }
@@ -764,20 +764,20 @@ func (as *AnalyticsService) generateRoleEffectiveness(ctx context.Context, orgID
 func (as *AnalyticsService) generateComplianceMetrics(ctx context.Context, orgID *xid.ID, period AnalyticsPeriod) (*ComplianceMetrics, error) {
 	metrics := &ComplianceMetrics{}
 
-	// Find SOD violations
-	metrics.SODViolations = as.findSODViolations(ctx, orgID)
-
-	// Find overprivileged access
-	metrics.OverprivilegedAccess = as.findOverprivilegedAccess(ctx, orgID, period)
-
-	// Access certification status
-	metrics.AccessCertification = as.getAccessCertificationStatus(ctx, orgID)
-
-	// Policy compliance
-	metrics.PolicyCompliance = as.getPolicyCompliance(ctx, orgID)
-
-	// Audit readiness
-	metrics.AuditReadiness = as.getAuditReadiness(ctx, orgID)
+	// // Find SOD violations
+	// metrics.SODViolations = as.findSODViolations(ctx, orgID)
+	//
+	// // Find overprivileged access
+	// metrics.OverprivilegedAccess = as.findOverprivilegedAccess(ctx, orgID, period)
+	//
+	// // Access certification status
+	// metrics.AccessCertification = as.getAccessCertificationStatus(ctx, orgID)
+	//
+	// // Policy compliance
+	// metrics.PolicyCompliance = as.getPolicyCompliance(ctx, orgID)
+	//
+	// // Audit readiness
+	// metrics.AuditReadiness = as.getAuditReadiness(ctx, orgID)
 
 	return metrics, nil
 }
@@ -789,25 +789,25 @@ func (as *AnalyticsService) generateTrendAnalysis(ctx context.Context, orgID *xi
 		Forecasts:        make(map[string]*Forecast),
 	}
 
-	// Analyze user growth trend
-	trends.UserGrowthTrend = as.analyzeUserGrowthTrend(ctx, orgID, period)
-
-	// Analyze permission usage trend
-	trends.PermissionUsageTrend = as.analyzePermissionUsageTrend(ctx, orgID, period)
-
-	// Analyze risk trend
-	trends.RiskTrend = as.analyzeRiskTrend(ctx, orgID, period)
-
-	// Analyze compliance trend
-	trends.ComplianceTrend = as.analyzeComplianceTrend(ctx, orgID, period)
-
-	// Detect seasonal patterns
-	trends.SeasonalPatterns["usage"] = as.detectUsageSeasonalPattern(ctx, orgID, period)
-	trends.SeasonalPatterns["access"] = as.detectAccessSeasonalPattern(ctx, orgID, period)
-
-	// Generate forecasts
-	trends.Forecasts["user_growth"] = as.forecastUserGrowth(trends.UserGrowthTrend)
-	trends.Forecasts["risk_level"] = as.forecastRiskLevel(trends.RiskTrend)
+	// // Analyze user growth trend
+	// trends.UserGrowthTrend = as.analyzeUserGrowthTrend(ctx, orgID, period)
+	//
+	// // Analyze permission usage trend
+	// trends.PermissionUsageTrend = as.analyzePermissionUsageTrend(ctx, orgID, period)
+	//
+	// // Analyze risk trend
+	// trends.RiskTrend = as.analyzeRiskTrend(ctx, orgID, period)
+	//
+	// // Analyze compliance trend
+	// trends.ComplianceTrend = as.analyzeComplianceTrend(ctx, orgID, period)
+	//
+	// // Detect seasonal patterns
+	// trends.SeasonalPatterns["usage"] = as.detectUsageSeasonalPattern(ctx, orgID, period)
+	// trends.SeasonalPatterns["access"] = as.detectAccessSeasonalPattern(ctx, orgID, period)
+	//
+	// // Generate forecasts
+	// trends.Forecasts["user_growth"] = as.forecastUserGrowth(trends.UserGrowthTrend)
+	// trends.Forecasts["risk_level"] = as.forecastRiskLevel(trends.RiskTrend)
 
 	return trends, nil
 }

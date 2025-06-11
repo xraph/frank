@@ -27,13 +27,7 @@ func NewUserManagementService(client *data.Clients) *UserManagementService {
 }
 
 // UserType represents the type of user
-type UserType string
-
-const (
-	UserTypeInternal UserType = "internal" // SaaS platform staff
-	UserTypeExternal UserType = "external" // Customer organization members
-	UserTypeEndUser  UserType = "end_user" // End users of auth service
-)
+type UserType = entUser.UserType
 
 // CreateInternalUserRequest for creating internal platform users
 type CreateInternalUserRequest struct {

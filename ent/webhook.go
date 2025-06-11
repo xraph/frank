@@ -28,6 +28,8 @@ type Webhook struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// DeletedAt holds the value of the "deleted_at" field.
+	DeletedAt time.Time `json:"deleted_at,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
 	// URL holds the value of the "url" field.
@@ -50,6 +52,8 @@ type Webhook struct {
 	Format webhook.Format `json:"format,omitempty"`
 	// Additional membership metadata
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
+	// Headers holds the value of the "headers" field.
+	Headers map[string]string `json:"headers,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the WebhookQuery when eager-loading is set.
 	Edges        WebhookEdges `json:"edges"`
@@ -93,7 +97,7 @@ func (*Webhook) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case webhook.FieldEventTypes, webhook.FieldMetadata:
+		case webhook.FieldEventTypes, webhook.FieldMetadata, webhook.FieldHeaders:
 			values[i] = new([]byte)
 		case webhook.FieldActive:
 			values[i] = new(sql.NullBool)
@@ -101,7 +105,7 @@ func (*Webhook) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullInt64)
 		case webhook.FieldName, webhook.FieldURL, webhook.FieldSecret, webhook.FieldVersion, webhook.FieldFormat:
 			values[i] = new(sql.NullString)
-		case webhook.FieldCreatedAt, webhook.FieldUpdatedAt:
+		case webhook.FieldCreatedAt, webhook.FieldUpdatedAt, webhook.FieldDeletedAt:
 			values[i] = new(sql.NullTime)
 		case webhook.FieldID, webhook.FieldOrganizationID:
 			values[i] = new(xid.ID)
@@ -137,6 +141,12 @@ func (w *Webhook) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
 				w.UpdatedAt = value.Time
+			}
+		case webhook.FieldDeletedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field deleted_at", values[i])
+			} else if value.Valid {
+				w.DeletedAt = value.Time
 			}
 		case webhook.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -208,6 +218,14 @@ func (w *Webhook) assignValues(columns []string, values []any) error {
 					return fmt.Errorf("unmarshal field metadata: %w", err)
 				}
 			}
+		case webhook.FieldHeaders:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field headers", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &w.Headers); err != nil {
+					return fmt.Errorf("unmarshal field headers: %w", err)
+				}
+			}
 		default:
 			w.selectValues.Set(columns[i], values[i])
 		}
@@ -260,6 +278,9 @@ func (w *Webhook) String() string {
 	builder.WriteString("updated_at=")
 	builder.WriteString(w.UpdatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
+	builder.WriteString("deleted_at=")
+	builder.WriteString(w.DeletedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(w.Name)
 	builder.WriteString(", ")
@@ -291,6 +312,9 @@ func (w *Webhook) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("metadata=")
 	builder.WriteString(fmt.Sprintf("%v", w.Metadata))
+	builder.WriteString(", ")
+	builder.WriteString("headers=")
+	builder.WriteString(fmt.Sprintf("%v", w.Headers))
 	builder.WriteByte(')')
 	return builder.String()
 }

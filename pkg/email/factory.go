@@ -11,8 +11,11 @@ import (
 func SenderFactory(cfg *config.EmailConfig, logger logging.Logger) Sender {
 	provider := strings.ToLower(cfg.Provider)
 
-	if config.IsDevelopment() {
-		logger.Warn("dev email provider, using mock sender", logging.String("provider", provider))
+	if config.IsDevelopment() && !cfg.ForceLive {
+		logger.Warn("dev email provider, using mock sender",
+			logging.String("provider", provider),
+			logging.Bool("force_live", cfg.ForceLive),
+		)
 		return NewMockEmailSender("./tmp/emails")
 	}
 
@@ -23,12 +26,16 @@ func SenderFactory(cfg *config.EmailConfig, logger logging.Logger) Sender {
 		return NewSendgridSender(cfg, logger)
 	case "mailgun":
 		return NewMailerSendSender(cfg, logger)
+	case "twilio":
+		return NewTwillioSender(cfg, logger)
 	case "ses":
 		return NewAmazonSESSender(cfg, logger)
 	case "mailersend":
 		return NewMailerSendSender(cfg, logger)
 	case "resend":
 		return NewResendSender(cfg, logger)
+	case "postmark":
+		return NewPostmarkSender(cfg, logger)
 	default:
 		logger.Warn("Unknown email provider, defaulting to SMTP", logging.String("provider", provider))
 		return NewSMTPSender(cfg, logger)

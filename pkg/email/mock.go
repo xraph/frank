@@ -14,6 +14,25 @@ type MockEmailSender struct {
 	OutputDir string // Directory to save emails as files, if empty logs to console
 }
 
+func (m *MockEmailSender) SendBulkEmails(ctx context.Context, emails []Email) (*BulkEmailResult, error) {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (m *MockEmailSender) TestConnection(ctx context.Context) error {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (m *MockEmailSender) GetDeliveryStatus(ctx context.Context, messageID string) (*DeliveryInfo, error) {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (m *MockEmailSender) Name() string {
+	return "mock"
+}
+
 // Send logs emails instead of sending them
 func (m *MockEmailSender) Send(ctx context.Context, email Email) error {
 	// Format email content for logging

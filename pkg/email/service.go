@@ -119,7 +119,7 @@ func (s *service) Send(ctx context.Context, input SendEmailInput) error {
 			logging.String("to", fmt.Sprintf("%v", input.To)),
 			logging.String("subject", input.Subject),
 		)
-		return errors.Wrap(errors.CodeEmailDeliveryFail, err, "failed to send email")
+		return errors.Wrap(err, errors.CodeEmailDeliveryFail, "failed to send email")
 	}
 
 	return nil
@@ -154,7 +154,7 @@ func (s *service) SendTemplate(ctx context.Context, input SendTemplateInput) err
 					logging.String("template_type", input.TemplateType),
 					logging.String("locale", locale),
 				)
-				return errors.Wrap(errors.CodeTemplateNotFound, err, "email template not found")
+				return errors.Wrap(err, errors.CodeTemplateNotFound, "email template not found")
 			}
 		} else {
 			s.logger.Error("Failed to find email template",
@@ -163,7 +163,7 @@ func (s *service) SendTemplate(ctx context.Context, input SendTemplateInput) err
 				logging.String("organization_id", input.OrganizationID.String()),
 				logging.String("locale", locale),
 			)
-			return errors.Wrap(errors.CodeTemplateNotFound, err, "email template not found")
+			return errors.Wrap(err, errors.CodeTemplateNotFound, "email template not found")
 		}
 	}
 
@@ -180,7 +180,7 @@ func (s *service) SendTemplate(ctx context.Context, input SendTemplateInput) err
 			logging.Error(err),
 			logging.String("template_id", template.ID.String()),
 		)
-		return errors.Wrap(errors.CodeTemplateNotFound, err, "failed to render email template")
+		return errors.Wrap(err, errors.CodeTemplateNotFound, "failed to render email template")
 	}
 
 	// Render text content if available
@@ -239,7 +239,7 @@ func (s *service) SendTemplate(ctx context.Context, input SendTemplateInput) err
 			logging.String("to", fmt.Sprintf("%v", input.To)),
 			logging.String("template_type", input.TemplateType),
 		)
-		return errors.Wrap(errors.CodeEmailDeliveryFail, err, "failed to send email")
+		return errors.Wrap(err, errors.CodeEmailDeliveryFail, "failed to send email")
 	}
 
 	return nil
@@ -277,7 +277,7 @@ func (s *service) SendMagicLinkEmail(ctx context.Context, email, firstName, magi
 		},
 	})
 	if err != nil {
-		return errors.Wrap(errors.CodeEmailDeliveryFail, err, "failed to render text template for magic link email")
+		return errors.Wrap(err, errors.CodeEmailDeliveryFail, "failed to render text template for magic link email")
 	}
 
 	// Log that the email was sent
@@ -300,20 +300,20 @@ func (s *service) CreateTemplate(ctx context.Context, input CreateTemplateInput)
 	// Check template validity by parsing it
 	_, err := template.New("test").Parse(input.HTMLContent)
 	if err != nil {
-		return nil, errors.Wrap(errors.CodeInvalidInput, err, "invalid HTML template")
+		return nil, errors.Wrap(err, errors.CodeInvalidInput, "invalid HTML template")
 	}
 
 	if input.TextContent != "" {
 		_, err = template.New("test").Parse(input.TextContent)
 		if err != nil {
-			return nil, errors.Wrap(errors.CodeInvalidInput, err, "invalid text template")
+			return nil, errors.Wrap(err, errors.CodeInvalidInput, "invalid text template")
 		}
 	}
 
 	// Parse subject template
 	_, err = template.New("test").Parse(input.Subject)
 	if err != nil {
-		return nil, errors.Wrap(errors.CodeInvalidInput, err, "invalid subject template")
+		return nil, errors.Wrap(err, errors.CodeInvalidInput, "invalid subject template")
 	}
 
 	// Create ent.EmailTemplateCreate
@@ -349,7 +349,7 @@ func (s *service) UpdateTemplate(ctx context.Context, id xid.ID, input UpdateTem
 	if input.HTMLContent != nil {
 		_, err := template.New("test").Parse(*input.HTMLContent)
 		if err != nil {
-			return nil, errors.Wrap(errors.CodeInvalidInput, err, "invalid HTML template")
+			return nil, errors.Wrap(err, errors.CodeInvalidInput, "invalid HTML template")
 		}
 	}
 
@@ -357,7 +357,7 @@ func (s *service) UpdateTemplate(ctx context.Context, id xid.ID, input UpdateTem
 	if input.TextContent != nil && *input.TextContent != "" {
 		_, err := template.New("test").Parse(*input.TextContent)
 		if err != nil {
-			return nil, errors.Wrap(errors.CodeInvalidInput, err, "invalid text template")
+			return nil, errors.Wrap(err, errors.CodeInvalidInput, "invalid text template")
 		}
 	}
 
@@ -365,7 +365,7 @@ func (s *service) UpdateTemplate(ctx context.Context, id xid.ID, input UpdateTem
 	if input.Subject != nil {
 		_, err := template.New("test").Parse(*input.Subject)
 		if err != nil {
-			return nil, errors.Wrap(errors.CodeInvalidInput, err, "invalid subject template")
+			return nil, errors.Wrap(err, errors.CodeInvalidInput, "invalid subject template")
 		}
 	}
 

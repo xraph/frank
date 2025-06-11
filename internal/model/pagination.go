@@ -328,7 +328,7 @@ func decodeCursor(cursor string) (int, error) {
 // TotalCount provides the total number of items available across all pages.
 type Pagination struct {
 	// Indicates whether more items exist after the requested range
-	HasNextPage bool `json:"hasNextPage" xml:"hasNextPage"`
+	HasNextPage bool `json:"hasNextPage" xml:"hasNextPage"  example:"true" doc:"Whether there are more results"`
 	// Indicates whether more items exist before the requested range
 	HasPreviousPage bool `json:"hasPreviousPage" xml:"hasPreviousPage"`
 	// Cursor for the first item
@@ -336,7 +336,7 @@ type Pagination struct {
 	// Cursor for the last item
 	EndCursor *string `json:"endCursor" xml:"endCursor"`
 	// Total number of items
-	TotalCount int `json:"totalCount" xml:"totalCount"`
+	TotalCount int `json:"totalCount" xml:"totalCount" example:"100" doc:"Total number of documents"`
 
 	CurrentPage int `json:"currentPage" xml:"currentPage"`
 	TotalPages  int `json:"totalPages" xml:"totalPages"`

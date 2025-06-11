@@ -1,0 +1,1 @@
+Welcome to {{.appName}}, {{.userName}}! 🎉 Your account is ready. Sign in at {{.loginUrl}} to get started. Need help? Reply HELP

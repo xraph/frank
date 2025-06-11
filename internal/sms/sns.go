@@ -15,14 +15,14 @@ import (
 
 // awsProvider implements the SNS SNS SMS provider
 type awsProvider struct {
-	config      *config.Config
+	config      *config.SMSConfig
 	logger      logging.Logger
 	snsClient   *sns.Client
 	initialized bool
 }
 
 // NewAWSProvider creates a new SNS SNS SMS provider
-func NewAWSProvider(cfg *config.Config, logger logging.Logger) Provider {
+func NewAWSProvider(cfg *config.SMSConfig, logger logging.Logger) Provider {
 	return &awsProvider{
 		config:      cfg,
 		logger:      logger,
@@ -37,19 +37,19 @@ func (p *awsProvider) initClient(ctx context.Context) error {
 	}
 
 	// Check credentials
-	if p.config.SMS.AWS.AccessKeyID == "" || p.config.SMS.AWS.SecretAccessKey == "" {
+	if p.config.AWS.AccessKeyID == "" || p.config.AWS.SecretAccessKey == "" {
 		return errors.New(errors.CodeConfigurationError, "SNS access key ID and secret access key are required")
 	}
 
 	// Create SNS credentials
 	creds := credentials.NewStaticCredentialsProvider(
-		p.config.SMS.AWS.AccessKeyID,
-		p.config.SMS.AWS.SecretAccessKey,
-		p.config.SMS.AWS.SessionToken,
+		p.config.AWS.AccessKeyID,
+		p.config.AWS.SecretAccessKey,
+		p.config.AWS.SessionToken,
 	)
 
 	// Load SNS configuration
-	region := p.config.SMS.AWS.Region
+	region := p.config.AWS.Region
 	if region == "" {
 		region = "us-east-1" // Default region
 	}
@@ -59,7 +59,7 @@ func (p *awsProvider) initClient(ctx context.Context) error {
 		awsconfig.WithCredentialsProvider(creds),
 	)
 	if err != nil {
-		return errors.Wrap(errors.CodeConfigurationError, err, "failed to load SNS configuration")
+		return errors.Wrap(err, errors.CodeConfigurationError, "failed to load SNS configuration")
 	}
 
 	// Create SNS client
@@ -108,7 +108,7 @@ func (p *awsProvider) Send(ctx context.Context, input SMS) error {
 	})
 
 	if err != nil {
-		return errors.Wrap(errors.CodeSMSDeliveryFail, err, "failed to send SMS via SNS SNS")
+		return errors.Wrap(err, errors.CodeSMSDeliveryFail, "failed to send SMS via SNS SNS")
 	}
 
 	return nil

@@ -15,7 +15,7 @@ import (
 
 // infobipProvider implements the Infobip SMS provider
 type infobipProvider struct {
-	config  *config.Config
+	config  *config.SMSConfig
 	logger  logging.Logger
 	client  *http.Client
 	apiKey  string
@@ -23,8 +23,8 @@ type infobipProvider struct {
 }
 
 // NewInfobipProvider creates a new Infobip SMS provider
-func NewInfobipProvider(cfg *config.Config, logger logging.Logger) Provider {
-	baseURL := cfg.SMS.Infobip.BaseURL
+func NewInfobipProvider(cfg *config.SMSConfig, logger logging.Logger) Provider {
+	baseURL := cfg.Infobip.BaseURL
 	if baseURL == "" {
 		baseURL = "https://api.infobip.com"
 	}
@@ -33,7 +33,7 @@ func NewInfobipProvider(cfg *config.Config, logger logging.Logger) Provider {
 		config:  cfg,
 		logger:  logger,
 		client:  &http.Client{},
-		apiKey:  cfg.SMS.Infobip.APIKey,
+		apiKey:  cfg.Infobip.APIKey,
 		baseURL: baseURL,
 	}
 }
@@ -48,7 +48,7 @@ func (p *infobipProvider) Send(ctx context.Context, input SMS) error {
 	// Set sender (From) if not provided
 	from := input.From
 	if from == "" {
-		from = p.config.SMS.FromNumber
+		from = p.config.FromNumber
 	}
 
 	// Prepare message
@@ -81,14 +81,14 @@ func (p *infobipProvider) Send(ctx context.Context, input SMS) error {
 	// Marshal request body to JSON
 	jsonBody, err := json.Marshal(requestBody)
 	if err != nil {
-		return errors.Wrap(errors.CodeSMSDeliveryFail, err, "failed to marshal Infobip request")
+		return errors.Wrap(err, errors.CodeSMSDeliveryFail, "failed to marshal Infobip request")
 	}
 
 	// Create request
 	apiURL := fmt.Sprintf("%s/sms/2/text/advanced", p.baseURL)
 	req, err := http.NewRequestWithContext(ctx, "POST", apiURL, bytes.NewBuffer(jsonBody))
 	if err != nil {
-		return errors.Wrap(errors.CodeSMSDeliveryFail, err, "failed to create Infobip request")
+		return errors.Wrap(err, errors.CodeSMSDeliveryFail, "failed to create Infobip request")
 	}
 
 	// Set headers
@@ -99,7 +99,7 @@ func (p *infobipProvider) Send(ctx context.Context, input SMS) error {
 	// Execute request
 	resp, err := p.client.Do(req)
 	if err != nil {
-		return errors.Wrap(errors.CodeSMSDeliveryFail, err, "failed to send Infobip request")
+		return errors.Wrap(err, errors.CodeSMSDeliveryFail, "failed to send Infobip request")
 	}
 	defer resp.Body.Close()
 

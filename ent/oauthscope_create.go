@@ -58,6 +58,20 @@ func (osc *OAuthScopeCreate) SetNillableUpdatedAt(t *time.Time) *OAuthScopeCreat
 	return osc
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (osc *OAuthScopeCreate) SetDeletedAt(t time.Time) *OAuthScopeCreate {
+	osc.mutation.SetDeletedAt(t)
+	return osc
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (osc *OAuthScopeCreate) SetNillableDeletedAt(t *time.Time) *OAuthScopeCreate {
+	if t != nil {
+		osc.SetDeletedAt(*t)
+	}
+	return osc
+}
+
 // SetName sets the "name" field.
 func (osc *OAuthScopeCreate) SetName(s string) *OAuthScopeCreate {
 	osc.mutation.SetName(s)
@@ -288,6 +302,10 @@ func (osc *OAuthScopeCreate) createSpec() (*OAuthScope, *sqlgraph.CreateSpec) {
 		_spec.SetField(oauthscope.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
+	if value, ok := osc.mutation.DeletedAt(); ok {
+		_spec.SetField(oauthscope.FieldDeletedAt, field.TypeTime, value)
+		_node.DeletedAt = value
+	}
 	if value, ok := osc.mutation.Name(); ok {
 		_spec.SetField(oauthscope.FieldName, field.TypeString, value)
 		_node.Name = value
@@ -416,6 +434,24 @@ func (u *OAuthScopeUpsert) UpdateUpdatedAt() *OAuthScopeUpsert {
 	return u
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (u *OAuthScopeUpsert) SetDeletedAt(v time.Time) *OAuthScopeUpsert {
+	u.Set(oauthscope.FieldDeletedAt, v)
+	return u
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *OAuthScopeUpsert) UpdateDeletedAt() *OAuthScopeUpsert {
+	u.SetExcluded(oauthscope.FieldDeletedAt)
+	return u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *OAuthScopeUpsert) ClearDeletedAt() *OAuthScopeUpsert {
+	u.SetNull(oauthscope.FieldDeletedAt)
+	return u
+}
+
 // SetName sets the "name" field.
 func (u *OAuthScopeUpsert) SetName(v string) *OAuthScopeUpsert {
 	u.Set(oauthscope.FieldName, v)
@@ -526,6 +562,27 @@ func (u *OAuthScopeUpsertOne) SetUpdatedAt(v time.Time) *OAuthScopeUpsertOne {
 func (u *OAuthScopeUpsertOne) UpdateUpdatedAt() *OAuthScopeUpsertOne {
 	return u.Update(func(s *OAuthScopeUpsert) {
 		s.UpdateUpdatedAt()
+	})
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *OAuthScopeUpsertOne) SetDeletedAt(v time.Time) *OAuthScopeUpsertOne {
+	return u.Update(func(s *OAuthScopeUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *OAuthScopeUpsertOne) UpdateDeletedAt() *OAuthScopeUpsertOne {
+	return u.Update(func(s *OAuthScopeUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *OAuthScopeUpsertOne) ClearDeletedAt() *OAuthScopeUpsertOne {
+	return u.Update(func(s *OAuthScopeUpsert) {
+		s.ClearDeletedAt()
 	})
 }
 
@@ -814,6 +871,27 @@ func (u *OAuthScopeUpsertBulk) SetUpdatedAt(v time.Time) *OAuthScopeUpsertBulk {
 func (u *OAuthScopeUpsertBulk) UpdateUpdatedAt() *OAuthScopeUpsertBulk {
 	return u.Update(func(s *OAuthScopeUpsert) {
 		s.UpdateUpdatedAt()
+	})
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *OAuthScopeUpsertBulk) SetDeletedAt(v time.Time) *OAuthScopeUpsertBulk {
+	return u.Update(func(s *OAuthScopeUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *OAuthScopeUpsertBulk) UpdateDeletedAt() *OAuthScopeUpsertBulk {
+	return u.Update(func(s *OAuthScopeUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *OAuthScopeUpsertBulk) ClearDeletedAt() *OAuthScopeUpsertBulk {
+	return u.Update(func(s *OAuthScopeUpsert) {
+		s.ClearDeletedAt()
 	})
 }
 

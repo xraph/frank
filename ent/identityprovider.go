@@ -28,6 +28,8 @@ type IdentityProvider struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// DeletedAt holds the value of the "deleted_at" field.
+	DeletedAt time.Time `json:"deleted_at,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
 	// OrganizationID holds the value of the "organization_id" field.
@@ -58,8 +60,22 @@ type IdentityProvider struct {
 	PrivateKey string `json:"-"`
 	// Active holds the value of the "active" field.
 	Active bool `json:"active,omitempty"`
+	// Enabled holds the value of the "enabled" field.
+	Enabled bool `json:"enabled,omitempty"`
 	// Primary holds the value of the "primary" field.
 	Primary bool `json:"primary,omitempty"`
+	// AutoProvision holds the value of the "auto_provision" field.
+	AutoProvision bool `json:"auto_provision,omitempty"`
+	// DefaultRole holds the value of the "default_role" field.
+	DefaultRole string `json:"default_role,omitempty"`
+	// Domain holds the value of the "domain" field.
+	Domain string `json:"domain,omitempty"`
+	// IconURL holds the value of the "icon_url" field.
+	IconURL string `json:"icon_url,omitempty"`
+	// ButtonText holds the value of the "button_text" field.
+	ButtonText string `json:"button_text,omitempty"`
+	// Protocol holds the value of the "protocol" field.
+	Protocol string `json:"protocol,omitempty"`
 	// Domains holds the value of the "domains" field.
 	Domains []string `json:"domains,omitempty"`
 	// AttributesMapping holds the value of the "attributes_mapping" field.
@@ -99,11 +115,11 @@ func (*IdentityProvider) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case identityprovider.FieldDomains, identityprovider.FieldAttributesMapping, identityprovider.FieldMetadata:
 			values[i] = new([]byte)
-		case identityprovider.FieldActive, identityprovider.FieldPrimary:
+		case identityprovider.FieldActive, identityprovider.FieldEnabled, identityprovider.FieldPrimary, identityprovider.FieldAutoProvision:
 			values[i] = new(sql.NullBool)
-		case identityprovider.FieldName, identityprovider.FieldProviderType, identityprovider.FieldClientID, identityprovider.FieldClientSecret, identityprovider.FieldIssuer, identityprovider.FieldAuthorizationEndpoint, identityprovider.FieldTokenEndpoint, identityprovider.FieldUserinfoEndpoint, identityprovider.FieldJwksURI, identityprovider.FieldMetadataURL, identityprovider.FieldRedirectURI, identityprovider.FieldCertificate, identityprovider.FieldPrivateKey:
+		case identityprovider.FieldName, identityprovider.FieldProviderType, identityprovider.FieldClientID, identityprovider.FieldClientSecret, identityprovider.FieldIssuer, identityprovider.FieldAuthorizationEndpoint, identityprovider.FieldTokenEndpoint, identityprovider.FieldUserinfoEndpoint, identityprovider.FieldJwksURI, identityprovider.FieldMetadataURL, identityprovider.FieldRedirectURI, identityprovider.FieldCertificate, identityprovider.FieldPrivateKey, identityprovider.FieldDefaultRole, identityprovider.FieldDomain, identityprovider.FieldIconURL, identityprovider.FieldButtonText, identityprovider.FieldProtocol:
 			values[i] = new(sql.NullString)
-		case identityprovider.FieldCreatedAt, identityprovider.FieldUpdatedAt:
+		case identityprovider.FieldCreatedAt, identityprovider.FieldUpdatedAt, identityprovider.FieldDeletedAt:
 			values[i] = new(sql.NullTime)
 		case identityprovider.FieldID, identityprovider.FieldOrganizationID:
 			values[i] = new(xid.ID)
@@ -139,6 +155,12 @@ func (ip *IdentityProvider) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
 				ip.UpdatedAt = value.Time
+			}
+		case identityprovider.FieldDeletedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field deleted_at", values[i])
+			} else if value.Valid {
+				ip.DeletedAt = value.Time
 			}
 		case identityprovider.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -230,11 +252,53 @@ func (ip *IdentityProvider) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				ip.Active = value.Bool
 			}
+		case identityprovider.FieldEnabled:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field enabled", values[i])
+			} else if value.Valid {
+				ip.Enabled = value.Bool
+			}
 		case identityprovider.FieldPrimary:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field primary", values[i])
 			} else if value.Valid {
 				ip.Primary = value.Bool
+			}
+		case identityprovider.FieldAutoProvision:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field auto_provision", values[i])
+			} else if value.Valid {
+				ip.AutoProvision = value.Bool
+			}
+		case identityprovider.FieldDefaultRole:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field default_role", values[i])
+			} else if value.Valid {
+				ip.DefaultRole = value.String
+			}
+		case identityprovider.FieldDomain:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field domain", values[i])
+			} else if value.Valid {
+				ip.Domain = value.String
+			}
+		case identityprovider.FieldIconURL:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field icon_url", values[i])
+			} else if value.Valid {
+				ip.IconURL = value.String
+			}
+		case identityprovider.FieldButtonText:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field button_text", values[i])
+			} else if value.Valid {
+				ip.ButtonText = value.String
+			}
+		case identityprovider.FieldProtocol:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field protocol", values[i])
+			} else if value.Valid {
+				ip.Protocol = value.String
 			}
 		case identityprovider.FieldDomains:
 			if value, ok := values[i].(*[]byte); !ok {
@@ -307,6 +371,9 @@ func (ip *IdentityProvider) String() string {
 	builder.WriteString("updated_at=")
 	builder.WriteString(ip.UpdatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
+	builder.WriteString("deleted_at=")
+	builder.WriteString(ip.DeletedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(ip.Name)
 	builder.WriteString(", ")
@@ -349,8 +416,29 @@ func (ip *IdentityProvider) String() string {
 	builder.WriteString("active=")
 	builder.WriteString(fmt.Sprintf("%v", ip.Active))
 	builder.WriteString(", ")
+	builder.WriteString("enabled=")
+	builder.WriteString(fmt.Sprintf("%v", ip.Enabled))
+	builder.WriteString(", ")
 	builder.WriteString("primary=")
 	builder.WriteString(fmt.Sprintf("%v", ip.Primary))
+	builder.WriteString(", ")
+	builder.WriteString("auto_provision=")
+	builder.WriteString(fmt.Sprintf("%v", ip.AutoProvision))
+	builder.WriteString(", ")
+	builder.WriteString("default_role=")
+	builder.WriteString(ip.DefaultRole)
+	builder.WriteString(", ")
+	builder.WriteString("domain=")
+	builder.WriteString(ip.Domain)
+	builder.WriteString(", ")
+	builder.WriteString("icon_url=")
+	builder.WriteString(ip.IconURL)
+	builder.WriteString(", ")
+	builder.WriteString("button_text=")
+	builder.WriteString(ip.ButtonText)
+	builder.WriteString(", ")
+	builder.WriteString("protocol=")
+	builder.WriteString(ip.Protocol)
 	builder.WriteString(", ")
 	builder.WriteString("domains=")
 	builder.WriteString(fmt.Sprintf("%v", ip.Domains))

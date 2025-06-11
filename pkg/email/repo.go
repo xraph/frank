@@ -90,7 +90,7 @@ func (r *templateRepository) Create(ctx context.Context, templateCreate *ent.Ema
 			Exist(ctx)
 
 		if err != nil {
-			return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to check template existence")
+			return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to check template existence")
 		}
 
 		if exists {
@@ -104,7 +104,7 @@ func (r *templateRepository) Create(ctx context.Context, templateCreate *ent.Ema
 		if ent.IsConstraintError(err) {
 			return nil, ErrTemplateAlreadyExists
 		}
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to create email template")
+		return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to create email template")
 	}
 
 	return template, nil
@@ -121,7 +121,7 @@ func (r *templateRepository) GetByID(ctx context.Context, id xid.ID) (*ent.Email
 		if ent.IsNotFound(err) {
 			return nil, ErrTemplateNotFound
 		}
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to get email template")
+		return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to get email template")
 	}
 
 	return template, nil
@@ -148,7 +148,7 @@ func (r *templateRepository) GetByTypeAndOrganization(ctx context.Context, templ
 		if ent.IsNotFound(err) {
 			return nil, errors.New(errors.CodeNotFound, fmt.Sprintf("email template not found for type '%s'", templateType))
 		}
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to get email template")
+		return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to get email template")
 	}
 
 	return template, nil
@@ -213,7 +213,7 @@ func (r *templateRepository) Update(ctx context.Context, templateUpdate *ent.Ema
 		if ent.IsNotFound(err) {
 			return nil, ErrTemplateNotFound
 		}
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to update email template")
+		return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to update email template")
 	}
 
 	return updatedTemplate, nil
@@ -240,7 +240,7 @@ func (r *templateRepository) Delete(ctx context.Context, id xid.ID) error {
 		if ent.IsNotFound(err) {
 			return ErrTemplateNotFound
 		}
-		return errors.Wrap(errors.CodeDatabaseError, err, "failed to delete email template")
+		return errors.Wrap(err, errors.CodeDatabaseError, "failed to delete email template")
 	}
 
 	return nil
@@ -382,7 +382,7 @@ func (r *templateRepository) BulkUpdate(ctx context.Context, updates []*ent.Emai
 func (r *templateRepository) ExportAll(ctx context.Context) ([]*ent.EmailTemplate, error) {
 	templates, err := r.client.EmailTemplate.Query().All(ctx)
 	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to export email templates")
+		return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to export email templates")
 	}
 	return templates, nil
 }

@@ -4,7 +4,7 @@ import (
 	"context"
 
 	entUser "github.com/juicycleff/frank/ent/user"
-	"github.com/juicycleff/frank/internal/middleware"
+	"github.com/juicycleff/frank/internal/contexts"
 	"github.com/juicycleff/frank/pkg/data"
 	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/rs/xid"
@@ -12,13 +12,6 @@ import (
 
 // Additional permissions for user type management
 const (
-	// Platform administration (internal users only)
-	PermissionManagePlatform        Permission = "manage:platform"
-	PermissionViewAllCustomers      Permission = "view:all:customers"
-	PermissionManageCustomerBilling Permission = "manage:customer:billing"
-	PermissionSuspendCustomer       Permission = "suspend:customer"
-	PermissionViewPlatformAnalytics Permission = "view:platform:analytics"
-
 	// End user management (customer organizations managing their auth service users)
 	PermissionViewEndUsers          Permission = "view:end:users"
 	PermissionListEndUsers          Permission = "list:end:users"
@@ -30,8 +23,8 @@ const (
 	PermissionViewEndUserAnalytics  Permission = "view:end:user:analytics"
 
 	// Auth service configuration (customer organizations)
-	PermissionConfigureAuthService     Permission = "configure:auth:service"
-	PermissionManageAuthProviders      Permission = "manage:auth:providers"
+	PermissionConfigureAuthService Permission = "configure:auth:service"
+	// PermissionManageAuthProviders      Permission = "manage:auth:providers"
 	PermissionViewAuthServiceAnalytics Permission = "view:auth:service:analytics"
 	PermissionManageAuthServiceDomain  Permission = "manage:auth:service:domain"
 
@@ -80,6 +73,12 @@ func NewEnhancedPermissionChecker(client *data.Clients) *EnhancedPermissionCheck
 		DefaultPermissionChecker: NewPermissionChecker(client),
 		userMgmt:                 NewUserManagementService(client),
 	}
+}
+
+// WithCustomRolePermissions allows setting custom role permissions
+func (epc *EnhancedPermissionChecker) WithCustomRolePermissions(rolePerms RolePermissions) *EnhancedPermissionChecker {
+	epc.rolePerms = rolePerms
+	return epc
 }
 
 // IsInternalUser checks if user is internal platform staff
@@ -182,10 +181,10 @@ func (epc *EnhancedPermissionChecker) HasPermissionForUserType(ctx context.Conte
 // CheckContextualPermission Context-aware permission checking
 func (epc *EnhancedPermissionChecker) CheckContextualPermission(ctx context.Context, permission Permission, resourceType ResourceType, resourceID xid.ID) (bool, error) {
 	// Get current user
-	userId, err := middleware.GetUserIDFromContext(ctx)
-	if err != nil {
-		return false, err
+	userId := contexts.GetUserIDFromContext(ctx)
+	if userId == nil {
+		return false, errors.New(errors.CodeForbidden, "user not found in context")
 	}
 
-	return epc.HasPermissionForUserType(ctx, permission, resourceType, resourceID, userId)
+	return epc.HasPermissionForUserType(ctx, permission, resourceType, resourceID, *userId)
 }

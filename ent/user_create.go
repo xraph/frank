@@ -16,6 +16,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/juicycleff/frank/ent/apikey"
+	"github.com/juicycleff/frank/ent/audit"
 	"github.com/juicycleff/frank/ent/membership"
 	"github.com/juicycleff/frank/ent/mfa"
 	"github.com/juicycleff/frank/ent/oauthauthorization"
@@ -483,6 +484,21 @@ func (uc *UserCreate) AddMemberships(m ...*Membership) *UserCreate {
 	return uc.AddMembershipIDs(ids...)
 }
 
+// AddSentInvitationIDs adds the "sent_invitations" edge to the Membership entity by IDs.
+func (uc *UserCreate) AddSentInvitationIDs(ids ...xid.ID) *UserCreate {
+	uc.mutation.AddSentInvitationIDs(ids...)
+	return uc
+}
+
+// AddSentInvitations adds the "sent_invitations" edges to the Membership entity.
+func (uc *UserCreate) AddSentInvitations(m ...*Membership) *UserCreate {
+	ids := make([]xid.ID, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return uc.AddSentInvitationIDs(ids...)
+}
+
 // AddSessionIDs adds the "sessions" edge to the Session entity by IDs.
 func (uc *UserCreate) AddSessionIDs(ids ...xid.ID) *UserCreate {
 	uc.mutation.AddSessionIDs(ids...)
@@ -661,6 +677,21 @@ func (uc *UserCreate) AddAssignedUserPermissions(u ...*UserPermission) *UserCrea
 		ids[i] = u[i].ID
 	}
 	return uc.AddAssignedUserPermissionIDs(ids...)
+}
+
+// AddAuditLogIDs adds the "audit_logs" edge to the Audit entity by IDs.
+func (uc *UserCreate) AddAuditLogIDs(ids ...xid.ID) *UserCreate {
+	uc.mutation.AddAuditLogIDs(ids...)
+	return uc
+}
+
+// AddAuditLogs adds the "audit_logs" edges to the Audit entity.
+func (uc *UserCreate) AddAuditLogs(a ...*Audit) *UserCreate {
+	ids := make([]xid.ID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return uc.AddAuditLogIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -985,6 +1016,22 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
+	if nodes := uc.mutation.SentInvitationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.SentInvitationsTable,
+			Columns: []string{user.SentInvitationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(membership.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
 	if nodes := uc.mutation.SessionsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -1170,6 +1217,22 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(userpermission.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.AuditLogsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AuditLogsTable,
+			Columns: []string{user.AuditLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(audit.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {

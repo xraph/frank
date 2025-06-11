@@ -172,7 +172,7 @@ func (rhs *RoleHierarchyService) CreateInheritanceRule(ctx context.Context, rule
 		return nil, err
 	}
 	if wouldCreateCycle {
-		return nil, errors.New(errors.CodeValidation, "inheritance rule would create a cycle")
+		return nil, errors.New(errors.CodeValidationError, "inheritance rule would create a cycle")
 	}
 
 	// Set defaults
@@ -670,15 +670,15 @@ func (rhs *RoleHierarchyService) hasHighSeverityConflicts(conflicts []*Permissio
 
 func (rhs *RoleHierarchyService) validateInheritanceRule(ctx context.Context, rule *RoleInheritanceRule) error {
 	if rule.ParentRoleID.IsNil() {
-		return errors.New(errors.CodeValidation, "parent role ID is required")
+		return errors.New(errors.CodeValidationError, "parent role ID is required")
 	}
 
 	if rule.ChildRoleID.IsNil() {
-		return errors.New(errors.CodeValidation, "child role ID is required")
+		return errors.New(errors.CodeValidationError, "child role ID is required")
 	}
 
 	if rule.ParentRoleID == rule.ChildRoleID {
-		return errors.New(errors.CodeValidation, "parent and child roles cannot be the same")
+		return errors.New(errors.CodeValidationError, "parent and child roles cannot be the same")
 	}
 
 	// Validate inheritance type
@@ -691,7 +691,7 @@ func (rhs *RoleHierarchyService) validateInheritanceRule(ctx context.Context, ru
 	}
 
 	if !validTypes[rule.InheritanceType] {
-		return errors.New(errors.CodeValidation, fmt.Sprintf("invalid inheritance type: %s", rule.InheritanceType))
+		return errors.New(errors.CodeUnauthorized, fmt.Sprintf("invalid inheritance type: %s", rule.InheritanceType))
 	}
 
 	return nil

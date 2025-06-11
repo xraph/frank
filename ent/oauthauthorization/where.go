@@ -69,6 +69,11 @@ func UpdatedAt(v time.Time) predicate.OAuthAuthorization {
 	return predicate.OAuthAuthorization(sql.FieldEQ(FieldUpdatedAt, v))
 }
 
+// DeletedAt applies equality check predicate on the "deleted_at" field. It's identical to DeletedAtEQ.
+func DeletedAt(v time.Time) predicate.OAuthAuthorization {
+	return predicate.OAuthAuthorization(sql.FieldEQ(FieldDeletedAt, v))
+}
+
 // ClientID applies equality check predicate on the "client_id" field. It's identical to ClientIDEQ.
 func ClientID(v xid.ID) predicate.OAuthAuthorization {
 	return predicate.OAuthAuthorization(sql.FieldEQ(FieldClientID, v))
@@ -127,6 +132,16 @@ func State(v string) predicate.OAuthAuthorization {
 // Nonce applies equality check predicate on the "nonce" field. It's identical to NonceEQ.
 func Nonce(v string) predicate.OAuthAuthorization {
 	return predicate.OAuthAuthorization(sql.FieldEQ(FieldNonce, v))
+}
+
+// UserAgent applies equality check predicate on the "user_agent" field. It's identical to UserAgentEQ.
+func UserAgent(v string) predicate.OAuthAuthorization {
+	return predicate.OAuthAuthorization(sql.FieldEQ(FieldUserAgent, v))
+}
+
+// IPAddress applies equality check predicate on the "ip_address" field. It's identical to IPAddressEQ.
+func IPAddress(v string) predicate.OAuthAuthorization {
+	return predicate.OAuthAuthorization(sql.FieldEQ(FieldIPAddress, v))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
@@ -207,6 +222,56 @@ func UpdatedAtLT(v time.Time) predicate.OAuthAuthorization {
 // UpdatedAtLTE applies the LTE predicate on the "updated_at" field.
 func UpdatedAtLTE(v time.Time) predicate.OAuthAuthorization {
 	return predicate.OAuthAuthorization(sql.FieldLTE(FieldUpdatedAt, v))
+}
+
+// DeletedAtEQ applies the EQ predicate on the "deleted_at" field.
+func DeletedAtEQ(v time.Time) predicate.OAuthAuthorization {
+	return predicate.OAuthAuthorization(sql.FieldEQ(FieldDeletedAt, v))
+}
+
+// DeletedAtNEQ applies the NEQ predicate on the "deleted_at" field.
+func DeletedAtNEQ(v time.Time) predicate.OAuthAuthorization {
+	return predicate.OAuthAuthorization(sql.FieldNEQ(FieldDeletedAt, v))
+}
+
+// DeletedAtIn applies the In predicate on the "deleted_at" field.
+func DeletedAtIn(vs ...time.Time) predicate.OAuthAuthorization {
+	return predicate.OAuthAuthorization(sql.FieldIn(FieldDeletedAt, vs...))
+}
+
+// DeletedAtNotIn applies the NotIn predicate on the "deleted_at" field.
+func DeletedAtNotIn(vs ...time.Time) predicate.OAuthAuthorization {
+	return predicate.OAuthAuthorization(sql.FieldNotIn(FieldDeletedAt, vs...))
+}
+
+// DeletedAtGT applies the GT predicate on the "deleted_at" field.
+func DeletedAtGT(v time.Time) predicate.OAuthAuthorization {
+	return predicate.OAuthAuthorization(sql.FieldGT(FieldDeletedAt, v))
+}
+
+// DeletedAtGTE applies the GTE predicate on the "deleted_at" field.
+func DeletedAtGTE(v time.Time) predicate.OAuthAuthorization {
+	return predicate.OAuthAuthorization(sql.FieldGTE(FieldDeletedAt, v))
+}
+
+// DeletedAtLT applies the LT predicate on the "deleted_at" field.
+func DeletedAtLT(v time.Time) predicate.OAuthAuthorization {
+	return predicate.OAuthAuthorization(sql.FieldLT(FieldDeletedAt, v))
+}
+
+// DeletedAtLTE applies the LTE predicate on the "deleted_at" field.
+func DeletedAtLTE(v time.Time) predicate.OAuthAuthorization {
+	return predicate.OAuthAuthorization(sql.FieldLTE(FieldDeletedAt, v))
+}
+
+// DeletedAtIsNil applies the IsNil predicate on the "deleted_at" field.
+func DeletedAtIsNil() predicate.OAuthAuthorization {
+	return predicate.OAuthAuthorization(sql.FieldIsNull(FieldDeletedAt))
+}
+
+// DeletedAtNotNil applies the NotNil predicate on the "deleted_at" field.
+func DeletedAtNotNil() predicate.OAuthAuthorization {
+	return predicate.OAuthAuthorization(sql.FieldNotNull(FieldDeletedAt))
 }
 
 // ClientIDEQ applies the EQ predicate on the "client_id" field.
@@ -967,6 +1032,156 @@ func NonceEqualFold(v string) predicate.OAuthAuthorization {
 // NonceContainsFold applies the ContainsFold predicate on the "nonce" field.
 func NonceContainsFold(v string) predicate.OAuthAuthorization {
 	return predicate.OAuthAuthorization(sql.FieldContainsFold(FieldNonce, v))
+}
+
+// UserAgentEQ applies the EQ predicate on the "user_agent" field.
+func UserAgentEQ(v string) predicate.OAuthAuthorization {
+	return predicate.OAuthAuthorization(sql.FieldEQ(FieldUserAgent, v))
+}
+
+// UserAgentNEQ applies the NEQ predicate on the "user_agent" field.
+func UserAgentNEQ(v string) predicate.OAuthAuthorization {
+	return predicate.OAuthAuthorization(sql.FieldNEQ(FieldUserAgent, v))
+}
+
+// UserAgentIn applies the In predicate on the "user_agent" field.
+func UserAgentIn(vs ...string) predicate.OAuthAuthorization {
+	return predicate.OAuthAuthorization(sql.FieldIn(FieldUserAgent, vs...))
+}
+
+// UserAgentNotIn applies the NotIn predicate on the "user_agent" field.
+func UserAgentNotIn(vs ...string) predicate.OAuthAuthorization {
+	return predicate.OAuthAuthorization(sql.FieldNotIn(FieldUserAgent, vs...))
+}
+
+// UserAgentGT applies the GT predicate on the "user_agent" field.
+func UserAgentGT(v string) predicate.OAuthAuthorization {
+	return predicate.OAuthAuthorization(sql.FieldGT(FieldUserAgent, v))
+}
+
+// UserAgentGTE applies the GTE predicate on the "user_agent" field.
+func UserAgentGTE(v string) predicate.OAuthAuthorization {
+	return predicate.OAuthAuthorization(sql.FieldGTE(FieldUserAgent, v))
+}
+
+// UserAgentLT applies the LT predicate on the "user_agent" field.
+func UserAgentLT(v string) predicate.OAuthAuthorization {
+	return predicate.OAuthAuthorization(sql.FieldLT(FieldUserAgent, v))
+}
+
+// UserAgentLTE applies the LTE predicate on the "user_agent" field.
+func UserAgentLTE(v string) predicate.OAuthAuthorization {
+	return predicate.OAuthAuthorization(sql.FieldLTE(FieldUserAgent, v))
+}
+
+// UserAgentContains applies the Contains predicate on the "user_agent" field.
+func UserAgentContains(v string) predicate.OAuthAuthorization {
+	return predicate.OAuthAuthorization(sql.FieldContains(FieldUserAgent, v))
+}
+
+// UserAgentHasPrefix applies the HasPrefix predicate on the "user_agent" field.
+func UserAgentHasPrefix(v string) predicate.OAuthAuthorization {
+	return predicate.OAuthAuthorization(sql.FieldHasPrefix(FieldUserAgent, v))
+}
+
+// UserAgentHasSuffix applies the HasSuffix predicate on the "user_agent" field.
+func UserAgentHasSuffix(v string) predicate.OAuthAuthorization {
+	return predicate.OAuthAuthorization(sql.FieldHasSuffix(FieldUserAgent, v))
+}
+
+// UserAgentIsNil applies the IsNil predicate on the "user_agent" field.
+func UserAgentIsNil() predicate.OAuthAuthorization {
+	return predicate.OAuthAuthorization(sql.FieldIsNull(FieldUserAgent))
+}
+
+// UserAgentNotNil applies the NotNil predicate on the "user_agent" field.
+func UserAgentNotNil() predicate.OAuthAuthorization {
+	return predicate.OAuthAuthorization(sql.FieldNotNull(FieldUserAgent))
+}
+
+// UserAgentEqualFold applies the EqualFold predicate on the "user_agent" field.
+func UserAgentEqualFold(v string) predicate.OAuthAuthorization {
+	return predicate.OAuthAuthorization(sql.FieldEqualFold(FieldUserAgent, v))
+}
+
+// UserAgentContainsFold applies the ContainsFold predicate on the "user_agent" field.
+func UserAgentContainsFold(v string) predicate.OAuthAuthorization {
+	return predicate.OAuthAuthorization(sql.FieldContainsFold(FieldUserAgent, v))
+}
+
+// IPAddressEQ applies the EQ predicate on the "ip_address" field.
+func IPAddressEQ(v string) predicate.OAuthAuthorization {
+	return predicate.OAuthAuthorization(sql.FieldEQ(FieldIPAddress, v))
+}
+
+// IPAddressNEQ applies the NEQ predicate on the "ip_address" field.
+func IPAddressNEQ(v string) predicate.OAuthAuthorization {
+	return predicate.OAuthAuthorization(sql.FieldNEQ(FieldIPAddress, v))
+}
+
+// IPAddressIn applies the In predicate on the "ip_address" field.
+func IPAddressIn(vs ...string) predicate.OAuthAuthorization {
+	return predicate.OAuthAuthorization(sql.FieldIn(FieldIPAddress, vs...))
+}
+
+// IPAddressNotIn applies the NotIn predicate on the "ip_address" field.
+func IPAddressNotIn(vs ...string) predicate.OAuthAuthorization {
+	return predicate.OAuthAuthorization(sql.FieldNotIn(FieldIPAddress, vs...))
+}
+
+// IPAddressGT applies the GT predicate on the "ip_address" field.
+func IPAddressGT(v string) predicate.OAuthAuthorization {
+	return predicate.OAuthAuthorization(sql.FieldGT(FieldIPAddress, v))
+}
+
+// IPAddressGTE applies the GTE predicate on the "ip_address" field.
+func IPAddressGTE(v string) predicate.OAuthAuthorization {
+	return predicate.OAuthAuthorization(sql.FieldGTE(FieldIPAddress, v))
+}
+
+// IPAddressLT applies the LT predicate on the "ip_address" field.
+func IPAddressLT(v string) predicate.OAuthAuthorization {
+	return predicate.OAuthAuthorization(sql.FieldLT(FieldIPAddress, v))
+}
+
+// IPAddressLTE applies the LTE predicate on the "ip_address" field.
+func IPAddressLTE(v string) predicate.OAuthAuthorization {
+	return predicate.OAuthAuthorization(sql.FieldLTE(FieldIPAddress, v))
+}
+
+// IPAddressContains applies the Contains predicate on the "ip_address" field.
+func IPAddressContains(v string) predicate.OAuthAuthorization {
+	return predicate.OAuthAuthorization(sql.FieldContains(FieldIPAddress, v))
+}
+
+// IPAddressHasPrefix applies the HasPrefix predicate on the "ip_address" field.
+func IPAddressHasPrefix(v string) predicate.OAuthAuthorization {
+	return predicate.OAuthAuthorization(sql.FieldHasPrefix(FieldIPAddress, v))
+}
+
+// IPAddressHasSuffix applies the HasSuffix predicate on the "ip_address" field.
+func IPAddressHasSuffix(v string) predicate.OAuthAuthorization {
+	return predicate.OAuthAuthorization(sql.FieldHasSuffix(FieldIPAddress, v))
+}
+
+// IPAddressIsNil applies the IsNil predicate on the "ip_address" field.
+func IPAddressIsNil() predicate.OAuthAuthorization {
+	return predicate.OAuthAuthorization(sql.FieldIsNull(FieldIPAddress))
+}
+
+// IPAddressNotNil applies the NotNil predicate on the "ip_address" field.
+func IPAddressNotNil() predicate.OAuthAuthorization {
+	return predicate.OAuthAuthorization(sql.FieldNotNull(FieldIPAddress))
+}
+
+// IPAddressEqualFold applies the EqualFold predicate on the "ip_address" field.
+func IPAddressEqualFold(v string) predicate.OAuthAuthorization {
+	return predicate.OAuthAuthorization(sql.FieldEqualFold(FieldIPAddress, v))
+}
+
+// IPAddressContainsFold applies the ContainsFold predicate on the "ip_address" field.
+func IPAddressContainsFold(v string) predicate.OAuthAuthorization {
+	return predicate.OAuthAuthorization(sql.FieldContainsFold(FieldIPAddress, v))
 }
 
 // HasClient applies the HasEdge predicate on the "client" edge.

@@ -1,6 +1,7 @@
 package frank
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -134,6 +135,13 @@ func WithServerEnabled() Option {
 	}
 }
 
+func WithRoutesDisabled() Option {
+	return func(f *Frank) error {
+		f.disableRoutes = true
+		return nil
+	}
+}
+
 // Defaults returns a slice of default options for Frank
 func Defaults() []Option {
 	return []Option{
@@ -188,15 +196,16 @@ func WithDevelopmentDefaults() Option {
 }
 
 type Frank struct {
-	router     server.Router
-	cfg        *config.Config
-	log        logging.Logger
-	clients    *data.Clients
-	hooks      *hooks.Hooks
-	chiMux     chi.Router
-	di         di.Container
-	server     *server.Server
-	withServer bool
+	router        server.Router
+	cfg           *config.Config
+	log           logging.Logger
+	clients       *data.Clients
+	hooks         *hooks.Hooks
+	chiMux        chi.Router
+	di            di.Container
+	server        *server.Server
+	withServer    bool
+	disableRoutes bool
 }
 
 // New initializes and returns a new instance of Frank, setting up session store, repositories, services, and routes.
@@ -257,22 +266,37 @@ func New(flagsOpts *server.ConfigFlags, opts ...Option) (*Frank, error) {
 		f.clients = dataClients
 	}
 
-	// Run Migration
-	err := f.clients.RunAutoMigration()
-	if err != nil {
-		return nil, fmt.Errorf("failed to run auto migration: %w", err)
+	// Run Migration only if not skipped
+	if f.cfg.Database.AutoMigrate {
+		f.log.Info("Running auto migration...")
+		err := f.clients.RunAutoMigration()
+		if err != nil {
+			f.log.Error("Failed to run auto migration", zap.Error(err))
+			// Instead of failing completely, log the error and continue
+			// This allows the application to start even if migration fails
+			f.log.Warn("Continuing without migration - some features may not work properly")
+		} else {
+			f.log.Info("Auto migration completed successfully")
+		}
+	} else {
+		f.log.Info("Skipping auto migration")
 	}
 
-	// Init repos
-	f.di, err = di.NewContainer(f.clients, f.cfg, f.log)
+	// Init repos - ensure this happens after migration attempt
+	container, err := di.NewContainerWithData(f.cfg, f.log, f.clients)
 	if err != nil {
 		return nil, fmt.Errorf("failed to init container: %w", err)
 	}
+	f.di = container
 
 	// Initialize router if not set via options
 	if f.router == nil {
 		f.log.Info("Using Huma framework (default)")
-		f.router = routes.NewRoutes(f.di, f.chiMux)
+		f.router = routes.NewRouter(f.di, f.chiMux)
+	}
+
+	if !f.disableRoutes {
+		f.router.RegisterRoutes()
 	}
 
 	if f.withServer {
@@ -354,13 +378,13 @@ func LoadConfigWithFallback(configPath string, appCfg *config.Config) (*config.C
 // Start starts the Frank server (add this method for completeness)
 func (f *Frank) Start() error {
 	f.log.Info("Starting Frank systems")
-	return f.DI().Start()
+	return f.DI().Start(context.Background())
 }
 
 // Stop gracefully stops the Frank server
 func (f *Frank) Stop() error {
 	f.log.Info("Stopping Frank systems")
-	return f.di.Close()
+	return f.di.Stop(context.Background())
 }
 
 func (f *Frank) Router() server.Router {
@@ -372,10 +396,31 @@ func (f *Frank) DI() di.Container {
 }
 
 func (f *Frank) Server() *server.Server {
+	// Add nil checks to prevent panic
+	if f == nil {
+		return nil
+	}
+
 	if f.server == nil {
+		// Ensure dependencies are not nil before creating server
+		if f.router == nil || f.di == nil {
+			// Log the error if possible
+			if f.log != nil {
+				f.log.Error("Cannot create server: missing dependencies",
+					zap.Bool("router_nil", f.router == nil),
+					zap.Bool("di_nil", f.di == nil))
+			}
+			return nil
+		}
+
 		f.server = server.NewServer(f.router.Chi(), f.di.Config(), f.di.Logger())
 	}
 	return f.server
+}
+
+// IsReady checks if Frank is properly initialized and ready to use
+func (f *Frank) IsReady() bool {
+	return f != nil && f.router != nil && f.di != nil && f.cfg != nil && f.log != nil
 }
 
 /*

@@ -5,11 +5,11 @@ import (
 	"encoding/base64"
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/caarlos0/env/v6"
-	"github.com/juicycleff/frank/gen/designtypes"
 
 	"github.com/spf13/viper"
 )
@@ -152,16 +152,19 @@ type AuthConfig struct {
 	AllowBearerToken bool `json:"allow_bearer_token" yaml:"allow_bearer_token" mapstructure:"allow_bearer_token" env:"AUTH_ALLOW_BEARER_TOKEN" envDefault:"true"`
 
 	// Session configuration
+	SessionName      string        `json:"session_name" yaml:"session_name" mapstructure:"session_name" env:"AUTH_SESSION_NAME" envDefault:"frank_sid"`
 	SessionDuration  time.Duration `json:"session_duration" yaml:"session_duration" mapstructure:"session_duration" env:"AUTH_SESSION_DURATION" envDefault:"24h"`
 	SessionSecretKey string        `json:"session_secret_key" yaml:"session_secret_key" mapstructure:"session_secret_key" env:"AUTH_SESSION_SECRET_KEY"`
 	CookieDomain     string        `json:"cookie_domain" yaml:"cookie_domain" mapstructure:"cookie_domain" env:"AUTH_COOKIE_DOMAIN" envDefault:"localhost"`
 	CookieSecure     bool          `json:"cookie_secure" yaml:"cookie_secure" mapstructure:"cookie_secure" env:"AUTH_COOKIE_SECURE" envDefault:"false"`
 	CookieHTTPOnly   bool          `json:"cookie_http_only" yaml:"cookie_http_only" mapstructure:"cookie_http_only" env:"AUTH_COOKIE_HTTP_ONLY" envDefault:"true"`
+	CookieMaxAge     time.Duration `json:"cookie_max_age" yaml:"cookie_max_age" mapstructure:"cookie_max_age" env:"AUTH_COOKIE_MAX_AGE" envDefault:"500h"`
 	CookieSameSite   string        `json:"cookie_same_site" yaml:"cookie_same_site" mapstructure:"cookie_same_site" env:"AUTH_COOKIE_SAME_SITE" envDefault:"lax"`
 
 	// Email verification
 	RequireEmailVerification bool          `json:"require_email_verification" yaml:"require_email_verification" mapstructure:"require_email_verification" env:"AUTH_REQUIRE_EMAIL_VERIFICATION" envDefault:"true"`
 	EmailVerificationExpiry  time.Duration `json:"email_verification_expiry" yaml:"email_verification_expiry" mapstructure:"email_verification_expiry" env:"AUTH_EMAIL_VERIFICATION_EXPIRY" envDefault:"24h"`
+	SendWelcomeEmail         bool          `json:"send_welcome_email" yaml:"send_welcome_email" mapstructure:"send_welcome_email" env:"AUTH_SEND_WELCOME_EMAIL" envDefault:"true"`
 
 	// Default user role
 	DefaultUserRole   string `json:"default_user_role" yaml:"default_user_role" mapstructure:"default_user_role" env:"AUTH_DEFAULT_USER_ROLE" envDefault:"user"`
@@ -183,23 +186,25 @@ type AuthConfig struct {
 
 // PasswordPolicy defines password requirements
 type PasswordPolicy struct {
-	MinLength          int  `json:"password_min_length" yaml:"password_min_length" mapstructure:"password_min_length" env:"AUTH_PASSWORD_MIN_LENGTH" envDefault:"8"`
-	MaxLength          int  `json:"password_max_length" yaml:"password_max_length" mapstructure:"password_max_length" env:"AUTH_PASSWORD_MAX_LENGTH" envDefault:"100"`
-	RequireUppercase   bool `json:"password_require_uppercase" yaml:"password_require_uppercase" mapstructure:"password_require_uppercase" env:"AUTH_PASSWORD_REQUIRE_UPPERCASE" envDefault:"true"`
-	RequireLowercase   bool `json:"password_require_lowercase" yaml:"password_require_lowercase" mapstructure:"password_require_lowercase" env:"AUTH_PASSWORD_REQUIRE_LOWERCASE" envDefault:"true"`
-	RequireDigit       bool `json:"password_require_digit" yaml:"password_require_digit" mapstructure:"password_require_digit" env:"AUTH_PASSWORD_REQUIRE_DIGIT" envDefault:"true"`
-	RequireSpecial     bool `json:"password_require_special" yaml:"password_require_special" mapstructure:"password_require_special" env:"AUTH_PASSWORD_REQUIRE_SPECIAL" envDefault:"false"`
-	MaxReusedPasswords int  `json:"password_max_reused_passwords" yaml:"password_max_reused_passwords" mapstructure:"password_max_reused_passwords" env:"AUTH_PASSWORD_MAX_REUSED_PASSWORDS" envDefault:"3"`
-	PreventReuse       bool `json:"password_prevent_reuse" yaml:"password_prevent_reuse" mapstructure:"password_prevent_reuse" env:"AUTH_PASSWORD_PREVENT_REUSE" envDefault:"true"`
-	ExpiryDays         int  `json:"password_expiry_days" yaml:"password_expiry_days" mapstructure:"password_expiry_days" env:"AUTH_PASSWORD_EXPIRY_DAYS" envDefault:"90"`
+	MinLength          int    `json:"password_min_length" yaml:"password_min_length" mapstructure:"password_min_length" env:"AUTH_PASSWORD_MIN_LENGTH" envDefault:"8"`
+	MaxLength          int    `json:"password_max_length" yaml:"password_max_length" mapstructure:"password_max_length" env:"AUTH_PASSWORD_MAX_LENGTH" envDefault:"100"`
+	RequireUppercase   bool   `json:"password_require_uppercase" yaml:"password_require_uppercase" mapstructure:"password_require_uppercase" env:"AUTH_PASSWORD_REQUIRE_UPPERCASE" envDefault:"true"`
+	RequireLowercase   bool   `json:"password_require_lowercase" yaml:"password_require_lowercase" mapstructure:"password_require_lowercase" env:"AUTH_PASSWORD_REQUIRE_LOWERCASE" envDefault:"true"`
+	RequireDigit       bool   `json:"password_require_digit" yaml:"password_require_digit" mapstructure:"password_require_digit" env:"AUTH_PASSWORD_REQUIRE_DIGIT" envDefault:"true"`
+	RequireSpecial     bool   `json:"password_require_special" yaml:"password_require_special" mapstructure:"password_require_special" env:"AUTH_PASSWORD_REQUIRE_SPECIAL" envDefault:"false"`
+	MaxReusedPasswords int    `json:"password_max_reused_passwords" yaml:"password_max_reused_passwords" mapstructure:"password_max_reused_passwords" env:"AUTH_PASSWORD_MAX_REUSED_PASSWORDS" envDefault:"3"`
+	PreventReuse       bool   `json:"password_prevent_reuse" yaml:"password_prevent_reuse" mapstructure:"password_prevent_reuse" env:"AUTH_PASSWORD_PREVENT_REUSE" envDefault:"true"`
+	ExpiryDays         int    `json:"password_expiry_days" yaml:"password_expiry_days" mapstructure:"password_expiry_days" env:"AUTH_PASSWORD_EXPIRY_DAYS" envDefault:"90"`
+	BcryptCost         int    `json:"bcrypt_cost" yaml:"bcrypt_cost" mapstructure:"bcrypt_cost" env:"AUTH_PASSWORD_EXPIRY_BCRYPT_COST" envDefault:"12"`
+	Algorithm          string `json:"algorithm" yaml:"algorithm" mapstructure:"encryption_algorithm" env:"AUTH_PASSWORD_ALGORITHM" envDefault:"bcrypt"`
 }
 
 // OrganizationConfig defines organization settings
 type OrganizationConfig struct {
-	DefaultName     string                  `json:"default_name" yaml:"default_name" mapstructure:"default_name" env:"ORG_DEFAULT_NAME" envDefault:"Default"`
-	DefaultFeatures []string                `json:"default_features" yaml:"default_features" mapstructure:"default_features" env:"ORG_DEFAULT_FEATURES" envDefault:"email,sms,magic_link"`
-	SignupFields    []designtypes.FormField `json:"signup_fields" yaml:"signup_fields" mapstructure:"signup_fields"`
-	Verification    OrgVerificationConfig   `json:"verification" yaml:"verification" mapstructure:"verification"`
+	DefaultName     string                `json:"default_name" yaml:"default_name" mapstructure:"default_name" env:"ORG_DEFAULT_NAME" envDefault:"Frank"`
+	DefaultFeatures []string              `json:"default_features" yaml:"default_features" mapstructure:"default_features" env:"ORG_DEFAULT_FEATURES" envDefault:"email,sms,magic_link"`
+	SignupFields    []FormField           `json:"signup_fields" yaml:"signup_fields" mapstructure:"signup_fields"`
+	Verification    OrgVerificationConfig `json:"verification" yaml:"verification" mapstructure:"verification"`
 }
 
 // OrgVerificationConfig defines organization settings
@@ -210,7 +215,7 @@ type OrgVerificationConfig struct {
 
 // EmailConfig represents email-specific configuration
 type EmailConfig struct {
-	Provider      string            `json:"provider" yaml:"provider" mapstructure:"provider" env:"EMAIL_PROVIDER" envDefault:"provider"`
+	Provider      string            `json:"provider" yaml:"provider" mapstructure:"provider" env:"EMAIL_PROVIDER" envDefault:"noop"`
 	FromEmail     string            `json:"from_email" yaml:"from_email" mapstructure:"from_email" env:"EMAIL_FROM_EMAIL" envDefault:"no-reply@example.com"`
 	FromName      string            `json:"from_name" yaml:"from_name" mapstructure:"from_name" env:"EMAIL_FROM_NAME" envDefault:"Frank Auth"`
 	CustomHeaders map[string]string `json:"custom_headers" yaml:"custom_headers" mapstructure:"custom_headers"`
@@ -240,45 +245,46 @@ type EmailConfig struct {
 	TemplatesDir      string `json:"templates_dir" yaml:"templates_dir" mapstructure:"templates_dir" env:"EMAIL_TEMPLATES_DIR" envDefault:"./templates/email"`
 	DefaultLanguage   string `json:"default_language" yaml:"default_language" mapstructure:"default_language" env:"EMAIL_DEFAULT_LANGUAGE" envDefault:"en"`
 	EnableRemoteStore bool   `json:"enable_remote_store" yaml:"enable_remote_store" mapstructure:"enable_remote_store" env:"EMAIL_ENABLE_REMOTE_STORE" envDefault:"true"`
+	ForceLive         bool   `json:"force_live" yaml:"force_live" mapstructure:"force_live" env:"EMAIL_FORCE_LIVE" envDefault:"false"`
 }
 
 // SMTPConfig represents SMTP configuration
 type SMTPConfig struct {
-	Host     string `json:"host" yaml:"host" mapstructure:"host" env:"SMTP_HOST"`
-	Port     int    `json:"port" yaml:"port" mapstructure:"port" env:"SMTP_PORT" envDefault:"587"`
-	Username string `json:"username" yaml:"username" mapstructure:"username" env:"SMTP_USERNAME"`
-	Password string `json:"password" yaml:"password" mapstructure:"password" env:"SMTP_PASSWORD"`
-	UseTLS   bool   `json:"use_tls" yaml:"use_tls" mapstructure:"use_tls" env:"SMTP_USE_TLS" envDefault:"false"`
+	Host     string `json:"host" yaml:"host" mapstructure:"host" env:"EMAIL_SMTP_HOST"`
+	Port     int    `json:"port" yaml:"port" mapstructure:"port" env:"EMAIL_SMTP_PORT" envDefault:"587"`
+	Username string `json:"username" yaml:"username" mapstructure:"username" env:"EMAIL_SMTP_USERNAME"`
+	Password string `json:"password" yaml:"password" mapstructure:"password" env:"EMAIL_SMTP_PASSWORD"`
+	UseTLS   bool   `json:"use_tls" yaml:"use_tls" mapstructure:"use_tls" env:"EMAIL_SMTP_USE_TLS" envDefault:"false"`
 }
 
 // SendgridConfig represents Sendgrid configuration
 type SendgridConfig struct {
-	APIKey string `json:"api_key" yaml:"api_key" mapstructure:"api_key" env:"SENDGRID_API_KEY"`
+	APIKey string `json:"api_key" yaml:"api_key" mapstructure:"api_key" env:"EMAIL_SENDGRID_API_KEY"`
 }
 
 // MailerSendConfig represents ResendConfig configuration
 type MailerSendConfig struct {
-	APIKey string `json:"api_key" yaml:"api_key" mapstructure:"api_key" env:"MAILER_SEND_API_KEY"`
+	APIKey string `json:"api_key" yaml:"api_key" mapstructure:"api_key" env:"EMAIL_MAILER_SEND_API_KEY"`
 }
 
 // ResendConfig represents ResendConfig configuration
 type ResendConfig struct {
-	APIKey string `json:"api_key" yaml:"api_key" mapstructure:"api_key" env:"RESEND_API_KEY"`
+	APIKey string `json:"api_key" yaml:"api_key" mapstructure:"api_key" env:"EMAIL_RESEND_API_KEY"`
 }
 
 // MailgunConfig represents Mailgun configuration
 type MailgunConfig struct {
-	Domain      string `json:"domain" yaml:"domain" mapstructure:"domain" env:"MAILGUN_DOMAIN"`
-	APIKey      string `json:"api_key" yaml:"api_key" mapstructure:"api_key" env:"MAILGUN_API_KEY"`
-	APIEndpoint string `json:"api_endpoint" yaml:"api_endpoint" mapstructure:"api_endpoint" env:"MAILGUN_API_ENDPOINT" envDefault:"https://api.mailgun.net/v3"`
+	Domain      string `json:"domain" yaml:"domain" mapstructure:"domain" env:"EMAIL_MAILGUN_DOMAIN"`
+	APIKey      string `json:"api_key" yaml:"api_key" mapstructure:"api_key" env:"EMAIL_MAILGUN_API_KEY"`
+	APIEndpoint string `json:"api_endpoint" yaml:"api_endpoint" mapstructure:"api_endpoint" env:"EMAIL_MAILGUN_API_ENDPOINT" envDefault:"https://api.mailgun.net/v3"`
 }
 
 // AmazonSESConfig represents Amazon SES configuration
 type AmazonSESConfig struct {
-	Region           string `json:"region" yaml:"region" mapstructure:"region" env:"SES_REGION" envDefault:"us-east-1"`
-	AccessKey        string `json:"access_key" yaml:"access_key" mapstructure:"access_key" env:"SES_ACCESS_KEY_ID"`
-	SecretKey        string `json:"secret_key" yaml:"secret_key" mapstructure:"secret_key" env:"SES_SECRET_ACCESS_KEY"`
-	ConfigurationSet string `json:"configuration_set" yaml:"configuration_set" mapstructure:"configuration_set" env:"CONFIGURATION_SET"`
+	Region           string `json:"region" yaml:"region" mapstructure:"region" env:"EMAIL_SES_REGION" envDefault:"us-east-1"`
+	AccessKey        string `json:"access_key" yaml:"access_key" mapstructure:"access_key" env:"EMAIL_SES_ACCESS_KEY_ID"`
+	SecretKey        string `json:"secret_key" yaml:"secret_key" mapstructure:"secret_key" env:"EMAIL_SES_SECRET_ACCESS_KEY"`
+	ConfigurationSet string `json:"configuration_set" yaml:"configuration_set" mapstructure:"configuration_set" env:"EMAIL_SES_CONFIGURATION_SET"`
 }
 
 // SMSConfig represents SMS-specific configuration
@@ -294,6 +300,8 @@ type SMSConfig struct {
 	VerificationCodeLength int `yaml:"verification_code_length" json:"verification_code_length" env:"SMS_VERIFICATION_CODE_LENGTH" envDefault:"6" mapstructure:"verification_code_length"`
 	// VerificationCodeExpiry is the expiry time for verification codes
 	VerificationCodeExpiry time.Duration `yaml:"verification_code_expiry" json:"verification_code_expiry" env:"SMS_VERIFICATION_CODE_EXPIRY" envDefault:"10m" mapstructure:"verification_code_expiry"`
+	TemplatesDir           string        `json:"templates_dir" yaml:"templates_dir" mapstructure:"templates_dir" env:"SMS_TEMPLATES_DIR" envDefault:"./templates/sms"`
+
 	// Twilio configuration
 	Twilio TwilioConfig `yaml:"twilio" json:"twilio" mapstructure:"twilio"`
 	// AWS SNS configuration
@@ -578,25 +586,25 @@ func Load(configPaths ...string) (*Config, error) {
 		config = &Config{}
 		v := viper.New()
 
-		// Set configuration defaults
+		// Step 1: Set configuration defaults first
 		SetDefaults(v)
 
-		// Parse environment variables into the struct
-		if err := env.Parse(config); err != nil {
-			loadErr = fmt.Errorf("error passring config env: %w", err)
-			return
+		// Step 2: Load .env file if it exists
+		if err := loadDotEnvFile(); err != nil {
+			fmt.Printf("Warning: Error loading .env file: %v\n", err)
 		}
 
-		// Load environment variables
-		LoadEnvironment(v)
+		// Step 3: Configure viper for environment variables
+		v.SetEnvPrefix(envPrefix) // "FRANK"
+		v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+		v.AutomaticEnv()
 
-		// Read configuration files if provided
+		// Step 4: Read configuration files if provided
 		if len(configPaths) > 0 {
 			for _, path := range configPaths {
 				v.AddConfigPath(path)
 			}
 		} else {
-			// Default config paths
 			v.AddConfigPath(".")
 			v.AddConfigPath("./config")
 			v.AddConfigPath("/etc/frank")
@@ -612,23 +620,27 @@ func Load(configPaths ...string) (*Config, error) {
 			}
 		}
 
+		// Step 5: Unmarshal viper config into struct
 		if err := v.Unmarshal(config); err != nil {
 			loadErr = fmt.Errorf("error unmarshaling config: %w", err)
 			return
 		}
 
-		// Validate required configuration
+		// Step 6: Parse environment variables directly (this overrides viper values)
+		// This is where your env: tags take effect
+		if err := env.Parse(config); err != nil {
+			loadErr = fmt.Errorf("error parsing config env: %w", err)
+			return
+		}
+
+		// Step 7: Validate required configuration
 		if err := validateConfig(config); err != nil {
 			loadErr = err
 			return
 		}
 	})
 
-	if loadErr != nil {
-		return nil, loadErr
-	}
-
-	return config, nil
+	return config, loadErr
 }
 
 // validateConfig validates the required configuration fields

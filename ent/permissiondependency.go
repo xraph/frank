@@ -27,6 +27,8 @@ type PermissionDependency struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// DeletedAt holds the value of the "deleted_at" field.
+	DeletedAt time.Time `json:"deleted_at,omitempty"`
 	// The permission that depends on another
 	PermissionID xid.ID `json:"permission_id,omitempty"`
 	// The permission that is required
@@ -87,7 +89,7 @@ func (*PermissionDependency) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case permissiondependency.FieldDependencyType, permissiondependency.FieldCondition, permissiondependency.FieldCreatedBy:
 			values[i] = new(sql.NullString)
-		case permissiondependency.FieldCreatedAt, permissiondependency.FieldUpdatedAt:
+		case permissiondependency.FieldCreatedAt, permissiondependency.FieldUpdatedAt, permissiondependency.FieldDeletedAt:
 			values[i] = new(sql.NullTime)
 		case permissiondependency.FieldID, permissiondependency.FieldPermissionID, permissiondependency.FieldRequiredPermissionID:
 			values[i] = new(xid.ID)
@@ -123,6 +125,12 @@ func (pd *PermissionDependency) assignValues(columns []string, values []any) err
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
 				pd.UpdatedAt = value.Time
+			}
+		case permissiondependency.FieldDeletedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field deleted_at", values[i])
+			} else if value.Valid {
+				pd.DeletedAt = value.Time
 			}
 		case permissiondependency.FieldPermissionID:
 			if value, ok := values[i].(*xid.ID); !ok {
@@ -211,6 +219,9 @@ func (pd *PermissionDependency) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
 	builder.WriteString(pd.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("deleted_at=")
+	builder.WriteString(pd.DeletedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("permission_id=")
 	builder.WriteString(fmt.Sprintf("%v", pd.PermissionID))

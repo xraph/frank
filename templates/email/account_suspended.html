@@ -1,0 +1,368 @@
+<!-- 1. Account Suspension Email Template -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Suspended - {{.app_name}}</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; padding: 20px 0; border-bottom: 2px solid #f0f0f0; }
+        .content { padding: 30px 0; }
+        .suspension-alert { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 25px; border-radius: 8px; margin: 20px 0; text-align: center; }
+        .button { display: inline-block; padding: 12px 30px; background: #dc3545; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }
+        .footer { text-align: center; padding: 20px 0; border-top: 1px solid #f0f0f0; color: #666; font-size: 14px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>{{.app_name}}</h1>
+        <h2>🚫 Account Suspended</h2>
+    </div>
+    <div class="content">
+        <div class="suspension-alert">
+            <h3>Your Account Has Been Suspended</h3>
+            <p><strong>Reason:</strong> {{.suspension_reason}}</p>
+            <p><strong>Suspended On:</strong> {{.suspended_at}}</p>
+        </div>
+        <p>Hello {{.user_name}},</p>
+        <p>Your {{.app_name}} account has been temporarily suspended due to {{.suspension_reason}}.</p>
+        {{if .automatic_suspension}}
+        <p>This was an automatic suspension triggered by our security systems.</p>
+        {{end}}
+        <h4>What this means:</h4>
+        <ul>
+            <li>You cannot access your account or any associated services</li>
+            <li>Your data remains secure and unchanged</li>
+            <li>{{if .temporary}}This suspension may be temporary{{else}}This requires manual review{{end}}</li>
+        </ul>
+        <h4>Next Steps:</h4>
+        <ol>
+            <li>Review our Terms of Service and Community Guidelines</li>
+            <li>Contact our support team to discuss the suspension</li>
+            <li>Provide any requested documentation or information</li>
+        </ol>
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="{{.appeal_url}}" class="button">Appeal Suspension</a>
+        </div>
+    </div>
+    <div class="footer">
+        <p>Reference ID: {{.reference_id}}</p>
+        <p><a href="{{.support_url}}">Contact Support</a> | <a href="{{.terms_url}}">Terms of Service</a></p>
+    </div>
+</div>
+</body>
+</html>
+
+<!-- 2. Trial Ending Soon Email Template -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Trial Ends Soon - {{.app_name}}</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; padding: 20px 0; border-bottom: 2px solid #f0f0f0; }
+        .content { padding: 30px 0; }
+        .trial-warning { background: #fff3cd; border: 1px solid #ffeaa7; padding: 25px; border-radius: 8px; margin: 20px 0; text-align: center; }
+        .button { display: inline-block; padding: 15px 35px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }
+        .features { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .footer { text-align: center; padding: 20px 0; border-top: 1px solid #f0f0f0; color: #666; font-size: 14px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>{{.app_name}}</h1>
+        <h2>⏰ Your Trial Ends Soon</h2>
+    </div>
+    <div class="content">
+        <div class="trial-warning">
+            <h3>{{.days_remaining}} Days Left in Your Trial</h3>
+            <p>Your free trial expires on <strong>{{.trial_end_date}}</strong></p>
+        </div>
+        <p>Hello {{.user_name}},</p>
+        <p>Your {{.app_name}} free trial is ending soon. Don't lose access to your authentication service!</p>
+        <div class="features">
+            <h4>What you'll lose access to:</h4>
+            <ul>
+                <li>{{.current_users}} active users</li>
+                <li>{{.organizations_count}} organizations</li>
+                <li>API integrations and webhooks</li>
+                <li>Advanced security features</li>
+                <li>24/7 priority support</li>
+            </ul>
+        </div>
+        <div style="text-align: center; margin: 30px 0;">
+            <p><strong>Continue your journey with {{.app_name}}</strong></p>
+            <a href="{{.upgrade_url}}" class="button">Choose Your Plan</a>
+        </div>
+        <p>Questions? Our team is here to help you find the perfect plan.</p>
+    </div>
+    <div class="footer">
+        <p><a href="{{.billing_url}}">Billing Settings</a> | <a href="{{.support_url}}">Contact Sales</a></p>
+    </div>
+</div>
+</body>
+</html>
+
+<!-- 3. MFA Setup Completed Email Template -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Two-Factor Authentication Enabled - {{.app_name}}</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; padding: 20px 0; border-bottom: 2px solid #f0f0f0; }
+        .content { padding: 30px 0; }
+        .security-success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 25px; border-radius: 8px; margin: 20px 0; text-align: center; }
+        .mfa-details { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .button { display: inline-block; padding: 12px 30px; background: #28a745; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }
+        .footer { text-align: center; padding: 20px 0; border-top: 1px solid #f0f0f0; color: #666; font-size: 14px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>{{.app_name}}</h1>
+        <h2>🔐 MFA Successfully Enabled</h2>
+    </div>
+    <div class="content">
+        <div class="security-success">
+            <h3>✅ Two-Factor Authentication is Now Active</h3>
+            <p>Your account security has been significantly enhanced!</p>
+        </div>
+        <p>Hello {{.user_name}},</p>
+        <p>Great news! You've successfully enabled two-factor authentication on your {{.app_name}} account.</p>
+        <div class="mfa-details">
+            <h4>MFA Method Configured:</h4>
+            <p><strong>Method:</strong> {{.mfa_method}}</p>
+            <p><strong>Device:</strong> {{.device_name}}</p>
+            <p><strong>Enabled On:</strong> {{.enabled_at}}</p>
+            {{if .backup_codes_generated}}
+            <p><strong>Backup Codes:</strong> {{.backup_codes_count}} codes generated</p>
+            {{end}}
+        </div>
+        <h4>What happens next:</h4>
+        <ul>
+            <li>You'll be prompted for a code during sign-in</li>
+            <li>Your account is now much more secure</li>
+            <li>Keep your backup codes in a safe place</li>
+            <li>You can manage MFA settings anytime</li>
+        </ul>
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="{{.security_settings_url}}" class="button">Manage Security Settings</a>
+        </div>
+    </div>
+    <div class="footer">
+        <p>If you didn't enable MFA, <a href="{{.security_url}}">secure your account immediately</a>.</p>
+    </div>
+</div>
+</body>
+</html>
+
+<!-- 4. API Rate Limit Exceeded Email Template -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Rate Limit Exceeded - {{.app_name}}</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; padding: 20px 0; border-bottom: 2px solid #f0f0f0; }
+        .content { padding: 30px 0; }
+        .rate-limit-alert { background: #fff3cd; border: 1px solid #ffeaa7; padding: 25px; border-radius: 8px; margin: 20px 0; }
+        .usage-stats { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .button { display: inline-block; padding: 12px 30px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }
+        .footer { text-align: center; padding: 20px 0; border-top: 1px solid #f0f0f0; color: #666; font-size: 14px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>{{.app_name}}</h1>
+        <h2>⚠️ API Rate Limit Exceeded</h2>
+    </div>
+    <div class="content">
+        <div class="rate-limit-alert">
+            <h3>Your API requests have been temporarily limited</h3>
+            <p><strong>Limit reached:</strong> {{.requests_per_period}} requests per {{.period}}</p>
+        </div>
+        <p>Hello {{.user_name}},</p>
+        <p>Your {{.app_name}} API usage has exceeded the rate limits for your current plan.</p>
+        <div class="usage-stats">
+            <h4>Current Usage:</h4>
+            <ul>
+                <li><strong>Requests this {{.period}}:</strong> {{.current_usage}}</li>
+                <li><strong>Plan limit:</strong> {{.plan_limit}}</li>
+                <li><strong>Overage:</strong> {{.overage}} requests</li>
+                <li><strong>Next reset:</strong> {{.reset_time}}</li>
+            </ul>
+        </div>
+        <h4>What this means:</h4>
+        <ul>
+            <li>Some API requests may be rejected</li>
+            <li>Your applications may experience delays</li>
+            <li>Service will resume at the next reset period</li>
+        </ul>
+        <h4>Recommended actions:</h4>
+        <ol>
+            <li>Implement request caching and optimization</li>
+            <li>Consider upgrading your plan for higher limits</li>
+            <li>Review your API usage patterns</li>
+        </ol>
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="{{.upgrade_plan_url}}" class="button">Upgrade Plan</a>
+        </div>
+    </div>
+    <div class="footer">
+        <p><a href="{{.usage_dashboard_url}}">View Usage Dashboard</a> | <a href="{{.api_docs_url}}">API Documentation</a></p>
+    </div>
+</div>
+</body>
+</html>
+
+<!-- 5. Data Export Completed Email Template -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Export Ready - {{.app_name}}</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; padding: 20px 0; border-bottom: 2px solid #f0f0f0; }
+        .content { padding: 30px 0; }
+        .export-success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 25px; border-radius: 8px; margin: 20px 0; text-align: center; }
+        .download-details { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .button { display: inline-block; padding: 15px 35px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }
+        .security-notice { background: #e2e3e5; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .footer { text-align: center; padding: 20px 0; border-top: 1px solid #f0f0f0; color: #666; font-size: 14px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>{{.app_name}}</h1>
+        <h2>📦 Your Data Export is Ready</h2>
+    </div>
+    <div class="content">
+        <div class="export-success">
+            <h3>✅ Export Completed Successfully</h3>
+            <p>Your requested data export has been generated and is ready for download.</p>
+        </div>
+        <p>Hello {{.user_name}},</p>
+        <p>We've successfully prepared your data export as requested on {{.request_date}}.</p>
+        <div class="download-details">
+            <h4>Export Details:</h4>
+            <ul>
+                <li><strong>Export Type:</strong> {{.export_type}}</li>
+                <li><strong>File Size:</strong> {{.file_size}}</li>
+                <li><strong>Format:</strong> {{.file_format}}</li>
+                <li><strong>Generated:</strong> {{.generated_at}}</li>
+                <li><strong>Expires:</strong> {{.expires_at}}</li>
+            </ul>
+        </div>
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="{{.download_url}}" class="button">Download Your Data</a>
+        </div>
+        <div class="security-notice">
+            <h4>🔒 Security Information:</h4>
+            <ul>
+                <li>This download link expires in {{.expires_in}}</li>
+                <li>The file is encrypted and password-protected</li>
+                <li>Only you can access this download</li>
+                <li>We recommend downloading immediately</li>
+            </ul>
+        </div>
+        <p><strong>Password:</strong> The password was sent to you separately for security.</p>
+    </div>
+    <div class="footer">
+        <p>Export ID: {{.export_id}}</p>
+        <p>If you didn't request this export, <a href="{{.support_url}}">contact support</a> immediately.</p>
+    </div>
+</div>
+</body>
+</html>
+
+<!-- 6. Scheduled Maintenance Notification Email Template -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scheduled Maintenance - {{.app_name}}</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; padding: 20px 0; border-bottom: 2px solid #f0f0f0; }
+        .content { padding: 30px 0; }
+        .maintenance-notice { background: #d1ecf1; border: 1px solid #bee5eb; padding: 25px; border-radius: 8px; margin: 20px 0; text-align: center; }
+        .timeline { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .impact-info { background: #fff3cd; border: 1px solid #ffeaa7; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .footer { text-align: center; padding: 20px 0; border-top: 1px solid #f0f0f0; color: #666; font-size: 14px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>{{.app_name}}</h1>
+        <h2>🔧 Scheduled Maintenance Notice</h2>
+    </div>
+    <div class="content">
+        <div class="maintenance-notice">
+            <h3>Upcoming System Maintenance</h3>
+            <p><strong>{{.maintenance_date}} at {{.maintenance_time}}</strong></p>
+            <p>Duration: {{.estimated_duration}}</p>
+        </div>
+        <p>Hello {{.user_name}},</p>
+        <p>We're writing to inform you about upcoming scheduled maintenance on our {{.app_name}} platform.</p>
+        <div class="timeline">
+            <h4>📅 Maintenance Schedule:</h4>
+            <ul>
+                <li><strong>Start:</strong> {{.start_time}}</li>
+                <li><strong>End:</strong> {{.end_time}}</li>
+                <li><strong>Timezone:</strong> {{.timezone}}</li>
+                <li><strong>Type:</strong> {{.maintenance_type}}</li>
+            </ul>
+        </div>
+        <div class="impact-info">
+            <h4>⚠️ Expected Impact:</h4>
+            <ul>
+                {{range .affected_services}}
+                <li>{{.}}</li>
+                {{end}}
+            </ul>
+            <p><strong>What to expect:</strong> {{.impact_description}}</p>
+        </div>
+        <h4>🎯 What we're improving:</h4>
+        <ul>
+            {{range .improvements}}
+            <li>{{.}}</li>
+            {{end}}
+        </ul>
+        <h4>📋 Preparation steps:</h4>
+        <ol>
+            <li>Plan around the maintenance window</li>
+            <li>Cache authentication tokens if possible</li>
+            <li>Monitor our status page for updates</li>
+            <li>Contact support for urgent concerns</li>
+        </ol>
+    </div>
+    <div class="footer">
+        <p><a href="{{.status_page_url}}">System Status</a> | <a href="{{.support_url}}">Contact Support</a></p>
+        <p>We apologize for any inconvenience and appreciate your patience.</p>
+    </div>
+</div>
+</body>
+</html>

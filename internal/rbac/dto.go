@@ -116,6 +116,7 @@ type Role struct {
 	Priority       int              `json:"priority,omitempty"`
 	Color          string           `json:"color,omitempty"`
 	Active         bool             `json:"active"`
+	ParentID       *xid.ID          `json:"parent_id,omitempty"`
 }
 
 // Permission represents a permission entity

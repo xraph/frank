@@ -20,6 +20,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/juicycleff/frank/ent/apikey"
+	"github.com/juicycleff/frank/ent/audit"
 	"github.com/juicycleff/frank/ent/emailtemplate"
 	"github.com/juicycleff/frank/ent/featureflag"
 	"github.com/juicycleff/frank/ent/identityprovider"
@@ -36,6 +37,7 @@ import (
 	"github.com/juicycleff/frank/ent/permissiondependency"
 	"github.com/juicycleff/frank/ent/role"
 	"github.com/juicycleff/frank/ent/session"
+	"github.com/juicycleff/frank/ent/smstemplate"
 	"github.com/juicycleff/frank/ent/ssostate"
 	"github.com/juicycleff/frank/ent/user"
 	"github.com/juicycleff/frank/ent/userpermission"
@@ -54,6 +56,8 @@ type Client struct {
 	Schema *migrate.Schema
 	// ApiKey is the client for interacting with the ApiKey builders.
 	ApiKey *ApiKeyClient
+	// Audit is the client for interacting with the Audit builders.
+	Audit *AuditClient
 	// EmailTemplate is the client for interacting with the EmailTemplate builders.
 	EmailTemplate *EmailTemplateClient
 	// FeatureFlag is the client for interacting with the FeatureFlag builders.
@@ -84,6 +88,8 @@ type Client struct {
 	PermissionDependency *PermissionDependencyClient
 	// Role is the client for interacting with the Role builders.
 	Role *RoleClient
+	// SMSTemplate is the client for interacting with the SMSTemplate builders.
+	SMSTemplate *SMSTemplateClient
 	// SSOState is the client for interacting with the SSOState builders.
 	SSOState *SSOStateClient
 	// Session is the client for interacting with the Session builders.
@@ -116,6 +122,7 @@ func NewClient(opts ...Option) *Client {
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.ApiKey = NewApiKeyClient(c.config)
+	c.Audit = NewAuditClient(c.config)
 	c.EmailTemplate = NewEmailTemplateClient(c.config)
 	c.FeatureFlag = NewFeatureFlagClient(c.config)
 	c.IdentityProvider = NewIdentityProviderClient(c.config)
@@ -131,6 +138,7 @@ func (c *Client) init() {
 	c.Permission = NewPermissionClient(c.config)
 	c.PermissionDependency = NewPermissionDependencyClient(c.config)
 	c.Role = NewRoleClient(c.config)
+	c.SMSTemplate = NewSMSTemplateClient(c.config)
 	c.SSOState = NewSSOStateClient(c.config)
 	c.Session = NewSessionClient(c.config)
 	c.User = NewUserClient(c.config)
@@ -239,6 +247,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ctx:                  ctx,
 		config:               cfg,
 		ApiKey:               NewApiKeyClient(cfg),
+		Audit:                NewAuditClient(cfg),
 		EmailTemplate:        NewEmailTemplateClient(cfg),
 		FeatureFlag:          NewFeatureFlagClient(cfg),
 		IdentityProvider:     NewIdentityProviderClient(cfg),
@@ -254,6 +263,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		Permission:           NewPermissionClient(cfg),
 		PermissionDependency: NewPermissionDependencyClient(cfg),
 		Role:                 NewRoleClient(cfg),
+		SMSTemplate:          NewSMSTemplateClient(cfg),
 		SSOState:             NewSSOStateClient(cfg),
 		Session:              NewSessionClient(cfg),
 		User:                 NewUserClient(cfg),
@@ -282,6 +292,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ctx:                  ctx,
 		config:               cfg,
 		ApiKey:               NewApiKeyClient(cfg),
+		Audit:                NewAuditClient(cfg),
 		EmailTemplate:        NewEmailTemplateClient(cfg),
 		FeatureFlag:          NewFeatureFlagClient(cfg),
 		IdentityProvider:     NewIdentityProviderClient(cfg),
@@ -297,6 +308,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		Permission:           NewPermissionClient(cfg),
 		PermissionDependency: NewPermissionDependencyClient(cfg),
 		Role:                 NewRoleClient(cfg),
+		SMSTemplate:          NewSMSTemplateClient(cfg),
 		SSOState:             NewSSOStateClient(cfg),
 		Session:              NewSessionClient(cfg),
 		User:                 NewUserClient(cfg),
@@ -334,10 +346,10 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.ApiKey, c.EmailTemplate, c.FeatureFlag, c.IdentityProvider, c.MFA,
+		c.ApiKey, c.Audit, c.EmailTemplate, c.FeatureFlag, c.IdentityProvider, c.MFA,
 		c.Membership, c.OAuthAuthorization, c.OAuthClient, c.OAuthScope, c.OAuthToken,
 		c.Organization, c.OrganizationFeature, c.Passkey, c.Permission,
-		c.PermissionDependency, c.Role, c.SSOState, c.Session, c.User,
+		c.PermissionDependency, c.Role, c.SMSTemplate, c.SSOState, c.Session, c.User,
 		c.UserPermission, c.UserRole, c.Verification, c.Webhook, c.WebhookEvent,
 	} {
 		n.Use(hooks...)
@@ -348,10 +360,10 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.ApiKey, c.EmailTemplate, c.FeatureFlag, c.IdentityProvider, c.MFA,
+		c.ApiKey, c.Audit, c.EmailTemplate, c.FeatureFlag, c.IdentityProvider, c.MFA,
 		c.Membership, c.OAuthAuthorization, c.OAuthClient, c.OAuthScope, c.OAuthToken,
 		c.Organization, c.OrganizationFeature, c.Passkey, c.Permission,
-		c.PermissionDependency, c.Role, c.SSOState, c.Session, c.User,
+		c.PermissionDependency, c.Role, c.SMSTemplate, c.SSOState, c.Session, c.User,
 		c.UserPermission, c.UserRole, c.Verification, c.Webhook, c.WebhookEvent,
 	} {
 		n.Intercept(interceptors...)
@@ -363,6 +375,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
 	case *ApiKeyMutation:
 		return c.ApiKey.mutate(ctx, m)
+	case *AuditMutation:
+		return c.Audit.mutate(ctx, m)
 	case *EmailTemplateMutation:
 		return c.EmailTemplate.mutate(ctx, m)
 	case *FeatureFlagMutation:
@@ -393,6 +407,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.PermissionDependency.mutate(ctx, m)
 	case *RoleMutation:
 		return c.Role.mutate(ctx, m)
+	case *SMSTemplateMutation:
+		return c.SMSTemplate.mutate(ctx, m)
 	case *SSOStateMutation:
 		return c.SSOState.mutate(ctx, m)
 	case *SessionMutation:
@@ -579,6 +595,187 @@ func (c *ApiKeyClient) mutate(ctx context.Context, m *ApiKeyMutation) (Value, er
 	}
 }
 
+// AuditClient is a client for the Audit schema.
+type AuditClient struct {
+	config
+}
+
+// NewAuditClient returns a client for the Audit from the given config.
+func NewAuditClient(c config) *AuditClient {
+	return &AuditClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `audit.Hooks(f(g(h())))`.
+func (c *AuditClient) Use(hooks ...Hook) {
+	c.hooks.Audit = append(c.hooks.Audit, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `audit.Intercept(f(g(h())))`.
+func (c *AuditClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Audit = append(c.inters.Audit, interceptors...)
+}
+
+// Create returns a builder for creating a Audit entity.
+func (c *AuditClient) Create() *AuditCreate {
+	mutation := newAuditMutation(c.config, OpCreate)
+	return &AuditCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Audit entities.
+func (c *AuditClient) CreateBulk(builders ...*AuditCreate) *AuditCreateBulk {
+	return &AuditCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *AuditClient) MapCreateBulk(slice any, setFunc func(*AuditCreate, int)) *AuditCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &AuditCreateBulk{err: fmt.Errorf("calling to AuditClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*AuditCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &AuditCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Audit.
+func (c *AuditClient) Update() *AuditUpdate {
+	mutation := newAuditMutation(c.config, OpUpdate)
+	return &AuditUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *AuditClient) UpdateOne(a *Audit) *AuditUpdateOne {
+	mutation := newAuditMutation(c.config, OpUpdateOne, withAudit(a))
+	return &AuditUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *AuditClient) UpdateOneID(id xid.ID) *AuditUpdateOne {
+	mutation := newAuditMutation(c.config, OpUpdateOne, withAuditID(id))
+	return &AuditUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Audit.
+func (c *AuditClient) Delete() *AuditDelete {
+	mutation := newAuditMutation(c.config, OpDelete)
+	return &AuditDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *AuditClient) DeleteOne(a *Audit) *AuditDeleteOne {
+	return c.DeleteOneID(a.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *AuditClient) DeleteOneID(id xid.ID) *AuditDeleteOne {
+	builder := c.Delete().Where(audit.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &AuditDeleteOne{builder}
+}
+
+// Query returns a query builder for Audit.
+func (c *AuditClient) Query() *AuditQuery {
+	return &AuditQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeAudit},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Audit entity by its id.
+func (c *AuditClient) Get(ctx context.Context, id xid.ID) (*Audit, error) {
+	return c.Query().Where(audit.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *AuditClient) GetX(ctx context.Context, id xid.ID) *Audit {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryUser queries the user edge of a Audit.
+func (c *AuditClient) QueryUser(a *Audit) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := a.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(audit.Table, audit.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, audit.UserTable, audit.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryOrganization queries the organization edge of a Audit.
+func (c *AuditClient) QueryOrganization(a *Audit) *OrganizationQuery {
+	query := (&OrganizationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := a.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(audit.Table, audit.FieldID, id),
+			sqlgraph.To(organization.Table, organization.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, audit.OrganizationTable, audit.OrganizationColumn),
+		)
+		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QuerySession queries the session edge of a Audit.
+func (c *AuditClient) QuerySession(a *Audit) *SessionQuery {
+	query := (&SessionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := a.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(audit.Table, audit.FieldID, id),
+			sqlgraph.To(session.Table, session.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, audit.SessionTable, audit.SessionColumn),
+		)
+		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *AuditClient) Hooks() []Hook {
+	return c.hooks.Audit
+}
+
+// Interceptors returns the client interceptors.
+func (c *AuditClient) Interceptors() []Interceptor {
+	return c.inters.Audit
+}
+
+func (c *AuditClient) mutate(ctx context.Context, m *AuditMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&AuditCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&AuditUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&AuditUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&AuditDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Audit mutation op: %q", m.Op())
+	}
+}
+
 // EmailTemplateClient is a client for the EmailTemplate schema.
 type EmailTemplateClient struct {
 	config
@@ -685,6 +882,22 @@ func (c *EmailTemplateClient) GetX(ctx context.Context, id xid.ID) *EmailTemplat
 		panic(err)
 	}
 	return obj
+}
+
+// QueryOrganization queries the organization edge of a EmailTemplate.
+func (c *EmailTemplateClient) QueryOrganization(et *EmailTemplate) *OrganizationQuery {
+	query := (&OrganizationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := et.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(emailtemplate.Table, emailtemplate.FieldID, id),
+			sqlgraph.To(organization.Table, organization.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, emailtemplate.OrganizationTable, emailtemplate.OrganizationColumn),
+		)
+		fromV = sqlgraph.Neighbors(et.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
 }
 
 // Hooks returns the client hooks.
@@ -1308,6 +1521,22 @@ func (c *MembershipClient) QueryRole(m *Membership) *RoleQuery {
 			sqlgraph.From(membership.Table, membership.FieldID, id),
 			sqlgraph.To(role.Table, role.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, membership.RoleTable, membership.RoleColumn),
+		)
+		fromV = sqlgraph.Neighbors(m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryInviter queries the inviter edge of a Membership.
+func (c *MembershipClient) QueryInviter(m *Membership) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(membership.Table, membership.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, membership.InviterTable, membership.InviterColumn),
 		)
 		fromV = sqlgraph.Neighbors(m.driver.Dialect(), step)
 		return fromV, nil
@@ -2220,6 +2449,38 @@ func (c *OrganizationClient) QueryMemberships(o *Organization) *MembershipQuery 
 	return query
 }
 
+// QuerySmsTemplates queries the sms_templates edge of a Organization.
+func (c *OrganizationClient) QuerySmsTemplates(o *Organization) *SMSTemplateQuery {
+	query := (&SMSTemplateClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := o.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(organization.Table, organization.FieldID, id),
+			sqlgraph.To(smstemplate.Table, smstemplate.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, organization.SmsTemplatesTable, organization.SmsTemplatesColumn),
+		)
+		fromV = sqlgraph.Neighbors(o.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryEmailTemplates queries the email_templates edge of a Organization.
+func (c *OrganizationClient) QueryEmailTemplates(o *Organization) *EmailTemplateQuery {
+	query := (&EmailTemplateClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := o.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(organization.Table, organization.FieldID, id),
+			sqlgraph.To(emailtemplate.Table, emailtemplate.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, organization.EmailTemplatesTable, organization.EmailTemplatesColumn),
+		)
+		fromV = sqlgraph.Neighbors(o.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryAPIKeys queries the api_keys edge of a Organization.
 func (c *OrganizationClient) QueryAPIKeys(o *Organization) *ApiKeyQuery {
 	query := (&ApiKeyClient{config: c.config}).Query()
@@ -2341,6 +2602,22 @@ func (c *OrganizationClient) QueryUserPermissionContexts(o *Organization) *UserP
 			sqlgraph.From(organization.Table, organization.FieldID, id),
 			sqlgraph.To(userpermission.Table, userpermission.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, true, organization.UserPermissionContextsTable, organization.UserPermissionContextsColumn),
+		)
+		fromV = sqlgraph.Neighbors(o.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAuditLogs queries the audit_logs edge of a Organization.
+func (c *OrganizationClient) QueryAuditLogs(o *Organization) *AuditQuery {
+	query := (&AuditClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := o.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(organization.Table, organization.FieldID, id),
+			sqlgraph.To(audit.Table, audit.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, organization.AuditLogsTable, organization.AuditLogsColumn),
 		)
 		fromV = sqlgraph.Neighbors(o.driver.Dialect(), step)
 		return fromV, nil
@@ -3326,6 +3603,155 @@ func (c *RoleClient) mutate(ctx context.Context, m *RoleMutation) (Value, error)
 	}
 }
 
+// SMSTemplateClient is a client for the SMSTemplate schema.
+type SMSTemplateClient struct {
+	config
+}
+
+// NewSMSTemplateClient returns a client for the SMSTemplate from the given config.
+func NewSMSTemplateClient(c config) *SMSTemplateClient {
+	return &SMSTemplateClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `smstemplate.Hooks(f(g(h())))`.
+func (c *SMSTemplateClient) Use(hooks ...Hook) {
+	c.hooks.SMSTemplate = append(c.hooks.SMSTemplate, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `smstemplate.Intercept(f(g(h())))`.
+func (c *SMSTemplateClient) Intercept(interceptors ...Interceptor) {
+	c.inters.SMSTemplate = append(c.inters.SMSTemplate, interceptors...)
+}
+
+// Create returns a builder for creating a SMSTemplate entity.
+func (c *SMSTemplateClient) Create() *SMSTemplateCreate {
+	mutation := newSMSTemplateMutation(c.config, OpCreate)
+	return &SMSTemplateCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of SMSTemplate entities.
+func (c *SMSTemplateClient) CreateBulk(builders ...*SMSTemplateCreate) *SMSTemplateCreateBulk {
+	return &SMSTemplateCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *SMSTemplateClient) MapCreateBulk(slice any, setFunc func(*SMSTemplateCreate, int)) *SMSTemplateCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &SMSTemplateCreateBulk{err: fmt.Errorf("calling to SMSTemplateClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*SMSTemplateCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &SMSTemplateCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for SMSTemplate.
+func (c *SMSTemplateClient) Update() *SMSTemplateUpdate {
+	mutation := newSMSTemplateMutation(c.config, OpUpdate)
+	return &SMSTemplateUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *SMSTemplateClient) UpdateOne(st *SMSTemplate) *SMSTemplateUpdateOne {
+	mutation := newSMSTemplateMutation(c.config, OpUpdateOne, withSMSTemplate(st))
+	return &SMSTemplateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *SMSTemplateClient) UpdateOneID(id xid.ID) *SMSTemplateUpdateOne {
+	mutation := newSMSTemplateMutation(c.config, OpUpdateOne, withSMSTemplateID(id))
+	return &SMSTemplateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for SMSTemplate.
+func (c *SMSTemplateClient) Delete() *SMSTemplateDelete {
+	mutation := newSMSTemplateMutation(c.config, OpDelete)
+	return &SMSTemplateDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *SMSTemplateClient) DeleteOne(st *SMSTemplate) *SMSTemplateDeleteOne {
+	return c.DeleteOneID(st.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *SMSTemplateClient) DeleteOneID(id xid.ID) *SMSTemplateDeleteOne {
+	builder := c.Delete().Where(smstemplate.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &SMSTemplateDeleteOne{builder}
+}
+
+// Query returns a query builder for SMSTemplate.
+func (c *SMSTemplateClient) Query() *SMSTemplateQuery {
+	return &SMSTemplateQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeSMSTemplate},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a SMSTemplate entity by its id.
+func (c *SMSTemplateClient) Get(ctx context.Context, id xid.ID) (*SMSTemplate, error) {
+	return c.Query().Where(smstemplate.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *SMSTemplateClient) GetX(ctx context.Context, id xid.ID) *SMSTemplate {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryOrganization queries the organization edge of a SMSTemplate.
+func (c *SMSTemplateClient) QueryOrganization(st *SMSTemplate) *OrganizationQuery {
+	query := (&OrganizationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := st.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(smstemplate.Table, smstemplate.FieldID, id),
+			sqlgraph.To(organization.Table, organization.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, smstemplate.OrganizationTable, smstemplate.OrganizationColumn),
+		)
+		fromV = sqlgraph.Neighbors(st.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *SMSTemplateClient) Hooks() []Hook {
+	return c.hooks.SMSTemplate
+}
+
+// Interceptors returns the client interceptors.
+func (c *SMSTemplateClient) Interceptors() []Interceptor {
+	return c.inters.SMSTemplate
+}
+
+func (c *SMSTemplateClient) mutate(ctx context.Context, m *SMSTemplateMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&SMSTemplateCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&SMSTemplateUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&SMSTemplateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&SMSTemplateDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown SMSTemplate mutation op: %q", m.Op())
+	}
+}
+
 // SSOStateClient is a client for the SSOState schema.
 type SSOStateClient struct {
 	config
@@ -3583,6 +4009,22 @@ func (c *SessionClient) QueryUser(s *Session) *UserQuery {
 	return query
 }
 
+// QueryAuditLogs queries the audit_logs edge of a Session.
+func (c *SessionClient) QueryAuditLogs(s *Session) *AuditQuery {
+	query := (&AuditClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := s.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(session.Table, session.FieldID, id),
+			sqlgraph.To(audit.Table, audit.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, session.AuditLogsTable, session.AuditLogsColumn),
+		)
+		fromV = sqlgraph.Neighbors(s.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *SessionClient) Hooks() []Hook {
 	return c.hooks.Session
@@ -3741,6 +4183,22 @@ func (c *UserClient) QueryMemberships(u *User) *MembershipQuery {
 			sqlgraph.From(user.Table, user.FieldID, id),
 			sqlgraph.To(membership.Table, membership.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, user.MembershipsTable, user.MembershipsColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QuerySentInvitations queries the sent_invitations edge of a User.
+func (c *UserClient) QuerySentInvitations(u *User) *MembershipQuery {
+	query := (&MembershipClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(membership.Table, membership.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.SentInvitationsTable, user.SentInvitationsColumn),
 		)
 		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
 		return fromV, nil
@@ -3933,6 +4391,22 @@ func (c *UserClient) QueryAssignedUserPermissions(u *User) *UserPermissionQuery 
 			sqlgraph.From(user.Table, user.FieldID, id),
 			sqlgraph.To(userpermission.Table, userpermission.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, user.AssignedUserPermissionsTable, user.AssignedUserPermissionsColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAuditLogs queries the audit_logs edge of a User.
+func (c *UserClient) QueryAuditLogs(u *User) *AuditQuery {
+	query := (&AuditClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(audit.Table, audit.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.AuditLogsTable, user.AuditLogsColumn),
 		)
 		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
 		return fromV, nil
@@ -4825,18 +5299,18 @@ func (c *WebhookEventClient) mutate(ctx context.Context, m *WebhookEventMutation
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		ApiKey, EmailTemplate, FeatureFlag, IdentityProvider, MFA, Membership,
+		ApiKey, Audit, EmailTemplate, FeatureFlag, IdentityProvider, MFA, Membership,
 		OAuthAuthorization, OAuthClient, OAuthScope, OAuthToken, Organization,
-		OrganizationFeature, Passkey, Permission, PermissionDependency, Role, SSOState,
-		Session, User, UserPermission, UserRole, Verification, Webhook,
-		WebhookEvent []ent.Hook
+		OrganizationFeature, Passkey, Permission, PermissionDependency, Role,
+		SMSTemplate, SSOState, Session, User, UserPermission, UserRole, Verification,
+		Webhook, WebhookEvent []ent.Hook
 	}
 	inters struct {
-		ApiKey, EmailTemplate, FeatureFlag, IdentityProvider, MFA, Membership,
+		ApiKey, Audit, EmailTemplate, FeatureFlag, IdentityProvider, MFA, Membership,
 		OAuthAuthorization, OAuthClient, OAuthScope, OAuthToken, Organization,
-		OrganizationFeature, Passkey, Permission, PermissionDependency, Role, SSOState,
-		Session, User, UserPermission, UserRole, Verification, Webhook,
-		WebhookEvent []ent.Interceptor
+		OrganizationFeature, Passkey, Permission, PermissionDependency, Role,
+		SMSTemplate, SSOState, Session, User, UserPermission, UserRole, Verification,
+		Webhook, WebhookEvent []ent.Interceptor
 	}
 )
 

@@ -13,13 +13,15 @@ import (
 // ResourceType represents the type of resource that permissions apply to
 type ResourceType string
 
-// Define all resource types based on your ent schemas
+// Resource Types for context-aware permissions
 const (
 	// Core organizational resources
 	ResourceOrganization ResourceType = "organization"
 	ResourceUser         ResourceType = "user"
 	ResourceRole         ResourceType = "role"
 	ResourcePermission   ResourceType = "permission"
+	ResourceAuditLog     ResourceType = "audit_log"
+	ResourceBilling      ResourceType = "billing"
 
 	// Authentication and security resources
 	ResourceSession      ResourceType = "session"
@@ -33,8 +35,9 @@ const (
 	ResourceEmailTemplate ResourceType = "email_template"
 
 	// System resources
-	ResourceGlobal ResourceType = "global"
-	ResourceSystem ResourceType = "system"
+	ResourceGlobal      ResourceType = "global"
+	ResourceSystem      ResourceType = "system"
+	ResourceApplication ResourceType = "application"
 )
 
 // Resource represents a specific resource instance

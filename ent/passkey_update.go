@@ -41,6 +41,26 @@ func (pu *PasskeyUpdate) SetUpdatedAt(t time.Time) *PasskeyUpdate {
 	return pu
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (pu *PasskeyUpdate) SetDeletedAt(t time.Time) *PasskeyUpdate {
+	pu.mutation.SetDeletedAt(t)
+	return pu
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (pu *PasskeyUpdate) SetNillableDeletedAt(t *time.Time) *PasskeyUpdate {
+	if t != nil {
+		pu.SetDeletedAt(*t)
+	}
+	return pu
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (pu *PasskeyUpdate) ClearDeletedAt() *PasskeyUpdate {
+	pu.mutation.ClearDeletedAt()
+	return pu
+}
+
 // SetUserID sets the "user_id" field.
 func (pu *PasskeyUpdate) SetUserID(x xid.ID) *PasskeyUpdate {
 	pu.mutation.SetUserID(x)
@@ -214,6 +234,86 @@ func (pu *PasskeyUpdate) ClearAttestation() *PasskeyUpdate {
 	return pu
 }
 
+// SetBackupState sets the "backup_state" field.
+func (pu *PasskeyUpdate) SetBackupState(b bool) *PasskeyUpdate {
+	pu.mutation.SetBackupState(b)
+	return pu
+}
+
+// SetNillableBackupState sets the "backup_state" field if the given value is not nil.
+func (pu *PasskeyUpdate) SetNillableBackupState(b *bool) *PasskeyUpdate {
+	if b != nil {
+		pu.SetBackupState(*b)
+	}
+	return pu
+}
+
+// ClearBackupState clears the value of the "backup_state" field.
+func (pu *PasskeyUpdate) ClearBackupState() *PasskeyUpdate {
+	pu.mutation.ClearBackupState()
+	return pu
+}
+
+// SetBackupEligible sets the "backup_eligible" field.
+func (pu *PasskeyUpdate) SetBackupEligible(b bool) *PasskeyUpdate {
+	pu.mutation.SetBackupEligible(b)
+	return pu
+}
+
+// SetNillableBackupEligible sets the "backup_eligible" field if the given value is not nil.
+func (pu *PasskeyUpdate) SetNillableBackupEligible(b *bool) *PasskeyUpdate {
+	if b != nil {
+		pu.SetBackupEligible(*b)
+	}
+	return pu
+}
+
+// ClearBackupEligible clears the value of the "backup_eligible" field.
+func (pu *PasskeyUpdate) ClearBackupEligible() *PasskeyUpdate {
+	pu.mutation.ClearBackupEligible()
+	return pu
+}
+
+// SetUserAgent sets the "user_agent" field.
+func (pu *PasskeyUpdate) SetUserAgent(s string) *PasskeyUpdate {
+	pu.mutation.SetUserAgent(s)
+	return pu
+}
+
+// SetNillableUserAgent sets the "user_agent" field if the given value is not nil.
+func (pu *PasskeyUpdate) SetNillableUserAgent(s *string) *PasskeyUpdate {
+	if s != nil {
+		pu.SetUserAgent(*s)
+	}
+	return pu
+}
+
+// ClearUserAgent clears the value of the "user_agent" field.
+func (pu *PasskeyUpdate) ClearUserAgent() *PasskeyUpdate {
+	pu.mutation.ClearUserAgent()
+	return pu
+}
+
+// SetIPAddress sets the "ip_address" field.
+func (pu *PasskeyUpdate) SetIPAddress(s string) *PasskeyUpdate {
+	pu.mutation.SetIPAddress(s)
+	return pu
+}
+
+// SetNillableIPAddress sets the "ip_address" field if the given value is not nil.
+func (pu *PasskeyUpdate) SetNillableIPAddress(s *string) *PasskeyUpdate {
+	if s != nil {
+		pu.SetIPAddress(*s)
+	}
+	return pu
+}
+
+// ClearIPAddress clears the value of the "ip_address" field.
+func (pu *PasskeyUpdate) ClearIPAddress() *PasskeyUpdate {
+	pu.mutation.ClearIPAddress()
+	return pu
+}
+
 // SetUser sets the "user" edge to the User entity.
 func (pu *PasskeyUpdate) SetUser(u *User) *PasskeyUpdate {
 	return pu.SetUserID(u.ID)
@@ -315,6 +415,12 @@ func (pu *PasskeyUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := pu.mutation.UpdatedAt(); ok {
 		_spec.SetField(passkey.FieldUpdatedAt, field.TypeTime, value)
 	}
+	if value, ok := pu.mutation.DeletedAt(); ok {
+		_spec.SetField(passkey.FieldDeletedAt, field.TypeTime, value)
+	}
+	if pu.mutation.DeletedAtCleared() {
+		_spec.ClearField(passkey.FieldDeletedAt, field.TypeTime)
+	}
 	if value, ok := pu.mutation.Name(); ok {
 		_spec.SetField(passkey.FieldName, field.TypeString, value)
 	}
@@ -367,6 +473,30 @@ func (pu *PasskeyUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if pu.mutation.AttestationCleared() {
 		_spec.ClearField(passkey.FieldAttestation, field.TypeJSON)
+	}
+	if value, ok := pu.mutation.BackupState(); ok {
+		_spec.SetField(passkey.FieldBackupState, field.TypeBool, value)
+	}
+	if pu.mutation.BackupStateCleared() {
+		_spec.ClearField(passkey.FieldBackupState, field.TypeBool)
+	}
+	if value, ok := pu.mutation.BackupEligible(); ok {
+		_spec.SetField(passkey.FieldBackupEligible, field.TypeBool, value)
+	}
+	if pu.mutation.BackupEligibleCleared() {
+		_spec.ClearField(passkey.FieldBackupEligible, field.TypeBool)
+	}
+	if value, ok := pu.mutation.UserAgent(); ok {
+		_spec.SetField(passkey.FieldUserAgent, field.TypeString, value)
+	}
+	if pu.mutation.UserAgentCleared() {
+		_spec.ClearField(passkey.FieldUserAgent, field.TypeString)
+	}
+	if value, ok := pu.mutation.IPAddress(); ok {
+		_spec.SetField(passkey.FieldIPAddress, field.TypeString, value)
+	}
+	if pu.mutation.IPAddressCleared() {
+		_spec.ClearField(passkey.FieldIPAddress, field.TypeString)
 	}
 	if pu.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -422,6 +552,26 @@ type PasskeyUpdateOne struct {
 // SetUpdatedAt sets the "updated_at" field.
 func (puo *PasskeyUpdateOne) SetUpdatedAt(t time.Time) *PasskeyUpdateOne {
 	puo.mutation.SetUpdatedAt(t)
+	return puo
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (puo *PasskeyUpdateOne) SetDeletedAt(t time.Time) *PasskeyUpdateOne {
+	puo.mutation.SetDeletedAt(t)
+	return puo
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (puo *PasskeyUpdateOne) SetNillableDeletedAt(t *time.Time) *PasskeyUpdateOne {
+	if t != nil {
+		puo.SetDeletedAt(*t)
+	}
+	return puo
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (puo *PasskeyUpdateOne) ClearDeletedAt() *PasskeyUpdateOne {
+	puo.mutation.ClearDeletedAt()
 	return puo
 }
 
@@ -598,6 +748,86 @@ func (puo *PasskeyUpdateOne) ClearAttestation() *PasskeyUpdateOne {
 	return puo
 }
 
+// SetBackupState sets the "backup_state" field.
+func (puo *PasskeyUpdateOne) SetBackupState(b bool) *PasskeyUpdateOne {
+	puo.mutation.SetBackupState(b)
+	return puo
+}
+
+// SetNillableBackupState sets the "backup_state" field if the given value is not nil.
+func (puo *PasskeyUpdateOne) SetNillableBackupState(b *bool) *PasskeyUpdateOne {
+	if b != nil {
+		puo.SetBackupState(*b)
+	}
+	return puo
+}
+
+// ClearBackupState clears the value of the "backup_state" field.
+func (puo *PasskeyUpdateOne) ClearBackupState() *PasskeyUpdateOne {
+	puo.mutation.ClearBackupState()
+	return puo
+}
+
+// SetBackupEligible sets the "backup_eligible" field.
+func (puo *PasskeyUpdateOne) SetBackupEligible(b bool) *PasskeyUpdateOne {
+	puo.mutation.SetBackupEligible(b)
+	return puo
+}
+
+// SetNillableBackupEligible sets the "backup_eligible" field if the given value is not nil.
+func (puo *PasskeyUpdateOne) SetNillableBackupEligible(b *bool) *PasskeyUpdateOne {
+	if b != nil {
+		puo.SetBackupEligible(*b)
+	}
+	return puo
+}
+
+// ClearBackupEligible clears the value of the "backup_eligible" field.
+func (puo *PasskeyUpdateOne) ClearBackupEligible() *PasskeyUpdateOne {
+	puo.mutation.ClearBackupEligible()
+	return puo
+}
+
+// SetUserAgent sets the "user_agent" field.
+func (puo *PasskeyUpdateOne) SetUserAgent(s string) *PasskeyUpdateOne {
+	puo.mutation.SetUserAgent(s)
+	return puo
+}
+
+// SetNillableUserAgent sets the "user_agent" field if the given value is not nil.
+func (puo *PasskeyUpdateOne) SetNillableUserAgent(s *string) *PasskeyUpdateOne {
+	if s != nil {
+		puo.SetUserAgent(*s)
+	}
+	return puo
+}
+
+// ClearUserAgent clears the value of the "user_agent" field.
+func (puo *PasskeyUpdateOne) ClearUserAgent() *PasskeyUpdateOne {
+	puo.mutation.ClearUserAgent()
+	return puo
+}
+
+// SetIPAddress sets the "ip_address" field.
+func (puo *PasskeyUpdateOne) SetIPAddress(s string) *PasskeyUpdateOne {
+	puo.mutation.SetIPAddress(s)
+	return puo
+}
+
+// SetNillableIPAddress sets the "ip_address" field if the given value is not nil.
+func (puo *PasskeyUpdateOne) SetNillableIPAddress(s *string) *PasskeyUpdateOne {
+	if s != nil {
+		puo.SetIPAddress(*s)
+	}
+	return puo
+}
+
+// ClearIPAddress clears the value of the "ip_address" field.
+func (puo *PasskeyUpdateOne) ClearIPAddress() *PasskeyUpdateOne {
+	puo.mutation.ClearIPAddress()
+	return puo
+}
+
 // SetUser sets the "user" edge to the User entity.
 func (puo *PasskeyUpdateOne) SetUser(u *User) *PasskeyUpdateOne {
 	return puo.SetUserID(u.ID)
@@ -729,6 +959,12 @@ func (puo *PasskeyUpdateOne) sqlSave(ctx context.Context) (_node *Passkey, err e
 	if value, ok := puo.mutation.UpdatedAt(); ok {
 		_spec.SetField(passkey.FieldUpdatedAt, field.TypeTime, value)
 	}
+	if value, ok := puo.mutation.DeletedAt(); ok {
+		_spec.SetField(passkey.FieldDeletedAt, field.TypeTime, value)
+	}
+	if puo.mutation.DeletedAtCleared() {
+		_spec.ClearField(passkey.FieldDeletedAt, field.TypeTime)
+	}
 	if value, ok := puo.mutation.Name(); ok {
 		_spec.SetField(passkey.FieldName, field.TypeString, value)
 	}
@@ -781,6 +1017,30 @@ func (puo *PasskeyUpdateOne) sqlSave(ctx context.Context) (_node *Passkey, err e
 	}
 	if puo.mutation.AttestationCleared() {
 		_spec.ClearField(passkey.FieldAttestation, field.TypeJSON)
+	}
+	if value, ok := puo.mutation.BackupState(); ok {
+		_spec.SetField(passkey.FieldBackupState, field.TypeBool, value)
+	}
+	if puo.mutation.BackupStateCleared() {
+		_spec.ClearField(passkey.FieldBackupState, field.TypeBool)
+	}
+	if value, ok := puo.mutation.BackupEligible(); ok {
+		_spec.SetField(passkey.FieldBackupEligible, field.TypeBool, value)
+	}
+	if puo.mutation.BackupEligibleCleared() {
+		_spec.ClearField(passkey.FieldBackupEligible, field.TypeBool)
+	}
+	if value, ok := puo.mutation.UserAgent(); ok {
+		_spec.SetField(passkey.FieldUserAgent, field.TypeString, value)
+	}
+	if puo.mutation.UserAgentCleared() {
+		_spec.ClearField(passkey.FieldUserAgent, field.TypeString)
+	}
+	if value, ok := puo.mutation.IPAddress(); ok {
+		_spec.SetField(passkey.FieldIPAddress, field.TypeString, value)
+	}
+	if puo.mutation.IPAddressCleared() {
+		_spec.ClearField(passkey.FieldIPAddress, field.TypeString)
 	}
 	if puo.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{

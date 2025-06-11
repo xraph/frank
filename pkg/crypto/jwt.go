@@ -5,473 +5,856 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"io/ioutil"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/juicycleff/frank/pkg/errors"
+	"github.com/rs/xid"
 )
 
-// JWTClaims represents JWT claims with standard and custom fields
-type JWTClaims struct {
-	jwt.RegisteredClaims
-	UserID         string                 `json:"user_id,omitempty"`
-	OrganizationID string                 `json:"organization_id,omitempty"`
-	Email          string                 `json:"email,omitempty"`
-	Roles          []string               `json:"roles,omitempty"`
-	Permissions    []string               `json:"permissions,omitempty"`
-	Scopes         []string               `json:"scopes,omitempty"`
-	Metadata       map[string]interface{} `json:"metadata,omitempty"`
-	TokenType      string                 `json:"token_type,omitempty"`
-}
+// TokenType represents different types of JWT tokens
+type TokenType string
 
-// JWTConfig holds JWT configuration
+const (
+	TokenTypeAccess         TokenType = "access"
+	TokenTypeRefresh        TokenType = "refresh"
+	TokenTypeEmailVerify    TokenType = "email_verify"
+	TokenTypePasswordReset  TokenType = "password_reset"
+	TokenTypeMagicLink      TokenType = "magic_link"
+	TokenTypeInvitation     TokenType = "invitation"
+	TokenTypeAPIKey         TokenType = "api_key"
+	TokenTypeWebhookPayload TokenType = "webhook_payload"
+)
+
+// SigningMethod represents JWT signing methods
+type SigningMethod string
+
+const (
+	SigningMethodHS256 SigningMethod = "HS256"
+	SigningMethodHS384 SigningMethod = "HS384"
+	SigningMethodHS512 SigningMethod = "HS512"
+	SigningMethodRS256 SigningMethod = "RS256"
+	SigningMethodRS384 SigningMethod = "RS384"
+	SigningMethodRS512 SigningMethod = "RS512"
+	SigningMethodES256 SigningMethod = "ES256"
+	SigningMethodES384 SigningMethod = "ES384"
+	SigningMethodES512 SigningMethod = "ES512"
+)
+
+// JWTConfig contains JWT configuration
 type JWTConfig struct {
-	SigningMethod string
-	SigningKey    []byte
-	Issuer        string
-	Audience      []string
-	AccessTTL     time.Duration
-	RefreshTTL    time.Duration
-	SignatureKey  interface{} // Can be []byte for HMAC or *rsa.PrivateKey for RSA
-	ValidationKey interface{} // Can be []byte for HMAC or *rsa.PublicKey for RSA
-	DefaultExpiry time.Duration
+	SecretKey           string
+	PublicKey           string
+	PrivateKey          string
+	SigningMethod       SigningMethod
+	Issuer              string
+	Audience            []string
+	AccessTokenExpiry   time.Duration
+	RefreshTokenExpiry  time.Duration
+	VerifyTokenExpiry   time.Duration
+	MagicLinkExpiry     time.Duration
+	InvitationExpiry    time.Duration
+	PasswordResetExpiry time.Duration
 }
 
-// JWTManager handles JWT operations
-type JWTManager struct {
-	config JWTConfig
+// CustomClaims represents custom claims for the application
+type CustomClaims struct {
+	jwt.RegisteredClaims
+	UserID         xid.ID            `json:"user_id,omitempty"`
+	OrganizationID *xid.ID           `json:"organization_id,omitempty"`
+	Email          string            `json:"email,omitempty"`
+	Username       string            `json:"username,omitempty"`
+	TokenType      TokenType         `json:"token_type,omitempty"`
+	Scopes         []string          `json:"scopes,omitempty"`
+	Roles          []string          `json:"roles,omitempty"`
+	Permissions    []string          `json:"permissions,omitempty"`
+	Metadata       map[string]string `json:"metadata,omitempty"`
+	SessionID      *xid.ID           `json:"session_id,omitempty"`
+	ClientID       *xid.ID           `json:"client_id,omitempty"`
+	DeviceID       string            `json:"device_id,omitempty"`
+	IPAddress      string            `json:"ip_address,omitempty"`
+	UserAgent      string            `json:"user_agent,omitempty"`
+}
+
+// Valid implements jwt.Claims interface
+func (c CustomClaims) Valid() error {
+	now := time.Now()
+
+	// Check expiration
+	if c.ExpiresAt != nil && now.After(c.ExpiresAt.Time) {
+		return fmt.Errorf("token has expired")
+	}
+
+	// Check not before
+	if c.NotBefore != nil && now.Before(c.NotBefore.Time) {
+		return fmt.Errorf("token is not valid yet")
+	}
+
+	// Check required fields
+	if c.Subject == "" {
+		return fmt.Errorf("subject is required")
+	}
+
+	if c.UserID.IsNil() {
+		return fmt.Errorf("user_id is required")
+	}
+
+	return nil
+}
+
+// GetExpirationTime implements jwt.Claims interface
+func (c CustomClaims) GetExpirationTime() (*jwt.NumericDate, error) {
+	return c.ExpiresAt, nil
+}
+
+// GetIssuedAt implements jwt.Claims interface
+func (c CustomClaims) GetIssuedAt() (*jwt.NumericDate, error) {
+	return c.IssuedAt, nil
+}
+
+// GetNotBefore implements jwt.Claims interface
+func (c CustomClaims) GetNotBefore() (*jwt.NumericDate, error) {
+	return c.NotBefore, nil
+}
+
+// GetIssuer implements jwt.Claims interface
+func (c CustomClaims) GetIssuer() (string, error) {
+	return c.Issuer, nil
+}
+
+// GetSubject implements jwt.Claims interface
+func (c CustomClaims) GetSubject() (string, error) {
+	return c.Subject, nil
+}
+
+// GetAudience implements jwt.Claims interface
+func (c CustomClaims) GetAudience() (jwt.ClaimStrings, error) {
+	return c.Audience, nil
+}
+
+type AccessTokenClaims struct {
+	UserID         xid.ID    `json:"sub"`
+	OrganizationID *xid.ID   `json:"org,omitempty"`
+	SessionID      xid.ID    `json:"sid"`
+	TokenType      TokenType `json:"token_type"`
+	Scopes         []string  `json:"scopes,omitempty"`
+	Permissions    []string  `json:"permissions,omitempty"`
+	jwt.RegisteredClaims
+}
+
+type RefreshTokenClaims struct {
+	UserID    xid.ID    `json:"sub"`
+	SessionID xid.ID    `json:"sid"`
+	TokenType TokenType `json:"token_type"`
+	jwt.RegisteredClaims
+}
+
+type APIKeyTokenClaims struct {
+	UserID         xid.ID    `json:"sub"`
+	OrganizationID *xid.ID   `json:"org,omitempty"`
+	KeyID          xid.ID    `json:"kid"`
+	TokenType      TokenType `json:"token_type"`
+	Scopes         []string  `json:"scopes"`
+	jwt.RegisteredClaims
+}
+
+// JWTManager provides JWT token management functionality
+type JWTManager interface {
+	GenerateToken(claims *CustomClaims) (string, error)
+	ValidateToken(tokenString string) (*CustomClaims, error)
+	GenerateAccessToken(claims *AccessTokenClaims) (string, error)
+	ValidateAccessToken(tokenString string) (*AccessTokenClaims, error)
+	GenerateAPIKeyToken(claims *APIKeyTokenClaims) (string, error)
+	ValidateAPIKeyToken(tokenString string) (*APIKeyTokenClaims, error)
+	GenerateRefreshToken(claims *RefreshTokenClaims) (string, error)
+	ValidateRefreshToken(tokenString string) (*RefreshTokenClaims, error)
+	RefreshToken(refreshTokenString string) (accessToken, refreshToken string, err error)
+	ParseTokenWithoutValidation(tokenString string) (*CustomClaims, error)
+	GetTokenExpiry(tokenType TokenType) time.Duration
+	RevokeToken(tokenString string) error
+	IsTokenRevoked(tokenString string) bool
+}
+
+// jwtManager implements JWTManager interface
+type jwtManager struct {
+	config       *JWTConfig
+	signingKey   interface{}
+	verifyingKey interface{}
+	revokedList  map[string]time.Time // Simple in-memory revocation list
 }
 
 // NewJWTManager creates a new JWT manager
-func NewJWTManager(config JWTConfig) *JWTManager {
-	return &JWTManager{
-		config: config,
+func NewJWTManager(config *JWTConfig) (JWTManager, error) {
+	if config == nil {
+		return nil, fmt.Errorf("JWT config is required")
 	}
+
+	manager := &jwtManager{
+		config:      config,
+		revokedList: make(map[string]time.Time),
+	}
+
+	// Set up signing and verifying keys based on the signing method
+	if err := manager.setupKeys(); err != nil {
+		return nil, fmt.Errorf("failed to setup JWT keys: %w", err)
+	}
+
+	return manager, nil
 }
 
-// NewJWTConfigRSA creates a new JWT configuration with RSA signing
-func NewJWTConfigRSA(privateKey *rsa.PrivateKey, publicKey *rsa.PublicKey, method string, issuer string, audience []string, expiry time.Duration) *JWTConfig {
-	if method == "" {
-		method = "RS256"
-	}
+// setupKeys configures the signing and verifying keys
+func (j *jwtManager) setupKeys() error {
+	method := string(j.config.SigningMethod)
 
-	return &JWTConfig{
-		SigningMethod: method,
-		SignatureKey:  privateKey,
-		ValidationKey: publicKey,
-		DefaultExpiry: expiry,
-		Issuer:        issuer,
-		Audience:      audience,
-	}
-}
+	switch {
+	case method[:2] == "HS": // HMAC methods
+		if j.config.SecretKey == "" {
+			return fmt.Errorf("secret key is required for HMAC signing methods")
+		}
+		j.signingKey = []byte(j.config.SecretKey)
+		j.verifyingKey = []byte(j.config.SecretKey)
 
-// LoadRSAPrivateKeyFromFile loads a PEM encoded RSA private key from a file
-func LoadRSAPrivateKeyFromFile(file string) (*rsa.PrivateKey, error) {
-	keyData, err := ioutil.ReadFile(file)
-	if err != nil {
-		return nil, fmt.Errorf("error reading private key file: %w", err)
-	}
-
-	return ParseRSAPrivateKeyFromPEM(keyData)
-}
-
-// LoadRSAPublicKeyFromFile loads a PEM encoded RSA public key from a file
-func LoadRSAPublicKeyFromFile(file string) (*rsa.PublicKey, error) {
-	keyData, err := ioutil.ReadFile(file)
-	if err != nil {
-		return nil, fmt.Errorf("error reading public key file: %w", err)
-	}
-
-	return ParseRSAPublicKeyFromPEM(keyData)
-}
-
-// ParseRSAPrivateKeyFromPEM parses a PEM encoded RSA private key
-func ParseRSAPrivateKeyFromPEM(keyData []byte) (*rsa.PrivateKey, error) {
-	block, _ := pem.Decode(keyData)
-	if block == nil {
-		return nil, errors.New(errors.CodeInvalidCredentials, "failed to parse PEM block containing the key")
-	}
-
-	privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
-	if err != nil {
-		// Try parsing as PKCS8
-		parsedKey, err2 := x509.ParsePKCS8PrivateKey(block.Bytes)
-		if err2 != nil {
-			return nil, fmt.Errorf("failed to parse private key: %w", err)
+	case method[:2] == "RS" || method[:2] == "ES": // RSA/ECDSA methods
+		if j.config.PrivateKey == "" {
+			return fmt.Errorf("private key is required for RSA/ECDSA signing methods")
 		}
 
-		privateKey, ok := parsedKey.(*rsa.PrivateKey)
-		if !ok {
-			return nil, errors.New(errors.CodeInvalidCredentials, "key is not an RSA private key")
+		// Parse private key
+		privateKeyPEM, _ := pem.Decode([]byte(j.config.PrivateKey))
+		if privateKeyPEM == nil {
+			return fmt.Errorf("invalid private key PEM format")
 		}
 
-		return privateKey, nil
-	}
-
-	return privateKey, nil
-}
-
-// ParseRSAPublicKeyFromPEM parses a PEM encoded RSA public key
-func ParseRSAPublicKeyFromPEM(keyData []byte) (*rsa.PublicKey, error) {
-	block, _ := pem.Decode(keyData)
-	if block == nil {
-		return nil, errors.New(errors.CodeInvalidCredentials, "failed to parse PEM block containing the key")
-	}
-
-	// Try parsing as PKCS1 public key
-	publicKey, err := x509.ParsePKCS1PublicKey(block.Bytes)
-	if err == nil {
-		return publicKey, nil
-	}
-
-	// Try parsing as X.509 certificate
-	cert, err := x509.ParseCertificate(block.Bytes)
-	if err == nil {
-		publicKey, ok := cert.PublicKey.(*rsa.PublicKey)
-		if !ok {
-			return nil, errors.New(errors.CodeInvalidCredentials, "certificate does not contain an RSA public key")
+		if method[:2] == "RS" {
+			privateKey, err := x509.ParsePKCS1PrivateKey(privateKeyPEM.Bytes)
+			if err != nil {
+				// Try PKCS8 format
+				key, err := x509.ParsePKCS8PrivateKey(privateKeyPEM.Bytes)
+				if err != nil {
+					return fmt.Errorf("failed to parse RSA private key: %w", err)
+				}
+				var ok bool
+				privateKey, ok = key.(*rsa.PrivateKey)
+				if !ok {
+					return fmt.Errorf("key is not an RSA private key")
+				}
+			}
+			j.signingKey = privateKey
+			j.verifyingKey = &privateKey.PublicKey
 		}
-		return publicKey, nil
-	}
 
-	// Try parsing as PKIX public key
-	parsedKey, err := x509.ParsePKIXPublicKey(block.Bytes)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse public key: %w", err)
-	}
-
-	publicKey, ok := parsedKey.(*rsa.PublicKey)
-	if !ok {
-		return nil, errors.New(errors.CodeInvalidCredentials, "key is not an RSA public key")
-	}
-
-	return publicKey, nil
-}
-
-// GenerateAccessToken generates a new access token
-func (m *JWTManager) GenerateAccessToken(userID, email string, options ...TokenOption) (string, error) {
-	return m.generateToken(userID, email, m.config.AccessTTL, "access", options...)
-}
-
-// GenerateRefreshToken generates a new refresh token
-func (m *JWTManager) GenerateRefreshToken(userID, email string, options ...TokenOption) (string, error) {
-	return m.generateToken(userID, email, m.config.RefreshTTL, "refresh", options...)
-}
-
-// TokenOption is a function that modifies token claims
-type TokenOption func(*JWTClaims)
-
-// WithOrganization adds organization ID to token claims
-func WithOrganization(orgID string) TokenOption {
-	return func(claims *JWTClaims) {
-		claims.OrganizationID = orgID
-	}
-}
-
-// WithRoles adds roles to token claims
-func WithRoles(roles []string) TokenOption {
-	return func(claims *JWTClaims) {
-		claims.Roles = roles
-	}
-}
-
-// WithPermissions adds permissions to token claims
-func WithPermissions(permissions []string) TokenOption {
-	return func(claims *JWTClaims) {
-		claims.Permissions = permissions
-	}
-}
-
-// WithScopes adds scopes to token claims
-func WithScopes(scopes []string) TokenOption {
-	return func(claims *JWTClaims) {
-		claims.Scopes = scopes
-	}
-}
-
-// WithMetadata adds metadata to token claims
-func WithMetadata(metadata map[string]interface{}) TokenOption {
-	return func(claims *JWTClaims) {
-		claims.Metadata = metadata
-	}
-}
-
-// WithCustomClaims adds custom claims to token claims
-func WithCustomClaims(customClaims map[string]interface{}) TokenOption {
-	return func(claims *JWTClaims) {
-		if claims.Metadata == nil {
-			claims.Metadata = make(map[string]interface{})
+		// Parse public key if provided
+		if j.config.PublicKey != "" {
+			publicKeyPEM, _ := pem.Decode([]byte(j.config.PublicKey))
+			if publicKeyPEM != nil {
+				publicKey, err := x509.ParsePKIXPublicKey(publicKeyPEM.Bytes)
+				if err != nil {
+					return fmt.Errorf("failed to parse public key: %w", err)
+				}
+				j.verifyingKey = publicKey
+			}
 		}
-		for k, v := range customClaims {
-			claims.Metadata[k] = v
-		}
+
+	default:
+		return fmt.Errorf("unsupported signing method: %s", method)
 	}
+
+	return nil
 }
 
-// WithExpiresAt overrides the default expiration time
-func WithExpiresAt(expiresAt time.Time) TokenOption {
-	return func(claims *JWTClaims) {
-		claims.ExpiresAt = jwt.NewNumericDate(expiresAt)
+// GenerateToken generates a new JWT token with the given claims
+func (j *jwtManager) GenerateToken(claims *CustomClaims) (string, error) {
+	if claims == nil {
+		return "", fmt.Errorf("claims are required")
 	}
-}
 
-// WithSubject sets the subject claim
-func WithSubject(subject string) TokenOption {
-	return func(claims *JWTClaims) {
-		claims.Subject = subject
-	}
-}
-
-// generateToken generates a JWT token
-func (m *JWTManager) generateToken(userID, email string, ttl time.Duration, tokenType string, options ...TokenOption) (string, error) {
+	// Set standard claims if not provided
 	now := time.Now()
-
-	claims := &JWTClaims{
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(now.Add(ttl)),
-			IssuedAt:  jwt.NewNumericDate(now),
-			NotBefore: jwt.NewNumericDate(now),
-			Issuer:    m.config.Issuer,
-			Audience:  m.config.Audience,
-		},
-		UserID:    userID,
-		Email:     email,
-		TokenType: tokenType,
+	if claims.IssuedAt == nil {
+		claims.IssuedAt = jwt.NewNumericDate(now)
+	}
+	if claims.NotBefore == nil {
+		claims.NotBefore = jwt.NewNumericDate(now)
+	}
+	if claims.ID == "" {
+		claims.ID = xid.New().String()
+	}
+	if claims.Issuer == "" {
+		claims.Issuer = j.config.Issuer
+	}
+	if len(claims.Audience) == 0 && len(j.config.Audience) > 0 {
+		claims.Audience = jwt.ClaimStrings(j.config.Audience)
 	}
 
-	// Apply options
-	for _, option := range options {
-		option(claims)
+	// Set expiration based on token type
+	if claims.ExpiresAt == nil {
+		expiry := j.GetTokenExpiry(claims.TokenType)
+		if expiry > 0 {
+			claims.ExpiresAt = jwt.NewNumericDate(now.Add(expiry))
+		}
 	}
 
 	// Create token
-	token := jwt.NewWithClaims(jwt.GetSigningMethod(m.config.SigningMethod), claims)
+	var token *jwt.Token
+	switch j.config.SigningMethod {
+	case SigningMethodHS256:
+		token = jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	case SigningMethodHS384:
+		token = jwt.NewWithClaims(jwt.SigningMethodHS384, claims)
+	case SigningMethodHS512:
+		token = jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
+	case SigningMethodRS256:
+		token = jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
+	case SigningMethodRS384:
+		token = jwt.NewWithClaims(jwt.SigningMethodRS384, claims)
+	case SigningMethodRS512:
+		token = jwt.NewWithClaims(jwt.SigningMethodRS512, claims)
+	default:
+		return "", fmt.Errorf("unsupported signing method: %s", j.config.SigningMethod)
+	}
 
 	// Sign token
-	tokenString, err := token.SignedString(m.config.SigningKey)
+	tokenString, err := token.SignedString(j.signingKey)
 	if err != nil {
-		return "", errors.Wrap(errors.CodeCryptoError, err, "failed to sign token")
+		return "", fmt.Errorf("failed to sign token: %w", err)
 	}
 
 	return tokenString, nil
 }
 
 // ValidateToken validates and parses a JWT token
-func (m *JWTManager) ValidateToken(tokenString string) (*JWTClaims, error) {
-	// Parse token
-	token, err := jwt.ParseWithClaims(tokenString, &JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
-		// Validate signing method
-		if token.Method.Alg() != m.config.SigningMethod {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Method.Alg())
-		}
-		return m.config.SigningKey, nil
-	})
-	if err != nil {
-		return nil, errors.Wrap(errors.CodeInvalidToken, err, "token validation failed")
+func (j *jwtManager) ValidateToken(tokenString string) (*CustomClaims, error) {
+	// Check if token is revoked
+	if j.IsTokenRevoked(tokenString) {
+		return nil, fmt.Errorf("token has been revoked")
 	}
 
-	// Check if the token is valid
-	if !token.Valid {
-		return nil, errors.Wrap(errors.CodeInvalidToken, err, "failed to parse token")
-	}
-
-	// if err != nil {
-	// 	// Handle specific JWT errors
-	// 	if ve, ok := err.(*jwt.ValidationError); ok {
-	// 		if ve.Errors&jwt.ErrTokenExpired != 0 {
-	// 			return nil, errors.New(errors.CodeTokenExpired, "token is expired")
-	// 		}
-	// 		return nil, errors.Wrap(errors.CodeInvalidToken, err, "token validation failed")
-	// 	}
-	// 	return nil, errors.Wrap(errors.CodeInvalidToken, err, "failed to parse token")
-	// }
-
-	// Extract claims
-	if claims, ok := token.Claims.(*JWTClaims); ok && token.Valid {
-		return claims, nil
-	}
-
-	return nil, errors.New(errors.CodeInvalidToken, "invalid token claims")
-}
-
-// RefreshToken validates a refresh token and generates a new access token
-func (m *JWTManager) RefreshToken(refreshToken string) (string, error) {
-	// Validate refresh token
-	claims, err := m.ValidateToken(refreshToken)
-	if err != nil {
-		return "", err
-	}
-
-	// Ensure it's a refresh token
-	if claims.TokenType != "refresh" {
-		return "", errors.New(errors.CodeInvalidRefreshToken, "not a refresh token")
-	}
-
-	// Generate new access token
-	return m.GenerateAccessToken(claims.UserID, claims.Email,
-		WithOrganization(claims.OrganizationID),
-		WithRoles(claims.Roles),
-		WithPermissions(claims.Permissions),
-		WithScopes(claims.Scopes),
-		WithMetadata(claims.Metadata),
-	)
-}
-
-// GenerateToken creates a JWT token with custom claims
-func (c *JWTConfig) GenerateToken(subject string, customClaims map[string]interface{}, expiry time.Duration) (string, error) {
-	// If expiry is not provided, use the default
-	if expiry == 0 {
-		expiry = c.DefaultExpiry
-	}
-
-	// Create the claims
-	now := time.Now()
-	expiryTime := now.Add(expiry)
-
-	claims := jwt.MapClaims{
-		"sub": subject,
-		"iat": now.Unix(),
-		"exp": expiryTime.Unix(),
-	}
-
-	// Add issuer and audience if provided
-	if c.Issuer != "" {
-		claims["iss"] = c.Issuer
-	}
-
-	if c.Audience != nil {
-		claims["aud"] = c.Audience
-	}
-
-	// Add custom claims
-	for k, v := range customClaims {
-		claims[k] = v
-	}
-
-	// Create the token
-	token := jwt.NewWithClaims(jwt.GetSigningMethod(c.SigningMethod), claims)
-
-	// Sign the token
-	signedToken, err := token.SignedString(c.SignatureKey)
-	if err != nil {
-		return "", fmt.Errorf("failed to sign token: %w", err)
-	}
-
-	return signedToken, nil
-}
-
-// ValidateToken validates a JWT token and returns its claims
-func (c *JWTConfig) ValidateToken(tokenString string) (jwt.MapClaims, error) {
-	// Parse the token
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		// Validate the signing method
-		if token.Method.Alg() != c.SigningMethod {
+	// Parse and validate token
+	token, err := jwt.ParseWithClaims(tokenString, &CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
+		// Verify signing method
+		expectedMethod := string(j.config.SigningMethod)
+		if token.Method.Alg() != expectedMethod {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
-
-		return c.ValidationKey, nil
+		return j.verifyingKey, nil
 	})
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse token: %w", err)
 	}
 
-	// Check if the token is valid
 	if !token.Valid {
-		return nil, errors.New(errors.CodeInvalidToken, "invalid token")
+		return nil, fmt.Errorf("token is invalid")
 	}
 
-	// Extract claims
-	claims, ok := token.Claims.(jwt.MapClaims)
+	claims, ok := token.Claims.(*CustomClaims)
 	if !ok {
-		return nil, errors.New(errors.CodeInvalidToken, "invalid claims format")
-	}
-
-	// Validate issuer if provided
-	if c.Issuer != "" {
-		issuer, issuerExists := claims["iss"]
-		if !issuerExists || issuer != c.Issuer {
-			return nil, errors.New(errors.CodeInvalidToken, "invalid issuer")
-		}
-	}
-
-	// Validate audience if provided
-	if c.Audience != nil {
-		aud, audExists := claims["aud"]
-		if !audExists {
-			return nil, errors.New(errors.CodeInvalidToken, "audience claim not found")
-		}
-
-		// Handle both string and slice audience values in the token
-		switch tokenAud := aud.(type) {
-		case string:
-			// Single audience in token, check if it's in our allowed audiences
-			found := false
-			for _, allowedAud := range c.Audience {
-				if tokenAud == allowedAud {
-					found = true
-					break
-				}
-			}
-			if !found {
-				return nil, errors.New(errors.CodeInvalidToken, "invalid audience")
-			}
-		case []interface{}:
-			// Multiple audiences in token, check if any match our allowed audiences
-			foundMatch := false
-			for _, allowedAud := range c.Audience {
-				for _, tokenAudItem := range tokenAud {
-					// Convert to string for comparison if needed
-					if audStr, ok := tokenAudItem.(string); ok && audStr == allowedAud {
-						foundMatch = true
-						break
-					}
-				}
-				if foundMatch {
-					break
-				}
-			}
-			if !foundMatch {
-				return nil, errors.New(errors.CodeInvalidToken, "invalid audience")
-			}
-		default:
-			return nil, errors.New(errors.CodeInvalidToken, "invalid audience format")
-		}
+		return nil, fmt.Errorf("failed to parse token claims")
 	}
 
 	return claims, nil
 }
 
-// GetSubjectFromToken extracts the subject claim from a token
-func (c *JWTConfig) GetSubjectFromToken(tokenString string) (string, error) {
-	claims, err := c.ValidateToken(tokenString)
+// GenerateAccessToken generates a new JWT token for access tokens
+func (j *jwtManager) GenerateAccessToken(claims *AccessTokenClaims) (string, error) {
+	if claims == nil {
+		return "", fmt.Errorf("claims are required")
+	}
+
+	// Set standard claims if not provided
+	now := time.Now()
+	if claims.IssuedAt == nil {
+		claims.IssuedAt = jwt.NewNumericDate(now)
+	}
+	if claims.NotBefore == nil {
+		claims.NotBefore = jwt.NewNumericDate(now)
+	}
+	if claims.ID == "" {
+		claims.ID = xid.New().String()
+	}
+	if claims.Issuer == "" {
+		claims.Issuer = j.config.Issuer
+	}
+	if len(claims.Audience) == 0 && len(j.config.Audience) > 0 {
+		claims.Audience = j.config.Audience
+	}
+
+	// Set expiration based on token type
+	if claims.ExpiresAt == nil {
+		expiry := j.GetTokenExpiry(claims.TokenType)
+		if expiry > 0 {
+			claims.ExpiresAt = jwt.NewNumericDate(now.Add(expiry))
+		}
+	}
+
+	// Create token
+	var token *jwt.Token
+	switch j.config.SigningMethod {
+	case SigningMethodHS256:
+		token = jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	case SigningMethodHS384:
+		token = jwt.NewWithClaims(jwt.SigningMethodHS384, claims)
+	case SigningMethodHS512:
+		token = jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
+	case SigningMethodRS256:
+		token = jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
+	case SigningMethodRS384:
+		token = jwt.NewWithClaims(jwt.SigningMethodRS384, claims)
+	case SigningMethodRS512:
+		token = jwt.NewWithClaims(jwt.SigningMethodRS512, claims)
+	default:
+		return "", fmt.Errorf("unsupported signing method: %s", j.config.SigningMethod)
+	}
+
+	// Sign token
+	tokenString, err := token.SignedString(j.signingKey)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to sign token: %w", err)
 	}
 
-	// Extract subject
-	sub, ok := claims["sub"].(string)
-	if !ok {
-		return "", errors.New(errors.CodeInvalidToken, "subject claim not found or not a string")
-	}
-
-	return sub, nil
+	return tokenString, nil
 }
 
-// ExtractClaimsWithoutValidation extracts claims from a token without validation
-// This is useful for debugging or when you just need to see what's in a token
-func ExtractClaimsWithoutValidation(tokenString string) (jwt.MapClaims, error) {
-	// Parse without validating the signature
-	token, _, err := new(jwt.Parser).ParseUnverified(tokenString, jwt.MapClaims{})
+// ValidateAccessToken validates and parses an access JWT token
+func (j *jwtManager) ValidateAccessToken(tokenString string) (*AccessTokenClaims, error) {
+	// Check if token is revoked
+	if j.IsTokenRevoked(tokenString) {
+		return nil, fmt.Errorf("token has been revoked")
+	}
+
+	// Parse and validate token
+	token, err := jwt.ParseWithClaims(tokenString, &AccessTokenClaims{}, func(token *jwt.Token) (interface{}, error) {
+		// Verify signing method
+		expectedMethod := string(j.config.SigningMethod)
+		if token.Method.Alg() != expectedMethod {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return j.verifyingKey, nil
+	})
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse token: %w", err)
 	}
 
-	// Extract claims
-	claims, ok := token.Claims.(jwt.MapClaims)
+	if !token.Valid {
+		return nil, fmt.Errorf("token is invalid")
+	}
+
+	claims, ok := token.Claims.(*AccessTokenClaims)
 	if !ok {
-		return nil, errors.New(errors.CodeInvalidToken, "invalid claims format")
+		fmt.Println(err)
+		return nil, fmt.Errorf("failed to parse token claims")
+	}
+
+	return claims, nil
+}
+
+// GenerateAPIKeyToken generates a new JWT token with the given api key claims
+func (j *jwtManager) GenerateAPIKeyToken(claims *APIKeyTokenClaims) (string, error) {
+	if claims == nil {
+		return "", fmt.Errorf("claims are required")
+	}
+
+	// Set standard claims if not provided
+	now := time.Now()
+	if claims.IssuedAt == nil {
+		claims.IssuedAt = jwt.NewNumericDate(now)
+	}
+	if claims.NotBefore == nil {
+		claims.NotBefore = jwt.NewNumericDate(now)
+	}
+	if claims.ID == "" {
+		claims.ID = xid.New().String()
+	}
+	if claims.Issuer == "" {
+		claims.Issuer = j.config.Issuer
+	}
+	if len(claims.Audience) == 0 && len(j.config.Audience) > 0 {
+		claims.Audience = j.config.Audience
+	}
+
+	// Set expiration based on token type
+	if claims.ExpiresAt == nil {
+		expiry := j.GetTokenExpiry(claims.TokenType)
+		if expiry > 0 {
+			claims.ExpiresAt = jwt.NewNumericDate(now.Add(expiry))
+		}
+	}
+
+	// Create token
+	var token *jwt.Token
+	switch j.config.SigningMethod {
+	case SigningMethodHS256:
+		token = jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	case SigningMethodHS384:
+		token = jwt.NewWithClaims(jwt.SigningMethodHS384, claims)
+	case SigningMethodHS512:
+		token = jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
+	case SigningMethodRS256:
+		token = jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
+	case SigningMethodRS384:
+		token = jwt.NewWithClaims(jwt.SigningMethodRS384, claims)
+	case SigningMethodRS512:
+		token = jwt.NewWithClaims(jwt.SigningMethodRS512, claims)
+	default:
+		return "", fmt.Errorf("unsupported signing method: %s", j.config.SigningMethod)
+	}
+
+	// Sign token
+	tokenString, err := token.SignedString(j.signingKey)
+	if err != nil {
+		return "", fmt.Errorf("failed to sign token: %w", err)
+	}
+
+	return tokenString, nil
+}
+
+// ValidateAPIKeyToken validates and parses an api key JWT token
+func (j *jwtManager) ValidateAPIKeyToken(tokenString string) (*APIKeyTokenClaims, error) {
+	// Check if token is revoked
+	if j.IsTokenRevoked(tokenString) {
+		return nil, fmt.Errorf("token has been revoked")
+	}
+
+	// Parse and validate token
+	token, err := jwt.ParseWithClaims(tokenString, &APIKeyTokenClaims{}, func(token *jwt.Token) (interface{}, error) {
+		// Verify signing method
+		expectedMethod := string(j.config.SigningMethod)
+		if token.Method.Alg() != expectedMethod {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return j.verifyingKey, nil
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse token: %w", err)
+	}
+
+	if !token.Valid {
+		return nil, fmt.Errorf("token is invalid")
+	}
+
+	claims, ok := token.Claims.(*APIKeyTokenClaims)
+	if !ok {
+		return nil, fmt.Errorf("failed to parse token claims")
+	}
+
+	return claims, nil
+}
+
+// GenerateRefreshToken generates a new JWT token with the given refresh token claims
+func (j *jwtManager) GenerateRefreshToken(claims *RefreshTokenClaims) (string, error) {
+	if claims == nil {
+		return "", fmt.Errorf("claims are required")
+	}
+
+	// Set standard claims if not provided
+	now := time.Now()
+	if claims.IssuedAt == nil {
+		claims.IssuedAt = jwt.NewNumericDate(now)
+	}
+	if claims.NotBefore == nil {
+		claims.NotBefore = jwt.NewNumericDate(now)
+	}
+	if claims.ID == "" {
+		claims.ID = xid.New().String()
+	}
+	if claims.Issuer == "" {
+		claims.Issuer = j.config.Issuer
+	}
+	if len(claims.Audience) == 0 && len(j.config.Audience) > 0 {
+		claims.Audience = j.config.Audience
+	}
+
+	// Set expiration based on token type
+	if claims.ExpiresAt == nil {
+		expiry := j.GetTokenExpiry(claims.TokenType)
+		if expiry > 0 {
+			claims.ExpiresAt = jwt.NewNumericDate(now.Add(expiry))
+		}
+	}
+
+	// Create token
+	var token *jwt.Token
+	switch j.config.SigningMethod {
+	case SigningMethodHS256:
+		token = jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	case SigningMethodHS384:
+		token = jwt.NewWithClaims(jwt.SigningMethodHS384, claims)
+	case SigningMethodHS512:
+		token = jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
+	case SigningMethodRS256:
+		token = jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
+	case SigningMethodRS384:
+		token = jwt.NewWithClaims(jwt.SigningMethodRS384, claims)
+	case SigningMethodRS512:
+		token = jwt.NewWithClaims(jwt.SigningMethodRS512, claims)
+	default:
+		return "", fmt.Errorf("unsupported signing method: %s", j.config.SigningMethod)
+	}
+
+	// Sign token
+	tokenString, err := token.SignedString(j.signingKey)
+	if err != nil {
+		return "", fmt.Errorf("failed to sign token: %w", err)
+	}
+
+	return tokenString, nil
+}
+
+// ValidateRefreshToken validates and parses a JWT token
+func (j *jwtManager) ValidateRefreshToken(tokenString string) (*RefreshTokenClaims, error) {
+	// Check if token is revoked
+	if j.IsTokenRevoked(tokenString) {
+		return nil, fmt.Errorf("token has been revoked")
+	}
+
+	// Parse and validate token
+	token, err := jwt.ParseWithClaims(tokenString, &RefreshTokenClaims{}, func(token *jwt.Token) (interface{}, error) {
+		// Verify signing method
+		expectedMethod := string(j.config.SigningMethod)
+		if token.Method.Alg() != expectedMethod {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return j.verifyingKey, nil
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse token: %w", err)
+	}
+
+	if !token.Valid {
+		return nil, fmt.Errorf("token is invalid")
+	}
+
+	claims, ok := token.Claims.(*RefreshTokenClaims)
+	if !ok {
+		return nil, fmt.Errorf("failed to parse token claims")
+	}
+
+	return claims, nil
+}
+
+// RefreshToken generates new access and refresh tokens from a refresh token
+func (j *jwtManager) RefreshToken(refreshTokenString string) (accessToken, refreshToken string, err error) {
+	// Validate refresh token
+	claims, err := j.ValidateToken(refreshTokenString)
+	if err != nil {
+		return "", "", fmt.Errorf("invalid refresh token: %w", err)
+	}
+
+	// Ensure this is a refresh token
+	if claims.TokenType != TokenTypeRefresh {
+		return "", "", fmt.Errorf("token is not a refresh token")
+	}
+
+	// Revoke the old refresh token
+	if err := j.RevokeToken(refreshTokenString); err != nil {
+		return "", "", fmt.Errorf("failed to revoke old refresh token: %w", err)
+	}
+
+	// Generate new access token
+	accessClaims := &CustomClaims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject: claims.Subject,
+		},
+		UserID:         claims.UserID,
+		OrganizationID: claims.OrganizationID,
+		Email:          claims.Email,
+		Username:       claims.Username,
+		TokenType:      TokenTypeAccess,
+		Scopes:         claims.Scopes,
+		Roles:          claims.Roles,
+		Permissions:    claims.Permissions,
+		SessionID:      claims.SessionID,
+		ClientID:       claims.ClientID,
+		DeviceID:       claims.DeviceID,
+		IPAddress:      claims.IPAddress,
+		UserAgent:      claims.UserAgent,
+	}
+
+	accessToken, err = j.GenerateToken(accessClaims)
+	if err != nil {
+		return "", "", fmt.Errorf("failed to generate access token: %w", err)
+	}
+
+	// Generate new refresh token
+	refreshClaims := &CustomClaims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject: claims.Subject,
+		},
+		UserID:         claims.UserID,
+		OrganizationID: claims.OrganizationID,
+		Email:          claims.Email,
+		Username:       claims.Username,
+		TokenType:      TokenTypeRefresh,
+		SessionID:      claims.SessionID,
+		ClientID:       claims.ClientID,
+		DeviceID:       claims.DeviceID,
+		IPAddress:      claims.IPAddress,
+		UserAgent:      claims.UserAgent,
+	}
+
+	refreshToken, err = j.GenerateToken(refreshClaims)
+	if err != nil {
+		return "", "", fmt.Errorf("failed to generate refresh token: %w", err)
+	}
+
+	return accessToken, refreshToken, nil
+}
+
+// ParseTokenWithoutValidation parses a token without validating it
+func (j *jwtManager) ParseTokenWithoutValidation(tokenString string) (*CustomClaims, error) {
+	token, _, err := new(jwt.Parser).ParseUnverified(tokenString, &CustomClaims{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse token: %w", err)
+	}
+
+	claims, ok := token.Claims.(*CustomClaims)
+	if !ok {
+		return nil, fmt.Errorf("failed to parse token claims")
+	}
+
+	return claims, nil
+}
+
+// GetTokenExpiry returns the expiry duration for a token type
+func (j *jwtManager) GetTokenExpiry(tokenType TokenType) time.Duration {
+	switch tokenType {
+	case TokenTypeAccess:
+		return j.config.AccessTokenExpiry
+	case TokenTypeRefresh:
+		return j.config.RefreshTokenExpiry
+	case TokenTypeEmailVerify:
+		return j.config.VerifyTokenExpiry
+	case TokenTypePasswordReset:
+		return j.config.PasswordResetExpiry
+	case TokenTypeMagicLink:
+		return j.config.MagicLinkExpiry
+	case TokenTypeInvitation:
+		return j.config.InvitationExpiry
+	default:
+		return j.config.AccessTokenExpiry // Default to access token expiry
+	}
+}
+
+// RevokeToken adds a token to the revocation list
+func (j *jwtManager) RevokeToken(tokenString string) error {
+	// Parse token to get expiry time
+	claims, err := j.ParseTokenWithoutValidation(tokenString)
+	if err != nil {
+		return fmt.Errorf("failed to parse token for revocation: %w", err)
+	}
+
+	// Add to revocation list with expiry time
+	var expiryTime time.Time
+	if claims.ExpiresAt != nil {
+		expiryTime = claims.ExpiresAt.Time
+	} else {
+		// If no expiry, set a far future date
+		expiryTime = time.Now().Add(24 * 365 * time.Hour) // 1 year
+	}
+
+	j.revokedList[tokenString] = expiryTime
+
+	// Clean up expired tokens from revocation list
+	j.cleanupRevokedTokens()
+
+	return nil
+}
+
+// IsTokenRevoked checks if a token has been revoked
+func (j *jwtManager) IsTokenRevoked(tokenString string) bool {
+	expiry, exists := j.revokedList[tokenString]
+	if !exists {
+		return false
+	}
+
+	// If token has expired, remove it from revocation list and return false
+	if time.Now().After(expiry) {
+		delete(j.revokedList, tokenString)
+		return false
+	}
+
+	return true
+}
+
+// cleanupRevokedTokens removes expired tokens from the revocation list
+func (j *jwtManager) cleanupRevokedTokens() {
+	now := time.Now()
+	for token, expiry := range j.revokedList {
+		if now.After(expiry) {
+			delete(j.revokedList, token)
+		}
+	}
+}
+
+// Utility functions
+
+// ExtractTokenFromHeader extracts JWT token from Authorization header
+func ExtractTokenFromHeader(authHeader string) (string, error) {
+	if authHeader == "" {
+		return "", fmt.Errorf("authorization header is required")
+	}
+
+	const bearerPrefix = "Bearer "
+	if len(authHeader) < len(bearerPrefix) || authHeader[:len(bearerPrefix)] != bearerPrefix {
+		return "", fmt.Errorf("invalid authorization header format")
+	}
+
+	return authHeader[len(bearerPrefix):], nil
+}
+
+// CreateTokenPair creates both access and refresh tokens
+func CreateTokenPair(manager JWTManager, userID xid.ID, orgID *xid.ID, email, username string, scopes, roles, permissions []string) (accessToken, refreshToken string, err error) {
+	// Create access token
+	accessClaims := &CustomClaims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject: userID.String(),
+		},
+		UserID:         userID,
+		OrganizationID: orgID,
+		Email:          email,
+		Username:       username,
+		TokenType:      TokenTypeAccess,
+		Scopes:         scopes,
+		Roles:          roles,
+		Permissions:    permissions,
+	}
+
+	accessToken, err = manager.GenerateToken(accessClaims)
+	if err != nil {
+		return "", "", fmt.Errorf("failed to generate access token: %w", err)
+	}
+
+	// Create refresh token
+	refreshClaims := &CustomClaims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject: userID.String(),
+		},
+		UserID:         userID,
+		OrganizationID: orgID,
+		Email:          email,
+		Username:       username,
+		TokenType:      TokenTypeRefresh,
+	}
+
+	refreshToken, err = manager.GenerateToken(refreshClaims)
+	if err != nil {
+		return "", "", fmt.Errorf("failed to generate refresh token: %w", err)
+	}
+
+	return accessToken, refreshToken, nil
+}
+
+// ValidateAndExtractClaims is a convenience function to validate token and extract claims
+func ValidateAndExtractClaims(manager JWTManager, tokenString string, expectedTokenType TokenType) (*CustomClaims, error) {
+	claims, err := manager.ValidateToken(tokenString)
+	if err != nil {
+		return nil, err
+	}
+
+	if expectedTokenType != "" && claims.TokenType != expectedTokenType {
+		return nil, fmt.Errorf("invalid token type: expected %s, got %s", expectedTokenType, claims.TokenType)
 	}
 
 	return claims, nil
@@ -479,52 +862,43 @@ func ExtractClaimsWithoutValidation(tokenString string) (jwt.MapClaims, error) {
 
 // IsTokenExpired checks if a token is expired without full validation
 func IsTokenExpired(tokenString string) (bool, error) {
-	claims, err := ExtractClaimsWithoutValidation(tokenString)
+	token, _, err := new(jwt.Parser).ParseUnverified(tokenString, &CustomClaims{})
 	if err != nil {
-		return true, err
+		return false, fmt.Errorf("failed to parse token: %w", err)
 	}
 
-	// Check expiration
-	if exp, ok := claims["exp"].(float64); ok {
-		if time.Unix(int64(exp), 0).Before(time.Now()) {
-			return true, nil
-		}
-		return false, nil
+	claims, ok := token.Claims.(*CustomClaims)
+	if !ok {
+		return false, fmt.Errorf("failed to parse token claims")
 	}
 
-	return true, errors.New(errors.CodeInvalidToken, "expiration claim not found or invalid format")
+	if claims.ExpiresAt == nil {
+		return false, nil // Token doesn't expire
+	}
+
+	return time.Now().After(claims.ExpiresAt.Time), nil
 }
 
-// GenerateAccessToken creates a JWT access token for OAuth2
-func (c *JWTConfig) GenerateAccessToken(userID, clientID string, scopes []string, expiry time.Duration) (string, error) {
-	// Prepare custom claims for OAuth2 access token
-	customClaims := map[string]interface{}{
-		"client_id": clientID,
-		"scope":     scopes,
+// GetTokenRemainingTime returns the remaining time before token expires
+func GetTokenRemainingTime(tokenString string) (time.Duration, error) {
+	token, _, err := new(jwt.Parser).ParseUnverified(tokenString, &CustomClaims{})
+	if err != nil {
+		return 0, fmt.Errorf("failed to parse token: %w", err)
 	}
 
-	return c.GenerateToken(userID, customClaims, expiry)
-}
-
-// GenerateIDToken creates an OpenID Connect ID token
-func (c *JWTConfig) GenerateIDToken(userID string, userData map[string]interface{}, clientID string, nonce string, expiry time.Duration) (string, error) {
-	// Prepare custom claims for ID token
-	customClaims := map[string]interface{}{
-		"aud": clientID,
+	claims, ok := token.Claims.(*CustomClaims)
+	if !ok {
+		return 0, fmt.Errorf("failed to parse token claims")
 	}
 
-	// Add user data
-	for k, v := range userData {
-		// Skip duplicate claims
-		if k != "sub" && k != "iss" && k != "aud" && k != "exp" && k != "iat" {
-			customClaims[k] = v
-		}
+	if claims.ExpiresAt == nil {
+		return time.Duration(0), nil // Token doesn't expire
 	}
 
-	// Add nonce if provided
-	if nonce != "" {
-		customClaims["nonce"] = nonce
+	remaining := time.Until(claims.ExpiresAt.Time)
+	if remaining < 0 {
+		return 0, nil // Token is expired
 	}
 
-	return c.GenerateToken(userID, customClaims, expiry)
+	return remaining, nil
 }

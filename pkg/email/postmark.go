@@ -21,7 +21,7 @@ type PostmarkSender struct {
 }
 
 // NewPostmarkSender creates a new Postmark sender
-func NewPostmarkSender(cfg *config.EmailConfig, logger logging.Logger) *PostmarkSender {
+func NewPostmarkSender(cfg *config.EmailConfig, logger logging.Logger) Sender {
 	return &PostmarkSender{
 		config: cfg,
 		logger: logger,
@@ -103,13 +103,13 @@ func (s *PostmarkSender) Send(ctx context.Context, email Email) error {
 	// Convert payload to JSON
 	jsonPayload, err := json.Marshal(payload)
 	if err != nil {
-		return errors.Wrap(errors.CodeInternalServer, err, "failed to marshal email payload")
+		return errors.Wrap(err, errors.CodeInternalServer, "failed to marshal email payload")
 	}
 
 	// Create request
 	req, err := http.NewRequestWithContext(ctx, "POST", "https://api.postmarkapp.com/email", bytes.NewBuffer(jsonPayload))
 	if err != nil {
-		return errors.Wrap(errors.CodeInternalServer, err, "failed to create HTTP request")
+		return errors.Wrap(err, errors.CodeInternalServer, "failed to create HTTP request")
 	}
 
 	// Add headers
@@ -120,7 +120,7 @@ func (s *PostmarkSender) Send(ctx context.Context, email Email) error {
 	// Execute request
 	resp, err := s.client.Do(req)
 	if err != nil {
-		return errors.Wrap(errors.CodeEmailDeliveryFail, err, "failed to send email via Postmark")
+		return errors.Wrap(err, errors.CodeEmailDeliveryFail, "failed to send email via Postmark")
 	}
 	defer resp.Body.Close()
 
@@ -139,6 +139,25 @@ func (s *PostmarkSender) Send(ctx context.Context, email Email) error {
 	)
 
 	return nil
+}
+
+func (s *PostmarkSender) SendBulkEmails(ctx context.Context, emails []Email) (*BulkEmailResult, error) {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (s *PostmarkSender) TestConnection(ctx context.Context) error {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (s *PostmarkSender) GetDeliveryStatus(ctx context.Context, messageID string) (*DeliveryInfo, error) {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (s *PostmarkSender) Name() string {
+	return "postmark"
 }
 
 // join combines a list of email addresses into a comma-separated string

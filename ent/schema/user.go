@@ -126,6 +126,7 @@ func (User) Edges() []ent.Edge {
 
 		edge.To("memberships", Membership.Type).
 			Comment("For external users - their memberships in organizations"),
+		edge.To("sent_invitations", Membership.Type),
 
 		// Shared authentication and security features
 		edge.To("sessions", Session.Type),
@@ -150,6 +151,8 @@ func (User) Edges() []ent.Edge {
 
 		edge.To("assigned_user_permissions", UserPermission.Type).
 			Comment("Permission assignments made by this user"),
+
+		edge.To("audit_logs", Audit.Type),
 	}
 }
 

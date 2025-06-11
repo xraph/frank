@@ -1,0 +1,1 @@
+{{.appName}}: {{.codeCount}} backup codes generated for your account. Store them safely. Generated at {{.timestamp}}.

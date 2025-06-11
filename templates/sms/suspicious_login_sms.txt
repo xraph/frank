@@ -1,0 +1,1 @@
+🚨 {{.appName}}: Suspicious sign-in detected from {{.location}} ({{.ipAddress}}). If this wasn't you, secure your account: {{.securityUrl}}

@@ -32,6 +32,11 @@ type OutputWithStatus[T any] struct {
 	Status int
 }
 
+type RedirectOutput struct {
+	Status   int
+	Location string `json:"location" header:"Location"`
+}
+
 type EmptyOutputBody struct{}
 type EmptyOutput = Output[EmptyOutputBody]
 

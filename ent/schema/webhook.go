@@ -40,6 +40,7 @@ func (Webhook) Fields() []ent.Field {
 			Values("json", "form").
 			Default("json"),
 		entity.JSONMapField("metadata", true),
+		entity.JSONMapStringField("headers", true),
 	}
 }
 
@@ -67,5 +68,6 @@ func (Webhook) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		ModelBaseMixin{},
 		TimeMixin{},
+		SoftDeleteMixin{},
 	}
 }

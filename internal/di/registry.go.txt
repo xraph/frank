@@ -1,0 +1,71 @@
+package di
+
+import (
+	"fmt"
+)
+
+// ContainerInner Registry for global access (optional)
+var
+ ContainerInner
+
+// SetGlobalContainer sets the global container instance
+func SetGlobalContainer(c ContainerInner) {
+	globalContainer = c
+}
+
+// GetGlobalContainer returns the global container instance
+func GetGlobalContainer() ContainerInner {
+	return globalContainer
+}
+
+// Service factory functions for advanced dependency injection
+
+// ServiceFactory represents a factory function for creating services
+type ServiceFactory[T any] func(ContainerInner) T
+
+// ServiceRegistry holds service factories
+type ServiceRegistry struct {
+	factories map[string]interface{}
+}
+
+// NewServiceRegistry creates a new service registry
+func NewServiceRegistry() *ServiceRegistry {
+	return &ServiceRegistry{
+		factories: make(map[string]interface{}),
+	}
+}
+
+// Register registers a service factory
+func (r *ServiceRegistry) Register[T any](name string, factory ServiceFactory[T]) {
+	r.factories[name] = factory
+}
+
+// Get retrieves a service from the registry
+func (r *ServiceRegistry) Get[T any](name string, container ContainerInner) (T, error) {
+	var zero T
+
+	factory, exists := r.factories[name]
+	if !exists {
+		return zero, fmt.Errorf("service %s not registered", name)
+	}
+
+	typedFactory, ok := factory.(ServiceFactory[T])
+	if !ok {
+		return zero, fmt.Errorf("service %s has incorrect type", name)
+	}
+
+	return typedFactory(container), nil
+}
+
+// Global service registry
+var globalRegistry = NewServiceRegistry()
+
+// RegisterService registers a service factory globally
+func RegisterService[T any](name string, factory ServiceFactory[T]) {
+	globalRegistry.Register(name, factory)
+}
+
+// GetService retrieves a service from the global registry
+func GetService[T any](name string, container ContainerInner) (T, error) {
+	return globalRegistry.Get[T](name, container)
+}

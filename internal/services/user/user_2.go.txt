@@ -1,0 +1,701 @@
+package user
+
+import (
+	"context"
+	"crypto/rand"
+	"encoding/base64"
+	"fmt"
+	"time"
+
+	"github.com/juicycleff/frank/ent"
+	"github.com/juicycleff/frank/ent/user"
+	"github.com/juicycleff/frank/internal/model"
+	"github.com/juicycleff/frank/internal/repository"
+	"github.com/juicycleff/frank/pkg/errors"
+	"github.com/juicycleff/frank/pkg/hash"
+	"github.com/juicycleff/frank/pkg/validation"
+	"github.com/rs/xid"
+	"golang.org/x/crypto/bcrypt"
+)
+
+// Service defines the user service interface
+type Service interface {
+	// User management
+	CreateUser(ctx context.Context, req model.CreateUserRequest) (*ent.User, error)
+	GetUser(ctx context.Context, id xid.ID) (*ent.User, error)
+	GetUserByEmail(ctx context.Context, email string, userType user.UserType, orgID *xid.ID) (*ent.User, error)
+	GetUserByUsername(ctx context.Context, username string, userType user.UserType, orgID *xid.ID) (*ent.User, error)
+	UpdateUser(ctx context.Context, id xid.ID, req model.UpdateUserRequest) (*ent.User, error)
+	DeleteUser(ctx context.Context, req model.DeleteUserRequest) error
+	ListUsers(ctx context.Context, req model.UserListRequest) (*model.UserListResponse, error)
+	GetUserStats(ctx context.Context, orgID *xid.ID) (*model.UserStats, error)
+
+	// Authentication
+	AuthenticateUser(ctx context.Context, email, password string, userType user.UserType, orgID *xid.ID) (*ent.User, error)
+	ValidateUserCredentials(ctx context.Context, email, password string, userType user.UserType, orgID *xid.ID) (*ent.User, error)
+
+	// Password management
+	ChangePassword(ctx context.Context, userID xid.ID, req model.ChangePasswordRequest) error
+	SetPassword(ctx context.Context, userID xid.ID, req model.SetPasswordRequest) error
+	GeneratePasswordResetToken(ctx context.Context, email string, userType user.UserType, orgID *xid.ID) (string, error)
+	ResetPassword(ctx context.Context, token, newPassword string) (*ent.User, error)
+	ValidatePassword(ctx context.Context, password string, userID xid.ID) error
+
+	// User status management
+	ActivateUser(ctx context.Context, userID xid.ID) error
+	DeactivateUser(ctx context.Context, userID xid.ID) error
+	BlockUser(ctx context.Context, userID xid.ID, reason string) error
+	UnblockUser(ctx context.Context, userID xid.ID) error
+
+	// Email verification
+	SendEmailVerification(ctx context.Context, userID xid.ID) error
+	VerifyEmail(ctx context.Context, token string) (*ent.User, error)
+	MarkEmailVerified(ctx context.Context, userID xid.ID) error
+
+	// Phone verification
+	SendPhoneVerification(ctx context.Context, userID xid.ID) error
+	VerifyPhone(ctx context.Context, userID xid.ID, code string) error
+	MarkPhoneVerified(ctx context.Context, userID xid.ID) error
+
+	// User activity
+	GetUserActivity(ctx context.Context, userID xid.ID, req model.UserActivityRequest) (*model.UserActivityResponse, error)
+	RecordLogin(ctx context.Context, userID xid.ID, ipAddress, userAgent string) error
+	UpdateLastLogin(ctx context.Context, userID xid.ID, ipAddress string) error
+
+	// Bulk operations
+	BulkUserOperation(ctx context.Context, req model.BulkUserOperation) (*model.BulkUserOperationResponse, error)
+	ImportUsers(ctx context.Context, users []model.CreateUserRequest, orgID xid.ID) (*model.BulkUserOperationResponse, error)
+	ExportUsers(ctx context.Context, orgID *xid.ID, filters map[string]interface{}) ([]byte, error)
+
+	// User search and filtering
+	SearchUsers(ctx context.Context, query string, filters map[string]interface{}) (*model.UserListResponse, error)
+	GetUsersByRole(ctx context.Context, roleID xid.ID, orgID *xid.ID) ([]*ent.User, error)
+	GetUsersByPermission(ctx context.Context, permission string, orgID *xid.ID) ([]*ent.User, error)
+
+	// User validation
+	ValidateUserExists(ctx context.Context, userID xid.ID) error
+	ValidateEmailUnique(ctx context.Context, email string, userType user.UserType, orgID *xid.ID, excludeUserID *xid.ID) error
+	ValidateUsernameUnique(ctx context.Context, username string, userType user.UserType, orgID *xid.ID, excludeUserID *xid.ID) error
+
+	// User impersonation (admin feature)
+	ImpersonateUser(ctx context.Context, adminID, targetUserID xid.ID, duration time.Duration) (string, error)
+	EndImpersonation(ctx context.Context, sessionToken string) error
+}
+
+// service implements the user service
+type service struct {
+	userRepo          repository.UserRepository
+	auditRepo         repository.AuditRepository
+	verificationRepo  repository.VerificationRepository
+	sessionRepo       repository.SessionRepository
+	mfaRepo           repository.MFARepository
+	orgRepo           repository.OrganizationRepository
+	hashService       hash.Service
+	validationService validation.Service
+}
+
+// NewService creates a new user service
+func NewService(
+	userRepo repository.UserRepository,
+	auditRepo repository.AuditRepository,
+	verificationRepo repository.VerificationRepository,
+	sessionRepo repository.SessionRepository,
+	mfaRepo repository.MFARepository,
+	orgRepo repository.OrganizationRepository,
+	hashService hash.Service,
+	validationService validation.Service,
+) Service {
+	return &service{
+		userRepo:          userRepo,
+		auditRepo:         auditRepo,
+		verificationRepo:  verificationRepo,
+		sessionRepo:       sessionRepo,
+		mfaRepo:           mfaRepo,
+		orgRepo:           orgRepo,
+		hashService:       hashService,
+		validationService: validationService,
+	}
+}
+
+// CreateUser creates a new user
+func (s *service) CreateUser(ctx context.Context, req model.CreateUserRequest) (*ent.User, error) {
+	// Validate request
+	if err := s.validateCreateUserRequest(ctx, req); err != nil {
+		return nil, err
+	}
+
+	// Hash password if provided
+	var passwordHash string
+	if req.Password != "" {
+		if !req.SkipPasswordValidation {
+			if err := s.ValidatePassword(ctx, req.Password, xid.NilID()); err != nil {
+				return nil, err
+			}
+		}
+
+		hash, err := s.hashPassword(req.Password)
+		if err != nil {
+			return nil, errors.Wrap(err, errors.CodeInternalServer, "failed to hash password")
+		}
+		passwordHash = hash
+	}
+
+	// Prepare user input
+	input := repository.CreateUserInput{
+		Email:            req.Email,
+		PhoneNumber:      req.PhoneNumber,
+		FirstName:        req.FirstName,
+		LastName:         req.LastName,
+		Username:         req.Username,
+		PasswordHash:     passwordHash,
+		UserType:         user.UserType(req.UserType),
+		OrganizationID:   req.OrganizationID,
+		Locale:           req.Locale,
+		Timezone:         req.Timezone,
+		AuthProvider:     req.AuthProvider,
+		ExternalID:       req.ExternalID,
+		CustomAttributes: req.CustomAttributes,
+		EmailVerified:    req.EmailVerified,
+		PhoneVerified:    req.PhoneVerified,
+		Active:           true,
+		Blocked:          false,
+	}
+
+	// Create user
+	user, err := s.userRepo.Create(ctx, input)
+	if err != nil {
+		return nil, errors.Wrap(err, errors.CodeInternalServer, "failed to create user")
+	}
+
+	// Send verification email if requested and email not pre-verified
+	if req.SendVerificationEmail && !req.EmailVerified && req.Email != "" {
+		if err := s.SendEmailVerification(ctx, user.ID); err != nil {
+			// Log error but don't fail user creation
+			s.logError(ctx, "failed to send verification email", err, map[string]interface{}{
+				"user_id": user.ID,
+				"email":   req.Email,
+			})
+		}
+	}
+
+	// Audit log
+	s.auditUserCreation(ctx, user.ID, user.ID, map[string]interface{}{
+		"email":     req.Email,
+		"user_type": req.UserType,
+		"org_id":    req.OrganizationID,
+	})
+
+	return user, nil
+}
+
+// GetUser retrieves a user by ID
+func (s *service) GetUser(ctx context.Context, id xid.ID) (*ent.User, error) {
+	user, err := s.userRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, errors.Wrap(err, errors.CodeNotFound, "user not found")
+	}
+	return user, nil
+}
+
+// GetUserByEmail retrieves a user by email
+func (s *service) GetUserByEmail(ctx context.Context, email string, userType user.UserType, orgID *xid.ID) (*ent.User, error) {
+	user, err := s.userRepo.GetByEmail(ctx, email, userType, orgID)
+	if err != nil {
+		return nil, errors.Wrap(err, errors.CodeNotFound, "user not found")
+	}
+	return user, nil
+}
+
+// GetUserByUsername retrieves a user by username
+func (s *service) GetUserByUsername(ctx context.Context, username string, userType user.UserType, orgID *xid.ID) (*ent.User, error) {
+	user, err := s.userRepo.GetByUsername(ctx, username, userType, orgID)
+	if err != nil {
+		return nil, errors.Wrap(err, errors.CodeNotFound, "user not found")
+	}
+	return user, nil
+}
+
+// UpdateUser updates a user
+func (s *service) UpdateUser(ctx context.Context, id xid.ID, req model.UpdateUserRequest) (*ent.User, error) {
+	// Validate user exists
+	if err := s.ValidateUserExists(ctx, id); err != nil {
+		return nil, err
+	}
+
+	// Validate unique constraints
+	if req.Email.IsSet() {
+		if err := s.ValidateEmailUnique(ctx, req.Email.Value(), user.UserTypeExternal, nil, &id); err != nil {
+			return nil, err
+		}
+	}
+
+	if req.Username.IsSet() {
+		if err := s.ValidateUsernameUnique(ctx, req.Username.Value(), user.UserTypeExternal, nil, &id); err != nil {
+			return nil, err
+		}
+	}
+
+	// Prepare update input
+	input := repository.UpdateUserInput{
+		Email:            req.Email.Ptr(),
+		PhoneNumber:      req.PhoneNumber.Ptr(),
+		FirstName:        req.FirstName.Ptr(),
+		LastName:         req.LastName.Ptr(),
+		Username:         req.Username.Ptr(),
+		ProfileImageURL:  req.ProfileImageURL.Ptr(),
+		Locale:           req.Locale.Ptr(),
+		Timezone:         req.Timezone.Ptr(),
+		CustomAttributes: req.CustomAttributes.Ptr(),
+		Active:           req.Active.Ptr(),
+		Blocked:          req.Blocked.Ptr(),
+	}
+
+	// Update user
+	user, err := s.userRepo.Update(ctx, id, input)
+	if err != nil {
+		return nil, errors.Wrap(err, errors.CodeInternalServer, "failed to update user")
+	}
+
+	// Audit log
+	s.auditUserUpdate(ctx, user.ID, user.ID, map[string]interface{}{
+		"updated_fields": s.getUpdatedFields(req),
+	})
+
+	return user, nil
+}
+
+// DeleteUser deletes a user
+func (s *service) DeleteUser(ctx context.Context, req model.DeleteUserRequest) error {
+	// Implementation depends on the specific DeleteUserRequest structure
+	// For now, assume it has a UserID field
+	return errors.New(errors.CodeNotImplemented, "delete user not implemented")
+}
+
+// ListUsers lists users with pagination and filtering
+func (s *service) ListUsers(ctx context.Context, req model.UserListRequest) (*model.UserListResponse, error) {
+	params := repository.ListUsersParams{
+		OrganizationID: req.OrganizationID,
+		UserType:       req.UserType,
+		Active:         req.Active,
+		Blocked:        req.Blocked,
+		Search:         req.Search,
+		AuthProvider:   req.AuthProvider,
+		PaginationParams: model.PaginationParams{
+			Limit:   req.Limit,
+			Offset:  req.Offset,
+			OrderBy: []string{fmt.Sprintf("%s:%s", req.SortBy, req.SortOrder)},
+		},
+	}
+
+	result, err := s.userRepo.List(ctx, params)
+	if err != nil {
+		return nil, errors.Wrap(err, errors.CodeInternalServer, "failed to list users")
+	}
+
+	// Convert to response format
+	users := make([]model.UserSummary, len(result.Data))
+	for i, u := range result.Data {
+		users[i] = model.UserSummary{
+			ID:              u.ID,
+			Email:           u.Email,
+			FirstName:       u.FirstName,
+			LastName:        u.LastName,
+			Username:        u.Username,
+			ProfileImageURL: u.ProfileImageURL,
+			UserType:        string(u.UserType),
+			Active:          u.Active,
+			LastLogin:       u.LastLogin,
+			CreatedAt:       u.CreatedAt,
+		}
+	}
+
+	return &model.UserListResponse{
+		Users:   users,
+		Total:   result.Pagination.TotalCount,
+		Limit:   req.Limit,
+		Offset:  req.Offset,
+		HasMore: result.Pagination.HasNextPage,
+	}, nil
+}
+
+// AuthenticateUser authenticates a user with email/password
+func (s *service) AuthenticateUser(ctx context.Context, email, password string, userType user.UserType, orgID *xid.ID) (*ent.User, error) {
+	// Get user by email
+	user, err := s.userRepo.GetByEmail(ctx, email, userType, orgID)
+	if err != nil {
+		return nil, errors.New(errors.CodeUnauthorized, "invalid credentials")
+	}
+
+	// Check if user is active and not blocked
+	if !user.Active {
+		return nil, errors.New(errors.CodeUnauthorized, "user account is inactive")
+	}
+
+	if user.Blocked {
+		return nil, errors.New(errors.CodeUnauthorized, "user account is blocked")
+	}
+
+	// Verify password
+	if err := s.verifyPassword(password, user.PasswordHash); err != nil {
+		// Audit failed login attempt
+		s.auditFailedLogin(ctx, user.ID, "invalid_password")
+		return nil, errors.New(errors.CodeUnauthorized, "invalid credentials")
+	}
+
+	return user, nil
+}
+
+// ValidateUserCredentials validates user credentials without full authentication
+func (s *service) ValidateUserCredentials(ctx context.Context, email, password string, userType user.UserType, orgID *xid.ID) (*ent.User, error) {
+	return s.AuthenticateUser(ctx, email, password, userType, orgID)
+}
+
+// ChangePassword changes a user's password
+func (s *service) ChangePassword(ctx context.Context, userID xid.ID, req model.ChangePasswordRequest) error {
+	// Get user
+	user, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		return errors.Wrap(err, errors.CodeNotFound, "user not found")
+	}
+
+	// Verify current password
+	if err := s.verifyPassword(req.CurrentPassword, user.PasswordHash); err != nil {
+		return errors.New(errors.CodeUnauthorized, "current password is incorrect")
+	}
+
+	// Validate new password
+	if err := s.ValidatePassword(ctx, req.NewPassword, userID); err != nil {
+		return err
+	}
+
+	// Hash new password
+	newPasswordHash, err := s.hashPassword(req.NewPassword)
+	if err != nil {
+		return errors.Wrap(err, errors.CodeInternalServer, "failed to hash password")
+	}
+
+	// Update password
+	if err := s.userRepo.UpdatePassword(ctx, userID, newPasswordHash); err != nil {
+		return errors.Wrap(err, errors.CodeInternalServer, "failed to update password")
+	}
+
+	// Audit log
+	s.auditPasswordChange(ctx, userID, userID)
+
+	return nil
+}
+
+// SetPassword sets a user's password (admin only)
+func (s *service) SetPassword(ctx context.Context, userID xid.ID, req model.SetPasswordRequest) error {
+	// Validate password
+	if err := s.ValidatePassword(ctx, req.Password, userID); err != nil {
+		return err
+	}
+
+	// Hash password
+	passwordHash, err := s.hashPassword(req.Password)
+	if err != nil {
+		return errors.Wrap(err, errors.CodeInternalServer, "failed to hash password")
+	}
+
+	// Update password
+	if err := s.userRepo.UpdatePassword(ctx, userID, passwordHash); err != nil {
+		return errors.Wrap(err, errors.CodeInternalServer, "failed to update password")
+	}
+
+	// TODO: Handle temporary password logic
+	if req.Temporary {
+		// Set flag to require password change on next login
+	}
+
+	// Audit log
+	s.auditPasswordSet(ctx, userID, userID)
+
+	return nil
+}
+
+// Helper methods
+
+func (s *service) validateCreateUserRequest(ctx context.Context, req model.CreateUserRequest) error {
+	if req.Email == "" {
+		return errors.New(errors.CodeBadRequest, "email is required")
+	}
+
+	if !s.validationService.IsValidEmail(req.Email) {
+		return errors.New(errors.CodeBadRequest, "invalid email format")
+	}
+
+	// Check email uniqueness
+	if err := s.ValidateEmailUnique(ctx, req.Email, user.UserType(req.UserType), req.OrganizationID, nil); err != nil {
+		return err
+	}
+
+	// Check username uniqueness if provided
+	if req.Username != "" {
+		if err := s.ValidateUsernameUnique(ctx, req.Username, user.UserType(req.UserType), req.OrganizationID, nil); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *service) hashPassword(password string) (string, error) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+	return string(hash), nil
+}
+
+func (s *service) verifyPassword(password, hash string) error {
+	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+}
+
+func (s *service) generateRandomToken() (string, error) {
+	bytes := make([]byte, 32)
+	if _, err := rand.Read(bytes); err != nil {
+		return "", err
+	}
+	return base64.URLEncoding.EncodeToString(bytes), nil
+}
+
+// Validation methods
+
+func (s *service) ValidateUserExists(ctx context.Context, userID xid.ID) error {
+	_, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		return errors.Wrap(err, errors.CodeNotFound, "user not found")
+	}
+	return nil
+}
+
+func (s *service) ValidateEmailUnique(ctx context.Context, email string, userType user.UserType, orgID *xid.ID, excludeUserID *xid.ID) error {
+	exists, err := s.userRepo.ExistsByEmail(ctx, email, userType, orgID)
+	if err != nil {
+		return errors.Wrap(err, errors.CodeInternalServer, "failed to check email uniqueness")
+	}
+
+	if exists {
+		// If we're excluding a user (for updates), check if it's the same user
+		if excludeUserID != nil {
+			existingUser, err := s.userRepo.GetByEmail(ctx, email, userType, orgID)
+			if err == nil && existingUser.ID == *excludeUserID {
+				return nil // Same user, allow update
+			}
+		}
+		return errors.New(errors.CodeConflict, "email already exists")
+	}
+
+	return nil
+}
+
+func (s *service) ValidateUsernameUnique(ctx context.Context, username string, userType user.UserType, orgID *xid.ID, excludeUserID *xid.ID) error {
+	exists, err := s.userRepo.ExistsByUsername(ctx, username, userType, orgID)
+	if err != nil {
+		return errors.Wrap(err, errors.CodeInternalServer, "failed to check username uniqueness")
+	}
+
+	if exists {
+		// If we're excluding a user (for updates), check if it's the same user
+		if excludeUserID != nil {
+			existingUser, err := s.userRepo.GetByUsername(ctx, username, userType, orgID)
+			if err == nil && existingUser.ID == *excludeUserID {
+				return nil // Same user, allow update
+			}
+		}
+		return errors.New(errors.CodeConflict, "username already exists")
+	}
+
+	return nil
+}
+
+func (s *service) ValidatePassword(ctx context.Context, password string, userID xid.ID) error {
+	if len(password) < 8 {
+		return errors.New(errors.CodeBadRequest, "password must be at least 8 characters long")
+	}
+
+	// Add more password validation rules as needed
+	return nil
+}
+
+// Audit helper methods
+
+func (s *service) auditUserCreation(ctx context.Context, userID, actorID xid.ID, metadata map[string]interface{}) {
+	input := repository.CreateAuditInput{
+		UserID:       &userID,
+		ActorID:      &actorID,
+		Action:       "user.created",
+		ResourceType: "user",
+		ResourceID:   &userID,
+		Status:       "success",
+		Metadata:     metadata,
+	}
+	s.auditRepo.Create(ctx, input)
+}
+
+func (s *service) auditUserUpdate(ctx context.Context, userID, actorID xid.ID, metadata map[string]interface{}) {
+	input := repository.CreateAuditInput{
+		UserID:       &userID,
+		ActorID:      &actorID,
+		Action:       "user.updated",
+		ResourceType: "user",
+		ResourceID:   &userID,
+		Status:       "success",
+		Metadata:     metadata,
+	}
+	s.auditRepo.Create(ctx, input)
+}
+
+func (s *service) auditPasswordChange(ctx context.Context, userID, actorID xid.ID) {
+	input := repository.CreateAuditInput{
+		UserID:       &userID,
+		ActorID:      &actorID,
+		Action:       "password.changed",
+		ResourceType: "user",
+		ResourceID:   &userID,
+		Status:       "success",
+	}
+	s.auditRepo.Create(ctx, input)
+}
+
+func (s *service) auditPasswordSet(ctx context.Context, userID, actorID xid.ID) {
+	input := repository.CreateAuditInput{
+		UserID:       &userID,
+		ActorID:      &actorID,
+		Action:       "password.set",
+		ResourceType: "user",
+		ResourceID:   &userID,
+		Status:       "success",
+	}
+	s.auditRepo.Create(ctx, input)
+}
+
+func (s *service) auditFailedLogin(ctx context.Context, userID xid.ID, reason string) {
+	input := repository.CreateAuditInput{
+		UserID:       &userID,
+		Action:       "login.failed",
+		ResourceType: "user",
+		ResourceID:   &userID,
+		Status:       "failed",
+		Metadata:     map[string]interface{}{"reason": reason},
+	}
+	s.auditRepo.Create(ctx, input)
+}
+
+func (s *service) logError(ctx context.Context, message string, err error, metadata map[string]interface{}) {
+	// Log error - implementation depends on logging framework
+	fmt.Printf("Error: %s - %v - %v\n", message, err, metadata)
+}
+
+func (s *service) getUpdatedFields(req model.UpdateUserRequest) []string {
+	var fields []string
+	if req.Email.IsSet() {
+		fields = append(fields, "email")
+	}
+	if req.FirstName.IsSet() {
+		fields = append(fields, "first_name")
+	}
+	if req.LastName.IsSet() {
+		fields = append(fields, "last_name")
+	}
+	// Add other fields as needed
+	return fields
+}
+
+// Placeholder implementations for interface compliance
+func (s *service) GetUserStats(ctx context.Context, orgID *xid.ID) (*model.UserStats, error) {
+	return nil, errors.New(errors.CodeNotImplemented, "not implemented")
+}
+
+func (s *service) GeneratePasswordResetToken(ctx context.Context, email string, userType user.UserType, orgID *xid.ID) (string, error) {
+	return "", errors.New(errors.CodeNotImplemented, "not implemented")
+}
+
+func (s *service) ResetPassword(ctx context.Context, token, newPassword string) (*ent.User, error) {
+	return nil, errors.New(errors.CodeNotImplemented, "not implemented")
+}
+
+func (s *service) ActivateUser(ctx context.Context, userID xid.ID) error {
+	return errors.New(errors.CodeNotImplemented, "not implemented")
+}
+
+func (s *service) DeactivateUser(ctx context.Context, userID xid.ID) error {
+	return errors.New(errors.CodeNotImplemented, "not implemented")
+}
+
+func (s *service) BlockUser(ctx context.Context, userID xid.ID, reason string) error {
+	return errors.New(errors.CodeNotImplemented, "not implemented")
+}
+
+func (s *service) UnblockUser(ctx context.Context, userID xid.ID) error {
+	return errors.New(errors.CodeNotImplemented, "not implemented")
+}
+
+func (s *service) SendEmailVerification(ctx context.Context, userID xid.ID) error {
+	return errors.New(errors.CodeNotImplemented, "not implemented")
+}
+
+func (s *service) VerifyEmail(ctx context.Context, token string) (*ent.User, error) {
+	return nil, errors.New(errors.CodeNotImplemented, "not implemented")
+}
+
+func (s *service) MarkEmailVerified(ctx context.Context, userID xid.ID) error {
+	return errors.New(errors.CodeNotImplemented, "not implemented")
+}
+
+func (s *service) SendPhoneVerification(ctx context.Context, userID xid.ID) error {
+	return errors.New(errors.CodeNotImplemented, "not implemented")
+}
+
+func (s *service) VerifyPhone(ctx context.Context, userID xid.ID, code string) error {
+	return errors.New(errors.CodeNotImplemented, "not implemented")
+}
+
+func (s *service) MarkPhoneVerified(ctx context.Context, userID xid.ID) error {
+	return errors.New(errors.CodeNotImplemented, "not implemented")
+}
+
+func (s *service) GetUserActivity(ctx context.Context, userID xid.ID, req model.UserActivityRequest) (*model.UserActivityResponse, error) {
+	return nil, errors.New(errors.CodeNotImplemented, "not implemented")
+}
+
+func (s *service) RecordLogin(ctx context.Context, userID xid.ID, ipAddress, userAgent string) error {
+	return errors.New(errors.CodeNotImplemented, "not implemented")
+}
+
+func (s *service) UpdateLastLogin(ctx context.Context, userID xid.ID, ipAddress string) error {
+	return errors.New(errors.CodeNotImplemented, "not implemented")
+}
+
+func (s *service) BulkUserOperation(ctx context.Context, req model.BulkUserOperation) (*model.BulkUserOperationResponse, error) {
+	return nil, errors.New(errors.CodeNotImplemented, "not implemented")
+}
+
+func (s *service) ImportUsers(ctx context.Context, users []model.CreateUserRequest, orgID xid.ID) (*model.BulkUserOperationResponse, error) {
+	return nil, errors.New(errors.CodeNotImplemented, "not implemented")
+}
+
+func (s *service) ExportUsers(ctx context.Context, orgID *xid.ID, filters map[string]interface{}) ([]byte, error) {
+	return nil, errors.New(errors.CodeNotImplemented, "not implemented")
+}
+
+func (s *service) SearchUsers(ctx context.Context, query string, filters map[string]interface{}) (*model.UserListResponse, error) {
+	return nil, errors.New(errors.CodeNotImplemented, "not implemented")
+}
+
+func (s *service) GetUsersByRole(ctx context.Context, roleID xid.ID, orgID *xid.ID) ([]*ent.User, error) {
+	return nil, errors.New(errors.CodeNotImplemented, "not implemented")
+}
+
+func (s *service) GetUsersByPermission(ctx context.Context, permission string, orgID *xid.ID) ([]*ent.User, error) {
+	return nil, errors.New(errors.CodeNotImplemented, "not implemented")
+}
+
+func (s *service) ImpersonateUser(ctx context.Context, adminID, targetUserID xid.ID, duration time.Duration) (string, error) {
+	return "", errors.New(errors.CodeNotImplemented, "not implemented")
+}
+
+func (s *service) EndImpersonation(ctx context.Context, sessionToken string) error {
+	return errors.New(errors.CodeNotImplemented, "not implemented")
+}

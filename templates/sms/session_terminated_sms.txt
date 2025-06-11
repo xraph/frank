@@ -1,0 +1,1 @@
+{{.appName}}: All sessions terminated for security. Sign in again at {{.loginUrl}}. Contact support if needed.

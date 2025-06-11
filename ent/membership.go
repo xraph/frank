@@ -30,12 +30,16 @@ type Membership struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// DeletedAt holds the value of the "deleted_at" field.
+	DeletedAt time.Time `json:"deleted_at,omitempty"`
 	// UserID holds the value of the "user_id" field.
 	UserID xid.ID `json:"user_id,omitempty"`
 	// OrganizationID holds the value of the "organization_id" field.
 	OrganizationID xid.ID `json:"organization_id,omitempty"`
 	// RoleID holds the value of the "role_id" field.
 	RoleID xid.ID `json:"role_id,omitempty"`
+	// Email holds the value of the "email" field.
+	Email string `json:"email,omitempty"`
 	// Status holds the value of the "status" field.
 	Status membership.Status `json:"status,omitempty"`
 	// User ID who sent the invitation
@@ -52,8 +56,12 @@ type Membership struct {
 	IsBillingContact bool `json:"is_billing_contact,omitempty"`
 	// Primary contact for the organization
 	IsPrimaryContact bool `json:"is_primary_contact,omitempty"`
+	// Datetime when the invitation left
+	LeftAt *time.Time `json:"left_at,omitempty"`
 	// Additional membership metadata
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
+	// Additional membership metadata
+	CustomFields map[string]interface{} `json:"custom_fields,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the MembershipQuery when eager-loading is set.
 	Edges        MembershipEdges `json:"edges"`
@@ -68,9 +76,11 @@ type MembershipEdges struct {
 	Organization *Organization `json:"organization,omitempty"`
 	// Role holds the value of the role edge.
 	Role *Role `json:"role,omitempty"`
+	// Inviter holds the value of the inviter edge.
+	Inviter *User `json:"inviter,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [4]bool
 }
 
 // UserOrErr returns the User value or an error if the edge
@@ -106,18 +116,29 @@ func (e MembershipEdges) RoleOrErr() (*Role, error) {
 	return nil, &NotLoadedError{edge: "role"}
 }
 
+// InviterOrErr returns the Inviter value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e MembershipEdges) InviterOrErr() (*User, error) {
+	if e.Inviter != nil {
+		return e.Inviter, nil
+	} else if e.loadedTypes[3] {
+		return nil, &NotFoundError{label: user.Label}
+	}
+	return nil, &NotLoadedError{edge: "inviter"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Membership) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case membership.FieldMetadata:
+		case membership.FieldMetadata, membership.FieldCustomFields:
 			values[i] = new([]byte)
 		case membership.FieldIsBillingContact, membership.FieldIsPrimaryContact:
 			values[i] = new(sql.NullBool)
-		case membership.FieldStatus, membership.FieldInvitationToken:
+		case membership.FieldEmail, membership.FieldStatus, membership.FieldInvitationToken:
 			values[i] = new(sql.NullString)
-		case membership.FieldCreatedAt, membership.FieldUpdatedAt, membership.FieldInvitedAt, membership.FieldJoinedAt, membership.FieldExpiresAt:
+		case membership.FieldCreatedAt, membership.FieldUpdatedAt, membership.FieldDeletedAt, membership.FieldInvitedAt, membership.FieldJoinedAt, membership.FieldExpiresAt, membership.FieldLeftAt:
 			values[i] = new(sql.NullTime)
 		case membership.FieldID, membership.FieldUserID, membership.FieldOrganizationID, membership.FieldRoleID, membership.FieldInvitedBy:
 			values[i] = new(xid.ID)
@@ -154,6 +175,12 @@ func (m *Membership) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				m.UpdatedAt = value.Time
 			}
+		case membership.FieldDeletedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field deleted_at", values[i])
+			} else if value.Valid {
+				m.DeletedAt = value.Time
+			}
 		case membership.FieldUserID:
 			if value, ok := values[i].(*xid.ID); !ok {
 				return fmt.Errorf("unexpected type %T for field user_id", values[i])
@@ -171,6 +198,12 @@ func (m *Membership) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field role_id", values[i])
 			} else if value != nil {
 				m.RoleID = *value
+			}
+		case membership.FieldEmail:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field email", values[i])
+			} else if value.Valid {
+				m.Email = value.String
 			}
 		case membership.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -222,12 +255,27 @@ func (m *Membership) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				m.IsPrimaryContact = value.Bool
 			}
+		case membership.FieldLeftAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field left_at", values[i])
+			} else if value.Valid {
+				m.LeftAt = new(time.Time)
+				*m.LeftAt = value.Time
+			}
 		case membership.FieldMetadata:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field metadata", values[i])
 			} else if value != nil && len(*value) > 0 {
 				if err := json.Unmarshal(*value, &m.Metadata); err != nil {
 					return fmt.Errorf("unmarshal field metadata: %w", err)
+				}
+			}
+		case membership.FieldCustomFields:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field custom_fields", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &m.CustomFields); err != nil {
+					return fmt.Errorf("unmarshal field custom_fields: %w", err)
 				}
 			}
 		default:
@@ -256,6 +304,11 @@ func (m *Membership) QueryOrganization() *OrganizationQuery {
 // QueryRole queries the "role" edge of the Membership entity.
 func (m *Membership) QueryRole() *RoleQuery {
 	return NewMembershipClient(m.config).QueryRole(m)
+}
+
+// QueryInviter queries the "inviter" edge of the Membership entity.
+func (m *Membership) QueryInviter() *UserQuery {
+	return NewMembershipClient(m.config).QueryInviter(m)
 }
 
 // Update returns a builder for updating this Membership.
@@ -287,6 +340,9 @@ func (m *Membership) String() string {
 	builder.WriteString("updated_at=")
 	builder.WriteString(m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
+	builder.WriteString("deleted_at=")
+	builder.WriteString(m.DeletedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
 	builder.WriteString("user_id=")
 	builder.WriteString(fmt.Sprintf("%v", m.UserID))
 	builder.WriteString(", ")
@@ -295,6 +351,9 @@ func (m *Membership) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("role_id=")
 	builder.WriteString(fmt.Sprintf("%v", m.RoleID))
+	builder.WriteString(", ")
+	builder.WriteString("email=")
+	builder.WriteString(m.Email)
 	builder.WriteString(", ")
 	builder.WriteString("status=")
 	builder.WriteString(fmt.Sprintf("%v", m.Status))
@@ -323,8 +382,16 @@ func (m *Membership) String() string {
 	builder.WriteString("is_primary_contact=")
 	builder.WriteString(fmt.Sprintf("%v", m.IsPrimaryContact))
 	builder.WriteString(", ")
+	if v := m.LeftAt; v != nil {
+		builder.WriteString("left_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
+	builder.WriteString(", ")
 	builder.WriteString("metadata=")
 	builder.WriteString(fmt.Sprintf("%v", m.Metadata))
+	builder.WriteString(", ")
+	builder.WriteString("custom_fields=")
+	builder.WriteString(fmt.Sprintf("%v", m.CustomFields))
 	builder.WriteByte(')')
 	return builder.String()
 }

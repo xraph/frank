@@ -19,7 +19,7 @@ type SMTPSender struct {
 }
 
 // NewSMTPSender creates a new SMTP sender
-func NewSMTPSender(cfg *config.EmailConfig, logger logging.Logger) *SMTPSender {
+func NewSMTPSender(cfg *config.EmailConfig, logger logging.Logger) Sender {
 	return &SMTPSender{
 		config: cfg,
 		logger: logger,
@@ -112,10 +112,29 @@ func (s *SMTPSender) Send(ctx context.Context, email Email) error {
 	)
 
 	if err != nil {
-		return errors.Wrap(errors.CodeEmailDeliveryFail, err, "failed to send email via SMTP")
+		return errors.Wrap(err, errors.CodeEmailDeliveryFail, "failed to send email via SMTP")
 	}
 
 	return nil
+}
+
+func (s *SMTPSender) SendBulkEmails(ctx context.Context, emails []Email) (*BulkEmailResult, error) {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (s *SMTPSender) TestConnection(ctx context.Context) error {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (s *SMTPSender) GetDeliveryStatus(ctx context.Context, messageID string) (*DeliveryInfo, error) {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (s *SMTPSender) Name() string {
+	return "smtp"
 }
 
 // generateBoundary generates a random boundary string

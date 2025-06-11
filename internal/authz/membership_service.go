@@ -218,7 +218,7 @@ func (ms *MembershipService) RemoveMember(ctx context.Context, orgID xid.ID, use
 		return err
 	}
 
-	if !org.OwnerID.IsNil() && org.OwnerID == userID {
+	if org.OwnerID.IsNil() && org.OwnerID == userID {
 		return errors.New(errors.CodeConflict, "cannot remove organization owner")
 	}
 

@@ -1,0 +1,1 @@
+{{.appName}}: New device added to your account: {{.deviceName}} ({{.deviceType}}). If this wasn't you, secure your account.

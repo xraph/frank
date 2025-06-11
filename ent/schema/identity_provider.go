@@ -52,8 +52,17 @@ func (IdentityProvider) Fields() []ent.Field {
 			Sensitive(),
 		field.Bool("active").
 			Default(true),
+		field.Bool("enabled").
+			Default(true),
 		field.Bool("primary").
 			Default(false),
+		field.Bool("auto_provision").
+			Default(false),
+		field.String("default_role").Optional(),
+		field.String("domain").Optional(),
+		field.String("icon_url").Optional(),
+		field.String("button_text").Optional(),
+		field.String("protocol").Optional(),
 		field.Strings("domains").
 			Optional(),
 		entity.JSONMapStringField("attributes_mapping", true),
@@ -85,5 +94,6 @@ func (IdentityProvider) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		ModelBaseMixin{},
 		TimeMixin{},
+		SoftDeleteMixin{},
 	}
 }

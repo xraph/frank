@@ -46,6 +46,10 @@ func (OAuthAuthorization) Fields() []ent.Field {
 			Optional(),
 		field.String("nonce").
 			Optional(),
+		field.String("user_agent").
+			Optional(),
+		field.String("ip_address").
+			Optional(),
 	}
 }
 
@@ -82,5 +86,6 @@ func (OAuthAuthorization) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		ModelBaseMixin{},
 		TimeMixin{},
+		SoftDeleteMixin{},
 	}
 }

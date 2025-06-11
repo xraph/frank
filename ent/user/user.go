@@ -85,6 +85,8 @@ const (
 	EdgeOrganization = "organization"
 	// EdgeMemberships holds the string denoting the memberships edge name in mutations.
 	EdgeMemberships = "memberships"
+	// EdgeSentInvitations holds the string denoting the sent_invitations edge name in mutations.
+	EdgeSentInvitations = "sent_invitations"
 	// EdgeSessions holds the string denoting the sessions edge name in mutations.
 	EdgeSessions = "sessions"
 	// EdgeAPIKeys holds the string denoting the api_keys edge name in mutations.
@@ -109,6 +111,8 @@ const (
 	EdgeAssignedUserRoles = "assigned_user_roles"
 	// EdgeAssignedUserPermissions holds the string denoting the assigned_user_permissions edge name in mutations.
 	EdgeAssignedUserPermissions = "assigned_user_permissions"
+	// EdgeAuditLogs holds the string denoting the audit_logs edge name in mutations.
+	EdgeAuditLogs = "audit_logs"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// OrganizationTable is the table that holds the organization relation/edge.
@@ -125,6 +129,13 @@ const (
 	MembershipsInverseTable = "memberships"
 	// MembershipsColumn is the table column denoting the memberships relation/edge.
 	MembershipsColumn = "user_id"
+	// SentInvitationsTable is the table that holds the sent_invitations relation/edge.
+	SentInvitationsTable = "memberships"
+	// SentInvitationsInverseTable is the table name for the Membership entity.
+	// It exists in this package in order to avoid circular dependency with the "membership" package.
+	SentInvitationsInverseTable = "memberships"
+	// SentInvitationsColumn is the table column denoting the sent_invitations relation/edge.
+	SentInvitationsColumn = "invited_by"
 	// SessionsTable is the table that holds the sessions relation/edge.
 	SessionsTable = "sessions"
 	// SessionsInverseTable is the table name for the Session entity.
@@ -207,6 +218,13 @@ const (
 	AssignedUserPermissionsInverseTable = "user_permissions"
 	// AssignedUserPermissionsColumn is the table column denoting the assigned_user_permissions relation/edge.
 	AssignedUserPermissionsColumn = "assigned_by"
+	// AuditLogsTable is the table that holds the audit_logs relation/edge.
+	AuditLogsTable = "audits"
+	// AuditLogsInverseTable is the table name for the Audit entity.
+	// It exists in this package in order to avoid circular dependency with the "audit" package.
+	AuditLogsInverseTable = "audits"
+	// AuditLogsColumn is the table column denoting the audit_logs relation/edge.
+	AuditLogsColumn = "user_id"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -491,6 +509,20 @@ func ByMemberships(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
+// BySentInvitationsCount orders the results by sent_invitations count.
+func BySentInvitationsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newSentInvitationsStep(), opts...)
+	}
+}
+
+// BySentInvitations orders the results by sent_invitations terms.
+func BySentInvitations(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newSentInvitationsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // BySessionsCount orders the results by sessions count.
 func BySessionsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -658,6 +690,20 @@ func ByAssignedUserPermissions(term sql.OrderTerm, terms ...sql.OrderTerm) Order
 		sqlgraph.OrderByNeighborTerms(s, newAssignedUserPermissionsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByAuditLogsCount orders the results by audit_logs count.
+func ByAuditLogsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newAuditLogsStep(), opts...)
+	}
+}
+
+// ByAuditLogs orders the results by audit_logs terms.
+func ByAuditLogs(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAuditLogsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newOrganizationStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -670,6 +716,13 @@ func newMembershipsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(MembershipsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, MembershipsTable, MembershipsColumn),
+	)
+}
+func newSentInvitationsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(SentInvitationsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, SentInvitationsTable, SentInvitationsColumn),
 	)
 }
 func newSessionsStep() *sqlgraph.Step {
@@ -754,5 +807,12 @@ func newAssignedUserPermissionsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(AssignedUserPermissionsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, AssignedUserPermissionsTable, AssignedUserPermissionsColumn),
+	)
+}
+func newAuditLogsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(AuditLogsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, AuditLogsTable, AuditLogsColumn),
 	)
 }

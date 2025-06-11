@@ -28,6 +28,8 @@ type MFA struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// DeletedAt holds the value of the "deleted_at" field.
+	DeletedAt time.Time `json:"deleted_at,omitempty"`
 	// UserID holds the value of the "user_id" field.
 	UserID xid.ID `json:"user_id,omitempty"`
 	// The MFA method type: 'totp', 'sms', 'email', 'backup_codes'
@@ -85,7 +87,7 @@ func (*MFA) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case mfa.FieldMethod, mfa.FieldSecret, mfa.FieldPhoneNumber, mfa.FieldEmail:
 			values[i] = new(sql.NullString)
-		case mfa.FieldCreatedAt, mfa.FieldUpdatedAt, mfa.FieldLastUsed:
+		case mfa.FieldCreatedAt, mfa.FieldUpdatedAt, mfa.FieldDeletedAt, mfa.FieldLastUsed:
 			values[i] = new(sql.NullTime)
 		case mfa.FieldID, mfa.FieldUserID:
 			values[i] = new(xid.ID)
@@ -121,6 +123,12 @@ func (m *MFA) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
 				m.UpdatedAt = value.Time
+			}
+		case mfa.FieldDeletedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field deleted_at", values[i])
+			} else if value.Valid {
+				m.DeletedAt = value.Time
 			}
 		case mfa.FieldUserID:
 			if value, ok := values[i].(*xid.ID); !ok {
@@ -233,6 +241,9 @@ func (m *MFA) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
 	builder.WriteString(m.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("deleted_at=")
+	builder.WriteString(m.DeletedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("user_id=")
 	builder.WriteString(fmt.Sprintf("%v", m.UserID))

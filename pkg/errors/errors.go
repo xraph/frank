@@ -85,7 +85,7 @@ func Newf(code string, message string, a ...any) *Error {
 }
 
 // Wrap wraps an existing error with additional context
-func Wrap(code string, err error, message string) *Error {
+func Wrap(err error, code string, message string) *Error {
 	return &Error{
 		Code:       code,
 		StatusCode: GetStatusCode(code),
@@ -95,7 +95,7 @@ func Wrap(code string, err error, message string) *Error {
 }
 
 // Wrapf wraps an existing error with additional context
-func Wrapf(code string, err error, message string, a ...any) *Error {
+func Wrapf(err error, code string, message string, a ...any) *Error {
 	return &Error{
 		Code:       code,
 		StatusCode: GetStatusCode(code),

@@ -44,6 +44,26 @@ func (ocu *OAuthClientUpdate) SetUpdatedAt(t time.Time) *OAuthClientUpdate {
 	return ocu
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (ocu *OAuthClientUpdate) SetDeletedAt(t time.Time) *OAuthClientUpdate {
+	ocu.mutation.SetDeletedAt(t)
+	return ocu
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (ocu *OAuthClientUpdate) SetNillableDeletedAt(t *time.Time) *OAuthClientUpdate {
+	if t != nil {
+		ocu.SetDeletedAt(*t)
+	}
+	return ocu
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (ocu *OAuthClientUpdate) ClearDeletedAt() *OAuthClientUpdate {
+	ocu.mutation.ClearDeletedAt()
+	return ocu
+}
+
 // SetClientID sets the "client_id" field.
 func (ocu *OAuthClientUpdate) SetClientID(s string) *OAuthClientUpdate {
 	ocu.mutation.SetClientID(s)
@@ -546,6 +566,12 @@ func (ocu *OAuthClientUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := ocu.mutation.UpdatedAt(); ok {
 		_spec.SetField(oauthclient.FieldUpdatedAt, field.TypeTime, value)
 	}
+	if value, ok := ocu.mutation.DeletedAt(); ok {
+		_spec.SetField(oauthclient.FieldDeletedAt, field.TypeTime, value)
+	}
+	if ocu.mutation.DeletedAtCleared() {
+		_spec.ClearField(oauthclient.FieldDeletedAt, field.TypeTime)
+	}
 	if value, ok := ocu.mutation.ClientID(); ok {
 		_spec.SetField(oauthclient.FieldClientID, field.TypeString, value)
 	}
@@ -830,6 +856,26 @@ type OAuthClientUpdateOne struct {
 // SetUpdatedAt sets the "updated_at" field.
 func (ocuo *OAuthClientUpdateOne) SetUpdatedAt(t time.Time) *OAuthClientUpdateOne {
 	ocuo.mutation.SetUpdatedAt(t)
+	return ocuo
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (ocuo *OAuthClientUpdateOne) SetDeletedAt(t time.Time) *OAuthClientUpdateOne {
+	ocuo.mutation.SetDeletedAt(t)
+	return ocuo
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (ocuo *OAuthClientUpdateOne) SetNillableDeletedAt(t *time.Time) *OAuthClientUpdateOne {
+	if t != nil {
+		ocuo.SetDeletedAt(*t)
+	}
+	return ocuo
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (ocuo *OAuthClientUpdateOne) ClearDeletedAt() *OAuthClientUpdateOne {
+	ocuo.mutation.ClearDeletedAt()
 	return ocuo
 }
 
@@ -1364,6 +1410,12 @@ func (ocuo *OAuthClientUpdateOne) sqlSave(ctx context.Context) (_node *OAuthClie
 	}
 	if value, ok := ocuo.mutation.UpdatedAt(); ok {
 		_spec.SetField(oauthclient.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if value, ok := ocuo.mutation.DeletedAt(); ok {
+		_spec.SetField(oauthclient.FieldDeletedAt, field.TypeTime, value)
+	}
+	if ocuo.mutation.DeletedAtCleared() {
+		_spec.ClearField(oauthclient.FieldDeletedAt, field.TypeTime)
 	}
 	if value, ok := ocuo.mutation.ClientID(); ok {
 		_spec.SetField(oauthclient.FieldClientID, field.TypeString, value)

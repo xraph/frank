@@ -22,6 +22,8 @@ const (
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
+	// FieldDeletedAt holds the string denoting the deleted_at field in the database.
+	FieldDeletedAt = "deleted_at"
 	// FieldUserID holds the string denoting the user_id field in the database.
 	FieldUserID = "user_id"
 	// FieldName holds the string denoting the name field in the database.
@@ -44,6 +46,14 @@ const (
 	FieldTransports = "transports"
 	// FieldAttestation holds the string denoting the attestation field in the database.
 	FieldAttestation = "attestation"
+	// FieldBackupState holds the string denoting the backup_state field in the database.
+	FieldBackupState = "backup_state"
+	// FieldBackupEligible holds the string denoting the backup_eligible field in the database.
+	FieldBackupEligible = "backup_eligible"
+	// FieldUserAgent holds the string denoting the user_agent field in the database.
+	FieldUserAgent = "user_agent"
+	// FieldIPAddress holds the string denoting the ip_address field in the database.
+	FieldIPAddress = "ip_address"
 	// EdgeUser holds the string denoting the user edge name in mutations.
 	EdgeUser = "user"
 	// Table holds the table name of the passkey in the database.
@@ -62,6 +72,7 @@ var Columns = []string{
 	FieldID,
 	FieldCreatedAt,
 	FieldUpdatedAt,
+	FieldDeletedAt,
 	FieldUserID,
 	FieldName,
 	FieldCredentialID,
@@ -73,6 +84,10 @@ var Columns = []string{
 	FieldLastUsed,
 	FieldTransports,
 	FieldAttestation,
+	FieldBackupState,
+	FieldBackupEligible,
+	FieldUserAgent,
+	FieldIPAddress,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -126,6 +141,11 @@ func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
 }
 
+// ByDeletedAt orders the results by the deleted_at field.
+func ByDeletedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDeletedAt, opts...).ToFunc()
+}
+
 // ByUserID orders the results by the user_id field.
 func ByUserID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUserID, opts...).ToFunc()
@@ -164,6 +184,26 @@ func ByAaguid(opts ...sql.OrderTermOption) OrderOption {
 // ByLastUsed orders the results by the last_used field.
 func ByLastUsed(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldLastUsed, opts...).ToFunc()
+}
+
+// ByBackupState orders the results by the backup_state field.
+func ByBackupState(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldBackupState, opts...).ToFunc()
+}
+
+// ByBackupEligible orders the results by the backup_eligible field.
+func ByBackupEligible(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldBackupEligible, opts...).ToFunc()
+}
+
+// ByUserAgent orders the results by the user_agent field.
+func ByUserAgent(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUserAgent, opts...).ToFunc()
+}
+
+// ByIPAddress orders the results by the ip_address field.
+func ByIPAddress(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldIPAddress, opts...).ToFunc()
 }
 
 // ByUserField orders the results by user field.

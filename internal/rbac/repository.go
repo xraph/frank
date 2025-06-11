@@ -110,7 +110,7 @@ func (r *repository) CreateRole(ctx context.Context, roleCreate *ent.RoleCreate)
 			Exist(ctx)
 
 		if err != nil {
-			return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to check role existence")
+			return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to check role existence")
 		}
 
 		if exists {
@@ -127,7 +127,7 @@ func (r *repository) CreateRole(ctx context.Context, roleCreate *ent.RoleCreate)
 			Exist(ctx)
 
 		if err != nil {
-			return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to check role existence")
+			return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to check role existence")
 		}
 
 		if exists {
@@ -141,7 +141,7 @@ func (r *repository) CreateRole(ctx context.Context, roleCreate *ent.RoleCreate)
 		if ent.IsConstraintError(err) {
 			return nil, ErrRoleConflict
 		}
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to create role")
+		return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to create role")
 	}
 
 	return role, nil
@@ -158,7 +158,7 @@ func (r *repository) GetRoleByID(ctx context.Context, id xid.ID) (*ent.Role, err
 		if ent.IsNotFound(err) {
 			return nil, ErrRoleNotFound
 		}
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to get role")
+		return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to get role")
 	}
 
 	return role, nil
@@ -182,7 +182,7 @@ func (r *repository) GetRoleByName(ctx context.Context, name string, orgId xid.I
 		if ent.IsNotFound(err) {
 			return nil, ErrRoleNotFound
 		}
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to get role by name")
+		return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to get role by name")
 	}
 
 	return role, nil
@@ -270,7 +270,7 @@ func (r *repository) UpdateRole(ctx context.Context, roleUpdate *ent.RoleUpdateO
 			}
 
 			if err != nil {
-				return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to check role name uniqueness")
+				return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to check role name uniqueness")
 			}
 
 			if nameExists {
@@ -285,7 +285,7 @@ func (r *repository) UpdateRole(ctx context.Context, roleUpdate *ent.RoleUpdateO
 		if ent.IsNotFound(err) {
 			return nil, ErrRoleNotFound
 		}
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to update role")
+		return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to update role")
 	}
 
 	return updatedRole, nil
@@ -308,7 +308,7 @@ func (r *repository) DeleteRole(ctx context.Context, id xid.ID) error {
 		if ent.IsNotFound(err) {
 			return ErrRoleNotFound
 		}
-		return errors.Wrap(errors.CodeDatabaseError, err, "failed to delete role")
+		return errors.Wrap(err, errors.CodeDatabaseError, "failed to delete role")
 	}
 
 	return nil
@@ -423,7 +423,7 @@ func (r *repository) AddPermissionToRole(ctx context.Context, roleID, permission
 		Exist(ctx)
 
 	if err != nil {
-		return errors.Wrap(errors.CodeDatabaseError, err, "failed to check permission assignment")
+		return errors.Wrap(err, errors.CodeDatabaseError, "failed to check permission assignment")
 	}
 
 	if exists {
@@ -438,7 +438,7 @@ func (r *repository) AddPermissionToRole(ctx context.Context, roleID, permission
 		Exec(ctx)
 
 	if err != nil {
-		return errors.Wrap(errors.CodeDatabaseError, err, "failed to add permission to role")
+		return errors.Wrap(err, errors.CodeDatabaseError, "failed to add permission to role")
 	}
 
 	return nil
@@ -465,7 +465,7 @@ func (r *repository) RemovePermissionFromRole(ctx context.Context, roleID, permi
 		Exec(ctx)
 
 	if err != nil {
-		return errors.Wrap(errors.CodeDatabaseError, err, "failed to remove permission from role")
+		return errors.Wrap(err, errors.CodeDatabaseError, "failed to remove permission from role")
 	}
 
 	return nil
@@ -487,7 +487,7 @@ func (r *repository) GetRolePermissions(ctx context.Context, roleID xid.ID) ([]*
 		All(ctx)
 
 	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to get role permissions")
+		return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to get role permissions")
 	}
 
 	return permissions, nil
@@ -514,7 +514,7 @@ func (r *repository) CreatePermission(ctx context.Context, permissionCreate *ent
 		Exist(ctx)
 
 	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to check permission existence")
+		return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to check permission existence")
 	}
 
 	if exists {
@@ -529,7 +529,7 @@ func (r *repository) CreatePermission(ctx context.Context, permissionCreate *ent
 			Exist(ctx)
 
 		if err != nil {
-			return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to check permission name uniqueness")
+			return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to check permission name uniqueness")
 		}
 
 		if exists {
@@ -543,7 +543,7 @@ func (r *repository) CreatePermission(ctx context.Context, permissionCreate *ent
 		if ent.IsConstraintError(err) {
 			return nil, ErrPermissionConflict
 		}
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to create permission")
+		return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to create permission")
 	}
 
 	return permission, nil
@@ -560,7 +560,7 @@ func (r *repository) GetPermissionByID(ctx context.Context, id xid.ID) (*ent.Per
 		if ent.IsNotFound(err) {
 			return nil, ErrPermissionNotFound
 		}
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to get permission")
+		return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to get permission")
 	}
 
 	return permission, nil
@@ -577,7 +577,7 @@ func (r *repository) GetPermissionByName(ctx context.Context, name string) (*ent
 		if ent.IsNotFound(err) {
 			return nil, ErrPermissionNotFound
 		}
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to get permission by name")
+		return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to get permission by name")
 	}
 
 	return permission, nil
@@ -648,7 +648,7 @@ func (r *repository) UpdatePermission(ctx context.Context, permissionUpdate *ent
 				Exist(ctx)
 
 			if err != nil {
-				return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to check permission name uniqueness")
+				return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to check permission name uniqueness")
 			}
 
 			if nameExists {
@@ -663,7 +663,7 @@ func (r *repository) UpdatePermission(ctx context.Context, permissionUpdate *ent
 		if ent.IsNotFound(err) {
 			return nil, ErrPermissionNotFound
 		}
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to update permission")
+		return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to update permission")
 	}
 
 	return updatedPermission, nil
@@ -686,7 +686,7 @@ func (r *repository) DeletePermission(ctx context.Context, id xid.ID) error {
 		if ent.IsNotFound(err) {
 			return ErrPermissionNotFound
 		}
-		return errors.Wrap(errors.CodeDatabaseError, err, "failed to delete permission")
+		return errors.Wrap(err, errors.CodeDatabaseError, "failed to delete permission")
 	}
 
 	return nil
@@ -705,7 +705,7 @@ func (r *repository) GetUserRoles(ctx context.Context, userID xid.ID) ([]*ent.Ro
 		Exist(ctx)
 
 	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to check user existence")
+		return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to check user existence")
 	}
 
 	if !exists {
@@ -720,7 +720,7 @@ func (r *repository) GetUserRoles(ctx context.Context, userID xid.ID) ([]*ent.Ro
 		All(ctx)
 
 	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to get user roles")
+		return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to get user roles")
 	}
 
 	return roles, nil
@@ -735,7 +735,7 @@ func (r *repository) GetUserPermissions(ctx context.Context, userID xid.ID) ([]*
 		Exist(ctx)
 
 	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to check user existence")
+		return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to check user existence")
 	}
 
 	if !exists {
@@ -751,7 +751,7 @@ func (r *repository) GetUserPermissions(ctx context.Context, userID xid.ID) ([]*
 		All(ctx)
 
 	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to get user permissions")
+		return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to get user permissions")
 	}
 
 	return permissions, nil

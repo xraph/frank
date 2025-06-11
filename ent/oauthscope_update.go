@@ -42,6 +42,26 @@ func (osu *OAuthScopeUpdate) SetUpdatedAt(t time.Time) *OAuthScopeUpdate {
 	return osu
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (osu *OAuthScopeUpdate) SetDeletedAt(t time.Time) *OAuthScopeUpdate {
+	osu.mutation.SetDeletedAt(t)
+	return osu
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (osu *OAuthScopeUpdate) SetNillableDeletedAt(t *time.Time) *OAuthScopeUpdate {
+	if t != nil {
+		osu.SetDeletedAt(*t)
+	}
+	return osu
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (osu *OAuthScopeUpdate) ClearDeletedAt() *OAuthScopeUpdate {
+	osu.mutation.ClearDeletedAt()
+	return osu
+}
+
 // SetName sets the "name" field.
 func (osu *OAuthScopeUpdate) SetName(s string) *OAuthScopeUpdate {
 	osu.mutation.SetName(s)
@@ -283,6 +303,12 @@ func (osu *OAuthScopeUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := osu.mutation.UpdatedAt(); ok {
 		_spec.SetField(oauthscope.FieldUpdatedAt, field.TypeTime, value)
 	}
+	if value, ok := osu.mutation.DeletedAt(); ok {
+		_spec.SetField(oauthscope.FieldDeletedAt, field.TypeTime, value)
+	}
+	if osu.mutation.DeletedAtCleared() {
+		_spec.ClearField(oauthscope.FieldDeletedAt, field.TypeTime)
+	}
 	if value, ok := osu.mutation.Name(); ok {
 		_spec.SetField(oauthscope.FieldName, field.TypeString, value)
 	}
@@ -455,6 +481,26 @@ type OAuthScopeUpdateOne struct {
 // SetUpdatedAt sets the "updated_at" field.
 func (osuo *OAuthScopeUpdateOne) SetUpdatedAt(t time.Time) *OAuthScopeUpdateOne {
 	osuo.mutation.SetUpdatedAt(t)
+	return osuo
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (osuo *OAuthScopeUpdateOne) SetDeletedAt(t time.Time) *OAuthScopeUpdateOne {
+	osuo.mutation.SetDeletedAt(t)
+	return osuo
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (osuo *OAuthScopeUpdateOne) SetNillableDeletedAt(t *time.Time) *OAuthScopeUpdateOne {
+	if t != nil {
+		osuo.SetDeletedAt(*t)
+	}
+	return osuo
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (osuo *OAuthScopeUpdateOne) ClearDeletedAt() *OAuthScopeUpdateOne {
+	osuo.mutation.ClearDeletedAt()
 	return osuo
 }
 
@@ -728,6 +774,12 @@ func (osuo *OAuthScopeUpdateOne) sqlSave(ctx context.Context) (_node *OAuthScope
 	}
 	if value, ok := osuo.mutation.UpdatedAt(); ok {
 		_spec.SetField(oauthscope.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if value, ok := osuo.mutation.DeletedAt(); ok {
+		_spec.SetField(oauthscope.FieldDeletedAt, field.TypeTime, value)
+	}
+	if osuo.mutation.DeletedAtCleared() {
+		_spec.ClearField(oauthscope.FieldDeletedAt, field.TypeTime)
 	}
 	if value, ok := osuo.mutation.Name(); ok {
 		_spec.SetField(oauthscope.FieldName, field.TypeString, value)

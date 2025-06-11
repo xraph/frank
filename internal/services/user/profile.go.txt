@@ -1,0 +1,951 @@
+package user
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"mime/multipart"
+	"time"
+
+	"github.com/juicycleff/frank/ent"
+	"github.com/juicycleff/frank/internal/model"
+	"github.com/juicycleff/frank/internal/repository"
+	"github.com/juicycleff/frank/pkg/errors"
+	"github.com/juicycleff/frank/pkg/storage"
+	"github.com/juicycleff/frank/pkg/validation"
+	"github.com/rs/xid"
+)
+
+// ProfileService defines the user profile service interface
+type ProfileService interface {
+	// Profile management
+	GetProfile(ctx context.Context, userID xid.ID) (*UserProfile, error)
+	UpdateProfile(ctx context.Context, userID xid.ID, req model.UserProfileUpdateRequest) (*UserProfile, error)
+	GetPublicProfile(ctx context.Context, userID xid.ID) (*PublicProfile, error)
+
+	// Profile image management
+	UploadProfileImage(ctx context.Context, userID xid.ID, file multipart.File, header *multipart.FileHeader) (*ProfileImageResult, error)
+	UpdateProfileImageURL(ctx context.Context, userID xid.ID, imageURL string) error
+	RemoveProfileImage(ctx context.Context, userID xid.ID) error
+	GetProfileImageURL(ctx context.Context, userID xid.ID) (string, error)
+
+	// Custom attributes management
+	SetCustomAttribute(ctx context.Context, userID xid.ID, key string, value interface{}) error
+	GetCustomAttribute(ctx context.Context, userID xid.ID, key string) (interface{}, error)
+	RemoveCustomAttribute(ctx context.Context, userID xid.ID, key string) error
+	ListCustomAttributes(ctx context.Context, userID xid.ID) (map[string]interface{}, error)
+
+	// Profile validation and enrichment
+	ValidateProfile(ctx context.Context, userID xid.ID) (*ProfileValidationResult, error)
+	EnrichProfile(ctx context.Context, userID xid.ID) (*ProfileEnrichmentResult, error)
+
+	// Profile completeness
+	GetProfileCompleteness(ctx context.Context, userID xid.ID) (*ProfileCompletenessResult, error)
+	GetProfileRequirements(ctx context.Context, userID xid.ID) (*ProfileRequirements, error)
+
+	// Profile history and activity
+	GetProfileHistory(ctx context.Context, userID xid.ID, opts ProfileHistoryOptions) (*ProfileHistoryResult, error)
+	GetProfileActivity(ctx context.Context, userID xid.ID, since time.Time) (*ProfileActivityResult, error)
+
+	// Profile sharing and privacy
+	UpdatePrivacySettings(ctx context.Context, userID xid.ID, settings ProfilePrivacySettings) error
+	GetPrivacySettings(ctx context.Context, userID xid.ID) (*ProfilePrivacySettings, error)
+
+	// Profile search and discovery
+	SearchProfiles(ctx context.Context, query string, filters ProfileSearchFilters) (*ProfileSearchResult, error)
+	GetSimilarProfiles(ctx context.Context, userID xid.ID, limit int) ([]*PublicProfile, error)
+
+	// Profile analytics
+	GetProfileViews(ctx context.Context, userID xid.ID, period ProfileAnalyticsPeriod) (*ProfileViewsResult, error)
+	GetProfileStats(ctx context.Context, userID xid.ID) (*ProfileStatsResult, error)
+}
+
+// Profile data structures
+
+type UserProfile struct {
+	ID               xid.ID                    `json:"id"`
+	Email            string                    `json:"email"`
+	FirstName        string                    `json:"firstName"`
+	LastName         string                    `json:"lastName"`
+	Username         string                    `json:"username,omitempty"`
+	ProfileImageURL  string                    `json:"profileImageUrl,omitempty"`
+	Bio              string                    `json:"bio,omitempty"`
+	Location         string                    `json:"location,omitempty"`
+	Website          string                    `json:"website,omitempty"`
+	Company          string                    `json:"company,omitempty"`
+	JobTitle         string                    `json:"jobTitle,omitempty"`
+	PhoneNumber      string                    `json:"phoneNumber,omitempty"`
+	Locale           string                    `json:"locale"`
+	Timezone         string                    `json:"timezone,omitempty"`
+	CustomAttributes map[string]interface{}    `json:"customAttributes,omitempty"`
+	EmailVerified    bool                      `json:"emailVerified"`
+	PhoneVerified    bool                      `json:"phoneVerified"`
+	CreatedAt        time.Time                 `json:"createdAt"`
+	UpdatedAt        time.Time                 `json:"updatedAt"`
+	LastLogin        *time.Time                `json:"lastLogin,omitempty"`
+	PrivacySettings  ProfilePrivacySettings    `json:"privacySettings"`
+	Completeness     ProfileCompletenessResult `json:"completeness"`
+	Organizations    []ProfileOrganization     `json:"organizations,omitempty"`
+	SocialLinks      []ProfileSocialLink       `json:"socialLinks,omitempty"`
+}
+
+type PublicProfile struct {
+	ID              xid.ID                 `json:"id"`
+	FirstName       string                 `json:"firstName"`
+	LastName        string                 `json:"lastName"`
+	Username        string                 `json:"username,omitempty"`
+	ProfileImageURL string                 `json:"profileImageUrl,omitempty"`
+	Bio             string                 `json:"bio,omitempty"`
+	Location        string                 `json:"location,omitempty"`
+	Website         string                 `json:"website,omitempty"`
+	Company         string                 `json:"company,omitempty"`
+	JobTitle        string                 `json:"jobTitle,omitempty"`
+	SocialLinks     []ProfileSocialLink    `json:"socialLinks,omitempty"`
+	JoinedAt        time.Time              `json:"joinedAt"`
+	PublicFields    map[string]interface{} `json:"publicFields,omitempty"`
+}
+
+type ProfileImageResult struct {
+	ImageURL     string    `json:"imageUrl"`
+	ThumbnailURL string    `json:"thumbnailUrl,omitempty"`
+	FileSize     int64     `json:"fileSize"`
+	ContentType  string    `json:"contentType"`
+	UploadedAt   time.Time `json:"uploadedAt"`
+}
+
+type ProfileValidationResult struct {
+	Valid       bool                       `json:"valid"`
+	Errors      []ProfileValidationError   `json:"errors,omitempty"`
+	Warnings    []ProfileValidationWarning `json:"warnings,omitempty"`
+	Suggestions []ProfileSuggestion        `json:"suggestions,omitempty"`
+}
+
+type ProfileValidationError struct {
+	Field   string `json:"field"`
+	Code    string `json:"code"`
+	Message string `json:"message"`
+}
+
+type ProfileValidationWarning struct {
+	Field   string `json:"field"`
+	Code    string `json:"code"`
+	Message string `json:"message"`
+}
+
+type ProfileSuggestion struct {
+	Type        string `json:"type"`
+	Description string `json:"description"`
+	Action      string `json:"action,omitempty"`
+}
+
+type ProfileEnrichmentResult struct {
+	EnrichedFields []string               `json:"enrichedFields"`
+	Data           map[string]interface{} `json:"data"`
+	Source         string                 `json:"source"`
+	Confidence     float64                `json:"confidence"`
+	EnrichedAt     time.Time              `json:"enrichedAt"`
+}
+
+type ProfileCompletenessResult struct {
+	Score           float64                 `json:"score"`
+	CompletedFields []string                `json:"completedFields"`
+	MissingFields   []string                `json:"missingFields"`
+	OptionalFields  []string                `json:"optionalFields"`
+	Requirements    ProfileRequirements     `json:"requirements"`
+	Recommendations []ProfileRecommendation `json:"recommendations"`
+}
+
+type ProfileRequirements struct {
+	RequiredFields    []ProfileFieldRequirement `json:"requiredFields"`
+	OptionalFields    []ProfileFieldRequirement `json:"optionalFields"`
+	MinimumScore      float64                   `json:"minimumScore"`
+	OrganizationRules map[string]interface{}    `json:"organizationRules,omitempty"`
+}
+
+type ProfileFieldRequirement struct {
+	Field       string `json:"field"`
+	Required    bool   `json:"required"`
+	MinLength   int    `json:"minLength,omitempty"`
+	MaxLength   int    `json:"maxLength,omitempty"`
+	Pattern     string `json:"pattern,omitempty"`
+	Description string `json:"description,omitempty"`
+}
+
+type ProfileRecommendation struct {
+	Type        string `json:"type"`
+	Priority    string `json:"priority"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Action      string `json:"action,omitempty"`
+}
+
+type ProfileHistoryOptions struct {
+	Limit  int       `json:"limit"`
+	Offset int       `json:"offset"`
+	Since  time.Time `json:"since,omitempty"`
+	Until  time.Time `json:"until,omitempty"`
+	Fields []string  `json:"fields,omitempty"`
+}
+
+type ProfileHistoryResult struct {
+	Changes []ProfileChange `json:"changes"`
+	Total   int             `json:"total"`
+	HasMore bool            `json:"hasMore"`
+}
+
+type ProfileChange struct {
+	ID        xid.ID                 `json:"id"`
+	Field     string                 `json:"field"`
+	OldValue  interface{}            `json:"oldValue,omitempty"`
+	NewValue  interface{}            `json:"newValue,omitempty"`
+	ChangedBy xid.ID                 `json:"changedBy"`
+	ChangedAt time.Time              `json:"changedAt"`
+	Reason    string                 `json:"reason,omitempty"`
+	Metadata  map[string]interface{} `json:"metadata,omitempty"`
+}
+
+type ProfileActivityResult struct {
+	Activities []ProfileActivity      `json:"activities"`
+	Summary    ProfileActivitySummary `json:"summary"`
+}
+
+type ProfileActivity struct {
+	Type      string                 `json:"type"`
+	Action    string                 `json:"action"`
+	Timestamp time.Time              `json:"timestamp"`
+	Details   map[string]interface{} `json:"details,omitempty"`
+}
+
+type ProfileActivitySummary struct {
+	UpdateCount      int       `json:"updateCount"`
+	LoginCount       int       `json:"loginCount"`
+	LastUpdate       time.Time `json:"lastUpdate"`
+	LastLogin        time.Time `json:"lastLogin"`
+	MostActiveFields []string  `json:"mostActiveFields"`
+}
+
+type ProfilePrivacySettings struct {
+	ProfileVisibility     string            `json:"profileVisibility"` // public, private, contacts_only
+	ShowEmail             bool              `json:"showEmail"`
+	ShowPhoneNumber       bool              `json:"showPhoneNumber"`
+	ShowLocation          bool              `json:"showLocation"`
+	ShowCompany           bool              `json:"showCompany"`
+	ShowJobTitle          bool              `json:"showJobTitle"`
+	ShowSocialLinks       bool              `json:"showSocialLinks"`
+	AllowProfileSearch    bool              `json:"allowProfileSearch"`
+	AllowContactImport    bool              `json:"allowContactImport"`
+	CustomFieldVisibility map[string]string `json:"customFieldVisibility,omitempty"`
+}
+
+type ProfileSearchFilters struct {
+	Location     string   `json:"location,omitempty"`
+	Company      string   `json:"company,omitempty"`
+	JobTitle     string   `json:"jobTitle,omitempty"`
+	Skills       []string `json:"skills,omitempty"`
+	Interests    []string `json:"interests,omitempty"`
+	Organization *xid.ID  `json:"organization,omitempty"`
+	Verified     *bool    `json:"verified,omitempty"`
+	Limit        int      `json:"limit"`
+	Offset       int      `json:"offset"`
+}
+
+type ProfileSearchResult struct {
+	Profiles []PublicProfile `json:"profiles"`
+	Total    int             `json:"total"`
+	HasMore  bool            `json:"hasMore"`
+}
+
+type ProfileAnalyticsPeriod string
+
+const (
+	ProfileAnalyticsPeriodDay   ProfileAnalyticsPeriod = "day"
+	ProfileAnalyticsPeriodWeek  ProfileAnalyticsPeriod = "week"
+	ProfileAnalyticsPeriodMonth ProfileAnalyticsPeriod = "month"
+	ProfileAnalyticsPeriodYear  ProfileAnalyticsPeriod = "year"
+)
+
+type ProfileViewsResult struct {
+	Period      ProfileAnalyticsPeriod `json:"period"`
+	TotalViews  int                    `json:"totalViews"`
+	UniqueViews int                    `json:"uniqueViews"`
+	ViewsByDay  map[string]int         `json:"viewsByDay"`
+	TopSources  []ProfileViewSource    `json:"topSources"`
+}
+
+type ProfileViewSource struct {
+	Source string `json:"source"`
+	Count  int    `json:"count"`
+}
+
+type ProfileStatsResult struct {
+	ProfileViews       int       `json:"profileViews"`
+	SearchAppearances  int       `json:"searchAppearances"`
+	ConnectionRequests int       `json:"connectionRequests"`
+	LastActivity       time.Time `json:"lastActivity"`
+	CompletionScore    float64   `json:"completionScore"`
+	EngagementScore    float64   `json:"engagementScore"`
+}
+
+type ProfileOrganization struct {
+	ID       xid.ID    `json:"id"`
+	Name     string    `json:"name"`
+	Role     string    `json:"role"`
+	JoinedAt time.Time `json:"joinedAt"`
+}
+
+type ProfileSocialLink struct {
+	Platform string `json:"platform"`
+	URL      string `json:"url"`
+	Username string `json:"username,omitempty"`
+	Verified bool   `json:"verified"`
+}
+
+// profileService implements the ProfileService interface
+type profileService struct {
+	userRepo          repository.UserRepository
+	auditRepo         repository.AuditRepository
+	membershipRepo    repository.MembershipRepository
+	storageService    storage.Service
+	validationService validation.Service
+}
+
+// NewProfileService creates a new profile service
+func NewProfileService(
+	userRepo repository.UserRepository,
+	auditRepo repository.AuditRepository,
+	membershipRepo repository.MembershipRepository,
+	storageService storage.Service,
+	validationService validation.Service,
+) ProfileService {
+	return &profileService{
+		userRepo:          userRepo,
+		auditRepo:         auditRepo,
+		membershipRepo:    membershipRepo,
+		storageService:    storageService,
+		validationService: validationService,
+	}
+}
+
+// GetProfile retrieves a complete user profile
+func (s *profileService) GetProfile(ctx context.Context, userID xid.ID) (*UserProfile, error) {
+	// Get user data
+	user, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		return nil, errors.Wrap(err, errors.CodeNotFound, "user not found")
+	}
+
+	// Get user memberships
+	memberships, err := s.membershipRepo.ListByUser(ctx, userID, repository.ListMembershipsParams{
+		PaginationParams: model.PaginationParams{Limit: 10},
+	})
+	if err != nil {
+		// Log error but don't fail
+		memberships = &model.PaginatedOutput[*ent.Membership]{Data: []*ent.Membership{}}
+	}
+
+	// Build profile organizations
+	var profileOrgs []ProfileOrganization
+	for _, membership := range memberships.Data {
+		if membership.Edges.Organization != nil {
+			profileOrgs = append(profileOrgs, ProfileOrganization{
+				ID:       membership.Edges.Organization.ID,
+				Name:     membership.Edges.Organization.Name,
+				Role:     "member", // TODO: Get actual role from membership
+				JoinedAt: membership.CreatedAt,
+			})
+		}
+	}
+
+	// Get privacy settings
+	privacySettings := s.getDefaultPrivacySettings()
+	if privacyData, exists := user.CustomAttributes["privacy_settings"]; exists {
+		if privacyBytes, err := json.Marshal(privacyData); err == nil {
+			json.Unmarshal(privacyBytes, &privacySettings)
+		}
+	}
+
+	// Get profile completeness
+	completeness := s.calculateProfileCompleteness(user)
+
+	// Extract social links from custom attributes
+	var socialLinks []ProfileSocialLink
+	if linksData, exists := user.CustomAttributes["social_links"]; exists {
+		if linksBytes, err := json.Marshal(linksData); err == nil {
+			json.Unmarshal(linksBytes, &socialLinks)
+		}
+	}
+
+	// Extract additional profile fields from custom attributes
+	bio := s.getCustomAttributeString(user.CustomAttributes, "bio")
+	location := s.getCustomAttributeString(user.CustomAttributes, "location")
+	website := s.getCustomAttributeString(user.CustomAttributes, "website")
+	company := s.getCustomAttributeString(user.CustomAttributes, "company")
+	jobTitle := s.getCustomAttributeString(user.CustomAttributes, "job_title")
+
+	profile := &UserProfile{
+		ID:               user.ID,
+		Email:            user.Email,
+		FirstName:        user.FirstName,
+		LastName:         user.LastName,
+		Username:         user.Username,
+		ProfileImageURL:  user.ProfileImageURL,
+		Bio:              bio,
+		Location:         location,
+		Website:          website,
+		Company:          company,
+		JobTitle:         jobTitle,
+		PhoneNumber:      user.PhoneNumber,
+		Locale:           user.Locale,
+		Timezone:         user.Timezone,
+		CustomAttributes: user.CustomAttributes,
+		EmailVerified:    user.EmailVerified,
+		PhoneVerified:    user.PhoneVerified,
+		CreatedAt:        user.CreatedAt,
+		UpdatedAt:        user.UpdatedAt,
+		LastLogin:        user.LastLogin,
+		PrivacySettings:  privacySettings,
+		Completeness:     completeness,
+		Organizations:    profileOrgs,
+		SocialLinks:      socialLinks,
+	}
+
+	return profile, nil
+}
+
+// UpdateProfile updates a user's profile
+func (s *profileService) UpdateProfile(ctx context.Context, userID xid.ID, req model.UserProfileUpdateRequest) (*UserProfile, error) {
+	// Get current user
+	user, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		return nil, errors.Wrap(err, errors.CodeNotFound, "user not found")
+	}
+
+	// Prepare custom attributes update
+	customAttrs := user.CustomAttributes
+	if customAttrs == nil {
+		customAttrs = make(map[string]interface{})
+	}
+
+	// Update custom attributes with new profile data
+	if req.CustomAttributes != nil {
+		for key, value := range req.CustomAttributes {
+			customAttrs[key] = value
+		}
+	}
+
+	// Prepare update input
+	input := repository.UpdateUserInput{
+		FirstName:        &req.FirstName,
+		LastName:         &req.LastName,
+		Username:         &req.Username,
+		ProfileImageURL:  &req.ProfileImageURL,
+		Locale:           &req.Locale,
+		Timezone:         &req.Timezone,
+		CustomAttributes: &customAttrs,
+	}
+
+	// Update user
+	updatedUser, err := s.userRepo.Update(ctx, userID, input)
+	if err != nil {
+		return nil, errors.Wrap(err, errors.CodeInternalServer, "failed to update profile")
+	}
+
+	// Audit log
+	s.auditProfileUpdate(ctx, userID, userID, s.getProfileUpdateFields(req))
+
+	// Return updated profile
+	return s.GetProfile(ctx, userID)
+}
+
+// GetPublicProfile retrieves a user's public profile
+func (s *profileService) GetPublicProfile(ctx context.Context, userID xid.ID) (*PublicProfile, error) {
+	// Get full profile
+	profile, err := s.GetProfile(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Filter based on privacy settings
+	publicProfile := &PublicProfile{
+		ID:           profile.ID,
+		JoinedAt:     profile.CreatedAt,
+		PublicFields: make(map[string]interface{}),
+	}
+
+	// Apply privacy settings
+	if profile.PrivacySettings.ProfileVisibility == "public" {
+		publicProfile.FirstName = profile.FirstName
+		publicProfile.LastName = profile.LastName
+		publicProfile.Username = profile.Username
+		publicProfile.ProfileImageURL = profile.ProfileImageURL
+		publicProfile.Bio = profile.Bio
+
+		if profile.PrivacySettings.ShowLocation {
+			publicProfile.Location = profile.Location
+		}
+		if profile.PrivacySettings.ShowCompany {
+			publicProfile.Company = profile.Company
+		}
+		if profile.PrivacySettings.ShowJobTitle {
+			publicProfile.JobTitle = profile.JobTitle
+		}
+		if profile.PrivacySettings.ShowSocialLinks {
+			publicProfile.SocialLinks = profile.SocialLinks
+		}
+	}
+
+	return publicProfile, nil
+}
+
+// UploadProfileImage handles profile image upload
+func (s *profileService) UploadProfileImage(ctx context.Context, userID xid.ID, file multipart.File, header *multipart.FileHeader) (*ProfileImageResult, error) {
+	// Validate file
+	if err := s.validateImageFile(header); err != nil {
+		return nil, err
+	}
+
+	// Generate unique filename
+	filename := fmt.Sprintf("profiles/%s/%s", userID.String(), header.Filename)
+
+	// Upload file to storage
+	result, err := s.storageService.UploadFile(ctx, storage.UploadFileInput{
+		File:        file,
+		Filename:    filename,
+		ContentType: header.Header.Get("Content-Type"),
+		Size:        header.Size,
+		Bucket:      "profile-images",
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, errors.CodeInternalServer, "failed to upload image")
+	}
+
+	// Update user profile image URL
+	if err := s.UpdateProfileImageURL(ctx, userID, result.URL); err != nil {
+		return nil, err
+	}
+
+	// Audit log
+	s.auditProfileImageUpdate(ctx, userID, userID, result.URL)
+
+	return &ProfileImageResult{
+		ImageURL:     result.URL,
+		ThumbnailURL: result.ThumbnailURL,
+		FileSize:     header.Size,
+		ContentType:  header.Header.Get("Content-Type"),
+		UploadedAt:   time.Now(),
+	}, nil
+}
+
+// UpdateProfileImageURL updates the profile image URL
+func (s *profileService) UpdateProfileImageURL(ctx context.Context, userID xid.ID, imageURL string) error {
+	input := repository.UpdateUserInput{
+		ProfileImageURL: &imageURL,
+	}
+
+	_, err := s.userRepo.Update(ctx, userID, input)
+	if err != nil {
+		return errors.Wrap(err, errors.CodeInternalServer, "failed to update profile image URL")
+	}
+
+	return nil
+}
+
+// RemoveProfileImage removes the user's profile image
+func (s *profileService) RemoveProfileImage(ctx context.Context, userID xid.ID) error {
+	emptyURL := ""
+	return s.UpdateProfileImageURL(ctx, userID, emptyURL)
+}
+
+// GetProfileImageURL retrieves the user's profile image URL
+func (s *profileService) GetProfileImageURL(ctx context.Context, userID xid.ID) (string, error) {
+	user, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		return "", errors.Wrap(err, errors.CodeNotFound, "user not found")
+	}
+	return user.ProfileImageURL, nil
+}
+
+// Custom attributes management
+
+func (s *profileService) SetCustomAttribute(ctx context.Context, userID xid.ID, key string, value interface{}) error {
+	user, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		return errors.Wrap(err, errors.CodeNotFound, "user not found")
+	}
+
+	customAttrs := user.CustomAttributes
+	if customAttrs == nil {
+		customAttrs = make(map[string]interface{})
+	}
+	customAttrs[key] = value
+
+	input := repository.UpdateUserInput{
+		CustomAttributes: &customAttrs,
+	}
+
+	_, err = s.userRepo.Update(ctx, userID, input)
+	if err != nil {
+		return errors.Wrap(err, errors.CodeInternalServer, "failed to update custom attribute")
+	}
+
+	return nil
+}
+
+func (s *profileService) GetCustomAttribute(ctx context.Context, userID xid.ID, key string) (interface{}, error) {
+	user, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		return nil, errors.Wrap(err, errors.CodeNotFound, "user not found")
+	}
+
+	if user.CustomAttributes == nil {
+		return nil, errors.New(errors.CodeNotFound, "attribute not found")
+	}
+
+	value, exists := user.CustomAttributes[key]
+	if !exists {
+		return nil, errors.New(errors.CodeNotFound, "attribute not found")
+	}
+
+	return value, nil
+}
+
+func (s *profileService) RemoveCustomAttribute(ctx context.Context, userID xid.ID, key string) error {
+	user, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		return errors.Wrap(err, errors.CodeNotFound, "user not found")
+	}
+
+	if user.CustomAttributes == nil {
+		return nil // Already doesn't exist
+	}
+
+	delete(user.CustomAttributes, key)
+
+	input := repository.UpdateUserInput{
+		CustomAttributes: &user.CustomAttributes,
+	}
+
+	_, err = s.userRepo.Update(ctx, userID, input)
+	if err != nil {
+		return errors.Wrap(err, errors.CodeInternalServer, "failed to remove custom attribute")
+	}
+
+	return nil
+}
+
+func (s *profileService) ListCustomAttributes(ctx context.Context, userID xid.ID) (map[string]interface{}, error) {
+	user, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		return nil, errors.Wrap(err, errors.CodeNotFound, "user not found")
+	}
+
+	if user.CustomAttributes == nil {
+		return make(map[string]interface{}), nil
+	}
+
+	return user.CustomAttributes, nil
+}
+
+// Helper methods
+
+func (s *profileService) validateImageFile(header *multipart.FileHeader) error {
+	// Check file size (max 5MB)
+	if header.Size > 5*1024*1024 {
+		return errors.New(errors.CodeBadRequest, "file size too large (max 5MB)")
+	}
+
+	// Check content type
+	contentType := header.Header.Get("Content-Type")
+	allowedTypes := []string{"image/jpeg", "image/png", "image/gif", "image/webp"}
+
+	for _, allowed := range allowedTypes {
+		if contentType == allowed {
+			return nil
+		}
+	}
+
+	return errors.New(errors.CodeBadRequest, "invalid file type (only JPEG, PNG, GIF, WebP allowed)")
+}
+
+func (s *profileService) getDefaultPrivacySettings() ProfilePrivacySettings {
+	return ProfilePrivacySettings{
+		ProfileVisibility:     "public",
+		ShowEmail:             false,
+		ShowPhoneNumber:       false,
+		ShowLocation:          true,
+		ShowCompany:           true,
+		ShowJobTitle:          true,
+		ShowSocialLinks:       true,
+		AllowProfileSearch:    true,
+		AllowContactImport:    true,
+		CustomFieldVisibility: make(map[string]string),
+	}
+}
+
+func (s *profileService) calculateProfileCompleteness(user *ent.User) ProfileCompletenessResult {
+	score := 0.0
+	total := 10.0 // Total possible points
+	completed := []string{}
+	missing := []string{}
+
+	// Required fields
+	if user.Email != "" {
+		score += 2.0
+		completed = append(completed, "email")
+	} else {
+		missing = append(missing, "email")
+	}
+
+	if user.FirstName != "" {
+		score += 1.0
+		completed = append(completed, "firstName")
+	} else {
+		missing = append(missing, "firstName")
+	}
+
+	if user.LastName != "" {
+		score += 1.0
+		completed = append(completed, "lastName")
+	} else {
+		missing = append(missing, "lastName")
+	}
+
+	// Optional fields that boost completeness
+	if user.ProfileImageURL != "" {
+		score += 1.0
+		completed = append(completed, "profileImage")
+	} else {
+		missing = append(missing, "profileImage")
+	}
+
+	if user.PhoneNumber != "" {
+		score += 1.0
+		completed = append(completed, "phoneNumber")
+	} else {
+		missing = append(missing, "phoneNumber")
+	}
+
+	// Custom attributes
+	if bio := s.getCustomAttributeString(user.CustomAttributes, "bio"); bio != "" {
+		score += 1.0
+		completed = append(completed, "bio")
+	} else {
+		missing = append(missing, "bio")
+	}
+
+	if location := s.getCustomAttributeString(user.CustomAttributes, "location"); location != "" {
+		score += 1.0
+		completed = append(completed, "location")
+	} else {
+		missing = append(missing, "location")
+	}
+
+	if company := s.getCustomAttributeString(user.CustomAttributes, "company"); company != "" {
+		score += 1.0
+		completed = append(completed, "company")
+	} else {
+		missing = append(missing, "company")
+	}
+
+	if jobTitle := s.getCustomAttributeString(user.CustomAttributes, "job_title"); jobTitle != "" {
+		score += 1.0
+		completed = append(completed, "jobTitle")
+	} else {
+		missing = append(missing, "jobTitle")
+	}
+
+	// Verification bonus
+	if user.EmailVerified {
+		score += 1.0
+		completed = append(completed, "emailVerification")
+	} else {
+		missing = append(missing, "emailVerification")
+	}
+
+	completionPercentage := (score / total) * 100
+
+	return ProfileCompletenessResult{
+		Score:           completionPercentage,
+		CompletedFields: completed,
+		MissingFields:   missing,
+		OptionalFields:  []string{"bio", "location", "company", "jobTitle", "phoneNumber"},
+		Requirements:    s.getProfileRequirements(),
+		Recommendations: s.generateProfileRecommendations(missing),
+	}
+}
+
+func (s *profileService) getCustomAttributeString(attrs map[string]interface{}, key string) string {
+	if attrs == nil {
+		return ""
+	}
+	if value, exists := attrs[key]; exists {
+		if str, ok := value.(string); ok {
+			return str
+		}
+	}
+	return ""
+}
+
+func (s *profileService) getProfileRequirements() ProfileRequirements {
+	return ProfileRequirements{
+		RequiredFields: []ProfileFieldRequirement{
+			{Field: "email", Required: true, Description: "Email address is required"},
+			{Field: "firstName", Required: true, MinLength: 1, Description: "First name is required"},
+			{Field: "lastName", Required: true, MinLength: 1, Description: "Last name is required"},
+		},
+		OptionalFields: []ProfileFieldRequirement{
+			{Field: "bio", Required: false, MaxLength: 500, Description: "Brief biography"},
+			{Field: "location", Required: false, MaxLength: 100, Description: "Current location"},
+			{Field: "company", Required: false, MaxLength: 100, Description: "Current company"},
+			{Field: "jobTitle", Required: false, MaxLength: 100, Description: "Job title"},
+		},
+		MinimumScore: 70.0,
+	}
+}
+
+func (s *profileService) generateProfileRecommendations(missingFields []string) []ProfileRecommendation {
+	var recommendations []ProfileRecommendation
+
+	for _, field := range missingFields {
+		switch field {
+		case "profileImage":
+			recommendations = append(recommendations, ProfileRecommendation{
+				Type:        "image",
+				Priority:    "medium",
+				Title:       "Add Profile Picture",
+				Description: "Upload a profile picture to help others recognize you",
+				Action:      "upload_image",
+			})
+		case "bio":
+			recommendations = append(recommendations, ProfileRecommendation{
+				Type:        "content",
+				Priority:    "low",
+				Title:       "Add Bio",
+				Description: "Write a brief bio to tell others about yourself",
+				Action:      "add_bio",
+			})
+		case "emailVerification":
+			recommendations = append(recommendations, ProfileRecommendation{
+				Type:        "verification",
+				Priority:    "high",
+				Title:       "Verify Email",
+				Description: "Verify your email address to secure your account",
+				Action:      "verify_email",
+			})
+		}
+	}
+
+	return recommendations
+}
+
+func (s *profileService) getProfileUpdateFields(req model.UserProfileUpdateRequest) []string {
+	var fields []string
+	if req.FirstName != "" {
+		fields = append(fields, "firstName")
+	}
+	if req.LastName != "" {
+		fields = append(fields, "lastName")
+	}
+	if req.Username != "" {
+		fields = append(fields, "username")
+	}
+	// Add other fields as needed
+	return fields
+}
+
+// Audit helper methods
+func (s *profileService) auditProfileUpdate(ctx context.Context, userID, actorID xid.ID, updatedFields []string) {
+	input := repository.CreateAuditInput{
+		UserID:       &userID,
+		ActorID:      &actorID,
+		Action:       "profile.updated",
+		ResourceType: "user",
+		ResourceID:   &userID,
+		Status:       "success",
+		Metadata:     map[string]interface{}{"updated_fields": updatedFields},
+	}
+	s.auditRepo.Create(ctx, input)
+}
+
+func (s *profileService) auditProfileImageUpdate(ctx context.Context, userID, actorID xid.ID, imageURL string) {
+	input := repository.CreateAuditInput{
+		UserID:       &userID,
+		ActorID:      &actorID,
+		Action:       "profile.image_updated",
+		ResourceType: "user",
+		ResourceID:   &userID,
+		Status:       "success",
+		Metadata:     map[string]interface{}{"image_url": imageURL},
+	}
+	s.auditRepo.Create(ctx, input)
+}
+
+// Placeholder implementations for interface compliance
+func (s *profileService) ValidateProfile(ctx context.Context, userID xid.ID) (*ProfileValidationResult, error) {
+	return nil, errors.New(errors.CodeNotImplemented, "not implemented")
+}
+
+func (s *profileService) EnrichProfile(ctx context.Context, userID xid.ID) (*ProfileEnrichmentResult, error) {
+	return nil, errors.New(errors.CodeNotImplemented, "not implemented")
+}
+
+func (s *profileService) GetProfileCompleteness(ctx context.Context, userID xid.ID) (*ProfileCompletenessResult, error) {
+	profile, err := s.GetProfile(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	return &profile.Completeness, nil
+}
+
+func (s *profileService) GetProfileRequirements(ctx context.Context, userID xid.ID) (*ProfileRequirements, error) {
+	requirements := s.getProfileRequirements()
+	return &requirements, nil
+}
+
+func (s *profileService) GetProfileHistory(ctx context.Context, userID xid.ID, opts ProfileHistoryOptions) (*ProfileHistoryResult, error) {
+	return nil, errors.New(errors.CodeNotImplemented, "not implemented")
+}
+
+func (s *profileService) GetProfileActivity(ctx context.Context, userID xid.ID, since time.Time) (*ProfileActivityResult, error) {
+	return nil, errors.New(errors.CodeNotImplemented, "not implemented")
+}
+
+func (s *profileService) UpdatePrivacySettings(ctx context.Context, userID xid.ID, settings ProfilePrivacySettings) error {
+	return s.SetCustomAttribute(ctx, userID, "privacy_settings", settings)
+}
+
+func (s *profileService) GetPrivacySettings(ctx context.Context, userID xid.ID) (*ProfilePrivacySettings, error) {
+	value, err := s.GetCustomAttribute(ctx, userID, "privacy_settings")
+	if err != nil {
+		// Return default settings if not found
+		defaultSettings := s.getDefaultPrivacySettings()
+		return &defaultSettings, nil
+	}
+
+	var settings ProfilePrivacySettings
+	if settingsBytes, err := json.Marshal(value); err == nil {
+		if err := json.Unmarshal(settingsBytes, &settings); err == nil {
+			return &settings, nil
+		}
+	}
+
+	// Return default settings if parsing fails
+	defaultSettings := s.getDefaultPrivacySettings()
+	return &defaultSettings, nil
+}
+
+func (s *profileService) SearchProfiles(ctx context.Context, query string, filters ProfileSearchFilters) (*ProfileSearchResult, error) {
+	return nil, errors.New(errors.CodeNotImplemented, "not implemented")
+}
+
+func (s *profileService) GetSimilarProfiles(ctx context.Context, userID xid.ID, limit int) ([]*PublicProfile, error) {
+	return nil, errors.New(errors.CodeNotImplemented, "not implemented")
+}
+
+func (s *profileService) GetProfileViews(ctx context.Context, userID xid.ID, period ProfileAnalyticsPeriod) (*ProfileViewsResult, error) {
+	return nil, errors.New(errors.CodeNotImplemented, "not implemented")
+}
+
+func (s *profileService) GetProfileStats(ctx context.Context, userID xid.ID) (*ProfileStatsResult, error) {
+	return nil, errors.New(errors.CodeNotImplemented, "not implemented")
+}

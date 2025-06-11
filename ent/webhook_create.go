@@ -57,6 +57,20 @@ func (wc *WebhookCreate) SetNillableUpdatedAt(t *time.Time) *WebhookCreate {
 	return wc
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (wc *WebhookCreate) SetDeletedAt(t time.Time) *WebhookCreate {
+	wc.mutation.SetDeletedAt(t)
+	return wc
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (wc *WebhookCreate) SetNillableDeletedAt(t *time.Time) *WebhookCreate {
+	if t != nil {
+		wc.SetDeletedAt(*t)
+	}
+	return wc
+}
+
 // SetName sets the "name" field.
 func (wc *WebhookCreate) SetName(s string) *WebhookCreate {
 	wc.mutation.SetName(s)
@@ -160,6 +174,12 @@ func (wc *WebhookCreate) SetNillableFormat(w *webhook.Format) *WebhookCreate {
 // SetMetadata sets the "metadata" field.
 func (wc *WebhookCreate) SetMetadata(m map[string]interface{}) *WebhookCreate {
 	wc.mutation.SetMetadata(m)
+	return wc
+}
+
+// SetHeaders sets the "headers" field.
+func (wc *WebhookCreate) SetHeaders(m map[string]string) *WebhookCreate {
+	wc.mutation.SetHeaders(m)
 	return wc
 }
 
@@ -376,6 +396,10 @@ func (wc *WebhookCreate) createSpec() (*Webhook, *sqlgraph.CreateSpec) {
 		_spec.SetField(webhook.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
+	if value, ok := wc.mutation.DeletedAt(); ok {
+		_spec.SetField(webhook.FieldDeletedAt, field.TypeTime, value)
+		_node.DeletedAt = value
+	}
 	if value, ok := wc.mutation.Name(); ok {
 		_spec.SetField(webhook.FieldName, field.TypeString, value)
 		_node.Name = value
@@ -415,6 +439,10 @@ func (wc *WebhookCreate) createSpec() (*Webhook, *sqlgraph.CreateSpec) {
 	if value, ok := wc.mutation.Metadata(); ok {
 		_spec.SetField(webhook.FieldMetadata, field.TypeJSON, value)
 		_node.Metadata = value
+	}
+	if value, ok := wc.mutation.Headers(); ok {
+		_spec.SetField(webhook.FieldHeaders, field.TypeJSON, value)
+		_node.Headers = value
 	}
 	if nodes := wc.mutation.OrganizationIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -510,6 +538,24 @@ func (u *WebhookUpsert) SetUpdatedAt(v time.Time) *WebhookUpsert {
 // UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
 func (u *WebhookUpsert) UpdateUpdatedAt() *WebhookUpsert {
 	u.SetExcluded(webhook.FieldUpdatedAt)
+	return u
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *WebhookUpsert) SetDeletedAt(v time.Time) *WebhookUpsert {
+	u.Set(webhook.FieldDeletedAt, v)
+	return u
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *WebhookUpsert) UpdateDeletedAt() *WebhookUpsert {
+	u.SetExcluded(webhook.FieldDeletedAt)
+	return u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *WebhookUpsert) ClearDeletedAt() *WebhookUpsert {
+	u.SetNull(webhook.FieldDeletedAt)
 	return u
 }
 
@@ -663,6 +709,24 @@ func (u *WebhookUpsert) ClearMetadata() *WebhookUpsert {
 	return u
 }
 
+// SetHeaders sets the "headers" field.
+func (u *WebhookUpsert) SetHeaders(v map[string]string) *WebhookUpsert {
+	u.Set(webhook.FieldHeaders, v)
+	return u
+}
+
+// UpdateHeaders sets the "headers" field to the value that was provided on create.
+func (u *WebhookUpsert) UpdateHeaders() *WebhookUpsert {
+	u.SetExcluded(webhook.FieldHeaders)
+	return u
+}
+
+// ClearHeaders clears the value of the "headers" field.
+func (u *WebhookUpsert) ClearHeaders() *WebhookUpsert {
+	u.SetNull(webhook.FieldHeaders)
+	return u
+}
+
 // UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
 // Using this option is equivalent to using:
 //
@@ -725,6 +789,27 @@ func (u *WebhookUpsertOne) SetUpdatedAt(v time.Time) *WebhookUpsertOne {
 func (u *WebhookUpsertOne) UpdateUpdatedAt() *WebhookUpsertOne {
 	return u.Update(func(s *WebhookUpsert) {
 		s.UpdateUpdatedAt()
+	})
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *WebhookUpsertOne) SetDeletedAt(v time.Time) *WebhookUpsertOne {
+	return u.Update(func(s *WebhookUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *WebhookUpsertOne) UpdateDeletedAt() *WebhookUpsertOne {
+	return u.Update(func(s *WebhookUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *WebhookUpsertOne) ClearDeletedAt() *WebhookUpsertOne {
+	return u.Update(func(s *WebhookUpsert) {
+		s.ClearDeletedAt()
 	})
 }
 
@@ -900,6 +985,27 @@ func (u *WebhookUpsertOne) UpdateMetadata() *WebhookUpsertOne {
 func (u *WebhookUpsertOne) ClearMetadata() *WebhookUpsertOne {
 	return u.Update(func(s *WebhookUpsert) {
 		s.ClearMetadata()
+	})
+}
+
+// SetHeaders sets the "headers" field.
+func (u *WebhookUpsertOne) SetHeaders(v map[string]string) *WebhookUpsertOne {
+	return u.Update(func(s *WebhookUpsert) {
+		s.SetHeaders(v)
+	})
+}
+
+// UpdateHeaders sets the "headers" field to the value that was provided on create.
+func (u *WebhookUpsertOne) UpdateHeaders() *WebhookUpsertOne {
+	return u.Update(func(s *WebhookUpsert) {
+		s.UpdateHeaders()
+	})
+}
+
+// ClearHeaders clears the value of the "headers" field.
+func (u *WebhookUpsertOne) ClearHeaders() *WebhookUpsertOne {
+	return u.Update(func(s *WebhookUpsert) {
+		s.ClearHeaders()
 	})
 }
 
@@ -1135,6 +1241,27 @@ func (u *WebhookUpsertBulk) UpdateUpdatedAt() *WebhookUpsertBulk {
 	})
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (u *WebhookUpsertBulk) SetDeletedAt(v time.Time) *WebhookUpsertBulk {
+	return u.Update(func(s *WebhookUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *WebhookUpsertBulk) UpdateDeletedAt() *WebhookUpsertBulk {
+	return u.Update(func(s *WebhookUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *WebhookUpsertBulk) ClearDeletedAt() *WebhookUpsertBulk {
+	return u.Update(func(s *WebhookUpsert) {
+		s.ClearDeletedAt()
+	})
+}
+
 // SetName sets the "name" field.
 func (u *WebhookUpsertBulk) SetName(v string) *WebhookUpsertBulk {
 	return u.Update(func(s *WebhookUpsert) {
@@ -1307,6 +1434,27 @@ func (u *WebhookUpsertBulk) UpdateMetadata() *WebhookUpsertBulk {
 func (u *WebhookUpsertBulk) ClearMetadata() *WebhookUpsertBulk {
 	return u.Update(func(s *WebhookUpsert) {
 		s.ClearMetadata()
+	})
+}
+
+// SetHeaders sets the "headers" field.
+func (u *WebhookUpsertBulk) SetHeaders(v map[string]string) *WebhookUpsertBulk {
+	return u.Update(func(s *WebhookUpsert) {
+		s.SetHeaders(v)
+	})
+}
+
+// UpdateHeaders sets the "headers" field to the value that was provided on create.
+func (u *WebhookUpsertBulk) UpdateHeaders() *WebhookUpsertBulk {
+	return u.Update(func(s *WebhookUpsert) {
+		s.UpdateHeaders()
+	})
+}
+
+// ClearHeaders clears the value of the "headers" field.
+func (u *WebhookUpsertBulk) ClearHeaders() *WebhookUpsertBulk {
+	return u.Update(func(s *WebhookUpsert) {
+		s.ClearHeaders()
 	})
 }
 

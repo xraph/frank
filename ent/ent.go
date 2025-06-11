@@ -16,6 +16,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/juicycleff/frank/ent/apikey"
+	"github.com/juicycleff/frank/ent/audit"
 	"github.com/juicycleff/frank/ent/emailtemplate"
 	"github.com/juicycleff/frank/ent/featureflag"
 	"github.com/juicycleff/frank/ent/identityprovider"
@@ -32,6 +33,7 @@ import (
 	"github.com/juicycleff/frank/ent/permissiondependency"
 	"github.com/juicycleff/frank/ent/role"
 	"github.com/juicycleff/frank/ent/session"
+	"github.com/juicycleff/frank/ent/smstemplate"
 	"github.com/juicycleff/frank/ent/ssostate"
 	"github.com/juicycleff/frank/ent/user"
 	"github.com/juicycleff/frank/ent/userpermission"
@@ -100,6 +102,7 @@ func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
 			apikey.Table:               apikey.ValidColumn,
+			audit.Table:                audit.ValidColumn,
 			emailtemplate.Table:        emailtemplate.ValidColumn,
 			featureflag.Table:          featureflag.ValidColumn,
 			identityprovider.Table:     identityprovider.ValidColumn,
@@ -115,6 +118,7 @@ func checkColumn(table, column string) error {
 			permission.Table:           permission.ValidColumn,
 			permissiondependency.Table: permissiondependency.ValidColumn,
 			role.Table:                 role.ValidColumn,
+			smstemplate.Table:          smstemplate.ValidColumn,
 			ssostate.Table:             ssostate.ValidColumn,
 			session.Table:              session.ValidColumn,
 			user.Table:                 user.ValidColumn,

@@ -69,6 +69,11 @@ func UpdatedAt(v time.Time) predicate.Organization {
 	return predicate.Organization(sql.FieldEQ(FieldUpdatedAt, v))
 }
 
+// DeletedAt applies equality check predicate on the "deleted_at" field. It's identical to DeletedAtEQ.
+func DeletedAt(v time.Time) predicate.Organization {
+	return predicate.Organization(sql.FieldEQ(FieldDeletedAt, v))
+}
+
 // Name applies equality check predicate on the "name" field. It's identical to NameEQ.
 func Name(v string) predicate.Organization {
 	return predicate.Organization(sql.FieldEQ(FieldName, v))
@@ -259,6 +264,56 @@ func UpdatedAtLTE(v time.Time) predicate.Organization {
 	return predicate.Organization(sql.FieldLTE(FieldUpdatedAt, v))
 }
 
+// DeletedAtEQ applies the EQ predicate on the "deleted_at" field.
+func DeletedAtEQ(v time.Time) predicate.Organization {
+	return predicate.Organization(sql.FieldEQ(FieldDeletedAt, v))
+}
+
+// DeletedAtNEQ applies the NEQ predicate on the "deleted_at" field.
+func DeletedAtNEQ(v time.Time) predicate.Organization {
+	return predicate.Organization(sql.FieldNEQ(FieldDeletedAt, v))
+}
+
+// DeletedAtIn applies the In predicate on the "deleted_at" field.
+func DeletedAtIn(vs ...time.Time) predicate.Organization {
+	return predicate.Organization(sql.FieldIn(FieldDeletedAt, vs...))
+}
+
+// DeletedAtNotIn applies the NotIn predicate on the "deleted_at" field.
+func DeletedAtNotIn(vs ...time.Time) predicate.Organization {
+	return predicate.Organization(sql.FieldNotIn(FieldDeletedAt, vs...))
+}
+
+// DeletedAtGT applies the GT predicate on the "deleted_at" field.
+func DeletedAtGT(v time.Time) predicate.Organization {
+	return predicate.Organization(sql.FieldGT(FieldDeletedAt, v))
+}
+
+// DeletedAtGTE applies the GTE predicate on the "deleted_at" field.
+func DeletedAtGTE(v time.Time) predicate.Organization {
+	return predicate.Organization(sql.FieldGTE(FieldDeletedAt, v))
+}
+
+// DeletedAtLT applies the LT predicate on the "deleted_at" field.
+func DeletedAtLT(v time.Time) predicate.Organization {
+	return predicate.Organization(sql.FieldLT(FieldDeletedAt, v))
+}
+
+// DeletedAtLTE applies the LTE predicate on the "deleted_at" field.
+func DeletedAtLTE(v time.Time) predicate.Organization {
+	return predicate.Organization(sql.FieldLTE(FieldDeletedAt, v))
+}
+
+// DeletedAtIsNil applies the IsNil predicate on the "deleted_at" field.
+func DeletedAtIsNil() predicate.Organization {
+	return predicate.Organization(sql.FieldIsNull(FieldDeletedAt))
+}
+
+// DeletedAtNotNil applies the NotNil predicate on the "deleted_at" field.
+func DeletedAtNotNil() predicate.Organization {
+	return predicate.Organization(sql.FieldNotNull(FieldDeletedAt))
+}
+
 // NameEQ applies the EQ predicate on the "name" field.
 func NameEQ(v string) predicate.Organization {
 	return predicate.Organization(sql.FieldEQ(FieldName, v))
@@ -387,6 +442,26 @@ func SlugEqualFold(v string) predicate.Organization {
 // SlugContainsFold applies the ContainsFold predicate on the "slug" field.
 func SlugContainsFold(v string) predicate.Organization {
 	return predicate.Organization(sql.FieldContainsFold(FieldSlug, v))
+}
+
+// DomainsIsNil applies the IsNil predicate on the "domains" field.
+func DomainsIsNil() predicate.Organization {
+	return predicate.Organization(sql.FieldIsNull(FieldDomains))
+}
+
+// DomainsNotNil applies the NotNil predicate on the "domains" field.
+func DomainsNotNil() predicate.Organization {
+	return predicate.Organization(sql.FieldNotNull(FieldDomains))
+}
+
+// VerifiedDomainsIsNil applies the IsNil predicate on the "verified_domains" field.
+func VerifiedDomainsIsNil() predicate.Organization {
+	return predicate.Organization(sql.FieldIsNull(FieldVerifiedDomains))
+}
+
+// VerifiedDomainsNotNil applies the NotNil predicate on the "verified_domains" field.
+func VerifiedDomainsNotNil() predicate.Organization {
+	return predicate.Organization(sql.FieldNotNull(FieldVerifiedDomains))
 }
 
 // DomainEQ applies the EQ predicate on the "domain" field.
@@ -1430,6 +1505,52 @@ func HasMembershipsWith(preds ...predicate.Membership) predicate.Organization {
 	})
 }
 
+// HasSmsTemplates applies the HasEdge predicate on the "sms_templates" edge.
+func HasSmsTemplates() predicate.Organization {
+	return predicate.Organization(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, SmsTemplatesTable, SmsTemplatesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasSmsTemplatesWith applies the HasEdge predicate on the "sms_templates" edge with a given conditions (other predicates).
+func HasSmsTemplatesWith(preds ...predicate.SMSTemplate) predicate.Organization {
+	return predicate.Organization(func(s *sql.Selector) {
+		step := newSmsTemplatesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasEmailTemplates applies the HasEdge predicate on the "email_templates" edge.
+func HasEmailTemplates() predicate.Organization {
+	return predicate.Organization(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, EmailTemplatesTable, EmailTemplatesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasEmailTemplatesWith applies the HasEdge predicate on the "email_templates" edge with a given conditions (other predicates).
+func HasEmailTemplatesWith(preds ...predicate.EmailTemplate) predicate.Organization {
+	return predicate.Organization(func(s *sql.Selector) {
+		step := newEmailTemplatesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // HasAPIKeys applies the HasEdge predicate on the "api_keys" edge.
 func HasAPIKeys() predicate.Organization {
 	return predicate.Organization(func(s *sql.Selector) {
@@ -1606,6 +1727,29 @@ func HasUserPermissionContexts() predicate.Organization {
 func HasUserPermissionContextsWith(preds ...predicate.UserPermission) predicate.Organization {
 	return predicate.Organization(func(s *sql.Selector) {
 		step := newUserPermissionContextsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasAuditLogs applies the HasEdge predicate on the "audit_logs" edge.
+func HasAuditLogs() predicate.Organization {
+	return predicate.Organization(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, AuditLogsTable, AuditLogsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasAuditLogsWith applies the HasEdge predicate on the "audit_logs" edge with a given conditions (other predicates).
+func HasAuditLogsWith(preds ...predicate.Audit) predicate.Organization {
+	return predicate.Organization(func(s *sql.Selector) {
+		step := newAuditLogsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

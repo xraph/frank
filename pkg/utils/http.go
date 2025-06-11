@@ -115,7 +115,7 @@ func DecodeJSON(r *http.Request, v interface{}) error {
 		if err == io.EOF {
 			return errors.New(errors.CodeBadRequest, "request body is empty")
 		}
-		return errors.Wrap(errors.CodeBadRequest, err, "invalid JSON format")
+		return errors.Wrap(err, errors.CodeBadRequest, "invalid JSON format")
 	}
 
 	return nil
@@ -190,13 +190,13 @@ func GetBasicAuth(r *http.Request) (username, password string, ok bool) {
 // ParseQueryParams parses query parameters into a struct
 func ParseQueryParams(r *http.Request, v interface{}) error {
 	if err := r.ParseForm(); err != nil {
-		return errors.Wrap(errors.CodeBadRequest, err, "failed to parse query parameters")
+		return errors.Wrap(err, errors.CodeBadRequest, "failed to parse query parameters")
 	}
 
 	decoder := json.NewDecoder(strings.NewReader(r.Form.Encode()))
 	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(v); err != nil {
-		return errors.Wrap(errors.CodeBadRequest, err, "failed to decode query parameters")
+		return errors.Wrap(err, errors.CodeBadRequest, "failed to decode query parameters")
 	}
 
 	return nil
@@ -431,7 +431,7 @@ func GetPathVarInt(r *http.Request, name string) (int, error) {
 
 	val, err := strconv.Atoi(str)
 	if err != nil {
-		return 0, errors.Wrap(errors.CodeInvalidInput, err, "invalid integer format")
+		return 0, errors.Wrap(err, errors.CodeInvalidInput, "invalid integer format")
 	}
 
 	return val, nil
@@ -446,7 +446,7 @@ func GetPathVarUUID(r *http.Request, name string) (uuid.UUID, error) {
 
 	id, err := uuid.Parse(str)
 	if err != nil {
-		return uuid.Nil, errors.Wrap(errors.CodeInvalidInput, err, "invalid UUID format")
+		return uuid.Nil, errors.Wrap(err, errors.CodeInvalidInput, "invalid UUID format")
 	}
 
 	return id, nil

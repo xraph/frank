@@ -40,6 +40,26 @@ func (vu *VerificationUpdate) SetUpdatedAt(t time.Time) *VerificationUpdate {
 	return vu
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (vu *VerificationUpdate) SetDeletedAt(t time.Time) *VerificationUpdate {
+	vu.mutation.SetDeletedAt(t)
+	return vu
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (vu *VerificationUpdate) SetNillableDeletedAt(t *time.Time) *VerificationUpdate {
+	if t != nil {
+		vu.SetDeletedAt(*t)
+	}
+	return vu
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (vu *VerificationUpdate) ClearDeletedAt() *VerificationUpdate {
+	vu.mutation.ClearDeletedAt()
+	return vu
+}
+
 // SetUserID sets the "user_id" field.
 func (vu *VerificationUpdate) SetUserID(x xid.ID) *VerificationUpdate {
 	vu.mutation.SetUserID(x)
@@ -263,6 +283,18 @@ func (vu *VerificationUpdate) ClearAttestation() *VerificationUpdate {
 	return vu
 }
 
+// SetMetadata sets the "metadata" field.
+func (vu *VerificationUpdate) SetMetadata(m map[string]interface{}) *VerificationUpdate {
+	vu.mutation.SetMetadata(m)
+	return vu
+}
+
+// ClearMetadata clears the value of the "metadata" field.
+func (vu *VerificationUpdate) ClearMetadata() *VerificationUpdate {
+	vu.mutation.ClearMetadata()
+	return vu
+}
+
 // SetUser sets the "user" edge to the User entity.
 func (vu *VerificationUpdate) SetUser(u *User) *VerificationUpdate {
 	return vu.SetUserID(u.ID)
@@ -359,6 +391,12 @@ func (vu *VerificationUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := vu.mutation.UpdatedAt(); ok {
 		_spec.SetField(verification.FieldUpdatedAt, field.TypeTime, value)
 	}
+	if value, ok := vu.mutation.DeletedAt(); ok {
+		_spec.SetField(verification.FieldDeletedAt, field.TypeTime, value)
+	}
+	if vu.mutation.DeletedAtCleared() {
+		_spec.ClearField(verification.FieldDeletedAt, field.TypeTime)
+	}
 	if value, ok := vu.mutation.GetType(); ok {
 		_spec.SetField(verification.FieldType, field.TypeString, value)
 	}
@@ -419,6 +457,12 @@ func (vu *VerificationUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if vu.mutation.AttestationCleared() {
 		_spec.ClearField(verification.FieldAttestation, field.TypeJSON)
 	}
+	if value, ok := vu.mutation.Metadata(); ok {
+		_spec.SetField(verification.FieldMetadata, field.TypeJSON, value)
+	}
+	if vu.mutation.MetadataCleared() {
+		_spec.ClearField(verification.FieldMetadata, field.TypeJSON)
+	}
 	if vu.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -473,6 +517,26 @@ type VerificationUpdateOne struct {
 // SetUpdatedAt sets the "updated_at" field.
 func (vuo *VerificationUpdateOne) SetUpdatedAt(t time.Time) *VerificationUpdateOne {
 	vuo.mutation.SetUpdatedAt(t)
+	return vuo
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (vuo *VerificationUpdateOne) SetDeletedAt(t time.Time) *VerificationUpdateOne {
+	vuo.mutation.SetDeletedAt(t)
+	return vuo
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (vuo *VerificationUpdateOne) SetNillableDeletedAt(t *time.Time) *VerificationUpdateOne {
+	if t != nil {
+		vuo.SetDeletedAt(*t)
+	}
+	return vuo
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (vuo *VerificationUpdateOne) ClearDeletedAt() *VerificationUpdateOne {
+	vuo.mutation.ClearDeletedAt()
 	return vuo
 }
 
@@ -699,6 +763,18 @@ func (vuo *VerificationUpdateOne) ClearAttestation() *VerificationUpdateOne {
 	return vuo
 }
 
+// SetMetadata sets the "metadata" field.
+func (vuo *VerificationUpdateOne) SetMetadata(m map[string]interface{}) *VerificationUpdateOne {
+	vuo.mutation.SetMetadata(m)
+	return vuo
+}
+
+// ClearMetadata clears the value of the "metadata" field.
+func (vuo *VerificationUpdateOne) ClearMetadata() *VerificationUpdateOne {
+	vuo.mutation.ClearMetadata()
+	return vuo
+}
+
 // SetUser sets the "user" edge to the User entity.
 func (vuo *VerificationUpdateOne) SetUser(u *User) *VerificationUpdateOne {
 	return vuo.SetUserID(u.ID)
@@ -825,6 +901,12 @@ func (vuo *VerificationUpdateOne) sqlSave(ctx context.Context) (_node *Verificat
 	if value, ok := vuo.mutation.UpdatedAt(); ok {
 		_spec.SetField(verification.FieldUpdatedAt, field.TypeTime, value)
 	}
+	if value, ok := vuo.mutation.DeletedAt(); ok {
+		_spec.SetField(verification.FieldDeletedAt, field.TypeTime, value)
+	}
+	if vuo.mutation.DeletedAtCleared() {
+		_spec.ClearField(verification.FieldDeletedAt, field.TypeTime)
+	}
 	if value, ok := vuo.mutation.GetType(); ok {
 		_spec.SetField(verification.FieldType, field.TypeString, value)
 	}
@@ -884,6 +966,12 @@ func (vuo *VerificationUpdateOne) sqlSave(ctx context.Context) (_node *Verificat
 	}
 	if vuo.mutation.AttestationCleared() {
 		_spec.ClearField(verification.FieldAttestation, field.TypeJSON)
+	}
+	if value, ok := vuo.mutation.Metadata(); ok {
+		_spec.SetField(verification.FieldMetadata, field.TypeJSON, value)
+	}
+	if vuo.mutation.MetadataCleared() {
+		_spec.ClearField(verification.FieldMetadata, field.TypeJSON)
 	}
 	if vuo.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{

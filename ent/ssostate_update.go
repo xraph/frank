@@ -38,6 +38,26 @@ func (ssu *SSOStateUpdate) SetUpdatedAt(t time.Time) *SSOStateUpdate {
 	return ssu
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (ssu *SSOStateUpdate) SetDeletedAt(t time.Time) *SSOStateUpdate {
+	ssu.mutation.SetDeletedAt(t)
+	return ssu
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (ssu *SSOStateUpdate) SetNillableDeletedAt(t *time.Time) *SSOStateUpdate {
+	if t != nil {
+		ssu.SetDeletedAt(*t)
+	}
+	return ssu
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (ssu *SSOStateUpdate) ClearDeletedAt() *SSOStateUpdate {
+	ssu.mutation.ClearDeletedAt()
+	return ssu
+}
+
 // SetState sets the "state" field.
 func (ssu *SSOStateUpdate) SetState(s string) *SSOStateUpdate {
 	ssu.mutation.SetState(s)
@@ -77,6 +97,26 @@ func (ssu *SSOStateUpdate) SetNillableExpiresAt(t *time.Time) *SSOStateUpdate {
 	if t != nil {
 		ssu.SetExpiresAt(*t)
 	}
+	return ssu
+}
+
+// SetRedirectURL sets the "redirect_url" field.
+func (ssu *SSOStateUpdate) SetRedirectURL(s string) *SSOStateUpdate {
+	ssu.mutation.SetRedirectURL(s)
+	return ssu
+}
+
+// SetNillableRedirectURL sets the "redirect_url" field if the given value is not nil.
+func (ssu *SSOStateUpdate) SetNillableRedirectURL(s *string) *SSOStateUpdate {
+	if s != nil {
+		ssu.SetRedirectURL(*s)
+	}
+	return ssu
+}
+
+// ClearRedirectURL clears the value of the "redirect_url" field.
+func (ssu *SSOStateUpdate) ClearRedirectURL() *SSOStateUpdate {
+	ssu.mutation.ClearRedirectURL()
 	return ssu
 }
 
@@ -152,6 +192,12 @@ func (ssu *SSOStateUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := ssu.mutation.UpdatedAt(); ok {
 		_spec.SetField(ssostate.FieldUpdatedAt, field.TypeTime, value)
 	}
+	if value, ok := ssu.mutation.DeletedAt(); ok {
+		_spec.SetField(ssostate.FieldDeletedAt, field.TypeTime, value)
+	}
+	if ssu.mutation.DeletedAtCleared() {
+		_spec.ClearField(ssostate.FieldDeletedAt, field.TypeTime)
+	}
 	if value, ok := ssu.mutation.State(); ok {
 		_spec.SetField(ssostate.FieldState, field.TypeString, value)
 	}
@@ -160,6 +206,12 @@ func (ssu *SSOStateUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := ssu.mutation.ExpiresAt(); ok {
 		_spec.SetField(ssostate.FieldExpiresAt, field.TypeTime, value)
+	}
+	if value, ok := ssu.mutation.RedirectURL(); ok {
+		_spec.SetField(ssostate.FieldRedirectURL, field.TypeString, value)
+	}
+	if ssu.mutation.RedirectURLCleared() {
+		_spec.ClearField(ssostate.FieldRedirectURL, field.TypeString)
 	}
 	_spec.AddModifiers(ssu.modifiers...)
 	if n, err = sqlgraph.UpdateNodes(ctx, ssu.driver, _spec); err != nil {
@@ -186,6 +238,26 @@ type SSOStateUpdateOne struct {
 // SetUpdatedAt sets the "updated_at" field.
 func (ssuo *SSOStateUpdateOne) SetUpdatedAt(t time.Time) *SSOStateUpdateOne {
 	ssuo.mutation.SetUpdatedAt(t)
+	return ssuo
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (ssuo *SSOStateUpdateOne) SetDeletedAt(t time.Time) *SSOStateUpdateOne {
+	ssuo.mutation.SetDeletedAt(t)
+	return ssuo
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (ssuo *SSOStateUpdateOne) SetNillableDeletedAt(t *time.Time) *SSOStateUpdateOne {
+	if t != nil {
+		ssuo.SetDeletedAt(*t)
+	}
+	return ssuo
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (ssuo *SSOStateUpdateOne) ClearDeletedAt() *SSOStateUpdateOne {
+	ssuo.mutation.ClearDeletedAt()
 	return ssuo
 }
 
@@ -228,6 +300,26 @@ func (ssuo *SSOStateUpdateOne) SetNillableExpiresAt(t *time.Time) *SSOStateUpdat
 	if t != nil {
 		ssuo.SetExpiresAt(*t)
 	}
+	return ssuo
+}
+
+// SetRedirectURL sets the "redirect_url" field.
+func (ssuo *SSOStateUpdateOne) SetRedirectURL(s string) *SSOStateUpdateOne {
+	ssuo.mutation.SetRedirectURL(s)
+	return ssuo
+}
+
+// SetNillableRedirectURL sets the "redirect_url" field if the given value is not nil.
+func (ssuo *SSOStateUpdateOne) SetNillableRedirectURL(s *string) *SSOStateUpdateOne {
+	if s != nil {
+		ssuo.SetRedirectURL(*s)
+	}
+	return ssuo
+}
+
+// ClearRedirectURL clears the value of the "redirect_url" field.
+func (ssuo *SSOStateUpdateOne) ClearRedirectURL() *SSOStateUpdateOne {
+	ssuo.mutation.ClearRedirectURL()
 	return ssuo
 }
 
@@ -333,6 +425,12 @@ func (ssuo *SSOStateUpdateOne) sqlSave(ctx context.Context) (_node *SSOState, er
 	if value, ok := ssuo.mutation.UpdatedAt(); ok {
 		_spec.SetField(ssostate.FieldUpdatedAt, field.TypeTime, value)
 	}
+	if value, ok := ssuo.mutation.DeletedAt(); ok {
+		_spec.SetField(ssostate.FieldDeletedAt, field.TypeTime, value)
+	}
+	if ssuo.mutation.DeletedAtCleared() {
+		_spec.ClearField(ssostate.FieldDeletedAt, field.TypeTime)
+	}
 	if value, ok := ssuo.mutation.State(); ok {
 		_spec.SetField(ssostate.FieldState, field.TypeString, value)
 	}
@@ -341,6 +439,12 @@ func (ssuo *SSOStateUpdateOne) sqlSave(ctx context.Context) (_node *SSOState, er
 	}
 	if value, ok := ssuo.mutation.ExpiresAt(); ok {
 		_spec.SetField(ssostate.FieldExpiresAt, field.TypeTime, value)
+	}
+	if value, ok := ssuo.mutation.RedirectURL(); ok {
+		_spec.SetField(ssostate.FieldRedirectURL, field.TypeString, value)
+	}
+	if ssuo.mutation.RedirectURLCleared() {
+		_spec.ClearField(ssostate.FieldRedirectURL, field.TypeString)
 	}
 	_spec.AddModifiers(ssuo.modifiers...)
 	_node = &SSOState{config: ssuo.config}

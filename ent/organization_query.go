@@ -17,6 +17,8 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/juicycleff/frank/ent/apikey"
+	"github.com/juicycleff/frank/ent/audit"
+	"github.com/juicycleff/frank/ent/emailtemplate"
 	"github.com/juicycleff/frank/ent/identityprovider"
 	"github.com/juicycleff/frank/ent/membership"
 	"github.com/juicycleff/frank/ent/oauthclient"
@@ -24,6 +26,7 @@ import (
 	"github.com/juicycleff/frank/ent/organizationfeature"
 	"github.com/juicycleff/frank/ent/predicate"
 	"github.com/juicycleff/frank/ent/role"
+	"github.com/juicycleff/frank/ent/smstemplate"
 	"github.com/juicycleff/frank/ent/user"
 	"github.com/juicycleff/frank/ent/userpermission"
 	"github.com/juicycleff/frank/ent/userrole"
@@ -40,6 +43,8 @@ type OrganizationQuery struct {
 	predicates                      []predicate.Organization
 	withUsers                       *UserQuery
 	withMemberships                 *MembershipQuery
+	withSmsTemplates                *SMSTemplateQuery
+	withEmailTemplates              *EmailTemplateQuery
 	withAPIKeys                     *ApiKeyQuery
 	withWebhooks                    *WebhookQuery
 	withFeatureFlags                *OrganizationFeatureQuery
@@ -48,9 +53,12 @@ type OrganizationQuery struct {
 	withRoles                       *RoleQuery
 	withUserRoleContexts            *UserRoleQuery
 	withUserPermissionContexts      *UserPermissionQuery
+	withAuditLogs                   *AuditQuery
 	modifiers                       []func(*sql.Selector)
 	withNamedUsers                  map[string]*UserQuery
 	withNamedMemberships            map[string]*MembershipQuery
+	withNamedSmsTemplates           map[string]*SMSTemplateQuery
+	withNamedEmailTemplates         map[string]*EmailTemplateQuery
 	withNamedAPIKeys                map[string]*ApiKeyQuery
 	withNamedWebhooks               map[string]*WebhookQuery
 	withNamedFeatureFlags           map[string]*OrganizationFeatureQuery
@@ -59,6 +67,7 @@ type OrganizationQuery struct {
 	withNamedRoles                  map[string]*RoleQuery
 	withNamedUserRoleContexts       map[string]*UserRoleQuery
 	withNamedUserPermissionContexts map[string]*UserPermissionQuery
+	withNamedAuditLogs              map[string]*AuditQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -132,6 +141,50 @@ func (oq *OrganizationQuery) QueryMemberships() *MembershipQuery {
 			sqlgraph.From(organization.Table, organization.FieldID, selector),
 			sqlgraph.To(membership.Table, membership.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, organization.MembershipsTable, organization.MembershipsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(oq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QuerySmsTemplates chains the current query on the "sms_templates" edge.
+func (oq *OrganizationQuery) QuerySmsTemplates() *SMSTemplateQuery {
+	query := (&SMSTemplateClient{config: oq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := oq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := oq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(organization.Table, organization.FieldID, selector),
+			sqlgraph.To(smstemplate.Table, smstemplate.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, organization.SmsTemplatesTable, organization.SmsTemplatesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(oq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryEmailTemplates chains the current query on the "email_templates" edge.
+func (oq *OrganizationQuery) QueryEmailTemplates() *EmailTemplateQuery {
+	query := (&EmailTemplateClient{config: oq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := oq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := oq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(organization.Table, organization.FieldID, selector),
+			sqlgraph.To(emailtemplate.Table, emailtemplate.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, organization.EmailTemplatesTable, organization.EmailTemplatesColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(oq.driver.Dialect(), step)
 		return fromU, nil
@@ -308,6 +361,28 @@ func (oq *OrganizationQuery) QueryUserPermissionContexts() *UserPermissionQuery 
 			sqlgraph.From(organization.Table, organization.FieldID, selector),
 			sqlgraph.To(userpermission.Table, userpermission.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, true, organization.UserPermissionContextsTable, organization.UserPermissionContextsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(oq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryAuditLogs chains the current query on the "audit_logs" edge.
+func (oq *OrganizationQuery) QueryAuditLogs() *AuditQuery {
+	query := (&AuditClient{config: oq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := oq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := oq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(organization.Table, organization.FieldID, selector),
+			sqlgraph.To(audit.Table, audit.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, organization.AuditLogsTable, organization.AuditLogsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(oq.driver.Dialect(), step)
 		return fromU, nil
@@ -509,6 +584,8 @@ func (oq *OrganizationQuery) Clone() *OrganizationQuery {
 		predicates:                 append([]predicate.Organization{}, oq.predicates...),
 		withUsers:                  oq.withUsers.Clone(),
 		withMemberships:            oq.withMemberships.Clone(),
+		withSmsTemplates:           oq.withSmsTemplates.Clone(),
+		withEmailTemplates:         oq.withEmailTemplates.Clone(),
 		withAPIKeys:                oq.withAPIKeys.Clone(),
 		withWebhooks:               oq.withWebhooks.Clone(),
 		withFeatureFlags:           oq.withFeatureFlags.Clone(),
@@ -517,6 +594,7 @@ func (oq *OrganizationQuery) Clone() *OrganizationQuery {
 		withRoles:                  oq.withRoles.Clone(),
 		withUserRoleContexts:       oq.withUserRoleContexts.Clone(),
 		withUserPermissionContexts: oq.withUserPermissionContexts.Clone(),
+		withAuditLogs:              oq.withAuditLogs.Clone(),
 		// clone intermediate query.
 		sql:       oq.sql.Clone(),
 		path:      oq.path,
@@ -543,6 +621,28 @@ func (oq *OrganizationQuery) WithMemberships(opts ...func(*MembershipQuery)) *Or
 		opt(query)
 	}
 	oq.withMemberships = query
+	return oq
+}
+
+// WithSmsTemplates tells the query-builder to eager-load the nodes that are connected to
+// the "sms_templates" edge. The optional arguments are used to configure the query builder of the edge.
+func (oq *OrganizationQuery) WithSmsTemplates(opts ...func(*SMSTemplateQuery)) *OrganizationQuery {
+	query := (&SMSTemplateClient{config: oq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	oq.withSmsTemplates = query
+	return oq
+}
+
+// WithEmailTemplates tells the query-builder to eager-load the nodes that are connected to
+// the "email_templates" edge. The optional arguments are used to configure the query builder of the edge.
+func (oq *OrganizationQuery) WithEmailTemplates(opts ...func(*EmailTemplateQuery)) *OrganizationQuery {
+	query := (&EmailTemplateClient{config: oq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	oq.withEmailTemplates = query
 	return oq
 }
 
@@ -634,6 +734,17 @@ func (oq *OrganizationQuery) WithUserPermissionContexts(opts ...func(*UserPermis
 	return oq
 }
 
+// WithAuditLogs tells the query-builder to eager-load the nodes that are connected to
+// the "audit_logs" edge. The optional arguments are used to configure the query builder of the edge.
+func (oq *OrganizationQuery) WithAuditLogs(opts ...func(*AuditQuery)) *OrganizationQuery {
+	query := (&AuditClient{config: oq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	oq.withAuditLogs = query
+	return oq
+}
+
 // GroupBy is used to group vertices by one or more fields/columns.
 // It is often used with aggregate functions, like: count, max, mean, min, sum.
 //
@@ -712,9 +823,11 @@ func (oq *OrganizationQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 	var (
 		nodes       = []*Organization{}
 		_spec       = oq.querySpec()
-		loadedTypes = [10]bool{
+		loadedTypes = [13]bool{
 			oq.withUsers != nil,
 			oq.withMemberships != nil,
+			oq.withSmsTemplates != nil,
+			oq.withEmailTemplates != nil,
 			oq.withAPIKeys != nil,
 			oq.withWebhooks != nil,
 			oq.withFeatureFlags != nil,
@@ -723,6 +836,7 @@ func (oq *OrganizationQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 			oq.withRoles != nil,
 			oq.withUserRoleContexts != nil,
 			oq.withUserPermissionContexts != nil,
+			oq.withAuditLogs != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -764,6 +878,30 @@ func (oq *OrganizationQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 			func(n *Organization, e *Membership) {
 				n.Edges.Memberships = append(n.Edges.Memberships, e)
 				if !e.Edges.loadedTypes[1] {
+					e.Edges.Organization = n
+				}
+			}); err != nil {
+			return nil, err
+		}
+	}
+	if query := oq.withSmsTemplates; query != nil {
+		if err := oq.loadSmsTemplates(ctx, query, nodes,
+			func(n *Organization) { n.Edges.SmsTemplates = []*SMSTemplate{} },
+			func(n *Organization, e *SMSTemplate) {
+				n.Edges.SmsTemplates = append(n.Edges.SmsTemplates, e)
+				if !e.Edges.loadedTypes[0] {
+					e.Edges.Organization = n
+				}
+			}); err != nil {
+			return nil, err
+		}
+	}
+	if query := oq.withEmailTemplates; query != nil {
+		if err := oq.loadEmailTemplates(ctx, query, nodes,
+			func(n *Organization) { n.Edges.EmailTemplates = []*EmailTemplate{} },
+			func(n *Organization, e *EmailTemplate) {
+				n.Edges.EmailTemplates = append(n.Edges.EmailTemplates, e)
+				if !e.Edges.loadedTypes[0] {
 					e.Edges.Organization = n
 				}
 			}); err != nil {
@@ -866,6 +1004,18 @@ func (oq *OrganizationQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 			return nil, err
 		}
 	}
+	if query := oq.withAuditLogs; query != nil {
+		if err := oq.loadAuditLogs(ctx, query, nodes,
+			func(n *Organization) { n.Edges.AuditLogs = []*Audit{} },
+			func(n *Organization, e *Audit) {
+				n.Edges.AuditLogs = append(n.Edges.AuditLogs, e)
+				if !e.Edges.loadedTypes[1] {
+					e.Edges.Organization = n
+				}
+			}); err != nil {
+			return nil, err
+		}
+	}
 	for name, query := range oq.withNamedUsers {
 		if err := oq.loadUsers(ctx, query, nodes,
 			func(n *Organization) { n.appendNamedUsers(name) },
@@ -884,6 +1034,30 @@ func (oq *OrganizationQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 			func(n *Organization, e *Membership) {
 				n.appendNamedMemberships(name, e)
 				if !e.Edges.loadedTypes[1] {
+					e.Edges.Organization = n
+				}
+			}); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range oq.withNamedSmsTemplates {
+		if err := oq.loadSmsTemplates(ctx, query, nodes,
+			func(n *Organization) { n.appendNamedSmsTemplates(name) },
+			func(n *Organization, e *SMSTemplate) {
+				n.appendNamedSmsTemplates(name, e)
+				if !e.Edges.loadedTypes[0] {
+					e.Edges.Organization = n
+				}
+			}); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range oq.withNamedEmailTemplates {
+		if err := oq.loadEmailTemplates(ctx, query, nodes,
+			func(n *Organization) { n.appendNamedEmailTemplates(name) },
+			func(n *Organization, e *EmailTemplate) {
+				n.appendNamedEmailTemplates(name, e)
+				if !e.Edges.loadedTypes[0] {
 					e.Edges.Organization = n
 				}
 			}); err != nil {
@@ -986,6 +1160,18 @@ func (oq *OrganizationQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 			return nil, err
 		}
 	}
+	for name, query := range oq.withNamedAuditLogs {
+		if err := oq.loadAuditLogs(ctx, query, nodes,
+			func(n *Organization) { n.appendNamedAuditLogs(name) },
+			func(n *Organization, e *Audit) {
+				n.appendNamedAuditLogs(name, e)
+				if !e.Edges.loadedTypes[1] {
+					e.Edges.Organization = n
+				}
+			}); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
 }
 
@@ -1034,6 +1220,66 @@ func (oq *OrganizationQuery) loadMemberships(ctx context.Context, query *Members
 	}
 	query.Where(predicate.Membership(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(organization.MembershipsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.OrganizationID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "organization_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (oq *OrganizationQuery) loadSmsTemplates(ctx context.Context, query *SMSTemplateQuery, nodes []*Organization, init func(*Organization), assign func(*Organization, *SMSTemplate)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[xid.ID]*Organization)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(smstemplate.FieldOrganizationID)
+	}
+	query.Where(predicate.SMSTemplate(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(organization.SmsTemplatesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.OrganizationID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "organization_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (oq *OrganizationQuery) loadEmailTemplates(ctx context.Context, query *EmailTemplateQuery, nodes []*Organization, init func(*Organization), assign func(*Organization, *EmailTemplate)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[xid.ID]*Organization)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(emailtemplate.FieldOrganizationID)
+	}
+	query.Where(predicate.EmailTemplate(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(organization.EmailTemplatesColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
@@ -1289,6 +1535,36 @@ func (oq *OrganizationQuery) loadUserPermissionContexts(ctx context.Context, que
 	}
 	return nil
 }
+func (oq *OrganizationQuery) loadAuditLogs(ctx context.Context, query *AuditQuery, nodes []*Organization, init func(*Organization), assign func(*Organization, *Audit)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[xid.ID]*Organization)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(audit.FieldOrganizationID)
+	}
+	query.Where(predicate.Audit(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(organization.AuditLogsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.OrganizationID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "organization_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
 
 func (oq *OrganizationQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := oq.querySpec()
@@ -1437,6 +1713,34 @@ func (oq *OrganizationQuery) WithNamedMemberships(name string, opts ...func(*Mem
 	return oq
 }
 
+// WithNamedSmsTemplates tells the query-builder to eager-load the nodes that are connected to the "sms_templates"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (oq *OrganizationQuery) WithNamedSmsTemplates(name string, opts ...func(*SMSTemplateQuery)) *OrganizationQuery {
+	query := (&SMSTemplateClient{config: oq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if oq.withNamedSmsTemplates == nil {
+		oq.withNamedSmsTemplates = make(map[string]*SMSTemplateQuery)
+	}
+	oq.withNamedSmsTemplates[name] = query
+	return oq
+}
+
+// WithNamedEmailTemplates tells the query-builder to eager-load the nodes that are connected to the "email_templates"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (oq *OrganizationQuery) WithNamedEmailTemplates(name string, opts ...func(*EmailTemplateQuery)) *OrganizationQuery {
+	query := (&EmailTemplateClient{config: oq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if oq.withNamedEmailTemplates == nil {
+		oq.withNamedEmailTemplates = make(map[string]*EmailTemplateQuery)
+	}
+	oq.withNamedEmailTemplates[name] = query
+	return oq
+}
+
 // WithNamedAPIKeys tells the query-builder to eager-load the nodes that are connected to the "api_keys"
 // edge with the given name. The optional arguments are used to configure the query builder of the edge.
 func (oq *OrganizationQuery) WithNamedAPIKeys(name string, opts ...func(*ApiKeyQuery)) *OrganizationQuery {
@@ -1546,6 +1850,20 @@ func (oq *OrganizationQuery) WithNamedUserPermissionContexts(name string, opts .
 		oq.withNamedUserPermissionContexts = make(map[string]*UserPermissionQuery)
 	}
 	oq.withNamedUserPermissionContexts[name] = query
+	return oq
+}
+
+// WithNamedAuditLogs tells the query-builder to eager-load the nodes that are connected to the "audit_logs"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (oq *OrganizationQuery) WithNamedAuditLogs(name string, opts ...func(*AuditQuery)) *OrganizationQuery {
+	query := (&AuditClient{config: oq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if oq.withNamedAuditLogs == nil {
+		oq.withNamedAuditLogs = make(map[string]*AuditQuery)
+	}
+	oq.withNamedAuditLogs[name] = query
 	return oq
 }
 

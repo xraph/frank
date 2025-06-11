@@ -56,6 +56,20 @@ func (pdc *PermissionDependencyCreate) SetNillableUpdatedAt(t *time.Time) *Permi
 	return pdc
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (pdc *PermissionDependencyCreate) SetDeletedAt(t time.Time) *PermissionDependencyCreate {
+	pdc.mutation.SetDeletedAt(t)
+	return pdc
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (pdc *PermissionDependencyCreate) SetNillableDeletedAt(t *time.Time) *PermissionDependencyCreate {
+	if t != nil {
+		pdc.SetDeletedAt(*t)
+	}
+	return pdc
+}
+
 // SetPermissionID sets the "permission_id" field.
 func (pdc *PermissionDependencyCreate) SetPermissionID(x xid.ID) *PermissionDependencyCreate {
 	pdc.mutation.SetPermissionID(x)
@@ -290,6 +304,10 @@ func (pdc *PermissionDependencyCreate) createSpec() (*PermissionDependency, *sql
 		_spec.SetField(permissiondependency.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
+	if value, ok := pdc.mutation.DeletedAt(); ok {
+		_spec.SetField(permissiondependency.FieldDeletedAt, field.TypeTime, value)
+		_node.DeletedAt = value
+	}
 	if value, ok := pdc.mutation.DependencyType(); ok {
 		_spec.SetField(permissiondependency.FieldDependencyType, field.TypeEnum, value)
 		_node.DependencyType = value
@@ -401,6 +419,24 @@ func (u *PermissionDependencyUpsert) SetUpdatedAt(v time.Time) *PermissionDepend
 // UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
 func (u *PermissionDependencyUpsert) UpdateUpdatedAt() *PermissionDependencyUpsert {
 	u.SetExcluded(permissiondependency.FieldUpdatedAt)
+	return u
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *PermissionDependencyUpsert) SetDeletedAt(v time.Time) *PermissionDependencyUpsert {
+	u.Set(permissiondependency.FieldDeletedAt, v)
+	return u
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *PermissionDependencyUpsert) UpdateDeletedAt() *PermissionDependencyUpsert {
+	u.SetExcluded(permissiondependency.FieldDeletedAt)
+	return u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *PermissionDependencyUpsert) ClearDeletedAt() *PermissionDependencyUpsert {
+	u.SetNull(permissiondependency.FieldDeletedAt)
 	return u
 }
 
@@ -550,6 +586,27 @@ func (u *PermissionDependencyUpsertOne) SetUpdatedAt(v time.Time) *PermissionDep
 func (u *PermissionDependencyUpsertOne) UpdateUpdatedAt() *PermissionDependencyUpsertOne {
 	return u.Update(func(s *PermissionDependencyUpsert) {
 		s.UpdateUpdatedAt()
+	})
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *PermissionDependencyUpsertOne) SetDeletedAt(v time.Time) *PermissionDependencyUpsertOne {
+	return u.Update(func(s *PermissionDependencyUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *PermissionDependencyUpsertOne) UpdateDeletedAt() *PermissionDependencyUpsertOne {
+	return u.Update(func(s *PermissionDependencyUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *PermissionDependencyUpsertOne) ClearDeletedAt() *PermissionDependencyUpsertOne {
+	return u.Update(func(s *PermissionDependencyUpsert) {
+		s.ClearDeletedAt()
 	})
 }
 
@@ -880,6 +937,27 @@ func (u *PermissionDependencyUpsertBulk) SetUpdatedAt(v time.Time) *PermissionDe
 func (u *PermissionDependencyUpsertBulk) UpdateUpdatedAt() *PermissionDependencyUpsertBulk {
 	return u.Update(func(s *PermissionDependencyUpsert) {
 		s.UpdateUpdatedAt()
+	})
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *PermissionDependencyUpsertBulk) SetDeletedAt(v time.Time) *PermissionDependencyUpsertBulk {
+	return u.Update(func(s *PermissionDependencyUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *PermissionDependencyUpsertBulk) UpdateDeletedAt() *PermissionDependencyUpsertBulk {
+	return u.Update(func(s *PermissionDependencyUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *PermissionDependencyUpsertBulk) ClearDeletedAt() *PermissionDependencyUpsertBulk {
+	return u.Update(func(s *PermissionDependencyUpsert) {
+		s.ClearDeletedAt()
 	})
 }
 

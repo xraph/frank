@@ -1,0 +1,1 @@
+{{.appName}}: Your account has been locked due to {{.reason}}. Contact support to unlock: {{.supportUrl}} Ref: {{.referenceId}}

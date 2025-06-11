@@ -33,6 +33,7 @@ type MembershipQuery struct {
 	withUser         *UserQuery
 	withOrganization *OrganizationQuery
 	withRole         *RoleQuery
+	withInviter      *UserQuery
 	modifiers        []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -129,6 +130,28 @@ func (mq *MembershipQuery) QueryRole() *RoleQuery {
 			sqlgraph.From(membership.Table, membership.FieldID, selector),
 			sqlgraph.To(role.Table, role.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, membership.RoleTable, membership.RoleColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(mq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryInviter chains the current query on the "inviter" edge.
+func (mq *MembershipQuery) QueryInviter() *UserQuery {
+	query := (&UserClient{config: mq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := mq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := mq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(membership.Table, membership.FieldID, selector),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, membership.InviterTable, membership.InviterColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(mq.driver.Dialect(), step)
 		return fromU, nil
@@ -331,6 +354,7 @@ func (mq *MembershipQuery) Clone() *MembershipQuery {
 		withUser:         mq.withUser.Clone(),
 		withOrganization: mq.withOrganization.Clone(),
 		withRole:         mq.withRole.Clone(),
+		withInviter:      mq.withInviter.Clone(),
 		// clone intermediate query.
 		sql:       mq.sql.Clone(),
 		path:      mq.path,
@@ -368,6 +392,17 @@ func (mq *MembershipQuery) WithRole(opts ...func(*RoleQuery)) *MembershipQuery {
 		opt(query)
 	}
 	mq.withRole = query
+	return mq
+}
+
+// WithInviter tells the query-builder to eager-load the nodes that are connected to
+// the "inviter" edge. The optional arguments are used to configure the query builder of the edge.
+func (mq *MembershipQuery) WithInviter(opts ...func(*UserQuery)) *MembershipQuery {
+	query := (&UserClient{config: mq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	mq.withInviter = query
 	return mq
 }
 
@@ -449,10 +484,11 @@ func (mq *MembershipQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*M
 	var (
 		nodes       = []*Membership{}
 		_spec       = mq.querySpec()
-		loadedTypes = [3]bool{
+		loadedTypes = [4]bool{
 			mq.withUser != nil,
 			mq.withOrganization != nil,
 			mq.withRole != nil,
+			mq.withInviter != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -491,6 +527,12 @@ func (mq *MembershipQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*M
 	if query := mq.withRole; query != nil {
 		if err := mq.loadRole(ctx, query, nodes, nil,
 			func(n *Membership, e *Role) { n.Edges.Role = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := mq.withInviter; query != nil {
+		if err := mq.loadInviter(ctx, query, nodes, nil,
+			func(n *Membership, e *User) { n.Edges.Inviter = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -584,6 +626,35 @@ func (mq *MembershipQuery) loadRole(ctx context.Context, query *RoleQuery, nodes
 	}
 	return nil
 }
+func (mq *MembershipQuery) loadInviter(ctx context.Context, query *UserQuery, nodes []*Membership, init func(*Membership), assign func(*Membership, *User)) error {
+	ids := make([]xid.ID, 0, len(nodes))
+	nodeids := make(map[xid.ID][]*Membership)
+	for i := range nodes {
+		fk := nodes[i].InvitedBy
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(user.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "invited_by" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
 
 func (mq *MembershipQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := mq.querySpec()
@@ -621,6 +692,9 @@ func (mq *MembershipQuery) querySpec() *sqlgraph.QuerySpec {
 		}
 		if mq.withRole != nil {
 			_spec.Node.AddColumnOnce(membership.FieldRoleID)
+		}
+		if mq.withInviter != nil {
+			_spec.Node.AddColumnOnce(membership.FieldInvitedBy)
 		}
 	}
 	if ps := mq.predicates; len(ps) > 0 {

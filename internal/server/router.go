@@ -12,7 +12,7 @@ type ConfigFlags struct {
 	Secure         bool   `doc:"Enable high security" short:"s" default:"true"`
 	Host           string `doc:"Hostname to listen on." default:"0.0.0.0"`
 	Port           int    `doc:"Port to listen on." short:"p"`
-	EnableWebBuild bool   `doc:"Build react client." short:"s"`
+	EnableWebBuild bool   `doc:"Build react client." short:"w"`
 	ConfigPath     string `doc:"Config path." short:"c"`
 	Domain         string `doc:"Domain the services is running on" default:"localhost"`
 }

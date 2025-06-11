@@ -43,6 +43,26 @@ func (pu *PermissionUpdate) SetUpdatedAt(t time.Time) *PermissionUpdate {
 	return pu
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (pu *PermissionUpdate) SetDeletedAt(t time.Time) *PermissionUpdate {
+	pu.mutation.SetDeletedAt(t)
+	return pu
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (pu *PermissionUpdate) SetNillableDeletedAt(t *time.Time) *PermissionUpdate {
+	if t != nil {
+		pu.SetDeletedAt(*t)
+	}
+	return pu
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (pu *PermissionUpdate) ClearDeletedAt() *PermissionUpdate {
+	pu.mutation.ClearDeletedAt()
+	return pu
+}
+
 // SetName sets the "name" field.
 func (pu *PermissionUpdate) SetName(s string) *PermissionUpdate {
 	pu.mutation.SetName(s)
@@ -588,6 +608,12 @@ func (pu *PermissionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := pu.mutation.UpdatedAt(); ok {
 		_spec.SetField(permission.FieldUpdatedAt, field.TypeTime, value)
 	}
+	if value, ok := pu.mutation.DeletedAt(); ok {
+		_spec.SetField(permission.FieldDeletedAt, field.TypeTime, value)
+	}
+	if pu.mutation.DeletedAtCleared() {
+		_spec.ClearField(permission.FieldDeletedAt, field.TypeTime)
+	}
 	if value, ok := pu.mutation.Name(); ok {
 		_spec.SetField(permission.FieldName, field.TypeString, value)
 	}
@@ -953,6 +979,26 @@ type PermissionUpdateOne struct {
 // SetUpdatedAt sets the "updated_at" field.
 func (puo *PermissionUpdateOne) SetUpdatedAt(t time.Time) *PermissionUpdateOne {
 	puo.mutation.SetUpdatedAt(t)
+	return puo
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (puo *PermissionUpdateOne) SetDeletedAt(t time.Time) *PermissionUpdateOne {
+	puo.mutation.SetDeletedAt(t)
+	return puo
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (puo *PermissionUpdateOne) SetNillableDeletedAt(t *time.Time) *PermissionUpdateOne {
+	if t != nil {
+		puo.SetDeletedAt(*t)
+	}
+	return puo
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (puo *PermissionUpdateOne) ClearDeletedAt() *PermissionUpdateOne {
+	puo.mutation.ClearDeletedAt()
 	return puo
 }
 
@@ -1530,6 +1576,12 @@ func (puo *PermissionUpdateOne) sqlSave(ctx context.Context) (_node *Permission,
 	}
 	if value, ok := puo.mutation.UpdatedAt(); ok {
 		_spec.SetField(permission.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if value, ok := puo.mutation.DeletedAt(); ok {
+		_spec.SetField(permission.FieldDeletedAt, field.TypeTime, value)
+	}
+	if puo.mutation.DeletedAtCleared() {
+		_spec.ClearField(permission.FieldDeletedAt, field.TypeTime)
 	}
 	if value, ok := puo.mutation.Name(); ok {
 		_spec.SetField(permission.FieldName, field.TypeString, value)

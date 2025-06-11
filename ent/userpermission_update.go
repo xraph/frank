@@ -42,6 +42,26 @@ func (upu *UserPermissionUpdate) SetUpdatedAt(t time.Time) *UserPermissionUpdate
 	return upu
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (upu *UserPermissionUpdate) SetDeletedAt(t time.Time) *UserPermissionUpdate {
+	upu.mutation.SetDeletedAt(t)
+	return upu
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (upu *UserPermissionUpdate) SetNillableDeletedAt(t *time.Time) *UserPermissionUpdate {
+	if t != nil {
+		upu.SetDeletedAt(*t)
+	}
+	return upu
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (upu *UserPermissionUpdate) ClearDeletedAt() *UserPermissionUpdate {
+	upu.mutation.ClearDeletedAt()
+	return upu
+}
+
 // SetUserID sets the "user_id" field.
 func (upu *UserPermissionUpdate) SetUserID(x xid.ID) *UserPermissionUpdate {
 	upu.mutation.SetUserID(x)
@@ -423,6 +443,12 @@ func (upu *UserPermissionUpdate) sqlSave(ctx context.Context) (n int, err error)
 	if value, ok := upu.mutation.UpdatedAt(); ok {
 		_spec.SetField(userpermission.FieldUpdatedAt, field.TypeTime, value)
 	}
+	if value, ok := upu.mutation.DeletedAt(); ok {
+		_spec.SetField(userpermission.FieldDeletedAt, field.TypeTime, value)
+	}
+	if upu.mutation.DeletedAtCleared() {
+		_spec.ClearField(userpermission.FieldDeletedAt, field.TypeTime)
+	}
 	if value, ok := upu.mutation.ContextType(); ok {
 		_spec.SetField(userpermission.FieldContextType, field.TypeEnum, value)
 	}
@@ -606,6 +632,26 @@ type UserPermissionUpdateOne struct {
 // SetUpdatedAt sets the "updated_at" field.
 func (upuo *UserPermissionUpdateOne) SetUpdatedAt(t time.Time) *UserPermissionUpdateOne {
 	upuo.mutation.SetUpdatedAt(t)
+	return upuo
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (upuo *UserPermissionUpdateOne) SetDeletedAt(t time.Time) *UserPermissionUpdateOne {
+	upuo.mutation.SetDeletedAt(t)
+	return upuo
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (upuo *UserPermissionUpdateOne) SetNillableDeletedAt(t *time.Time) *UserPermissionUpdateOne {
+	if t != nil {
+		upuo.SetDeletedAt(*t)
+	}
+	return upuo
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (upuo *UserPermissionUpdateOne) ClearDeletedAt() *UserPermissionUpdateOne {
+	upuo.mutation.ClearDeletedAt()
 	return upuo
 }
 
@@ -1019,6 +1065,12 @@ func (upuo *UserPermissionUpdateOne) sqlSave(ctx context.Context) (_node *UserPe
 	}
 	if value, ok := upuo.mutation.UpdatedAt(); ok {
 		_spec.SetField(userpermission.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if value, ok := upuo.mutation.DeletedAt(); ok {
+		_spec.SetField(userpermission.FieldDeletedAt, field.TypeTime, value)
+	}
+	if upuo.mutation.DeletedAtCleared() {
+		_spec.ClearField(userpermission.FieldDeletedAt, field.TypeTime)
 	}
 	if value, ok := upuo.mutation.ContextType(); ok {
 		_spec.SetField(userpermission.FieldContextType, field.TypeEnum, value)

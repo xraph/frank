@@ -42,6 +42,26 @@ func (wu *WebhookUpdate) SetUpdatedAt(t time.Time) *WebhookUpdate {
 	return wu
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (wu *WebhookUpdate) SetDeletedAt(t time.Time) *WebhookUpdate {
+	wu.mutation.SetDeletedAt(t)
+	return wu
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (wu *WebhookUpdate) SetNillableDeletedAt(t *time.Time) *WebhookUpdate {
+	if t != nil {
+		wu.SetDeletedAt(*t)
+	}
+	return wu
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (wu *WebhookUpdate) ClearDeletedAt() *WebhookUpdate {
+	wu.mutation.ClearDeletedAt()
+	return wu
+}
+
 // SetName sets the "name" field.
 func (wu *WebhookUpdate) SetName(s string) *WebhookUpdate {
 	wu.mutation.SetName(s)
@@ -206,6 +226,18 @@ func (wu *WebhookUpdate) ClearMetadata() *WebhookUpdate {
 	return wu
 }
 
+// SetHeaders sets the "headers" field.
+func (wu *WebhookUpdate) SetHeaders(m map[string]string) *WebhookUpdate {
+	wu.mutation.SetHeaders(m)
+	return wu
+}
+
+// ClearHeaders clears the value of the "headers" field.
+func (wu *WebhookUpdate) ClearHeaders() *WebhookUpdate {
+	wu.mutation.ClearHeaders()
+	return wu
+}
+
 // SetOrganization sets the "organization" edge to the Organization entity.
 func (wu *WebhookUpdate) SetOrganization(o *Organization) *WebhookUpdate {
 	return wu.SetOrganizationID(o.ID)
@@ -348,6 +380,12 @@ func (wu *WebhookUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := wu.mutation.UpdatedAt(); ok {
 		_spec.SetField(webhook.FieldUpdatedAt, field.TypeTime, value)
 	}
+	if value, ok := wu.mutation.DeletedAt(); ok {
+		_spec.SetField(webhook.FieldDeletedAt, field.TypeTime, value)
+	}
+	if wu.mutation.DeletedAtCleared() {
+		_spec.ClearField(webhook.FieldDeletedAt, field.TypeTime)
+	}
 	if value, ok := wu.mutation.Name(); ok {
 		_spec.SetField(webhook.FieldName, field.TypeString, value)
 	}
@@ -391,6 +429,12 @@ func (wu *WebhookUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if wu.mutation.MetadataCleared() {
 		_spec.ClearField(webhook.FieldMetadata, field.TypeJSON)
+	}
+	if value, ok := wu.mutation.Headers(); ok {
+		_spec.SetField(webhook.FieldHeaders, field.TypeJSON, value)
+	}
+	if wu.mutation.HeadersCleared() {
+		_spec.ClearField(webhook.FieldHeaders, field.TypeJSON)
 	}
 	if wu.mutation.OrganizationCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -491,6 +535,26 @@ type WebhookUpdateOne struct {
 // SetUpdatedAt sets the "updated_at" field.
 func (wuo *WebhookUpdateOne) SetUpdatedAt(t time.Time) *WebhookUpdateOne {
 	wuo.mutation.SetUpdatedAt(t)
+	return wuo
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (wuo *WebhookUpdateOne) SetDeletedAt(t time.Time) *WebhookUpdateOne {
+	wuo.mutation.SetDeletedAt(t)
+	return wuo
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (wuo *WebhookUpdateOne) SetNillableDeletedAt(t *time.Time) *WebhookUpdateOne {
+	if t != nil {
+		wuo.SetDeletedAt(*t)
+	}
+	return wuo
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (wuo *WebhookUpdateOne) ClearDeletedAt() *WebhookUpdateOne {
+	wuo.mutation.ClearDeletedAt()
 	return wuo
 }
 
@@ -655,6 +719,18 @@ func (wuo *WebhookUpdateOne) SetMetadata(m map[string]interface{}) *WebhookUpdat
 // ClearMetadata clears the value of the "metadata" field.
 func (wuo *WebhookUpdateOne) ClearMetadata() *WebhookUpdateOne {
 	wuo.mutation.ClearMetadata()
+	return wuo
+}
+
+// SetHeaders sets the "headers" field.
+func (wuo *WebhookUpdateOne) SetHeaders(m map[string]string) *WebhookUpdateOne {
+	wuo.mutation.SetHeaders(m)
+	return wuo
+}
+
+// ClearHeaders clears the value of the "headers" field.
+func (wuo *WebhookUpdateOne) ClearHeaders() *WebhookUpdateOne {
+	wuo.mutation.ClearHeaders()
 	return wuo
 }
 
@@ -830,6 +906,12 @@ func (wuo *WebhookUpdateOne) sqlSave(ctx context.Context) (_node *Webhook, err e
 	if value, ok := wuo.mutation.UpdatedAt(); ok {
 		_spec.SetField(webhook.FieldUpdatedAt, field.TypeTime, value)
 	}
+	if value, ok := wuo.mutation.DeletedAt(); ok {
+		_spec.SetField(webhook.FieldDeletedAt, field.TypeTime, value)
+	}
+	if wuo.mutation.DeletedAtCleared() {
+		_spec.ClearField(webhook.FieldDeletedAt, field.TypeTime)
+	}
 	if value, ok := wuo.mutation.Name(); ok {
 		_spec.SetField(webhook.FieldName, field.TypeString, value)
 	}
@@ -873,6 +955,12 @@ func (wuo *WebhookUpdateOne) sqlSave(ctx context.Context) (_node *Webhook, err e
 	}
 	if wuo.mutation.MetadataCleared() {
 		_spec.ClearField(webhook.FieldMetadata, field.TypeJSON)
+	}
+	if value, ok := wuo.mutation.Headers(); ok {
+		_spec.SetField(webhook.FieldHeaders, field.TypeJSON, value)
+	}
+	if wuo.mutation.HeadersCleared() {
+		_spec.ClearField(webhook.FieldHeaders, field.TypeJSON)
 	}
 	if wuo.mutation.OrganizationCleared() {
 		edge := &sqlgraph.EdgeSpec{

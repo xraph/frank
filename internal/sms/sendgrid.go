@@ -16,19 +16,19 @@ import (
 // sendgridProvider implements the SendGrid SMS provider
 // Note: SendGrid's SMS service is powered by Twilio
 type sendgridProvider struct {
-	config *config.Config
+	config *config.SMSConfig
 	logger logging.Logger
 	client *http.Client
 	apiKey string
 }
 
 // NewSendgridProvider creates a new SendGrid SMS provider
-func NewSendgridProvider(cfg *config.Config, logger logging.Logger) Provider {
+func NewSendgridProvider(cfg *config.SMSConfig, logger logging.Logger) Provider {
 	return &sendgridProvider{
 		config: cfg,
 		logger: logger,
 		client: &http.Client{},
-		apiKey: cfg.SMS.SendGrid.APIKey,
+		apiKey: cfg.SendGrid.APIKey,
 	}
 }
 
@@ -42,7 +42,7 @@ func (p *sendgridProvider) Send(ctx context.Context, input SMS) error {
 	// Set sender (From) if not provided
 	from := input.From
 	if from == "" {
-		from = p.config.SMS.FromNumber
+		from = p.config.FromNumber
 	}
 
 	// Prepare request body
@@ -62,13 +62,13 @@ func (p *sendgridProvider) Send(ctx context.Context, input SMS) error {
 	// Marshal request body to JSON
 	jsonBody, err := json.Marshal(requestBody)
 	if err != nil {
-		return errors.Wrap(errors.CodeSMSDeliveryFail, err, "failed to marshal SendGrid request")
+		return errors.Wrap(err, errors.CodeSMSDeliveryFail, "failed to marshal SendGrid request")
 	}
 
 	// Create request
 	req, err := http.NewRequestWithContext(ctx, "POST", "https://api.sendgrid.com/v3/sms/send", bytes.NewBuffer(jsonBody))
 	if err != nil {
-		return errors.Wrap(errors.CodeSMSDeliveryFail, err, "failed to create SendGrid request")
+		return errors.Wrap(err, errors.CodeSMSDeliveryFail, "failed to create SendGrid request")
 	}
 
 	// Set headers
@@ -78,7 +78,7 @@ func (p *sendgridProvider) Send(ctx context.Context, input SMS) error {
 	// Execute request
 	resp, err := p.client.Do(req)
 	if err != nil {
-		return errors.Wrap(errors.CodeSMSDeliveryFail, err, "failed to send SendGrid request")
+		return errors.Wrap(err, errors.CodeSMSDeliveryFail, "failed to send SendGrid request")
 	}
 	defer resp.Body.Close()
 

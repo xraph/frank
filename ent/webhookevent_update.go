@@ -40,6 +40,26 @@ func (weu *WebhookEventUpdate) SetUpdatedAt(t time.Time) *WebhookEventUpdate {
 	return weu
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (weu *WebhookEventUpdate) SetDeletedAt(t time.Time) *WebhookEventUpdate {
+	weu.mutation.SetDeletedAt(t)
+	return weu
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (weu *WebhookEventUpdate) SetNillableDeletedAt(t *time.Time) *WebhookEventUpdate {
+	if t != nil {
+		weu.SetDeletedAt(*t)
+	}
+	return weu
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (weu *WebhookEventUpdate) ClearDeletedAt() *WebhookEventUpdate {
+	weu.mutation.ClearDeletedAt()
+	return weu
+}
+
 // SetWebhookID sets the "webhook_id" field.
 func (weu *WebhookEventUpdate) SetWebhookID(x xid.ID) *WebhookEventUpdate {
 	weu.mutation.SetWebhookID(x)
@@ -325,6 +345,12 @@ func (weu *WebhookEventUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := weu.mutation.UpdatedAt(); ok {
 		_spec.SetField(webhookevent.FieldUpdatedAt, field.TypeTime, value)
 	}
+	if value, ok := weu.mutation.DeletedAt(); ok {
+		_spec.SetField(webhookevent.FieldDeletedAt, field.TypeTime, value)
+	}
+	if weu.mutation.DeletedAtCleared() {
+		_spec.ClearField(webhookevent.FieldDeletedAt, field.TypeTime)
+	}
 	if value, ok := weu.mutation.EventType(); ok {
 		_spec.SetField(webhookevent.FieldEventType, field.TypeString, value)
 	}
@@ -436,6 +462,26 @@ type WebhookEventUpdateOne struct {
 // SetUpdatedAt sets the "updated_at" field.
 func (weuo *WebhookEventUpdateOne) SetUpdatedAt(t time.Time) *WebhookEventUpdateOne {
 	weuo.mutation.SetUpdatedAt(t)
+	return weuo
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (weuo *WebhookEventUpdateOne) SetDeletedAt(t time.Time) *WebhookEventUpdateOne {
+	weuo.mutation.SetDeletedAt(t)
+	return weuo
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (weuo *WebhookEventUpdateOne) SetNillableDeletedAt(t *time.Time) *WebhookEventUpdateOne {
+	if t != nil {
+		weuo.SetDeletedAt(*t)
+	}
+	return weuo
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (weuo *WebhookEventUpdateOne) ClearDeletedAt() *WebhookEventUpdateOne {
+	weuo.mutation.ClearDeletedAt()
 	return weuo
 }
 
@@ -753,6 +799,12 @@ func (weuo *WebhookEventUpdateOne) sqlSave(ctx context.Context) (_node *WebhookE
 	}
 	if value, ok := weuo.mutation.UpdatedAt(); ok {
 		_spec.SetField(webhookevent.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if value, ok := weuo.mutation.DeletedAt(); ok {
+		_spec.SetField(webhookevent.FieldDeletedAt, field.TypeTime, value)
+	}
+	if weuo.mutation.DeletedAtCleared() {
+		_spec.ClearField(webhookevent.FieldDeletedAt, field.TypeTime)
 	}
 	if value, ok := weuo.mutation.EventType(); ok {
 		_spec.SetField(webhookevent.FieldEventType, field.TypeString, value)

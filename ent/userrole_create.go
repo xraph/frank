@@ -58,6 +58,20 @@ func (urc *UserRoleCreate) SetNillableUpdatedAt(t *time.Time) *UserRoleCreate {
 	return urc
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (urc *UserRoleCreate) SetDeletedAt(t time.Time) *UserRoleCreate {
+	urc.mutation.SetDeletedAt(t)
+	return urc
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (urc *UserRoleCreate) SetNillableDeletedAt(t *time.Time) *UserRoleCreate {
+	if t != nil {
+		urc.SetDeletedAt(*t)
+	}
+	return urc
+}
+
 // SetUserID sets the "user_id" field.
 func (urc *UserRoleCreate) SetUserID(x xid.ID) *UserRoleCreate {
 	urc.mutation.SetUserID(x)
@@ -359,6 +373,10 @@ func (urc *UserRoleCreate) createSpec() (*UserRole, *sqlgraph.CreateSpec) {
 		_spec.SetField(userrole.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
+	if value, ok := urc.mutation.DeletedAt(); ok {
+		_spec.SetField(userrole.FieldDeletedAt, field.TypeTime, value)
+		_node.DeletedAt = value
+	}
 	if value, ok := urc.mutation.ContextType(); ok {
 		_spec.SetField(userrole.FieldContextType, field.TypeEnum, value)
 		_node.ContextType = value
@@ -508,6 +526,24 @@ func (u *UserRoleUpsert) SetUpdatedAt(v time.Time) *UserRoleUpsert {
 // UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
 func (u *UserRoleUpsert) UpdateUpdatedAt() *UserRoleUpsert {
 	u.SetExcluded(userrole.FieldUpdatedAt)
+	return u
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *UserRoleUpsert) SetDeletedAt(v time.Time) *UserRoleUpsert {
+	u.Set(userrole.FieldDeletedAt, v)
+	return u
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *UserRoleUpsert) UpdateDeletedAt() *UserRoleUpsert {
+	u.SetExcluded(userrole.FieldDeletedAt)
+	return u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *UserRoleUpsert) ClearDeletedAt() *UserRoleUpsert {
+	u.SetNull(userrole.FieldDeletedAt)
 	return u
 }
 
@@ -705,6 +741,27 @@ func (u *UserRoleUpsertOne) SetUpdatedAt(v time.Time) *UserRoleUpsertOne {
 func (u *UserRoleUpsertOne) UpdateUpdatedAt() *UserRoleUpsertOne {
 	return u.Update(func(s *UserRoleUpsert) {
 		s.UpdateUpdatedAt()
+	})
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *UserRoleUpsertOne) SetDeletedAt(v time.Time) *UserRoleUpsertOne {
+	return u.Update(func(s *UserRoleUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *UserRoleUpsertOne) UpdateDeletedAt() *UserRoleUpsertOne {
+	return u.Update(func(s *UserRoleUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *UserRoleUpsertOne) ClearDeletedAt() *UserRoleUpsertOne {
+	return u.Update(func(s *UserRoleUpsert) {
+		s.ClearDeletedAt()
 	})
 }
 
@@ -1091,6 +1148,27 @@ func (u *UserRoleUpsertBulk) SetUpdatedAt(v time.Time) *UserRoleUpsertBulk {
 func (u *UserRoleUpsertBulk) UpdateUpdatedAt() *UserRoleUpsertBulk {
 	return u.Update(func(s *UserRoleUpsert) {
 		s.UpdateUpdatedAt()
+	})
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *UserRoleUpsertBulk) SetDeletedAt(v time.Time) *UserRoleUpsertBulk {
+	return u.Update(func(s *UserRoleUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *UserRoleUpsertBulk) UpdateDeletedAt() *UserRoleUpsertBulk {
+	return u.Update(func(s *UserRoleUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *UserRoleUpsertBulk) ClearDeletedAt() *UserRoleUpsertBulk {
+	return u.Update(func(s *UserRoleUpsert) {
+		s.ClearDeletedAt()
 	})
 }
 

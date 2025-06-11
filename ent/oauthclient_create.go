@@ -59,6 +59,20 @@ func (occ *OAuthClientCreate) SetNillableUpdatedAt(t *time.Time) *OAuthClientCre
 	return occ
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (occ *OAuthClientCreate) SetDeletedAt(t time.Time) *OAuthClientCreate {
+	occ.mutation.SetDeletedAt(t)
+	return occ
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (occ *OAuthClientCreate) SetNillableDeletedAt(t *time.Time) *OAuthClientCreate {
+	if t != nil {
+		occ.SetDeletedAt(*t)
+	}
+	return occ
+}
+
 // SetClientID sets the "client_id" field.
 func (occ *OAuthClientCreate) SetClientID(s string) *OAuthClientCreate {
 	occ.mutation.SetClientID(s)
@@ -503,6 +517,10 @@ func (occ *OAuthClientCreate) createSpec() (*OAuthClient, *sqlgraph.CreateSpec) 
 		_spec.SetField(oauthclient.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
+	if value, ok := occ.mutation.DeletedAt(); ok {
+		_spec.SetField(oauthclient.FieldDeletedAt, field.TypeTime, value)
+		_node.DeletedAt = value
+	}
 	if value, ok := occ.mutation.ClientID(); ok {
 		_spec.SetField(oauthclient.FieldClientID, field.TypeString, value)
 		_node.ClientID = value
@@ -697,6 +715,24 @@ func (u *OAuthClientUpsert) SetUpdatedAt(v time.Time) *OAuthClientUpsert {
 // UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
 func (u *OAuthClientUpsert) UpdateUpdatedAt() *OAuthClientUpsert {
 	u.SetExcluded(oauthclient.FieldUpdatedAt)
+	return u
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *OAuthClientUpsert) SetDeletedAt(v time.Time) *OAuthClientUpsert {
+	u.Set(oauthclient.FieldDeletedAt, v)
+	return u
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *OAuthClientUpsert) UpdateDeletedAt() *OAuthClientUpsert {
+	u.SetExcluded(oauthclient.FieldDeletedAt)
+	return u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *OAuthClientUpsert) ClearDeletedAt() *OAuthClientUpsert {
+	u.SetNull(oauthclient.FieldDeletedAt)
 	return u
 }
 
@@ -1032,6 +1068,27 @@ func (u *OAuthClientUpsertOne) SetUpdatedAt(v time.Time) *OAuthClientUpsertOne {
 func (u *OAuthClientUpsertOne) UpdateUpdatedAt() *OAuthClientUpsertOne {
 	return u.Update(func(s *OAuthClientUpsert) {
 		s.UpdateUpdatedAt()
+	})
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *OAuthClientUpsertOne) SetDeletedAt(v time.Time) *OAuthClientUpsertOne {
+	return u.Update(func(s *OAuthClientUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *OAuthClientUpsertOne) UpdateDeletedAt() *OAuthClientUpsertOne {
+	return u.Update(func(s *OAuthClientUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *OAuthClientUpsertOne) ClearDeletedAt() *OAuthClientUpsertOne {
+	return u.Update(func(s *OAuthClientUpsert) {
+		s.ClearDeletedAt()
 	})
 }
 
@@ -1579,6 +1636,27 @@ func (u *OAuthClientUpsertBulk) SetUpdatedAt(v time.Time) *OAuthClientUpsertBulk
 func (u *OAuthClientUpsertBulk) UpdateUpdatedAt() *OAuthClientUpsertBulk {
 	return u.Update(func(s *OAuthClientUpsert) {
 		s.UpdateUpdatedAt()
+	})
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *OAuthClientUpsertBulk) SetDeletedAt(v time.Time) *OAuthClientUpsertBulk {
+	return u.Update(func(s *OAuthClientUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *OAuthClientUpsertBulk) UpdateDeletedAt() *OAuthClientUpsertBulk {
+	return u.Update(func(s *OAuthClientUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *OAuthClientUpsertBulk) ClearDeletedAt() *OAuthClientUpsertBulk {
+	return u.Update(func(s *OAuthClientUpsert) {
+		s.ClearDeletedAt()
 	})
 }
 

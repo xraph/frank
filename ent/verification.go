@@ -28,6 +28,8 @@ type Verification struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// DeletedAt holds the value of the "deleted_at" field.
+	DeletedAt time.Time `json:"deleted_at,omitempty"`
 	// UserID holds the value of the "user_id" field.
 	UserID xid.ID `json:"user_id,omitempty"`
 	// Verification type: email, phone, password_reset, magic_link
@@ -54,6 +56,8 @@ type Verification struct {
 	UserAgent string `json:"user_agent,omitempty"`
 	// Additional membership metadata
 	Attestation map[string]interface{} `json:"attestation,omitempty"`
+	// Additional membership metadata
+	Metadata map[string]interface{} `json:"metadata,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the VerificationQuery when eager-loading is set.
 	Edges        VerificationEdges `json:"edges"`
@@ -85,7 +89,7 @@ func (*Verification) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case verification.FieldAttestation:
+		case verification.FieldAttestation, verification.FieldMetadata:
 			values[i] = new([]byte)
 		case verification.FieldUsed:
 			values[i] = new(sql.NullBool)
@@ -93,7 +97,7 @@ func (*Verification) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullInt64)
 		case verification.FieldType, verification.FieldToken, verification.FieldEmail, verification.FieldPhoneNumber, verification.FieldRedirectURL, verification.FieldIPAddress, verification.FieldUserAgent:
 			values[i] = new(sql.NullString)
-		case verification.FieldCreatedAt, verification.FieldUpdatedAt, verification.FieldUsedAt, verification.FieldExpiresAt:
+		case verification.FieldCreatedAt, verification.FieldUpdatedAt, verification.FieldDeletedAt, verification.FieldUsedAt, verification.FieldExpiresAt:
 			values[i] = new(sql.NullTime)
 		case verification.FieldID, verification.FieldUserID:
 			values[i] = new(xid.ID)
@@ -129,6 +133,12 @@ func (v *Verification) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
 				v.UpdatedAt = value.Time
+			}
+		case verification.FieldDeletedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field deleted_at", values[i])
+			} else if value.Valid {
+				v.DeletedAt = value.Time
 			}
 		case verification.FieldUserID:
 			if value, ok := values[i].(*xid.ID); !ok {
@@ -211,6 +221,14 @@ func (v *Verification) assignValues(columns []string, values []any) error {
 					return fmt.Errorf("unmarshal field attestation: %w", err)
 				}
 			}
+		case verification.FieldMetadata:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field metadata", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &v.Metadata); err != nil {
+					return fmt.Errorf("unmarshal field metadata: %w", err)
+				}
+			}
 		default:
 			v.selectValues.Set(columns[i], values[i])
 		}
@@ -258,6 +276,9 @@ func (v *Verification) String() string {
 	builder.WriteString("updated_at=")
 	builder.WriteString(v.UpdatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
+	builder.WriteString("deleted_at=")
+	builder.WriteString(v.DeletedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
 	builder.WriteString("user_id=")
 	builder.WriteString(fmt.Sprintf("%v", v.UserID))
 	builder.WriteString(", ")
@@ -297,6 +318,9 @@ func (v *Verification) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("attestation=")
 	builder.WriteString(fmt.Sprintf("%v", v.Attestation))
+	builder.WriteString(", ")
+	builder.WriteString("metadata=")
+	builder.WriteString(fmt.Sprintf("%v", v.Metadata))
 	builder.WriteByte(')')
 	return builder.String()
 }

@@ -66,16 +66,19 @@ type Attachment struct {
 	Content []byte `json:"content"`
 
 	// Filename is the name of the attachment
-	Filename string
+	Filename string `json:"filename"`
 
 	// ContentType is the MIME type of the attachment
-	ContentType string
+	ContentType string `json:"content_type"`
 
 	// Base64Content is the base64-encoded content of the attachment
 	Base64Content string
 
 	// Size is the size of the attachment in bytes (optional)
 	Size int64
+
+	Disposition string `json:"disposition,omitempty"` // attachment, inline
+	ContentID   string `json:"content_id,omitempty"`
 }
 
 // NewAttachment creates a new email attachment

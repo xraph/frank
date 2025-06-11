@@ -29,6 +29,8 @@ type OAuthAuthorization struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// DeletedAt holds the value of the "deleted_at" field.
+	DeletedAt time.Time `json:"deleted_at,omitempty"`
 	// ClientID holds the value of the "client_id" field.
 	ClientID xid.ID `json:"client_id,omitempty"`
 	// UserID holds the value of the "user_id" field.
@@ -55,6 +57,10 @@ type OAuthAuthorization struct {
 	State string `json:"state,omitempty"`
 	// Nonce holds the value of the "nonce" field.
 	Nonce string `json:"nonce,omitempty"`
+	// UserAgent holds the value of the "user_agent" field.
+	UserAgent string `json:"user_agent,omitempty"`
+	// IPAddress holds the value of the "ip_address" field.
+	IPAddress string `json:"ip_address,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the OAuthAuthorizationQuery when eager-loading is set.
 	Edges        OAuthAuthorizationEdges `json:"edges"`
@@ -115,9 +121,9 @@ func (*OAuthAuthorization) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case oauthauthorization.FieldUsed:
 			values[i] = new(sql.NullBool)
-		case oauthauthorization.FieldCode, oauthauthorization.FieldCodeChallenge, oauthauthorization.FieldCodeChallengeMethod, oauthauthorization.FieldRedirectURI, oauthauthorization.FieldState, oauthauthorization.FieldNonce:
+		case oauthauthorization.FieldCode, oauthauthorization.FieldCodeChallenge, oauthauthorization.FieldCodeChallengeMethod, oauthauthorization.FieldRedirectURI, oauthauthorization.FieldState, oauthauthorization.FieldNonce, oauthauthorization.FieldUserAgent, oauthauthorization.FieldIPAddress:
 			values[i] = new(sql.NullString)
-		case oauthauthorization.FieldCreatedAt, oauthauthorization.FieldUpdatedAt, oauthauthorization.FieldUsedAt, oauthauthorization.FieldExpiresAt:
+		case oauthauthorization.FieldCreatedAt, oauthauthorization.FieldUpdatedAt, oauthauthorization.FieldDeletedAt, oauthauthorization.FieldUsedAt, oauthauthorization.FieldExpiresAt:
 			values[i] = new(sql.NullTime)
 		case oauthauthorization.FieldID, oauthauthorization.FieldClientID, oauthauthorization.FieldUserID, oauthauthorization.FieldOrganizationID:
 			values[i] = new(xid.ID)
@@ -153,6 +159,12 @@ func (oa *OAuthAuthorization) assignValues(columns []string, values []any) error
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
 				oa.UpdatedAt = value.Time
+			}
+		case oauthauthorization.FieldDeletedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field deleted_at", values[i])
+			} else if value.Valid {
+				oa.DeletedAt = value.Time
 			}
 		case oauthauthorization.FieldClientID:
 			if value, ok := values[i].(*xid.ID); !ok {
@@ -235,6 +247,18 @@ func (oa *OAuthAuthorization) assignValues(columns []string, values []any) error
 			} else if value.Valid {
 				oa.Nonce = value.String
 			}
+		case oauthauthorization.FieldUserAgent:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field user_agent", values[i])
+			} else if value.Valid {
+				oa.UserAgent = value.String
+			}
+		case oauthauthorization.FieldIPAddress:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field ip_address", values[i])
+			} else if value.Valid {
+				oa.IPAddress = value.String
+			}
 		default:
 			oa.selectValues.Set(columns[i], values[i])
 		}
@@ -292,6 +316,9 @@ func (oa *OAuthAuthorization) String() string {
 	builder.WriteString("updated_at=")
 	builder.WriteString(oa.UpdatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
+	builder.WriteString("deleted_at=")
+	builder.WriteString(oa.DeletedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
 	builder.WriteString("client_id=")
 	builder.WriteString(fmt.Sprintf("%v", oa.ClientID))
 	builder.WriteString(", ")
@@ -331,6 +358,12 @@ func (oa *OAuthAuthorization) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("nonce=")
 	builder.WriteString(oa.Nonce)
+	builder.WriteString(", ")
+	builder.WriteString("user_agent=")
+	builder.WriteString(oa.UserAgent)
+	builder.WriteString(", ")
+	builder.WriteString("ip_address=")
+	builder.WriteString(oa.IPAddress)
 	builder.WriteByte(')')
 	return builder.String()
 }

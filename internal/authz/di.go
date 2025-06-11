@@ -6,24 +6,32 @@ import (
 
 // PermissionsService represents the permission checking service
 type PermissionsService struct {
-	checker PermissionChecker
+	checker PermissionCheckerWithContext
 }
 
-// NewPermissionsService creates a new PermissionsService
-func NewPermissionsService(client *data.Clients) *PermissionsService {
+// NewService creates a new PermissionsService
+func NewService(client *data.Clients) Service {
 	return &PermissionsService{
-		checker: NewPermissionChecker(client),
+		checker: NewEnhancedPermissionChecker(client),
 	}
 }
 
 // Checker returns the permission checker
-func (ps *PermissionsService) Checker() PermissionChecker {
+func (ps *PermissionsService) Checker() PermissionCheckerWithContext {
 	return ps.checker
 }
 
 // WithCustomRolePermissions allows setting custom role permissions
-func (ps *PermissionsService) WithCustomRolePermissions(rolePerms RolePermissions) *PermissionsService {
-	ps.checker = NewPermissionChecker(ps.checker.(*DefaultPermissionChecker).client).
+func (ps *PermissionsService) WithCustomRolePermissions(rolePerms RolePermissions) Service {
+	ps.checker = NewEnhancedPermissionChecker(ps.checker.(*EnhancedPermissionChecker).client).
 		WithCustomRolePermissions(rolePerms)
 	return ps
 }
+
+func (ps *PermissionsService) PermissionChecker() PermissionCheckerWithContext {
+	return ps.checker
+}
+
+// func (a *PermissionsService) RoleChecker() RoleChecker {
+// 	return a.roleChecker
+// }

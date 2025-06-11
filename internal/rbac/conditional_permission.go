@@ -129,7 +129,7 @@ func (cpe *ConditionalPermissionEngine) EvaluatePermission(ctx context.Context, 
 	// Enrich context with user, organization, and system data
 	err := cpe.enrichContext(ctx, context)
 	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to enrich permission context")
+		return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to enrich permission context")
 	}
 
 	// Get applicable policy rules
@@ -341,7 +341,7 @@ func (cpe *ConditionalPermissionEngine) evaluateConditionRule(rule *ConditionRul
 	case "not":
 		return cpe.evaluateNotRule(rule, context)
 	default:
-		return false, errors.New(errors.CodeValidation, fmt.Sprintf("unsupported rule operator: %s", rule.Operator))
+		return false, errors.New(errors.CodeValidationError, fmt.Sprintf("unsupported rule operator: %s", rule.Operator))
 	}
 }
 
@@ -425,11 +425,11 @@ func (cpe *ConditionalPermissionEngine) evaluateCondition(condition *Condition, 
 
 func (cpe *ConditionalPermissionEngine) validatePolicyRule(rule *PolicyRule) error {
 	if rule.Name == "" {
-		return errors.New(errors.CodeValidation, "rule name is required")
+		return errors.New(errors.CodeValidationError, "rule name is required")
 	}
 
 	if rule.Effect != PolicyEffectPermit && rule.Effect != PolicyEffectDeny {
-		return errors.New(errors.CodeValidation, "rule effect must be 'permit' or 'deny'")
+		return errors.New(errors.CodeValidationError, "rule effect must be 'permit' or 'deny'")
 	}
 
 	// Validate condition rule if present
@@ -446,7 +446,7 @@ func (cpe *ConditionalPermissionEngine) validateConditionRule(rule *ConditionRul
 	}
 
 	if !validOperators[rule.Operator] {
-		return errors.New(errors.CodeValidation, fmt.Sprintf("invalid rule operator: %s", rule.Operator))
+		return errors.New(errors.CodeValidationError, fmt.Sprintf("invalid rule operator: %s", rule.Operator))
 	}
 
 	// Validate nested conditions
@@ -470,17 +470,17 @@ func (cpe *ConditionalPermissionEngine) validateConditionRule(rule *ConditionRul
 
 func (cpe *ConditionalPermissionEngine) validateCondition(condition *Condition) error {
 	if condition.Field == "" {
-		return errors.New(errors.CodeValidation, "condition field is required")
+		return errors.New(errors.CodeValidationError, "condition field is required")
 	}
 
 	if condition.Operator == "" {
-		return errors.New(errors.CodeValidation, "condition operator is required")
+		return errors.New(errors.CodeValidationError, "condition operator is required")
 	}
 
 	// Check if evaluator exists for this type
 	if condition.Type != "" {
 		if _, exists := cpe.evaluators[condition.Type]; !exists {
-			return errors.New(errors.CodeValidation, fmt.Sprintf("unsupported condition type: %s", condition.Type))
+			return errors.New(errors.CodeValidationError, fmt.Sprintf("unsupported condition type: %s", condition.Type))
 		}
 	}
 
@@ -524,7 +524,7 @@ func (se *StringEvaluator) Evaluate(condition *Condition, context *PermissionCon
 		}
 		return false, nil
 	default:
-		return false, errors.New(errors.CodeValidation, fmt.Sprintf("unsupported string operator: %s", condition.Operator))
+		return false, errors.New(errors.CodeValidationError, fmt.Sprintf("unsupported string operator: %s", condition.Operator))
 	}
 }
 
@@ -554,7 +554,7 @@ func (ne *NumberEvaluator) Evaluate(condition *Condition, context *PermissionCon
 	case "less_than_or_equal":
 		return valueNum <= expectedNum, nil
 	default:
-		return false, errors.New(errors.CodeValidation, fmt.Sprintf("unsupported number operator: %s", condition.Operator))
+		return false, errors.New(errors.CodeValidationError, fmt.Sprintf("unsupported number operator: %s", condition.Operator))
 	}
 }
 
@@ -576,7 +576,7 @@ func (be *BooleanEvaluator) Evaluate(condition *Condition, context *PermissionCo
 	case "not_equals":
 		return valueBool != expectedBool, nil
 	default:
-		return false, errors.New(errors.CodeValidation, fmt.Sprintf("unsupported boolean operator: %s", condition.Operator))
+		return false, errors.New(errors.CodeValidationError, fmt.Sprintf("unsupported boolean operator: %s", condition.Operator))
 	}
 }
 
@@ -612,7 +612,7 @@ func (ae *ArrayEvaluator) Evaluate(condition *Condition, context *PermissionCont
 		}
 		return true, nil // Non-array values are considered "empty"
 	default:
-		return false, errors.New(errors.CodeValidation, fmt.Sprintf("unsupported array operator: %s", condition.Operator))
+		return false, errors.New(errors.CodeValidationError, fmt.Sprintf("unsupported array operator: %s", condition.Operator))
 	}
 }
 
@@ -642,9 +642,9 @@ func (de *DateEvaluator) Evaluate(condition *Condition, context *PermissionConte
 			end := toTime(dates[1])
 			return valueTime.After(start) && valueTime.Before(end), nil
 		}
-		return false, errors.New(errors.CodeValidation, "between operator requires array with two dates")
+		return false, errors.New(errors.CodeValidationError, "between operator requires array with two dates")
 	default:
-		return false, errors.New(errors.CodeValidation, fmt.Sprintf("unsupported date operator: %s", condition.Operator))
+		return false, errors.New(errors.CodeValidationError, fmt.Sprintf("unsupported date operator: %s", condition.Operator))
 	}
 }
 
@@ -665,7 +665,7 @@ func (pe *PatternEvaluator) Evaluate(condition *Condition, context *PermissionCo
 		matched, err := regexp.MatchString(pattern, valueStr)
 		return matched, err
 	default:
-		return false, errors.New(errors.CodeValidation, fmt.Sprintf("unsupported pattern operator: %s", condition.Operator))
+		return false, errors.New(errors.CodeValidationError, fmt.Sprintf("unsupported pattern operator: %s", condition.Operator))
 	}
 }
 

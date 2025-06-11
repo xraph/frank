@@ -15,7 +15,7 @@ import (
 
 // telnyxProvider implements the Telnyx SMS provider
 type telnyxProvider struct {
-	config             *config.Config
+	config             *config.SMSConfig
 	logger             logging.Logger
 	client             *http.Client
 	apiKey             string
@@ -23,13 +23,13 @@ type telnyxProvider struct {
 }
 
 // NewTelnyxProvider creates a new Telnyx SMS provider
-func NewTelnyxProvider(cfg *config.Config, logger logging.Logger) Provider {
+func NewTelnyxProvider(cfg *config.SMSConfig, logger logging.Logger) Provider {
 	return &telnyxProvider{
 		config:             cfg,
 		logger:             logger,
 		client:             &http.Client{},
-		apiKey:             cfg.SMS.Telnyx.APIKey,
-		messagingProfileID: cfg.SMS.Telnyx.MessagingProfileID,
+		apiKey:             cfg.Telnyx.APIKey,
+		messagingProfileID: cfg.Telnyx.MessagingProfileID,
 	}
 }
 
@@ -43,7 +43,7 @@ func (p *telnyxProvider) Send(ctx context.Context, input SMS) error {
 	// Set sender (From) if not provided
 	from := input.From
 	if from == "" {
-		from = p.config.SMS.FromNumber
+		from = p.config.FromNumber
 	}
 
 	// Prepare request body
@@ -75,13 +75,13 @@ func (p *telnyxProvider) Send(ctx context.Context, input SMS) error {
 	// Marshal request body to JSON
 	jsonBody, err := json.Marshal(requestBody)
 	if err != nil {
-		return errors.Wrap(errors.CodeSMSDeliveryFail, err, "failed to marshal Telnyx request")
+		return errors.Wrap(err, errors.CodeSMSDeliveryFail, "failed to marshal Telnyx request")
 	}
 
 	// Create request
 	req, err := http.NewRequestWithContext(ctx, "POST", "https://api.telnyx.com/v2/messages", bytes.NewBuffer(jsonBody))
 	if err != nil {
-		return errors.Wrap(errors.CodeSMSDeliveryFail, err, "failed to create Telnyx request")
+		return errors.Wrap(err, errors.CodeSMSDeliveryFail, "failed to create Telnyx request")
 	}
 
 	// Set headers
@@ -92,7 +92,7 @@ func (p *telnyxProvider) Send(ctx context.Context, input SMS) error {
 	// Execute request
 	resp, err := p.client.Do(req)
 	if err != nil {
-		return errors.Wrap(errors.CodeSMSDeliveryFail, err, "failed to send Telnyx request")
+		return errors.Wrap(err, errors.CodeSMSDeliveryFail, "failed to send Telnyx request")
 	}
 	defer resp.Body.Close()
 

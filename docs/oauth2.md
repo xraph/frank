@@ -21,7 +21,7 @@ Frank implements the OpenID Connect (OIDC) protocol on top of OAuth2, providing:
 
 - Standard OIDC scopes (`openid`, `profile`, `email`)
 - ID token issuance
-- UserInfo endpoint
+- SSOUserInfo endpoint
 - Discovery endpoint (`.well-known/openid-configuration`)
 - JWKS endpoint for key rotation
 
@@ -92,7 +92,7 @@ Example response:
 }
 ```
 
-### UserInfo Endpoint
+### SSOUserInfo Endpoint
 
 ```
 GET /oauth/userinfo

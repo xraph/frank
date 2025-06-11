@@ -16,6 +16,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/juicycleff/frank/ent/emailtemplate"
+	"github.com/juicycleff/frank/ent/organization"
 	"github.com/rs/xid"
 )
 
@@ -51,6 +52,20 @@ func (etc *EmailTemplateCreate) SetUpdatedAt(t time.Time) *EmailTemplateCreate {
 func (etc *EmailTemplateCreate) SetNillableUpdatedAt(t *time.Time) *EmailTemplateCreate {
 	if t != nil {
 		etc.SetUpdatedAt(*t)
+	}
+	return etc
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (etc *EmailTemplateCreate) SetDeletedAt(t time.Time) *EmailTemplateCreate {
+	etc.mutation.SetDeletedAt(t)
+	return etc
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (etc *EmailTemplateCreate) SetNillableDeletedAt(t *time.Time) *EmailTemplateCreate {
+	if t != nil {
+		etc.SetDeletedAt(*t)
 	}
 	return etc
 }
@@ -167,6 +182,11 @@ func (etc *EmailTemplateCreate) SetNillableID(x *xid.ID) *EmailTemplateCreate {
 		etc.SetID(*x)
 	}
 	return etc
+}
+
+// SetOrganization sets the "organization" edge to the Organization entity.
+func (etc *EmailTemplateCreate) SetOrganization(o *Organization) *EmailTemplateCreate {
+	return etc.SetOrganizationID(o.ID)
 }
 
 // Mutation returns the EmailTemplateMutation object of the builder.
@@ -323,6 +343,10 @@ func (etc *EmailTemplateCreate) createSpec() (*EmailTemplate, *sqlgraph.CreateSp
 		_spec.SetField(emailtemplate.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
+	if value, ok := etc.mutation.DeletedAt(); ok {
+		_spec.SetField(emailtemplate.FieldDeletedAt, field.TypeTime, value)
+		_node.DeletedAt = value
+	}
 	if value, ok := etc.mutation.Name(); ok {
 		_spec.SetField(emailtemplate.FieldName, field.TypeString, value)
 		_node.Name = value
@@ -343,10 +367,6 @@ func (etc *EmailTemplateCreate) createSpec() (*EmailTemplate, *sqlgraph.CreateSp
 		_spec.SetField(emailtemplate.FieldTextContent, field.TypeString, value)
 		_node.TextContent = value
 	}
-	if value, ok := etc.mutation.OrganizationID(); ok {
-		_spec.SetField(emailtemplate.FieldOrganizationID, field.TypeString, value)
-		_node.OrganizationID = value
-	}
 	if value, ok := etc.mutation.Active(); ok {
 		_spec.SetField(emailtemplate.FieldActive, field.TypeBool, value)
 		_node.Active = value
@@ -362,6 +382,23 @@ func (etc *EmailTemplateCreate) createSpec() (*EmailTemplate, *sqlgraph.CreateSp
 	if value, ok := etc.mutation.Metadata(); ok {
 		_spec.SetField(emailtemplate.FieldMetadata, field.TypeJSON, value)
 		_node.Metadata = value
+	}
+	if nodes := etc.mutation.OrganizationIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   emailtemplate.OrganizationTable,
+			Columns: []string{emailtemplate.OrganizationColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(organization.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.OrganizationID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }
@@ -424,6 +461,24 @@ func (u *EmailTemplateUpsert) SetUpdatedAt(v time.Time) *EmailTemplateUpsert {
 // UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
 func (u *EmailTemplateUpsert) UpdateUpdatedAt() *EmailTemplateUpsert {
 	u.SetExcluded(emailtemplate.FieldUpdatedAt)
+	return u
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *EmailTemplateUpsert) SetDeletedAt(v time.Time) *EmailTemplateUpsert {
+	u.Set(emailtemplate.FieldDeletedAt, v)
+	return u
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *EmailTemplateUpsert) UpdateDeletedAt() *EmailTemplateUpsert {
+	u.SetExcluded(emailtemplate.FieldDeletedAt)
+	return u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *EmailTemplateUpsert) ClearDeletedAt() *EmailTemplateUpsert {
+	u.SetNull(emailtemplate.FieldDeletedAt)
 	return u
 }
 
@@ -627,6 +682,27 @@ func (u *EmailTemplateUpsertOne) SetUpdatedAt(v time.Time) *EmailTemplateUpsertO
 func (u *EmailTemplateUpsertOne) UpdateUpdatedAt() *EmailTemplateUpsertOne {
 	return u.Update(func(s *EmailTemplateUpsert) {
 		s.UpdateUpdatedAt()
+	})
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *EmailTemplateUpsertOne) SetDeletedAt(v time.Time) *EmailTemplateUpsertOne {
+	return u.Update(func(s *EmailTemplateUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *EmailTemplateUpsertOne) UpdateDeletedAt() *EmailTemplateUpsertOne {
+	return u.Update(func(s *EmailTemplateUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *EmailTemplateUpsertOne) ClearDeletedAt() *EmailTemplateUpsertOne {
+	return u.Update(func(s *EmailTemplateUpsert) {
+		s.ClearDeletedAt()
 	})
 }
 
@@ -1020,6 +1096,27 @@ func (u *EmailTemplateUpsertBulk) SetUpdatedAt(v time.Time) *EmailTemplateUpsert
 func (u *EmailTemplateUpsertBulk) UpdateUpdatedAt() *EmailTemplateUpsertBulk {
 	return u.Update(func(s *EmailTemplateUpsert) {
 		s.UpdateUpdatedAt()
+	})
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *EmailTemplateUpsertBulk) SetDeletedAt(v time.Time) *EmailTemplateUpsertBulk {
+	return u.Update(func(s *EmailTemplateUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *EmailTemplateUpsertBulk) UpdateDeletedAt() *EmailTemplateUpsertBulk {
+	return u.Update(func(s *EmailTemplateUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *EmailTemplateUpsertBulk) ClearDeletedAt() *EmailTemplateUpsertBulk {
+	return u.Update(func(s *EmailTemplateUpsert) {
+		s.ClearDeletedAt()
 	})
 }
 

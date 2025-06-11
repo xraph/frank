@@ -138,6 +138,30 @@ func (f ApiKeyMutationRuleFunc) EvalMutation(ctx context.Context, m ent.Mutation
 	return Denyf("ent/privacy: unexpected mutation type %T, expect *ent.ApiKeyMutation", m)
 }
 
+// The AuditQueryRuleFunc type is an adapter to allow the use of ordinary
+// functions as a query rule.
+type AuditQueryRuleFunc func(context.Context, *ent.AuditQuery) error
+
+// EvalQuery return f(ctx, q).
+func (f AuditQueryRuleFunc) EvalQuery(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.AuditQuery); ok {
+		return f(ctx, q)
+	}
+	return Denyf("ent/privacy: unexpected query type %T, expect *ent.AuditQuery", q)
+}
+
+// The AuditMutationRuleFunc type is an adapter to allow the use of ordinary
+// functions as a mutation rule.
+type AuditMutationRuleFunc func(context.Context, *ent.AuditMutation) error
+
+// EvalMutation calls f(ctx, m).
+func (f AuditMutationRuleFunc) EvalMutation(ctx context.Context, m ent.Mutation) error {
+	if m, ok := m.(*ent.AuditMutation); ok {
+		return f(ctx, m)
+	}
+	return Denyf("ent/privacy: unexpected mutation type %T, expect *ent.AuditMutation", m)
+}
+
 // The EmailTemplateQueryRuleFunc type is an adapter to allow the use of ordinary
 // functions as a query rule.
 type EmailTemplateQueryRuleFunc func(context.Context, *ent.EmailTemplateQuery) error
@@ -498,6 +522,30 @@ func (f RoleMutationRuleFunc) EvalMutation(ctx context.Context, m ent.Mutation) 
 	return Denyf("ent/privacy: unexpected mutation type %T, expect *ent.RoleMutation", m)
 }
 
+// The SMSTemplateQueryRuleFunc type is an adapter to allow the use of ordinary
+// functions as a query rule.
+type SMSTemplateQueryRuleFunc func(context.Context, *ent.SMSTemplateQuery) error
+
+// EvalQuery return f(ctx, q).
+func (f SMSTemplateQueryRuleFunc) EvalQuery(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.SMSTemplateQuery); ok {
+		return f(ctx, q)
+	}
+	return Denyf("ent/privacy: unexpected query type %T, expect *ent.SMSTemplateQuery", q)
+}
+
+// The SMSTemplateMutationRuleFunc type is an adapter to allow the use of ordinary
+// functions as a mutation rule.
+type SMSTemplateMutationRuleFunc func(context.Context, *ent.SMSTemplateMutation) error
+
+// EvalMutation calls f(ctx, m).
+func (f SMSTemplateMutationRuleFunc) EvalMutation(ctx context.Context, m ent.Mutation) error {
+	if m, ok := m.(*ent.SMSTemplateMutation); ok {
+		return f(ctx, m)
+	}
+	return Denyf("ent/privacy: unexpected mutation type %T, expect *ent.SMSTemplateMutation", m)
+}
+
 // The SSOStateQueryRuleFunc type is an adapter to allow the use of ordinary
 // functions as a query rule.
 type SSOStateQueryRuleFunc func(context.Context, *ent.SSOStateQuery) error
@@ -727,6 +775,8 @@ func queryFilter(q ent.Query) (Filter, error) {
 	switch q := q.(type) {
 	case *ent.ApiKeyQuery:
 		return q.Filter(), nil
+	case *ent.AuditQuery:
+		return q.Filter(), nil
 	case *ent.EmailTemplateQuery:
 		return q.Filter(), nil
 	case *ent.FeatureFlagQuery:
@@ -757,6 +807,8 @@ func queryFilter(q ent.Query) (Filter, error) {
 		return q.Filter(), nil
 	case *ent.RoleQuery:
 		return q.Filter(), nil
+	case *ent.SMSTemplateQuery:
+		return q.Filter(), nil
 	case *ent.SSOStateQuery:
 		return q.Filter(), nil
 	case *ent.SessionQuery:
@@ -781,6 +833,8 @@ func queryFilter(q ent.Query) (Filter, error) {
 func mutationFilter(m ent.Mutation) (Filter, error) {
 	switch m := m.(type) {
 	case *ent.ApiKeyMutation:
+		return m.Filter(), nil
+	case *ent.AuditMutation:
 		return m.Filter(), nil
 	case *ent.EmailTemplateMutation:
 		return m.Filter(), nil
@@ -811,6 +865,8 @@ func mutationFilter(m ent.Mutation) (Filter, error) {
 	case *ent.PermissionDependencyMutation:
 		return m.Filter(), nil
 	case *ent.RoleMutation:
+		return m.Filter(), nil
+	case *ent.SMSTemplateMutation:
 		return m.Filter(), nil
 	case *ent.SSOStateMutation:
 		return m.Filter(), nil

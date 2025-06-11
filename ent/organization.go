@@ -27,10 +27,16 @@ type Organization struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// DeletedAt holds the value of the "deleted_at" field.
+	DeletedAt time.Time `json:"deleted_at,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
 	// Slug holds the value of the "slug" field.
 	Slug string `json:"slug,omitempty"`
+	// Domains holds the value of the "domains" field.
+	Domains []string `json:"domains,omitempty"`
+	// VerifiedDomains holds the value of the "verified_domains" field.
+	VerifiedDomains []string `json:"verified_domains,omitempty"`
 	// Domain holds the value of the "domain" field.
 	Domain string `json:"domain,omitempty"`
 	// LogoURL holds the value of the "logo_url" field.
@@ -91,6 +97,10 @@ type OrganizationEdges struct {
 	Users []*User `json:"users,omitempty"`
 	// Memberships holds the value of the memberships edge.
 	Memberships []*Membership `json:"memberships,omitempty"`
+	// SmsTemplates holds the value of the sms_templates edge.
+	SmsTemplates []*SMSTemplate `json:"sms_templates,omitempty"`
+	// EmailTemplates holds the value of the email_templates edge.
+	EmailTemplates []*EmailTemplate `json:"email_templates,omitempty"`
 	// APIKeys holds the value of the api_keys edge.
 	APIKeys []*ApiKey `json:"api_keys,omitempty"`
 	// Webhooks holds the value of the webhooks edge.
@@ -107,11 +117,15 @@ type OrganizationEdges struct {
 	UserRoleContexts []*UserRole `json:"user_role_contexts,omitempty"`
 	// UserPermissionContexts holds the value of the user_permission_contexts edge.
 	UserPermissionContexts []*UserPermission `json:"user_permission_contexts,omitempty"`
+	// AuditLogs holds the value of the audit_logs edge.
+	AuditLogs []*Audit `json:"audit_logs,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes                 [10]bool
+	loadedTypes                 [13]bool
 	namedUsers                  map[string][]*User
 	namedMemberships            map[string][]*Membership
+	namedSmsTemplates           map[string][]*SMSTemplate
+	namedEmailTemplates         map[string][]*EmailTemplate
 	namedAPIKeys                map[string][]*ApiKey
 	namedWebhooks               map[string][]*Webhook
 	namedFeatureFlags           map[string][]*OrganizationFeature
@@ -120,6 +134,7 @@ type OrganizationEdges struct {
 	namedRoles                  map[string][]*Role
 	namedUserRoleContexts       map[string][]*UserRole
 	namedUserPermissionContexts map[string][]*UserPermission
+	namedAuditLogs              map[string][]*Audit
 }
 
 // UsersOrErr returns the Users value or an error if the edge
@@ -140,10 +155,28 @@ func (e OrganizationEdges) MembershipsOrErr() ([]*Membership, error) {
 	return nil, &NotLoadedError{edge: "memberships"}
 }
 
+// SmsTemplatesOrErr returns the SmsTemplates value or an error if the edge
+// was not loaded in eager-loading.
+func (e OrganizationEdges) SmsTemplatesOrErr() ([]*SMSTemplate, error) {
+	if e.loadedTypes[2] {
+		return e.SmsTemplates, nil
+	}
+	return nil, &NotLoadedError{edge: "sms_templates"}
+}
+
+// EmailTemplatesOrErr returns the EmailTemplates value or an error if the edge
+// was not loaded in eager-loading.
+func (e OrganizationEdges) EmailTemplatesOrErr() ([]*EmailTemplate, error) {
+	if e.loadedTypes[3] {
+		return e.EmailTemplates, nil
+	}
+	return nil, &NotLoadedError{edge: "email_templates"}
+}
+
 // APIKeysOrErr returns the APIKeys value or an error if the edge
 // was not loaded in eager-loading.
 func (e OrganizationEdges) APIKeysOrErr() ([]*ApiKey, error) {
-	if e.loadedTypes[2] {
+	if e.loadedTypes[4] {
 		return e.APIKeys, nil
 	}
 	return nil, &NotLoadedError{edge: "api_keys"}
@@ -152,7 +185,7 @@ func (e OrganizationEdges) APIKeysOrErr() ([]*ApiKey, error) {
 // WebhooksOrErr returns the Webhooks value or an error if the edge
 // was not loaded in eager-loading.
 func (e OrganizationEdges) WebhooksOrErr() ([]*Webhook, error) {
-	if e.loadedTypes[3] {
+	if e.loadedTypes[5] {
 		return e.Webhooks, nil
 	}
 	return nil, &NotLoadedError{edge: "webhooks"}
@@ -161,7 +194,7 @@ func (e OrganizationEdges) WebhooksOrErr() ([]*Webhook, error) {
 // FeatureFlagsOrErr returns the FeatureFlags value or an error if the edge
 // was not loaded in eager-loading.
 func (e OrganizationEdges) FeatureFlagsOrErr() ([]*OrganizationFeature, error) {
-	if e.loadedTypes[4] {
+	if e.loadedTypes[6] {
 		return e.FeatureFlags, nil
 	}
 	return nil, &NotLoadedError{edge: "feature_flags"}
@@ -170,7 +203,7 @@ func (e OrganizationEdges) FeatureFlagsOrErr() ([]*OrganizationFeature, error) {
 // IdentityProvidersOrErr returns the IdentityProviders value or an error if the edge
 // was not loaded in eager-loading.
 func (e OrganizationEdges) IdentityProvidersOrErr() ([]*IdentityProvider, error) {
-	if e.loadedTypes[5] {
+	if e.loadedTypes[7] {
 		return e.IdentityProviders, nil
 	}
 	return nil, &NotLoadedError{edge: "identity_providers"}
@@ -179,7 +212,7 @@ func (e OrganizationEdges) IdentityProvidersOrErr() ([]*IdentityProvider, error)
 // OauthClientsOrErr returns the OauthClients value or an error if the edge
 // was not loaded in eager-loading.
 func (e OrganizationEdges) OauthClientsOrErr() ([]*OAuthClient, error) {
-	if e.loadedTypes[6] {
+	if e.loadedTypes[8] {
 		return e.OauthClients, nil
 	}
 	return nil, &NotLoadedError{edge: "oauth_clients"}
@@ -188,7 +221,7 @@ func (e OrganizationEdges) OauthClientsOrErr() ([]*OAuthClient, error) {
 // RolesOrErr returns the Roles value or an error if the edge
 // was not loaded in eager-loading.
 func (e OrganizationEdges) RolesOrErr() ([]*Role, error) {
-	if e.loadedTypes[7] {
+	if e.loadedTypes[9] {
 		return e.Roles, nil
 	}
 	return nil, &NotLoadedError{edge: "roles"}
@@ -197,7 +230,7 @@ func (e OrganizationEdges) RolesOrErr() ([]*Role, error) {
 // UserRoleContextsOrErr returns the UserRoleContexts value or an error if the edge
 // was not loaded in eager-loading.
 func (e OrganizationEdges) UserRoleContextsOrErr() ([]*UserRole, error) {
-	if e.loadedTypes[8] {
+	if e.loadedTypes[10] {
 		return e.UserRoleContexts, nil
 	}
 	return nil, &NotLoadedError{edge: "user_role_contexts"}
@@ -206,10 +239,19 @@ func (e OrganizationEdges) UserRoleContextsOrErr() ([]*UserRole, error) {
 // UserPermissionContextsOrErr returns the UserPermissionContexts value or an error if the edge
 // was not loaded in eager-loading.
 func (e OrganizationEdges) UserPermissionContextsOrErr() ([]*UserPermission, error) {
-	if e.loadedTypes[9] {
+	if e.loadedTypes[11] {
 		return e.UserPermissionContexts, nil
 	}
 	return nil, &NotLoadedError{edge: "user_permission_contexts"}
+}
+
+// AuditLogsOrErr returns the AuditLogs value or an error if the edge
+// was not loaded in eager-loading.
+func (e OrganizationEdges) AuditLogsOrErr() ([]*Audit, error) {
+	if e.loadedTypes[12] {
+		return e.AuditLogs, nil
+	}
+	return nil, &NotLoadedError{edge: "audit_logs"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -217,7 +259,7 @@ func (*Organization) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case organization.FieldMetadata, organization.FieldAuthConfig:
+		case organization.FieldDomains, organization.FieldVerifiedDomains, organization.FieldMetadata, organization.FieldAuthConfig:
 			values[i] = new([]byte)
 		case organization.FieldActive, organization.FieldTrialUsed, organization.FieldIsPlatformOrganization, organization.FieldSSOEnabled, organization.FieldAuthServiceEnabled:
 			values[i] = new(sql.NullBool)
@@ -225,7 +267,7 @@ func (*Organization) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullInt64)
 		case organization.FieldName, organization.FieldSlug, organization.FieldDomain, organization.FieldLogoURL, organization.FieldPlan, organization.FieldOrgType, organization.FieldSSODomain, organization.FieldSubscriptionID, organization.FieldCustomerID, organization.FieldSubscriptionStatus, organization.FieldAuthDomain:
 			values[i] = new(sql.NullString)
-		case organization.FieldCreatedAt, organization.FieldUpdatedAt, organization.FieldTrialEndsAt:
+		case organization.FieldCreatedAt, organization.FieldUpdatedAt, organization.FieldDeletedAt, organization.FieldTrialEndsAt:
 			values[i] = new(sql.NullTime)
 		case organization.FieldID, organization.FieldOwnerID:
 			values[i] = new(xid.ID)
@@ -262,6 +304,12 @@ func (o *Organization) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				o.UpdatedAt = value.Time
 			}
+		case organization.FieldDeletedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field deleted_at", values[i])
+			} else if value.Valid {
+				o.DeletedAt = value.Time
+			}
 		case organization.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
@@ -273,6 +321,22 @@ func (o *Organization) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field slug", values[i])
 			} else if value.Valid {
 				o.Slug = value.String
+			}
+		case organization.FieldDomains:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field domains", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &o.Domains); err != nil {
+					return fmt.Errorf("unmarshal field domains: %w", err)
+				}
+			}
+		case organization.FieldVerifiedDomains:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field verified_domains", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &o.VerifiedDomains); err != nil {
+					return fmt.Errorf("unmarshal field verified_domains: %w", err)
+				}
 			}
 		case organization.FieldDomain:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -446,6 +510,16 @@ func (o *Organization) QueryMemberships() *MembershipQuery {
 	return NewOrganizationClient(o.config).QueryMemberships(o)
 }
 
+// QuerySmsTemplates queries the "sms_templates" edge of the Organization entity.
+func (o *Organization) QuerySmsTemplates() *SMSTemplateQuery {
+	return NewOrganizationClient(o.config).QuerySmsTemplates(o)
+}
+
+// QueryEmailTemplates queries the "email_templates" edge of the Organization entity.
+func (o *Organization) QueryEmailTemplates() *EmailTemplateQuery {
+	return NewOrganizationClient(o.config).QueryEmailTemplates(o)
+}
+
 // QueryAPIKeys queries the "api_keys" edge of the Organization entity.
 func (o *Organization) QueryAPIKeys() *ApiKeyQuery {
 	return NewOrganizationClient(o.config).QueryAPIKeys(o)
@@ -486,6 +560,11 @@ func (o *Organization) QueryUserPermissionContexts() *UserPermissionQuery {
 	return NewOrganizationClient(o.config).QueryUserPermissionContexts(o)
 }
 
+// QueryAuditLogs queries the "audit_logs" edge of the Organization entity.
+func (o *Organization) QueryAuditLogs() *AuditQuery {
+	return NewOrganizationClient(o.config).QueryAuditLogs(o)
+}
+
 // Update returns a builder for updating this Organization.
 // Note that you need to call Organization.Unwrap() before calling this method if this Organization
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -515,11 +594,20 @@ func (o *Organization) String() string {
 	builder.WriteString("updated_at=")
 	builder.WriteString(o.UpdatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
+	builder.WriteString("deleted_at=")
+	builder.WriteString(o.DeletedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(o.Name)
 	builder.WriteString(", ")
 	builder.WriteString("slug=")
 	builder.WriteString(o.Slug)
+	builder.WriteString(", ")
+	builder.WriteString("domains=")
+	builder.WriteString(fmt.Sprintf("%v", o.Domains))
+	builder.WriteString(", ")
+	builder.WriteString("verified_domains=")
+	builder.WriteString(fmt.Sprintf("%v", o.VerifiedDomains))
 	builder.WriteString(", ")
 	builder.WriteString("domain=")
 	builder.WriteString(o.Domain)
@@ -643,6 +731,54 @@ func (o *Organization) appendNamedMemberships(name string, edges ...*Membership)
 		o.Edges.namedMemberships[name] = []*Membership{}
 	} else {
 		o.Edges.namedMemberships[name] = append(o.Edges.namedMemberships[name], edges...)
+	}
+}
+
+// NamedSmsTemplates returns the SmsTemplates named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (o *Organization) NamedSmsTemplates(name string) ([]*SMSTemplate, error) {
+	if o.Edges.namedSmsTemplates == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := o.Edges.namedSmsTemplates[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (o *Organization) appendNamedSmsTemplates(name string, edges ...*SMSTemplate) {
+	if o.Edges.namedSmsTemplates == nil {
+		o.Edges.namedSmsTemplates = make(map[string][]*SMSTemplate)
+	}
+	if len(edges) == 0 {
+		o.Edges.namedSmsTemplates[name] = []*SMSTemplate{}
+	} else {
+		o.Edges.namedSmsTemplates[name] = append(o.Edges.namedSmsTemplates[name], edges...)
+	}
+}
+
+// NamedEmailTemplates returns the EmailTemplates named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (o *Organization) NamedEmailTemplates(name string) ([]*EmailTemplate, error) {
+	if o.Edges.namedEmailTemplates == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := o.Edges.namedEmailTemplates[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (o *Organization) appendNamedEmailTemplates(name string, edges ...*EmailTemplate) {
+	if o.Edges.namedEmailTemplates == nil {
+		o.Edges.namedEmailTemplates = make(map[string][]*EmailTemplate)
+	}
+	if len(edges) == 0 {
+		o.Edges.namedEmailTemplates[name] = []*EmailTemplate{}
+	} else {
+		o.Edges.namedEmailTemplates[name] = append(o.Edges.namedEmailTemplates[name], edges...)
 	}
 }
 
@@ -835,6 +971,30 @@ func (o *Organization) appendNamedUserPermissionContexts(name string, edges ...*
 		o.Edges.namedUserPermissionContexts[name] = []*UserPermission{}
 	} else {
 		o.Edges.namedUserPermissionContexts[name] = append(o.Edges.namedUserPermissionContexts[name], edges...)
+	}
+}
+
+// NamedAuditLogs returns the AuditLogs named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (o *Organization) NamedAuditLogs(name string) ([]*Audit, error) {
+	if o.Edges.namedAuditLogs == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := o.Edges.namedAuditLogs[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (o *Organization) appendNamedAuditLogs(name string, edges ...*Audit) {
+	if o.Edges.namedAuditLogs == nil {
+		o.Edges.namedAuditLogs = make(map[string][]*Audit)
+	}
+	if len(edges) == 0 {
+		o.Edges.namedAuditLogs[name] = []*Audit{}
+	} else {
+		o.Edges.namedAuditLogs[name] = append(o.Edges.namedAuditLogs[name], edges...)
 	}
 }
 

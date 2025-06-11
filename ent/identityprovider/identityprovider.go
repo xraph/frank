@@ -22,6 +22,8 @@ const (
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
+	// FieldDeletedAt holds the string denoting the deleted_at field in the database.
+	FieldDeletedAt = "deleted_at"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
 	// FieldOrganizationID holds the string denoting the organization_id field in the database.
@@ -52,8 +54,22 @@ const (
 	FieldPrivateKey = "private_key"
 	// FieldActive holds the string denoting the active field in the database.
 	FieldActive = "active"
+	// FieldEnabled holds the string denoting the enabled field in the database.
+	FieldEnabled = "enabled"
 	// FieldPrimary holds the string denoting the primary field in the database.
 	FieldPrimary = "primary"
+	// FieldAutoProvision holds the string denoting the auto_provision field in the database.
+	FieldAutoProvision = "auto_provision"
+	// FieldDefaultRole holds the string denoting the default_role field in the database.
+	FieldDefaultRole = "default_role"
+	// FieldDomain holds the string denoting the domain field in the database.
+	FieldDomain = "domain"
+	// FieldIconURL holds the string denoting the icon_url field in the database.
+	FieldIconURL = "icon_url"
+	// FieldButtonText holds the string denoting the button_text field in the database.
+	FieldButtonText = "button_text"
+	// FieldProtocol holds the string denoting the protocol field in the database.
+	FieldProtocol = "protocol"
 	// FieldDomains holds the string denoting the domains field in the database.
 	FieldDomains = "domains"
 	// FieldAttributesMapping holds the string denoting the attributes_mapping field in the database.
@@ -78,6 +94,7 @@ var Columns = []string{
 	FieldID,
 	FieldCreatedAt,
 	FieldUpdatedAt,
+	FieldDeletedAt,
 	FieldName,
 	FieldOrganizationID,
 	FieldProviderType,
@@ -93,7 +110,14 @@ var Columns = []string{
 	FieldCertificate,
 	FieldPrivateKey,
 	FieldActive,
+	FieldEnabled,
 	FieldPrimary,
+	FieldAutoProvision,
+	FieldDefaultRole,
+	FieldDomain,
+	FieldIconURL,
+	FieldButtonText,
+	FieldProtocol,
 	FieldDomains,
 	FieldAttributesMapping,
 	FieldMetadata,
@@ -124,8 +148,12 @@ var (
 	ProviderTypeValidator func(string) error
 	// DefaultActive holds the default value on creation for the "active" field.
 	DefaultActive bool
+	// DefaultEnabled holds the default value on creation for the "enabled" field.
+	DefaultEnabled bool
 	// DefaultPrimary holds the default value on creation for the "primary" field.
 	DefaultPrimary bool
+	// DefaultAutoProvision holds the default value on creation for the "auto_provision" field.
+	DefaultAutoProvision bool
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() xid.ID
 )
@@ -146,6 +174,11 @@ func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByUpdatedAt orders the results by the updated_at field.
 func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
+}
+
+// ByDeletedAt orders the results by the deleted_at field.
+func ByDeletedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDeletedAt, opts...).ToFunc()
 }
 
 // ByName orders the results by the name field.
@@ -223,9 +256,44 @@ func ByActive(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldActive, opts...).ToFunc()
 }
 
+// ByEnabled orders the results by the enabled field.
+func ByEnabled(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldEnabled, opts...).ToFunc()
+}
+
 // ByPrimary orders the results by the primary field.
 func ByPrimary(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldPrimary, opts...).ToFunc()
+}
+
+// ByAutoProvision orders the results by the auto_provision field.
+func ByAutoProvision(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAutoProvision, opts...).ToFunc()
+}
+
+// ByDefaultRole orders the results by the default_role field.
+func ByDefaultRole(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDefaultRole, opts...).ToFunc()
+}
+
+// ByDomain orders the results by the domain field.
+func ByDomain(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDomain, opts...).ToFunc()
+}
+
+// ByIconURL orders the results by the icon_url field.
+func ByIconURL(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldIconURL, opts...).ToFunc()
+}
+
+// ByButtonText orders the results by the button_text field.
+func ByButtonText(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldButtonText, opts...).ToFunc()
+}
+
+// ByProtocol orders the results by the protocol field.
+func ByProtocol(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldProtocol, opts...).ToFunc()
 }
 
 // ByOrganizationField orders the results by organization field.

@@ -56,6 +56,20 @@ func (wec *WebhookEventCreate) SetNillableUpdatedAt(t *time.Time) *WebhookEventC
 	return wec
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (wec *WebhookEventCreate) SetDeletedAt(t time.Time) *WebhookEventCreate {
+	wec.mutation.SetDeletedAt(t)
+	return wec
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (wec *WebhookEventCreate) SetNillableDeletedAt(t *time.Time) *WebhookEventCreate {
+	if t != nil {
+		wec.SetDeletedAt(*t)
+	}
+	return wec
+}
+
 // SetWebhookID sets the "webhook_id" field.
 func (wec *WebhookEventCreate) SetWebhookID(x xid.ID) *WebhookEventCreate {
 	wec.mutation.SetWebhookID(x)
@@ -331,6 +345,10 @@ func (wec *WebhookEventCreate) createSpec() (*WebhookEvent, *sqlgraph.CreateSpec
 		_spec.SetField(webhookevent.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
+	if value, ok := wec.mutation.DeletedAt(); ok {
+		_spec.SetField(webhookevent.FieldDeletedAt, field.TypeTime, value)
+		_node.DeletedAt = value
+	}
 	if value, ok := wec.mutation.EventType(); ok {
 		_spec.SetField(webhookevent.FieldEventType, field.TypeString, value)
 		_node.EventType = value
@@ -449,6 +467,24 @@ func (u *WebhookEventUpsert) SetUpdatedAt(v time.Time) *WebhookEventUpsert {
 // UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
 func (u *WebhookEventUpsert) UpdateUpdatedAt() *WebhookEventUpsert {
 	u.SetExcluded(webhookevent.FieldUpdatedAt)
+	return u
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *WebhookEventUpsert) SetDeletedAt(v time.Time) *WebhookEventUpsert {
+	u.Set(webhookevent.FieldDeletedAt, v)
+	return u
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *WebhookEventUpsert) UpdateDeletedAt() *WebhookEventUpsert {
+	u.SetExcluded(webhookevent.FieldDeletedAt)
+	return u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *WebhookEventUpsert) ClearDeletedAt() *WebhookEventUpsert {
+	u.SetNull(webhookevent.FieldDeletedAt)
 	return u
 }
 
@@ -700,6 +736,27 @@ func (u *WebhookEventUpsertOne) SetUpdatedAt(v time.Time) *WebhookEventUpsertOne
 func (u *WebhookEventUpsertOne) UpdateUpdatedAt() *WebhookEventUpsertOne {
 	return u.Update(func(s *WebhookEventUpsert) {
 		s.UpdateUpdatedAt()
+	})
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *WebhookEventUpsertOne) SetDeletedAt(v time.Time) *WebhookEventUpsertOne {
+	return u.Update(func(s *WebhookEventUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *WebhookEventUpsertOne) UpdateDeletedAt() *WebhookEventUpsertOne {
+	return u.Update(func(s *WebhookEventUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *WebhookEventUpsertOne) ClearDeletedAt() *WebhookEventUpsertOne {
+	return u.Update(func(s *WebhookEventUpsert) {
+		s.ClearDeletedAt()
 	})
 }
 
@@ -1149,6 +1206,27 @@ func (u *WebhookEventUpsertBulk) SetUpdatedAt(v time.Time) *WebhookEventUpsertBu
 func (u *WebhookEventUpsertBulk) UpdateUpdatedAt() *WebhookEventUpsertBulk {
 	return u.Update(func(s *WebhookEventUpsert) {
 		s.UpdateUpdatedAt()
+	})
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *WebhookEventUpsertBulk) SetDeletedAt(v time.Time) *WebhookEventUpsertBulk {
+	return u.Update(func(s *WebhookEventUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *WebhookEventUpsertBulk) UpdateDeletedAt() *WebhookEventUpsertBulk {
+	return u.Update(func(s *WebhookEventUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *WebhookEventUpsertBulk) ClearDeletedAt() *WebhookEventUpsertBulk {
+	return u.Update(func(s *WebhookEventUpsert) {
+		s.ClearDeletedAt()
 	})
 }
 

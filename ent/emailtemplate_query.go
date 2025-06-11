@@ -16,6 +16,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/juicycleff/frank/ent/emailtemplate"
+	"github.com/juicycleff/frank/ent/organization"
 	"github.com/juicycleff/frank/ent/predicate"
 	"github.com/rs/xid"
 )
@@ -23,11 +24,12 @@ import (
 // EmailTemplateQuery is the builder for querying EmailTemplate entities.
 type EmailTemplateQuery struct {
 	config
-	ctx        *QueryContext
-	order      []emailtemplate.OrderOption
-	inters     []Interceptor
-	predicates []predicate.EmailTemplate
-	modifiers  []func(*sql.Selector)
+	ctx              *QueryContext
+	order            []emailtemplate.OrderOption
+	inters           []Interceptor
+	predicates       []predicate.EmailTemplate
+	withOrganization *OrganizationQuery
+	modifiers        []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -62,6 +64,28 @@ func (etq *EmailTemplateQuery) Unique(unique bool) *EmailTemplateQuery {
 func (etq *EmailTemplateQuery) Order(o ...emailtemplate.OrderOption) *EmailTemplateQuery {
 	etq.order = append(etq.order, o...)
 	return etq
+}
+
+// QueryOrganization chains the current query on the "organization" edge.
+func (etq *EmailTemplateQuery) QueryOrganization() *OrganizationQuery {
+	query := (&OrganizationClient{config: etq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := etq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := etq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(emailtemplate.Table, emailtemplate.FieldID, selector),
+			sqlgraph.To(organization.Table, organization.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, emailtemplate.OrganizationTable, emailtemplate.OrganizationColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(etq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // First returns the first EmailTemplate entity from the query.
@@ -251,16 +275,28 @@ func (etq *EmailTemplateQuery) Clone() *EmailTemplateQuery {
 		return nil
 	}
 	return &EmailTemplateQuery{
-		config:     etq.config,
-		ctx:        etq.ctx.Clone(),
-		order:      append([]emailtemplate.OrderOption{}, etq.order...),
-		inters:     append([]Interceptor{}, etq.inters...),
-		predicates: append([]predicate.EmailTemplate{}, etq.predicates...),
+		config:           etq.config,
+		ctx:              etq.ctx.Clone(),
+		order:            append([]emailtemplate.OrderOption{}, etq.order...),
+		inters:           append([]Interceptor{}, etq.inters...),
+		predicates:       append([]predicate.EmailTemplate{}, etq.predicates...),
+		withOrganization: etq.withOrganization.Clone(),
 		// clone intermediate query.
 		sql:       etq.sql.Clone(),
 		path:      etq.path,
 		modifiers: append([]func(*sql.Selector){}, etq.modifiers...),
 	}
+}
+
+// WithOrganization tells the query-builder to eager-load the nodes that are connected to
+// the "organization" edge. The optional arguments are used to configure the query builder of the edge.
+func (etq *EmailTemplateQuery) WithOrganization(opts ...func(*OrganizationQuery)) *EmailTemplateQuery {
+	query := (&OrganizationClient{config: etq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	etq.withOrganization = query
+	return etq
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -339,8 +375,11 @@ func (etq *EmailTemplateQuery) prepareQuery(ctx context.Context) error {
 
 func (etq *EmailTemplateQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*EmailTemplate, error) {
 	var (
-		nodes = []*EmailTemplate{}
-		_spec = etq.querySpec()
+		nodes       = []*EmailTemplate{}
+		_spec       = etq.querySpec()
+		loadedTypes = [1]bool{
+			etq.withOrganization != nil,
+		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*EmailTemplate).scanValues(nil, columns)
@@ -348,6 +387,7 @@ func (etq *EmailTemplateQuery) sqlAll(ctx context.Context, hooks ...queryHook) (
 	_spec.Assign = func(columns []string, values []any) error {
 		node := &EmailTemplate{config: etq.config}
 		nodes = append(nodes, node)
+		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	if len(etq.modifiers) > 0 {
@@ -362,7 +402,43 @@ func (etq *EmailTemplateQuery) sqlAll(ctx context.Context, hooks ...queryHook) (
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+	if query := etq.withOrganization; query != nil {
+		if err := etq.loadOrganization(ctx, query, nodes, nil,
+			func(n *EmailTemplate, e *Organization) { n.Edges.Organization = e }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
+}
+
+func (etq *EmailTemplateQuery) loadOrganization(ctx context.Context, query *OrganizationQuery, nodes []*EmailTemplate, init func(*EmailTemplate), assign func(*EmailTemplate, *Organization)) error {
+	ids := make([]xid.ID, 0, len(nodes))
+	nodeids := make(map[xid.ID][]*EmailTemplate)
+	for i := range nodes {
+		fk := nodes[i].OrganizationID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(organization.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "organization_id" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
 }
 
 func (etq *EmailTemplateQuery) sqlCount(ctx context.Context) (int, error) {
@@ -392,6 +468,9 @@ func (etq *EmailTemplateQuery) querySpec() *sqlgraph.QuerySpec {
 			if fields[i] != emailtemplate.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
+		}
+		if etq.withOrganization != nil {
+			_spec.Node.AddColumnOnce(emailtemplate.FieldOrganizationID)
 		}
 	}
 	if ps := etq.predicates; len(ps) > 0 {

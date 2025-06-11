@@ -23,6 +23,8 @@ const (
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
+	// FieldDeletedAt holds the string denoting the deleted_at field in the database.
+	FieldDeletedAt = "deleted_at"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
 	// FieldURL holds the string denoting the url field in the database.
@@ -45,6 +47,8 @@ const (
 	FieldFormat = "format"
 	// FieldMetadata holds the string denoting the metadata field in the database.
 	FieldMetadata = "metadata"
+	// FieldHeaders holds the string denoting the headers field in the database.
+	FieldHeaders = "headers"
 	// EdgeOrganization holds the string denoting the organization edge name in mutations.
 	EdgeOrganization = "organization"
 	// EdgeEvents holds the string denoting the events edge name in mutations.
@@ -72,6 +76,7 @@ var Columns = []string{
 	FieldID,
 	FieldCreatedAt,
 	FieldUpdatedAt,
+	FieldDeletedAt,
 	FieldName,
 	FieldURL,
 	FieldOrganizationID,
@@ -83,6 +88,7 @@ var Columns = []string{
 	FieldTimeoutMs,
 	FieldFormat,
 	FieldMetadata,
+	FieldHeaders,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -164,6 +170,11 @@ func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByUpdatedAt orders the results by the updated_at field.
 func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
+}
+
+// ByDeletedAt orders the results by the deleted_at field.
+func ByDeletedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDeletedAt, opts...).ToFunc()
 }
 
 // ByName orders the results by the name field.

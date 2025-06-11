@@ -25,6 +25,8 @@ func (SSOState) Fields() []ent.Field {
 
 		field.Time("expires_at").
 			Comment("When this state expires"),
+
+		field.String("redirect_url").Optional(),
 	}
 }
 
@@ -46,5 +48,6 @@ func (SSOState) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		ModelBaseMixin{},
 		TimeMixin{},
+		SoftDeleteMixin{},
 	}
 }

@@ -41,14 +41,15 @@ var BaseRolePermissions = RolePermissions{
 	RoleOwner: {
 		// Owner-specific permissions (those not in Admin)
 		PermissionDeleteOrganization,
-		PermissionRemoveOrganizationMember,
+		PermissionRemoveMembers,
 		PermissionDeleteUser, // Can delete users in their org
 	},
 	RoleAdmin: {
 		// Admin-specific permissions (those not in Member)
 		PermissionUpdateOrganization,
-		PermissionAddOrganizationMember, PermissionUpdateOrganizationMember,
-		PermissionManageOrganizationInvites,
+		PermissionInviteMembers,
+		PermissionRemoveMembers,
+		PermissionManageMembers,
 		PermissionUpdateUser, PermissionCreateUser,
 		PermissionManageAPIKeys, PermissionDeleteAPIKey,
 		PermissionManageSessions, PermissionDeleteSession,
@@ -71,7 +72,7 @@ var BaseRolePermissions = RolePermissions{
 	},
 	RoleViewer: {
 		// Viewer-specific permissions (those not in Guest)
-		PermissionViewOrganization, PermissionViewOrganizationMembers,
+		PermissionViewOrganization, PermissionViewMembers,
 		PermissionViewUser, PermissionListUsers,
 		PermissionViewAPIKeys, PermissionListAPIKeys,
 		PermissionViewSessions, PermissionListSessions,

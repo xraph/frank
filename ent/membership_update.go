@@ -42,6 +42,26 @@ func (mu *MembershipUpdate) SetUpdatedAt(t time.Time) *MembershipUpdate {
 	return mu
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (mu *MembershipUpdate) SetDeletedAt(t time.Time) *MembershipUpdate {
+	mu.mutation.SetDeletedAt(t)
+	return mu
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (mu *MembershipUpdate) SetNillableDeletedAt(t *time.Time) *MembershipUpdate {
+	if t != nil {
+		mu.SetDeletedAt(*t)
+	}
+	return mu
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (mu *MembershipUpdate) ClearDeletedAt() *MembershipUpdate {
+	mu.mutation.ClearDeletedAt()
+	return mu
+}
+
 // SetUserID sets the "user_id" field.
 func (mu *MembershipUpdate) SetUserID(x xid.ID) *MembershipUpdate {
 	mu.mutation.SetUserID(x)
@@ -80,6 +100,20 @@ func (mu *MembershipUpdate) SetRoleID(x xid.ID) *MembershipUpdate {
 func (mu *MembershipUpdate) SetNillableRoleID(x *xid.ID) *MembershipUpdate {
 	if x != nil {
 		mu.SetRoleID(*x)
+	}
+	return mu
+}
+
+// SetEmail sets the "email" field.
+func (mu *MembershipUpdate) SetEmail(s string) *MembershipUpdate {
+	mu.mutation.SetEmail(s)
+	return mu
+}
+
+// SetNillableEmail sets the "email" field if the given value is not nil.
+func (mu *MembershipUpdate) SetNillableEmail(s *string) *MembershipUpdate {
+	if s != nil {
+		mu.SetEmail(*s)
 	}
 	return mu
 }
@@ -220,6 +254,26 @@ func (mu *MembershipUpdate) SetNillableIsPrimaryContact(b *bool) *MembershipUpda
 	return mu
 }
 
+// SetLeftAt sets the "left_at" field.
+func (mu *MembershipUpdate) SetLeftAt(t time.Time) *MembershipUpdate {
+	mu.mutation.SetLeftAt(t)
+	return mu
+}
+
+// SetNillableLeftAt sets the "left_at" field if the given value is not nil.
+func (mu *MembershipUpdate) SetNillableLeftAt(t *time.Time) *MembershipUpdate {
+	if t != nil {
+		mu.SetLeftAt(*t)
+	}
+	return mu
+}
+
+// ClearLeftAt clears the value of the "left_at" field.
+func (mu *MembershipUpdate) ClearLeftAt() *MembershipUpdate {
+	mu.mutation.ClearLeftAt()
+	return mu
+}
+
 // SetMetadata sets the "metadata" field.
 func (mu *MembershipUpdate) SetMetadata(m map[string]interface{}) *MembershipUpdate {
 	mu.mutation.SetMetadata(m)
@@ -229,6 +283,18 @@ func (mu *MembershipUpdate) SetMetadata(m map[string]interface{}) *MembershipUpd
 // ClearMetadata clears the value of the "metadata" field.
 func (mu *MembershipUpdate) ClearMetadata() *MembershipUpdate {
 	mu.mutation.ClearMetadata()
+	return mu
+}
+
+// SetCustomFields sets the "custom_fields" field.
+func (mu *MembershipUpdate) SetCustomFields(m map[string]interface{}) *MembershipUpdate {
+	mu.mutation.SetCustomFields(m)
+	return mu
+}
+
+// ClearCustomFields clears the value of the "custom_fields" field.
+func (mu *MembershipUpdate) ClearCustomFields() *MembershipUpdate {
+	mu.mutation.ClearCustomFields()
 	return mu
 }
 
@@ -245,6 +311,25 @@ func (mu *MembershipUpdate) SetOrganization(o *Organization) *MembershipUpdate {
 // SetRole sets the "role" edge to the Role entity.
 func (mu *MembershipUpdate) SetRole(r *Role) *MembershipUpdate {
 	return mu.SetRoleID(r.ID)
+}
+
+// SetInviterID sets the "inviter" edge to the User entity by ID.
+func (mu *MembershipUpdate) SetInviterID(id xid.ID) *MembershipUpdate {
+	mu.mutation.SetInviterID(id)
+	return mu
+}
+
+// SetNillableInviterID sets the "inviter" edge to the User entity by ID if the given value is not nil.
+func (mu *MembershipUpdate) SetNillableInviterID(id *xid.ID) *MembershipUpdate {
+	if id != nil {
+		mu = mu.SetInviterID(*id)
+	}
+	return mu
+}
+
+// SetInviter sets the "inviter" edge to the User entity.
+func (mu *MembershipUpdate) SetInviter(u *User) *MembershipUpdate {
+	return mu.SetInviterID(u.ID)
 }
 
 // Mutation returns the MembershipMutation object of the builder.
@@ -267,6 +352,12 @@ func (mu *MembershipUpdate) ClearOrganization() *MembershipUpdate {
 // ClearRole clears the "role" edge to the Role entity.
 func (mu *MembershipUpdate) ClearRole() *MembershipUpdate {
 	mu.mutation.ClearRole()
+	return mu
+}
+
+// ClearInviter clears the "inviter" edge to the User entity.
+func (mu *MembershipUpdate) ClearInviter() *MembershipUpdate {
+	mu.mutation.ClearInviter()
 	return mu
 }
 
@@ -323,6 +414,11 @@ func (mu *MembershipUpdate) check() error {
 			return &ValidationError{Name: "role_id", err: fmt.Errorf(`ent: validator failed for field "Membership.role_id": %w`, err)}
 		}
 	}
+	if v, ok := mu.mutation.Email(); ok {
+		if err := membership.EmailValidator(v); err != nil {
+			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "Membership.email": %w`, err)}
+		}
+	}
 	if v, ok := mu.mutation.Status(); ok {
 		if err := membership.StatusValidator(v); err != nil {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Membership.status": %w`, err)}
@@ -361,14 +457,17 @@ func (mu *MembershipUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := mu.mutation.UpdatedAt(); ok {
 		_spec.SetField(membership.FieldUpdatedAt, field.TypeTime, value)
 	}
+	if value, ok := mu.mutation.DeletedAt(); ok {
+		_spec.SetField(membership.FieldDeletedAt, field.TypeTime, value)
+	}
+	if mu.mutation.DeletedAtCleared() {
+		_spec.ClearField(membership.FieldDeletedAt, field.TypeTime)
+	}
+	if value, ok := mu.mutation.Email(); ok {
+		_spec.SetField(membership.FieldEmail, field.TypeString, value)
+	}
 	if value, ok := mu.mutation.Status(); ok {
 		_spec.SetField(membership.FieldStatus, field.TypeEnum, value)
-	}
-	if value, ok := mu.mutation.InvitedBy(); ok {
-		_spec.SetField(membership.FieldInvitedBy, field.TypeString, value)
-	}
-	if mu.mutation.InvitedByCleared() {
-		_spec.ClearField(membership.FieldInvitedBy, field.TypeString)
 	}
 	if value, ok := mu.mutation.InvitedAt(); ok {
 		_spec.SetField(membership.FieldInvitedAt, field.TypeTime, value)
@@ -397,11 +496,23 @@ func (mu *MembershipUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := mu.mutation.IsPrimaryContact(); ok {
 		_spec.SetField(membership.FieldIsPrimaryContact, field.TypeBool, value)
 	}
+	if value, ok := mu.mutation.LeftAt(); ok {
+		_spec.SetField(membership.FieldLeftAt, field.TypeTime, value)
+	}
+	if mu.mutation.LeftAtCleared() {
+		_spec.ClearField(membership.FieldLeftAt, field.TypeTime)
+	}
 	if value, ok := mu.mutation.Metadata(); ok {
 		_spec.SetField(membership.FieldMetadata, field.TypeJSON, value)
 	}
 	if mu.mutation.MetadataCleared() {
 		_spec.ClearField(membership.FieldMetadata, field.TypeJSON)
+	}
+	if value, ok := mu.mutation.CustomFields(); ok {
+		_spec.SetField(membership.FieldCustomFields, field.TypeJSON, value)
+	}
+	if mu.mutation.CustomFieldsCleared() {
+		_spec.ClearField(membership.FieldCustomFields, field.TypeJSON)
 	}
 	if mu.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -490,6 +601,35 @@ func (mu *MembershipUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if mu.mutation.InviterCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   membership.InviterTable,
+			Columns: []string{membership.InviterColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := mu.mutation.InviterIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   membership.InviterTable,
+			Columns: []string{membership.InviterColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	_spec.AddModifiers(mu.modifiers...)
 	if n, err = sqlgraph.UpdateNodes(ctx, mu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -515,6 +655,26 @@ type MembershipUpdateOne struct {
 // SetUpdatedAt sets the "updated_at" field.
 func (muo *MembershipUpdateOne) SetUpdatedAt(t time.Time) *MembershipUpdateOne {
 	muo.mutation.SetUpdatedAt(t)
+	return muo
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (muo *MembershipUpdateOne) SetDeletedAt(t time.Time) *MembershipUpdateOne {
+	muo.mutation.SetDeletedAt(t)
+	return muo
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (muo *MembershipUpdateOne) SetNillableDeletedAt(t *time.Time) *MembershipUpdateOne {
+	if t != nil {
+		muo.SetDeletedAt(*t)
+	}
+	return muo
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (muo *MembershipUpdateOne) ClearDeletedAt() *MembershipUpdateOne {
+	muo.mutation.ClearDeletedAt()
 	return muo
 }
 
@@ -556,6 +716,20 @@ func (muo *MembershipUpdateOne) SetRoleID(x xid.ID) *MembershipUpdateOne {
 func (muo *MembershipUpdateOne) SetNillableRoleID(x *xid.ID) *MembershipUpdateOne {
 	if x != nil {
 		muo.SetRoleID(*x)
+	}
+	return muo
+}
+
+// SetEmail sets the "email" field.
+func (muo *MembershipUpdateOne) SetEmail(s string) *MembershipUpdateOne {
+	muo.mutation.SetEmail(s)
+	return muo
+}
+
+// SetNillableEmail sets the "email" field if the given value is not nil.
+func (muo *MembershipUpdateOne) SetNillableEmail(s *string) *MembershipUpdateOne {
+	if s != nil {
+		muo.SetEmail(*s)
 	}
 	return muo
 }
@@ -696,6 +870,26 @@ func (muo *MembershipUpdateOne) SetNillableIsPrimaryContact(b *bool) *Membership
 	return muo
 }
 
+// SetLeftAt sets the "left_at" field.
+func (muo *MembershipUpdateOne) SetLeftAt(t time.Time) *MembershipUpdateOne {
+	muo.mutation.SetLeftAt(t)
+	return muo
+}
+
+// SetNillableLeftAt sets the "left_at" field if the given value is not nil.
+func (muo *MembershipUpdateOne) SetNillableLeftAt(t *time.Time) *MembershipUpdateOne {
+	if t != nil {
+		muo.SetLeftAt(*t)
+	}
+	return muo
+}
+
+// ClearLeftAt clears the value of the "left_at" field.
+func (muo *MembershipUpdateOne) ClearLeftAt() *MembershipUpdateOne {
+	muo.mutation.ClearLeftAt()
+	return muo
+}
+
 // SetMetadata sets the "metadata" field.
 func (muo *MembershipUpdateOne) SetMetadata(m map[string]interface{}) *MembershipUpdateOne {
 	muo.mutation.SetMetadata(m)
@@ -705,6 +899,18 @@ func (muo *MembershipUpdateOne) SetMetadata(m map[string]interface{}) *Membershi
 // ClearMetadata clears the value of the "metadata" field.
 func (muo *MembershipUpdateOne) ClearMetadata() *MembershipUpdateOne {
 	muo.mutation.ClearMetadata()
+	return muo
+}
+
+// SetCustomFields sets the "custom_fields" field.
+func (muo *MembershipUpdateOne) SetCustomFields(m map[string]interface{}) *MembershipUpdateOne {
+	muo.mutation.SetCustomFields(m)
+	return muo
+}
+
+// ClearCustomFields clears the value of the "custom_fields" field.
+func (muo *MembershipUpdateOne) ClearCustomFields() *MembershipUpdateOne {
+	muo.mutation.ClearCustomFields()
 	return muo
 }
 
@@ -721,6 +927,25 @@ func (muo *MembershipUpdateOne) SetOrganization(o *Organization) *MembershipUpda
 // SetRole sets the "role" edge to the Role entity.
 func (muo *MembershipUpdateOne) SetRole(r *Role) *MembershipUpdateOne {
 	return muo.SetRoleID(r.ID)
+}
+
+// SetInviterID sets the "inviter" edge to the User entity by ID.
+func (muo *MembershipUpdateOne) SetInviterID(id xid.ID) *MembershipUpdateOne {
+	muo.mutation.SetInviterID(id)
+	return muo
+}
+
+// SetNillableInviterID sets the "inviter" edge to the User entity by ID if the given value is not nil.
+func (muo *MembershipUpdateOne) SetNillableInviterID(id *xid.ID) *MembershipUpdateOne {
+	if id != nil {
+		muo = muo.SetInviterID(*id)
+	}
+	return muo
+}
+
+// SetInviter sets the "inviter" edge to the User entity.
+func (muo *MembershipUpdateOne) SetInviter(u *User) *MembershipUpdateOne {
+	return muo.SetInviterID(u.ID)
 }
 
 // Mutation returns the MembershipMutation object of the builder.
@@ -743,6 +968,12 @@ func (muo *MembershipUpdateOne) ClearOrganization() *MembershipUpdateOne {
 // ClearRole clears the "role" edge to the Role entity.
 func (muo *MembershipUpdateOne) ClearRole() *MembershipUpdateOne {
 	muo.mutation.ClearRole()
+	return muo
+}
+
+// ClearInviter clears the "inviter" edge to the User entity.
+func (muo *MembershipUpdateOne) ClearInviter() *MembershipUpdateOne {
+	muo.mutation.ClearInviter()
 	return muo
 }
 
@@ -812,6 +1043,11 @@ func (muo *MembershipUpdateOne) check() error {
 			return &ValidationError{Name: "role_id", err: fmt.Errorf(`ent: validator failed for field "Membership.role_id": %w`, err)}
 		}
 	}
+	if v, ok := muo.mutation.Email(); ok {
+		if err := membership.EmailValidator(v); err != nil {
+			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "Membership.email": %w`, err)}
+		}
+	}
 	if v, ok := muo.mutation.Status(); ok {
 		if err := membership.StatusValidator(v); err != nil {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Membership.status": %w`, err)}
@@ -867,14 +1103,17 @@ func (muo *MembershipUpdateOne) sqlSave(ctx context.Context) (_node *Membership,
 	if value, ok := muo.mutation.UpdatedAt(); ok {
 		_spec.SetField(membership.FieldUpdatedAt, field.TypeTime, value)
 	}
+	if value, ok := muo.mutation.DeletedAt(); ok {
+		_spec.SetField(membership.FieldDeletedAt, field.TypeTime, value)
+	}
+	if muo.mutation.DeletedAtCleared() {
+		_spec.ClearField(membership.FieldDeletedAt, field.TypeTime)
+	}
+	if value, ok := muo.mutation.Email(); ok {
+		_spec.SetField(membership.FieldEmail, field.TypeString, value)
+	}
 	if value, ok := muo.mutation.Status(); ok {
 		_spec.SetField(membership.FieldStatus, field.TypeEnum, value)
-	}
-	if value, ok := muo.mutation.InvitedBy(); ok {
-		_spec.SetField(membership.FieldInvitedBy, field.TypeString, value)
-	}
-	if muo.mutation.InvitedByCleared() {
-		_spec.ClearField(membership.FieldInvitedBy, field.TypeString)
 	}
 	if value, ok := muo.mutation.InvitedAt(); ok {
 		_spec.SetField(membership.FieldInvitedAt, field.TypeTime, value)
@@ -903,11 +1142,23 @@ func (muo *MembershipUpdateOne) sqlSave(ctx context.Context) (_node *Membership,
 	if value, ok := muo.mutation.IsPrimaryContact(); ok {
 		_spec.SetField(membership.FieldIsPrimaryContact, field.TypeBool, value)
 	}
+	if value, ok := muo.mutation.LeftAt(); ok {
+		_spec.SetField(membership.FieldLeftAt, field.TypeTime, value)
+	}
+	if muo.mutation.LeftAtCleared() {
+		_spec.ClearField(membership.FieldLeftAt, field.TypeTime)
+	}
 	if value, ok := muo.mutation.Metadata(); ok {
 		_spec.SetField(membership.FieldMetadata, field.TypeJSON, value)
 	}
 	if muo.mutation.MetadataCleared() {
 		_spec.ClearField(membership.FieldMetadata, field.TypeJSON)
+	}
+	if value, ok := muo.mutation.CustomFields(); ok {
+		_spec.SetField(membership.FieldCustomFields, field.TypeJSON, value)
+	}
+	if muo.mutation.CustomFieldsCleared() {
+		_spec.ClearField(membership.FieldCustomFields, field.TypeJSON)
 	}
 	if muo.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -989,6 +1240,35 @@ func (muo *MembershipUpdateOne) sqlSave(ctx context.Context) (_node *Membership,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if muo.mutation.InviterCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   membership.InviterTable,
+			Columns: []string{membership.InviterColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := muo.mutation.InviterIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   membership.InviterTable,
+			Columns: []string{membership.InviterColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {

@@ -69,6 +69,11 @@ func UpdatedAt(v time.Time) predicate.Membership {
 	return predicate.Membership(sql.FieldEQ(FieldUpdatedAt, v))
 }
 
+// DeletedAt applies equality check predicate on the "deleted_at" field. It's identical to DeletedAtEQ.
+func DeletedAt(v time.Time) predicate.Membership {
+	return predicate.Membership(sql.FieldEQ(FieldDeletedAt, v))
+}
+
 // UserID applies equality check predicate on the "user_id" field. It's identical to UserIDEQ.
 func UserID(v xid.ID) predicate.Membership {
 	return predicate.Membership(sql.FieldEQ(FieldUserID, v))
@@ -82,6 +87,11 @@ func OrganizationID(v xid.ID) predicate.Membership {
 // RoleID applies equality check predicate on the "role_id" field. It's identical to RoleIDEQ.
 func RoleID(v xid.ID) predicate.Membership {
 	return predicate.Membership(sql.FieldEQ(FieldRoleID, v))
+}
+
+// Email applies equality check predicate on the "email" field. It's identical to EmailEQ.
+func Email(v string) predicate.Membership {
+	return predicate.Membership(sql.FieldEQ(FieldEmail, v))
 }
 
 // InvitedBy applies equality check predicate on the "invited_by" field. It's identical to InvitedByEQ.
@@ -117,6 +127,11 @@ func IsBillingContact(v bool) predicate.Membership {
 // IsPrimaryContact applies equality check predicate on the "is_primary_contact" field. It's identical to IsPrimaryContactEQ.
 func IsPrimaryContact(v bool) predicate.Membership {
 	return predicate.Membership(sql.FieldEQ(FieldIsPrimaryContact, v))
+}
+
+// LeftAt applies equality check predicate on the "left_at" field. It's identical to LeftAtEQ.
+func LeftAt(v time.Time) predicate.Membership {
+	return predicate.Membership(sql.FieldEQ(FieldLeftAt, v))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
@@ -197,6 +212,56 @@ func UpdatedAtLT(v time.Time) predicate.Membership {
 // UpdatedAtLTE applies the LTE predicate on the "updated_at" field.
 func UpdatedAtLTE(v time.Time) predicate.Membership {
 	return predicate.Membership(sql.FieldLTE(FieldUpdatedAt, v))
+}
+
+// DeletedAtEQ applies the EQ predicate on the "deleted_at" field.
+func DeletedAtEQ(v time.Time) predicate.Membership {
+	return predicate.Membership(sql.FieldEQ(FieldDeletedAt, v))
+}
+
+// DeletedAtNEQ applies the NEQ predicate on the "deleted_at" field.
+func DeletedAtNEQ(v time.Time) predicate.Membership {
+	return predicate.Membership(sql.FieldNEQ(FieldDeletedAt, v))
+}
+
+// DeletedAtIn applies the In predicate on the "deleted_at" field.
+func DeletedAtIn(vs ...time.Time) predicate.Membership {
+	return predicate.Membership(sql.FieldIn(FieldDeletedAt, vs...))
+}
+
+// DeletedAtNotIn applies the NotIn predicate on the "deleted_at" field.
+func DeletedAtNotIn(vs ...time.Time) predicate.Membership {
+	return predicate.Membership(sql.FieldNotIn(FieldDeletedAt, vs...))
+}
+
+// DeletedAtGT applies the GT predicate on the "deleted_at" field.
+func DeletedAtGT(v time.Time) predicate.Membership {
+	return predicate.Membership(sql.FieldGT(FieldDeletedAt, v))
+}
+
+// DeletedAtGTE applies the GTE predicate on the "deleted_at" field.
+func DeletedAtGTE(v time.Time) predicate.Membership {
+	return predicate.Membership(sql.FieldGTE(FieldDeletedAt, v))
+}
+
+// DeletedAtLT applies the LT predicate on the "deleted_at" field.
+func DeletedAtLT(v time.Time) predicate.Membership {
+	return predicate.Membership(sql.FieldLT(FieldDeletedAt, v))
+}
+
+// DeletedAtLTE applies the LTE predicate on the "deleted_at" field.
+func DeletedAtLTE(v time.Time) predicate.Membership {
+	return predicate.Membership(sql.FieldLTE(FieldDeletedAt, v))
+}
+
+// DeletedAtIsNil applies the IsNil predicate on the "deleted_at" field.
+func DeletedAtIsNil() predicate.Membership {
+	return predicate.Membership(sql.FieldIsNull(FieldDeletedAt))
+}
+
+// DeletedAtNotNil applies the NotNil predicate on the "deleted_at" field.
+func DeletedAtNotNil() predicate.Membership {
+	return predicate.Membership(sql.FieldNotNull(FieldDeletedAt))
 }
 
 // UserIDEQ applies the EQ predicate on the "user_id" field.
@@ -407,6 +472,71 @@ func RoleIDEqualFold(v xid.ID) predicate.Membership {
 func RoleIDContainsFold(v xid.ID) predicate.Membership {
 	vc := v.String()
 	return predicate.Membership(sql.FieldContainsFold(FieldRoleID, vc))
+}
+
+// EmailEQ applies the EQ predicate on the "email" field.
+func EmailEQ(v string) predicate.Membership {
+	return predicate.Membership(sql.FieldEQ(FieldEmail, v))
+}
+
+// EmailNEQ applies the NEQ predicate on the "email" field.
+func EmailNEQ(v string) predicate.Membership {
+	return predicate.Membership(sql.FieldNEQ(FieldEmail, v))
+}
+
+// EmailIn applies the In predicate on the "email" field.
+func EmailIn(vs ...string) predicate.Membership {
+	return predicate.Membership(sql.FieldIn(FieldEmail, vs...))
+}
+
+// EmailNotIn applies the NotIn predicate on the "email" field.
+func EmailNotIn(vs ...string) predicate.Membership {
+	return predicate.Membership(sql.FieldNotIn(FieldEmail, vs...))
+}
+
+// EmailGT applies the GT predicate on the "email" field.
+func EmailGT(v string) predicate.Membership {
+	return predicate.Membership(sql.FieldGT(FieldEmail, v))
+}
+
+// EmailGTE applies the GTE predicate on the "email" field.
+func EmailGTE(v string) predicate.Membership {
+	return predicate.Membership(sql.FieldGTE(FieldEmail, v))
+}
+
+// EmailLT applies the LT predicate on the "email" field.
+func EmailLT(v string) predicate.Membership {
+	return predicate.Membership(sql.FieldLT(FieldEmail, v))
+}
+
+// EmailLTE applies the LTE predicate on the "email" field.
+func EmailLTE(v string) predicate.Membership {
+	return predicate.Membership(sql.FieldLTE(FieldEmail, v))
+}
+
+// EmailContains applies the Contains predicate on the "email" field.
+func EmailContains(v string) predicate.Membership {
+	return predicate.Membership(sql.FieldContains(FieldEmail, v))
+}
+
+// EmailHasPrefix applies the HasPrefix predicate on the "email" field.
+func EmailHasPrefix(v string) predicate.Membership {
+	return predicate.Membership(sql.FieldHasPrefix(FieldEmail, v))
+}
+
+// EmailHasSuffix applies the HasSuffix predicate on the "email" field.
+func EmailHasSuffix(v string) predicate.Membership {
+	return predicate.Membership(sql.FieldHasSuffix(FieldEmail, v))
+}
+
+// EmailEqualFold applies the EqualFold predicate on the "email" field.
+func EmailEqualFold(v string) predicate.Membership {
+	return predicate.Membership(sql.FieldEqualFold(FieldEmail, v))
+}
+
+// EmailContainsFold applies the ContainsFold predicate on the "email" field.
+func EmailContainsFold(v string) predicate.Membership {
+	return predicate.Membership(sql.FieldContainsFold(FieldEmail, v))
 }
 
 // StatusEQ applies the EQ predicate on the "status" field.
@@ -744,6 +874,56 @@ func IsPrimaryContactNEQ(v bool) predicate.Membership {
 	return predicate.Membership(sql.FieldNEQ(FieldIsPrimaryContact, v))
 }
 
+// LeftAtEQ applies the EQ predicate on the "left_at" field.
+func LeftAtEQ(v time.Time) predicate.Membership {
+	return predicate.Membership(sql.FieldEQ(FieldLeftAt, v))
+}
+
+// LeftAtNEQ applies the NEQ predicate on the "left_at" field.
+func LeftAtNEQ(v time.Time) predicate.Membership {
+	return predicate.Membership(sql.FieldNEQ(FieldLeftAt, v))
+}
+
+// LeftAtIn applies the In predicate on the "left_at" field.
+func LeftAtIn(vs ...time.Time) predicate.Membership {
+	return predicate.Membership(sql.FieldIn(FieldLeftAt, vs...))
+}
+
+// LeftAtNotIn applies the NotIn predicate on the "left_at" field.
+func LeftAtNotIn(vs ...time.Time) predicate.Membership {
+	return predicate.Membership(sql.FieldNotIn(FieldLeftAt, vs...))
+}
+
+// LeftAtGT applies the GT predicate on the "left_at" field.
+func LeftAtGT(v time.Time) predicate.Membership {
+	return predicate.Membership(sql.FieldGT(FieldLeftAt, v))
+}
+
+// LeftAtGTE applies the GTE predicate on the "left_at" field.
+func LeftAtGTE(v time.Time) predicate.Membership {
+	return predicate.Membership(sql.FieldGTE(FieldLeftAt, v))
+}
+
+// LeftAtLT applies the LT predicate on the "left_at" field.
+func LeftAtLT(v time.Time) predicate.Membership {
+	return predicate.Membership(sql.FieldLT(FieldLeftAt, v))
+}
+
+// LeftAtLTE applies the LTE predicate on the "left_at" field.
+func LeftAtLTE(v time.Time) predicate.Membership {
+	return predicate.Membership(sql.FieldLTE(FieldLeftAt, v))
+}
+
+// LeftAtIsNil applies the IsNil predicate on the "left_at" field.
+func LeftAtIsNil() predicate.Membership {
+	return predicate.Membership(sql.FieldIsNull(FieldLeftAt))
+}
+
+// LeftAtNotNil applies the NotNil predicate on the "left_at" field.
+func LeftAtNotNil() predicate.Membership {
+	return predicate.Membership(sql.FieldNotNull(FieldLeftAt))
+}
+
 // MetadataIsNil applies the IsNil predicate on the "metadata" field.
 func MetadataIsNil() predicate.Membership {
 	return predicate.Membership(sql.FieldIsNull(FieldMetadata))
@@ -752,6 +932,16 @@ func MetadataIsNil() predicate.Membership {
 // MetadataNotNil applies the NotNil predicate on the "metadata" field.
 func MetadataNotNil() predicate.Membership {
 	return predicate.Membership(sql.FieldNotNull(FieldMetadata))
+}
+
+// CustomFieldsIsNil applies the IsNil predicate on the "custom_fields" field.
+func CustomFieldsIsNil() predicate.Membership {
+	return predicate.Membership(sql.FieldIsNull(FieldCustomFields))
+}
+
+// CustomFieldsNotNil applies the NotNil predicate on the "custom_fields" field.
+func CustomFieldsNotNil() predicate.Membership {
+	return predicate.Membership(sql.FieldNotNull(FieldCustomFields))
 }
 
 // HasUser applies the HasEdge predicate on the "user" edge.
@@ -815,6 +1005,29 @@ func HasRole() predicate.Membership {
 func HasRoleWith(preds ...predicate.Role) predicate.Membership {
 	return predicate.Membership(func(s *sql.Selector) {
 		step := newRoleStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasInviter applies the HasEdge predicate on the "inviter" edge.
+func HasInviter() predicate.Membership {
+	return predicate.Membership(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, InviterTable, InviterColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasInviterWith applies the HasEdge predicate on the "inviter" edge with a given conditions (other predicates).
+func HasInviterWith(preds ...predicate.User) predicate.Membership {
+	return predicate.Membership(func(s *sql.Selector) {
+		step := newInviterStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

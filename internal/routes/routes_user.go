@@ -3,100 +3,133 @@ package routes
 import (
 	"context"
 	"net/http"
-	"strings"
 
 	"github.com/danielgtaylor/huma/v2"
-	"github.com/juicycleff/frank/ent"
-	"github.com/juicycleff/frank/ent/user"
+	"github.com/juicycleff/frank/ent/userrole"
 	"github.com/juicycleff/frank/internal/authz"
 	"github.com/juicycleff/frank/internal/di"
+	"github.com/juicycleff/frank/internal/middleware"
 	"github.com/juicycleff/frank/internal/model"
-	userService "github.com/juicycleff/frank/internal/services/user"
+	"github.com/juicycleff/frank/internal/services/rbac"
+	"github.com/juicycleff/frank/pkg/errors"
+	"github.com/juicycleff/frank/pkg/logging"
 	"github.com/rs/xid"
+	"github.com/samber/lo"
 )
 
-// RegisterUserAPI registers all user-related endpoints
+// RegisterUserAPI registers all user management endpoints
 func RegisterUserAPI(api huma.API, di di.Container) {
 	userCtrl := &userController{
 		api: api,
 		di:  di,
 	}
 
-	// User management endpoints
-	registerCreateUser(api, userCtrl)
+	// User CRUD endpoints
+	registerListUsers(api, userCtrl)
 	registerGetUser(api, userCtrl)
+	registerCreateUser(api, userCtrl)
 	registerUpdateUser(api, userCtrl)
 	registerDeleteUser(api, userCtrl)
-	registerListUsers(api, userCtrl)
-	registerGetCurrentUser(api, userCtrl)
-	registerUpdateCurrentUser(api, userCtrl)
+	registerBulkUserOperations(api, userCtrl)
 
-	// Organization-scoped user endpoints
-	registerListOrganizationUsers(api, userCtrl)
-	registerGetOrganizationUser(api, userCtrl)
-	registerCreateOrganizationUser(api, userCtrl)
-
-	// Password management endpoints
-	registerChangePassword(api, userCtrl)
-	registerInitiatePasswordReset(api, userCtrl)
-	registerCompletePasswordReset(api, userCtrl)
-
-	// User profile endpoints
+	// User profile management
 	registerGetUserProfile(api, userCtrl)
 	registerUpdateUserProfile(api, userCtrl)
-	registerGetUserMemberships(api, userCtrl)
-	registerVerifyUserAccess(api, userCtrl)
+	registerChangePassword(api, userCtrl)
+	registerSetPassword(api, userCtrl)
+
+	// User role and permission management
+	registerListUserRoles(api, userCtrl)
+	registerAssignUserRole(api, userCtrl)
+	registerRemoveUserRole(api, userCtrl)
+	registerListUserPermissions(api, userCtrl)
+	registerAssignUserPermission(api, userCtrl)
+	registerRemoveUserPermission(api, userCtrl)
+
+	// User activity and sessions
+	registerGetUserActivity(api, userCtrl)
+	registerGetUserSessions(api, userCtrl)
+	registerRevokeUserSession(api, userCtrl)
+	registerRevokeAllUserSessions(api, userCtrl)
+
+	// User MFA management
+	registerGetUserMFA(api, userCtrl)
+	registerEnableUserMFA(api, userCtrl)
+	registerDisableUserMFA(api, userCtrl)
+	registerResetUserMFA(api, userCtrl)
+
+	// User statistics and analytics
+	registerGetUserStats(api, userCtrl)
+	registerExportUsers(api, userCtrl)
 }
 
-// userController handles user-related API requests
+// userController handles user management API requests
 type userController struct {
 	api huma.API
 	di  di.Container
 }
 
-// User Management Endpoints
+// User CRUD Endpoints
 
-func registerCreateUser(api huma.API, userCtrl *userController) {
+func registerListUsers(api huma.API, userCtrl *userController) {
 	huma.Register(api, huma.Operation{
-		OperationID: "createUser",
-		Method:      http.MethodPost,
-		Path:        "/users",
-		Summary:     "Create a new user",
-		Description: "Create a new user (platform admin only)",
+		OperationID: "listUsers",
+		Method:      http.MethodGet,
+		Path:        "/organizations/{orgId}/users",
+		Summary:     "List users",
+		Description: "List users in an organization with pagination and filtering",
 		Tags:        []string{"Users"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
-			authz.PermissionCreateUser, authz.ResourceSystem, "",
+			authz.PermissionListUsers, authz.ResourceOrganization, "orgId",
 		)},
-	}, userCtrl.createUserHandler)
+	}, userCtrl.listUsersHandler)
 }
 
 func registerGetUser(api huma.API, userCtrl *userController) {
 	huma.Register(api, huma.Operation{
 		OperationID: "getUser",
 		Method:      http.MethodGet,
-		Path:        "/users/{userId}",
-		Summary:     "Get user details",
-		Description: "Get detailed information about a user",
+		Path:        "/organizations/{orgId}/users/{id}",
+		Summary:     "Get user",
+		Description: "Get user by ID",
 		Tags:        []string{"Users"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("User not found")),
 		Security: []map[string][]string{
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
-			authz.PermissionViewUser, authz.ResourceUser, "userId",
+			authz.PermissionViewUser, authz.ResourceUser, "id",
 		)},
 	}, userCtrl.getUserHandler)
+}
+
+func registerCreateUser(api huma.API, userCtrl *userController) {
+	huma.Register(api, huma.Operation{
+		OperationID: "createUser",
+		Method:      http.MethodPost,
+		Path:        "/organizations/{orgId}/users",
+		Summary:     "Create user",
+		Description: "Create a new user in the organization",
+		Tags:        []string{"Users"},
+		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true),
+		Security: []map[string][]string{
+			{"jwt": {}},
+		},
+		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
+			authz.PermissionCreateUser, authz.ResourceOrganization, "orgId",
+		)},
+	}, userCtrl.createUserHandler)
 }
 
 func registerUpdateUser(api huma.API, userCtrl *userController) {
 	huma.Register(api, huma.Operation{
 		OperationID: "updateUser",
 		Method:      http.MethodPut,
-		Path:        "/users/{userId}",
+		Path:        "/organizations/{orgId}/users/{id}",
 		Summary:     "Update user",
 		Description: "Update user information",
 		Tags:        []string{"Users"},
@@ -105,7 +138,7 @@ func registerUpdateUser(api huma.API, userCtrl *userController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
-			authz.PermissionUpdateUser, authz.ResourceUser, "userId",
+			authz.PermissionUpdateUser, authz.ResourceUser, "id",
 		)},
 	}, userCtrl.updateUserHandler)
 }
@@ -114,205 +147,55 @@ func registerDeleteUser(api huma.API, userCtrl *userController) {
 	huma.Register(api, huma.Operation{
 		OperationID:   "deleteUser",
 		Method:        http.MethodDelete,
-		Path:          "/users/{userId}",
+		Path:          "/organizations/{orgId}/users/{id}",
 		Summary:       "Delete user",
-		Description:   "Delete a user (soft delete)",
+		Description:   "Delete user account",
 		Tags:          []string{"Users"},
 		DefaultStatus: 204,
 		Responses: model.MergeErrorResponses(map[string]*huma.Response{
-			"204": {
-				Description: "User successfully deleted",
-			},
+			"204": {Description: "User successfully deleted"},
 		}, true, model.NotFoundError("User not found")),
 		Security: []map[string][]string{
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
-			authz.PermissionDeleteUser, authz.ResourceUser, "userId",
+			authz.PermissionDeleteUser, authz.ResourceUser, "id",
 		)},
 	}, userCtrl.deleteUserHandler)
 }
 
-func registerListUsers(api huma.API, userCtrl *userController) {
+func registerBulkUserOperations(api huma.API, userCtrl *userController) {
 	huma.Register(api, huma.Operation{
-		OperationID: "listUsers",
-		Method:      http.MethodGet,
-		Path:        "/users",
-		Summary:     "List users",
-		Description: "List users with filtering and pagination",
+		OperationID: "bulkUserOperations",
+		Method:      http.MethodPost,
+		Path:        "/organizations/{orgId}/users/bulk",
+		Summary:     "Bulk user operations",
+		Description: "Perform bulk operations on multiple users",
 		Tags:        []string{"Users"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
-			authz.PermissionListUsers, authz.ResourceSystem, "",
+			authz.PermissionManageUsers, authz.ResourceOrganization, "orgId",
 		)},
-	}, userCtrl.listUsersHandler)
+	}, userCtrl.bulkUserOperationsHandler)
 }
 
-// Current User Endpoints
-
-func registerGetCurrentUser(api huma.API, userCtrl *userController) {
-	huma.Register(api, huma.Operation{
-		OperationID: "getCurrentUser",
-		Method:      http.MethodGet,
-		Path:        "/users/me",
-		Summary:     "Get current user",
-		Description: "Get current user's information",
-		Tags:        []string{"Users", "Profile"},
-		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true),
-		Security: []map[string][]string{
-			{"jwt": {}},
-		},
-	}, userCtrl.getCurrentUserHandler)
-}
-
-func registerUpdateCurrentUser(api huma.API, userCtrl *userController) {
-	huma.Register(api, huma.Operation{
-		OperationID: "updateCurrentUser",
-		Method:      http.MethodPut,
-		Path:        "/users/me",
-		Summary:     "Update current user",
-		Description: "Update current user's information",
-		Tags:        []string{"Users", "Profile"},
-		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true),
-		Security: []map[string][]string{
-			{"jwt": {}},
-		},
-	}, userCtrl.updateCurrentUserHandler)
-}
-
-// Organization-Scoped User Endpoints
-
-func registerListOrganizationUsers(api huma.API, userCtrl *userController) {
-	huma.Register(api, huma.Operation{
-		OperationID: "listOrganizationUsers",
-		Method:      http.MethodGet,
-		Path:        "/organizations/{orgId}/users",
-		Summary:     "List organization users",
-		Description: "List all users in an organization",
-		Tags:        []string{"Organizations", "Users"},
-		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true),
-		Security: []map[string][]string{
-			{"jwt": {}},
-		},
-		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
-			authz.PermissionViewMembers, authz.ResourceOrganization, "orgId",
-		)},
-	}, userCtrl.listOrganizationUsersHandler)
-}
-
-func registerGetOrganizationUser(api huma.API, userCtrl *userController) {
-	huma.Register(api, huma.Operation{
-		OperationID: "getOrganizationUser",
-		Method:      http.MethodGet,
-		Path:        "/organizations/{orgId}/users/{userId}",
-		Summary:     "Get organization user",
-		Description: "Get a specific user within an organization context",
-		Tags:        []string{"Organizations", "Users"},
-		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("User not found")),
-		Security: []map[string][]string{
-			{"jwt": {}},
-		},
-		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
-			authz.PermissionViewMembers, authz.ResourceOrganization, "orgId",
-		)},
-	}, userCtrl.getOrganizationUserHandler)
-}
-
-func registerCreateOrganizationUser(api huma.API, userCtrl *userController) {
-	huma.Register(api, huma.Operation{
-		OperationID: "createOrganizationUser",
-		Method:      http.MethodPost,
-		Path:        "/organizations/{orgId}/users",
-		Summary:     "Create organization user",
-		Description: "Create a new user within an organization (external or end user)",
-		Tags:        []string{"Organizations", "Users"},
-		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true),
-		Security: []map[string][]string{
-			{"jwt": {}},
-		},
-		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
-			authz.PermissionCreateUser, authz.ResourceOrganization, "orgId",
-		)},
-	}, userCtrl.createOrganizationUserHandler)
-}
-
-// Password Management Endpoints
-
-func registerChangePassword(api huma.API, userCtrl *userController) {
-	huma.Register(api, huma.Operation{
-		OperationID:   "changePassword",
-		Method:        http.MethodPost,
-		Path:          "/users/me/change-password",
-		Summary:       "Change password",
-		Description:   "Change current user's password",
-		Tags:          []string{"Users", "Authentication"],
-			DefaultStatus: 204,
-			Responses: model.MergeErrorResponses(map[string]*huma.Response{
-			"204": {
-			Description: "Password successfully changed",
-		},
-		// }, true),
-		// 	Security: []map[string][]string{
-		// {"jwt": {}},
-		},
-		}, userCtrl.changePasswordHandler),
-	}})
-}
-
-func registerInitiatePasswordReset(api huma.API, userCtrl *userController) {
-	huma.Register(api, huma.Operation{
-		OperationID:   "initiatePasswordReset",
-		Method:        http.MethodPost,
-		Path:          "/auth/password-reset/initiate",
-		Summary:       "Initiate password reset",
-		Description:   "Initiate password reset process",
-		Tags:          []string{"Authentication"},
-		DefaultStatus: 204,
-		Responses: model.MergeErrorResponses(map[string]*huma.Response{
-			"204": {
-				Description: "Password reset initiated (email sent if user exists)",
-			},
-		}, true),
-	}, userCtrl.initiatePasswordResetHandler)
-}
-
-func registerCompletePasswordReset(api huma.API, userCtrl *userController) {
-	huma.Register(api, huma.Operation{
-		OperationID:   "completePasswordReset",
-		Method:        http.MethodPost,
-		Path:          "/auth/password-reset/complete",
-		Summary:       "Complete password reset",
-		Description:   "Complete password reset process with token",
-		Tags:          []string{"Authentication"},
-		DefaultStatus: 204,
-		Responses: model.MergeErrorResponses(map[string]*huma.Response{
-			"204": {
-				Description: "Password successfully reset",
-			},
-		}, true),
-	}, userCtrl.completePasswordResetHandler)
-}
-
-// Profile and Access Endpoints
+// User Profile Management Endpoints
 
 func registerGetUserProfile(api huma.API, userCtrl *userController) {
 	huma.Register(api, huma.Operation{
 		OperationID: "getUserProfile",
 		Method:      http.MethodGet,
-		Path:        "/users/{userId}/profile",
-		Summary:     "Get user profile",
-		Description: "Get user profile information",
+		Path:        "/user/profile",
+		Summary:     "Get current user profile",
+		Description: "Get the current authenticated user's profile",
 		Tags:        []string{"Users", "Profile"},
-		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("User not found")),
+		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, false),
 		Security: []map[string][]string{
 			{"jwt": {}},
 		},
-		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
-			authz.PermissionViewUser, authz.ResourceUser, "userId",
-		)},
 	}, userCtrl.getUserProfileHandler)
 }
 
@@ -320,178 +203,516 @@ func registerUpdateUserProfile(api huma.API, userCtrl *userController) {
 	huma.Register(api, huma.Operation{
 		OperationID: "updateUserProfile",
 		Method:      http.MethodPut,
-		Path:        "/users/{userId}/profile",
-		Summary:     "Update user profile",
-		Description: "Update user profile information",
+		Path:        "/user/profile",
+		Summary:     "Update current user profile",
+		Description: "Update the current authenticated user's profile",
 		Tags:        []string{"Users", "Profile"},
-		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("User not found")),
+		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, false),
 		Security: []map[string][]string{
 			{"jwt": {}},
 		},
-		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
-			authz.PermissionUpdateUser, authz.ResourceUser, "userId",
-		)},
 	}, userCtrl.updateUserProfileHandler)
 }
 
-func registerGetUserMemberships(api huma.API, userCtrl *userController) {
+func registerChangePassword(api huma.API, userCtrl *userController) {
 	huma.Register(api, huma.Operation{
-		OperationID: "getUserMemberships",
-		Method:      http.MethodGet,
-		Path:        "/users/{userId}/memberships",
-		Summary:     "Get user memberships",
-		Description: "Get all organization memberships for a user",
-		Tags:        []string{"Users", "Memberships"},
+		OperationID: "changePassword",
+		Method:      http.MethodPost,
+		Path:        "/user/change-password",
+		Summary:     "Change password",
+		Description: "Change the current user's password",
+		Tags:        []string{"Users", "Profile"},
+		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, false),
+		Security: []map[string][]string{
+			{"jwt": {}},
+		},
+	}, userCtrl.changePasswordHandler)
+}
+
+func registerSetPassword(api huma.API, userCtrl *userController) {
+	huma.Register(api, huma.Operation{
+		OperationID: "setUserPassword",
+		Method:      http.MethodPost,
+		Path:        "/organizations/{orgId}/users/{id}/set-password",
+		Summary:     "Set user password",
+		Description: "Set password for a user (admin only)",
+		Tags:        []string{"Users"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("User not found")),
 		Security: []map[string][]string{
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
-			authz.PermissionViewUser, authz.ResourceUser, "userId",
+			authz.PermissionManageUsers, authz.ResourceUser, "id",
 		)},
-	}, userCtrl.getUserMembershipsHandler)
+	}, userCtrl.setPasswordHandler)
 }
 
-func registerVerifyUserAccess(api huma.API, userCtrl *userController) {
+// User Role Management Endpoints
+
+func registerListUserRoles(api huma.API, userCtrl *userController) {
 	huma.Register(api, huma.Operation{
-		OperationID: "verifyUserAccess",
+		OperationID: "listUserRoles",
 		Method:      http.MethodGet,
-		Path:        "/organizations/{orgId}/users/{userId}/access",
-		Summary:     "Verify user access",
-		Description: "Verify if a user has access to an organization",
-		Tags:        []string{"Organizations", "Users", "Access"},
+		Path:        "/organizations/{orgId}/users/{id}/roles",
+		Summary:     "List user roles",
+		Description: "List all roles assigned to a user",
+		Tags:        []string{"Users", "Roles"},
+		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("User not found")),
+		Security: []map[string][]string{
+			{"jwt": {}},
+		},
+		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
+			authz.PermissionViewRoles, authz.ResourceUser, "id",
+		)},
+	}, userCtrl.listUserRolesHandler)
+}
+
+func registerAssignUserRole(api huma.API, userCtrl *userController) {
+	huma.Register(api, huma.Operation{
+		OperationID: "assignUserRole",
+		Method:      http.MethodPost,
+		Path:        "/organizations/{orgId}/users/{id}/roles",
+		Summary:     "Assign role to user",
+		Description: "Assign a role to a user",
+		Tags:        []string{"Users", "Roles"},
+		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("User not found")),
+		Security: []map[string][]string{
+			{"jwt": {}},
+		},
+		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
+			authz.PermissionManageRoles, authz.ResourceUser, "id",
+		)},
+	}, userCtrl.assignUserRoleHandler)
+}
+
+func registerRemoveUserRole(api huma.API, userCtrl *userController) {
+	huma.Register(api, huma.Operation{
+		OperationID:   "removeUserRole",
+		Method:        http.MethodDelete,
+		Path:          "/organizations/{orgId}/users/{id}/roles/{roleId}",
+		Summary:       "Remove role from user",
+		Description:   "Remove a role assignment from a user",
+		Tags:          []string{"Users", "Roles"},
+		DefaultStatus: 204,
+		Responses: model.MergeErrorResponses(map[string]*huma.Response{
+			"204": {Description: "Role successfully removed from user"},
+		}, true, model.NotFoundError("User or role not found")),
+		Security: []map[string][]string{
+			{"jwt": {}},
+		},
+		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
+			authz.PermissionManageRoles, authz.ResourceUser, "id",
+		)},
+	}, userCtrl.removeUserRoleHandler)
+}
+
+// User Permission Management Endpoints
+
+func registerListUserPermissions(api huma.API, userCtrl *userController) {
+	huma.Register(api, huma.Operation{
+		OperationID: "listUserPermissions",
+		Method:      http.MethodGet,
+		Path:        "/organizations/{orgId}/users/{id}/permissions",
+		Summary:     "List user permissions",
+		Description: "List all permissions for a user (direct and inherited from roles)",
+		Tags:        []string{"Users", "Permissions"},
+		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("User not found")),
+		Security: []map[string][]string{
+			{"jwt": {}},
+		},
+		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
+			authz.PermissionViewPermissions, authz.ResourceUser, "id",
+		)},
+	}, userCtrl.listUserPermissionsHandler)
+}
+
+func registerAssignUserPermission(api huma.API, userCtrl *userController) {
+	huma.Register(api, huma.Operation{
+		OperationID: "assignUserPermission",
+		Method:      http.MethodPost,
+		Path:        "/organizations/{orgId}/users/{id}/permissions",
+		Summary:     "Assign permission to user",
+		Description: "Assign a direct permission to a user",
+		Tags:        []string{"Users", "Permissions"},
+		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("User not found")),
+		Security: []map[string][]string{
+			{"jwt": {}},
+		},
+		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
+			authz.PermissionManagePermissions, authz.ResourceUser, "id",
+		)},
+	}, userCtrl.assignUserPermissionHandler)
+}
+
+func registerRemoveUserPermission(api huma.API, userCtrl *userController) {
+	huma.Register(api, huma.Operation{
+		OperationID:   "removeUserPermission",
+		Method:        http.MethodDelete,
+		Path:          "/organizations/{orgId}/users/{id}/permissions/{permissionId}",
+		Summary:       "Remove permission from user",
+		Description:   "Remove a direct permission assignment from a user",
+		Tags:          []string{"Users", "Permissions"},
+		DefaultStatus: 204,
+		Responses: model.MergeErrorResponses(map[string]*huma.Response{
+			"204": {Description: "Permission successfully removed from user"},
+		}, true, model.NotFoundError("User or permission not found")),
+		Security: []map[string][]string{
+			{"jwt": {}},
+		},
+		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
+			authz.PermissionManagePermissions, authz.ResourceUser, "id",
+		)},
+	}, userCtrl.removeUserPermissionHandler)
+}
+
+// User Activity and Session Endpoints
+
+func registerGetUserActivity(api huma.API, userCtrl *userController) {
+	huma.Register(api, huma.Operation{
+		OperationID: "getUserActivity",
+		Method:      http.MethodGet,
+		Path:        "/organizations/{orgId}/users/{id}/activity",
+		Summary:     "Get user activity",
+		Description: "Get user activity log with pagination",
+		Tags:        []string{"Users", "Activity"},
+		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("User not found")),
+		Security: []map[string][]string{
+			{"jwt": {}},
+		},
+		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
+			authz.PermissionViewAuditLogs, authz.ResourceUser, "id",
+		)},
+	}, userCtrl.getUserActivityHandler)
+}
+
+func registerGetUserSessions(api huma.API, userCtrl *userController) {
+	huma.Register(api, huma.Operation{
+		OperationID: "getUserSessions",
+		Method:      http.MethodGet,
+		Path:        "/organizations/{orgId}/users/{id}/sessions",
+		Summary:     "Get user sessions",
+		Description: "Get active sessions for a user",
+		Tags:        []string{"Users", "Sessions"},
+		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("User not found")),
+		Security: []map[string][]string{
+			{"jwt": {}},
+		},
+		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
+			authz.PermissionViewUser, authz.ResourceUser, "id",
+		)},
+	}, userCtrl.getUserSessionsHandler)
+}
+
+func registerRevokeUserSession(api huma.API, userCtrl *userController) {
+	huma.Register(api, huma.Operation{
+		OperationID:   "revokeUserSession",
+		Method:        http.MethodDelete,
+		Path:          "/organizations/{orgId}/users/{id}/sessions/{sessionId}",
+		Summary:       "Revoke user session",
+		Description:   "Revoke a specific session for a user",
+		Tags:          []string{"Users", "Sessions"},
+		DefaultStatus: 204,
+		Responses: model.MergeErrorResponses(map[string]*huma.Response{
+			"204": {Description: "Session successfully revoked"},
+		}, true, model.NotFoundError("User or session not found")),
+		Security: []map[string][]string{
+			{"jwt": {}},
+		},
+		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
+			authz.PermissionManageUsers, authz.ResourceUser, "id",
+		)},
+	}, userCtrl.revokeUserSessionHandler)
+}
+
+func registerRevokeAllUserSessions(api huma.API, userCtrl *userController) {
+	huma.Register(api, huma.Operation{
+		OperationID:   "revokeAllUserSessions",
+		Method:        http.MethodDelete,
+		Path:          "/organizations/{orgId}/users/{id}/sessions",
+		Summary:       "Revoke all user sessions",
+		Description:   "Revoke all sessions for a user",
+		Tags:          []string{"Users", "Sessions"},
+		DefaultStatus: 204,
+		Responses: model.MergeErrorResponses(map[string]*huma.Response{
+			"204": {Description: "All sessions successfully revoked"},
+		}, true, model.NotFoundError("User not found")),
+		Security: []map[string][]string{
+			{"jwt": {}},
+		},
+		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
+			authz.PermissionManageUsers, authz.ResourceUser, "id",
+		)},
+	}, userCtrl.revokeAllUserSessionsHandler)
+}
+
+// User MFA Management Endpoints
+
+func registerGetUserMFA(api huma.API, userCtrl *userController) {
+	huma.Register(api, huma.Operation{
+		OperationID: "getUserMFA",
+		Method:      http.MethodGet,
+		Path:        "/organizations/{orgId}/users/{id}/mfa",
+		Summary:     "Get user MFA status",
+		Description: "Get MFA configuration and status for a user",
+		Tags:        []string{"Users", "MFA"},
+		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("User not found")),
+		Security: []map[string][]string{
+			{"jwt": {}},
+		},
+		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
+			authz.PermissionViewUser, authz.ResourceUser, "id",
+		)},
+	}, userCtrl.getUserMFAHandler)
+}
+
+func registerEnableUserMFA(api huma.API, userCtrl *userController) {
+	huma.Register(api, huma.Operation{
+		OperationID: "enableUserMFA",
+		Method:      http.MethodPost,
+		Path:        "/organizations/{orgId}/users/{id}/mfa/enable",
+		Summary:     "Enable MFA for user",
+		Description: "Enable MFA for a user (admin action)",
+		Tags:        []string{"Users", "MFA"},
+		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("User not found")),
+		Security: []map[string][]string{
+			{"jwt": {}},
+		},
+		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
+			authz.PermissionManageUsers, authz.ResourceUser, "id",
+		)},
+	}, userCtrl.enableUserMFAHandler)
+}
+
+func registerDisableUserMFA(api huma.API, userCtrl *userController) {
+	huma.Register(api, huma.Operation{
+		OperationID:   "disableUserMFA",
+		Method:        http.MethodDelete,
+		Path:          "/organizations/{orgId}/users/{id}/mfa",
+		Summary:       "Disable MFA for user",
+		Description:   "Disable MFA for a user (admin action)",
+		Tags:          []string{"Users", "MFA"},
+		DefaultStatus: 204,
+		Responses: model.MergeErrorResponses(map[string]*huma.Response{
+			"204": {Description: "MFA successfully disabled"},
+		}, true, model.NotFoundError("User not found")),
+		Security: []map[string][]string{
+			{"jwt": {}},
+		},
+		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
+			authz.PermissionManageUsers, authz.ResourceUser, "id",
+		)},
+	}, userCtrl.disableUserMFAHandler)
+}
+
+func registerResetUserMFA(api huma.API, userCtrl *userController) {
+	huma.Register(api, huma.Operation{
+		OperationID: "resetUserMFA",
+		Method:      http.MethodPost,
+		Path:        "/organizations/{orgId}/users/{id}/mfa/reset",
+		Summary:     "Reset user MFA",
+		Description: "Reset MFA configuration for a user (admin action)",
+		Tags:        []string{"Users", "MFA"},
+		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("User not found")),
+		Security: []map[string][]string{
+			{"jwt": {}},
+		},
+		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
+			authz.PermissionManageUsers, authz.ResourceUser, "id",
+		)},
+	}, userCtrl.resetUserMFAHandler)
+}
+
+// User Statistics and Analytics
+
+func registerGetUserStats(api huma.API, userCtrl *userController) {
+	huma.Register(api, huma.Operation{
+		OperationID: "getUserStats",
+		Method:      http.MethodGet,
+		Path:        "/organizations/{orgId}/users/stats",
+		Summary:     "Get user statistics",
+		Description: "Get user statistics for the organization",
+		Tags:        []string{"Users", "Analytics"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
-			authz.PermissionViewMembers, authz.ResourceOrganization, "orgId",
+			authz.PermissionViewAnalytics, authz.ResourceOrganization, "orgId",
 		)},
-	}, userCtrl.verifyUserAccessHandler)
+	}, userCtrl.getUserStatsHandler)
 }
 
-// Input/Output Type Definitions
-
-// User Management Types
-type CreateUserInput struct {
-	Body userService.CreateUserInput `json:"body"`
+func registerExportUsers(api huma.API, userCtrl *userController) {
+	huma.Register(api, huma.Operation{
+		OperationID: "exportUsers",
+		Method:      http.MethodPost,
+		Path:        "/organizations/{orgId}/users/export",
+		Summary:     "Export users",
+		Description: "Export user data to CSV or JSON format",
+		Tags:        []string{"Users", "Export"},
+		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true),
+		Security: []map[string][]string{
+			{"jwt": {}},
+		},
+		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
+			authz.PermissionExportUsers, authz.ResourceOrganization, "orgId",
+		)},
+	}, userCtrl.exportUsersHandler)
 }
 
-type CreateUserOutput = model.Output[*ent.User]
-
-type GetUserInput struct {
-	UserID xid.ID `path:"userId" doc:"User ID"`
-}
-
-type GetUserOutput = model.Output[*ent.User]
-
-type UpdateUserInput struct {
-	UserID xid.ID                      `path:"userId" doc:"User ID"`
-	Body   userService.UpdateUserInput `json:"body"`
-}
-
-type UpdateUserOutput = model.Output[*ent.User]
-
-type DeleteUserInput struct {
-	UserID xid.ID `path:"userId" doc:"User ID"`
-}
+// Input/Output type definitions
 
 type ListUsersInput struct {
-	model.PaginationParams
-	OrganizationID *xid.ID           `query:"organization_id" doc:"Filter by organization"`
-	UserType       *user.UserType    `query:"user_type" doc:"Filter by user type"`
-	Active         *bool             `query:"active" doc:"Filter by active status"`
-	Blocked        *bool             `query:"blocked" doc:"Filter by blocked status"`
-	AuthProvider   *string           `query:"auth_provider" doc:"Filter by auth provider"`
-	Search         *string           `query:"search" doc:"Search in name, email, username"`
+	model.OrganisationPathParams
+	model.UserListRequest
 }
 
-type ListUsersOutput = model.Output[*model.PaginatedOutput[*ent.User]]
+type ListUsersOutput = model.Output[*model.UserListResponse]
 
-// Current User Types
-type GetCurrentUserOutput = model.Output[*ent.User]
-
-type UpdateCurrentUserInput struct {
-	Body userService.UpdateUserInput `json:"body"`
+type GetUserInput struct {
+	model.OrganisationPathParams
+	ID xid.ID `path:"id" doc:"User ID"`
 }
 
-type UpdateCurrentUserOutput = model.Output[*ent.User]
+type GetUserOutput = model.Output[*model.User]
 
-// Organization User Types
-type ListOrganizationUsersInput struct {
-	model.PaginationParams
-	OrgID    xid.ID         `path:"orgId" doc:"Organization ID"`
-	UserType *user.UserType `query:"user_type" doc:"Filter by user type"`
-	Active   *bool          `query:"active" doc:"Filter by active status"`
-	Search   *string        `query:"search" doc:"Search in name, email, username"`
+type CreateUserInput struct {
+	model.OrganisationPathParams
+	Body model.CreateUserRequest
 }
 
-type ListOrganizationUsersOutput = model.Output[*model.PaginatedOutput[*ent.User]]
+type CreateUserOutput = model.Output[*model.User]
 
-type GetOrganizationUserInput struct {
-	OrgID  xid.ID `path:"orgId" doc:"Organization ID"`
-	UserID xid.ID `path:"userId" doc:"User ID"`
+type UpdateUserInput struct {
+	model.OrganisationPathParams
+	ID   xid.ID `path:"id" doc:"User ID"`
+	Body model.UpdateUserRequest
 }
 
-type GetOrganizationUserOutput = model.Output[*ent.User]
+type UpdateUserOutput = model.Output[*model.User]
 
-type CreateOrganizationUserInput struct {
-	OrgID xid.ID                      `path:"orgId" doc:"Organization ID"`
-	Body  userService.CreateUserInput `json:"body"`
+type DeleteUserInput struct {
+	model.OrganisationPathParams
+	ID   xid.ID `path:"id" doc:"User ID"`
+	Body model.DeleteUserRequest
 }
 
-type CreateOrganizationUserOutput = model.Output[*ent.User]
-
-// Password Management Types
-type ChangePasswordInput struct {
-	Body userService.ChangePasswordInput `json:"body"`
+type BulkUserOperationsInput struct {
+	model.OrganisationPathParams
+	Body model.BulkUserOperation
 }
 
-type InitiatePasswordResetInput struct {
-	Body userService.ResetPasswordInput `json:"body"`
-}
-
-type CompletePasswordResetInput struct {
-	Body userService.CompletePasswordResetInput `json:"body"`
-}
-
-// Profile and Access Types
-type GetUserProfileOutput = model.Output[*ent.User]
+type BulkUserOperationsOutput = model.Output[*model.BulkUserOperationResponse]
 
 type UpdateUserProfileInput struct {
-	UserID xid.ID                      `path:"userId" doc:"User ID"`
-	Body   userService.UpdateUserInput `json:"body"`
+	Body model.UserProfileUpdateRequest
 }
 
-type UpdateUserProfileOutput = model.Output[*ent.User]
+type UpdateUserProfileOutput = model.Output[*model.User]
 
-type GetUserMembershipsInput struct {
-	UserID xid.ID `path:"userId" doc:"User ID"`
+type ChangePasswordInput struct {
+	Body model.ChangePasswordRequest
 }
 
-type GetUserMembershipsOutput = model.Output[[]*ent.Membership]
-
-type VerifyUserAccessInput struct {
-	OrgID  xid.ID `path:"orgId" doc:"Organization ID"`
-	UserID xid.ID `path:"userId" doc:"User ID"`
+type SetPasswordInput struct {
+	model.OrganisationPathParams
+	ID   xid.ID `path:"id" doc:"User ID"`
+	Body model.SetPasswordRequest
 }
 
-type VerifyUserAccessOutput = model.Output[bool]
+type AssignUserRoleInput struct {
+	model.OrganisationPathParams
+	ID   xid.ID `path:"id" doc:"User ID"`
+	Body model.AssignRoleRequest
+}
 
-// Handler Implementations
+type RemoveUserRoleInput struct {
+	model.OrganisationPathParams
+	ID     xid.ID `path:"id" doc:"User ID"`
+	RoleID xid.ID `path:"roleId" doc:"Role ID"`
+}
 
-// User Management Handlers
+type ListUserRolesOutput = model.Output[[]*model.UserRoleAssignment]
 
-func (c *userController) createUserHandler(ctx context.Context, input *CreateUserInput) (*CreateUserOutput, error) {
-	// Get current user from context for created_by
-	currentUserID, err := c.di.Auth().GetUserIDFromContext(ctx)
+type AssignUserPermissionInput struct {
+	model.OrganisationPathParams
+	ID   xid.ID `path:"id" doc:"User ID"`
+	Body model.AssignPermissionRequest
+}
+
+type RemoveUserPermissionInput struct {
+	model.OrganisationPathParams
+	ID           xid.ID `path:"id" doc:"User ID"`
+	PermissionID xid.ID `path:"permissionId" doc:"Permission ID"`
+}
+
+type ListUserPermissionsOutput = model.Output[[]*model.UserPermissionAssignment]
+
+type GetUserActivityInput struct {
+	model.OrganisationPathParams
+	ID xid.ID `path:"id" doc:"User ID"`
+	model.UserActivityRequest
+}
+
+type GetUserActivityOutput = model.Output[*model.UserActivityResponse]
+
+type RevokeUserSessionInput struct {
+	model.OrganisationPathParams
+	ID        xid.ID `path:"id" doc:"User ID"`
+	SessionID xid.ID `path:"sessionId" doc:"Session ID"`
+}
+
+type GetUserStatsOutput = model.Output[*model.UserStats]
+
+func (c *userController) listUsersHandler(ctx context.Context, input *ListUsersInput) (*ListUsersOutput, error) {
+	// Get user service from DI container
+	userService := c.di.UserService()
+
+	// Create list request with organization filtering
+	listReq := model.UserListRequest{
+		PaginationParams: input.PaginationParams,
+		// Add organization filtering based on path parameter
+		OrganizationID: &input.PathOrgID,
+	}
+
+	// Call user service to list users
+	result, err := userService.ListUsers(ctx, listReq)
 	if err != nil {
 		return nil, err
 	}
 
-	input.Body.CreatedBy = &currentUserID
+	return &ListUsersOutput{
+		Body: result,
+	}, nil
+}
 
-	user, err := c.di.UserService().CreateUser(ctx, input.Body)
+func (c *userController) getUserHandler(ctx context.Context, input *GetUserInput) (*GetUserOutput, error) {
+	userService := c.di.UserService()
+
+	// Get user by ID
+	user, err := userService.GetUser(ctx, input.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Verify user belongs to the organization
+	if user.OrganizationID == nil || *user.OrganizationID != input.PathOrgID {
+		return nil, errors.New(errors.CodeNotFound, "user not found in organization")
+	}
+
+	return &GetUserOutput{
+		Body: user,
+	}, nil
+}
+
+func (c *userController) createUserHandler(ctx context.Context, input *CreateUserInput) (*CreateUserOutput, error) {
+	userService := c.di.UserService()
+
+	// Set organization ID from path parameter
+	input.Body.OrganizationID = &input.PathOrgID
+
+	// Create user
+	user, err := userService.CreateUser(ctx, input.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -501,31 +722,21 @@ func (c *userController) createUserHandler(ctx context.Context, input *CreateUse
 	}, nil
 }
 
-func (c *userController) getUserHandler(ctx context.Context, input *GetUserInput) (*GetUserOutput, error) {
-	// Get current user's organization context for access validation
-	currentUserID, err := c.di.Auth().GetUserIDFromContext(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	// Get current user's organization context
-	currentUser, err := c.di.UserService().GetUser(ctx, currentUserID, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	user, err := c.di.UserService().GetUser(ctx, input.UserID, currentUser.OrganizationID)
-	if err != nil {
-		return nil, err
-	}
-
-	return &GetUserOutput{
-		Body: user,
-	}, nil
-}
-
 func (c *userController) updateUserHandler(ctx context.Context, input *UpdateUserInput) (*UpdateUserOutput, error) {
-	user, err := c.di.UserService().UpdateUser(ctx, input.UserID, input.Body)
+	userService := c.di.UserService()
+
+	// First verify user exists and belongs to organization
+	existingUser, err := userService.GetUser(ctx, input.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	if existingUser.OrganizationID == nil || *existingUser.OrganizationID != input.PathOrgID {
+		return nil, errors.New(errors.CodeNotFound, "user not found in organization")
+	}
+
+	// Update user
+	user, err := userService.UpdateUser(ctx, input.ID, input.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -536,210 +747,75 @@ func (c *userController) updateUserHandler(ctx context.Context, input *UpdateUse
 }
 
 func (c *userController) deleteUserHandler(ctx context.Context, input *DeleteUserInput) (*model.EmptyOutput, error) {
-	err := c.di.UserService().DeleteUser(ctx, input.UserID)
-	return nil, err
-}
+	userService := c.di.UserService()
 
-func (c *userController) listUsersHandler(ctx context.Context, input *ListUsersInput) (*ListUsersOutput, error) {
-	// Convert pagination params to service input
-	serviceInput := userService.ListUsersInput{
-		OrganizationID: input.OrganizationID,
-		UserType:       input.UserType,
-		Active:         input.Active,
-		Blocked:        input.Blocked,
-		AuthProvider:   input.AuthProvider,
-		Search:         input.Search,
-		Limit:          input.Limit,
-		Offset:         input.Offset,
-	}
-
-	// Set default limit if not provided
-	if serviceInput.Limit == 0 {
-		serviceInput.Limit = 20
-	}
-
-	users, totalCount, err := c.di.UserService().ListUsers(ctx, serviceInput)
+	// First verify user exists and belongs to organization
+	existingUser, err := userService.GetUser(ctx, input.ID)
 	if err != nil {
 		return nil, err
 	}
 
-	return &ListUsersOutput{
-		Body: &model.PaginatedOutput[*ent.User]{
-			Data: users,
-			Pagination: &model.Pagination{
-				TotalCount:      totalCount,
-				HasNextPage:     (input.Offset + len(users)) < totalCount,
-				HasPreviousPage: input.Offset > 0,
-				PageSize:        serviceInput.Limit,
-			},
-		},
+	if existingUser.OrganizationID == nil || *existingUser.OrganizationID != input.PathOrgID {
+		return nil, errors.New(errors.CodeNotFound, "user not found in organization")
+	}
+
+	// Delete user
+	err = userService.DeleteUser(ctx, input.ID, input.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.EmptyOutput{}, nil
+}
+
+func (c *userController) bulkUserOperationsHandler(ctx context.Context, input *BulkUserOperationsInput) (*BulkUserOperationsOutput, error) {
+	userService := c.di.UserService()
+
+	// Set organization context
+	input.Body.OrganizationID = &input.PathOrgID
+
+	// Perform bulk operation
+	result, err := userService.BulkUpdateUsers(ctx, input.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return &BulkUserOperationsOutput{
+		Body: result,
 	}, nil
 }
 
-// Current User Handlers
-
-func (c *userController) getCurrentUserHandler(ctx context.Context, input *struct{}) (*GetCurrentUserOutput, error) {
-	currentUserID, err := c.di.Auth().GetUserIDFromContext(ctx)
+func (c *userController) getUserProfileHandler(ctx context.Context, input *struct{}) (*GetUserOutput, error) {
+	// Get current user ID from context (this should be set by authentication middleware)
+	userID, err := c.getCurrentUserID(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	user, err := c.di.UserService().GetUser(ctx, currentUserID, nil)
+	userService := c.di.UserService()
+
+	// Get current user's profile
+	user, err := userService.GetUser(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
 
-	return &GetCurrentUserOutput{
-		Body: user,
-	}, nil
-}
-
-func (c *userController) updateCurrentUserHandler(ctx context.Context, input *UpdateCurrentUserInput) (*UpdateCurrentUserOutput, error) {
-	currentUserID, err := c.di.Auth().GetUserIDFromContext(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	user, err := c.di.UserService().UpdateUser(ctx, currentUserID, input.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	return &UpdateCurrentUserOutput{
-		Body: user,
-	}, nil
-}
-
-// Organization User Handlers
-
-func (c *userController) listOrganizationUsersHandler(ctx context.Context, input *ListOrganizationUsersInput) (*ListOrganizationUsersOutput, error) {
-	users, err := c.di.UserService().GetUsersByOrganization(ctx, input.OrgID, input.UserType)
-	if err != nil {
-		return nil, err
-	}
-
-	// Apply search filter if provided
-	if input.Search != nil && *input.Search != "" {
-		// Simple filtering - in production, this should be done at the database level
-		var filteredUsers []*ent.User
-		searchTerm := strings.ToLower(*input.Search)
-		for _, u := range users {
-			if strings.Contains(strings.ToLower(u.Email), searchTerm) ||
-				(u.FirstName != nil && strings.Contains(strings.ToLower(*u.FirstName), searchTerm)) ||
-				(u.LastName != nil && strings.Contains(strings.ToLower(*u.LastName), searchTerm)) ||
-				(u.Username != nil && strings.Contains(strings.ToLower(*u.Username), searchTerm)) {
-				filteredUsers = append(filteredUsers, u)
-			}
-		}
-		users = filteredUsers
-	}
-
-	// Apply active filter if provided
-	if input.Active != nil {
-		var filteredUsers []*ent.User
-		for _, u := range users {
-			if u.Active == *input.Active {
-				filteredUsers = append(filteredUsers, u)
-			}
-		}
-		users = filteredUsers
-	}
-
-	return &ListOrganizationUsersOutput{
-		Body: &model.PaginatedOutput[*ent.User]{
-			Data: users,
-			Pagination: &model.Pagination{
-				TotalCount: len(users),
-			},
-		},
-	}, nil
-}
-
-func (c *userController) getOrganizationUserHandler(ctx context.Context, input *GetOrganizationUserInput) (*GetOrganizationUserOutput, error) {
-	user, err := c.di.UserService().GetUser(ctx, input.UserID, &input.OrgID)
-	if err != nil {
-		return nil, err
-	}
-
-	return &GetOrganizationUserOutput{
-		Body: user,
-	}, nil
-}
-
-func (c *userController) createOrganizationUserHandler(ctx context.Context, input *CreateOrganizationUserInput) (*CreateOrganizationUserOutput, error) {
-	// Get current user from context for created_by
-	currentUserID, err := c.di.Auth().GetUserIDFromContext(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	// Set organization ID and created by
-	input.Body.OrganizationID = &input.OrgID
-	input.Body.CreatedBy = &currentUserID
-
-	// Default to external user type if not specified
-	if input.Body.UserType == "" {
-		input.Body.UserType = user.UserTypeExternal
-	}
-
-	user, err := c.di.UserService().CreateUser(ctx, input.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	return &CreateOrganizationUserOutput{
-		Body: user,
-	}, nil
-}
-
-// Password Management Handlers
-
-func (c *userController) changePasswordHandler(ctx context.Context, input *ChangePasswordInput) (*model.EmptyOutput, error) {
-	currentUserID, err := c.di.Auth().GetUserIDFromContext(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	err = c.di.UserService().ChangePassword(ctx, currentUserID, input.Body)
-	return nil, err
-}
-
-func (c *userController) initiatePasswordResetHandler(ctx context.Context, input *InitiatePasswordResetInput) (*model.EmptyOutput, error) {
-	err := c.di.UserService().InitiatePasswordReset(ctx, input.Body)
-	return nil, err
-}
-
-func (c *userController) completePasswordResetHandler(ctx context.Context, input *CompletePasswordResetInput) (*model.EmptyOutput, error) {
-	err := c.di.UserService().CompletePasswordReset(ctx, input.Body)
-	return nil, err
-}
-
-// Profile and Access Handlers
-
-func (c *userController) getUserProfileHandler(ctx context.Context, input *GetUserInput) (*GetUserProfileOutput, error) {
-	// Same as getUserHandler but can have different response model in future
-	currentUserID, err := c.di.Auth().GetUserIDFromContext(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	currentUser, err := c.di.UserService().GetUser(ctx, currentUserID, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	user, err := c.di.UserService().GetUser(ctx, input.UserID, currentUser.OrganizationID)
-	if err != nil {
-		return nil, err
-	}
-
-	return &GetUserProfileOutput{
+	return &GetUserOutput{
 		Body: user,
 	}, nil
 }
 
 func (c *userController) updateUserProfileHandler(ctx context.Context, input *UpdateUserProfileInput) (*UpdateUserProfileOutput, error) {
-	user, err := c.di.UserService().UpdateUser(ctx, input.UserID, input.Body)
+	// Get current user ID from context
+	userID, err := c.getCurrentUserID(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	profileService := c.di.ProfileService()
+
+	// Update user profile
+	user, err := profileService.UpdateProfile(ctx, userID, input.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -749,24 +825,475 @@ func (c *userController) updateUserProfileHandler(ctx context.Context, input *Up
 	}, nil
 }
 
-func (c *userController) getUserMembershipsHandler(ctx context.Context, input *GetUserMembershipsInput) (*GetUserMembershipsOutput, error) {
-	memberships, err := c.di.UserService().GetUserMemberships(ctx, input.UserID)
+func (c *userController) changePasswordHandler(ctx context.Context, input *ChangePasswordInput) (*model.EmptyOutput, error) {
+	// Get current user ID from context
+	userID, err := c.getCurrentUserID(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	return &GetUserMembershipsOutput{
-		Body: memberships,
+	userService := c.di.UserService()
+
+	// Change password
+	err = userService.ChangePassword(ctx, userID, input.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.EmptyOutput{}, nil
+}
+
+func (c *userController) setPasswordHandler(ctx context.Context, input *SetPasswordInput) (*model.EmptyOutput, error) {
+	userService := c.di.UserService()
+
+	// First verify user exists and belongs to organization
+	existingUser, err := userService.GetUser(ctx, input.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	if existingUser.OrganizationID == nil || *existingUser.OrganizationID != input.PathOrgID {
+		return nil, errors.New(errors.CodeNotFound, "user not found in organization")
+	}
+
+	// Set password (admin operation)
+	err = userService.SetPassword(ctx, input.ID, input.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.EmptyOutput{}, nil
+}
+
+func (c *userController) listUserRolesHandler(ctx context.Context, input *GetUserInput) (*ListUserRolesOutput, error) {
+	rbacService := c.di.RBACService()
+
+	// First verify user exists and belongs to organization
+	userService := c.di.UserService()
+	existingUser, err := userService.GetUser(ctx, input.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	if existingUser.OrganizationID == nil || *existingUser.OrganizationID != input.PathOrgID {
+		return nil, errors.New(errors.CodeNotFound, "user not found in organization")
+	}
+
+	// Get user roles with organization context
+	roles, err := rbacService.ListUserRoles(ctx, input.ID, userrole.ContextTypeOrganization, &input.PathOrgID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ListUserRolesOutput{
+		Body: lo.Map(roles, func(item *model.RoleAssignment, index int) *model.UserRoleAssignment {
+			return &model.UserRoleAssignment{
+				ID:          item.ID,
+				ExpiresAt:   item.ExpiresAt,
+				Active:      item.Active,
+				RoleID:      item.RoleID,
+				ContextType: item.ContextType,
+				DisplayName: item.Role.DisplayName,
+				RoleName:    item.Role.Name,
+				AssignedBy:  item.AssignedBy,
+				ContextID:   item.ContextID,
+				AssignedAt:  item.AssignedAt,
+			}
+		}),
 	}, nil
 }
 
-func (c *userController) verifyUserAccessHandler(ctx context.Context, input *VerifyUserAccessInput) (*VerifyUserAccessOutput, error) {
-	hasAccess, err := c.di.UserService().VerifyUserAccess(ctx, input.UserID, input.OrgID)
+func (c *userController) assignUserRoleHandler(ctx context.Context, input *AssignUserRoleInput) (*model.EmptyOutput, error) {
+	rbacService := c.di.RBACService()
+	userService := c.di.UserService()
+
+	// First verify user exists and belongs to organization
+	existingUser, err := userService.GetUser(ctx, input.ID)
 	if err != nil {
 		return nil, err
 	}
 
-	return &VerifyUserAccessOutput{
-		Body: hasAccess,
+	if existingUser.OrganizationID == nil || *existingUser.OrganizationID != input.PathOrgID {
+		return nil, errors.New(errors.CodeNotFound, "user not found in organization")
+	}
+
+	// Get current user for audit trail
+	currentUserID, _ := c.getCurrentUserID(ctx)
+
+	// Assign role to user
+	assignInput := rbac.AssignRoleToUserInput{
+		UserID:      input.ID,
+		RoleID:      input.Body.RoleID,
+		ContextType: userrole.ContextTypeOrganization,
+		ContextID:   &input.PathOrgID,
+		AssignedBy:  &currentUserID,
+	}
+
+	_, err = rbacService.AssignRoleToUser(ctx, assignInput)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.EmptyOutput{}, nil
+}
+
+func (c *userController) removeUserRoleHandler(ctx context.Context, input *RemoveUserRoleInput) (*model.EmptyOutput, error) {
+	rbacService := c.di.RBACService()
+	userService := c.di.UserService()
+
+	// First verify user exists and belongs to organization
+	existingUser, err := userService.GetUser(ctx, input.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	if existingUser.OrganizationID == nil || *existingUser.OrganizationID != input.PathOrgID {
+		return nil, errors.New(errors.CodeNotFound, "user not found in organization")
+	}
+
+	// Remove role from user
+	err = rbacService.RemoveRoleFromUser(ctx, input.ID, input.RoleID, userrole.ContextTypeOrganization, &input.PathOrgID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.EmptyOutput{}, nil
+}
+
+func (c *userController) listUserPermissionsHandler(ctx context.Context, input *GetUserInput) (*ListUserPermissionsOutput, error) {
+	rbacService := c.di.RBACService()
+	userService := c.di.UserService()
+
+	// First verify user exists and belongs to organization
+	existingUser, err := userService.GetUser(ctx, input.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	if existingUser.OrganizationID == nil || *existingUser.OrganizationID != input.PathOrgID {
+		return nil, errors.New(errors.CodeNotFound, "user not found in organization")
+	}
+
+	// Get user permission summary
+	summary, err := rbacService.GetUserPermissionSummary(ctx, input.ID, userrole.ContextTypeOrganization, &input.PathOrgID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ListUserPermissionsOutput{
+		Body: lo.Map(summary.DirectPermissions, func(item model.PermissionAssignment, index int) *model.UserPermissionAssignment {
+			return &model.UserPermissionAssignment{
+				ID:             item.ID,
+				ExpiresAt:      item.ExpiresAt,
+				Active:         item.Active,
+				PermissionID:   item.PermissionID,
+				ContextType:    item.ContextType,
+				DisplayName:    item.Permission.DisplayName,
+				PermissionName: item.Permission.Name,
+				ResourceType:   item.ResourceType,
+				PermissionType: item.PermissionType,
+				Reason:         item.Reason,
+				Conditions:     item.Conditions,
+				ResourceID:     item.ResourceID,
+				AssignedBy:     item.AssignedBy,
+				ContextID:      item.ContextID,
+				AssignedAt:     item.AssignedAt,
+			}
+		}),
 	}, nil
+}
+
+func (c *userController) assignUserPermissionHandler(ctx context.Context, input *AssignUserPermissionInput) (*model.EmptyOutput, error) {
+	rbacService := c.di.RBACService()
+	userService := c.di.UserService()
+
+	// First verify user exists and belongs to organization
+	existingUser, err := userService.GetUser(ctx, input.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	if existingUser.OrganizationID == nil || *existingUser.OrganizationID != input.PathOrgID {
+		return nil, errors.New(errors.CodeNotFound, "user not found in organization")
+	}
+
+	// Get current user for audit trail
+	currentUserID, _ := c.getCurrentUserID(ctx)
+
+	// Assign permission to user
+	assignInput := rbac.AssignPermissionToUserInput{
+		UserID:         input.ID,
+		PermissionID:   input.Body.PermissionID,
+		ContextType:    userrole.ContextTypeOrganization,
+		ContextID:      &input.PathOrgID,
+		PermissionType: "grant",
+		AssignedBy:     &currentUserID,
+	}
+
+	_, err = rbacService.AssignPermissionToUser(ctx, assignInput)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.EmptyOutput{}, nil
+}
+
+func (c *userController) removeUserPermissionHandler(ctx context.Context, input *RemoveUserPermissionInput) (*model.EmptyOutput, error) {
+	rbacService := c.di.RBACService()
+	userService := c.di.UserService()
+
+	// First verify user exists and belongs to organization
+	existingUser, err := userService.GetUser(ctx, input.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	if existingUser.OrganizationID == nil || *existingUser.OrganizationID != input.PathOrgID {
+		return nil, errors.New(errors.CodeNotFound, "user not found in organization")
+	}
+
+	// Remove permission from user
+	err = rbacService.RemovePermissionFromUser(ctx, input.ID, input.PermissionID, userrole.ContextTypeOrganization, &input.PathOrgID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.EmptyOutput{}, nil
+}
+
+func (c *userController) getUserActivityHandler(ctx context.Context, input *GetUserActivityInput) (*GetUserActivityOutput, error) {
+	userService := c.di.UserService()
+
+	// First verify user exists and belongs to organization
+	existingUser, err := userService.GetUser(ctx, input.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	if existingUser.OrganizationID == nil || *existingUser.OrganizationID != input.PathOrgID {
+		return nil, errors.New(errors.CodeNotFound, "user not found in organization")
+	}
+
+	// Get user activity
+	activity, err := userService.GetUserActivity(ctx, input.ID, input.UserActivityRequest)
+	if err != nil {
+		return nil, err
+	}
+
+	return &GetUserActivityOutput{
+		Body: activity,
+	}, nil
+}
+
+type GetUserSessionsOutput = model.Output[[]*model.Session]
+
+func (c *userController) getUserSessionsHandler(ctx context.Context, input *GetUserInput) (*GetUserSessionsOutput, error) {
+	userService := c.di.UserService()
+
+	// First verify user exists and belongs to organization
+	existingUser, err := userService.GetUser(ctx, input.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	if existingUser.OrganizationID == nil || *existingUser.OrganizationID != input.PathOrgID {
+		return nil, errors.New(errors.CodeNotFound, "user not found in organization")
+	}
+
+	c.di.Logger().Info("Getting user sessions", logging.String("user_id", input.ID.String()))
+	sessions, err := c.di.SessionService().GetUserSessions(ctx, existingUser.ID, false)
+	if err != nil {
+		return nil, err
+	}
+
+	return &GetUserSessionsOutput{
+		Body: sessions,
+	}, nil
+}
+
+func (c *userController) revokeUserSessionHandler(ctx context.Context, input *RevokeUserSessionInput) (*model.EmptyOutput, error) {
+	// This would require a session service to be implemented
+	userService := c.di.UserService()
+
+	// First verify user exists and belongs to organization
+	existingUser, err := userService.GetUser(ctx, input.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	if existingUser.OrganizationID == nil || *existingUser.OrganizationID != input.PathOrgID {
+		return nil, errors.New(errors.CodeNotFound, "user not found in organization")
+	}
+
+	err = c.di.SessionService().InvalidateSession(ctx, input.SessionID)
+	if err != nil {
+		return nil, err
+	}
+
+	//  Revoke specific session
+	c.di.Logger().Info("Revoked user session",
+		logging.String("user_id", input.ID.String()),
+		logging.String("session_id", input.SessionID.String()))
+
+	return &model.EmptyOutput{}, nil
+}
+
+func (c *userController) revokeAllUserSessionsHandler(ctx context.Context, input *GetUserInput) (*model.EmptyOutput, error) {
+	// This would require a session service to be implemented
+	userService := c.di.UserService()
+
+	// First verify user exists and belongs to organization
+	existingUser, err := userService.GetUser(ctx, input.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	if existingUser.OrganizationID == nil || *existingUser.OrganizationID != input.PathOrgID {
+		return nil, errors.New(errors.CodeNotFound, "user not found in organization")
+	}
+
+	// Revoke all user sessions
+	_, err = c.di.SessionService().InvalidateAllUserSessions(ctx, existingUser.ID)
+	if err != nil {
+		return nil, err
+	}
+	c.di.Logger().Info("Revoked all user sessions", logging.String("user_id", input.ID.String()))
+
+	return &model.EmptyOutput{}, nil
+}
+
+func (c *userController) getUserMFAHandler(ctx context.Context, input *GetUserInput) (*model.EmptyOutput, error) {
+	// This would require an MFA service to be implemented
+	userService := c.di.UserService()
+
+	// First verify user exists and belongs to organization
+	existingUser, err := userService.GetUser(ctx, input.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	if existingUser.OrganizationID == nil || *existingUser.OrganizationID != input.PathOrgID {
+		return nil, errors.New(errors.CodeNotFound, "user not found in organization")
+	}
+
+	// TODO: Get user MFA status from MFA service
+	c.di.Logger().Info("Getting user MFA status", logging.String("user_id", input.ID.String()))
+
+	return &model.EmptyOutput{}, nil
+}
+
+func (c *userController) enableUserMFAHandler(ctx context.Context, input *GetUserInput) (*model.EmptyOutput, error) {
+	// This would require an MFA service to be implemented
+	userService := c.di.UserService()
+
+	// First verify user exists and belongs to organization
+	existingUser, err := userService.GetUser(ctx, input.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	if existingUser.OrganizationID == nil || *existingUser.OrganizationID != input.PathOrgID {
+		return nil, errors.New(errors.CodeNotFound, "user not found in organization")
+	}
+
+	// TODO: Enable MFA for user
+	c.di.Logger().Info("Enabling MFA for user", logging.String("user_id", input.ID.String()))
+
+	return &model.EmptyOutput{}, nil
+}
+
+func (c *userController) disableUserMFAHandler(ctx context.Context, input *GetUserInput) (*model.EmptyOutput, error) {
+	// This would require an MFA service to be implemented
+	userService := c.di.UserService()
+
+	// First verify user exists and belongs to organization
+	existingUser, err := userService.GetUser(ctx, input.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	if existingUser.OrganizationID == nil || *existingUser.OrganizationID != input.PathOrgID {
+		return nil, errors.New(errors.CodeNotFound, "user not found in organization")
+	}
+
+	// TODO: Disable MFA for user
+	c.di.Logger().Info("Disabling MFA for user", logging.String("user_id", input.ID.String()))
+
+	return &model.EmptyOutput{}, nil
+}
+
+func (c *userController) resetUserMFAHandler(ctx context.Context, input *GetUserInput) (*model.EmptyOutput, error) {
+	// This would require an MFA service to be implemented
+	userService := c.di.UserService()
+
+	// First verify user exists and belongs to organization
+	existingUser, err := userService.GetUser(ctx, input.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	if existingUser.OrganizationID == nil || *existingUser.OrganizationID != input.PathOrgID {
+		return nil, errors.New(errors.CodeNotFound, "user not found in organization")
+	}
+
+	// TODO: Reset MFA for user
+	c.di.Logger().Info("Resetting MFA for user", logging.String("user_id", input.ID.String()))
+
+	return &model.EmptyOutput{}, nil
+}
+
+func (c *userController) getUserStatsHandler(ctx context.Context, input *model.OrganisationPathParams) (*GetUserStatsOutput, error) {
+	userService := c.di.UserService()
+
+	// Get user statistics for the organization
+	stats, err := userService.GetUserStats(ctx, &input.PathOrgID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &GetUserStatsOutput{
+		Body: stats,
+	}, nil
+}
+
+func (c *userController) exportUsersHandler(ctx context.Context, input *model.OrganisationPathParams) (*model.EmptyOutput, error) {
+	// This would require an export service to be implemented
+	// For now, just log the export request
+	c.di.Logger().Info("Exporting users", logging.String("org_id", input.PathOrgID.String()))
+
+	// TODO: Implement user export functionality
+	// 1. Generate export file (CSV/JSON)
+	// 2. Store temporarily or send via email
+	// 3. Return download URL or success message
+
+	return &model.EmptyOutput{}, nil
+}
+
+// Helper method to get current user ID from context
+func (c *userController) getCurrentUserID(ctx context.Context) (xid.ID, error) {
+	user, err := middleware.GetUserFromContextSafe(ctx)
+	if err != nil {
+		return xid.NilID(), err
+	}
+
+	return user.ID, nil
+}
+
+// Additional helper methods that may be needed
+
+func (c *userController) validateOrganizationAccess(ctx context.Context, userID, orgID xid.ID) error {
+	// Verify user has access to the organization
+	// This could check membership, permissions, etc.
+
+	userService := c.di.UserService()
+	user, err := userService.GetUser(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	if user.OrganizationID == nil || *user.OrganizationID != orgID {
+		return errors.New(errors.CodeForbidden, "user does not have access to this organization")
+	}
+
+	return nil
 }

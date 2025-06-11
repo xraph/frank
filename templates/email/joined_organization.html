@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Team Member Joined {{.organization_name}}</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; padding: 20px 0; border-bottom: 2px solid #f0f0f0; }
+        .content { padding: 30px 0; }
+        .welcome-banner { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 25px; border-radius: 12px; margin: 20px 0; text-align: center; }
+        .member-card { background: #f8f9fa; padding: 25px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #28a745; }
+        .role-badge { background: #e9ecef; color: #495057; padding: 6px 12px; border-radius: 15px; display: inline-block; font-size: 12px; font-weight: bold; margin: 5px 0; }
+        .button { display: inline-block; padding: 12px 30px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 10px 5px; }
+        .button.primary { background: #28a745; }
+        .footer { text-align: center; padding: 20px 0; border-top: 1px solid #f0f0f0; color: #666; font-size: 14px; }
+        .team-stats { display: flex; justify-content: space-around; background: #e9ecef; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .stat { text-align: center; }
+        .stat-number { font-size: 24px; font-weight: bold; color: #28a745; }
+        .activity-item { padding: 10px 0; border-bottom: 1px solid #e9ecef; }
+        .activity-item:last-child { border-bottom: none; }
+        @media (max-width: 600px) {
+            .team-stats { flex-direction: column; }
+            .stat { margin: 10px 0; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>{{.organization_name}}</h1>
+        <h2>🎉 Team Update</h2>
+    </div>
+
+    <div class="content">
+        <div class="welcome-banner">
+            <h2>Welcome Our New Team Member!</h2>
+            <p>{{.organization_name}} is growing stronger</p>
+        </div>
+
+        <div class="member-card">
+            <h3>👋 Meet {{.new_member_name}}</h3>
+            <p><strong>Email:</strong> {{.new_member_email}}</p>
+            <p><strong>Role:</strong> <span class="role-badge">{{.new_member_role}}</span></p>
+            <p><strong>Joined:</strong> {{.joined_at}}</p>
+            {{if .invited_by}}
+            <p><strong>Invited by:</strong> {{.invited_by}}</p>
+            {{end}}
+            {{if .department}}
+            <p><strong>Department:</strong> {{.department}}</p>
+            {{end}}
+        </div>
+
+        <div class="team-stats">
+            <div class="stat">
+                <div class="stat-number">{{.total_members}}</div>
+                <div>Total Members</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number">{{.new_members_this_month}}</div>
+                <div>New This Month</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number">{{.active_projects}}</div>
+                <div>Active Projects</div>
+            </div>
+        </div>
+
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h4>🚀 Quick Actions</h4>
+            <div style="text-align: center;">
+                <a href="{{.team_directory_url}}" class="button">View Team Directory</a>
+                <a href="{{.send_welcome_url}}" class="button primary">Send Welcome Message</a>
+            </div>
+        </div>
+
+        {{if .recent_activity}}
+        <div style="background: white; border: 1px solid #dee2e6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h4>📊 Recent Team Activity</h4>
+            {{range .recent_activity}}
+            <div class="activity-item">
+                <strong>{{.user_name}}</strong> {{.action}}
+                <span style="color: #6c757d; font-size: 12px; float: right;">{{.timestamp}}</span>
+            </div>
+            {{end}}
+        </div>
+        {{end}}
+
+        <div style="background: #e8f5e8; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h4>💡 Team Collaboration Tips</h4>
+            <ul>
+                <li><strong>Introduce yourself:</strong> Send a quick message to welcome new members</li>
+                <li><strong>Share resources:</strong> Help them get up to speed with project documentation</li>
+                <li><strong>Schedule check-ins:</strong> Regular team meetings help build relationships</li>
+                <li><strong>Use team channels:</strong> Keep communication open and inclusive</li>
+            </ul>
+        </div>
+
+        <p>A stronger team means better results for everyone. Let's make sure {{.new_member_name}} feels welcomed and gets up to speed quickly!</p>
+
+        <p>Keep building great things together,<br>
+            <strong>The {{.app_name}} Team</strong></p>
+    </div>
+
+    <div class="footer">
+        <p>This team update was sent to all members of {{.organization_name}}.</p>
+        <p>To manage your notification preferences, <a href="{{.notification_settings_url}}">click here</a>.</p>
+        <p><a href="{{.team_directory_url}}">Team Directory</a> | <a href="{{.organization_settings_url}}">Organization Settings</a> | <a href="{{.support_url}}">Support</a></p>
+    </div>
+</div>
+</body>
+</html>

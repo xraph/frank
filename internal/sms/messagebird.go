@@ -15,19 +15,19 @@ import (
 
 // messagebirdProvider implements the MessageBird SMS provider
 type messagebirdProvider struct {
-	config *config.Config
+	config *config.SMSConfig
 	logger logging.Logger
 	client *http.Client
 	apiKey string
 }
 
 // NewMessageBirdProvider creates a new MessageBird SMS provider
-func NewMessageBirdProvider(cfg *config.Config, logger logging.Logger) Provider {
+func NewMessageBirdProvider(cfg *config.SMSConfig, logger logging.Logger) Provider {
 	return &messagebirdProvider{
 		config: cfg,
 		logger: logger,
 		client: &http.Client{},
-		apiKey: cfg.SMS.MessageBird.AccessKey,
+		apiKey: cfg.MessageBird.AccessKey,
 	}
 }
 
@@ -41,7 +41,7 @@ func (p *messagebirdProvider) Send(ctx context.Context, input SMS) error {
 	// Set sender (From) if not provided
 	from := input.From
 	if from == "" {
-		from = p.config.SMS.FromNumber
+		from = p.config.FromNumber
 	}
 
 	// Prepare request body
@@ -67,13 +67,13 @@ func (p *messagebirdProvider) Send(ctx context.Context, input SMS) error {
 	// Marshal request body to JSON
 	jsonBody, err := json.Marshal(requestBody)
 	if err != nil {
-		return errors.Wrap(errors.CodeSMSDeliveryFail, err, "failed to marshal MessageBird request")
+		return errors.Wrap(err, errors.CodeSMSDeliveryFail, "failed to marshal MessageBird request")
 	}
 
 	// Create request
 	req, err := http.NewRequestWithContext(ctx, "POST", "https://rest.messagebird.com/messages", bytes.NewBuffer(jsonBody))
 	if err != nil {
-		return errors.Wrap(errors.CodeSMSDeliveryFail, err, "failed to create MessageBird request")
+		return errors.Wrap(err, errors.CodeSMSDeliveryFail, "failed to create MessageBird request")
 	}
 
 	// Set headers
@@ -83,14 +83,14 @@ func (p *messagebirdProvider) Send(ctx context.Context, input SMS) error {
 	// Execute request
 	resp, err := p.client.Do(req)
 	if err != nil {
-		return errors.Wrap(errors.CodeSMSDeliveryFail, err, "failed to send MessageBird request")
+		return errors.Wrap(err, errors.CodeSMSDeliveryFail, "failed to send MessageBird request")
 	}
 	defer resp.Body.Close()
 
 	// Read response body
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return errors.Wrap(errors.CodeSMSDeliveryFail, err, "failed to read MessageBird response")
+		return errors.Wrap(err, errors.CodeSMSDeliveryFail, "failed to read MessageBird response")
 	}
 
 	// Check response status

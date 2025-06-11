@@ -12,6 +12,9 @@ import (
 // ApiKey is the predicate function for apikey builders.
 type ApiKey func(*sql.Selector)
 
+// Audit is the predicate function for audit builders.
+type Audit func(*sql.Selector)
+
 // EmailTemplate is the predicate function for emailtemplate builders.
 type EmailTemplate func(*sql.Selector)
 
@@ -56,6 +59,9 @@ type PermissionDependency func(*sql.Selector)
 
 // Role is the predicate function for role builders.
 type Role func(*sql.Selector)
+
+// SMSTemplate is the predicate function for smstemplate builders.
+type SMSTemplate func(*sql.Selector)
 
 // SSOState is the predicate function for ssostate builders.
 type SSOState func(*sql.Selector)

@@ -41,6 +41,26 @@ func (ofu *OrganizationFeatureUpdate) SetUpdatedAt(t time.Time) *OrganizationFea
 	return ofu
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (ofu *OrganizationFeatureUpdate) SetDeletedAt(t time.Time) *OrganizationFeatureUpdate {
+	ofu.mutation.SetDeletedAt(t)
+	return ofu
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (ofu *OrganizationFeatureUpdate) SetNillableDeletedAt(t *time.Time) *OrganizationFeatureUpdate {
+	if t != nil {
+		ofu.SetDeletedAt(*t)
+	}
+	return ofu
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (ofu *OrganizationFeatureUpdate) ClearDeletedAt() *OrganizationFeatureUpdate {
+	ofu.mutation.ClearDeletedAt()
+	return ofu
+}
+
 // SetOrganizationID sets the "organization_id" field.
 func (ofu *OrganizationFeatureUpdate) SetOrganizationID(x xid.ID) *OrganizationFeatureUpdate {
 	ofu.mutation.SetOrganizationID(x)
@@ -200,6 +220,12 @@ func (ofu *OrganizationFeatureUpdate) sqlSave(ctx context.Context) (n int, err e
 	if value, ok := ofu.mutation.UpdatedAt(); ok {
 		_spec.SetField(organizationfeature.FieldUpdatedAt, field.TypeTime, value)
 	}
+	if value, ok := ofu.mutation.DeletedAt(); ok {
+		_spec.SetField(organizationfeature.FieldDeletedAt, field.TypeTime, value)
+	}
+	if ofu.mutation.DeletedAtCleared() {
+		_spec.ClearField(organizationfeature.FieldDeletedAt, field.TypeTime)
+	}
 	if value, ok := ofu.mutation.Enabled(); ok {
 		_spec.SetField(organizationfeature.FieldEnabled, field.TypeBool, value)
 	}
@@ -292,6 +318,26 @@ type OrganizationFeatureUpdateOne struct {
 // SetUpdatedAt sets the "updated_at" field.
 func (ofuo *OrganizationFeatureUpdateOne) SetUpdatedAt(t time.Time) *OrganizationFeatureUpdateOne {
 	ofuo.mutation.SetUpdatedAt(t)
+	return ofuo
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (ofuo *OrganizationFeatureUpdateOne) SetDeletedAt(t time.Time) *OrganizationFeatureUpdateOne {
+	ofuo.mutation.SetDeletedAt(t)
+	return ofuo
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (ofuo *OrganizationFeatureUpdateOne) SetNillableDeletedAt(t *time.Time) *OrganizationFeatureUpdateOne {
+	if t != nil {
+		ofuo.SetDeletedAt(*t)
+	}
+	return ofuo
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (ofuo *OrganizationFeatureUpdateOne) ClearDeletedAt() *OrganizationFeatureUpdateOne {
+	ofuo.mutation.ClearDeletedAt()
 	return ofuo
 }
 
@@ -483,6 +529,12 @@ func (ofuo *OrganizationFeatureUpdateOne) sqlSave(ctx context.Context) (_node *O
 	}
 	if value, ok := ofuo.mutation.UpdatedAt(); ok {
 		_spec.SetField(organizationfeature.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if value, ok := ofuo.mutation.DeletedAt(); ok {
+		_spec.SetField(organizationfeature.FieldDeletedAt, field.TypeTime, value)
+	}
+	if ofuo.mutation.DeletedAtCleared() {
+		_spec.ClearField(organizationfeature.FieldDeletedAt, field.TypeTime)
 	}
 	if value, ok := ofuo.mutation.Enabled(); ok {
 		_spec.SetField(organizationfeature.FieldEnabled, field.TypeBool, value)

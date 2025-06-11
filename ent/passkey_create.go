@@ -56,6 +56,20 @@ func (pc *PasskeyCreate) SetNillableUpdatedAt(t *time.Time) *PasskeyCreate {
 	return pc
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (pc *PasskeyCreate) SetDeletedAt(t time.Time) *PasskeyCreate {
+	pc.mutation.SetDeletedAt(t)
+	return pc
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (pc *PasskeyCreate) SetNillableDeletedAt(t *time.Time) *PasskeyCreate {
+	if t != nil {
+		pc.SetDeletedAt(*t)
+	}
+	return pc
+}
+
 // SetUserID sets the "user_id" field.
 func (pc *PasskeyCreate) SetUserID(x xid.ID) *PasskeyCreate {
 	pc.mutation.SetUserID(x)
@@ -159,6 +173,62 @@ func (pc *PasskeyCreate) SetTransports(s []string) *PasskeyCreate {
 // SetAttestation sets the "attestation" field.
 func (pc *PasskeyCreate) SetAttestation(m map[string]interface{}) *PasskeyCreate {
 	pc.mutation.SetAttestation(m)
+	return pc
+}
+
+// SetBackupState sets the "backup_state" field.
+func (pc *PasskeyCreate) SetBackupState(b bool) *PasskeyCreate {
+	pc.mutation.SetBackupState(b)
+	return pc
+}
+
+// SetNillableBackupState sets the "backup_state" field if the given value is not nil.
+func (pc *PasskeyCreate) SetNillableBackupState(b *bool) *PasskeyCreate {
+	if b != nil {
+		pc.SetBackupState(*b)
+	}
+	return pc
+}
+
+// SetBackupEligible sets the "backup_eligible" field.
+func (pc *PasskeyCreate) SetBackupEligible(b bool) *PasskeyCreate {
+	pc.mutation.SetBackupEligible(b)
+	return pc
+}
+
+// SetNillableBackupEligible sets the "backup_eligible" field if the given value is not nil.
+func (pc *PasskeyCreate) SetNillableBackupEligible(b *bool) *PasskeyCreate {
+	if b != nil {
+		pc.SetBackupEligible(*b)
+	}
+	return pc
+}
+
+// SetUserAgent sets the "user_agent" field.
+func (pc *PasskeyCreate) SetUserAgent(s string) *PasskeyCreate {
+	pc.mutation.SetUserAgent(s)
+	return pc
+}
+
+// SetNillableUserAgent sets the "user_agent" field if the given value is not nil.
+func (pc *PasskeyCreate) SetNillableUserAgent(s *string) *PasskeyCreate {
+	if s != nil {
+		pc.SetUserAgent(*s)
+	}
+	return pc
+}
+
+// SetIPAddress sets the "ip_address" field.
+func (pc *PasskeyCreate) SetIPAddress(s string) *PasskeyCreate {
+	pc.mutation.SetIPAddress(s)
+	return pc
+}
+
+// SetNillableIPAddress sets the "ip_address" field if the given value is not nil.
+func (pc *PasskeyCreate) SetNillableIPAddress(s *string) *PasskeyCreate {
+	if s != nil {
+		pc.SetIPAddress(*s)
+	}
 	return pc
 }
 
@@ -331,6 +401,10 @@ func (pc *PasskeyCreate) createSpec() (*Passkey, *sqlgraph.CreateSpec) {
 		_spec.SetField(passkey.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
+	if value, ok := pc.mutation.DeletedAt(); ok {
+		_spec.SetField(passkey.FieldDeletedAt, field.TypeTime, value)
+		_node.DeletedAt = value
+	}
 	if value, ok := pc.mutation.Name(); ok {
 		_spec.SetField(passkey.FieldName, field.TypeString, value)
 		_node.Name = value
@@ -370,6 +444,22 @@ func (pc *PasskeyCreate) createSpec() (*Passkey, *sqlgraph.CreateSpec) {
 	if value, ok := pc.mutation.Attestation(); ok {
 		_spec.SetField(passkey.FieldAttestation, field.TypeJSON, value)
 		_node.Attestation = value
+	}
+	if value, ok := pc.mutation.BackupState(); ok {
+		_spec.SetField(passkey.FieldBackupState, field.TypeBool, value)
+		_node.BackupState = value
+	}
+	if value, ok := pc.mutation.BackupEligible(); ok {
+		_spec.SetField(passkey.FieldBackupEligible, field.TypeBool, value)
+		_node.BackupEligible = value
+	}
+	if value, ok := pc.mutation.UserAgent(); ok {
+		_spec.SetField(passkey.FieldUserAgent, field.TypeString, value)
+		_node.UserAgent = value
+	}
+	if value, ok := pc.mutation.IPAddress(); ok {
+		_spec.SetField(passkey.FieldIPAddress, field.TypeString, value)
+		_node.IPAddress = value
 	}
 	if nodes := pc.mutation.UserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -449,6 +539,24 @@ func (u *PasskeyUpsert) SetUpdatedAt(v time.Time) *PasskeyUpsert {
 // UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
 func (u *PasskeyUpsert) UpdateUpdatedAt() *PasskeyUpsert {
 	u.SetExcluded(passkey.FieldUpdatedAt)
+	return u
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *PasskeyUpsert) SetDeletedAt(v time.Time) *PasskeyUpsert {
+	u.Set(passkey.FieldDeletedAt, v)
+	return u
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *PasskeyUpsert) UpdateDeletedAt() *PasskeyUpsert {
+	u.SetExcluded(passkey.FieldDeletedAt)
+	return u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *PasskeyUpsert) ClearDeletedAt() *PasskeyUpsert {
+	u.SetNull(passkey.FieldDeletedAt)
 	return u
 }
 
@@ -620,6 +728,78 @@ func (u *PasskeyUpsert) ClearAttestation() *PasskeyUpsert {
 	return u
 }
 
+// SetBackupState sets the "backup_state" field.
+func (u *PasskeyUpsert) SetBackupState(v bool) *PasskeyUpsert {
+	u.Set(passkey.FieldBackupState, v)
+	return u
+}
+
+// UpdateBackupState sets the "backup_state" field to the value that was provided on create.
+func (u *PasskeyUpsert) UpdateBackupState() *PasskeyUpsert {
+	u.SetExcluded(passkey.FieldBackupState)
+	return u
+}
+
+// ClearBackupState clears the value of the "backup_state" field.
+func (u *PasskeyUpsert) ClearBackupState() *PasskeyUpsert {
+	u.SetNull(passkey.FieldBackupState)
+	return u
+}
+
+// SetBackupEligible sets the "backup_eligible" field.
+func (u *PasskeyUpsert) SetBackupEligible(v bool) *PasskeyUpsert {
+	u.Set(passkey.FieldBackupEligible, v)
+	return u
+}
+
+// UpdateBackupEligible sets the "backup_eligible" field to the value that was provided on create.
+func (u *PasskeyUpsert) UpdateBackupEligible() *PasskeyUpsert {
+	u.SetExcluded(passkey.FieldBackupEligible)
+	return u
+}
+
+// ClearBackupEligible clears the value of the "backup_eligible" field.
+func (u *PasskeyUpsert) ClearBackupEligible() *PasskeyUpsert {
+	u.SetNull(passkey.FieldBackupEligible)
+	return u
+}
+
+// SetUserAgent sets the "user_agent" field.
+func (u *PasskeyUpsert) SetUserAgent(v string) *PasskeyUpsert {
+	u.Set(passkey.FieldUserAgent, v)
+	return u
+}
+
+// UpdateUserAgent sets the "user_agent" field to the value that was provided on create.
+func (u *PasskeyUpsert) UpdateUserAgent() *PasskeyUpsert {
+	u.SetExcluded(passkey.FieldUserAgent)
+	return u
+}
+
+// ClearUserAgent clears the value of the "user_agent" field.
+func (u *PasskeyUpsert) ClearUserAgent() *PasskeyUpsert {
+	u.SetNull(passkey.FieldUserAgent)
+	return u
+}
+
+// SetIPAddress sets the "ip_address" field.
+func (u *PasskeyUpsert) SetIPAddress(v string) *PasskeyUpsert {
+	u.Set(passkey.FieldIPAddress, v)
+	return u
+}
+
+// UpdateIPAddress sets the "ip_address" field to the value that was provided on create.
+func (u *PasskeyUpsert) UpdateIPAddress() *PasskeyUpsert {
+	u.SetExcluded(passkey.FieldIPAddress)
+	return u
+}
+
+// ClearIPAddress clears the value of the "ip_address" field.
+func (u *PasskeyUpsert) ClearIPAddress() *PasskeyUpsert {
+	u.SetNull(passkey.FieldIPAddress)
+	return u
+}
+
 // UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
 // Using this option is equivalent to using:
 //
@@ -682,6 +862,27 @@ func (u *PasskeyUpsertOne) SetUpdatedAt(v time.Time) *PasskeyUpsertOne {
 func (u *PasskeyUpsertOne) UpdateUpdatedAt() *PasskeyUpsertOne {
 	return u.Update(func(s *PasskeyUpsert) {
 		s.UpdateUpdatedAt()
+	})
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *PasskeyUpsertOne) SetDeletedAt(v time.Time) *PasskeyUpsertOne {
+	return u.Update(func(s *PasskeyUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *PasskeyUpsertOne) UpdateDeletedAt() *PasskeyUpsertOne {
+	return u.Update(func(s *PasskeyUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *PasskeyUpsertOne) ClearDeletedAt() *PasskeyUpsertOne {
+	return u.Update(func(s *PasskeyUpsert) {
+		s.ClearDeletedAt()
 	})
 }
 
@@ -878,6 +1079,90 @@ func (u *PasskeyUpsertOne) UpdateAttestation() *PasskeyUpsertOne {
 func (u *PasskeyUpsertOne) ClearAttestation() *PasskeyUpsertOne {
 	return u.Update(func(s *PasskeyUpsert) {
 		s.ClearAttestation()
+	})
+}
+
+// SetBackupState sets the "backup_state" field.
+func (u *PasskeyUpsertOne) SetBackupState(v bool) *PasskeyUpsertOne {
+	return u.Update(func(s *PasskeyUpsert) {
+		s.SetBackupState(v)
+	})
+}
+
+// UpdateBackupState sets the "backup_state" field to the value that was provided on create.
+func (u *PasskeyUpsertOne) UpdateBackupState() *PasskeyUpsertOne {
+	return u.Update(func(s *PasskeyUpsert) {
+		s.UpdateBackupState()
+	})
+}
+
+// ClearBackupState clears the value of the "backup_state" field.
+func (u *PasskeyUpsertOne) ClearBackupState() *PasskeyUpsertOne {
+	return u.Update(func(s *PasskeyUpsert) {
+		s.ClearBackupState()
+	})
+}
+
+// SetBackupEligible sets the "backup_eligible" field.
+func (u *PasskeyUpsertOne) SetBackupEligible(v bool) *PasskeyUpsertOne {
+	return u.Update(func(s *PasskeyUpsert) {
+		s.SetBackupEligible(v)
+	})
+}
+
+// UpdateBackupEligible sets the "backup_eligible" field to the value that was provided on create.
+func (u *PasskeyUpsertOne) UpdateBackupEligible() *PasskeyUpsertOne {
+	return u.Update(func(s *PasskeyUpsert) {
+		s.UpdateBackupEligible()
+	})
+}
+
+// ClearBackupEligible clears the value of the "backup_eligible" field.
+func (u *PasskeyUpsertOne) ClearBackupEligible() *PasskeyUpsertOne {
+	return u.Update(func(s *PasskeyUpsert) {
+		s.ClearBackupEligible()
+	})
+}
+
+// SetUserAgent sets the "user_agent" field.
+func (u *PasskeyUpsertOne) SetUserAgent(v string) *PasskeyUpsertOne {
+	return u.Update(func(s *PasskeyUpsert) {
+		s.SetUserAgent(v)
+	})
+}
+
+// UpdateUserAgent sets the "user_agent" field to the value that was provided on create.
+func (u *PasskeyUpsertOne) UpdateUserAgent() *PasskeyUpsertOne {
+	return u.Update(func(s *PasskeyUpsert) {
+		s.UpdateUserAgent()
+	})
+}
+
+// ClearUserAgent clears the value of the "user_agent" field.
+func (u *PasskeyUpsertOne) ClearUserAgent() *PasskeyUpsertOne {
+	return u.Update(func(s *PasskeyUpsert) {
+		s.ClearUserAgent()
+	})
+}
+
+// SetIPAddress sets the "ip_address" field.
+func (u *PasskeyUpsertOne) SetIPAddress(v string) *PasskeyUpsertOne {
+	return u.Update(func(s *PasskeyUpsert) {
+		s.SetIPAddress(v)
+	})
+}
+
+// UpdateIPAddress sets the "ip_address" field to the value that was provided on create.
+func (u *PasskeyUpsertOne) UpdateIPAddress() *PasskeyUpsertOne {
+	return u.Update(func(s *PasskeyUpsert) {
+		s.UpdateIPAddress()
+	})
+}
+
+// ClearIPAddress clears the value of the "ip_address" field.
+func (u *PasskeyUpsertOne) ClearIPAddress() *PasskeyUpsertOne {
+	return u.Update(func(s *PasskeyUpsert) {
+		s.ClearIPAddress()
 	})
 }
 
@@ -1113,6 +1398,27 @@ func (u *PasskeyUpsertBulk) UpdateUpdatedAt() *PasskeyUpsertBulk {
 	})
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (u *PasskeyUpsertBulk) SetDeletedAt(v time.Time) *PasskeyUpsertBulk {
+	return u.Update(func(s *PasskeyUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *PasskeyUpsertBulk) UpdateDeletedAt() *PasskeyUpsertBulk {
+	return u.Update(func(s *PasskeyUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *PasskeyUpsertBulk) ClearDeletedAt() *PasskeyUpsertBulk {
+	return u.Update(func(s *PasskeyUpsert) {
+		s.ClearDeletedAt()
+	})
+}
+
 // SetUserID sets the "user_id" field.
 func (u *PasskeyUpsertBulk) SetUserID(v xid.ID) *PasskeyUpsertBulk {
 	return u.Update(func(s *PasskeyUpsert) {
@@ -1306,6 +1612,90 @@ func (u *PasskeyUpsertBulk) UpdateAttestation() *PasskeyUpsertBulk {
 func (u *PasskeyUpsertBulk) ClearAttestation() *PasskeyUpsertBulk {
 	return u.Update(func(s *PasskeyUpsert) {
 		s.ClearAttestation()
+	})
+}
+
+// SetBackupState sets the "backup_state" field.
+func (u *PasskeyUpsertBulk) SetBackupState(v bool) *PasskeyUpsertBulk {
+	return u.Update(func(s *PasskeyUpsert) {
+		s.SetBackupState(v)
+	})
+}
+
+// UpdateBackupState sets the "backup_state" field to the value that was provided on create.
+func (u *PasskeyUpsertBulk) UpdateBackupState() *PasskeyUpsertBulk {
+	return u.Update(func(s *PasskeyUpsert) {
+		s.UpdateBackupState()
+	})
+}
+
+// ClearBackupState clears the value of the "backup_state" field.
+func (u *PasskeyUpsertBulk) ClearBackupState() *PasskeyUpsertBulk {
+	return u.Update(func(s *PasskeyUpsert) {
+		s.ClearBackupState()
+	})
+}
+
+// SetBackupEligible sets the "backup_eligible" field.
+func (u *PasskeyUpsertBulk) SetBackupEligible(v bool) *PasskeyUpsertBulk {
+	return u.Update(func(s *PasskeyUpsert) {
+		s.SetBackupEligible(v)
+	})
+}
+
+// UpdateBackupEligible sets the "backup_eligible" field to the value that was provided on create.
+func (u *PasskeyUpsertBulk) UpdateBackupEligible() *PasskeyUpsertBulk {
+	return u.Update(func(s *PasskeyUpsert) {
+		s.UpdateBackupEligible()
+	})
+}
+
+// ClearBackupEligible clears the value of the "backup_eligible" field.
+func (u *PasskeyUpsertBulk) ClearBackupEligible() *PasskeyUpsertBulk {
+	return u.Update(func(s *PasskeyUpsert) {
+		s.ClearBackupEligible()
+	})
+}
+
+// SetUserAgent sets the "user_agent" field.
+func (u *PasskeyUpsertBulk) SetUserAgent(v string) *PasskeyUpsertBulk {
+	return u.Update(func(s *PasskeyUpsert) {
+		s.SetUserAgent(v)
+	})
+}
+
+// UpdateUserAgent sets the "user_agent" field to the value that was provided on create.
+func (u *PasskeyUpsertBulk) UpdateUserAgent() *PasskeyUpsertBulk {
+	return u.Update(func(s *PasskeyUpsert) {
+		s.UpdateUserAgent()
+	})
+}
+
+// ClearUserAgent clears the value of the "user_agent" field.
+func (u *PasskeyUpsertBulk) ClearUserAgent() *PasskeyUpsertBulk {
+	return u.Update(func(s *PasskeyUpsert) {
+		s.ClearUserAgent()
+	})
+}
+
+// SetIPAddress sets the "ip_address" field.
+func (u *PasskeyUpsertBulk) SetIPAddress(v string) *PasskeyUpsertBulk {
+	return u.Update(func(s *PasskeyUpsert) {
+		s.SetIPAddress(v)
+	})
+}
+
+// UpdateIPAddress sets the "ip_address" field to the value that was provided on create.
+func (u *PasskeyUpsertBulk) UpdateIPAddress() *PasskeyUpsertBulk {
+	return u.Update(func(s *PasskeyUpsert) {
+		s.UpdateIPAddress()
+	})
+}
+
+// ClearIPAddress clears the value of the "ip_address" field.
+func (u *PasskeyUpsertBulk) ClearIPAddress() *PasskeyUpsertBulk {
+	return u.Update(func(s *PasskeyUpsert) {
+		s.ClearIPAddress()
 	})
 }
 

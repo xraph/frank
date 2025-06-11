@@ -41,6 +41,10 @@ func (Passkey) Fields() []ent.Field {
 		field.JSON("transports", []string{}).
 			Optional(),
 		entity.JSONMapField("attestation", true),
+		field.Bool("backup_state").Optional(),
+		field.Bool("backup_eligible").Optional(),
+		field.String("user_agent").Optional(),
+		field.String("ip_address").Optional(),
 	}
 }
 
@@ -68,5 +72,6 @@ func (Passkey) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		ModelBaseMixin{},
 		TimeMixin{},
+		SoftDeleteMixin{},
 	}
 }

@@ -26,12 +26,16 @@ type SSOState struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// DeletedAt holds the value of the "deleted_at" field.
+	DeletedAt time.Time `json:"deleted_at,omitempty"`
 	// State token for SSO authentication flow
 	State string `json:"state,omitempty"`
 	// JSON-encoded state data
 	Data string `json:"data,omitempty"`
 	// When this state expires
-	ExpiresAt    time.Time `json:"expires_at,omitempty"`
+	ExpiresAt time.Time `json:"expires_at,omitempty"`
+	// RedirectURL holds the value of the "redirect_url" field.
+	RedirectURL  string `json:"redirect_url,omitempty"`
 	selectValues sql.SelectValues
 }
 
@@ -40,9 +44,9 @@ func (*SSOState) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case ssostate.FieldState, ssostate.FieldData:
+		case ssostate.FieldState, ssostate.FieldData, ssostate.FieldRedirectURL:
 			values[i] = new(sql.NullString)
-		case ssostate.FieldCreatedAt, ssostate.FieldUpdatedAt, ssostate.FieldExpiresAt:
+		case ssostate.FieldCreatedAt, ssostate.FieldUpdatedAt, ssostate.FieldDeletedAt, ssostate.FieldExpiresAt:
 			values[i] = new(sql.NullTime)
 		case ssostate.FieldID:
 			values[i] = new(xid.ID)
@@ -79,6 +83,12 @@ func (ss *SSOState) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				ss.UpdatedAt = value.Time
 			}
+		case ssostate.FieldDeletedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field deleted_at", values[i])
+			} else if value.Valid {
+				ss.DeletedAt = value.Time
+			}
 		case ssostate.FieldState:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field state", values[i])
@@ -96,6 +106,12 @@ func (ss *SSOState) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field expires_at", values[i])
 			} else if value.Valid {
 				ss.ExpiresAt = value.Time
+			}
+		case ssostate.FieldRedirectURL:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field redirect_url", values[i])
+			} else if value.Valid {
+				ss.RedirectURL = value.String
 			}
 		default:
 			ss.selectValues.Set(columns[i], values[i])
@@ -139,6 +155,9 @@ func (ss *SSOState) String() string {
 	builder.WriteString("updated_at=")
 	builder.WriteString(ss.UpdatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
+	builder.WriteString("deleted_at=")
+	builder.WriteString(ss.DeletedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
 	builder.WriteString("state=")
 	builder.WriteString(ss.State)
 	builder.WriteString(", ")
@@ -147,6 +166,9 @@ func (ss *SSOState) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("expires_at=")
 	builder.WriteString(ss.ExpiresAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("redirect_url=")
+	builder.WriteString(ss.RedirectURL)
 	builder.WriteByte(')')
 	return builder.String()
 }

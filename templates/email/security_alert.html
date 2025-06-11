@@ -1,0 +1,376 @@
+<!-- 1. Security Breach Notification Email Template -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Important Security Notice - {{.app_name}}</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; padding: 20px 0; border-bottom: 2px solid #f0f0f0; }
+        .content { padding: 30px 0; }
+        .breach-alert { background: #721c24; color: white; padding: 25px; border-radius: 8px; margin: 20px 0; text-align: center; }
+        .incident-details { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #dc3545; }
+        .action-required { background: #fff3cd; border: 1px solid #ffeaa7; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .button { display: inline-block; padding: 15px 35px; background: #dc3545; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }
+        .footer { text-align: center; padding: 20px 0; border-top: 1px solid #f0f0f0; color: #666; font-size: 14px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>{{.app_name}}</h1>
+        <h2>🚨 Important Security Notice</h2>
+    </div>
+    <div class="content">
+        <div class="breach-alert">
+            <h3>Security Incident Notification</h3>
+            <p>We are writing to inform you of a security incident that may have affected your account.</p>
+        </div>
+
+        <p>Dear {{.user_name}},</p>
+
+        <p>We are contacting you regarding a security incident that occurred on our systems. We take your privacy and security very seriously, and we want to provide you with details about what happened and what we are doing about it.</p>
+
+        <div class="incident-details">
+            <h4>🔍 What Happened:</h4>
+            <p>{{.incident_description}}</p>
+
+            <h4>📅 When:</h4>
+            <p><strong>Discovered:</strong> {{.discovered_at}}</p>
+            <p><strong>Occurred:</strong> {{.occurred_at}}</p>
+            <p><strong>Contained:</strong> {{.contained_at}}</p>
+
+            <h4>🎯 What Information Was Involved:</h4>
+            <ul>
+                {{range .affected_data_types}}
+                <li>{{.}}</li>
+                {{end}}
+            </ul>
+
+            <h4>🛡️ What Information Was NOT Involved:</h4>
+            <ul>
+                {{range .unaffected_data_types}}
+                <li>{{.}}</li>
+                {{end}}
+            </ul>
+        </div>
+
+        <div class="action-required">
+            <h4>⚡ Immediate Actions Required:</h4>
+            <ol>
+                <li><strong>Change your password immediately</strong></li>
+                <li><strong>Enable two-factor authentication</strong> if not already active</li>
+                <li><strong>Review your account activity</strong> for any suspicious behavior</li>
+                <li><strong>Monitor your accounts</strong> on other services that use the same password</li>
+            </ol>
+
+            <div style="text-align: center; margin: 20px 0;">
+                <a href="{{.secure_account_url}}" class="button">Secure My Account Now</a>
+            </div>
+        </div>
+
+        <h4>🔧 What We Are Doing:</h4>
+        <ul>
+            <li>We have contained the incident and closed the security vulnerability</li>
+            <li>We are working with cybersecurity experts and law enforcement</li>
+            <li>We have implemented additional security measures</li>
+            <li>We are providing free credit monitoring services (if applicable)</li>
+            <li>We have notified relevant authorities as required by law</li>
+        </ul>
+
+        <h4>📞 Support and Resources:</h4>
+        <p>We have set up a dedicated support line for questions related to this incident:</p>
+        <ul>
+            <li><strong>Email:</strong> security-incident@{{.company_domain}}</li>
+            <li><strong>Phone:</strong> {{.incident_support_phone}}</li>
+            <li><strong>Hours:</strong> Available 24/7</li>
+        </ul>
+
+        <p>We sincerely apologize for this incident and any inconvenience it may cause. We are committed to maintaining your trust and will continue to invest in security measures to protect your information.</p>
+
+        <p>For more information, please visit our security incident page at {{.incident_page_url}}</p>
+
+        <p>Sincerely,<br>
+            <strong>{{.ceo_name}}, CEO<br>{{.app_name}}</strong></p>
+    </div>
+    <div class="footer">
+        <p>Incident Reference: {{.incident_id}}</p>
+        <p><a href="{{.incident_page_url}}">Full Incident Report</a> | <a href="{{.security_center_url}}">Security Center</a></p>
+    </div>
+</div>
+</body>
+</html>
+
+<!-- 2. User Removed from Organization Email Template -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Removed from {{.organization_name}} - {{.app_name}}</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; padding: 20px 0; border-bottom: 2px solid #f0f0f0; }
+        .content { padding: 30px 0; }
+        .removal-notice { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 25px; border-radius: 8px; margin: 20px 0; text-align: center; }
+        .access-info { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .button { display: inline-block; padding: 12px 30px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }
+        .footer { text-align: center; padding: 20px 0; border-top: 1px solid #f0f0f0; color: #666; font-size: 14px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>{{.app_name}}</h1>
+        <h2>👋 Organization Access Removed</h2>
+    </div>
+    <div class="content">
+        <div class="removal-notice">
+            <h3>You've been removed from {{.organization_name}}</h3>
+            <p>Your access to this organization has been revoked.</p>
+        </div>
+
+        <p>Hello {{.user_name}},</p>
+
+        <p>We're writing to inform you that your access to <strong>{{.organization_name}}</strong> has been removed.</p>
+
+        <div class="access-info">
+            <h4>📋 Removal Details:</h4>
+            <ul>
+                <li><strong>Organization:</strong> {{.organization_name}}</li>
+                <li><strong>Your Role:</strong> {{.user_role}}</li>
+                <li><strong>Removed By:</strong> {{.removed_by}}</li>
+                <li><strong>Removed On:</strong> {{.removed_at}}</li>
+                {{if .removal_reason}}
+                <li><strong>Reason:</strong> {{.removal_reason}}</li>
+                {{end}}
+            </ul>
+        </div>
+
+        <h4>🔄 What this means:</h4>
+        <ul>
+            <li>You can no longer access {{.organization_name}}'s resources</li>
+            <li>Your API keys for this organization have been revoked</li>
+            <li>You won't receive notifications from this organization</li>
+            <li>Your personal {{.app_name}} account remains active</li>
+        </ul>
+
+        {{if .data_retention_info}}
+        <div style="background: #e9ecef; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h4>📁 Data and Access:</h4>
+            <p>{{.data_retention_info}}</p>
+        </div>
+        {{end}}
+
+        <p>If you believe this was done in error, please contact the organization administrator or our support team.</p>
+
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="{{.dashboard_url}}" class="button">Go to Your Dashboard</a>
+        </div>
+    </div>
+    <div class="footer">
+        <p>Questions about this removal? <a href="{{.support_url}}">Contact Support</a></p>
+    </div>
+</div>
+</body>
+</html>
+
+<!-- 3. Domain Verification Required Email Template -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Domain Verification Required - {{.app_name}}</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; padding: 20px 0; border-bottom: 2px solid #f0f0f0; }
+        .content { padding: 30px 0; }
+        .verification-notice { background: #fff3cd; border: 1px solid #ffeaa7; padding: 25px; border-radius: 8px; margin: 20px 0; text-align: center; }
+        .dns-record { background: #f8f9fa; border: 1px solid #dee2e6; padding: 20px; border-radius: 8px; margin: 20px 0; font-family: monospace; }
+        .button { display: inline-block; padding: 12px 30px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }
+        .footer { text-align: center; padding: 20px 0; border-top: 1px solid #f0f0f0; color: #666; font-size: 14px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>{{.app_name}}</h1>
+        <h2>🔍 Domain Verification Required</h2>
+    </div>
+    <div class="content">
+        <div class="verification-notice">
+            <h3>Verify Your Domain: {{.domain_name}}</h3>
+            <p>Complete domain verification to enable advanced features</p>
+        </div>
+
+        <p>Hello {{.user_name}},</p>
+
+        <p>To enhance security and enable advanced features for <strong>{{.organization_name}}</strong>, you need to verify ownership of your domain <strong>{{.domain_name}}</strong>.</p>
+
+        <h4>🎯 Benefits of Domain Verification:</h4>
+        <ul>
+            <li>Enhanced security for your organization</li>
+            <li>Single Sign-On (SSO) capabilities</li>
+            <li>Advanced user management</li>
+            <li>Branded authentication experience</li>
+            <li>Domain-restricted invitations</li>
+        </ul>
+
+        <h4>📋 Verification Methods:</h4>
+
+        <div style="background: #e9ecef; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h5>Method 1: DNS TXT Record (Recommended)</h5>
+            <p>Add this TXT record to your domain's DNS:</p>
+            <div class="dns-record">
+                <strong>Type:</strong> TXT<br>
+                <strong>Name:</strong> {{.dns_record_name}}<br>
+                <strong>Value:</strong> {{.dns_record_value}}
+            </div>
+        </div>
+
+        <div style="background: #e9ecef; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h5>Method 2: HTML File Upload</h5>
+            <p>Upload this file to your domain root:</p>
+            <div class="dns-record">
+                <strong>File:</strong> {{.verification_file_name}}<br>
+                <strong>URL:</strong> https://{{.domain_name}}/{{.verification_file_name}}<br>
+                <strong>Content:</strong> {{.verification_file_content}}
+            </div>
+        </div>
+
+        <h4>🔧 Step-by-Step Instructions:</h4>
+        <ol>
+            <li>Choose your preferred verification method above</li>
+            <li>Add the DNS record or upload the HTML file</li>
+            <li>Click "Verify Domain" below</li>
+            <li>Wait for verification (can take up to 24 hours)</li>
+        </ol>
+
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="{{.verify_domain_url}}" class="button">Verify Domain</a>
+        </div>
+
+        <div style="background: #d1ecf1; border: 1px solid #bee5eb; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h4>💡 Need Help?</h4>
+            <p>Having trouble with domain verification? Check our detailed guides:</p>
+            <ul>
+                <li><a href="{{.dns_guide_url}}">DNS Verification Guide</a></li>
+                <li><a href="{{.file_upload_guide_url}}">File Upload Guide</a></li>
+                <li><a href="{{.troubleshooting_url}}">Troubleshooting Tips</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="footer">
+        <p>Domain verification expires in {{.expires_in}} days.</p>
+        <p><a href="{{.domain_settings_url}}">Domain Settings</a> | <a href="{{.support_url}}">Contact Support</a></p>
+    </div>
+</div>
+</body>
+</html>
+
+<!-- 4. Account Deletion Confirmation Email Template -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Deletion Confirmation - {{.app_name}}</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; padding: 20px 0; border-bottom: 2px solid #f0f0f0; }
+        .content { padding: 30px 0; }
+        .deletion-notice { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 25px; border-radius: 8px; margin: 20px 0; text-align: center; }
+        .data-info { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .recovery-info { background: #fff3cd; border: 1px solid #ffeaa7; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .button { display: inline-block; padding: 12px 30px; background: #dc3545; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }
+        .footer { text-align: center; padding: 20px 0; border-top: 1px solid #f0f0f0; color: #666; font-size: 14px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>{{.app_name}}</h1>
+        <h2>❌ Account Deletion Confirmation</h2>
+    </div>
+    <div class="content">
+        <div class="deletion-notice">
+            <h3>Your Account Has Been Scheduled for Deletion</h3>
+            <p>We're sorry to see you go, {{.user_name}}.</p>
+        </div>
+
+        <p>This email confirms that your {{.app_name}} account deletion request has been processed.</p>
+
+        <div class="data-info">
+            <h4>📋 Deletion Details:</h4>
+            <ul>
+                <li><strong>Account:</strong> {{.user_email}}</li>
+                <li><strong>Deletion Requested:</strong> {{.deletion_requested_at}}</li>
+                <li><strong>Final Deletion:</strong> {{.final_deletion_date}}</li>
+                <li><strong>Grace Period:</strong> {{.grace_period_days}} days</li>
+            </ul>
+        </div>
+
+        <div class="recovery-info">
+            <h4>🔄 Recovery Period ({{.grace_period_days}} days remaining)</h4>
+            <p>Your account is scheduled for permanent deletion on <strong>{{.final_deletion_date}}</strong>.</p>
+            <p>Until then, you can still recover your account by signing in or clicking the button below.</p>
+
+            <div style="text-align: center; margin: 20px 0;">
+                <a href="{{.recovery_url}}" class="button">Recover My Account</a>
+            </div>
+        </div>
+
+        <h4>🗑️ What will be deleted:</h4>
+        <ul>
+            <li>Your user profile and account data</li>
+            <li>All API keys and access tokens</li>
+            <li>Personal preferences and settings</li>
+            <li>Authentication logs and session history</li>
+            {{if .organization_data}}
+            <li>Organizations you own ({{.organizations_count}} organization(s))</li>
+            {{end}}
+        </ul>
+
+        <h4>💾 What we'll retain (as required by law):</h4>
+        <ul>
+            <li>Billing records and transaction history</li>
+            <li>Security and audit logs (anonymized)</li>
+            <li>Legal compliance data</li>
+        </ul>
+
+        {{if .organization_ownership}}
+        <div style="background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h4>⚠️ Organization Ownership</h4>
+            <p>You are the owner of {{.organizations_count}} organization(s). Before your account can be deleted, you must:</p>
+            <ul>
+                <li>Transfer ownership to another member, or</li>
+                <li>Delete the organization(s)</li>
+            </ul>
+            <p><a href="{{.transfer_ownership_url}}">Manage Organization Ownership</a></p>
+        </div>
+        {{end}}
+
+        <div style="background: #e2e3e5; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h4>📞 Need Help?</h4>
+            <p>If you have questions about account deletion or need assistance:</p>
+            <ul>
+                <li>Email: <a href="mailto:{{.support_email}}">{{.support_email}}</a></li>
+                <li>Reference ID: {{.deletion_request_id}}</li>
+            </ul>
+        </div>
+
+        <p>Thank you for using {{.app_name}}. We hope to serve you again in the future.</p>
+    </div>
+    <div class="footer">
+        <p>This is an automated message regarding account deletion request {{.deletion_request_id}}.</p>
+        <p>If you didn't request account deletion, <a href="{{.recovery_url}}">recover your account immediately</a>.</p>
+    </div>
+</div>
+</body>
+</html>

@@ -1,25 +1,23 @@
 package hooks
 
 import (
-	"github.com/juicycleff/frank/ent"
-	"github.com/juicycleff/frank/gen/auth"
-	"github.com/juicycleff/frank/pkg/user"
+	"github.com/juicycleff/frank/internal/model"
 )
 
 type AuthHooks interface {
-	BeforeLogin(rsp user.LoginResult) error
-	OnLogin(rsp *auth.LoginResponse) error
+	BeforeLogin(rsp model.LoginResponse) error
+	OnLogin(rsp *model.LoginResponse) error
 
-	BeforeLogout(rsp *ent.User) error
-	OnLogout(rsp *ent.User) error
+	BeforeLogout(rsp *model.User) error
+	OnLogout(rsp *model.User) error
 
-	BeforeSignup(rsp *user.CreateUserInput) error
-	OnSignup(rsp *auth.LoginResponse) error
+	BeforeSignup(rsp *model.RegisterRequest) error
+	OnSignup(rsp *model.LoginResponse) error
 
-	OnAccountVerified(input auth.VerifyEmailPayload, verified bool) error
+	OnAccountVerified(input model.VerificationResponse, verified bool) error
 
-	BeforeResetPassword(user user.UpdateUserInput) error
-	OnResetPassword(user user.UpdateUserInput) error
+	BeforeResetPassword(user model.PasswordResetRequest) error
+	OnResetPassword(user model.PasswordResetRequest) error
 }
 
 type OrganisationHooks interface{}
@@ -33,7 +31,7 @@ func New() *Hooks {
 	return &Hooks{}
 }
 
-func (h *Hooks) BeforeLogout(input *ent.User) error {
+func (h *Hooks) BeforeLogout(input *model.User) error {
 	if h.Auth == nil {
 		return nil
 	}
@@ -41,7 +39,7 @@ func (h *Hooks) BeforeLogout(input *ent.User) error {
 	return h.Auth.BeforeLogout(input)
 }
 
-func (h *Hooks) OnLogout(input *ent.User) error {
+func (h *Hooks) OnLogout(input *model.User) error {
 	if h.Auth == nil {
 		return nil
 	}
@@ -49,7 +47,7 @@ func (h *Hooks) OnLogout(input *ent.User) error {
 	return h.Auth.OnLogout(input)
 }
 
-func (h *Hooks) BeforeLogin(input user.LoginResult) error {
+func (h *Hooks) BeforeLogin(input model.LoginResponse) error {
 	if h.Auth == nil {
 		return nil
 	}
@@ -57,14 +55,14 @@ func (h *Hooks) BeforeLogin(input user.LoginResult) error {
 	return h.Auth.BeforeLogin(input)
 }
 
-func (h *Hooks) OnLogin(input *auth.LoginResponse) error {
+func (h *Hooks) OnLogin(input *model.LoginResponse) error {
 	if h.Auth == nil {
 		return nil
 	}
 	return h.Auth.OnLogin(input)
 }
 
-func (h *Hooks) BeforeSignup(input *user.CreateUserInput) error {
+func (h *Hooks) BeforeSignup(input *model.RegisterRequest) error {
 	if h.Auth == nil {
 		return nil
 	}
@@ -72,7 +70,7 @@ func (h *Hooks) BeforeSignup(input *user.CreateUserInput) error {
 	return h.Auth.BeforeSignup(input)
 }
 
-func (h *Hooks) OnSignup(input *auth.LoginResponse) error {
+func (h *Hooks) OnSignup(input *model.LoginResponse) error {
 	if h.Auth == nil {
 		return nil
 	}
@@ -80,7 +78,7 @@ func (h *Hooks) OnSignup(input *auth.LoginResponse) error {
 	return h.Auth.OnSignup(input)
 }
 
-func (h *Hooks) OnAccountVerified(input auth.VerifyEmailPayload, verified bool) error {
+func (h *Hooks) OnAccountVerified(input model.VerificationResponse, verified bool) error {
 	if h.Auth == nil {
 		return nil
 	}

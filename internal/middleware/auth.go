@@ -4,546 +4,898 @@ import (
 	"context"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/danielgtaylor/huma/v2"
-	"github.com/danielgtaylor/huma/v2/adapters/humachi"
 	"github.com/go-chi/chi/v5"
-	"github.com/gorilla/sessions"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/juicycleff/frank/config"
-	"github.com/juicycleff/frank/internal/apikeys"
-	"github.com/juicycleff/frank/internal/auth/session"
+	"github.com/juicycleff/frank/ent"
+	"github.com/juicycleff/frank/ent/user"
+	"github.com/juicycleff/frank/internal/contexts"
+	"github.com/juicycleff/frank/internal/di"
+	"github.com/juicycleff/frank/internal/model"
+	"github.com/juicycleff/frank/internal/repository"
 	"github.com/juicycleff/frank/pkg/crypto"
 	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/juicycleff/frank/pkg/logging"
-	"github.com/juicycleff/frank/pkg/utils"
 	"github.com/rs/xid"
 )
 
-// contextKey is a private type for context keys
-type contextKey string
+// AuthMethod represents the authentication method used
+type AuthMethod string
 
 const (
-	// UserIDKey is the key for user ID in the request context
-	UserIDKey contextKey = "user_id"
-
-	// OrganizationIDKey is the key for organization ID in the request context
-	OrganizationIDKey contextKey = "organization_id"
-
-	// RolesKey is the key for user roles in the request context
-	RolesKey contextKey = "roles"
-
-	// PermissionsKey is the key for user permissions in the request context
-	PermissionsKey contextKey = "permissions"
-
-	// ScopesKey is the key for token scopes in the request context
-	ScopesKey contextKey = "scopes"
-
-	// AuthenticatedKey is the key for the authenticated flag in the request context
-	AuthenticatedKey contextKey = "authenticated"
-
-	// SessionKey is the key for session information in the request context
-	SessionKey contextKey = "session"
-
-	// SubdomainKey is the key for subdomain information in the request context
-	SubdomainKey contextKey = "subdomain"
-
-	// HeadersKey is the key for headers included in the request context.
-	HeadersKey contextKey = "headers-included"
-
-	// RequestInfoKey is the key for storing request-specific information in the context.
-	RequestInfoKey contextKey = "req-info-frank"
+	AuthMethodJWT     AuthMethod = "jwt"
+	AuthMethodAPIKey  AuthMethod = "api_key"
+	AuthMethodSession AuthMethod = "session"
+	AuthMethodNone    AuthMethod = "none"
 )
 
-// AuthOptions configures how the Auth middleware behaves
-type AuthOptions struct {
-	// Required determines if authentication is required
-	Required bool
-
-	// AllowAPIKey allows API key authentication
-	AllowAPIKey bool
-
-	// AllowSession allows session-based authentication
-	AllowSession bool
-
-	// AllowBearerToken allows bearer token authentication
-	AllowBearerToken bool
-
-	// AllowedScopes limits access to requests with specific scopes
-	AllowedScopes []string
-
-	// RequiredRoles specifies roles the user must have to access
-	RequiredRoles []string
-
-	// RequiredPermissions specifies permissions the user must have to access
-	RequiredPermissions []string
-
-	// SessionManager is used for session-based authentication
-	SessionManager *session.Manager
-
-	// SessionManagerStore is used for session-based authentication
-	SessionStore sessions.Store
-
-	// APIKeyService is used for API key authentication
-	APIKeyService apikeys.Service
-
-	CookieHandler *session.CookieHandler
+// UserContext represents the authenticated user context
+type UserContext struct {
+	ID             xid.ID           `json:"id"`
+	Email          string           `json:"email"`
+	Username       string           `json:"username,omitempty"`
+	FirstName      string           `json:"firstName,omitempty"`
+	LastName       string           `json:"lastName,omitempty"`
+	UserType       user.UserType    `json:"userType"`
+	OrganizationID *xid.ID          `json:"organizationId,omitempty"`
+	Active         bool             `json:"active"`
+	EmailVerified  bool             `json:"emailVerified"`
+	Permissions    []string         `json:"permissions,omitempty"`
+	Roles          []model.RoleInfo `json:"roles,omitempty"`
+	Metadata       map[string]any   `json:"metadata,omitempty"`
+	SessionID      xid.ID           `json:"sessionId,omitempty"`
 }
 
-// DefaultAuthOptions returns the default auth options
-func DefaultAuthOptions() AuthOptions {
-	return AuthOptions{
-		Required:         true,
-		AllowAPIKey:      true,
-		AllowSession:     true,
-		AllowBearerToken: true,
+// SessionContext represents the session context
+type SessionContext struct {
+	ID           xid.ID    `json:"id"`
+	Token        string    `json:"token"`
+	UserID       xid.ID    `json:"userId"`
+	ExpiresAt    time.Time `json:"expiresAt"`
+	LastActiveAt time.Time `json:"lastActiveAt"`
+	IPAddress    string    `json:"ipAddress,omitempty"`
+	UserAgent    string    `json:"userAgent,omitempty"`
+	DeviceID     string    `json:"deviceId,omitempty"`
+}
+
+// APIKeyContext represents the API key context
+type APIKeyContext struct {
+	ID             xid.ID                  `json:"id"`
+	Name           string                  `json:"name"`
+	Type           string                  `json:"type"`
+	UserID         *xid.ID                 `json:"userId,omitempty"`
+	OrganizationID *xid.ID                 `json:"organizationId,omitempty"`
+	Permissions    []string                `json:"permissions,omitempty"`
+	Scopes         []string                `json:"scopes,omitempty"`
+	LastUsed       *time.Time              `json:"lastUsed,omitempty"`
+	RateLimits     *model.APIKeyRateLimits `json:"rateLimits,omitempty"`
+}
+
+// JWTClaims represents JWT token claims
+type JWTClaims struct {
+	UserID         xid.ID   `json:"user_id"`
+	OrganizationID *xid.ID  `json:"organization_id"`
+	SessionID      *xid.ID  `json:"session_id"`
+	UserType       string   `json:"user_type"`
+	Permissions    []string `json:"permissions,omitempty"`
+	jwt.RegisteredClaims
+}
+
+// AuthMiddleware provides authentication middleware functions
+type AuthMiddleware struct {
+	config           *config.Config
+	userRepo         repository.UserRepository
+	sessionRepo      repository.SessionRepository
+	apiKeyRepo       repository.ApiKeyRepository
+	organizationRepo repository.OrganizationRepository
+	crypto           crypto.Util
+	api              huma.API
+	logger           logging.Logger
+}
+
+// NewAuthMiddleware creates a new authentication middleware
+func NewAuthMiddleware(di di.Container, api huma.API) *AuthMiddleware {
+	return &AuthMiddleware{
+		api:              api,
+		config:           di.Config(),
+		userRepo:         di.Repo().User(),
+		sessionRepo:      di.Repo().Session(),
+		apiKeyRepo:       di.Repo().APIKey(),
+		organizationRepo: di.Repo().Organization(),
+		crypto:           di.Crypto(),
+		logger:           di.Logger().Named("auth-middleware"),
 	}
 }
 
-// Auth middleware extracts and validates authentication information
-func Auth(
-	cfg *config.Config,
-	logger logging.Logger,
-	sessionManager *session.Manager,
-	sessionStore sessions.Store,
-	apiKeyService apikeys.Service,
-	required bool,
-) func(http.Handler) http.Handler {
-	options := DefaultAuthOptions()
-	options.Required = required
-	options.AllowAPIKey = cfg.Auth.AllowAPIKey
-	options.AllowSession = cfg.Auth.AllowSession
-	options.AllowBearerToken = cfg.Auth.AllowBearerToken
-
-	options.SessionManager = sessionManager
-	options.SessionStore = sessionStore
-	options.APIKeyService = apiKeyService
-
-	return AuthWithOptions(cfg, logger, &options)
-}
-
-// AuthWithOptions returns an Auth middleware with custom options
-func AuthWithOptions(cfg *config.Config, logger logging.Logger, options *AuthOptions) func(http.Handler) http.Handler {
+// RequireAuth middleware that requires authentication via JWT, API key, or session
+func (m *AuthMiddleware) RequireAuth() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			authenticated, ctx, err := PrefillAuthWithOptions(r, r.Context(), cfg, logger, options)
+			ctx := r.Context()
 
-			// Check if authentication is required but not provided
-			if options.Required && !authenticated {
-				utils.RespondError(w, err)
+			// Try different authentication methods in order of preference
+			authenticated := false
+
+			// 1. Try JWT authentication
+			if m.config.Auth.AllowBearerToken {
+				if session, user, err := m.authenticateJWT(ctx, r); err == nil && user != nil {
+					ctx = m.setUserContext(ctx, user, AuthMethodJWT)
+					ctx = m.setSessionContext(ctx, session)
+					authenticated = true
+				}
+			}
+
+			// 2. Try API Key authentication
+			if !authenticated && m.config.Auth.AllowAPIKey {
+				if apiKey, user, err := m.authenticateAPIKey(ctx, r); err == nil && apiKey != nil && user != nil {
+					ctx = m.setUserContext(ctx, user, AuthMethodAPIKey)
+					ctx = m.setAPIKeyContext(ctx, apiKey)
+					authenticated = true
+				}
+			}
+
+			// 3. Try Session authentication
+			if !authenticated && m.config.Auth.AllowSession {
+				if session, user, err := m.authenticateSession(ctx, r); err == nil && session != nil && user != nil {
+					ctx = m.setUserContext(ctx, user, AuthMethodSession)
+					ctx = m.setSessionContext(ctx, session)
+					authenticated = true
+				}
+			}
+
+			if !authenticated {
+				m.respondUnauthorized(w, r, "authentication required")
 				return
 			}
 
-			// Pass to the next handler with updated context
+			// Add request metadata
+			ctx = m.addRequestMetadata(ctx, r)
+
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
 }
 
-// PrefillAuthWithOptions returns an Auth middleware with custom options
-func PrefillAuthWithOptions(
-	r *http.Request,
-	ctx context.Context,
-	cfg *config.Config,
-	logger logging.Logger,
-	options *AuthOptions,
-) (bool, context.Context, error) {
-	authenticated := false
+// RequireAuthHuma middleware that requires authentication via JWT, API key, or session
+func (m *AuthMiddleware) RequireAuthHuma() func(huma.Context, func(huma.Context)) {
+	return func(ctx huma.Context, next func(huma.Context)) {
+		info, _ := GetRequestInfoFromContext(ctx.Context())
+		r := info.Req
+		rctx := ctx.Context()
 
-	// Try to authenticate using bearer tokens
-	if options.AllowBearerToken {
-		authHeader := r.Header.Get("Authorization")
-		if strings.HasPrefix(authHeader, "Bearer ") {
-			token := strings.TrimPrefix(authHeader, "Bearer ")
-			userID, orgID, err := validateBearerToken(ctx, token, cfg)
-			if err == nil {
-				// Valid JWT token
-				ctx = context.WithValue(ctx, UserIDKey, userID)
-				if orgID != "" {
-					ctx = context.WithValue(ctx, OrganizationIDKey, orgID)
-				}
+		// Try different authentication methods in order of preference
+		authenticated := false
+
+		// 1. Try JWT authentication
+		if m.config.Auth.AllowBearerToken {
+			if session, user, err := m.authenticateJWT(rctx, r); err == nil && user != nil {
+				ctx = m.setUserContextHuma(ctx, user, AuthMethodJWT)
+				ctx = m.setSessionContextHuma(ctx, session)
 				authenticated = true
-				logger.Debug("Authenticated via Bearer token")
-			} else {
-				// If not a valid JWT, check if it's a session token
-				if options.SessionManager != nil {
-					sess, err := options.SessionManager.GetSession(ctx, token)
-					if err == nil {
-						ctx = context.WithValue(ctx, UserIDKey, sess.UserID)
-						if sess.OrganizationID != "" {
-							ctx = context.WithValue(ctx, OrganizationIDKey, sess.OrganizationID)
-						}
-						authenticated = true
-						logger.Debug("Authenticated via session token in Authorization header")
-					}
-				}
 			}
 		}
-	}
 
-	// Try API key authentication
-	if !authenticated && options.AllowAPIKey && options.APIKeyService != nil {
-		apiKey := r.Header.Get("X-API-Key")
-		if apiKey == "" {
-			// Check in query params as a fallback
-			apiKey = r.URL.Query().Get("api_key")
-		}
-
-		if apiKey != "" {
-			if apiKeyInfo, err := options.APIKeyService.Validate(ctx, apiKey); err == nil {
-				// API key is valid
-				if !apiKeyInfo.UserID.IsNil() {
-					ctx = context.WithValue(ctx, UserIDKey, apiKeyInfo.UserID)
-				}
-				if !apiKeyInfo.OrganizationID.IsNil() {
-					ctx = context.WithValue(ctx, OrganizationIDKey, apiKeyInfo.OrganizationID)
-				}
+		// 2. Try API Key authentication
+		if !authenticated && m.config.Auth.AllowAPIKey {
+			if apiKey, user, err := m.authenticateAPIKey(rctx, r); err == nil && apiKey != nil && user != nil {
+				ctx = m.setUserContextHuma(ctx, user, AuthMethodAPIKey)
+				ctx = m.setAPIKeyContextHuma(ctx, apiKey)
 				authenticated = true
-				logger.Debug("Authenticated via API key")
-
-				// Update last used timestamp in a goroutine
-				go func(id xid.ID) {
-					bgCtx, cancel := context.WithTimeout(context.Background(), cfg.Server.ShutdownTimeout)
-					defer cancel()
-					if err := options.APIKeyService.UpdateLastUsed(bgCtx, id.String()); err != nil {
-						logger.Error("Failed to update API key last used timestamp",
-							logging.String("key_id", id.String()),
-							logging.Error(err))
-					}
-				}(apiKeyInfo.ID)
 			}
 		}
-	}
 
-	// Try session authentication
-	if !authenticated && options.AllowSession {
-		// Get session via the helper
-		sess, err := session.GetSessionHelper(r, cfg, options.CookieHandler, options.SessionStore, logger)
-		if err == nil {
-			// Check if user is authenticated in session
-			if userID, ok := sess.Values["user_id"].(string); ok && userID != "" {
-				ctx = context.WithValue(ctx, UserIDKey, userID)
-
-				// Also check for organization in session
-				if orgID, ok := sess.Values["organization_id"].(string); ok && orgID != "" {
-					ctx = context.WithValue(ctx, OrganizationIDKey, orgID)
-				}
+		// 3. Try Session authentication
+		if !authenticated && m.config.Auth.AllowSession {
+			if session, user, err := m.authenticateSession(rctx, r); err == nil && session != nil && user != nil {
+				ctx = m.setUserContextHuma(ctx, user, AuthMethodSession)
+				ctx = m.setSessionContextHuma(ctx, session)
 				authenticated = true
-				logger.Debug("Authenticated via session cookie")
 			}
 		}
+
+		if !authenticated {
+			m.respondUnauthorizedHuma(ctx, "authentication required")
+			return
+		}
+
+		// Add request metadata
+		ctx = m.addRequestMetadataHuma(ctx, r)
+
+		next(ctx)
 	}
-
-	// Add authentication status to context
-	ctx = context.WithValue(ctx, AuthenticatedKey, authenticated)
-
-	// Check if authentication is required but not provided
-	if options.Required && !authenticated {
-		return authenticated, ctx, errors.New(errors.CodeUnauthorized, "authentication required")
-	}
-
-	return authenticated, ctx, nil
 }
 
-// AuthHuma middleware extracts and validates authentication information
-func AuthHuma(cfg *config.Config, logger logging.Logger, sessionManager *session.Manager, apiKeyService apikeys.Service) func(huma.Context, func(huma.Context)) {
-	options := DefaultAuthOptions()
-	options.SessionManager = sessionManager
-	options.APIKeyService = apiKeyService
-
-	return AuthWithOptionsHuma(cfg, logger, options)
-}
-
-// AuthWithOptionsHuma returns an Auth middleware with custom options
-func AuthWithOptionsHuma(cfg *config.Config, logger logging.Logger, options AuthOptions) func(huma.Context, func(huma.Context)) {
-	return func(hctx huma.Context, next func(huma.Context)) {
-
-		// Unwrap the request and response objects.
-		r, w := humachi.Unwrap(hctx)
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+// OptionalAuth middleware that allows both authenticated and unauthenticated requests
+func (m *AuthMiddleware) OptionalAuth() func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
-			authenticated := false
 
-			// Get the route pattern from Chi's context
-			routePattern := chi.RouteContext(r.Context()).RoutePattern()
+			// Try authentication but don't fail if none found
+			if m.config.Auth.AllowBearerToken {
+				if session, user, err := m.authenticateJWT(ctx, r); err == nil && user != nil {
+					ctx = m.setUserContext(ctx, user, AuthMethodJWT)
+					ctx = m.setSessionContext(ctx, session)
+				}
+			}
 
-			// Skip authentication for public routes (modify this based on your requirements)
-			for _, path := range cfg.Security.PublicPaths {
-				if routePattern == path {
-					next(hctx)
+			if GetUserFromContext(ctx) == nil && m.config.Auth.AllowAPIKey {
+				if apiKey, user, err := m.authenticateAPIKey(ctx, r); err == nil && apiKey != nil && user != nil {
+					ctx = m.setUserContext(ctx, user, AuthMethodAPIKey)
+					ctx = m.setAPIKeyContext(ctx, apiKey)
+				}
+			}
+
+			if GetUserFromContext(ctx) == nil && m.config.Auth.AllowSession {
+				if session, user, err := m.authenticateSession(ctx, r); err == nil && session != nil && user != nil {
+					ctx = m.setUserContext(ctx, user, AuthMethodSession)
+					ctx = m.setSessionContext(ctx, session)
+				}
+			}
+
+			// Add request metadata regardless of authentication
+			ctx = m.addRequestMetadata(ctx, r)
+
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
+}
+
+// OptionalAuthHuma middleware that allows both authenticated and unauthenticated requests
+func (m *AuthMiddleware) OptionalAuthHuma() func(huma.Context, func(huma.Context)) {
+	return func(ctx huma.Context, next func(huma.Context)) {
+		info, _ := GetRequestInfoFromContext(ctx.Context())
+		r := info.Req
+
+		// Try authentication but don't fail if none found
+		if m.config.Auth.AllowBearerToken {
+			if session, user, err := m.authenticateJWT(ctx.Context(), r); err == nil && user != nil {
+				ctx = m.setUserContextHuma(ctx, user, AuthMethodJWT)
+				ctx = m.setSessionContextHuma(ctx, session)
+			}
+		}
+
+		if GetUserFromContext(ctx.Context()) == nil && m.config.Auth.AllowAPIKey {
+			if apiKey, user, err := m.authenticateAPIKey(ctx.Context(), r); err == nil && apiKey != nil && user != nil {
+				ctx = m.setUserContextHuma(ctx, user, AuthMethodAPIKey)
+				ctx = m.setAPIKeyContextHuma(ctx, apiKey)
+			}
+		}
+
+		if GetUserFromContext(ctx.Context()) == nil && m.config.Auth.AllowSession {
+			if session, user, err := m.authenticateSession(ctx.Context(), r); err == nil && session != nil && user != nil {
+				ctx = m.setUserContextHuma(ctx, user, AuthMethodSession)
+				ctx = m.setSessionContextHuma(ctx, session)
+			}
+		}
+
+		// Add request metadata regardless of authentication
+		ctx = m.addRequestMetadataHuma(ctx, r)
+
+		next(ctx)
+	}
+}
+
+// RequireUserType middleware that requires a specific user type
+func (m *AuthMiddleware) RequireUserType(userTypes ...user.UserType) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			user := GetUserFromContext(r.Context())
+			if user == nil {
+				m.respondUnauthorized(w, r, "authentication required")
+				return
+			}
+
+			for _, allowedType := range userTypes {
+				if user.UserType == allowedType {
+					next.ServeHTTP(w, r)
 					return
 				}
 			}
 
-			// Try to authenticate using various methods
-			if options.AllowBearerToken {
-				authHeader := r.Header.Get("Authorization")
-				if strings.HasPrefix(authHeader, "Bearer ") {
-					token := strings.TrimPrefix(authHeader, "Bearer ")
-					if userID, orgID, err := validateBearerToken(ctx, token, cfg); err == nil {
-						// Token is valid, add info to context
-						ctx = context.WithValue(ctx, UserIDKey, userID)
-						if orgID != "" {
-							ctx = context.WithValue(ctx, OrganizationIDKey, orgID)
-						}
-						authenticated = true
-					}
-				}
-			}
-
-			// Try API key authentication
-			if !authenticated && options.AllowAPIKey && options.APIKeyService != nil {
-				apiKey := r.Header.Get("X-API-Key")
-				if apiKey == "" {
-					// Check in query params as a fallback
-					apiKey = r.URL.Query().Get("api_key")
-				}
-
-				if apiKey != "" {
-					if apiKeyInfo, err := options.APIKeyService.Validate(ctx, apiKey); err == nil {
-						// API key is valid, add info to context
-						if !apiKeyInfo.UserID.IsNil() {
-							ctx = context.WithValue(ctx, UserIDKey, apiKeyInfo.UserID)
-						}
-						if !apiKeyInfo.OrganizationID.IsNil() {
-							ctx = context.WithValue(ctx, OrganizationIDKey, apiKeyInfo.OrganizationID)
-						}
-						authenticated = true
-
-						// Update last used timestamp in a goroutine
-						go func(id xid.ID) {
-							bgCtx, cancel := context.WithTimeout(context.Background(), cfg.Server.ShutdownTimeout)
-							defer cancel()
-							if err := options.APIKeyService.UpdateLastUsed(bgCtx, id.String()); err != nil {
-								logger.Error("Failed to update API key last used timestamp",
-									logging.String("key_id", id.String()),
-									logging.Error(err))
-							}
-						}(apiKeyInfo.ID)
-					}
-				}
-			}
-
-			// Try session authentication
-			if !authenticated && options.AllowSession && options.SessionManager != nil {
-				// Try to get token from session cookie
-				sess, err := session.GetSessionHelper(r, cfg, options.CookieHandler, options.SessionStore, logger)
-				if err == nil {
-					// Check if user is authenticated in session
-					if userID, ok := sess.Values["user_id"].(string); ok && userID != "" {
-						ctx = context.WithValue(ctx, UserIDKey, userID)
-
-						// Also check for organization in session
-						if orgID, ok := sess.Values["organization_id"].(string); ok && orgID != "" {
-							ctx = context.WithValue(ctx, OrganizationIDKey, orgID)
-						}
-						authenticated = true
-					}
-				}
-			}
-
-			// Check if authentication is required but not provided
-			if options.Required && !authenticated {
-				utils.RespondError(w, errors.New(errors.CodeUnauthorized, "authentication required"))
-				return
-			}
-
-			// Add authentication status to context
-			ctx = context.WithValue(ctx, AuthenticatedKey, authenticated)
-
-			// Pass to the next handler with updated context
-			next(hctx)
-		}).ServeHTTP(w, r)
+			m.respondForbidden(w, r, "insufficient permissions")
+		})
 	}
 }
 
-// validateBearerToken validates a JWT token and extracts the user ID
-func validateBearerToken(ctx context.Context, token string, cfg *config.Config) (string, string, error) {
-	// Initialize JWT config
-	jwtConfig := &crypto.JWTConfig{
-		SigningMethod: cfg.Auth.TokenSigningMethod,
-		SignatureKey:  []byte(cfg.Auth.TokenSecretKey),
-		ValidationKey: []byte(cfg.Auth.TokenSecretKey),
-		Issuer:        cfg.Auth.TokenIssuer,
-		Audience:      cfg.Auth.TokenAudience,
-	}
-
-	// Validate token and get claims
-	claims, err := jwtConfig.ValidateToken(token)
-	if err != nil {
-		return "", "", err
-	}
-
-	// Extract user ID from subject claim
-	userID, ok := claims["sub"].(string)
-	if !ok || userID == "" {
-		return "", "", errors.New(errors.CodeInvalidToken, "invalid token: missing subject claim")
-	}
-
-	// Extract organization ID if present
-	var orgID string
-	if org, ok := claims["organization_id"].(string); ok && org != "" {
-		orgID = org
-	}
-
-	return userID, orgID, nil
-}
-
-// RequireAuthentication returns a middleware that requires authentication
-func RequireAuthentication(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		authenticated, _ := ctx.Value(AuthenticatedKey).(bool)
-
-		if !authenticated {
-			utils.RespondError(w, errors.New(errors.CodeUnauthorized, "authentication required"))
+// RequireUserTypeHuma middleware that requires a specific user type
+func (m *AuthMiddleware) RequireUserTypeHuma(userTypes ...user.UserType) func(huma.Context, func(huma.Context)) {
+	return func(ctx huma.Context, next func(huma.Context)) {
+		user := GetUserFromContext(ctx.Context())
+		if user == nil {
+			m.respondUnauthorizedHuma(ctx, "authentication required")
 			return
 		}
 
-		next.ServeHTTP(w, r)
-	})
+		for _, allowedType := range userTypes {
+			if user.UserType == allowedType {
+				next(ctx)
+				return
+			}
+		}
+
+		m.respondForbiddenHuma(ctx, "insufficient permissions")
+	}
 }
 
-// RequireAuthenticationHuma returns a middleware that requires authentication
-func RequireAuthenticationHuma(ctx huma.Context, next func(huma.Context)) {
-	// Unwrap the request and response objects.
-	r, w := humachi.Unwrap(ctx)
+// RequireOrganization middleware that requires organization context
+func (m *AuthMiddleware) RequireOrganization() func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			orgID := GetOrganizationIDFromContext(r.Context())
+			if orgID == nil {
+				m.respondForbidden(w, r, "organization context required")
+				return
+			}
 
-	http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		authenticated, _ := ctx.Context().Value(AuthenticatedKey).(bool)
+			next.ServeHTTP(w, r)
+		})
+	}
+}
 
-		if !authenticated {
-			utils.RespondError(w, errors.New(errors.CodeUnauthorized, "authentication required"))
+// RequireOrganizationHuma middleware that requires organization context
+func (m *AuthMiddleware) RequireOrganizationHuma() func(huma.Context, func(huma.Context)) {
+	return func(ctx huma.Context, next func(huma.Context)) {
+		orgID := GetOrganizationIDFromContext(ctx.Context())
+		if orgID == nil {
+			m.respondForbiddenHuma(ctx, "organization context required")
 			return
 		}
 
 		next(ctx)
-	}).ServeHTTP(w, r)
-}
-
-// RequireRole returns a middleware that requires a specific role
-func RequireRole(role string) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			ctx := r.Context()
-
-			// Check if user is authenticated
-			authenticated, _ := ctx.Value(AuthenticatedKey).(bool)
-			if !authenticated {
-				utils.RespondError(w, errors.New(errors.CodeUnauthorized, "authentication required"))
-				return
-			}
-
-			// Get roles from context
-			rolesData := ctx.Value(RolesKey)
-			if rolesData == nil {
-				utils.RespondError(w, errors.New(errors.CodeForbidden, "access denied: missing role information"))
-				return
-			}
-
-			roles, ok := rolesData.([]string)
-			if !ok {
-				utils.RespondError(w, errors.New(errors.CodeForbidden, "access denied: invalid role information"))
-				return
-			}
-
-			// Check if user has the required role
-			hasRole := false
-			for _, r := range roles {
-				if r == role {
-					hasRole = true
-					break
-				}
-			}
-
-			if !hasRole {
-				utils.RespondError(w, errors.New(errors.CodeForbidden, "access denied: missing required role"))
-				return
-			}
-
-			next.ServeHTTP(w, r)
-		})
 	}
 }
 
-// RequirePermission returns a middleware that requires a specific permission
-func RequirePermission(permission string) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			ctx := r.Context()
+// HumaAuth Huma Authentication Middleware for API handlers
+func (m *AuthMiddleware) HumaAuth() func(huma.Context, func(huma.Context)) {
+	return func(ctx huma.Context, next func(huma.Context)) {
+		r := ctx.Context().Value("http_request").(*http.Request)
+		// w := ctx.Context().Value("http_writer").(http.ResponseWriter)
 
-			// Check if user is authenticated
-			authenticated, _ := ctx.Value(AuthenticatedKey).(bool)
-			if !authenticated {
-				utils.RespondError(w, errors.New(errors.CodeUnauthorized, "authentication required"))
-				return
+		// Try authentication
+		authenticated := false
+		reqCtx := r.Context()
+
+		if m.config.Auth.AllowBearerToken {
+			if session, currentUser, err := m.authenticateJWT(reqCtx, r); err == nil && currentUser != nil {
+				ctx = m.setUserContextHuma(ctx, currentUser, AuthMethodJWT)
+				ctx = m.setSessionContextHuma(ctx, session)
+				authenticated = true
 			}
+		}
 
-			// Get permissions from context
-			permsData := ctx.Value(PermissionsKey)
-			if permsData == nil {
-				utils.RespondError(w, errors.New(errors.CodeForbidden, "access denied: missing permission information"))
-				return
+		if !authenticated && m.config.Auth.AllowAPIKey {
+			if apiKey, currentUser, err := m.authenticateAPIKey(reqCtx, r); err == nil && apiKey != nil && currentUser != nil {
+				ctx = m.setUserContextHuma(ctx, currentUser, AuthMethodAPIKey)
+				ctx = m.setAPIKeyContextHuma(ctx, apiKey)
+				authenticated = true
 			}
+		}
 
-			permissions, ok := permsData.([]string)
-			if !ok {
-				utils.RespondError(w, errors.New(errors.CodeForbidden, "access denied: invalid permission information"))
-				return
+		if !authenticated && m.config.Auth.AllowSession {
+			if session, currentUser, err := m.authenticateSession(reqCtx, r); err == nil && session != nil && currentUser != nil {
+				ctx = m.setUserContextHuma(ctx, currentUser, AuthMethodSession)
+				ctx = m.setSessionContextHuma(ctx, session)
+				authenticated = true
 			}
+		}
 
-			// Check if user has the required permission
-			hasPermission := false
-			for _, p := range permissions {
-				if p == permission {
-					hasPermission = true
-					break
-				}
-			}
+		if !authenticated {
+			ctx.SetStatus(http.StatusUnauthorized)
+			ctx.SetHeader("Content-Type", "application/json")
+			errResp := errors.NewErrorResponse(errors.New(errors.CodeUnauthorized, "authentication required"))
+			huma.WriteErr(m.api, ctx, errResp.StatusCode(), errResp.Error())
+			return
+		}
 
-			if !hasPermission {
-				utils.RespondError(w, errors.New(errors.CodeForbidden, "access denied: missing required permission"))
-				return
-			}
-
-			next.ServeHTTP(w, r)
-		})
+		// Update context and continue
+		ctx = m.addRequestMetadataHuma(ctx, r)
+		next(ctx)
 	}
 }
 
-// GetUserIDReq gets the user ID from the request context
-func GetUserIDReq(r *http.Request) (xid.ID, bool) {
-	userID, ok := r.Context().Value(UserIDKey).(xid.ID)
-	return userID, ok
+// Authentication methods
+
+func (m *AuthMiddleware) authenticateJWT(ctx context.Context, r *http.Request) (*SessionContext, *UserContext, error) {
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		return nil, nil, errors.New(errors.CodeUnauthorized, "no authorization header")
+	}
+
+	// Extract Bearer token
+	parts := strings.SplitN(authHeader, " ", 2)
+	if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+		return nil, nil, errors.New(errors.CodeUnauthorized, "invalid authorization header format")
+	}
+
+	tokenString := parts[1]
+
+	// Parse and validate JWT token
+	claims, err := m.crypto.JWT().ValidateAccessToken(tokenString)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, errors.CodeUnauthorized, "invalid token")
+	}
+
+	// Check token expiration
+	if claims.ExpiresAt != nil && claims.ExpiresAt.Time.Before(time.Now()) {
+		return nil, nil, errors.New(errors.CodeUnauthorized, "token expired")
+	}
+
+	// Get user from database
+	user, err := m.userRepo.GetByID(ctx, claims.UserID)
+	if err != nil {
+		return nil, nil, errors.New(errors.CodeUnauthorized, "user not found")
+	}
+
+	if !user.Active || user.Blocked {
+		return nil, nil, errors.New(errors.CodeUnauthorized, "user account is disabled")
+	}
+
+	// Validate session
+	session, err := m.sessionRepo.GetByID(ctx, claims.SessionID)
+	if err != nil {
+		return nil, nil, errors.New(errors.CodeUnauthorized, "invalid session")
+	}
+
+	sessionCtx := &SessionContext{
+		ID:           session.ID,
+		Token:        session.Token,
+		UserID:       session.UserID,
+		ExpiresAt:    session.ExpiresAt,
+		LastActiveAt: session.LastActiveAt,
+		IPAddress:    session.IPAddress,
+		UserAgent:    session.UserAgent,
+		DeviceID:     session.DeviceID,
+	}
+	userCtx := m.convertToUserContext(user, nil)
+	userCtx.SessionID = session.ID
+
+	return sessionCtx, userCtx, nil
 }
 
-// NewLoggedInUserIDCtx .
-func NewLoggedInUserIDCtx(ctx context.Context, userID xid.ID) context.Context {
-	ctx = context.WithValue(ctx, UserIDKey, userID)
+func (m *AuthMiddleware) authenticateAPIKey(ctx context.Context, r *http.Request) (*APIKeyContext, *UserContext, error) {
+	// Try header first
+	keyValue := r.Header.Get("X-API-Key")
+	if keyValue == "" {
+		// Try query parameter
+		keyValue = r.URL.Query().Get("api_key")
+	}
+
+	if keyValue == "" {
+		return nil, nil, errors.New(errors.CodeUnauthorized, "no api key provided")
+	}
+
+	// Hash the key for lookup
+	hashedKey := m.crypto.Hasher().HashAPIKey(keyValue)
+
+	// Get API key from database
+	apiKey, err := m.apiKeyRepo.GetActiveByHashedKey(ctx, hashedKey)
+	if err != nil {
+		return nil, nil, errors.New(errors.CodeUnauthorized, "invalid api key")
+	}
+
+	// Check expiration
+	if apiKey.ExpiresAt != nil && apiKey.ExpiresAt.Before(time.Now()) {
+		return nil, nil, errors.New(errors.CodeUnauthorized, "api key expired")
+	}
+
+	// Update last used (async)
+	go func() {
+		_ = m.apiKeyRepo.UpdateLastUsed(context.Background(), apiKey.ID)
+	}()
+
+	// Get associated user if user-scoped key
+	var currentUser *ent.User
+	if !apiKey.UserID.IsNil() {
+		currentUser, err = m.userRepo.GetByID(ctx, apiKey.UserID)
+		if err != nil {
+			return nil, nil, errors.New(errors.CodeUnauthorized, "associated user not found")
+		}
+
+		if !currentUser.Active || currentUser.Blocked {
+			return nil, nil, errors.New(errors.CodeUnauthorized, "associated user account is disabled")
+		}
+	}
+
+	apiKeyCtx := &APIKeyContext{
+		ID:             apiKey.ID,
+		Name:           apiKey.Name,
+		Type:           apiKey.Type,
+		UserID:         &apiKey.UserID,
+		OrganizationID: &apiKey.OrganizationID,
+		Permissions:    apiKey.Permissions,
+		Scopes:         apiKey.Scopes,
+		LastUsed:       apiKey.LastUsed,
+	}
+
+	var userCtx *UserContext
+	if currentUser != nil {
+		userCtx = m.convertToUserContext(currentUser, apiKey.Permissions)
+	} else {
+		// Organization-level API key without specific user
+		userCtx = &UserContext{
+			ID:             xid.New(), // Synthetic ID for organization key
+			UserType:       user.UserTypeExternal,
+			OrganizationID: &apiKey.OrganizationID,
+			Active:         true,
+			EmailVerified:  true,
+			Permissions:    apiKey.Permissions,
+		}
+	}
+
+	return apiKeyCtx, userCtx, nil
+}
+
+func (m *AuthMiddleware) authenticateSession(ctx context.Context, r *http.Request) (*SessionContext, *UserContext, error) {
+	// Try session cookie
+	cookie, err := r.Cookie(m.config.Auth.SessionName)
+	if err != nil {
+		return nil, nil, errors.New(errors.CodeUnauthorized, "no session cookie")
+	}
+
+	sessionToken := cookie.Value
+	if sessionToken == "" {
+		return nil, nil, errors.New(errors.CodeUnauthorized, "empty session token")
+	}
+
+	// Validate session
+	session, err := m.sessionRepo.GetByToken(ctx, sessionToken)
+	if err != nil {
+		return nil, nil, errors.New(errors.CodeUnauthorized, "invalid session")
+	}
+
+	// Check session validity
+	if !session.Active || time.Now().After(session.ExpiresAt) {
+		return nil, nil, errors.New(errors.CodeUnauthorized, "session expired")
+	}
+
+	// Get user
+	user, err := m.userRepo.GetByID(ctx, session.UserID)
+	if err != nil {
+		return nil, nil, errors.New(errors.CodeUnauthorized, "user not found")
+	}
+
+	if !user.Active || user.Blocked {
+		return nil, nil, errors.New(errors.CodeUnauthorized, "user account is disabled")
+	}
+
+	// Update session activity (async)
+	go func() {
+		_ = m.sessionRepo.UpdateLastActive(context.Background(), sessionToken)
+	}()
+
+	sessionCtx := &SessionContext{
+		ID:           session.ID,
+		Token:        session.Token,
+		UserID:       session.UserID,
+		ExpiresAt:    session.ExpiresAt,
+		LastActiveAt: session.LastActiveAt,
+		IPAddress:    session.IPAddress,
+		UserAgent:    session.UserAgent,
+		DeviceID:     session.DeviceID,
+	}
+
+	userCtx := m.convertToUserContext(user, nil)
+
+	return sessionCtx, userCtx, nil
+}
+
+// Context helper methods
+
+func (m *AuthMiddleware) setUserContext(ctx context.Context, user *UserContext, authMethod AuthMethod) context.Context {
+	ctx = context.WithValue(ctx, contexts.UserContextKey, user)
+	ctx = context.WithValue(ctx, contexts.UserIDContextKey, user.ID)
+	ctx = context.WithValue(ctx, contexts.UserTypeContextKey, user.UserType)
+	ctx = context.WithValue(ctx, contexts.AuthMethodContextKey, authMethod)
+
+	if user.OrganizationID != nil {
+		ctx = context.WithValue(ctx, contexts.OrganizationIDContextKey, *user.OrganizationID)
+	}
+
+	if len(user.Permissions) > 0 {
+		ctx = context.WithValue(ctx, contexts.PermissionsContextKey, user.Permissions)
+	}
+
+	if len(user.Roles) > 0 {
+		ctx = context.WithValue(ctx, contexts.RolesContextKey, user.Roles)
+	}
+
 	return ctx
 }
 
-// GetUserID gets the user ID from the request context
-func GetUserID(ctx context.Context) (xid.ID, bool) {
-	userID, ok := ctx.Value(UserIDKey).(xid.ID)
-	return userID, ok
+func (m *AuthMiddleware) setSessionContext(ctx context.Context, session *SessionContext) context.Context {
+	ctx = context.WithValue(ctx, contexts.SessionContextKey, session)
+	ctx = context.WithValue(ctx, contexts.SessionIDContextKey, session.ID)
+	return ctx
 }
 
-// GetUserIDFromContext gets the user ID from the request context
-func GetUserIDFromContext(ctx context.Context) (xid.ID, error) {
-	userID, ok := ctx.Value(UserIDKey).(xid.ID)
-	if !ok {
-		return xid.NilID(), errors.New(errors.CodeForbidden, "user not logged in")
+func (m *AuthMiddleware) setAPIKeyContext(ctx context.Context, apiKey *APIKeyContext) context.Context {
+	ctx = context.WithValue(ctx, contexts.APIKeyContextKey, apiKey)
+	ctx = context.WithValue(ctx, contexts.APIKeyIDContextKey, apiKey.ID)
+	return ctx
+}
+
+func (m *AuthMiddleware) addRequestMetadata(ctx context.Context, r *http.Request) context.Context {
+	// Extract request ID from chi middleware
+	if requestID := chi.URLParam(r, "request_id"); requestID != "" {
+		ctx = context.WithValue(ctx, contexts.RequestIDContextKey, requestID)
 	}
-	return userID, nil
+
+	// Add IP address
+	ctx = context.WithValue(ctx, contexts.IPAddressContextKey, GetClientIP(r))
+
+	// Add User Agent
+	ctx = context.WithValue(ctx, contexts.UserAgentContextKey, r.UserAgent())
+
+	return ctx
 }
 
-// GetOrganizationIDReq gets the organization ID from the request context
-func GetOrganizationIDReq(r *http.Request) (string, bool) {
-	return GetOrganizationID(r.Context())
+func (m *AuthMiddleware) setUserContextHuma(ctx huma.Context, user *UserContext, authMethod AuthMethod) huma.Context {
+	ctx = huma.WithValue(ctx, contexts.UserContextKey, user)
+	ctx = huma.WithValue(ctx, contexts.UserIDContextKey, user.ID)
+	ctx = huma.WithValue(ctx, contexts.UserTypeContextKey, user.UserType)
+	ctx = huma.WithValue(ctx, contexts.AuthMethodContextKey, authMethod)
+
+	if user.OrganizationID != nil {
+		ctx = huma.WithValue(ctx, contexts.OrganizationIDContextKey, *user.OrganizationID)
+	}
+
+	if len(user.Permissions) > 0 {
+		ctx = huma.WithValue(ctx, contexts.PermissionsContextKey, user.Permissions)
+	}
+
+	if len(user.Roles) > 0 {
+		ctx = huma.WithValue(ctx, contexts.RolesContextKey, user.Roles)
+	}
+
+	return ctx
 }
 
-// GetOrganizationID gets the organization ID from the request context
-func GetOrganizationID(ctx context.Context) (string, bool) {
-	orgID, ok := ctx.Value(OrganizationIDKey).(string)
-	return orgID, ok
+func (m *AuthMiddleware) setSessionContextHuma(ctx huma.Context, session *SessionContext) huma.Context {
+	ctx = huma.WithValue(ctx, contexts.SessionContextKey, session)
+	ctx = huma.WithValue(ctx, contexts.SessionIDContextKey, session.ID)
+	return ctx
+}
+
+func (m *AuthMiddleware) setAPIKeyContextHuma(ctx huma.Context, apiKey *APIKeyContext) huma.Context {
+	ctx = huma.WithValue(ctx, contexts.APIKeyContextKey, apiKey)
+	ctx = huma.WithValue(ctx, contexts.APIKeyIDContextKey, apiKey.ID)
+	return ctx
+}
+
+func (m *AuthMiddleware) addRequestMetadataHuma(ctx huma.Context, r *http.Request) huma.Context {
+	// Extract request ID from chi middleware
+	if requestID := chi.URLParam(r, "request_id"); requestID != "" {
+		ctx = huma.WithValue(ctx, contexts.RequestIDContextKey, requestID)
+	}
+
+	// Add IP address
+	ctx = huma.WithValue(ctx, contexts.IPAddressContextKey, GetClientIP(r))
+
+	// Add User Agent
+	ctx = huma.WithValue(ctx, contexts.UserAgentContextKey, r.UserAgent())
+
+	return ctx
+}
+
+func (m *AuthMiddleware) convertToUserContext(user *ent.User, permissions []string) *UserContext {
+	return &UserContext{
+		ID:             user.ID,
+		Email:          user.Email,
+		Username:       user.Username,
+		FirstName:      user.FirstName,
+		LastName:       user.LastName,
+		UserType:       user.UserType,
+		OrganizationID: &user.OrganizationID,
+		Active:         user.Active,
+		EmailVerified:  user.EmailVerified,
+		Permissions:    permissions,
+		Metadata:       user.Metadata,
+	}
+}
+
+// Response helpers
+
+func (m *AuthMiddleware) respondUnauthorized(w http.ResponseWriter, r *http.Request, message string) {
+	errResp := errors.NewErrorResponse(errors.New(errors.CodeUnauthorized, message))
+	m.respondError(w, r, errResp)
+}
+
+func (m *AuthMiddleware) respondForbidden(w http.ResponseWriter, r *http.Request, message string) {
+	errResp := errors.NewErrorResponse(errors.New(errors.CodeForbidden, message))
+	m.respondError(w, r, errResp)
+}
+
+func (m *AuthMiddleware) respondError(w http.ResponseWriter, r *http.Request, errResp *errors.ErrorResponse) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(errResp.StatusCode())
+	// Simple JSON error response
+	jsonResp := `{"code":"` + errResp.Code + `","message":"` + errResp.Message + `"}`
+	_, _ = w.Write([]byte(jsonResp))
+}
+
+func (m *AuthMiddleware) respondUnauthorizedHuma(ctx huma.Context, message string) {
+	errResp := errors.NewErrorResponse(errors.New(errors.CodeUnauthorized, message))
+	m.respondErrorHuma(ctx, errResp)
+}
+
+func (m *AuthMiddleware) respondForbiddenHuma(ctx huma.Context, message string) {
+	errResp := errors.NewErrorResponse(errors.New(errors.CodeForbidden, message))
+	m.respondErrorHuma(ctx, errResp)
+}
+
+func (m *AuthMiddleware) respondErrorHuma(ctx huma.Context, errResp *errors.ErrorResponse) {
+	huma.WriteErr(m.api, ctx, errResp.StatusCode(), errResp.Message)
+}
+
+// Context getter functions
+
+// GetUserFromContextSafe retrieves the user from request context
+func GetUserFromContextSafe(ctx context.Context) (*UserContext, error) {
+	if user, ok := ctx.Value(contexts.UserContextKey).(*UserContext); ok {
+		return user, nil
+	}
+	return nil, errors.New(errors.CodeUnauthorized, "user not authorized")
+}
+
+// GetUserFromContext retrieves the user from request context
+func GetUserFromContext(ctx context.Context) *UserContext {
+	if user, ok := ctx.Value(contexts.UserContextKey).(*UserContext); ok {
+		return user
+	}
+	return nil
+}
+
+// GetUserIDFromContext retrieves the user ID from request context
+func GetUserIDFromContext(ctx context.Context) *xid.ID {
+	if userID, ok := ctx.Value(contexts.UserIDContextKey).(xid.ID); ok {
+		return &userID
+	}
+	return nil
+}
+
+// GetUserTypeFromContext retrieves the user type from request context
+func GetUserTypeFromContext(ctx context.Context) *user.UserType {
+	if userType, ok := ctx.Value(contexts.UserTypeContextKey).(user.UserType); ok {
+		return &userType
+	}
+	return nil
+}
+
+// GetOrganizationIDFromContext retrieves the organization ID from request context
+func GetOrganizationIDFromContext(ctx context.Context) *xid.ID {
+	if orgID, ok := ctx.Value(contexts.OrganizationIDContextKey).(xid.ID); ok {
+		return &orgID
+	}
+	return nil
+}
+
+// GetSessionFromContext retrieves the session from request context
+func GetSessionFromContext(ctx context.Context) *SessionContext {
+	if session, ok := ctx.Value(contexts.SessionContextKey).(*SessionContext); ok {
+		return session
+	}
+	return nil
+}
+
+// GetAPIKeyFromContext retrieves the API key from request context
+func GetAPIKeyFromContext(ctx context.Context) *APIKeyContext {
+	if apiKey, ok := ctx.Value(contexts.APIKeyContextKey).(*APIKeyContext); ok {
+		return apiKey
+	}
+	return nil
+}
+
+// GetAuthMethodFromContext retrieves the authentication method from request context
+func GetAuthMethodFromContext(ctx context.Context) AuthMethod {
+	if method, ok := ctx.Value(contexts.AuthMethodContextKey).(AuthMethod); ok {
+		return method
+	}
+	return AuthMethodNone
+}
+
+// GetPermissionsFromContext retrieves permissions from request context
+func GetPermissionsFromContext(ctx context.Context) []string {
+	if permissions, ok := ctx.Value(contexts.PermissionsContextKey).([]string); ok {
+		return permissions
+	}
+	return nil
+}
+
+// GetRolesFromContext retrieves roles from request context
+func GetRolesFromContext(ctx context.Context) []model.RoleInfo {
+	if roles, ok := ctx.Value(contexts.RolesContextKey).([]model.RoleInfo); ok {
+		return roles
+	}
+	return nil
+}
+
+// GetClientIP extracts the client IP address from the request
+func GetClientIP(r *http.Request) string {
+	// Check X-Forwarded-For header
+	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+		ips := strings.Split(xff, ",")
+		return strings.TrimSpace(ips[0])
+	}
+
+	// Check X-Real-IP header
+	if xri := r.Header.Get("X-Real-IP"); xri != "" {
+		return xri
+	}
+
+	// Use remote address
+	ip := r.RemoteAddr
+	if colon := strings.LastIndex(ip, ":"); colon != -1 {
+		ip = ip[:colon]
+	}
+	return ip
+}
+
+// GetClientUserAgent extracts the client User-Agent from the request
+func GetClientUserAgent(r *http.Request) string {
+	return r.UserAgent()
+}
+
+// IsAuthenticated checks if the request is authenticated
+func IsAuthenticated(ctx context.Context) bool {
+	return GetUserFromContext(ctx) != nil
+}
+
+// HasPermission checks if the user has a specific permission
+func HasPermission(ctx context.Context, permission string) bool {
+	permissions := GetPermissionsFromContext(ctx)
+	for _, p := range permissions {
+		if p == permission {
+			return true
+		}
+	}
+	return false
+}
+
+// HasAnyPermission checks if the user has any of the specified permissions
+func HasAnyPermission(ctx context.Context, permissions ...string) bool {
+	userPermissions := GetPermissionsFromContext(ctx)
+	for _, required := range permissions {
+		for _, userPerm := range userPermissions {
+			if userPerm == required {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// HasRole checks if the user has a specific role
+func HasRole(ctx context.Context, roleName string) bool {
+	roles := GetRolesFromContext(ctx)
+	for _, role := range roles {
+		if role.Name == roleName {
+			return true
+		}
+	}
+	return false
+}
+
+// IsUserType checks if the user is of a specific type
+func IsUserType(ctx context.Context, userType user.UserType) bool {
+	currentType := GetUserTypeFromContext(ctx)
+	return currentType != nil && *currentType == userType
+}
+
+// IsInternalUser checks if the user is an internal user
+func IsInternalUser(ctx context.Context) bool {
+	return IsUserType(ctx, user.UserTypeInternal)
+}
+
+// IsExternalUser checks if the user is an external user
+func IsExternalUser(ctx context.Context) bool {
+	return IsUserType(ctx, user.UserTypeExternal)
+}
+
+// IsEndUser checks if the user is an end user
+func IsEndUser(ctx context.Context) bool {
+	return IsUserType(ctx, user.UserTypeEndUser)
 }

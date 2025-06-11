@@ -46,6 +46,7 @@ func (Verification) Fields() []ent.Field {
 		field.String("user_agent").
 			Optional(),
 		entity.JSONMapField("attestation", true),
+		entity.JSONMapField("metadata", true),
 	}
 }
 
@@ -76,5 +77,6 @@ func (Verification) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		ModelBaseMixin{},
 		TimeMixin{},
+		SoftDeleteMixin{},
 	}
 }

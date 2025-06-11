@@ -57,6 +57,20 @@ func (akc *ApiKeyCreate) SetNillableUpdatedAt(t *time.Time) *ApiKeyCreate {
 	return akc
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (akc *ApiKeyCreate) SetDeletedAt(t time.Time) *ApiKeyCreate {
+	akc.mutation.SetDeletedAt(t)
+	return akc
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (akc *ApiKeyCreate) SetNillableDeletedAt(t *time.Time) *ApiKeyCreate {
+	if t != nil {
+		akc.SetDeletedAt(*t)
+	}
+	return akc
+}
+
 // SetName sets the "name" field.
 func (akc *ApiKeyCreate) SetName(s string) *ApiKeyCreate {
 	akc.mutation.SetName(s)
@@ -335,6 +349,10 @@ func (akc *ApiKeyCreate) createSpec() (*ApiKey, *sqlgraph.CreateSpec) {
 		_spec.SetField(apikey.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
+	if value, ok := akc.mutation.DeletedAt(); ok {
+		_spec.SetField(apikey.FieldDeletedAt, field.TypeTime, value)
+		_node.DeletedAt = value
+	}
 	if value, ok := akc.mutation.Name(); ok {
 		_spec.SetField(apikey.FieldName, field.TypeString, value)
 		_node.Name = value
@@ -470,6 +488,24 @@ func (u *ApiKeyUpsert) SetUpdatedAt(v time.Time) *ApiKeyUpsert {
 // UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
 func (u *ApiKeyUpsert) UpdateUpdatedAt() *ApiKeyUpsert {
 	u.SetExcluded(apikey.FieldUpdatedAt)
+	return u
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *ApiKeyUpsert) SetDeletedAt(v time.Time) *ApiKeyUpsert {
+	u.Set(apikey.FieldDeletedAt, v)
+	return u
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *ApiKeyUpsert) UpdateDeletedAt() *ApiKeyUpsert {
+	u.SetExcluded(apikey.FieldDeletedAt)
+	return u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *ApiKeyUpsert) ClearDeletedAt() *ApiKeyUpsert {
+	u.SetNull(apikey.FieldDeletedAt)
 	return u
 }
 
@@ -721,6 +757,27 @@ func (u *ApiKeyUpsertOne) SetUpdatedAt(v time.Time) *ApiKeyUpsertOne {
 func (u *ApiKeyUpsertOne) UpdateUpdatedAt() *ApiKeyUpsertOne {
 	return u.Update(func(s *ApiKeyUpsert) {
 		s.UpdateUpdatedAt()
+	})
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *ApiKeyUpsertOne) SetDeletedAt(v time.Time) *ApiKeyUpsertOne {
+	return u.Update(func(s *ApiKeyUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *ApiKeyUpsertOne) UpdateDeletedAt() *ApiKeyUpsertOne {
+	return u.Update(func(s *ApiKeyUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *ApiKeyUpsertOne) ClearDeletedAt() *ApiKeyUpsertOne {
+	return u.Update(func(s *ApiKeyUpsert) {
+		s.ClearDeletedAt()
 	})
 }
 
@@ -1170,6 +1227,27 @@ func (u *ApiKeyUpsertBulk) SetUpdatedAt(v time.Time) *ApiKeyUpsertBulk {
 func (u *ApiKeyUpsertBulk) UpdateUpdatedAt() *ApiKeyUpsertBulk {
 	return u.Update(func(s *ApiKeyUpsert) {
 		s.UpdateUpdatedAt()
+	})
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *ApiKeyUpsertBulk) SetDeletedAt(v time.Time) *ApiKeyUpsertBulk {
+	return u.Update(func(s *ApiKeyUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *ApiKeyUpsertBulk) UpdateDeletedAt() *ApiKeyUpsertBulk {
+	return u.Update(func(s *ApiKeyUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *ApiKeyUpsertBulk) ClearDeletedAt() *ApiKeyUpsertBulk {
+	return u.Update(func(s *ApiKeyUpsert) {
+		s.ClearDeletedAt()
 	})
 }
 

@@ -76,7 +76,7 @@ func (r *eventRepository) Create(ctx context.Context, eventCreate *ent.WebhookEv
 			Exist(ctx)
 
 		if err != nil {
-			return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to check webhook existence")
+			return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to check webhook existence")
 		}
 
 		if !exists {
@@ -90,7 +90,7 @@ func (r *eventRepository) Create(ctx context.Context, eventCreate *ent.WebhookEv
 		if ent.IsConstraintError(err) {
 			return nil, errors.New(errors.CodeConflict, "webhook event already exists")
 		}
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to create webhook event")
+		return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to create webhook event")
 	}
 
 	return event, nil
@@ -107,7 +107,7 @@ func (r *eventRepository) GetByID(ctx context.Context, id xid.ID) (*ent.WebhookE
 		if ent.IsNotFound(err) {
 			return nil, ErrWebhookEventNotFound
 		}
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to get webhook event")
+		return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to get webhook event")
 	}
 
 	return event, nil
@@ -160,7 +160,7 @@ func (r *eventRepository) Update(ctx context.Context, eventUpdate *ent.WebhookEv
 		Exist(ctx)
 
 	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to check webhook event existence")
+		return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to check webhook event existence")
 	}
 
 	if !exists {
@@ -173,7 +173,7 @@ func (r *eventRepository) Update(ctx context.Context, eventUpdate *ent.WebhookEv
 		if ent.IsNotFound(err) {
 			return nil, ErrWebhookEventNotFound
 		}
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to update webhook event")
+		return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to update webhook event")
 	}
 
 	return event, nil
@@ -188,7 +188,7 @@ func (r *eventRepository) Delete(ctx context.Context, id xid.ID) error {
 		Exist(ctx)
 
 	if err != nil {
-		return errors.Wrap(errors.CodeDatabaseError, err, "failed to check webhook event existence")
+		return errors.Wrap(err, errors.CodeDatabaseError, "failed to check webhook event existence")
 	}
 
 	if !exists {
@@ -204,7 +204,7 @@ func (r *eventRepository) Delete(ctx context.Context, id xid.ID) error {
 		if ent.IsNotFound(err) {
 			return ErrWebhookEventNotFound
 		}
-		return errors.Wrap(errors.CodeDatabaseError, err, "failed to delete webhook event")
+		return errors.Wrap(err, errors.CodeDatabaseError, "failed to delete webhook event")
 	}
 
 	return nil
@@ -218,7 +218,7 @@ func (r *eventRepository) DeleteByWebhookID(ctx context.Context, webhookID xid.I
 		Exec(ctx)
 
 	if err != nil {
-		return errors.Wrap(errors.CodeDatabaseError, err, "failed to delete webhook events")
+		return errors.Wrap(err, errors.CodeDatabaseError, "failed to delete webhook events")
 	}
 
 	return nil
@@ -239,7 +239,7 @@ func (r *eventRepository) GetPendingEvents(ctx context.Context, limit int) ([]*e
 		All(ctx)
 
 	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to get pending webhook events")
+		return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to get pending webhook events")
 	}
 
 	return events, nil
@@ -387,7 +387,7 @@ func (r *eventRepository) BulkUpdate(ctx context.Context, updates []*ent.Webhook
 func (r *eventRepository) ExportAll(ctx context.Context) ([]*ent.WebhookEvent, error) {
 	events, err := r.client.WebhookEvent.Query().All(ctx)
 	if err != nil {
-		return nil, errors.Wrap(errors.CodeDatabaseError, err, "failed to export webhook events")
+		return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to export webhook events")
 	}
 	return events, nil
 }

@@ -1,0 +1,1 @@
+{{.appName}}: {{.organizationName}} usage alert - {{.resourceType}} at {{.percentage}}% of limit. Upgrade: {{.upgradeUrl}}

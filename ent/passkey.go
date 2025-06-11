@@ -28,6 +28,8 @@ type Passkey struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// DeletedAt holds the value of the "deleted_at" field.
+	DeletedAt time.Time `json:"deleted_at,omitempty"`
 	// UserID holds the value of the "user_id" field.
 	UserID xid.ID `json:"user_id,omitempty"`
 	// Name holds the value of the "name" field.
@@ -50,6 +52,14 @@ type Passkey struct {
 	Transports []string `json:"transports,omitempty"`
 	// Additional membership metadata
 	Attestation map[string]interface{} `json:"attestation,omitempty"`
+	// BackupState holds the value of the "backup_state" field.
+	BackupState bool `json:"backup_state,omitempty"`
+	// BackupEligible holds the value of the "backup_eligible" field.
+	BackupEligible bool `json:"backup_eligible,omitempty"`
+	// UserAgent holds the value of the "user_agent" field.
+	UserAgent string `json:"user_agent,omitempty"`
+	// IPAddress holds the value of the "ip_address" field.
+	IPAddress string `json:"ip_address,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the PasskeyQuery when eager-loading is set.
 	Edges        PasskeyEdges `json:"edges"`
@@ -83,13 +93,13 @@ func (*Passkey) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case passkey.FieldPublicKey, passkey.FieldTransports, passkey.FieldAttestation:
 			values[i] = new([]byte)
-		case passkey.FieldActive:
+		case passkey.FieldActive, passkey.FieldBackupState, passkey.FieldBackupEligible:
 			values[i] = new(sql.NullBool)
 		case passkey.FieldSignCount:
 			values[i] = new(sql.NullInt64)
-		case passkey.FieldName, passkey.FieldCredentialID, passkey.FieldDeviceType, passkey.FieldAaguid:
+		case passkey.FieldName, passkey.FieldCredentialID, passkey.FieldDeviceType, passkey.FieldAaguid, passkey.FieldUserAgent, passkey.FieldIPAddress:
 			values[i] = new(sql.NullString)
-		case passkey.FieldCreatedAt, passkey.FieldUpdatedAt, passkey.FieldLastUsed:
+		case passkey.FieldCreatedAt, passkey.FieldUpdatedAt, passkey.FieldDeletedAt, passkey.FieldLastUsed:
 			values[i] = new(sql.NullTime)
 		case passkey.FieldID, passkey.FieldUserID:
 			values[i] = new(xid.ID)
@@ -125,6 +135,12 @@ func (pa *Passkey) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
 				pa.UpdatedAt = value.Time
+			}
+		case passkey.FieldDeletedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field deleted_at", values[i])
+			} else if value.Valid {
+				pa.DeletedAt = value.Time
 			}
 		case passkey.FieldUserID:
 			if value, ok := values[i].(*xid.ID); !ok {
@@ -197,6 +213,30 @@ func (pa *Passkey) assignValues(columns []string, values []any) error {
 					return fmt.Errorf("unmarshal field attestation: %w", err)
 				}
 			}
+		case passkey.FieldBackupState:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field backup_state", values[i])
+			} else if value.Valid {
+				pa.BackupState = value.Bool
+			}
+		case passkey.FieldBackupEligible:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field backup_eligible", values[i])
+			} else if value.Valid {
+				pa.BackupEligible = value.Bool
+			}
+		case passkey.FieldUserAgent:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field user_agent", values[i])
+			} else if value.Valid {
+				pa.UserAgent = value.String
+			}
+		case passkey.FieldIPAddress:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field ip_address", values[i])
+			} else if value.Valid {
+				pa.IPAddress = value.String
+			}
 		default:
 			pa.selectValues.Set(columns[i], values[i])
 		}
@@ -244,6 +284,9 @@ func (pa *Passkey) String() string {
 	builder.WriteString("updated_at=")
 	builder.WriteString(pa.UpdatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
+	builder.WriteString("deleted_at=")
+	builder.WriteString(pa.DeletedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
 	builder.WriteString("user_id=")
 	builder.WriteString(fmt.Sprintf("%v", pa.UserID))
 	builder.WriteString(", ")
@@ -278,6 +321,18 @@ func (pa *Passkey) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("attestation=")
 	builder.WriteString(fmt.Sprintf("%v", pa.Attestation))
+	builder.WriteString(", ")
+	builder.WriteString("backup_state=")
+	builder.WriteString(fmt.Sprintf("%v", pa.BackupState))
+	builder.WriteString(", ")
+	builder.WriteString("backup_eligible=")
+	builder.WriteString(fmt.Sprintf("%v", pa.BackupEligible))
+	builder.WriteString(", ")
+	builder.WriteString("user_agent=")
+	builder.WriteString(pa.UserAgent)
+	builder.WriteString(", ")
+	builder.WriteString("ip_address=")
+	builder.WriteString(pa.IPAddress)
 	builder.WriteByte(')')
 	return builder.String()
 }

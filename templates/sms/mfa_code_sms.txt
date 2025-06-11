@@ -1,0 +1,1 @@
+{{.appName}}: Your 2FA code is {{.code}}. Enter this code to complete sign-in. Expires in {{.expiresIn}}.

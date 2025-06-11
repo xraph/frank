@@ -57,6 +57,20 @@ func (ofc *OrganizationFeatureCreate) SetNillableUpdatedAt(t *time.Time) *Organi
 	return ofc
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (ofc *OrganizationFeatureCreate) SetDeletedAt(t time.Time) *OrganizationFeatureCreate {
+	ofc.mutation.SetDeletedAt(t)
+	return ofc
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (ofc *OrganizationFeatureCreate) SetNillableDeletedAt(t *time.Time) *OrganizationFeatureCreate {
+	if t != nil {
+		ofc.SetDeletedAt(*t)
+	}
+	return ofc
+}
+
 // SetOrganizationID sets the "organization_id" field.
 func (ofc *OrganizationFeatureCreate) SetOrganizationID(x xid.ID) *OrganizationFeatureCreate {
 	ofc.mutation.SetOrganizationID(x)
@@ -243,6 +257,10 @@ func (ofc *OrganizationFeatureCreate) createSpec() (*OrganizationFeature, *sqlgr
 		_spec.SetField(organizationfeature.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
+	if value, ok := ofc.mutation.DeletedAt(); ok {
+		_spec.SetField(organizationfeature.FieldDeletedAt, field.TypeTime, value)
+		_node.DeletedAt = value
+	}
 	if value, ok := ofc.mutation.Enabled(); ok {
 		_spec.SetField(organizationfeature.FieldEnabled, field.TypeBool, value)
 		_node.Enabled = value
@@ -346,6 +364,24 @@ func (u *OrganizationFeatureUpsert) SetUpdatedAt(v time.Time) *OrganizationFeatu
 // UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
 func (u *OrganizationFeatureUpsert) UpdateUpdatedAt() *OrganizationFeatureUpsert {
 	u.SetExcluded(organizationfeature.FieldUpdatedAt)
+	return u
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *OrganizationFeatureUpsert) SetDeletedAt(v time.Time) *OrganizationFeatureUpsert {
+	u.Set(organizationfeature.FieldDeletedAt, v)
+	return u
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *OrganizationFeatureUpsert) UpdateDeletedAt() *OrganizationFeatureUpsert {
+	u.SetExcluded(organizationfeature.FieldDeletedAt)
+	return u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *OrganizationFeatureUpsert) ClearDeletedAt() *OrganizationFeatureUpsert {
+	u.SetNull(organizationfeature.FieldDeletedAt)
 	return u
 }
 
@@ -465,6 +501,27 @@ func (u *OrganizationFeatureUpsertOne) SetUpdatedAt(v time.Time) *OrganizationFe
 func (u *OrganizationFeatureUpsertOne) UpdateUpdatedAt() *OrganizationFeatureUpsertOne {
 	return u.Update(func(s *OrganizationFeatureUpsert) {
 		s.UpdateUpdatedAt()
+	})
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *OrganizationFeatureUpsertOne) SetDeletedAt(v time.Time) *OrganizationFeatureUpsertOne {
+	return u.Update(func(s *OrganizationFeatureUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *OrganizationFeatureUpsertOne) UpdateDeletedAt() *OrganizationFeatureUpsertOne {
+	return u.Update(func(s *OrganizationFeatureUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *OrganizationFeatureUpsertOne) ClearDeletedAt() *OrganizationFeatureUpsertOne {
+	return u.Update(func(s *OrganizationFeatureUpsert) {
+		s.ClearDeletedAt()
 	})
 }
 
@@ -760,6 +817,27 @@ func (u *OrganizationFeatureUpsertBulk) SetUpdatedAt(v time.Time) *OrganizationF
 func (u *OrganizationFeatureUpsertBulk) UpdateUpdatedAt() *OrganizationFeatureUpsertBulk {
 	return u.Update(func(s *OrganizationFeatureUpsert) {
 		s.UpdateUpdatedAt()
+	})
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *OrganizationFeatureUpsertBulk) SetDeletedAt(v time.Time) *OrganizationFeatureUpsertBulk {
+	return u.Update(func(s *OrganizationFeatureUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *OrganizationFeatureUpsertBulk) UpdateDeletedAt() *OrganizationFeatureUpsertBulk {
+	return u.Update(func(s *OrganizationFeatureUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *OrganizationFeatureUpsertBulk) ClearDeletedAt() *OrganizationFeatureUpsertBulk {
+	return u.Update(func(s *OrganizationFeatureUpsert) {
+		s.ClearDeletedAt()
 	})
 }
 

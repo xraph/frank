@@ -4,13 +4,15 @@ import (
 	"context"
 	"net/http"
 	"net/url"
+
+	"github.com/juicycleff/frank/internal/contexts"
 )
 
 // AddHeader is a middleware that attaches request headers to the context using the specified permission.
 func AddHeader() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			r = r.WithContext(context.WithValue(r.Context(), HeadersKey, r.Header))
+			r = r.WithContext(context.WithValue(r.Context(), contexts.HeadersContextKKey, r.Header))
 			next.ServeHTTP(w, r)
 		})
 	}
@@ -19,7 +21,7 @@ func AddHeader() func(http.Handler) http.Handler {
 // GetHeaders retrieves the HTTP headers from the provided context associated with the UserIDKey.
 // Returns the headers and a boolean indicating success or failure of the retrieval.
 func GetHeaders(ctx context.Context) (*http.Header, bool) {
-	h, ok := ctx.Value(HeadersKey).(*http.Header)
+	h, ok := ctx.Value(contexts.HeadersContextKKey).(*http.Header)
 	return h, ok
 }
 
@@ -42,15 +44,48 @@ func AddRequestInfo() func(http.Handler) http.Handler {
 				Req:        r,
 				Res:        w,
 			}
-			r = r.WithContext(context.WithValue(r.Context(), RequestInfoKey, info))
+
+			ctx := r.Context()
+
+			// Add IP address
+			ctx = context.WithValue(ctx, contexts.IPAddressContextKey, GetClientIP(r))
+
+			// Add User Agent
+			ctx = context.WithValue(ctx, contexts.UserAgentContextKey, r.UserAgent())
+
+			// Add Headers
+			ctx = context.WithValue(ctx, contexts.HeadersContextKKey, r.Header)
+
+			// Add request info
+			ctx = context.WithValue(r.Context(), contexts.RequestInfoContextKey, info)
+
+			r = r.WithContext(ctx)
 			next.ServeHTTP(w, r)
 		})
 	}
 }
 
-// GetRequestInfo retrieves the RequestInfo object from the provided context.
+// GetRequestInfoFromContext retrieves the RequestInfo object from the provided context.
 // Returns the RequestInfo and true if successful, otherwise nil and false.
-func GetRequestInfo(ctx context.Context) (*RequestInfo, bool) {
-	h, ok := ctx.Value(RequestInfoKey).(*RequestInfo)
+func GetRequestInfoFromContext(ctx context.Context) (*RequestInfo, bool) {
+	h, ok := ctx.Value(contexts.RequestInfoContextKey).(*RequestInfo)
+	return h, ok
+}
+
+// GetIPAddressFromContext retrieves the client IP address from the context.
+func GetIPAddressFromContext(ctx context.Context) (string, bool) {
+	ip, ok := ctx.Value(contexts.IPAddressContextKey).(string)
+	return ip, ok
+}
+
+// GetUserAgentFromContext retrieves the User-Agent from the context.
+func GetUserAgentFromContext(ctx context.Context) (string, bool) {
+	ua, ok := ctx.Value(contexts.UserAgentContextKey).(string)
+	return ua, ok
+}
+
+// GetHeadersFromContext retrieves the headers from the context.
+func GetHeadersFromContext(ctx context.Context) (http.Header, bool) {
+	h, ok := ctx.Value(contexts.HeadersContextKKey).(http.Header)
 	return h, ok
 }

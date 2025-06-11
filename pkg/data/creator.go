@@ -10,6 +10,11 @@ import (
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/ent"
 
+	// Database drivers
+	_ "github.com/go-sql-driver/mysql" // MySQL
+	// _ "github.com/lib/pq"              // PostgreSQL
+	// _ "github.com/mattn/go-sqlite3"    // SQLite
+
 	_ "github.com/jackc/pgx/v5/stdlib"
 	// _ "github.com/lib/pq"           // PostgreSQL driver
 	_ "github.com/mattn/go-sqlite3" // SQLite driver
@@ -32,6 +37,7 @@ func newSqlServer(drv *entsql.Driver, cfg *config.Config) (*ent.Client, *entsql.
 			dsn = fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
 				cfg.Database.Host, cfg.Database.Port, cfg.Database.User,
 				cfg.Database.Password, cfg.Database.Database, cfg.Database.SSLMode)
+			fmt.Println("dsn ===> ", dsn)
 		}
 		db, err = sql.Open("pgx", dsn)
 		if err != nil {

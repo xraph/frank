@@ -40,6 +40,26 @@ func (ffu *FeatureFlagUpdate) SetUpdatedAt(t time.Time) *FeatureFlagUpdate {
 	return ffu
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (ffu *FeatureFlagUpdate) SetDeletedAt(t time.Time) *FeatureFlagUpdate {
+	ffu.mutation.SetDeletedAt(t)
+	return ffu
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (ffu *FeatureFlagUpdate) SetNillableDeletedAt(t *time.Time) *FeatureFlagUpdate {
+	if t != nil {
+		ffu.SetDeletedAt(*t)
+	}
+	return ffu
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (ffu *FeatureFlagUpdate) ClearDeletedAt() *FeatureFlagUpdate {
+	ffu.mutation.ClearDeletedAt()
+	return ffu
+}
+
 // SetName sets the "name" field.
 func (ffu *FeatureFlagUpdate) SetName(s string) *FeatureFlagUpdate {
 	ffu.mutation.SetName(s)
@@ -248,6 +268,12 @@ func (ffu *FeatureFlagUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := ffu.mutation.UpdatedAt(); ok {
 		_spec.SetField(featureflag.FieldUpdatedAt, field.TypeTime, value)
 	}
+	if value, ok := ffu.mutation.DeletedAt(); ok {
+		_spec.SetField(featureflag.FieldDeletedAt, field.TypeTime, value)
+	}
+	if ffu.mutation.DeletedAtCleared() {
+		_spec.ClearField(featureflag.FieldDeletedAt, field.TypeTime)
+	}
 	if value, ok := ffu.mutation.Name(); ok {
 		_spec.SetField(featureflag.FieldName, field.TypeString, value)
 	}
@@ -339,6 +365,26 @@ type FeatureFlagUpdateOne struct {
 // SetUpdatedAt sets the "updated_at" field.
 func (ffuo *FeatureFlagUpdateOne) SetUpdatedAt(t time.Time) *FeatureFlagUpdateOne {
 	ffuo.mutation.SetUpdatedAt(t)
+	return ffuo
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (ffuo *FeatureFlagUpdateOne) SetDeletedAt(t time.Time) *FeatureFlagUpdateOne {
+	ffuo.mutation.SetDeletedAt(t)
+	return ffuo
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (ffuo *FeatureFlagUpdateOne) SetNillableDeletedAt(t *time.Time) *FeatureFlagUpdateOne {
+	if t != nil {
+		ffuo.SetDeletedAt(*t)
+	}
+	return ffuo
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (ffuo *FeatureFlagUpdateOne) ClearDeletedAt() *FeatureFlagUpdateOne {
+	ffuo.mutation.ClearDeletedAt()
 	return ffuo
 }
 
@@ -579,6 +625,12 @@ func (ffuo *FeatureFlagUpdateOne) sqlSave(ctx context.Context) (_node *FeatureFl
 	}
 	if value, ok := ffuo.mutation.UpdatedAt(); ok {
 		_spec.SetField(featureflag.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if value, ok := ffuo.mutation.DeletedAt(); ok {
+		_spec.SetField(featureflag.FieldDeletedAt, field.TypeTime, value)
+	}
+	if ffuo.mutation.DeletedAtCleared() {
+		_spec.ClearField(featureflag.FieldDeletedAt, field.TypeTime)
 	}
 	if value, ok := ffuo.mutation.Name(); ok {
 		_spec.SetField(featureflag.FieldName, field.TypeString, value)

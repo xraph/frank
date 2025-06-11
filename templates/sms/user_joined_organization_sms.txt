@@ -1,0 +1,1 @@
+{{.appName}}: {{.newMemberName}} joined {{.organizationName}} as {{.role}} on {{.joinedAt}}. View team: {{.teamUrl}}
