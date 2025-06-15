@@ -42,6 +42,10 @@ const (
 	FieldPermissions = "permissions"
 	// FieldScopes holds the string denoting the scopes field in the database.
 	FieldScopes = "scopes"
+	// FieldIPWhitelist holds the string denoting the ip_whitelist field in the database.
+	FieldIPWhitelist = "ip_whitelist"
+	// FieldRateLimits holds the string denoting the rate_limits field in the database.
+	FieldRateLimits = "rate_limits"
 	// FieldMetadata holds the string denoting the metadata field in the database.
 	FieldMetadata = "metadata"
 	// FieldLastUsed holds the string denoting the last_used field in the database.
@@ -52,6 +56,8 @@ const (
 	EdgeUser = "user"
 	// EdgeOrganization holds the string denoting the organization edge name in mutations.
 	EdgeOrganization = "organization"
+	// EdgeActivities holds the string denoting the activities edge name in mutations.
+	EdgeActivities = "activities"
 	// Table holds the table name of the apikey in the database.
 	Table = "api_keys"
 	// UserTable is the table that holds the user relation/edge.
@@ -68,6 +74,13 @@ const (
 	OrganizationInverseTable = "organizations"
 	// OrganizationColumn is the table column denoting the organization relation/edge.
 	OrganizationColumn = "organization_id"
+	// ActivitiesTable is the table that holds the activities relation/edge.
+	ActivitiesTable = "api_key_activities"
+	// ActivitiesInverseTable is the table name for the ApiKeyActivity entity.
+	// It exists in this package in order to avoid circular dependency with the "apikeyactivity" package.
+	ActivitiesInverseTable = "api_key_activities"
+	// ActivitiesColumn is the table column denoting the activities relation/edge.
+	ActivitiesColumn = "key_id"
 )
 
 // Columns holds all SQL columns for apikey fields.
@@ -85,6 +98,8 @@ var Columns = []string{
 	FieldActive,
 	FieldPermissions,
 	FieldScopes,
+	FieldIPWhitelist,
+	FieldRateLimits,
 	FieldMetadata,
 	FieldLastUsed,
 	FieldExpiresAt,
@@ -200,6 +215,20 @@ func ByOrganizationField(field string, opts ...sql.OrderTermOption) OrderOption 
 		sqlgraph.OrderByNeighborTerms(s, newOrganizationStep(), sql.OrderByField(field, opts...))
 	}
 }
+
+// ByActivitiesCount orders the results by activities count.
+func ByActivitiesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newActivitiesStep(), opts...)
+	}
+}
+
+// ByActivities orders the results by activities terms.
+func ByActivities(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newActivitiesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newUserStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -212,5 +241,12 @@ func newOrganizationStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(OrganizationInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, OrganizationTable, OrganizationColumn),
+	)
+}
+func newActivitiesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ActivitiesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ActivitiesTable, ActivitiesColumn),
 	)
 }

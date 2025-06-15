@@ -5,6 +5,7 @@ import (
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -29,7 +30,7 @@ func (Role) Fields() []ent.Field {
 
 		// Context and scope
 		field.Enum("role_type").
-			Values("system", "organization", "application").
+			GoType(model.RoleType("")).
 			Comment("system = platform roles, organization = org roles, application = customer's app roles"),
 
 		field.String("organization_id").

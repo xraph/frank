@@ -13,6 +13,7 @@ import (
 	entUser "github.com/juicycleff/frank/ent/user"
 	"github.com/juicycleff/frank/pkg/data"
 	"github.com/juicycleff/frank/pkg/errors"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -84,7 +85,7 @@ func (ms *MembershipService) InviteUser(ctx context.Context, req InviteUserReque
 		Where(
 			entMembership.UserID(user.ID),
 			entMembership.OrganizationID(req.OrganizationID),
-			entMembership.StatusIn(entMembership.StatusPending, entMembership.StatusActive),
+			entMembership.StatusIn(model.MembershipStatusPending, model.MembershipStatusActive),
 		).
 		Only(ctx)
 	if err == nil {

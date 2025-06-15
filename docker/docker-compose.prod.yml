@@ -1,0 +1,584 @@
+# Frank Auth SaaS - Production Docker Compose
+# This docker-compose file is optimized for production deployment
+# All sensitive values should be provided via environment variables or Docker secrets
+
+version: '3.8'
+
+services:
+  # Main application service - Production configuration
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: production
+      args:
+        - VERSION=${VERSION:-1.0.0}
+        - BUILD_TIME=${BUILD_TIME}
+        - GIT_COMMIT=${GIT_COMMIT}
+        - ENVIRONMENT=production
+    image: frankauth/frank-auth:${VERSION:-latest}
+    container_name: frank-auth-app
+    hostname: frank-auth-app
+    restart: unless-stopped
+    ports:
+      - "8080:8080"   # Main API port
+      - "9090:9090"   # Metrics port
+    environment:
+      # Database configuration - Use external managed database in production
+      - DATABASE_HOST=${DATABASE_HOST}
+      - DATABASE_PORT=${DATABASE_PORT:-5432}
+      - DATABASE_NAME=${DATABASE_NAME}
+      - DATABASE_USER=${DATABASE_USER}
+      - DATABASE_PASSWORD_FILE=/run/secrets/db_password
+      - DATABASE_SSL_MODE=require
+
+      # Redis configuration - Use external managed Redis in production
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+      - REDIS_PASSWORD_FILE=/run/secrets/redis_password
+      - REDIS_DATABASE=${REDIS_DATABASE:-0}
+
+      # Application configuration
+      - ENVIRONMENT=production
+      - LOG_LEVEL=info
+      - CONFIG_PATH=/app/configs
+      - SERVER_PORT=8080
+      - SERVER_HOST=0.0.0.0
+
+      # Security secrets - Use Docker secrets
+      - JWT_SECRET_FILE=/run/secrets/jwt_secret
+      - SESSION_SECRET_FILE=/run/secrets/session_secret
+
+      # Email configuration - Use production email service
+      - EMAIL_PROVIDER=${EMAIL_PROVIDER:-sendgrid}
+      - SENDGRID_API_KEY_FILE=/run/secrets/sendgrid_api_key
+      - EMAIL_FROM=${EMAIL_FROM}
+      - EMAIL_FROM_NAME=${EMAIL_FROM_NAME:-Frank Auth}
+
+      # SMS configuration - Use production SMS service
+      - SMS_PROVIDER=${SMS_PROVIDER:-twilio}
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID}
+      - TWILIO_AUTH_TOKEN_FILE=/run/secrets/twilio_auth_token
+      - TWILIO_FROM_NUMBER=${TWILIO_FROM_NUMBER}
+
+      # OAuth configuration - Production OAuth apps
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET_FILE=/run/secrets/google_client_secret
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
+      - GITHUB_CLIENT_SECRET_FILE=/run/secrets/github_client_secret
+      - MICROSOFT_CLIENT_ID=${MICROSOFT_CLIENT_ID}
+      - MICROSOFT_CLIENT_SECRET_FILE=/run/secrets/microsoft_client_secret
+
+      # External services
+      - STRIPE_PUBLIC_KEY=${STRIPE_PUBLIC_KEY}
+      - STRIPE_SECRET_KEY_FILE=/run/secrets/stripe_secret_key
+      - STRIPE_WEBHOOK_SECRET_FILE=/run/secrets/stripe_webhook_secret
+
+      # Monitoring and observability
+      - JAEGER_ENDPOINT=${JAEGER_ENDPOINT}
+      - OTLP_ENDPOINT=${OTLP_ENDPOINT}
+      - ANALYTICS_API_KEY_FILE=/run/secrets/analytics_api_key
+
+      # Security settings
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS}
+      - SESSION_COOKIE_DOMAIN=${SESSION_COOKIE_DOMAIN}
+      - RATE_LIMIT_ENABLED=true
+      - SECURITY_HEADERS_ENABLED=true
+      - REQUIRE_HTTPS=true
+
+      # Compliance settings
+      - SOC2_ENABLED=true
+      - GDPR_ENABLED=true
+      - AUDIT_RETENTION_DAYS=2555
+    secrets:
+      - db_password
+      - redis_password
+      - jwt_secret
+      - session_secret
+      - sendgrid_api_key
+      - twilio_auth_token
+      - google_client_secret
+      - github_client_secret
+      - microsoft_client_secret
+      - stripe_secret_key
+      - stripe_webhook_secret
+      - analytics_api_key
+    volumes:
+      - app-logs:/var/log/frank-auth
+      - app-temp:/tmp/frank-auth
+    networks:
+      - frank-network
+      - external-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      replicas: 3
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+        window: 120s
+      update_config:
+        parallelism: 1
+        delay: 30s
+        failure_action: rollback
+        monitor: 60s
+        order: start-first
+      rollback_config:
+        parallelism: 1
+        delay: 0s
+        failure_action: pause
+        monitor: 60s
+        order: stop-first
+
+  # Nginx reverse proxy and load balancer
+  nginx:
+    image: nginx:alpine
+    container_name: frank-auth-nginx
+    hostname: frank-auth-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - DOMAIN_NAME=${DOMAIN_NAME:-api.frankauth.com}
+      - SSL_CERT_PATH=/etc/nginx/ssl/cert.pem
+      - SSL_KEY_PATH=/etc/nginx/ssl/key.pem
+    volumes:
+      - ../docker/nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro
+      - ../docker/nginx/sites-available/frankauth.conf:/etc/nginx/sites-enabled/frankauth.conf:ro
+      - ssl-certs:/etc/nginx/ssl:ro
+      - nginx-logs:/var/log/nginx
+    networks:
+      - frank-network
+      - external-network
+    depends_on:
+      - app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
+  # Database migrations service (run once)
+  migrations:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: migrations
+    image: frankauth/frank-auth-migrations:${VERSION:-latest}
+    container_name: frank-auth-migrations
+    environment:
+      - DATABASE_URL=postgres://${DATABASE_USER}:${DATABASE_PASSWORD}@${DATABASE_HOST}:${DATABASE_PORT:-5432}/${DATABASE_NAME}?sslmode=require
+    networks:
+      - external-network
+    deploy:
+      restart_policy:
+        condition: none
+      replicas: 1
+    profiles:
+      - migrations
+
+  # Redis (only if not using external managed Redis)
+  redis:
+    image: redis:7-alpine
+    container_name: frank-auth-redis
+    hostname: frank-auth-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    environment:
+      - REDIS_PASSWORD_FILE=/run/secrets/redis_password
+    secrets:
+      - redis_password
+    volumes:
+      - redis-data:/data
+      - ../docker/redis/redis.prod.conf:/usr/local/etc/redis/redis.conf:ro
+    networks:
+      - frank-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "$$(cat /run/secrets/redis_password)", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    command: redis-server /usr/local/etc/redis/redis.conf --requirepass $$(cat /run/secrets/redis_password)
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    profiles:
+      - redis-local
+
+  # PostgreSQL (only if not using external managed database)
+  db:
+    image: postgres:15-alpine
+    container_name: frank-auth-db
+    hostname: frank-auth-db
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=${DATABASE_NAME}
+      - POSTGRES_USER=${DATABASE_USER}
+      - POSTGRES_PASSWORD_FILE=/run/secrets/db_password
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    secrets:
+      - db_password
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - postgres-backups:/backups
+    networks:
+      - frank-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER} -d ${DATABASE_NAME}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    profiles:
+      - db-local
+
+  # Backup service for database
+  backup:
+    image: postgres:15-alpine
+    container_name: frank-auth-backup
+    environment:
+      - PGHOST=${DATABASE_HOST}
+      - PGPORT=${DATABASE_PORT:-5432}
+      - PGDATABASE=${DATABASE_NAME}
+      - PGUSER=${DATABASE_USER}
+      - PGPASSWORD_FILE=/run/secrets/db_password
+      - BACKUP_SCHEDULE=${BACKUP_SCHEDULE:-0 2 * * *}
+      - BACKUP_RETENTION_DAYS=${BACKUP_RETENTION_DAYS:-30}
+    secrets:
+      - db_password
+    volumes:
+      - postgres-backups:/backups
+      - ../scripts/backup.sh:/backup.sh:ro
+    networks:
+      - external-network
+    command: crond -f
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
+    profiles:
+      - backup
+
+  # Log aggregation with Fluentd
+  fluentd:
+    image: fluent/fluentd:v1.16-debian
+    container_name: frank-auth-fluentd
+    hostname: frank-auth-fluentd
+    restart: unless-stopped
+    ports:
+      - "24224:24224"
+      - "24224:24224/udp"
+    environment:
+      - FLUENTD_CONF=fluent.conf
+      - FLUENTD_LOG_LEVEL=info
+    volumes:
+      - ../docker/fluentd/fluent.conf:/fluentd/etc/fluent.conf:ro
+      - app-logs:/var/log/frank-auth:ro
+      - nginx-logs:/var/log/nginx:ro
+    networks:
+      - frank-network
+      - external-network
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+    profiles:
+      - logging
+
+  # Prometheus for metrics collection
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: frank-auth-prometheus
+    hostname: frank-auth-prometheus
+    restart: unless-stopped
+    ports:
+      - "9091:9090"
+    volumes:
+      - ../docker/prometheus/prometheus.prod.yml:/etc/prometheus/prometheus.yml:ro
+      - ../docker/prometheus/rules:/etc/prometheus/rules:ro
+      - prometheus-data:/prometheus
+    networks:
+      - frank-network
+      - external-network
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=90d'
+      - '--storage.tsdb.retention.size=50GB'
+      - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.25'
+          memory: 512M
+    profiles:
+      - monitoring
+
+  # Grafana for metrics visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: frank-auth-grafana
+    hostname: frank-auth-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD_FILE=/run/secrets/grafana_admin_password
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SECURITY_COOKIE_SECURE=true
+      - GF_SECURITY_COOKIE_SAMESITE=strict
+      - GF_SERVER_DOMAIN=${GRAFANA_DOMAIN:-grafana.frankauth.com}
+      - GF_SERVER_ROOT_URL=https://${GRAFANA_DOMAIN:-grafana.frankauth.com}
+      - GF_DATABASE_TYPE=postgres
+      - GF_DATABASE_HOST=${DATABASE_HOST}:${DATABASE_PORT:-5432}
+      - GF_DATABASE_NAME=grafana
+      - GF_DATABASE_USER=grafana
+      - GF_DATABASE_PASSWORD_FILE=/run/secrets/grafana_db_password
+      - GF_DATABASE_SSL_MODE=require
+    secrets:
+      - grafana_admin_password
+      - grafana_db_password
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ../docker/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ../docker/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    networks:
+      - frank-network
+      - external-network
+    depends_on:
+      - prometheus
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    profiles:
+      - monitoring
+
+  # Alertmanager for alert handling
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: frank-auth-alertmanager
+    hostname: frank-auth-alertmanager
+    restart: unless-stopped
+    ports:
+      - "9093:9093"
+    environment:
+      - SLACK_WEBHOOK_URL_FILE=/run/secrets/slack_webhook_url
+      - PAGERDUTY_KEY_FILE=/run/secrets/pagerduty_key
+    secrets:
+      - slack_webhook_url
+      - pagerduty_key
+    volumes:
+      - ../docker/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager-data:/alertmanager
+    networks:
+      - frank-network
+      - external-network
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+      - '--web.external-url=https://alerts.frankauth.com'
+      - '--cluster.listen-address=0.0.0.0:9094'
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
+    profiles:
+      - monitoring
+
+# Docker secrets for sensitive data
+secrets:
+  db_password:
+    external: true
+    name: frank_auth_db_password
+  redis_password:
+    external: true
+    name: frank_auth_redis_password
+  jwt_secret:
+    external: true
+    name: frank_auth_jwt_secret
+  session_secret:
+    external: true
+    name: frank_auth_session_secret
+  sendgrid_api_key:
+    external: true
+    name: frank_auth_sendgrid_api_key
+  twilio_auth_token:
+    external: true
+    name: frank_auth_twilio_auth_token
+  google_client_secret:
+    external: true
+    name: frank_auth_google_client_secret
+  github_client_secret:
+    external: true
+    name: frank_auth_github_client_secret
+  microsoft_client_secret:
+    external: true
+    name: frank_auth_microsoft_client_secret
+  stripe_secret_key:
+    external: true
+    name: frank_auth_stripe_secret_key
+  stripe_webhook_secret:
+    external: true
+    name: frank_auth_stripe_webhook_secret
+  analytics_api_key:
+    external: true
+    name: frank_auth_analytics_api_key
+  grafana_admin_password:
+    external: true
+    name: frank_auth_grafana_admin_password
+  grafana_db_password:
+    external: true
+    name: frank_auth_grafana_db_password
+  slack_webhook_url:
+    external: true
+    name: frank_auth_slack_webhook_url
+  pagerduty_key:
+    external: true
+    name: frank_auth_pagerduty_key
+
+# Named volumes for data persistence
+volumes:
+  postgres-data:
+    external: true
+    name: frank_auth_postgres_data
+  postgres-backups:
+    external: true
+    name: frank_auth_postgres_backups
+  redis-data:
+    external: true
+    name: frank_auth_redis_data
+  prometheus-data:
+    external: true
+    name: frank_auth_prometheus_data
+  grafana-data:
+    external: true
+    name: frank_auth_grafana_data
+  alertmanager-data:
+    external: true
+    name: frank_auth_alertmanager_data
+  ssl-certs:
+    external: true
+    name: frank_auth_ssl_certs
+  app-logs:
+    external: true
+    name: frank_auth_app_logs
+  nginx-logs:
+    external: true
+    name: frank_auth_nginx_logs
+
+# Networks
+networks:
+  frank-network:
+    name: frank_auth_internal
+    driver: overlay
+    attachable: true
+    encrypted: true
+    ipam:
+      config:
+        - subnet: 10.0.1.0/24
+  external-network:
+    name: frank_auth_external
+    driver: overlay
+    external: true
+
+# Production deployment commands:
+#
+# 1. Create Docker secrets:
+#    echo "your_secret" | docker secret create frank_auth_db_password -
+#    echo "your_jwt_secret" | docker secret create frank_auth_jwt_secret -
+#    (repeat for all secrets)
+#
+# 2. Create external volumes:
+#    docker volume create frank_auth_postgres_data
+#    docker volume create frank_auth_redis_data
+#    (repeat for all volumes)
+#
+# 3. Deploy the stack:
+#    docker stack deploy -c docker-compose.prod.yml frank-auth
+#
+# 4. Run migrations:
+#    docker-compose --profile migrations up migrations
+#
+# 5. Monitor the deployment:
+#    docker service ls
+#    docker service logs frank-auth_app
+#
+# 6. Scale services:
+#    docker service scale frank-auth_app=5
+#
+# 7. Update services:
+#    docker service update --image frankauth/frank-auth:v1.1.0 frank-auth_app
+#
+# 8. Cleanup:
+#    docker stack rm frank-auth

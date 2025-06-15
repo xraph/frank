@@ -6,6 +6,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 	"github.com/juicycleff/frank/pkg/entity"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -47,8 +48,8 @@ func (Organization) Fields() []ent.Field {
 
 		// Organization type differentiation
 		field.Enum("org_type").
-			Values("platform", "customer").
-			Default("customer").
+			GoType(model.OrgType("")).
+			Default(model.OrgTypeCustomer.String()).
 			Comment("platform = Your SaaS company, customer = Client organizations"),
 
 		field.Bool("is_platform_organization").
@@ -149,6 +150,8 @@ func (Organization) Edges() []ent.Edge {
 			Ref("organization_context"),
 
 		edge.To("audit_logs", Audit.Type),
+		edge.To("organization_providers", OrganizationProvider.Type),
+		edge.To("activities", Activity.Type),
 		// edge.To("user_role_contexts", UserRole.Type).
 		// 	From("organization_context"),
 		// edge.To("user_permission_contexts", UserPermission.Type).

@@ -15,18 +15,20 @@ import (
 	"github.com/juicycleff/frank/internal/rbac"
 	"github.com/juicycleff/frank/internal/services/audit"
 	"github.com/juicycleff/frank/internal/services/auth"
-	"github.com/juicycleff/frank/internal/services/mfa"
-	"github.com/juicycleff/frank/internal/services/notification"
-	"github.com/juicycleff/frank/internal/services/oauth"
-	"github.com/juicycleff/frank/internal/services/organization"
-	"github.com/juicycleff/frank/internal/services/passkey"
-	"github.com/juicycleff/frank/internal/services/sso"
-	"github.com/juicycleff/frank/internal/services/user"
-	"github.com/juicycleff/frank/internal/services/webhook"
 	"github.com/juicycleff/frank/pkg/crypto"
 	"github.com/juicycleff/frank/pkg/data"
 	"github.com/juicycleff/frank/pkg/email"
 	"github.com/juicycleff/frank/pkg/logging"
+	audit2 "github.com/juicycleff/frank/pkg/services/audit"
+	auth2 "github.com/juicycleff/frank/pkg/services/auth"
+	"github.com/juicycleff/frank/pkg/services/mfa"
+	"github.com/juicycleff/frank/pkg/services/notification"
+	"github.com/juicycleff/frank/pkg/services/oauth"
+	"github.com/juicycleff/frank/pkg/services/organization"
+	"github.com/juicycleff/frank/pkg/services/passkey"
+	"github.com/juicycleff/frank/pkg/services/sso"
+	"github.com/juicycleff/frank/pkg/services/user"
+	"github.com/juicycleff/frank/pkg/services/webhook"
 	"github.com/juicycleff/frank/pkg/validation"
 
 	_ "github.com/go-sql-driver/mysql" // MySQL
@@ -165,18 +167,18 @@ func ProvideAuthZService(
 }
 
 // ProvideTokenService provides the token service
-func ProvideTokenService(cfg *config.Config, crypto crypto.Util, logger logging.Logger) auth.TokenService {
-	return auth.NewTokenService(cfg, crypto, logger)
+func ProvideTokenService(cfg *config.Config, crypto crypto.Util, logger logging.Logger) auth2.TokenService {
+	return auth2.NewTokenService(cfg, crypto, logger)
 }
 
 // ProvideSessionService provides the session service
-func ProvideSessionService(entClient *ent.Client, cfg *config.Config, logger logging.Logger) auth.SessionService {
-	return auth.NewSessionService(entClient, cfg, logger)
+func ProvideSessionService(entClient *ent.Client, cfg *config.Config, logger logging.Logger) auth2.SessionService {
+	return auth2.NewSessionService(entClient, cfg, logger)
 }
 
 // ProvidePasswordService provides the password service
-func ProvidePasswordService(cfg *config.Config, crypto crypto.Util, logger logging.Logger) auth.PasswordService {
-	return auth.NewPasswordService(cfg, crypto, logger)
+func ProvidePasswordService(cfg *config.Config, crypto crypto.Util, logger logging.Logger) auth2.PasswordService {
+	return auth2.NewPasswordService(cfg, crypto, logger)
 }
 
 // ProvideFrankAuth provides the Frank authentication service
@@ -187,9 +189,9 @@ func ProvideFrankAuth(entClient *ent.Client, cfg *config.Config, logger logging.
 // ProvideAuthService provides the authentication service
 func ProvideAuthService(
 	frank auth.FrankAuth,
-	tokenService auth.TokenService,
-	sessionService auth.SessionService,
-	passwordService auth.PasswordService,
+	tokenService auth2.TokenService,
+	sessionService auth2.SessionService,
+	passwordService auth2.PasswordService,
 ) AuthService {
 	return &authService{
 		frank:           frank,
@@ -225,7 +227,7 @@ func ProvideSSOService(entClient *ent.Client, cfg *config.Config, logger logging
 }
 
 // ProvideAuditService provides the audit service
-func ProvideAuditService(entClient *ent.Client, logger logging.Logger, cfg *config.Config) audit.Service {
+func ProvideAuditService(entClient *ent.Client, logger logging.Logger, cfg *config.Config) audit2.Service {
 	return audit.NewService(entClient, logger, cfg)
 }
 

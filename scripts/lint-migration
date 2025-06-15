@@ -1,7 +1,0 @@
-#!/bin/bash
-set -eu
-MIGRATION_NAME=${1:-}
-
-
-# Push migration
-atlas migrate lint --env local --dev-url "postgres://postgres:postgres@localhost:5432/frank?sslmode=disable&search_path=public"

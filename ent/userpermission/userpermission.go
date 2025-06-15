@@ -11,6 +11,7 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -141,51 +142,22 @@ var (
 	DefaultID func() xid.ID
 )
 
-// ContextType defines the type for the "context_type" enum field.
-type ContextType string
-
-// ContextType values.
-const (
-	ContextTypeSystem       ContextType = "system"
-	ContextTypeOrganization ContextType = "organization"
-	ContextTypeApplication  ContextType = "application"
-	ContextTypeResource     ContextType = "resource"
-)
-
-func (ct ContextType) String() string {
-	return string(ct)
-}
-
 // ContextTypeValidator is a validator for the "context_type" field enum values. It is called by the builders before save.
-func ContextTypeValidator(ct ContextType) error {
-	switch ct {
-	case ContextTypeSystem, ContextTypeOrganization, ContextTypeApplication, ContextTypeResource:
+func ContextTypeValidator(ct model.ContextType) error {
+	switch ct.String() {
+	case "platform", "organization", "application", "resource":
 		return nil
 	default:
 		return fmt.Errorf("userpermission: invalid enum value for context_type field: %q", ct)
 	}
 }
 
-// PermissionType defines the type for the "permission_type" enum field.
-type PermissionType string
-
-// PermissionTypeGrant is the default value of the PermissionType enum.
-const DefaultPermissionType = PermissionTypeGrant
-
-// PermissionType values.
-const (
-	PermissionTypeGrant PermissionType = "grant"
-	PermissionTypeDeny  PermissionType = "deny"
-)
-
-func (pt PermissionType) String() string {
-	return string(pt)
-}
+const DefaultPermissionType model.PermissionType = "grant"
 
 // PermissionTypeValidator is a validator for the "permission_type" field enum values. It is called by the builders before save.
-func PermissionTypeValidator(pt PermissionType) error {
-	switch pt {
-	case PermissionTypeGrant, PermissionTypeDeny:
+func PermissionTypeValidator(pt model.PermissionType) error {
+	switch pt.String() {
+	case "grant", "deny":
 		return nil
 	default:
 		return fmt.Errorf("userpermission: invalid enum value for permission_type field: %q", pt)

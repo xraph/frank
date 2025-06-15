@@ -9,9 +9,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/juicycleff/frank/internal/model"
 	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/juicycleff/frank/pkg/logging"
+	"github.com/juicycleff/frank/pkg/model"
 	"golang.org/x/time/rate"
 )
 

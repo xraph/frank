@@ -8,8 +8,8 @@ import (
 	"entgo.io/ent/dialect/sql/sqljson"
 	"github.com/juicycleff/frank/ent"
 	"github.com/juicycleff/frank/ent/identityprovider"
-	"github.com/juicycleff/frank/internal/model"
 	"github.com/juicycleff/frank/pkg/errors"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -130,6 +130,7 @@ type UpdateIdentityProviderInput struct {
 	AttributeMapping map[string]string `json:"attributeMapping,omitempty" doc:"Updated attribute mappings"`
 	IconURL          *string           `json:"iconUrl,omitempty" example:"https://example.com/new-icon.png" doc:"Updated icon URL"`
 	ButtonText       *string           `json:"buttonText,omitempty" example:"Updated button text" doc:"Updated button text"`
+	Config           map[string]any    `json:"config" doc:"Updated provider configuration"`
 }
 
 // ProviderStats represents identity provider statistics

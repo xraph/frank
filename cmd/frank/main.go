@@ -7,11 +7,11 @@ import (
 	"github.com/danielgtaylor/huma/v2/humacli"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/juicycleff/frank"
-	commands2 "github.com/juicycleff/frank/commands"
 	"github.com/juicycleff/frank/config"
+	"github.com/juicycleff/frank/internal/commands"
 	"github.com/juicycleff/frank/internal/di"
-	"github.com/juicycleff/frank/internal/server"
 	"github.com/juicycleff/frank/pkg/logging"
+	server2 "github.com/juicycleff/frank/pkg/server"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 )
@@ -24,8 +24,8 @@ type FrankCLI struct {
 	logger    logging.Logger
 	config    *config.Config
 	ctx       context.Context
-	base      *commands2.BaseCommand
-	allCmds   *commands2.AllCommands
+	base      *commands.BaseCommand
+	allCmds   *commands.AllCommands
 }
 
 func main() {
@@ -33,11 +33,11 @@ func main() {
 		ctx: context.Background(),
 	}
 
-	banner := server.DefaultBanner()
+	banner := server2.DefaultBanner()
 
-	var apiServer *server.Server
+	var apiServer *server2.Server
 
-	cli.CLI = humacli.New(func(hooks humacli.Hooks, opts *server.ConfigFlags) {
+	cli.CLI = humacli.New(func(hooks humacli.Hooks, opts *server2.ConfigFlags) {
 		var err error
 		banner.Title = "Wakflo Identity Server is starting"
 
@@ -87,7 +87,7 @@ func main() {
 	cli.Root().AddCommand(&cobra.Command{
 		Use:   "start",
 		Short: "Start the server",
-		Run:   server.StartCMD(apiServer),
+		Run:   server2.StartCMD(apiServer),
 	})
 
 	cli.Root().AddCommand(&cobra.Command{
@@ -138,8 +138,8 @@ func (cli *FrankCLI) registerCommands(rootCmd *cobra.Command) {
 	}
 
 	// Create base command with minimal setup for registration
-	cli.base = commands2.NewBaseCommand(cli.config, nil, cli.logger, cli.ctx)
-	cli.allCmds = commands2.NewAllCommands(cli.base)
+	cli.base = commands.NewBaseCommand(cli.config, nil, cli.logger, cli.ctx)
+	cli.allCmds = commands.NewAllCommands(cli.base)
 
 	// Register all commands
 	cli.allCmds.RegisterAllCommands(rootCmd)
@@ -201,8 +201,8 @@ func (cli *FrankCLI) initialize(cmd *cobra.Command, args []string) error {
 	}
 
 	// Update the base command with full dependencies
-	cli.base = commands2.NewBaseCommand(cli.config, cli.container, cli.logger, cli.ctx)
-	cli.allCmds = commands2.NewAllCommands(cli.base)
+	cli.base = commands.NewBaseCommand(cli.config, cli.container, cli.logger, cli.ctx)
+	cli.allCmds = commands.NewAllCommands(cli.base)
 	cli.allCmds.RegisterAllCommands(cmd)
 
 	cli.logger.Debug("CLI initialized successfully")

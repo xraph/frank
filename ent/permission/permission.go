@@ -11,6 +11,7 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -173,25 +174,10 @@ var (
 	DefaultID func() xid.ID
 )
 
-// Category defines the type for the "category" enum field.
-type Category string
-
-// Category values.
-const (
-	CategoryPlatform     Category = "platform"
-	CategoryOrganization Category = "organization"
-	CategoryApplication  Category = "application"
-	CategoryResource     Category = "resource"
-)
-
-func (c Category) String() string {
-	return string(c)
-}
-
 // CategoryValidator is a validator for the "category" field enum values. It is called by the builders before save.
-func CategoryValidator(c Category) error {
-	switch c {
-	case CategoryPlatform, CategoryOrganization, CategoryApplication, CategoryResource:
+func CategoryValidator(c model.ContextType) error {
+	switch c.String() {
+	case "platform", "organization", "application", "resource":
 		return nil
 	default:
 		return fmt.Errorf("permission: invalid enum value for category field: %q", c)

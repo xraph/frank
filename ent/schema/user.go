@@ -6,6 +6,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 	"github.com/juicycleff/frank/pkg/entity"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -57,8 +58,8 @@ func (User) Fields() []ent.Field {
 
 		// User type and context
 		field.Enum("user_type").
-			Values("internal", "external", "end_user").
-			Default("external").
+			GoType(model.UserType("")).
+			Default(model.UserTypeExternal.String()).
 			Comment("internal = platform staff, external = customer org members, end_user = auth service users"),
 
 		// Organization context
@@ -153,6 +154,7 @@ func (User) Edges() []ent.Edge {
 			Comment("Permission assignments made by this user"),
 
 		edge.To("audit_logs", Audit.Type),
+		edge.To("activities", Activity.Type),
 	}
 }
 

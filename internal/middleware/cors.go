@@ -7,6 +7,7 @@ import (
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/juicycleff/frank/config"
+	"github.com/juicycleff/frank/pkg/contexts"
 	"github.com/juicycleff/frank/pkg/logging"
 )
 
@@ -499,8 +500,8 @@ func HumaWebhookCORSMiddlewareWithConfig(api huma.API, config *CORSConfig) func(
 
 	return func(ctx huma.Context, next func(huma.Context)) {
 		// Get the underlying HTTP request and response writer
-		r := ctx.Context().Value("http_request").(*http.Request)
-		w := ctx.Context().Value("http_writer").(http.ResponseWriter)
+		r := ctx.Context().Value(contexts.HTTPRequestContextKey).(*http.Request)
+		w := ctx.Context().Value(contexts.HTTPResponseWriterKey).(http.ResponseWriter)
 
 		origin := r.Header.Get("Origin")
 

@@ -1,0 +1,465 @@
+# Frank Auth SaaS - Test Configuration
+# This configuration file is used for running tests (unit, integration, e2e)
+# Optimized for speed and test isolation
+
+# Application Information
+app:
+  name: "Frank Auth SaaS Test"
+  version: "1.0.0-test"
+  description: "Test configuration for Frank Auth SaaS"
+  environment: "test"
+  debug: true
+  log_level: "warn" # Reduced logging during tests
+
+# Server Configuration - Optimized for testing
+server:
+  host: "127.0.0.1"
+  port: 0 # Use random available port for tests
+  read_timeout: 5s
+  write_timeout: 5s
+  idle_timeout: 10s
+  shutdown_timeout: 1s
+  max_header_bytes: 1048576
+  enable_pprof: false
+  enable_metrics: false
+  metrics_port: 0
+
+# Database Configuration - In-memory or test database
+database:
+  driver: "postgres"
+  host: "localhost"
+  port: 5432
+  name: "frank_auth_test"
+  user: "postgres"
+  password: "postgres"
+  ssl_mode: "disable"
+  timezone: "UTC"
+  max_connections: 10 # Reduced for tests
+  max_idle_connections: 2
+  max_lifetime: "10m"
+  log_queries: false
+  migration_path: "./migrations"
+  auto_migrate: true # Always migrate during tests
+
+  # Test-specific settings
+  reset_database: true # Reset DB between test suites
+  use_transactions: true # Wrap tests in transactions
+
+# Redis Configuration - Use different database for tests
+redis:
+  host: "localhost"
+  port: 6379
+  password: ""
+  database: 1 # Different database for tests
+  pool_size: 5
+  min_idle_connections: 1
+  max_retries: 1
+  dial_timeout: 1s
+  read_timeout: 1s
+  write_timeout: 1s
+  pool_timeout: 1s
+  idle_timeout: 1m
+  key_prefix: "frank_auth:test:"
+
+  # Test-specific settings
+  flush_db_on_start: true # Clear Redis at test start
+
+# Authentication Configuration - Relaxed for testing
+auth:
+  # JWT Configuration - Test-specific secrets
+  jwt_secret: "test-jwt-secret-not-for-production"
+  jwt_expiry: "1h"
+  jwt_refresh_expiry: "24h"
+  jwt_issuer: "frank-auth-test"
+  jwt_audience: "frank-auth-test-users"
+
+  # Session Configuration
+  session_secret: "test-session-secret"
+  session_expiry: "1h"
+  session_cookie_name: "frank_auth_test_session"
+  session_cookie_domain: ""
+  session_cookie_secure: false
+  session_cookie_http_only: true
+  session_cookie_same_site: "lax"
+
+  # Password Policy - Relaxed for tests
+  password_policy:
+    min_length: 6
+    max_length: 100
+    require_uppercase: false
+    require_lowercase: false
+    require_digit: false
+    require_special: false
+    max_reused_passwords: 1
+    prevent_reuse: false
+    expiry_days: 9999 # Effectively disabled
+    strength_check: false
+
+  # Account Settings - Relaxed for tests
+  require_email_verification: false
+  allow_registration: true
+  allow_password_reset: true
+  max_login_attempts: 100 # Effectively disabled
+  lockout_duration: "1s"
+
+  # CAPTCHA Configuration - Disabled for tests
+  enable_captcha: false
+  captcha_secret_key: "test-captcha-secret"
+  captcha_site_key: "test-captcha-site"
+
+# Multi-Factor Authentication Configuration - Simplified for tests
+mfa:
+  totp_issuer: "Frank Auth Test"
+  totp_digits: 6
+  totp_period: 30
+  totp_skew: 5 # More lenient for tests
+  totp_algorithm: "SHA1"
+  sms_code_length: 4 # Shorter for tests
+  sms_code_expiry: "10m"
+  email_code_length: 4
+  email_code_expiry: "10m"
+  backup_codes_count: 3 # Fewer for tests
+  backup_codes_length: 6
+  enforce_for_admins: false
+  default_methods: ["totp"]
+
+# Organization Configuration - Simplified for tests
+organization:
+  default_name: "Test Organization"
+  default_features: ["email", "sms", "oauth"]
+  max_members_free: 100
+  max_members_paid: 1000
+  allow_domain_verification: true
+  require_domain_verification: false
+  invitation_expiry: "1h"
+
+  # Signup Configuration
+  signup_fields:
+    - name: "email"
+      type: "email"
+      required: true
+      label: "Email"
+    - name: "first_name"
+      type: "text"
+      required: false
+      label: "First Name"
+    - name: "last_name"
+      type: "text"
+      required: false
+      label: "Last Name"
+
+  # Verification Settings
+  verification:
+    require_email: false
+    require_phone: false
+    email_verification_expiry: "1h"
+    phone_verification_expiry: "10m"
+
+# Security Configuration - Relaxed for tests
+security:
+  # Rate Limiting - Disabled for tests
+  rate_limit_enabled: false
+  rate_limit_per_second: 1000
+  rate_limit_burst: 10000
+  rate_limit_cleanup_interval: "1m"
+
+  # CORS Configuration - Permissive for tests
+  cors_enabled: true
+  cors_allowed_origins: ["*"]
+  cors_allowed_methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"]
+  cors_allowed_headers: ["*"]
+  cors_exposed_headers: ["*"]
+  cors_allow_credentials: true
+  cors_max_age: 86400
+
+  # Security Headers - Disabled for tests
+  security_headers_enabled: false
+  security_headers:
+    x_frame_options: "SAMEORIGIN"
+    x_content_type_options: "nosniff"
+    x_xss_protection: "0"
+    strict_transport_security: ""
+    content_security_policy: ""
+    referrer_policy: "no-referrer-when-downgrade"
+
+  # API Keys
+  api_key_length: 16 # Shorter for tests
+  api_key_prefix: "fa_test_"
+  api_key_expiry: "1h"
+
+# Email Configuration - Mock service for tests
+email:
+  provider: "mock"
+
+  # Mock Configuration
+  mock:
+    enabled: true
+    log_emails: true
+    store_emails: true # Store emails for test verification
+    fail_rate: 0.0 # Percentage of emails to fail (for testing)
+
+  # Email Settings
+  from_email: "test@frankauth.test"
+  from_name: "Frank Auth Test"
+  reply_to: "test@frankauth.test"
+
+  # Template Settings
+  template_path: "./templates/email"
+  default_template: "default"
+  enable_tracking: false
+
+# SMS Configuration - Mock service for tests
+sms:
+  provider: "mock"
+
+  # Mock Configuration
+  mock:
+    enabled: true
+    log_sms: true
+    store_sms: true # Store SMS for test verification
+    fail_rate: 0.0 # Percentage of SMS to fail (for testing)
+
+  # Default Settings
+  from_number: "+1234567890"
+  default_country_code: "+1"
+
+# OAuth Configuration - Mock providers for tests
+oauth:
+  # Mock Google OAuth
+  google:
+    enabled: true
+    client_id: "test-google-client-id"
+    client_secret: "test-google-client-secret"
+    scopes: ["openid", "profile", "email"]
+    redirect_url: "http://localhost:8080/v1/oauth/google/callback"
+
+    # Mock settings
+    mock_enabled: true
+    mock_user_info:
+      id: "google-test-user-123"
+      email: "test@google.com"
+      name: "Google Test User"
+      picture: "https://example.com/avatar.jpg"
+
+  # Mock GitHub OAuth
+  github:
+    enabled: true
+    client_id: "test-github-client-id"
+    client_secret: "test-github-client-secret"
+    scopes: ["user:email", "read:user"]
+    redirect_url: "http://localhost:8080/v1/oauth/github/callback"
+
+    # Mock settings
+    mock_enabled: true
+    mock_user_info:
+      id: "github-test-user-123"
+      login: "testuser"
+      email: "test@github.com"
+      name: "GitHub Test User"
+      avatar_url: "https://example.com/avatar.jpg"
+
+# Webhook Configuration - Simplified for tests
+webhooks:
+  enabled: true
+  max_retries: 1
+  retry_delay: "1s"
+  timeout: "5s"
+  batch_size: 10
+  worker_count: 1
+
+  # Mock webhook endpoints for testing
+  mock_endpoints:
+    - url: "http://localhost:8080/test/webhook"
+      events: ["*"]
+
+  # Event Configuration
+  events:
+    - "user.created"
+    - "user.updated"
+    - "session.created"
+    - "organization.created"
+
+# Audit Configuration - Simplified for tests
+audit:
+  enabled: true
+  retention_days: 1 # Short retention for tests
+  batch_size: 100
+  flush_interval: "1s"
+
+  # Store audit logs in memory for test verification
+  store_in_memory: true
+
+  # Events to Audit
+  events:
+    authentication: true
+    authorization: true
+    user_management: true
+    organization_management: true
+    configuration_changes: false
+    security_events: true
+
+# Monitoring Configuration - Disabled for tests
+monitoring:
+  # Metrics
+  metrics_enabled: false
+  metrics_endpoint: ""
+
+  # Health Checks
+  health_enabled: true
+  health_endpoint: "http://localhost:8080/health"
+
+  # Tracing - Disabled for tests
+  tracing_enabled: false
+  jaeger_endpoint: ""
+  otlp_endpoint: ""
+  sample_rate: 0.0
+
+# Logging Configuration - Minimal for tests
+logging:
+  level: "warn" # Reduced logging noise
+  format: "console"
+  enable_caller: false
+  enable_stacktrace: false
+
+  # File Logging - Disabled for tests
+  file_enabled: false
+  file_path: ""
+  file_max_size: 0
+  file_max_backups: 0
+  file_max_age: 0
+  file_compress: false
+
+# Templates Configuration
+templates:
+  path: "./templates"
+  email_path: "./templates/email"
+  auth_path: "./templates/auth"
+  enable_file_watcher: false
+
+# Feature Flags - Test all features
+features:
+  enable_passkeys: true
+  enable_magic_links: true
+  enable_social_login: true
+  enable_enterprise_sso: true
+  enable_advanced_analytics: false
+  enable_compliance_mode: false
+  enable_multi_region: false
+
+# Test-Specific Settings
+test:
+  # Database settings
+  reset_database_between_tests: true
+  use_database_transactions: true
+
+  # Mock services
+  mock_all_external_services: true
+  mock_email_service: true
+  mock_sms_service: true
+  mock_oauth_providers: true
+  mock_webhook_delivery: true
+
+  # Test data
+  create_test_fixtures: true
+  test_users:
+    - email: "admin@test.com"
+      password: "admin123"
+      user_type: "internal"
+      roles: ["admin"]
+    - email: "user@test.com"
+      password: "user123"
+      user_type: "external"
+      roles: ["user"]
+    - email: "member@test.com"
+      password: "member123"
+      user_type: "external"
+      roles: ["member"]
+
+  test_organizations:
+    - name: "Test Organization"
+      slug: "test-org"
+      domain: "test.com"
+
+  # Test timeouts
+  test_timeout: "30s"
+  integration_test_timeout: "60s"
+  e2e_test_timeout: "120s"
+
+  # Parallel test settings
+  parallel_tests: true
+  max_parallel_tests: 4
+
+  # Test coverage
+  enable_coverage: true
+  coverage_threshold: 80 # Minimum coverage percentage
+
+  # Test reporting
+  generate_test_reports: true
+  test_report_format: "json"
+
+  # Performance testing
+  load_test_enabled: false
+  benchmark_enabled: false
+
+# Test Fixtures Configuration
+fixtures:
+  # User fixtures
+  users:
+    admin:
+      email: "admin@frankauth.test"
+      password: "TestAdmin123!"
+      first_name: "Admin"
+      last_name: "User"
+      user_type: "internal"
+      verified: true
+
+    external_user:
+      email: "external@frankauth.test"
+      password: "TestExternal123!"
+      first_name: "External"
+      last_name: "User"
+      user_type: "external"
+      verified: true
+
+    end_user:
+      email: "enduser@frankauth.test"
+      password: "TestEndUser123!"
+      first_name: "End"
+      last_name: "User"
+      user_type: "external"
+      verified: true
+
+  # Organization fixtures
+  organizations:
+    test_org:
+      name: "Test Organization"
+      slug: "test-org"
+      domain: "test.com"
+      verified: true
+
+    acme_corp:
+      name: "Acme Corporation"
+      slug: "acme-corp"
+      domain: "acme.com"
+      verified: false
+
+# CI/CD Configuration
+ci:
+  # GitHub Actions specific settings
+  github_actions:
+    enabled: true
+    artifact_retention_days: 7
+
+  # Docker settings for CI
+  docker:
+    build_args:
+      - "ENVIRONMENT=test"
+      - "LOG_LEVEL=error"
+
+  # Test database for CI
+  test_database:
+    host: "localhost"
+    port: 5432
+    name: "frank_auth_ci_test"
+    user: "postgres"
+    password: "postgres"

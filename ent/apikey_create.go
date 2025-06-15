@@ -16,8 +16,10 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/juicycleff/frank/ent/apikey"
+	"github.com/juicycleff/frank/ent/apikeyactivity"
 	"github.com/juicycleff/frank/ent/organization"
 	"github.com/juicycleff/frank/ent/user"
+	"github.com/juicycleff/frank/pkg/common"
 	"github.com/rs/xid"
 )
 
@@ -157,6 +159,26 @@ func (akc *ApiKeyCreate) SetScopes(s []string) *ApiKeyCreate {
 	return akc
 }
 
+// SetIPWhitelist sets the "ip_whitelist" field.
+func (akc *ApiKeyCreate) SetIPWhitelist(s []string) *ApiKeyCreate {
+	akc.mutation.SetIPWhitelist(s)
+	return akc
+}
+
+// SetRateLimits sets the "rate_limits" field.
+func (akc *ApiKeyCreate) SetRateLimits(ckrl common.APIKeyRateLimits) *ApiKeyCreate {
+	akc.mutation.SetRateLimits(ckrl)
+	return akc
+}
+
+// SetNillableRateLimits sets the "rate_limits" field if the given value is not nil.
+func (akc *ApiKeyCreate) SetNillableRateLimits(ckrl *common.APIKeyRateLimits) *ApiKeyCreate {
+	if ckrl != nil {
+		akc.SetRateLimits(*ckrl)
+	}
+	return akc
+}
+
 // SetMetadata sets the "metadata" field.
 func (akc *ApiKeyCreate) SetMetadata(m map[string]interface{}) *ApiKeyCreate {
 	akc.mutation.SetMetadata(m)
@@ -213,6 +235,21 @@ func (akc *ApiKeyCreate) SetUser(u *User) *ApiKeyCreate {
 // SetOrganization sets the "organization" edge to the Organization entity.
 func (akc *ApiKeyCreate) SetOrganization(o *Organization) *ApiKeyCreate {
 	return akc.SetOrganizationID(o.ID)
+}
+
+// AddActivityIDs adds the "activities" edge to the ApiKeyActivity entity by IDs.
+func (akc *ApiKeyCreate) AddActivityIDs(ids ...xid.ID) *ApiKeyCreate {
+	akc.mutation.AddActivityIDs(ids...)
+	return akc
+}
+
+// AddActivities adds the "activities" edges to the ApiKeyActivity entity.
+func (akc *ApiKeyCreate) AddActivities(a ...*ApiKeyActivity) *ApiKeyCreate {
+	ids := make([]xid.ID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return akc.AddActivityIDs(ids...)
 }
 
 // Mutation returns the ApiKeyMutation object of the builder.
@@ -381,6 +418,14 @@ func (akc *ApiKeyCreate) createSpec() (*ApiKey, *sqlgraph.CreateSpec) {
 		_spec.SetField(apikey.FieldScopes, field.TypeJSON, value)
 		_node.Scopes = value
 	}
+	if value, ok := akc.mutation.IPWhitelist(); ok {
+		_spec.SetField(apikey.FieldIPWhitelist, field.TypeJSON, value)
+		_node.IPWhitelist = value
+	}
+	if value, ok := akc.mutation.RateLimits(); ok {
+		_spec.SetField(apikey.FieldRateLimits, field.TypeJSON, value)
+		_node.RateLimits = value
+	}
 	if value, ok := akc.mutation.Metadata(); ok {
 		_spec.SetField(apikey.FieldMetadata, field.TypeJSON, value)
 		_node.Metadata = value
@@ -425,6 +470,22 @@ func (akc *ApiKeyCreate) createSpec() (*ApiKey, *sqlgraph.CreateSpec) {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.OrganizationID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := akc.mutation.ActivitiesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   apikey.ActivitiesTable,
+			Columns: []string{apikey.ActivitiesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(apikeyactivity.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
@@ -638,6 +699,42 @@ func (u *ApiKeyUpsert) UpdateScopes() *ApiKeyUpsert {
 // ClearScopes clears the value of the "scopes" field.
 func (u *ApiKeyUpsert) ClearScopes() *ApiKeyUpsert {
 	u.SetNull(apikey.FieldScopes)
+	return u
+}
+
+// SetIPWhitelist sets the "ip_whitelist" field.
+func (u *ApiKeyUpsert) SetIPWhitelist(v []string) *ApiKeyUpsert {
+	u.Set(apikey.FieldIPWhitelist, v)
+	return u
+}
+
+// UpdateIPWhitelist sets the "ip_whitelist" field to the value that was provided on create.
+func (u *ApiKeyUpsert) UpdateIPWhitelist() *ApiKeyUpsert {
+	u.SetExcluded(apikey.FieldIPWhitelist)
+	return u
+}
+
+// ClearIPWhitelist clears the value of the "ip_whitelist" field.
+func (u *ApiKeyUpsert) ClearIPWhitelist() *ApiKeyUpsert {
+	u.SetNull(apikey.FieldIPWhitelist)
+	return u
+}
+
+// SetRateLimits sets the "rate_limits" field.
+func (u *ApiKeyUpsert) SetRateLimits(v common.APIKeyRateLimits) *ApiKeyUpsert {
+	u.Set(apikey.FieldRateLimits, v)
+	return u
+}
+
+// UpdateRateLimits sets the "rate_limits" field to the value that was provided on create.
+func (u *ApiKeyUpsert) UpdateRateLimits() *ApiKeyUpsert {
+	u.SetExcluded(apikey.FieldRateLimits)
+	return u
+}
+
+// ClearRateLimits clears the value of the "rate_limits" field.
+func (u *ApiKeyUpsert) ClearRateLimits() *ApiKeyUpsert {
+	u.SetNull(apikey.FieldRateLimits)
 	return u
 }
 
@@ -932,6 +1029,48 @@ func (u *ApiKeyUpsertOne) UpdateScopes() *ApiKeyUpsertOne {
 func (u *ApiKeyUpsertOne) ClearScopes() *ApiKeyUpsertOne {
 	return u.Update(func(s *ApiKeyUpsert) {
 		s.ClearScopes()
+	})
+}
+
+// SetIPWhitelist sets the "ip_whitelist" field.
+func (u *ApiKeyUpsertOne) SetIPWhitelist(v []string) *ApiKeyUpsertOne {
+	return u.Update(func(s *ApiKeyUpsert) {
+		s.SetIPWhitelist(v)
+	})
+}
+
+// UpdateIPWhitelist sets the "ip_whitelist" field to the value that was provided on create.
+func (u *ApiKeyUpsertOne) UpdateIPWhitelist() *ApiKeyUpsertOne {
+	return u.Update(func(s *ApiKeyUpsert) {
+		s.UpdateIPWhitelist()
+	})
+}
+
+// ClearIPWhitelist clears the value of the "ip_whitelist" field.
+func (u *ApiKeyUpsertOne) ClearIPWhitelist() *ApiKeyUpsertOne {
+	return u.Update(func(s *ApiKeyUpsert) {
+		s.ClearIPWhitelist()
+	})
+}
+
+// SetRateLimits sets the "rate_limits" field.
+func (u *ApiKeyUpsertOne) SetRateLimits(v common.APIKeyRateLimits) *ApiKeyUpsertOne {
+	return u.Update(func(s *ApiKeyUpsert) {
+		s.SetRateLimits(v)
+	})
+}
+
+// UpdateRateLimits sets the "rate_limits" field to the value that was provided on create.
+func (u *ApiKeyUpsertOne) UpdateRateLimits() *ApiKeyUpsertOne {
+	return u.Update(func(s *ApiKeyUpsert) {
+		s.UpdateRateLimits()
+	})
+}
+
+// ClearRateLimits clears the value of the "rate_limits" field.
+func (u *ApiKeyUpsertOne) ClearRateLimits() *ApiKeyUpsertOne {
+	return u.Update(func(s *ApiKeyUpsert) {
+		s.ClearRateLimits()
 	})
 }
 
@@ -1402,6 +1541,48 @@ func (u *ApiKeyUpsertBulk) UpdateScopes() *ApiKeyUpsertBulk {
 func (u *ApiKeyUpsertBulk) ClearScopes() *ApiKeyUpsertBulk {
 	return u.Update(func(s *ApiKeyUpsert) {
 		s.ClearScopes()
+	})
+}
+
+// SetIPWhitelist sets the "ip_whitelist" field.
+func (u *ApiKeyUpsertBulk) SetIPWhitelist(v []string) *ApiKeyUpsertBulk {
+	return u.Update(func(s *ApiKeyUpsert) {
+		s.SetIPWhitelist(v)
+	})
+}
+
+// UpdateIPWhitelist sets the "ip_whitelist" field to the value that was provided on create.
+func (u *ApiKeyUpsertBulk) UpdateIPWhitelist() *ApiKeyUpsertBulk {
+	return u.Update(func(s *ApiKeyUpsert) {
+		s.UpdateIPWhitelist()
+	})
+}
+
+// ClearIPWhitelist clears the value of the "ip_whitelist" field.
+func (u *ApiKeyUpsertBulk) ClearIPWhitelist() *ApiKeyUpsertBulk {
+	return u.Update(func(s *ApiKeyUpsert) {
+		s.ClearIPWhitelist()
+	})
+}
+
+// SetRateLimits sets the "rate_limits" field.
+func (u *ApiKeyUpsertBulk) SetRateLimits(v common.APIKeyRateLimits) *ApiKeyUpsertBulk {
+	return u.Update(func(s *ApiKeyUpsert) {
+		s.SetRateLimits(v)
+	})
+}
+
+// UpdateRateLimits sets the "rate_limits" field to the value that was provided on create.
+func (u *ApiKeyUpsertBulk) UpdateRateLimits() *ApiKeyUpsertBulk {
+	return u.Update(func(s *ApiKeyUpsert) {
+		s.UpdateRateLimits()
+	})
+}
+
+// ClearRateLimits clears the value of the "rate_limits" field.
+func (u *ApiKeyUpsertBulk) ClearRateLimits() *ApiKeyUpsertBulk {
+	return u.Update(func(s *ApiKeyUpsert) {
+		s.ClearRateLimits()
 	})
 }
 

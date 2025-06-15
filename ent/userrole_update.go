@@ -19,6 +19,7 @@ import (
 	"github.com/juicycleff/frank/ent/role"
 	"github.com/juicycleff/frank/ent/user"
 	"github.com/juicycleff/frank/ent/userrole"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -91,15 +92,15 @@ func (uru *UserRoleUpdate) SetNillableRoleID(x *xid.ID) *UserRoleUpdate {
 }
 
 // SetContextType sets the "context_type" field.
-func (uru *UserRoleUpdate) SetContextType(ut userrole.ContextType) *UserRoleUpdate {
-	uru.mutation.SetContextType(ut)
+func (uru *UserRoleUpdate) SetContextType(mt model.ContextType) *UserRoleUpdate {
+	uru.mutation.SetContextType(mt)
 	return uru
 }
 
 // SetNillableContextType sets the "context_type" field if the given value is not nil.
-func (uru *UserRoleUpdate) SetNillableContextType(ut *userrole.ContextType) *UserRoleUpdate {
-	if ut != nil {
-		uru.SetContextType(*ut)
+func (uru *UserRoleUpdate) SetNillableContextType(mt *model.ContextType) *UserRoleUpdate {
+	if mt != nil {
+		uru.SetContextType(*mt)
 	}
 	return uru
 }
@@ -584,15 +585,15 @@ func (uruo *UserRoleUpdateOne) SetNillableRoleID(x *xid.ID) *UserRoleUpdateOne {
 }
 
 // SetContextType sets the "context_type" field.
-func (uruo *UserRoleUpdateOne) SetContextType(ut userrole.ContextType) *UserRoleUpdateOne {
-	uruo.mutation.SetContextType(ut)
+func (uruo *UserRoleUpdateOne) SetContextType(mt model.ContextType) *UserRoleUpdateOne {
+	uruo.mutation.SetContextType(mt)
 	return uruo
 }
 
 // SetNillableContextType sets the "context_type" field if the given value is not nil.
-func (uruo *UserRoleUpdateOne) SetNillableContextType(ut *userrole.ContextType) *UserRoleUpdateOne {
-	if ut != nil {
-		uruo.SetContextType(*ut)
+func (uruo *UserRoleUpdateOne) SetNillableContextType(mt *model.ContextType) *UserRoleUpdateOne {
+	if mt != nil {
+		uruo.SetContextType(*mt)
 	}
 	return uruo
 }

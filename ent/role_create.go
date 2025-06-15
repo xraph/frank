@@ -21,6 +21,7 @@ import (
 	"github.com/juicycleff/frank/ent/role"
 	"github.com/juicycleff/frank/ent/user"
 	"github.com/juicycleff/frank/ent/userrole"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -109,8 +110,8 @@ func (rc *RoleCreate) SetNillableDescription(s *string) *RoleCreate {
 }
 
 // SetRoleType sets the "role_type" field.
-func (rc *RoleCreate) SetRoleType(rt role.RoleType) *RoleCreate {
-	rc.mutation.SetRoleType(rt)
+func (rc *RoleCreate) SetRoleType(mt model.RoleType) *RoleCreate {
+	rc.mutation.SetRoleType(mt)
 	return rc
 }
 
@@ -790,7 +791,7 @@ func (u *RoleUpsert) ClearDescription() *RoleUpsert {
 }
 
 // SetRoleType sets the "role_type" field.
-func (u *RoleUpsert) SetRoleType(v role.RoleType) *RoleUpsert {
+func (u *RoleUpsert) SetRoleType(v model.RoleType) *RoleUpsert {
 	u.Set(role.FieldRoleType, v)
 	return u
 }
@@ -1100,7 +1101,7 @@ func (u *RoleUpsertOne) ClearDescription() *RoleUpsertOne {
 }
 
 // SetRoleType sets the "role_type" field.
-func (u *RoleUpsertOne) SetRoleType(v role.RoleType) *RoleUpsertOne {
+func (u *RoleUpsertOne) SetRoleType(v model.RoleType) *RoleUpsertOne {
 	return u.Update(func(s *RoleUpsert) {
 		s.SetRoleType(v)
 	})
@@ -1605,7 +1606,7 @@ func (u *RoleUpsertBulk) ClearDescription() *RoleUpsertBulk {
 }
 
 // SetRoleType sets the "role_type" field.
-func (u *RoleUpsertBulk) SetRoleType(v role.RoleType) *RoleUpsertBulk {
+func (u *RoleUpsertBulk) SetRoleType(v model.RoleType) *RoleUpsertBulk {
 	return u.Update(func(s *RoleUpsert) {
 		s.SetRoleType(v)
 	})

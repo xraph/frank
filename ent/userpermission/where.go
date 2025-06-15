@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/juicycleff/frank/ent/predicate"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -395,23 +396,33 @@ func PermissionIDContainsFold(v xid.ID) predicate.UserPermission {
 }
 
 // ContextTypeEQ applies the EQ predicate on the "context_type" field.
-func ContextTypeEQ(v ContextType) predicate.UserPermission {
-	return predicate.UserPermission(sql.FieldEQ(FieldContextType, v))
+func ContextTypeEQ(v model.ContextType) predicate.UserPermission {
+	vc := v
+	return predicate.UserPermission(sql.FieldEQ(FieldContextType, vc))
 }
 
 // ContextTypeNEQ applies the NEQ predicate on the "context_type" field.
-func ContextTypeNEQ(v ContextType) predicate.UserPermission {
-	return predicate.UserPermission(sql.FieldNEQ(FieldContextType, v))
+func ContextTypeNEQ(v model.ContextType) predicate.UserPermission {
+	vc := v
+	return predicate.UserPermission(sql.FieldNEQ(FieldContextType, vc))
 }
 
 // ContextTypeIn applies the In predicate on the "context_type" field.
-func ContextTypeIn(vs ...ContextType) predicate.UserPermission {
-	return predicate.UserPermission(sql.FieldIn(FieldContextType, vs...))
+func ContextTypeIn(vs ...model.ContextType) predicate.UserPermission {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.UserPermission(sql.FieldIn(FieldContextType, v...))
 }
 
 // ContextTypeNotIn applies the NotIn predicate on the "context_type" field.
-func ContextTypeNotIn(vs ...ContextType) predicate.UserPermission {
-	return predicate.UserPermission(sql.FieldNotIn(FieldContextType, vs...))
+func ContextTypeNotIn(vs ...model.ContextType) predicate.UserPermission {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.UserPermission(sql.FieldNotIn(FieldContextType, v...))
 }
 
 // ContextIDEQ applies the EQ predicate on the "context_id" field.
@@ -650,23 +661,33 @@ func ResourceIDContainsFold(v xid.ID) predicate.UserPermission {
 }
 
 // PermissionTypeEQ applies the EQ predicate on the "permission_type" field.
-func PermissionTypeEQ(v PermissionType) predicate.UserPermission {
-	return predicate.UserPermission(sql.FieldEQ(FieldPermissionType, v))
+func PermissionTypeEQ(v model.PermissionType) predicate.UserPermission {
+	vc := v
+	return predicate.UserPermission(sql.FieldEQ(FieldPermissionType, vc))
 }
 
 // PermissionTypeNEQ applies the NEQ predicate on the "permission_type" field.
-func PermissionTypeNEQ(v PermissionType) predicate.UserPermission {
-	return predicate.UserPermission(sql.FieldNEQ(FieldPermissionType, v))
+func PermissionTypeNEQ(v model.PermissionType) predicate.UserPermission {
+	vc := v
+	return predicate.UserPermission(sql.FieldNEQ(FieldPermissionType, vc))
 }
 
 // PermissionTypeIn applies the In predicate on the "permission_type" field.
-func PermissionTypeIn(vs ...PermissionType) predicate.UserPermission {
-	return predicate.UserPermission(sql.FieldIn(FieldPermissionType, vs...))
+func PermissionTypeIn(vs ...model.PermissionType) predicate.UserPermission {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.UserPermission(sql.FieldIn(FieldPermissionType, v...))
 }
 
 // PermissionTypeNotIn applies the NotIn predicate on the "permission_type" field.
-func PermissionTypeNotIn(vs ...PermissionType) predicate.UserPermission {
-	return predicate.UserPermission(sql.FieldNotIn(FieldPermissionType, vs...))
+func PermissionTypeNotIn(vs ...model.PermissionType) predicate.UserPermission {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.UserPermission(sql.FieldNotIn(FieldPermissionType, v...))
 }
 
 // AssignedByEQ applies the EQ predicate on the "assigned_by" field.

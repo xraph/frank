@@ -7,9 +7,9 @@ import (
 	"github.com/juicycleff/frank/ent"
 	"github.com/juicycleff/frank/ent/predicate"
 	"github.com/juicycleff/frank/ent/user"
-	"github.com/juicycleff/frank/internal/model"
 	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/juicycleff/frank/pkg/logging"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -18,10 +18,10 @@ type UserRepository interface {
 	// Basic CRUD operations
 	Create(ctx context.Context, input CreateUserInput) (*ent.User, error)
 	GetByID(ctx context.Context, id xid.ID) (*ent.User, error)
-	GetByEmail(ctx context.Context, email string, userType user.UserType, organizationID *xid.ID) (*ent.User, error)
-	GetByUsername(ctx context.Context, username string, userType user.UserType, organizationID *xid.ID) (*ent.User, error)
-	GetUserByPhone(ctx context.Context, phone string, userType user.UserType, organizationID *xid.ID) (*ent.User, error)
-	GetByExternalID(ctx context.Context, externalID string, provider string, userType user.UserType, organizationID *xid.ID) (*ent.User, error)
+	GetByEmail(ctx context.Context, email string, userType model.UserType, organizationID *xid.ID) (*ent.User, error)
+	GetByUsername(ctx context.Context, username string, userType model.UserType, organizationID *xid.ID) (*ent.User, error)
+	GetUserByPhone(ctx context.Context, phone string, userType model.UserType, organizationID *xid.ID) (*ent.User, error)
+	GetByExternalID(ctx context.Context, externalID string, provider string, userType model.UserType, organizationID *xid.ID) (*ent.User, error)
 	Update(ctx context.Context, id xid.ID, input UpdateUserInput) (*ent.User, error)
 	Delete(ctx context.Context, id xid.ID) error
 
@@ -49,11 +49,11 @@ type UserRepository interface {
 	// Organization context
 	GetPlatformAdmins(ctx context.Context) ([]*ent.User, error)
 	GetOrganizationMembers(ctx context.Context, organizationID xid.ID, activeOnly bool) ([]*ent.User, error)
-	CountByOrganization(ctx context.Context, organizationID xid.ID, userType user.UserType) (int, error)
+	CountByOrganization(ctx context.Context, organizationID xid.ID, userType model.UserType) (int, error)
 
 	// Existence checks
-	ExistsByEmail(ctx context.Context, email string, userType user.UserType, organizationID *xid.ID) (bool, error)
-	ExistsByUsername(ctx context.Context, username string, userType user.UserType, organizationID *xid.ID) (bool, error)
+	ExistsByEmail(ctx context.Context, email string, userType model.UserType, organizationID *xid.ID) (bool, error)
+	ExistsByUsername(ctx context.Context, username string, userType model.UserType, organizationID *xid.ID) (bool, error)
 }
 
 // CreateUserInput represents input for creating a user
@@ -65,7 +65,7 @@ type CreateUserInput struct {
 	Username              *string                `json:"username,omitempty"`
 	PasswordHash          *string                `json:"password_hash,omitempty"`
 	ProviderName          string                 `json:"provider_name,omitempty"`
-	UserType              user.UserType          `json:"user_type"`
+	UserType              model.UserType         `json:"user_type"`
 	OrganizationID        *xid.ID                `json:"organization_id,omitempty"`
 	PrimaryOrganizationID *xid.ID                `json:"primary_organization_id,omitempty"`
 	IsPlatformAdmin       bool                   `json:"is_platform_admin"`
@@ -100,21 +100,21 @@ type UpdateUserInput struct {
 // ListUsersParams represents parameters for listing users
 type ListUsersParams struct {
 	model.PaginationParams
-	UserType       *user.UserType `json:"user_type,omitempty"`
-	OrganizationID *xid.ID        `json:"organization_id,omitempty"`
-	Active         *bool          `json:"active,omitempty"`
-	Blocked        *bool          `json:"blocked,omitempty"`
-	EmailVerified  *bool          `json:"email_verified,omitempty"`
-	AuthProvider   *string        `json:"auth_provider,omitempty"`
+	UserType       *model.UserType `json:"user_type,omitempty"`
+	OrganizationID *xid.ID         `json:"organization_id,omitempty"`
+	Active         *bool           `json:"active,omitempty"`
+	Blocked        *bool           `json:"blocked,omitempty"`
+	EmailVerified  *bool           `json:"email_verified,omitempty"`
+	AuthProvider   *string         `json:"auth_provider,omitempty"`
 }
 
 // SearchUsersParams represents parameters for searching users
 type SearchUsersParams struct {
 	model.PaginationParams
-	UserType       *user.UserType `json:"user_type,omitempty"`
-	OrganizationID *xid.ID        `json:"organization_id,omitempty"`
-	Fields         []string       `json:"fields,omitempty"` // Fields to search in: email, first_name, last_name, username
-	ExactMatch     bool           `json:"exact_match"`
+	UserType       *model.UserType `json:"user_type,omitempty"`
+	OrganizationID *xid.ID         `json:"organization_id,omitempty"`
+	Fields         []string        `json:"fields,omitempty"` // Fields to search in: email, first_name, last_name, username
+	ExactMatch     bool            `json:"exact_match"`
 }
 
 // userRepository implements UserRepository
@@ -211,7 +211,7 @@ func (r *userRepository) GetByID(ctx context.Context, id xid.ID) (*ent.User, err
 }
 
 // GetByEmail retrieves a user by email with optional filters
-func (r *userRepository) GetByEmail(ctx context.Context, email string, userType user.UserType, organizationID *xid.ID) (*ent.User, error) {
+func (r *userRepository) GetByEmail(ctx context.Context, email string, userType model.UserType, organizationID *xid.ID) (*ent.User, error) {
 	query := r.client.User.Query().
 		Where(
 			user.Email(email),
@@ -233,7 +233,7 @@ func (r *userRepository) GetByEmail(ctx context.Context, email string, userType 
 }
 
 // GetByUsername retrieves a user by username
-func (r *userRepository) GetByUsername(ctx context.Context, username string, userType user.UserType, organizationID *xid.ID) (*ent.User, error) {
+func (r *userRepository) GetByUsername(ctx context.Context, username string, userType model.UserType, organizationID *xid.ID) (*ent.User, error) {
 	query := r.client.User.Query().
 		Where(
 			user.Username(username),
@@ -255,7 +255,7 @@ func (r *userRepository) GetByUsername(ctx context.Context, username string, use
 }
 
 // GetUserByPhone retrieves a user by username
-func (r *userRepository) GetUserByPhone(ctx context.Context, phone string, userType user.UserType, organizationID *xid.ID) (*ent.User, error) {
+func (r *userRepository) GetUserByPhone(ctx context.Context, phone string, userType model.UserType, organizationID *xid.ID) (*ent.User, error) {
 	query := r.client.User.Query().
 		Where(
 			user.PhoneNumber(phone),
@@ -277,7 +277,7 @@ func (r *userRepository) GetUserByPhone(ctx context.Context, phone string, userT
 }
 
 // GetByExternalID retrieves a user by external provider ID
-func (r *userRepository) GetByExternalID(ctx context.Context, externalID string, provider string, userType user.UserType, organizationID *xid.ID) (*ent.User, error) {
+func (r *userRepository) GetByExternalID(ctx context.Context, externalID string, provider string, userType model.UserType, organizationID *xid.ID) (*ent.User, error) {
 	query := r.client.User.Query().
 		Where(
 			user.ExternalID(externalID),
@@ -628,7 +628,7 @@ func (r *userRepository) GetOrganizationMembers(ctx context.Context, organizatio
 	return users, nil
 }
 
-func (r *userRepository) CountByOrganization(ctx context.Context, organizationID xid.ID, userType user.UserType) (int, error) {
+func (r *userRepository) CountByOrganization(ctx context.Context, organizationID xid.ID, userType model.UserType) (int, error) {
 	count, err := r.client.User.Query().
 		Where(
 			user.OrganizationID(organizationID),
@@ -644,7 +644,7 @@ func (r *userRepository) CountByOrganization(ctx context.Context, organizationID
 
 // Existence check methods
 
-func (r *userRepository) ExistsByEmail(ctx context.Context, email string, userType user.UserType, organizationID *xid.ID) (bool, error) {
+func (r *userRepository) ExistsByEmail(ctx context.Context, email string, userType model.UserType, organizationID *xid.ID) (bool, error) {
 	query := r.client.User.Query().
 		Where(
 			user.Email(email),
@@ -662,7 +662,7 @@ func (r *userRepository) ExistsByEmail(ctx context.Context, email string, userTy
 	return exists, nil
 }
 
-func (r *userRepository) ExistsByUsername(ctx context.Context, username string, userType user.UserType, organizationID *xid.ID) (bool, error) {
+func (r *userRepository) ExistsByUsername(ctx context.Context, username string, userType model.UserType, organizationID *xid.ID) (bool, error) {
 	query := r.client.User.Query().
 		Where(
 			user.Username(username),

@@ -7,8 +7,8 @@ import (
 
 	"github.com/juicycleff/frank/ent"
 	"github.com/juicycleff/frank/ent/apikey"
-	"github.com/juicycleff/frank/internal/model"
 	"github.com/juicycleff/frank/pkg/errors"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -22,6 +22,7 @@ type ApiKeyRepository interface {
 	Delete(ctx context.Context, id xid.ID) error
 
 	// Query operations
+	List(ctx context.Context, opts ListAPIKeyParams) (*model.PaginatedOutput[*ent.ApiKey], error)
 	ListByUserID(ctx context.Context, userID xid.ID, opts model.PaginationParams) (*model.PaginatedOutput[*ent.ApiKey], error)
 	ListByOrganizationID(ctx context.Context, orgID xid.ID, opts model.PaginationParams) (*model.PaginatedOutput[*ent.ApiKey], error)
 	ListActiveByUserID(ctx context.Context, userID xid.ID) ([]*ent.ApiKey, error)
@@ -38,6 +39,9 @@ type ApiKeyRepository interface {
 	ListExpired(ctx context.Context, before time.Time) ([]*ent.ApiKey, error)
 	ListByType(ctx context.Context, keyType string, opts model.PaginationParams) (*model.PaginatedOutput[*ent.ApiKey], error)
 	GetActiveByHashedKey(ctx context.Context, hashedKey string) (*ent.ApiKey, error)
+
+	SetActive(ctx context.Context, id xid.ID, active bool) error
+	RotateKey(ctx context.Context, oldKeyID xid.ID, newKey *model.APIKey) error
 }
 
 // apiKeyRepository implements ApiKeyRepository interface
@@ -54,28 +58,46 @@ func NewApiKeyRepository(client *ent.Client) ApiKeyRepository {
 
 // CreateApiKeyInput defines the input for creating an API key
 type CreateApiKeyInput struct {
-	Name           string         `json:"name"`
-	Key            string         `json:"key"`
-	HashedKey      string         `json:"hashed_key"`
-	UserID         *xid.ID        `json:"user_id,omitempty"`
-	OrganizationID *xid.ID        `json:"organization_id,omitempty"`
-	Type           string         `json:"type"`
-	Active         bool           `json:"active"`
-	Permissions    []string       `json:"permissions,omitempty"`
-	Scopes         []string       `json:"scopes,omitempty"`
-	Metadata       map[string]any `json:"metadata,omitempty"`
-	ExpiresAt      *time.Time     `json:"expires_at,omitempty"`
+	Name           string                  `json:"name"`
+	Key            string                  `json:"key"`
+	HashedKey      string                  `json:"hashed_key"`
+	UserID         xid.ID                  `json:"user_id,omitempty"`
+	OrganizationID xid.ID                  `json:"organization_id,omitempty"`
+	Type           string                  `json:"type"`
+	Active         bool                    `json:"active"`
+	Permissions    []string                `json:"permissions,omitempty"`
+	Scopes         []string                `json:"scopes,omitempty"`
+	Metadata       map[string]any          `json:"metadata,omitempty"`
+	ExpiresAt      *time.Time              `json:"expires_at,omitempty"`
+	IPWhitelist    []string                `json:"ipWhitelist,omitempty"`
+	RateLimits     *model.APIKeyRateLimits `json:"rateLimits,omitempty" doc:"Rate limits"`
 }
 
 // UpdateApiKeyInput defines the input for updating an API key
 type UpdateApiKeyInput struct {
-	Name        *string        `json:"name,omitempty"`
-	Active      *bool          `json:"active,omitempty"`
-	Permissions []string       `json:"permissions,omitempty"`
-	Scopes      []string       `json:"scopes,omitempty"`
-	Metadata    map[string]any `json:"metadata,omitempty"`
-	LastUsed    *time.Time     `json:"last_used,omitempty"`
-	ExpiresAt   *time.Time     `json:"expires_at,omitempty"`
+	Name        *string                 `json:"name,omitempty"`
+	Active      *bool                   `json:"active,omitempty"`
+	Permissions []string                `json:"permissions,omitempty"`
+	Scopes      []string                `json:"scopes,omitempty"`
+	Metadata    map[string]any          `json:"metadata,omitempty"`
+	LastUsed    *time.Time              `json:"last_used,omitempty"`
+	ExpiresAt   *time.Time              `json:"expires_at,omitempty"`
+	IPWhitelist *[]string               `json:"ipWhitelist,omitempty"`
+	RateLimits  *model.APIKeyRateLimits `json:"rateLimits,omitempty" doc:"Rate limits"`
+}
+
+type ListAPIKeyParams struct {
+	model.PaginationParams
+	UserID         *xid.ID
+	OrganizationID *xid.ID
+	IncludeUsage   bool
+	Type           string
+	Active         *bool
+	Name           string
+	Search         string
+	Used           *bool
+	Scopes         []string
+	Permission     string
 }
 
 // Create creates a new API key
@@ -85,14 +107,16 @@ func (r *apiKeyRepository) Create(ctx context.Context, input CreateApiKeyInput) 
 		SetKey(input.Key).
 		SetHashedKey(input.HashedKey).
 		SetType(input.Type).
-		SetActive(input.Active)
+		SetActive(input.Active).
+		SetIPWhitelist(input.IPWhitelist).
+		SetNillableRateLimits(input.RateLimits)
 
-	if input.UserID != nil {
-		builder.SetUserID(*input.UserID)
+	if !input.UserID.IsNil() {
+		builder.SetUserID(input.UserID)
 	}
 
-	if input.OrganizationID != nil {
-		builder.SetOrganizationID(*input.OrganizationID)
+	if !input.OrganizationID.IsNil() {
+		builder.SetOrganizationID(input.OrganizationID)
 	}
 
 	if input.Permissions != nil {
@@ -192,6 +216,18 @@ func (r *apiKeyRepository) Update(ctx context.Context, id xid.ID, input UpdateAp
 		builder.SetExpiresAt(*input.ExpiresAt)
 	}
 
+	if input.IPWhitelist != nil {
+		builder.SetIPWhitelist(*input.IPWhitelist)
+	}
+
+	if input.RateLimits != nil {
+		builder.SetRateLimits(*input.RateLimits)
+	}
+
+	if input.ExpiresAt != nil {
+		builder.SetExpiresAt(*input.ExpiresAt)
+	}
+
 	apiKey, err := builder.Save(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
@@ -214,6 +250,53 @@ func (r *apiKeyRepository) Delete(ctx context.Context, id xid.ID) error {
 	}
 
 	return nil
+}
+
+func (r *apiKeyRepository) List(ctx context.Context, opts ListAPIKeyParams) (*model.PaginatedOutput[*ent.ApiKey], error) {
+	query := r.client.ApiKey.
+		Query().
+		WithUser().
+		WithOrganization()
+
+	if opts.OrderBy == nil || len(opts.OrderBy) == 0 {
+		query = query.Order(ent.Desc(apikey.FieldCreatedAt))
+
+	}
+
+	if opts.UserID != nil {
+		query = query.Where(apikey.UserID(*opts.UserID))
+	}
+
+	if opts.OrganizationID != nil {
+		query = query.Where(apikey.OrganizationID(*opts.OrganizationID))
+	}
+
+	if opts.Type != "" {
+		query = query.Where(apikey.Type(opts.Type))
+	}
+
+	if opts.Active != nil {
+		query = query.Where(apikey.Active(*opts.Active))
+	}
+
+	if opts.Name != "" {
+		query = query.Where(apikey.Name(opts.Name))
+	}
+
+	if opts.Search != "" {
+		query = query.Where(apikey.NameContainsFold(opts.Search))
+	}
+
+	if opts.Used != nil {
+		query = query.Where(apikey.LastUsedIsNil())
+	}
+
+	result, err := model.WithPaginationAndOptions[*ent.ApiKey, *ent.ApiKeyQuery](ctx, query, opts.PaginationParams)
+	if err != nil {
+		return nil, errors.Wrap(err, errors.CodeInternalServer, "Failed to list API keys by user ID")
+	}
+
+	return result, nil
 }
 
 // ListByUserID retrieves paginated API keys for a user
@@ -441,4 +524,86 @@ func (r *apiKeyRepository) GetActiveByHashedKey(ctx context.Context, hashedKey s
 	}
 
 	return apiKey, nil
+}
+
+// Extended implementation with missing methods
+func (r *apiKeyRepository) SetActive(ctx context.Context, id xid.ID, active bool) error {
+	err := r.client.ApiKey.
+		UpdateOneID(id).
+		SetActive(active).
+		Exec(ctx)
+
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return errors.New(errors.CodeNotFound, "API key not found")
+		}
+		return errors.Wrap(err, errors.CodeInternalServer, "Failed to update API key active status")
+	}
+
+	return nil
+}
+
+// RotateKey creates a new API key and deactivates the old one in a transaction
+func (r *apiKeyRepository) RotateKey(ctx context.Context, oldKeyID xid.ID, newKey *model.APIKey) error {
+	tx, err := r.client.Tx(ctx)
+	if err != nil {
+		return errors.Wrap(err, errors.CodeInternalServer, "Failed to start transaction")
+	}
+
+	// Create new API key
+	createInput := CreateApiKeyInput{
+		Name:           newKey.Name,
+		Key:            newKey.Key,
+		HashedKey:      newKey.HashedKey,
+		UserID:         newKey.UserID,
+		OrganizationID: newKey.OrganizationID,
+		Type:           newKey.Type,
+		Active:         newKey.Active,
+		Permissions:    newKey.Permissions,
+		Scopes:         newKey.Scopes,
+		Metadata:       newKey.Metadata,
+		ExpiresAt:      newKey.ExpiresAt,
+		IPWhitelist:    newKey.IPWhitelist,
+		RateLimits:     newKey.RateLimits,
+	}
+
+	_, err = tx.ApiKey.Create().
+		SetID(newKey.ID).
+		SetName(createInput.Name).
+		SetKey(createInput.Key).
+		SetHashedKey(createInput.HashedKey).
+		SetType(createInput.Type).
+		SetActive(createInput.Active).
+		SetIPWhitelist(createInput.IPWhitelist).
+		SetNillableRateLimits(createInput.RateLimits).
+		SetUserID(createInput.UserID).
+		SetOrganizationID(createInput.OrganizationID).
+		SetPermissions(createInput.Permissions).
+		SetScopes(createInput.Scopes).
+		SetMetadata(createInput.Metadata).
+		SetNillableExpiresAt(createInput.ExpiresAt).
+		Save(ctx)
+
+	if err != nil {
+		tx.Rollback()
+		return errors.Wrap(err, errors.CodeInternalServer, "Failed to create new API key")
+	}
+
+	// Deactivate old API key
+	err = tx.ApiKey.
+		UpdateOneID(oldKeyID).
+		SetActive(false).
+		Exec(ctx)
+
+	if err != nil {
+		tx.Rollback()
+		return errors.Wrap(err, errors.CodeInternalServer, "Failed to deactivate old API key")
+	}
+
+	// Commit transaction
+	if err := tx.Commit(); err != nil {
+		return errors.Wrap(err, errors.CodeInternalServer, "Failed to commit rotation transaction")
+	}
+
+	return nil
 }

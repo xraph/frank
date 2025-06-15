@@ -16,6 +16,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/juicycleff/frank/ent/activity"
 	"github.com/juicycleff/frank/ent/apikey"
 	"github.com/juicycleff/frank/ent/audit"
 	"github.com/juicycleff/frank/ent/membership"
@@ -57,6 +58,7 @@ type UserQuery struct {
 	withAssignedUserRoles            *UserRoleQuery
 	withAssignedUserPermissions      *UserPermissionQuery
 	withAuditLogs                    *AuditQuery
+	withActivities                   *ActivityQuery
 	modifiers                        []func(*sql.Selector)
 	withNamedMemberships             map[string]*MembershipQuery
 	withNamedSentInvitations         map[string]*MembershipQuery
@@ -73,6 +75,7 @@ type UserQuery struct {
 	withNamedAssignedUserRoles       map[string]*UserRoleQuery
 	withNamedAssignedUserPermissions map[string]*UserPermissionQuery
 	withNamedAuditLogs               map[string]*AuditQuery
+	withNamedActivities              map[string]*ActivityQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -461,6 +464,28 @@ func (uq *UserQuery) QueryAuditLogs() *AuditQuery {
 	return query
 }
 
+// QueryActivities chains the current query on the "activities" edge.
+func (uq *UserQuery) QueryActivities() *ActivityQuery {
+	query := (&ActivityClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(activity.Table, activity.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.ActivitiesTable, user.ActivitiesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
 // First returns the first User entity from the query.
 // Returns a *NotFoundError when no User was found.
 func (uq *UserQuery) First(ctx context.Context) (*User, error) {
@@ -669,6 +694,7 @@ func (uq *UserQuery) Clone() *UserQuery {
 		withAssignedUserRoles:       uq.withAssignedUserRoles.Clone(),
 		withAssignedUserPermissions: uq.withAssignedUserPermissions.Clone(),
 		withAuditLogs:               uq.withAuditLogs.Clone(),
+		withActivities:              uq.withActivities.Clone(),
 		// clone intermediate query.
 		sql:       uq.sql.Clone(),
 		path:      uq.path,
@@ -852,6 +878,17 @@ func (uq *UserQuery) WithAuditLogs(opts ...func(*AuditQuery)) *UserQuery {
 	return uq
 }
 
+// WithActivities tells the query-builder to eager-load the nodes that are connected to
+// the "activities" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithActivities(opts ...func(*ActivityQuery)) *UserQuery {
+	query := (&ActivityClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withActivities = query
+	return uq
+}
+
 // GroupBy is used to group vertices by one or more fields/columns.
 // It is often used with aggregate functions, like: count, max, mean, min, sum.
 //
@@ -930,7 +967,7 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	var (
 		nodes       = []*User{}
 		_spec       = uq.querySpec()
-		loadedTypes = [16]bool{
+		loadedTypes = [17]bool{
 			uq.withOrganization != nil,
 			uq.withMemberships != nil,
 			uq.withSentInvitations != nil,
@@ -947,6 +984,7 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 			uq.withAssignedUserRoles != nil,
 			uq.withAssignedUserPermissions != nil,
 			uq.withAuditLogs != nil,
+			uq.withActivities != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -1151,6 +1189,18 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 			return nil, err
 		}
 	}
+	if query := uq.withActivities; query != nil {
+		if err := uq.loadActivities(ctx, query, nodes,
+			func(n *User) { n.Edges.Activities = []*Activity{} },
+			func(n *User, e *Activity) {
+				n.Edges.Activities = append(n.Edges.Activities, e)
+				if !e.Edges.loadedTypes[0] {
+					e.Edges.User = n
+				}
+			}); err != nil {
+			return nil, err
+		}
+	}
 	for name, query := range uq.withNamedMemberships {
 		if err := uq.loadMemberships(ctx, query, nodes,
 			func(n *User) { n.appendNamedMemberships(name) },
@@ -1319,6 +1369,18 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 			func(n *User) { n.appendNamedAuditLogs(name) },
 			func(n *User, e *Audit) {
 				n.appendNamedAuditLogs(name, e)
+				if !e.Edges.loadedTypes[0] {
+					e.Edges.User = n
+				}
+			}); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range uq.withNamedActivities {
+		if err := uq.loadActivities(ctx, query, nodes,
+			func(n *User) { n.appendNamedActivities(name) },
+			func(n *User, e *Activity) {
+				n.appendNamedActivities(name, e)
 				if !e.Edges.loadedTypes[0] {
 					e.Edges.User = n
 				}
@@ -1839,6 +1901,36 @@ func (uq *UserQuery) loadAuditLogs(ctx context.Context, query *AuditQuery, nodes
 	}
 	return nil
 }
+func (uq *UserQuery) loadActivities(ctx context.Context, query *ActivityQuery, nodes []*User, init func(*User), assign func(*User, *Activity)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[xid.ID]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(activity.FieldUserID)
+	}
+	query.Where(predicate.Activity(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.ActivitiesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.UserID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
 
 func (uq *UserQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := uq.querySpec()
@@ -2169,6 +2261,20 @@ func (uq *UserQuery) WithNamedAuditLogs(name string, opts ...func(*AuditQuery)) 
 		uq.withNamedAuditLogs = make(map[string]*AuditQuery)
 	}
 	uq.withNamedAuditLogs[name] = query
+	return uq
+}
+
+// WithNamedActivities tells the query-builder to eager-load the nodes that are connected to the "activities"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithNamedActivities(name string, opts ...func(*ActivityQuery)) *UserQuery {
+	query := (&ActivityClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if uq.withNamedActivities == nil {
+		uq.withNamedActivities = make(map[string]*ActivityQuery)
+	}
+	uq.withNamedActivities[name] = query
 	return uq
 }
 

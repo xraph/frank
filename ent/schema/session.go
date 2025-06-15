@@ -56,6 +56,7 @@ func (Session) Edges() []ent.Edge {
 			Required(),
 
 		edge.To("audit_logs", Audit.Type),
+		edge.To("activities", Activity.Type),
 	}
 }
 

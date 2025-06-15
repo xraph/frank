@@ -17,6 +17,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/juicycleff/frank/ent/identityprovider"
 	"github.com/juicycleff/frank/ent/organization"
+	"github.com/juicycleff/frank/ent/organizationprovider"
 	"github.com/juicycleff/frank/ent/predicate"
 	"github.com/rs/xid"
 )
@@ -526,6 +527,21 @@ func (ipu *IdentityProviderUpdate) SetOrganization(o *Organization) *IdentityPro
 	return ipu.SetOrganizationID(o.ID)
 }
 
+// AddOrganizationProviderIDs adds the "organization_providers" edge to the OrganizationProvider entity by IDs.
+func (ipu *IdentityProviderUpdate) AddOrganizationProviderIDs(ids ...xid.ID) *IdentityProviderUpdate {
+	ipu.mutation.AddOrganizationProviderIDs(ids...)
+	return ipu
+}
+
+// AddOrganizationProviders adds the "organization_providers" edges to the OrganizationProvider entity.
+func (ipu *IdentityProviderUpdate) AddOrganizationProviders(o ...*OrganizationProvider) *IdentityProviderUpdate {
+	ids := make([]xid.ID, len(o))
+	for i := range o {
+		ids[i] = o[i].ID
+	}
+	return ipu.AddOrganizationProviderIDs(ids...)
+}
+
 // Mutation returns the IdentityProviderMutation object of the builder.
 func (ipu *IdentityProviderUpdate) Mutation() *IdentityProviderMutation {
 	return ipu.mutation
@@ -535,6 +551,27 @@ func (ipu *IdentityProviderUpdate) Mutation() *IdentityProviderMutation {
 func (ipu *IdentityProviderUpdate) ClearOrganization() *IdentityProviderUpdate {
 	ipu.mutation.ClearOrganization()
 	return ipu
+}
+
+// ClearOrganizationProviders clears all "organization_providers" edges to the OrganizationProvider entity.
+func (ipu *IdentityProviderUpdate) ClearOrganizationProviders() *IdentityProviderUpdate {
+	ipu.mutation.ClearOrganizationProviders()
+	return ipu
+}
+
+// RemoveOrganizationProviderIDs removes the "organization_providers" edge to OrganizationProvider entities by IDs.
+func (ipu *IdentityProviderUpdate) RemoveOrganizationProviderIDs(ids ...xid.ID) *IdentityProviderUpdate {
+	ipu.mutation.RemoveOrganizationProviderIDs(ids...)
+	return ipu
+}
+
+// RemoveOrganizationProviders removes "organization_providers" edges to OrganizationProvider entities.
+func (ipu *IdentityProviderUpdate) RemoveOrganizationProviders(o ...*OrganizationProvider) *IdentityProviderUpdate {
+	ids := make([]xid.ID, len(o))
+	for i := range o {
+		ids[i] = o[i].ID
+	}
+	return ipu.RemoveOrganizationProviderIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -782,6 +819,51 @@ func (ipu *IdentityProviderUpdate) sqlSave(ctx context.Context) (n int, err erro
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(organization.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if ipu.mutation.OrganizationProvidersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   identityprovider.OrganizationProvidersTable,
+			Columns: []string{identityprovider.OrganizationProvidersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(organizationprovider.FieldID, field.TypeString),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ipu.mutation.RemovedOrganizationProvidersIDs(); len(nodes) > 0 && !ipu.mutation.OrganizationProvidersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   identityprovider.OrganizationProvidersTable,
+			Columns: []string{identityprovider.OrganizationProvidersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(organizationprovider.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ipu.mutation.OrganizationProvidersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   identityprovider.OrganizationProvidersTable,
+			Columns: []string{identityprovider.OrganizationProvidersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(organizationprovider.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -1302,6 +1384,21 @@ func (ipuo *IdentityProviderUpdateOne) SetOrganization(o *Organization) *Identit
 	return ipuo.SetOrganizationID(o.ID)
 }
 
+// AddOrganizationProviderIDs adds the "organization_providers" edge to the OrganizationProvider entity by IDs.
+func (ipuo *IdentityProviderUpdateOne) AddOrganizationProviderIDs(ids ...xid.ID) *IdentityProviderUpdateOne {
+	ipuo.mutation.AddOrganizationProviderIDs(ids...)
+	return ipuo
+}
+
+// AddOrganizationProviders adds the "organization_providers" edges to the OrganizationProvider entity.
+func (ipuo *IdentityProviderUpdateOne) AddOrganizationProviders(o ...*OrganizationProvider) *IdentityProviderUpdateOne {
+	ids := make([]xid.ID, len(o))
+	for i := range o {
+		ids[i] = o[i].ID
+	}
+	return ipuo.AddOrganizationProviderIDs(ids...)
+}
+
 // Mutation returns the IdentityProviderMutation object of the builder.
 func (ipuo *IdentityProviderUpdateOne) Mutation() *IdentityProviderMutation {
 	return ipuo.mutation
@@ -1311,6 +1408,27 @@ func (ipuo *IdentityProviderUpdateOne) Mutation() *IdentityProviderMutation {
 func (ipuo *IdentityProviderUpdateOne) ClearOrganization() *IdentityProviderUpdateOne {
 	ipuo.mutation.ClearOrganization()
 	return ipuo
+}
+
+// ClearOrganizationProviders clears all "organization_providers" edges to the OrganizationProvider entity.
+func (ipuo *IdentityProviderUpdateOne) ClearOrganizationProviders() *IdentityProviderUpdateOne {
+	ipuo.mutation.ClearOrganizationProviders()
+	return ipuo
+}
+
+// RemoveOrganizationProviderIDs removes the "organization_providers" edge to OrganizationProvider entities by IDs.
+func (ipuo *IdentityProviderUpdateOne) RemoveOrganizationProviderIDs(ids ...xid.ID) *IdentityProviderUpdateOne {
+	ipuo.mutation.RemoveOrganizationProviderIDs(ids...)
+	return ipuo
+}
+
+// RemoveOrganizationProviders removes "organization_providers" edges to OrganizationProvider entities.
+func (ipuo *IdentityProviderUpdateOne) RemoveOrganizationProviders(o ...*OrganizationProvider) *IdentityProviderUpdateOne {
+	ids := make([]xid.ID, len(o))
+	for i := range o {
+		ids[i] = o[i].ID
+	}
+	return ipuo.RemoveOrganizationProviderIDs(ids...)
 }
 
 // Where appends a list predicates to the IdentityProviderUpdate builder.
@@ -1588,6 +1706,51 @@ func (ipuo *IdentityProviderUpdateOne) sqlSave(ctx context.Context) (_node *Iden
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(organization.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if ipuo.mutation.OrganizationProvidersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   identityprovider.OrganizationProvidersTable,
+			Columns: []string{identityprovider.OrganizationProvidersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(organizationprovider.FieldID, field.TypeString),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ipuo.mutation.RemovedOrganizationProvidersIDs(); len(nodes) > 0 && !ipuo.mutation.OrganizationProvidersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   identityprovider.OrganizationProvidersTable,
+			Columns: []string{identityprovider.OrganizationProvidersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(organizationprovider.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ipuo.mutation.OrganizationProvidersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   identityprovider.OrganizationProvidersTable,
+			Columns: []string{identityprovider.OrganizationProvidersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(organizationprovider.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {

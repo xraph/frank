@@ -100,7 +100,7 @@ type DatabaseConfig struct {
 	MaxIdleConns  int           `json:"max_idle_conns" yaml:"max_idle_conns" mapstructure:"max_idle_conns" env:"DATABASE_MAX_IDLE_CONNS" envDefault:"25"`
 	ConnMaxLife   time.Duration `json:"conn_max_life" yaml:"conn_max_life" mapstructure:"conn_max_life" env:"DATABASE_CONN_MAX_LIFE" envDefault:"5m"`
 	DSN           string        `json:"dsn" yaml:"-" mapstructure:"dsn" env:"DATABASE_DSN"`
-	AutoMigrate   bool          `json:"auto_migrate" yaml:"auto_migrate" mapstructure:"auto_migrate" env:"DATABASE_AUTO_MIGRATE" envDefault:"true"`
+	AutoMigrate   bool          `json:"auto_migrate" yaml:"auto_migrate" mapstructure:"auto_migrate" env:"DATABASE_AUTO_MIGRATE" envDefault:"false"`
 	LogSQL        bool          `json:"log_sql" yaml:"log_sql" mapstructure:"log_sql" env:"DATABASE_LOG_SQL" envDefault:"false"`
 	MigrationsDir string        `json:"migrations_dir" yaml:"migrations_dir" mapstructure:"migrations_dir" env:"DATABASE_MIGRATIONS_DIR" envDefault:"./migrations"`
 }

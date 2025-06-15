@@ -5,16 +5,13 @@ import (
 	"net/http"
 
 	"github.com/danielgtaylor/huma/v2"
-	"github.com/juicycleff/frank/ent/userrole"
 	"github.com/juicycleff/frank/internal/authz"
 	"github.com/juicycleff/frank/internal/di"
 	"github.com/juicycleff/frank/internal/middleware"
-	"github.com/juicycleff/frank/internal/model"
-	"github.com/juicycleff/frank/internal/services/rbac"
 	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/juicycleff/frank/pkg/logging"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
-	"github.com/samber/lo"
 )
 
 // RegisterUserAPI registers all user management endpoints
@@ -43,8 +40,6 @@ func RegisterUserAPI(api huma.API, di di.Container) {
 	registerAssignUserRole(api, userCtrl)
 	registerRemoveUserRole(api, userCtrl)
 	registerListUserPermissions(api, userCtrl)
-	registerAssignUserPermission(api, userCtrl)
-	registerRemoveUserPermission(api, userCtrl)
 
 	// User activity and sessions
 	registerGetUserActivity(api, userCtrl)
@@ -102,7 +97,7 @@ func registerGetUser(api huma.API, userCtrl *userController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
-			authz.PermissionViewUser, authz.ResourceUser, "id",
+			authz.PermissionReadUser, authz.ResourceUser, "id",
 		)},
 	}, userCtrl.getUserHandler)
 }
@@ -191,7 +186,7 @@ func registerGetUserProfile(api huma.API, userCtrl *userController) {
 		Path:        "/user/profile",
 		Summary:     "Get current user profile",
 		Description: "Get the current authenticated user's profile",
-		Tags:        []string{"Users", "Profile"},
+		Tags:        []string{"Users"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, false),
 		Security: []map[string][]string{
 			{"jwt": {}},
@@ -206,7 +201,7 @@ func registerUpdateUserProfile(api huma.API, userCtrl *userController) {
 		Path:        "/user/profile",
 		Summary:     "Update current user profile",
 		Description: "Update the current authenticated user's profile",
-		Tags:        []string{"Users", "Profile"},
+		Tags:        []string{"Users"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, false),
 		Security: []map[string][]string{
 			{"jwt": {}},
@@ -221,7 +216,7 @@ func registerChangePassword(api huma.API, userCtrl *userController) {
 		Path:        "/user/change-password",
 		Summary:     "Change password",
 		Description: "Change the current user's password",
-		Tags:        []string{"Users", "Profile"},
+		Tags:        []string{"Users"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, false),
 		Security: []map[string][]string{
 			{"jwt": {}},
@@ -256,13 +251,13 @@ func registerListUserRoles(api huma.API, userCtrl *userController) {
 		Path:        "/organizations/{orgId}/users/{id}/roles",
 		Summary:     "List user roles",
 		Description: "List all roles assigned to a user",
-		Tags:        []string{"Users", "Roles"},
+		Tags:        []string{"Users"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("User not found")),
 		Security: []map[string][]string{
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
-			authz.PermissionViewRoles, authz.ResourceUser, "id",
+			authz.PermissionReadRole, authz.ResourceUser, "id",
 		)},
 	}, userCtrl.listUserRolesHandler)
 }
@@ -274,13 +269,13 @@ func registerAssignUserRole(api huma.API, userCtrl *userController) {
 		Path:        "/organizations/{orgId}/users/{id}/roles",
 		Summary:     "Assign role to user",
 		Description: "Assign a role to a user",
-		Tags:        []string{"Users", "Roles"},
+		Tags:        []string{"Users"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("User not found")),
 		Security: []map[string][]string{
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
-			authz.PermissionManageRoles, authz.ResourceUser, "id",
+			authz.PermissionManageRole, authz.ResourceUser, "id",
 		)},
 	}, userCtrl.assignUserRoleHandler)
 }
@@ -292,7 +287,7 @@ func registerRemoveUserRole(api huma.API, userCtrl *userController) {
 		Path:          "/organizations/{orgId}/users/{id}/roles/{roleId}",
 		Summary:       "Remove role from user",
 		Description:   "Remove a role assignment from a user",
-		Tags:          []string{"Users", "Roles"},
+		Tags:          []string{"Users"},
 		DefaultStatus: 204,
 		Responses: model.MergeErrorResponses(map[string]*huma.Response{
 			"204": {Description: "Role successfully removed from user"},
@@ -301,7 +296,7 @@ func registerRemoveUserRole(api huma.API, userCtrl *userController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
-			authz.PermissionManageRoles, authz.ResourceUser, "id",
+			authz.PermissionManageRole, authz.ResourceUser, "id",
 		)},
 	}, userCtrl.removeUserRoleHandler)
 }
@@ -315,54 +310,15 @@ func registerListUserPermissions(api huma.API, userCtrl *userController) {
 		Path:        "/organizations/{orgId}/users/{id}/permissions",
 		Summary:     "List user permissions",
 		Description: "List all permissions for a user (direct and inherited from roles)",
-		Tags:        []string{"Users", "Permissions"},
+		Tags:        []string{"Users"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("User not found")),
 		Security: []map[string][]string{
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
-			authz.PermissionViewPermissions, authz.ResourceUser, "id",
+			authz.PermissionReadPermission, authz.ResourceUser, "id",
 		)},
 	}, userCtrl.listUserPermissionsHandler)
-}
-
-func registerAssignUserPermission(api huma.API, userCtrl *userController) {
-	huma.Register(api, huma.Operation{
-		OperationID: "assignUserPermission",
-		Method:      http.MethodPost,
-		Path:        "/organizations/{orgId}/users/{id}/permissions",
-		Summary:     "Assign permission to user",
-		Description: "Assign a direct permission to a user",
-		Tags:        []string{"Users", "Permissions"},
-		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("User not found")),
-		Security: []map[string][]string{
-			{"jwt": {}},
-		},
-		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
-			authz.PermissionManagePermissions, authz.ResourceUser, "id",
-		)},
-	}, userCtrl.assignUserPermissionHandler)
-}
-
-func registerRemoveUserPermission(api huma.API, userCtrl *userController) {
-	huma.Register(api, huma.Operation{
-		OperationID:   "removeUserPermission",
-		Method:        http.MethodDelete,
-		Path:          "/organizations/{orgId}/users/{id}/permissions/{permissionId}",
-		Summary:       "Remove permission from user",
-		Description:   "Remove a direct permission assignment from a user",
-		Tags:          []string{"Users", "Permissions"},
-		DefaultStatus: 204,
-		Responses: model.MergeErrorResponses(map[string]*huma.Response{
-			"204": {Description: "Permission successfully removed from user"},
-		}, true, model.NotFoundError("User or permission not found")),
-		Security: []map[string][]string{
-			{"jwt": {}},
-		},
-		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
-			authz.PermissionManagePermissions, authz.ResourceUser, "id",
-		)},
-	}, userCtrl.removeUserPermissionHandler)
 }
 
 // User Activity and Session Endpoints
@@ -374,7 +330,7 @@ func registerGetUserActivity(api huma.API, userCtrl *userController) {
 		Path:        "/organizations/{orgId}/users/{id}/activity",
 		Summary:     "Get user activity",
 		Description: "Get user activity log with pagination",
-		Tags:        []string{"Users", "Activity"},
+		Tags:        []string{"Users"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("User not found")),
 		Security: []map[string][]string{
 			{"jwt": {}},
@@ -392,13 +348,13 @@ func registerGetUserSessions(api huma.API, userCtrl *userController) {
 		Path:        "/organizations/{orgId}/users/{id}/sessions",
 		Summary:     "Get user sessions",
 		Description: "Get active sessions for a user",
-		Tags:        []string{"Users", "Sessions"},
+		Tags:        []string{"Users"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("User not found")),
 		Security: []map[string][]string{
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
-			authz.PermissionViewUser, authz.ResourceUser, "id",
+			authz.PermissionReadUser, authz.ResourceUser, "id",
 		)},
 	}, userCtrl.getUserSessionsHandler)
 }
@@ -460,7 +416,7 @@ func registerGetUserMFA(api huma.API, userCtrl *userController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
-			authz.PermissionViewUser, authz.ResourceUser, "id",
+			authz.PermissionReadUser, authz.ResourceUser, "id",
 		)},
 	}, userCtrl.getUserMFAHandler)
 }
@@ -632,7 +588,7 @@ type RemoveUserRoleInput struct {
 	RoleID xid.ID `path:"roleId" doc:"Role ID"`
 }
 
-type ListUserRolesOutput = model.Output[[]*model.UserRoleAssignment]
+type ListUserRolesOutput = model.Output[[]*model.Role]
 
 type AssignUserPermissionInput struct {
 	model.OrganisationPathParams
@@ -646,7 +602,7 @@ type RemoveUserPermissionInput struct {
 	PermissionID xid.ID `path:"permissionId" doc:"Permission ID"`
 }
 
-type ListUserPermissionsOutput = model.Output[[]*model.UserPermissionAssignment]
+type ListUserPermissionsOutput = model.Output[[]*model.Permission]
 
 type GetUserActivityInput struct {
 	model.OrganisationPathParams
@@ -880,26 +836,13 @@ func (c *userController) listUserRolesHandler(ctx context.Context, input *GetUse
 	}
 
 	// Get user roles with organization context
-	roles, err := rbacService.ListUserRoles(ctx, input.ID, userrole.ContextTypeOrganization, &input.PathOrgID)
+	roles, err := rbacService.GetUserRoles(ctx, input.ID)
 	if err != nil {
 		return nil, err
 	}
 
 	return &ListUserRolesOutput{
-		Body: lo.Map(roles, func(item *model.RoleAssignment, index int) *model.UserRoleAssignment {
-			return &model.UserRoleAssignment{
-				ID:          item.ID,
-				ExpiresAt:   item.ExpiresAt,
-				Active:      item.Active,
-				RoleID:      item.RoleID,
-				ContextType: item.ContextType,
-				DisplayName: item.Role.DisplayName,
-				RoleName:    item.Role.Name,
-				AssignedBy:  item.AssignedBy,
-				ContextID:   item.ContextID,
-				AssignedAt:  item.AssignedAt,
-			}
-		}),
+		Body: roles,
 	}, nil
 }
 
@@ -919,17 +862,7 @@ func (c *userController) assignUserRoleHandler(ctx context.Context, input *Assig
 
 	// Get current user for audit trail
 	currentUserID, _ := c.getCurrentUserID(ctx)
-
-	// Assign role to user
-	assignInput := rbac.AssignRoleToUserInput{
-		UserID:      input.ID,
-		RoleID:      input.Body.RoleID,
-		ContextType: userrole.ContextTypeOrganization,
-		ContextID:   &input.PathOrgID,
-		AssignedBy:  &currentUserID,
-	}
-
-	_, err = rbacService.AssignRoleToUser(ctx, assignInput)
+	err = rbacService.AssignOrganizationRole(ctx, currentUserID, input.PathOrgID, "")
 	if err != nil {
 		return nil, err
 	}
@@ -952,7 +885,7 @@ func (c *userController) removeUserRoleHandler(ctx context.Context, input *Remov
 	}
 
 	// Remove role from user
-	err = rbacService.RemoveRoleFromUser(ctx, input.ID, input.RoleID, userrole.ContextTypeOrganization, &input.PathOrgID)
+	err = rbacService.RemoveUserRole(ctx, input.ID, input.RoleID, model.ContextTypeOrganization, &input.PathOrgID)
 	if err != nil {
 		return nil, err
 	}
@@ -975,90 +908,15 @@ func (c *userController) listUserPermissionsHandler(ctx context.Context, input *
 	}
 
 	// Get user permission summary
-	summary, err := rbacService.GetUserPermissionSummary(ctx, input.ID, userrole.ContextTypeOrganization, &input.PathOrgID)
+	// summary, err := rbacService.GetUserPermissions(ctx, input.ID, userrole.ContextTypeOrganization, &input.PathOrgID)
+	summary, err := rbacService.GetUserPermissions(ctx, input.ID)
 	if err != nil {
 		return nil, err
 	}
 
 	return &ListUserPermissionsOutput{
-		Body: lo.Map(summary.DirectPermissions, func(item model.PermissionAssignment, index int) *model.UserPermissionAssignment {
-			return &model.UserPermissionAssignment{
-				ID:             item.ID,
-				ExpiresAt:      item.ExpiresAt,
-				Active:         item.Active,
-				PermissionID:   item.PermissionID,
-				ContextType:    item.ContextType,
-				DisplayName:    item.Permission.DisplayName,
-				PermissionName: item.Permission.Name,
-				ResourceType:   item.ResourceType,
-				PermissionType: item.PermissionType,
-				Reason:         item.Reason,
-				Conditions:     item.Conditions,
-				ResourceID:     item.ResourceID,
-				AssignedBy:     item.AssignedBy,
-				ContextID:      item.ContextID,
-				AssignedAt:     item.AssignedAt,
-			}
-		}),
+		Body: summary,
 	}, nil
-}
-
-func (c *userController) assignUserPermissionHandler(ctx context.Context, input *AssignUserPermissionInput) (*model.EmptyOutput, error) {
-	rbacService := c.di.RBACService()
-	userService := c.di.UserService()
-
-	// First verify user exists and belongs to organization
-	existingUser, err := userService.GetUser(ctx, input.ID)
-	if err != nil {
-		return nil, err
-	}
-
-	if existingUser.OrganizationID == nil || *existingUser.OrganizationID != input.PathOrgID {
-		return nil, errors.New(errors.CodeNotFound, "user not found in organization")
-	}
-
-	// Get current user for audit trail
-	currentUserID, _ := c.getCurrentUserID(ctx)
-
-	// Assign permission to user
-	assignInput := rbac.AssignPermissionToUserInput{
-		UserID:         input.ID,
-		PermissionID:   input.Body.PermissionID,
-		ContextType:    userrole.ContextTypeOrganization,
-		ContextID:      &input.PathOrgID,
-		PermissionType: "grant",
-		AssignedBy:     &currentUserID,
-	}
-
-	_, err = rbacService.AssignPermissionToUser(ctx, assignInput)
-	if err != nil {
-		return nil, err
-	}
-
-	return &model.EmptyOutput{}, nil
-}
-
-func (c *userController) removeUserPermissionHandler(ctx context.Context, input *RemoveUserPermissionInput) (*model.EmptyOutput, error) {
-	rbacService := c.di.RBACService()
-	userService := c.di.UserService()
-
-	// First verify user exists and belongs to organization
-	existingUser, err := userService.GetUser(ctx, input.ID)
-	if err != nil {
-		return nil, err
-	}
-
-	if existingUser.OrganizationID == nil || *existingUser.OrganizationID != input.PathOrgID {
-		return nil, errors.New(errors.CodeNotFound, "user not found in organization")
-	}
-
-	// Remove permission from user
-	err = rbacService.RemovePermissionFromUser(ctx, input.ID, input.PermissionID, userrole.ContextTypeOrganization, &input.PathOrgID)
-	if err != nil {
-		return nil, err
-	}
-
-	return &model.EmptyOutput{}, nil
 }
 
 func (c *userController) getUserActivityHandler(ctx context.Context, input *GetUserActivityInput) (*GetUserActivityOutput, error) {

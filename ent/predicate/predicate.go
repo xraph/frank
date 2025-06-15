@@ -9,8 +9,14 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
+// Activity is the predicate function for activity builders.
+type Activity func(*sql.Selector)
+
 // ApiKey is the predicate function for apikey builders.
 type ApiKey func(*sql.Selector)
+
+// ApiKeyActivity is the predicate function for apikeyactivity builders.
+type ApiKeyActivity func(*sql.Selector)
 
 // Audit is the predicate function for audit builders.
 type Audit func(*sql.Selector)
@@ -48,6 +54,9 @@ type Organization func(*sql.Selector)
 // OrganizationFeature is the predicate function for organizationfeature builders.
 type OrganizationFeature func(*sql.Selector)
 
+// OrganizationProvider is the predicate function for organizationprovider builders.
+type OrganizationProvider func(*sql.Selector)
+
 // Passkey is the predicate function for passkey builders.
 type Passkey func(*sql.Selector)
 
@@ -56,6 +65,9 @@ type Permission func(*sql.Selector)
 
 // PermissionDependency is the predicate function for permissiondependency builders.
 type PermissionDependency func(*sql.Selector)
+
+// ProviderTemplate is the predicate function for providertemplate builders.
+type ProviderTemplate func(*sql.Selector)
 
 // Role is the predicate function for role builders.
 type Role func(*sql.Selector)

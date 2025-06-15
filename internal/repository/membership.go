@@ -7,9 +7,9 @@ import (
 
 	"github.com/juicycleff/frank/ent"
 	"github.com/juicycleff/frank/ent/membership"
-	"github.com/juicycleff/frank/internal/model"
 	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/juicycleff/frank/pkg/logging"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -50,7 +50,7 @@ type MembershipRepository interface {
 	Activate(ctx context.Context, id xid.ID) error
 	Deactivate(ctx context.Context, id xid.ID) error
 	Suspend(ctx context.Context, id xid.ID) error
-	UpdateStatus(ctx context.Context, id xid.ID, status membership.Status) error
+	UpdateStatus(ctx context.Context, id xid.ID, status model.MembershipStatus) error
 
 	// Role management
 	UpdateRole(ctx context.Context, id xid.ID, roleID xid.ID) error
@@ -58,7 +58,7 @@ type MembershipRepository interface {
 
 	// Member management
 	GetActiveMembers(ctx context.Context, organizationID xid.ID) ([]*ent.Membership, error)
-	GetMemberCount(ctx context.Context, organizationID xid.ID, status *membership.Status) (int, error)
+	GetMemberCount(ctx context.Context, organizationID xid.ID, status *model.MembershipStatus) (int, error)
 	GetBillingContacts(ctx context.Context, organizationID xid.ID) ([]*ent.Membership, error)
 	GetPrimaryContact(ctx context.Context, organizationID xid.ID) (*ent.Membership, error)
 	SetPrimaryContact(ctx context.Context, id xid.ID) error
@@ -80,7 +80,7 @@ type CreateMembershipInput struct {
 	UserID           xid.ID                 `json:"user_id"`
 	OrganizationID   xid.ID                 `json:"organization_id"`
 	RoleID           xid.ID                 `json:"role_id"`
-	Status           membership.Status      `json:"status"`
+	Status           model.MembershipStatus `json:"status"`
 	InvitedBy        *xid.ID                `json:"invited_by,omitempty"`
 	InvitedAt        time.Time              `json:"invited_at"`
 	JoinedAt         *time.Time             `json:"joined_at,omitempty"`
@@ -97,7 +97,7 @@ type CreateInvitationInput struct {
 	UserID           xid.ID                 `json:"user_id"`
 	OrganizationID   xid.ID                 `json:"organization_id"`
 	Token            *string                `json:"token,omitempty"`
-	Status           membership.Status      `json:"status"`
+	Status           model.MembershipStatus `json:"status"`
 	Email            string                 `json:"email"`
 	RoleID           xid.ID                 `json:"role_id"`
 	InvitedBy        xid.ID                 `json:"invited_by"`
@@ -113,37 +113,37 @@ type CreateInvitationInput struct {
 
 // UpdateMembershipInput represents input for updating a membership
 type UpdateMembershipInput struct {
-	RoleID           *xid.ID                `json:"role_id,omitempty"`
-	Status           *membership.Status     `json:"status,omitempty"`
-	JoinedAt         *time.Time             `json:"joined_at,omitempty"`
-	ExpiresAt        *time.Time             `json:"expires_at,omitempty"`
-	IsBillingContact *bool                  `json:"is_billing_contact,omitempty"`
-	IsPrimaryContact *bool                  `json:"is_primary_contact,omitempty"`
-	Metadata         map[string]interface{} `json:"metadata,omitempty"`
+	RoleID           *xid.ID                 `json:"role_id,omitempty"`
+	Status           *model.MembershipStatus `json:"status,omitempty"`
+	JoinedAt         *time.Time              `json:"joined_at,omitempty"`
+	ExpiresAt        *time.Time              `json:"expires_at,omitempty"`
+	IsBillingContact *bool                   `json:"is_billing_contact,omitempty"`
+	IsPrimaryContact *bool                   `json:"is_primary_contact,omitempty"`
+	Metadata         map[string]interface{}  `json:"metadata,omitempty"`
 }
 
 // ListMembershipsParams represents parameters for listing memberships
 type ListMembershipsParams struct {
 	model.PaginationParams
-	OrganizationID   *xid.ID            `json:"organizationId,omitempty" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"Filter by organization"`
-	Status           *membership.Status `json:"status,omitempty"`
-	RoleID           *xid.ID            `json:"role_id,omitempty"`
-	IsBillingContact *bool              `json:"is_billing_contact,omitempty"`
-	IsPrimaryContact *bool              `json:"is_primary_contact,omitempty"`
-	InvitedBy        *xid.ID            `json:"invited_by,omitempty"`
-	Search           string             `json:"search,omitempty" example:"john" doc:"Search in user name/email"`
+	OrganizationID   *xid.ID                 `json:"organizationId,omitempty" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"Filter by organization"`
+	Status           *model.MembershipStatus `json:"status,omitempty"`
+	RoleID           *xid.ID                 `json:"role_id,omitempty"`
+	IsBillingContact *bool                   `json:"is_billing_contact,omitempty"`
+	IsPrimaryContact *bool                   `json:"is_primary_contact,omitempty"`
+	InvitedBy        *xid.ID                 `json:"invited_by,omitempty"`
+	Search           string                  `json:"search,omitempty" example:"john" doc:"Search in user name/email"`
 }
 
 // MembershipStats represents membership statistics for an organization
 type MembershipStats struct {
-	TotalMembers     int                       `json:"total_members"`
-	ActiveMembers    int                       `json:"active_members"`
-	PendingMembers   int                       `json:"pending_members"`
-	InactiveMembers  int                       `json:"inactive_members"`
-	SuspendedMembers int                       `json:"suspended_members"`
-	StatusBreakdown  map[membership.Status]int `json:"status_breakdown"`
-	RecentJoins      int                       `json:"recent_joins"`   // Last 30 days
-	RecentInvites    int                       `json:"recent_invites"` // Last 30 days
+	TotalMembers     int                            `json:"total_members"`
+	ActiveMembers    int                            `json:"active_members"`
+	PendingMembers   int                            `json:"pending_members"`
+	InactiveMembers  int                            `json:"inactive_members"`
+	SuspendedMembers int                            `json:"suspended_members"`
+	StatusBreakdown  map[model.MembershipStatus]int `json:"status_breakdown"`
+	RecentJoins      int                            `json:"recent_joins"`   // Last 30 days
+	RecentInvites    int                            `json:"recent_invites"` // Last 30 days
 }
 
 // InvitationStats represents invitation statistics
@@ -385,7 +385,7 @@ func (r *membershipRepository) ListActiveByOrganizationID(ctx context.Context, o
 		Query().
 		Where(
 			membership.OrganizationID(orgID),
-			membership.StatusEQ(membership.StatusActive),
+			membership.StatusEQ(model.MembershipStatusActive),
 		).
 		WithUser().
 		WithOrganization().
@@ -406,7 +406,7 @@ func (r *membershipRepository) ListPendingByOrganizationID(ctx context.Context, 
 		Query().
 		Where(
 			membership.OrganizationID(orgID),
-			membership.StatusEQ(membership.StatusPending),
+			membership.StatusEQ(model.MembershipStatusPending),
 		).
 		WithUser().
 		WithOrganization().
@@ -428,7 +428,7 @@ func (r *membershipRepository) CreateInvitation(ctx context.Context, input Creat
 		UserID:           input.UserID,
 		OrganizationID:   input.OrganizationID,
 		RoleID:           input.RoleID,
-		Status:           membership.StatusPending,
+		Status:           model.MembershipStatusPending,
 		InvitedBy:        &input.InvitedBy,
 		InvitedAt:        time.Now(),
 		ExpiresAt:        &input.ExpiresAt,
@@ -455,12 +455,12 @@ func (r *membershipRepository) AcceptInvitation(ctx context.Context, token strin
 		return nil, errors.New(errors.CodeBadRequest, "Invitation has expired")
 	}
 
-	if member.Status != membership.StatusPending {
+	if member.Status != model.MembershipStatusPending {
 		return nil, errors.New(errors.CodeBadRequest, "Invitation has already been processed")
 	}
 
 	// Accept the invitation
-	status := membership.StatusActive
+	status := model.MembershipStatusActive
 	now := time.Now()
 	updated, err := r.Update(ctx, member.ID, UpdateMembershipInput{
 		Status:   &status,
@@ -479,7 +479,7 @@ func (r *membershipRepository) DeclineInvitation(ctx context.Context, token stri
 		return err
 	}
 
-	if member.Status != membership.StatusPending {
+	if member.Status != model.MembershipStatusPending {
 		return errors.New(errors.CodeBadRequest, "Invitation has already been processed")
 	}
 
@@ -510,7 +510,7 @@ func (r *membershipRepository) GetPendingInvitations(ctx context.Context, organi
 	memberships, err := r.client.Membership.Query().
 		Where(
 			membership.OrganizationID(organizationID),
-			membership.StatusEQ(membership.StatusPending),
+			membership.StatusEQ(model.MembershipStatusPending),
 		).
 		WithUser().
 		WithRole().
@@ -524,7 +524,7 @@ func (r *membershipRepository) GetPendingInvitations(ctx context.Context, organi
 func (r *membershipRepository) GetExpiredInvitations(ctx context.Context) ([]*ent.Membership, error) {
 	memberships, err := r.client.Membership.Query().
 		Where(
-			membership.StatusEQ(membership.StatusPending),
+			membership.StatusEQ(model.MembershipStatusPending),
 			membership.ExpiresAtLT(time.Now()),
 		).
 		All(ctx)
@@ -537,7 +537,7 @@ func (r *membershipRepository) GetExpiredInvitations(ctx context.Context) ([]*en
 func (r *membershipRepository) CleanupExpiredInvitations(ctx context.Context) (int, error) {
 	deleted, err := r.client.Membership.Delete().
 		Where(
-			membership.StatusEQ(membership.StatusPending),
+			membership.StatusEQ(model.MembershipStatusPending),
 			membership.ExpiresAtLT(time.Now()),
 		).
 		Exec(ctx)
@@ -550,7 +550,7 @@ func (r *membershipRepository) CleanupExpiredInvitations(ctx context.Context) (i
 // Status management methods
 
 func (r *membershipRepository) Activate(ctx context.Context, id xid.ID) error {
-	status := membership.StatusActive
+	status := model.MembershipStatusActive
 	_, err := r.Update(ctx, id, UpdateMembershipInput{
 		Status: &status,
 	})
@@ -558,7 +558,7 @@ func (r *membershipRepository) Activate(ctx context.Context, id xid.ID) error {
 }
 
 func (r *membershipRepository) Deactivate(ctx context.Context, id xid.ID) error {
-	status := membership.StatusInactive
+	status := model.MembershipStatusInactive
 	_, err := r.Update(ctx, id, UpdateMembershipInput{
 		Status: &status,
 	})
@@ -566,14 +566,14 @@ func (r *membershipRepository) Deactivate(ctx context.Context, id xid.ID) error 
 }
 
 func (r *membershipRepository) Suspend(ctx context.Context, id xid.ID) error {
-	status := membership.StatusSuspended
+	status := model.MembershipStatusSuspended
 	_, err := r.Update(ctx, id, UpdateMembershipInput{
 		Status: &status,
 	})
 	return err
 }
 
-func (r *membershipRepository) UpdateStatus(ctx context.Context, id xid.ID, status membership.Status) error {
+func (r *membershipRepository) UpdateStatus(ctx context.Context, id xid.ID, status model.MembershipStatus) error {
 	_, err := r.Update(ctx, id, UpdateMembershipInput{
 		Status: &status,
 	})
@@ -610,7 +610,7 @@ func (r *membershipRepository) GetActiveMembers(ctx context.Context, organizatio
 	memberships, err := r.client.Membership.Query().
 		Where(
 			membership.OrganizationID(organizationID),
-			membership.StatusEQ(membership.StatusActive),
+			membership.StatusEQ(model.MembershipStatusActive),
 		).
 		WithUser().
 		WithRole().
@@ -621,7 +621,7 @@ func (r *membershipRepository) GetActiveMembers(ctx context.Context, organizatio
 	return memberships, nil
 }
 
-func (r *membershipRepository) GetMemberCount(ctx context.Context, organizationID xid.ID, status *membership.Status) (int, error) {
+func (r *membershipRepository) GetMemberCount(ctx context.Context, organizationID xid.ID, status *model.MembershipStatus) (int, error) {
 	query := r.client.Membership.Query().
 		Where(membership.OrganizationID(organizationID))
 
@@ -641,7 +641,7 @@ func (r *membershipRepository) GetBillingContacts(ctx context.Context, organizat
 		Where(
 			membership.OrganizationID(organizationID),
 			membership.IsBillingContact(true),
-			membership.StatusEQ(membership.StatusActive),
+			membership.StatusEQ(model.MembershipStatusActive),
 		).
 		WithUser().
 		All(ctx)
@@ -656,7 +656,7 @@ func (r *membershipRepository) GetPrimaryContact(ctx context.Context, organizati
 		Where(
 			membership.OrganizationID(organizationID),
 			membership.IsPrimaryContact(true),
-			membership.StatusEQ(membership.StatusActive),
+			membership.StatusEQ(model.MembershipStatusActive),
 		).
 		WithUser().
 		Only(ctx)
@@ -731,10 +731,10 @@ func (r *membershipRepository) GetMembershipStats(ctx context.Context, organizat
 		return nil, err
 	}
 
-	statsActive := membership.StatusActive
-	statsPending := membership.StatusPending
-	statsInactive := membership.StatusInactive
-	statsSuspended := membership.StatusSuspended
+	statsActive := model.MembershipStatusActive
+	statsPending := model.MembershipStatusPending
+	statsInactive := model.MembershipStatusInactive
+	statsSuspended := model.MembershipStatusSuspended
 
 	// Get count by status
 	active, err := r.GetMemberCount(ctx, organizationID, &statsActive)
@@ -785,11 +785,11 @@ func (r *membershipRepository) GetMembershipStats(ctx context.Context, organizat
 		ActiveMembers:   active,
 		PendingMembers:  pending,
 		InactiveMembers: inactive,
-		StatusBreakdown: map[membership.Status]int{
-			membership.StatusActive:    active,
-			membership.StatusPending:   pending,
-			membership.StatusInactive:  inactive,
-			membership.StatusSuspended: suspended,
+		StatusBreakdown: map[model.MembershipStatus]int{
+			model.MembershipStatusActive:    active,
+			model.MembershipStatusPending:   pending,
+			model.MembershipStatusInactive:  inactive,
+			model.MembershipStatusSuspended: suspended,
 		},
 		RecentJoins:   recentJoins,
 		RecentInvites: recentInvites,
@@ -832,7 +832,7 @@ func (r *membershipRepository) GetInvitationStats(ctx context.Context, organizat
 		Where(
 			membership.OrganizationID(organizationID),
 			membership.InvitedAtGTE(since),
-			membership.StatusEQ(membership.StatusActive),
+			membership.StatusEQ(model.MembershipStatusActive),
 		).
 		Count(ctx)
 	if err != nil {
@@ -844,7 +844,7 @@ func (r *membershipRepository) GetInvitationStats(ctx context.Context, organizat
 		Where(
 			membership.OrganizationID(organizationID),
 			membership.InvitedAtGTE(since),
-			membership.StatusEQ(membership.StatusPending),
+			membership.StatusEQ(model.MembershipStatusPending),
 		).
 		Count(ctx)
 	if err != nil {
@@ -856,7 +856,7 @@ func (r *membershipRepository) GetInvitationStats(ctx context.Context, organizat
 		Where(
 			membership.OrganizationID(organizationID),
 			membership.InvitedAtGTE(since),
-			membership.StatusEQ(membership.StatusPending),
+			membership.StatusEQ(model.MembershipStatusPending),
 			membership.ExpiresAtLT(time.Now()),
 		).
 		Count(ctx)
@@ -899,7 +899,7 @@ func (r *membershipRepository) HasActiveMembership(ctx context.Context, userID, 
 		Where(
 			membership.UserID(userID),
 			membership.OrganizationID(organizationID),
-			membership.StatusEQ(membership.StatusActive),
+			membership.StatusEQ(model.MembershipStatusActive),
 		).
 		Exist(ctx)
 	if err != nil {

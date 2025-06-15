@@ -11,14 +11,13 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/ent"
-	"github.com/juicycleff/frank/ent/user"
-	"github.com/juicycleff/frank/internal/contexts"
 	"github.com/juicycleff/frank/internal/di"
-	"github.com/juicycleff/frank/internal/model"
 	"github.com/juicycleff/frank/internal/repository"
+	"github.com/juicycleff/frank/pkg/contexts"
 	"github.com/juicycleff/frank/pkg/crypto"
 	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/juicycleff/frank/pkg/logging"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -39,7 +38,7 @@ type UserContext struct {
 	Username       string           `json:"username,omitempty"`
 	FirstName      string           `json:"firstName,omitempty"`
 	LastName       string           `json:"lastName,omitempty"`
-	UserType       user.UserType    `json:"userType"`
+	UserType       model.UserType   `json:"userType"`
 	OrganizationID *xid.ID          `json:"organizationId,omitempty"`
 	Active         bool             `json:"active"`
 	EmailVerified  bool             `json:"emailVerified"`
@@ -280,7 +279,7 @@ func (m *AuthMiddleware) OptionalAuthHuma() func(huma.Context, func(huma.Context
 }
 
 // RequireUserType middleware that requires a specific user type
-func (m *AuthMiddleware) RequireUserType(userTypes ...user.UserType) func(http.Handler) http.Handler {
+func (m *AuthMiddleware) RequireUserType(userTypes ...model.UserType) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			user := GetUserFromContext(r.Context())
@@ -302,7 +301,7 @@ func (m *AuthMiddleware) RequireUserType(userTypes ...user.UserType) func(http.H
 }
 
 // RequireUserTypeHuma middleware that requires a specific user type
-func (m *AuthMiddleware) RequireUserTypeHuma(userTypes ...user.UserType) func(huma.Context, func(huma.Context)) {
+func (m *AuthMiddleware) RequireUserTypeHuma(userTypes ...model.UserType) func(huma.Context, func(huma.Context)) {
 	return func(ctx huma.Context, next func(huma.Context)) {
 		user := GetUserFromContext(ctx.Context())
 		if user == nil {
@@ -352,7 +351,7 @@ func (m *AuthMiddleware) RequireOrganizationHuma() func(huma.Context, func(huma.
 // HumaAuth Huma Authentication Middleware for API handlers
 func (m *AuthMiddleware) HumaAuth() func(huma.Context, func(huma.Context)) {
 	return func(ctx huma.Context, next func(huma.Context)) {
-		r := ctx.Context().Value("http_request").(*http.Request)
+		r := ctx.Context().Value(contexts.HTTPRequestContextKey).(*http.Request)
 		// w := ctx.Context().Value("http_writer").(http.ResponseWriter)
 
 		// Try authentication
@@ -518,7 +517,7 @@ func (m *AuthMiddleware) authenticateAPIKey(ctx context.Context, r *http.Request
 		// Organization-level API key without specific user
 		userCtx = &UserContext{
 			ID:             xid.New(), // Synthetic ID for organization key
-			UserType:       user.UserTypeExternal,
+			UserType:       model.UserTypeExternal,
 			OrganizationID: &apiKey.OrganizationID,
 			Active:         true,
 			EmailVerified:  true,
@@ -758,8 +757,8 @@ func GetUserIDFromContext(ctx context.Context) *xid.ID {
 }
 
 // GetUserTypeFromContext retrieves the user type from request context
-func GetUserTypeFromContext(ctx context.Context) *user.UserType {
-	if userType, ok := ctx.Value(contexts.UserTypeContextKey).(user.UserType); ok {
+func GetUserTypeFromContext(ctx context.Context) *model.UserType {
+	if userType, ok := ctx.Value(contexts.UserTypeContextKey).(model.UserType); ok {
 		return &userType
 	}
 	return nil
@@ -880,22 +879,22 @@ func HasRole(ctx context.Context, roleName string) bool {
 }
 
 // IsUserType checks if the user is of a specific type
-func IsUserType(ctx context.Context, userType user.UserType) bool {
+func IsUserType(ctx context.Context, userType model.UserType) bool {
 	currentType := GetUserTypeFromContext(ctx)
 	return currentType != nil && *currentType == userType
 }
 
 // IsInternalUser checks if the user is an internal user
 func IsInternalUser(ctx context.Context) bool {
-	return IsUserType(ctx, user.UserTypeInternal)
+	return IsUserType(ctx, model.UserTypeInternal)
 }
 
 // IsExternalUser checks if the user is an external user
 func IsExternalUser(ctx context.Context) bool {
-	return IsUserType(ctx, user.UserTypeExternal)
+	return IsUserType(ctx, model.UserTypeExternal)
 }
 
 // IsEndUser checks if the user is an end user
 func IsEndUser(ctx context.Context) bool {
-	return IsUserType(ctx, user.UserTypeEndUser)
+	return IsUserType(ctx, model.UserTypeEndUser)
 }

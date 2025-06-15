@@ -5,6 +5,7 @@ import (
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
+	"github.com/juicycleff/frank/pkg/model"
 )
 
 // Permission holds enhanced permission definition
@@ -37,7 +38,7 @@ func (Permission) Fields() []ent.Field {
 
 		// Permission categorization
 		field.Enum("category").
-			Values("platform", "organization", "application", "resource").
+			GoType(model.ContextType("")).
 			Comment("Category helps organize permissions by scope"),
 
 		field.JSON("applicable_user_types", []string{}).

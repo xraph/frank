@@ -1,693 +1,691 @@
+// Package main provides a command-line interface for managing database migrations
+// in the Frank Auth SaaS platform using entgo's versioned migrations with Atlas support.
+// This tool handles entgo schema migrations, data seeding, and database management operations
+// for the multi-tenant authentication system.
 package main
 
 import (
 	"context"
-	"database/sql"
 	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/golang-migrate/migrate/v4"
-	"github.com/golang-migrate/migrate/v4/database/postgres"
-	"github.com/golang-migrate/migrate/v4/database/sqlite3"
-	"github.com/golang-migrate/migrate/v4/source/file"
+	_ "github.com/golang-migrate/migrate/v4/database/mysql"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/database/sqlite3"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/juicycleff/frank/config"
+	"github.com/juicycleff/frank/internal/migration"
+	"github.com/juicycleff/frank/pkg/data"
 	"github.com/juicycleff/frank/pkg/logging"
-	_ "github.com/lib/pq"           // PostgreSQL driver
-	_ "github.com/mattn/go-sqlite3" // SQLite driver
 	"github.com/rs/xid"
-	"go.uber.org/zap"
 )
 
-// MigrationConfig holds migration-specific configuration
-type MigrationConfig struct {
-	DatabaseURL     string
-	MigrationsDir   string
-	Driver          string
-	AutoMigrate     bool
-	CreateDatabase  bool
-	DropDatabase    bool
-	ResetDatabase   bool
-	ForceMigration  bool
-	MigrationNumber int
-	Command         string
-	ConfigPath      string
+const (
+	// Migration commands
+	cmdMigrate     = "migrate"
+	cmdRollback    = "rollback"
+	cmdStatus      = "status"
+	cmdCreate      = "create"
+	cmdSeed        = "seed"
+	cmdReset       = "reset"
+	cmdValidate    = "validate"
+	cmdVersion     = "version"
+	cmdForceUnlock = "force-unlock"
+	cmdDrop        = "drop"
+
+	// Default timeout for migration operations
+	defaultTimeout = 5 * time.Minute
+
+	// Migration directory
+	migrationDir = "migrations"
+)
+
+// CLI represents the migration command-line interface
+type CLI struct {
+	config      *config.Config
+	logger      logging.Logger
+	migrator    *migration.Migrator
+	dataClients *data.Clients
+	migrate     *migrate.Migrate
 }
 
-// Available commands
-const (
-	CmdUp       = "up"
-	CmdDown     = "down"
-	CmdDrop     = "drop"
-	CmdForce    = "force"
-	CmdVersion  = "version"
-	CmdGoto     = "goto"
-	CmdCreate   = "create"
-	CmdStatus   = "status"
-	CmdReset    = "reset"
-	CmdSeed     = "seed"
-	CmdValidate = "validate"
+// Command line flags
+var (
+	configPath  = flag.String("config", "", "Path to configuration file")
+	environment = flag.String("env", "", "Environment (development, staging, production)")
+	dryRun      = flag.Bool("dry-run", false, "Show what would be done without executing")
+	force       = flag.Bool("force", false, "Force the operation (use with caution)")
+	timeout     = flag.Duration("timeout", defaultTimeout, "Timeout for migration operations")
+	verbose     = flag.Bool("verbose", false, "Enable verbose logging")
+	version     = flag.String("version", "", "Target migration version")
+	steps       = flag.Int("steps", 0, "Number of steps to rollback")
+	name        = flag.String("name", "", "Name for new migration")
+	seedFile    = flag.String("seed-file", "", "Path to seed data file")
+	tenantID    = flag.String("tenant", "", "Tenant ID for tenant-specific operations")
+	skipConfirm = flag.Bool("yes", false, "Skip confirmation prompts")
+	migrateDir  = flag.String("migrate-dir", migrationDir, "Migration directory path")
 )
 
 func main() {
-	var migrationConfig MigrationConfig
-
-	// Parse command line flags
-	flag.StringVar(&migrationConfig.Command, "command", "up", "Migration command (up, down, drop, force, version, goto, create, status, reset, seed, validate)")
-	flag.StringVar(&migrationConfig.DatabaseURL, "database-url", "", "Database connection URL")
-	flag.StringVar(&migrationConfig.MigrationsDir, "migrations-dir", "./migrations", "Path to migrations directory")
-	flag.StringVar(&migrationConfig.Driver, "driver", "postgres", "Database driver (postgres, sqlite3)")
-	flag.StringVar(&migrationConfig.ConfigPath, "config", "", "Path to config file")
-	flag.BoolVar(&migrationConfig.AutoMigrate, "auto-migrate", false, "Automatically run migrations")
-	flag.BoolVar(&migrationConfig.CreateDatabase, "create-db", false, "Create database if it does not exist")
-	flag.BoolVar(&migrationConfig.DropDatabase, "drop-db", false, "Drop database (use with caution)")
-	flag.BoolVar(&migrationConfig.ResetDatabase, "reset-db", false, "Drop and recreate database (use with caution)")
-	flag.BoolVar(&migrationConfig.ForceMigration, "force", false, "Force migration to specific version")
-	flag.IntVar(&migrationConfig.MigrationNumber, "number", 0, "Migration number for force/goto commands")
-
 	flag.Parse()
 
+	if len(flag.Args()) == 0 {
+		printUsage()
+		os.Exit(1)
+	}
+
+	command := flag.Args()[0]
+
+	// Initialize CLI
+	cli, err := newCLI()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error initializing CLI: %v\n", err)
+		os.Exit(1)
+	}
+	defer cli.cleanup()
+
+	// Set timeout context
+	ctx, cancel := context.WithTimeout(context.Background(), *timeout)
+	defer cancel()
+
+	// Execute command
+	if err := cli.executeCommand(ctx, command, flag.Args()[1:]); err != nil {
+		cli.logger.Error("Command failed", logging.Error(err))
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
+	}
+}
+
+// newCLI creates a new CLI instance with proper initialization
+func newCLI() (*CLI, error) {
+	// Load configuration
+	cfg, err := loadConfig()
+	if err != nil {
+		return nil, fmt.Errorf("failed to load configuration: %w", err)
+	}
+
 	// Initialize logger
+	logLevel := cfg.Logging.Level
+	if *verbose {
+		logLevel = "debug"
+	}
+
 	logger := logging.NewLogger(&logging.LoggerConfig{
-		Level: "info",
+		Level:       logLevel,
+		Environment: cfg.Environment,
+		// Output:      "stdout",
+		// Format:      "text", // Use text format for CLI
 	})
 
-	// Load configuration if config path is provided
-	var cfg *config.Config
-	var err error
-	if migrationConfig.ConfigPath != "" {
-		cfg, err = config.Load(migrationConfig.ConfigPath)
-		if err != nil {
-			logger.Error("Failed to load config", zap.Error(err))
-			os.Exit(1)
-		}
-	} else {
-		// Try to load default config
-		cfg, err = config.Load()
-		if err != nil {
-			logger.Warn("Failed to load default config, using flags", zap.Error(err))
-		}
+	// Initialize data clients
+	dataClients := data.NewClients(cfg, logger, nil, nil)
+	if dataClients == nil {
+		return nil, fmt.Errorf("failed to initialize data clients")
 	}
 
-	// Use config values if available, otherwise use flags
-	if cfg != nil && migrationConfig.DatabaseURL == "" {
-		migrationConfig.DatabaseURL = cfg.Database.GetFullAddress()
-		migrationConfig.MigrationsDir = cfg.Database.MigrationsDir
-		migrationConfig.Driver = cfg.Database.Driver
-		migrationConfig.AutoMigrate = cfg.Database.AutoMigrate
-	}
+	// Initialize custom migrator for seeding and additional operations
+	migrator := migration.NewMigrator(dataClients, logger)
 
-	// Validate required parameters
-	if migrationConfig.DatabaseURL == "" {
-		logger.Error("Database URL is required")
-		printUsage()
-		os.Exit(1)
-	}
-
-	if migrationConfig.MigrationsDir == "" {
-		migrationConfig.MigrationsDir = "./migrations"
-	}
-
-	// Ensure migrations directory exists
-	if err := ensureMigrationsDir(migrationConfig.MigrationsDir); err != nil {
-		logger.Error("Failed to ensure migrations directory", "error", err)
-		os.Exit(1)
-	}
-
-	// Execute the specified command
-	ctx := context.Background()
-	migrator := NewMigrator(migrationConfig, logger)
-
-	switch migrationConfig.Command {
-	case CmdUp:
-		err = migrator.Up(ctx)
-	case CmdDown:
-		err = migrator.Down(ctx)
-	case CmdDrop:
-		err = migrator.Drop(ctx)
-	case CmdForce:
-		if migrationConfig.MigrationNumber == 0 {
-			logger.Error("Migration number is required for force command")
-			os.Exit(1)
-		}
-		err = migrator.Force(ctx, migrationConfig.MigrationNumber)
-	case CmdVersion:
-		err = migrator.Version(ctx)
-	case CmdGoto:
-		if migrationConfig.MigrationNumber == 0 {
-			logger.Error("Migration number is required for goto command")
-			os.Exit(1)
-		}
-		err = migrator.Goto(ctx, uint(migrationConfig.MigrationNumber))
-	case CmdCreate:
-		if len(flag.Args()) == 0 {
-			logger.Error("Migration name is required for create command")
-			os.Exit(1)
-		}
-		err = migrator.Create(ctx, strings.Join(flag.Args(), "_"))
-	case CmdStatus:
-		err = migrator.Status(ctx)
-	case CmdReset:
-		err = migrator.Reset(ctx)
-	case CmdSeed:
-		err = migrator.Seed(ctx)
-	case CmdValidate:
-		err = migrator.Validate(ctx)
-	default:
-		logger.Error("Unknown command", zap.String("command", migrationConfig.Command))
-		printUsage()
-		os.Exit(1)
-	}
-
+	// Initialize golang-migrate instance
+	migrateInstance, err := initializeGolangMigrate(cfg)
 	if err != nil {
-		logger.Error("Migration failed", zap.String("command", migrationConfig.Command), zap.Error(err))
-		os.Exit(1)
+		logger.Warn("Failed to initialize golang-migrate, some operations may not be available", logging.Error(err))
 	}
 
-	logger.Info("Migration completed successfully", zap.String("command", migrationConfig.Command))
+	return &CLI{
+		config:      cfg,
+		logger:      logger,
+		migrator:    migrator,
+		dataClients: dataClients,
+		migrate:     migrateInstance,
+	}, nil
 }
 
-// Migrator handles database migrations
-type Migrator struct {
-	config MigrationConfig
-	logger logging.Logger
-	db     *sql.DB
-	m      *migrate.Migrate
-}
+// initializeGolangMigrate initializes the golang-migrate instance
+func initializeGolangMigrate(cfg *config.Config) (*migrate.Migrate, error) {
+	// Build source URL for migration files
+	sourceURL := fmt.Sprintf("file://%s", *migrateDir)
 
-// NewMigrator creates a new migrator instance
-func NewMigrator(config MigrationConfig, logger logging.Logger) *Migrator {
-	return &Migrator{
-		config: config,
-		logger: logger,
-	}
-}
-
-// initializeDB initializes the database connection
-func (m *Migrator) initializeDB(ctx context.Context) error {
-	if m.db != nil {
-		return nil
-	}
-
-	db, err := sql.Open(m.config.Driver, m.config.DatabaseURL)
-	if err != nil {
-		return fmt.Errorf("failed to open database: %w", err)
-	}
-
-	// Test the connection
-	if err := db.PingContext(ctx); err != nil {
-		return fmt.Errorf("failed to ping database: %w", err)
-	}
-
-	m.db = db
-	return nil
-}
-
-// initializeMigrate initializes the migrate instance
-func (m *Migrator) initializeMigrate(ctx context.Context) error {
-	if m.m != nil {
-		return nil
-	}
-
-	if err := m.initializeDB(ctx); err != nil {
-		return err
-	}
-
-	// Initialize the file source
-	sourceURL := fmt.Sprintf("file://%s", m.config.MigrationsDir)
-	source, err := (&file.File{}).Open(sourceURL)
-	if err != nil {
-		return fmt.Errorf("failed to open migration source: %w", err)
-	}
-
-	// Initialize database driver
-	var driver migrate.Database
-	switch m.config.Driver {
+	// Build database URL
+	var databaseURL string
+	switch cfg.Database.Driver {
 	case "postgres":
-		driver, err = postgres.WithInstance(m.db, &postgres.Config{})
-	case "sqlite3":
-		driver, err = sqlite3.WithInstance(m.db, &sqlite3.Config{})
+		if cfg.Database.DSN != "" {
+			databaseURL = cfg.Database.DSN
+		} else {
+			databaseURL = fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=%s",
+				cfg.Database.User,
+				cfg.Database.Password,
+				cfg.Database.Host,
+				cfg.Database.Port,
+				cfg.Database.Database,
+				cfg.Database.SSLMode,
+			)
+		}
+	case "mysql":
+		if cfg.Database.DSN != "" {
+			databaseURL = "mysql://" + cfg.Database.DSN
+		} else {
+			databaseURL = fmt.Sprintf("mysql://%s:%s@tcp(%s:%d)/%s",
+				cfg.Database.User,
+				cfg.Database.Password,
+				cfg.Database.Host,
+				cfg.Database.Port,
+				cfg.Database.Database,
+			)
+		}
+	case "sqlite", "sqlite3":
+		databaseURL = "sqlite3://" + cfg.Database.Database
 	default:
-		return fmt.Errorf("unsupported database driver: %s", m.config.Driver)
-	}
-
-	if err != nil {
-		return fmt.Errorf("failed to initialize database driver: %w", err)
+		return nil, fmt.Errorf("unsupported database driver: %s", cfg.Database.Driver)
 	}
 
 	// Create migrate instance
-	migrator, err := migrate.NewWithSourceAndDatabaseInstance("file", source, m.config.Driver, driver)
+	m, err := migrate.New(sourceURL, databaseURL)
 	if err != nil {
-		return fmt.Errorf("failed to create migrate instance: %w", err)
+		return nil, fmt.Errorf("failed to create migrate instance: %w", err)
 	}
 
-	m.m = migrator
-	return nil
+	return m, nil
 }
 
-// Up runs all pending migrations
-func (m *Migrator) Up(ctx context.Context) error {
-	m.logger.Info("Running up migrations")
-
-	if err := m.initializeMigrate(ctx); err != nil {
-		return err
+// loadConfig loads configuration from file or environment
+func loadConfig() (*config.Config, error) {
+	if *configPath != "" {
+		return config.Load(*configPath)
 	}
 
-	if err := m.m.Up(); err != nil {
+	if *environment != "" {
+		os.Setenv("ENVIRONMENT", *environment)
+	}
+
+	return config.Load("")
+}
+
+// cleanup performs cleanup operations
+func (c *CLI) cleanup() {
+	if c.migrate != nil {
+		sourceErr, databaseErr := c.migrate.Close()
+		if sourceErr != nil {
+			c.logger.Error("Failed to close migration source", logging.Error(sourceErr))
+		}
+		if databaseErr != nil {
+			c.logger.Error("Failed to close migration database", logging.Error(databaseErr))
+		}
+	}
+
+	if c.dataClients != nil {
+		if err := c.dataClients.Close(); err != nil {
+			c.logger.Error("Failed to close data clients", logging.Error(err))
+		}
+	}
+}
+
+// executeCommand executes the specified migration command
+func (c *CLI) executeCommand(ctx context.Context, command string, args []string) error {
+	switch command {
+	case cmdMigrate:
+		return c.handleMigrate(ctx)
+	case cmdRollback:
+		return c.handleRollback(ctx)
+	case cmdStatus:
+		return c.handleStatus(ctx)
+	case cmdCreate:
+		return c.handleCreate(ctx)
+	case cmdSeed:
+		return c.handleSeed(ctx)
+	case cmdReset:
+		return c.handleReset(ctx)
+	case cmdValidate:
+		return c.handleValidate(ctx)
+	case cmdVersion:
+		return c.handleVersion(ctx)
+	case cmdForceUnlock:
+		return c.handleForceUnlock(ctx)
+	case cmdDrop:
+		return c.handleDrop(ctx)
+	default:
+		return fmt.Errorf("unknown command: %s", command)
+	}
+}
+
+// handleMigrate handles the migrate command
+func (c *CLI) handleMigrate(ctx context.Context) error {
+	if c.migrate == nil {
+		return fmt.Errorf("migration instance not available")
+	}
+
+	c.logger.Info("Starting database migration")
+
+	if *dryRun {
+		c.logger.Info("DRY RUN: Showing pending migrations")
+		return c.showPendingMigrations()
+	}
+
+	var err error
+	if *version != "" {
+		// Migrate to specific version
+		targetVersion, parseErr := parseVersion(*version)
+		if parseErr != nil {
+			return fmt.Errorf("invalid version format: %w", parseErr)
+		}
+		err = c.migrate.Migrate(targetVersion)
+	} else {
+		// Migrate to latest
+		err = c.migrate.Up()
+	}
+
+	if err != nil {
 		if err == migrate.ErrNoChange {
-			m.logger.Info("No migrations to run")
+			fmt.Println("No migrations to apply - database is up to date")
+			c.logger.Info("No migrations to apply")
 			return nil
 		}
-		return fmt.Errorf("failed to run up migrations: %w", err)
+		return fmt.Errorf("migration failed: %w", err)
 	}
 
+	c.logger.Info("Migration completed successfully")
+	fmt.Println("✓ Migration completed successfully")
 	return nil
 }
 
-// Down runs one down migration
-func (m *Migrator) Down(ctx context.Context) error {
-	m.logger.Info("Running down migration")
-
-	if err := m.initializeMigrate(ctx); err != nil {
-		return err
+// handleRollback handles the rollback command
+func (c *CLI) handleRollback(ctx context.Context) error {
+	if c.migrate == nil {
+		return fmt.Errorf("migration instance not available")
 	}
 
-	if err := m.m.Steps(-1); err != nil {
-		if err == migrate.ErrNoChange {
-			m.logger.Info("No migrations to rollback")
+	if *steps == 0 && *version == "" {
+		return fmt.Errorf("rollback requires either --steps or --version flag")
+	}
+
+	if !*skipConfirm {
+		if !confirmRollback() {
+			fmt.Println("Rollback cancelled")
 			return nil
 		}
-		return fmt.Errorf("failed to run down migration: %w", err)
 	}
 
-	return nil
-}
+	c.logger.Info("Starting database rollback")
 
-// Drop drops all tables
-func (m *Migrator) Drop(ctx context.Context) error {
-	m.logger.Warn("Dropping all database tables")
-
-	if err := m.initializeMigrate(ctx); err != nil {
-		return err
-	}
-
-	if err := m.m.Drop(); err != nil {
-		return fmt.Errorf("failed to drop database: %w", err)
-	}
-
-	return nil
-}
-
-// Force forces the migration version
-func (m *Migrator) Force(ctx context.Context, version int) error {
-	m.logger.Info("Forcing migration version", zap.Int("version", version))
-
-	if err := m.initializeMigrate(ctx); err != nil {
-		return err
-	}
-
-	if err := m.m.Force(version); err != nil {
-		return fmt.Errorf("failed to force migration version: %w", err)
-	}
-
-	return nil
-}
-
-// Version prints the current migration version
-func (m *Migrator) Version(ctx context.Context) error {
-	if err := m.initializeMigrate(ctx); err != nil {
-		return err
-	}
-
-	version, dirty, err := m.m.Version()
-	if err != nil {
-		if err == migrate.ErrNilVersion {
-			m.logger.Info("No migrations have been run")
-			return nil
-		}
-		return fmt.Errorf("failed to get migration version: %w", err)
-	}
-
-	status := "clean"
-	if dirty {
-		status = "dirty"
-	}
-
-	m.logger.Info("Current migration version", zap.Int("version", int(version)), zap.String("status", status))
-	return nil
-}
-
-// Goto migrates to a specific version
-func (m *Migrator) Goto(ctx context.Context, version uint) error {
-	m.logger.Info("Migrating to specific version", zap.Int("version", int(version)))
-
-	if err := m.initializeMigrate(ctx); err != nil {
-		return err
-	}
-
-	if err := m.m.Migrate(version); err != nil {
-		if err == migrate.ErrNoChange {
-			m.logger.Info("Already at specified version", zap.Int("version", int(version)))
-			return nil
-		}
-		return fmt.Errorf("failed to migrate to version %d: %w", version, err)
-	}
-
-	return nil
-}
-
-// Create creates a new migration file
-func (m *Migrator) Create(ctx context.Context, name string) error {
-	if name == "" {
-		return fmt.Errorf("migration name cannot be empty")
-	}
-
-	// Generate timestamp
-	timestamp := time.Now().Unix()
-
-	// Create up migration file
-	upFilename := fmt.Sprintf("%d_%s.up.sql", timestamp, name)
-	upPath := filepath.Join(m.config.MigrationsDir, upFilename)
-
-	// Create down migration file
-	downFilename := fmt.Sprintf("%d_%s.down.sql", timestamp, name)
-	downPath := filepath.Join(m.config.MigrationsDir, downFilename)
-
-	// Create up file
-	upFile, err := os.Create(upPath)
-	if err != nil {
-		return fmt.Errorf("failed to create up migration file: %w", err)
-	}
-	defer upFile.Close()
-
-	// Write template to up file
-	upTemplate := fmt.Sprintf(`-- Migration: %s
--- Created: %s
--- Description: Add your up migration here
-
-BEGIN;
-
--- Add your SQL statements here
--- Example:
--- CREATE TABLE example_table (
---     id BIGSERIAL PRIMARY KEY,
---     name VARCHAR(255) NOT NULL,
---     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
--- );
-
-COMMIT;
-`, name, time.Now().Format(time.RFC3339))
-
-	if _, err := upFile.WriteString(upTemplate); err != nil {
-		return fmt.Errorf("failed to write up migration template: %w", err)
-	}
-
-	// Create down file
-	downFile, err := os.Create(downPath)
-	if err != nil {
-		return fmt.Errorf("failed to create down migration file: %w", err)
-	}
-	defer downFile.Close()
-
-	// Write template to down file
-	downTemplate := fmt.Sprintf(`-- Migration: %s (DOWN)
--- Created: %s
--- Description: Add your down migration here
-
-BEGIN;
-
--- Add your rollback SQL statements here
--- Example:
--- DROP TABLE IF EXISTS example_table;
-
-COMMIT;
-`, name, time.Now().Format(time.RFC3339))
-
-	if _, err := downFile.WriteString(downTemplate); err != nil {
-		return fmt.Errorf("failed to write down migration template: %w", err)
-	}
-
-	m.logger.Info("Migration files created",
-		zap.String("up_file", upPath),
-		zap.String("down_file", downPath),
-	)
-
-	return nil
-}
-
-// Status shows the migration status
-func (m *Migrator) Status(ctx context.Context) error {
-	if err := m.initializeMigrate(ctx); err != nil {
-		return err
-	}
-
-	version, dirty, err := m.m.Version()
-	if err != nil {
-		if err == migrate.ErrNilVersion {
-			m.logger.Info("Migration Status: No migrations have been run")
-			return nil
-		}
-		return fmt.Errorf("failed to get migration version: %w", err)
-	}
-
-	status := "clean"
-	if dirty {
-		status = "dirty"
-	}
-
-	m.logger.Info("Migration Status",
-		zap.Int("current_version", int(version)),
-		zap.String("status", status),
-		zap.String("migrations_dir", m.config.MigrationsDir),
-	)
-
-	// List migration files
-	files, err := filepath.Glob(filepath.Join(m.config.MigrationsDir, "*.up.sql"))
-	if err != nil {
-		return fmt.Errorf("failed to list migration files: %w", err)
-	}
-
-	m.logger.Info("Available migrations", zap.Int("count", len(files)))
-	for _, file := range files {
-		filename := filepath.Base(file)
-		versionStr := strings.Split(filename, "_")[0]
-		fileVersion, _ := strconv.Atoi(versionStr)
-
-		status := "pending"
-		if uint(fileVersion) <= version {
-			status = "applied"
-		}
-		m.logger.Info("Migration file", zap.String("filename", filename), zap.Int("status", status))
-	}
-
-	return nil
-}
-
-// Reset drops all tables and reruns all migrations
-func (m *Migrator) Reset(ctx context.Context) error {
-	m.logger.Warn("Resetting database (drop + up)")
-
-	if err := m.Drop(ctx); err != nil {
-		return fmt.Errorf("failed to drop database: %w", err)
-	}
-
-	if err := m.Up(ctx); err != nil {
-		return fmt.Errorf("failed to run migrations after reset: %w", err)
-	}
-
-	return nil
-}
-
-// Seed runs database seeding
-func (m *Migrator) Seed(ctx context.Context) error {
-	m.logger.Info("Running database seeding")
-
-	if err := m.initializeDB(ctx); err != nil {
-		return err
-	}
-
-	// Create platform organization if it doesn't exist
-	if err := m.createPlatformOrganization(ctx); err != nil {
-		return fmt.Errorf("failed to create platform organization: %w", err)
-	}
-
-	// Create default admin user if it doesn't exist
-	if err := m.createDefaultAdminUser(ctx); err != nil {
-		return fmt.Errorf("failed to create default admin user: %w", err)
-	}
-
-	// Create default roles if they don't exist
-	if err := m.createDefaultRoles(ctx); err != nil {
-		return fmt.Errorf("failed to create default roles: %w", err)
-	}
-
-	m.logger.Info("Database seeding completed")
-	return nil
-}
-
-// Validate validates migration files
-func (m *Migrator) Validate(ctx context.Context) error {
-	m.logger.Info("Validating migration files")
-
-	files, err := filepath.Glob(filepath.Join(m.config.MigrationsDir, "*.sql"))
-	if err != nil {
-		return fmt.Errorf("failed to list migration files: %w", err)
-	}
-
-	if len(files) == 0 {
-		m.logger.Warn("No migration files found")
+	if *dryRun {
+		c.logger.Info("DRY RUN: Would rollback database")
 		return nil
 	}
 
-	validCount := 0
-	for _, file := range files {
-		if err := m.validateMigrationFile(file); err != nil {
-			m.logger.Error("Invalid migration file", zap.String("file", file), zap.Error(err))
-		} else {
-			validCount++
+	var err error
+	if *version != "" {
+		// Rollback to specific version
+		targetVersion, parseErr := parseVersion(*version)
+		if parseErr != nil {
+			return fmt.Errorf("invalid version format: %w", parseErr)
+		}
+		err = c.migrate.Migrate(targetVersion)
+	} else if *steps > 0 {
+		// Rollback specific number of steps
+		err = c.migrate.Steps(-*steps)
+	}
+
+	if err != nil {
+		return fmt.Errorf("rollback failed: %w", err)
+	}
+
+	c.logger.Info("Rollback completed successfully")
+	fmt.Println("✓ Rollback completed successfully")
+	return nil
+}
+
+// handleStatus handles the status command
+func (c *CLI) handleStatus(ctx context.Context) error {
+	if c.migrate == nil {
+		return fmt.Errorf("migration instance not available")
+	}
+
+	// Get current version
+	currentVersion, dirty, err := c.migrate.Version()
+	if err != nil && err != migrate.ErrNilVersion {
+		return fmt.Errorf("failed to get current version: %w", err)
+	}
+
+	fmt.Printf("Migration Status\n")
+	fmt.Printf("================\n")
+	fmt.Printf("Database:        %s\n", c.config.Database.Database)
+	fmt.Printf("Driver:          %s\n", c.config.Database.Driver)
+	fmt.Printf("Migration Dir:   %s\n", *migrateDir)
+
+	if err == migrate.ErrNilVersion {
+		fmt.Printf("Current Version: No migrations applied\n")
+	} else {
+		fmt.Printf("Current Version: %d\n", currentVersion)
+	}
+
+	if dirty {
+		fmt.Printf("Status:          DIRTY (migration failed, manual intervention required)\n")
+		fmt.Printf("⚠️  Database is in a dirty state. Use 'force-unlock' if you're sure no migration is running.\n")
+	} else {
+		fmt.Printf("Status:          CLEAN\n")
+	}
+
+	// Show available migrations
+	if err := c.showAvailableMigrations(); err != nil {
+		c.logger.Warn("Failed to show available migrations", logging.Error(err))
+	}
+
+	return nil
+}
+
+// handleCreate handles the create command
+func (c *CLI) handleCreate(ctx context.Context) error {
+	if *name == "" {
+		return fmt.Errorf("migration name is required (use --name flag)")
+	}
+
+	c.logger.Info("Creating new migration", logging.String("name", *name))
+
+	// Use entgo's migration generator
+	cmd := fmt.Sprintf("go run -mod=mod ent/migrate/main.go %s", *name)
+	fmt.Printf("Generating migration using: %s\n", cmd)
+	fmt.Printf("Please run this command from your project root directory.\n")
+
+	return nil
+}
+
+// handleSeed handles the seed command
+func (c *CLI) handleSeed(ctx context.Context) error {
+	c.logger.Info("Starting database seeding")
+
+	opts := migration.SeedOptions{
+		SeedFile: *seedFile,
+		TenantID: parseTenantID(*tenantID),
+		Force:    *force,
+	}
+
+	if err := c.migrator.Seed(ctx, opts); err != nil {
+		return fmt.Errorf("seeding failed: %w", err)
+	}
+
+	c.logger.Info("Database seeding completed successfully")
+	fmt.Println("✓ Database seeded successfully")
+	return nil
+}
+
+// handleReset handles the reset command
+func (c *CLI) handleReset(ctx context.Context) error {
+	if !*skipConfirm {
+		if !confirmReset() {
+			fmt.Println("Reset cancelled")
+			return nil
 		}
 	}
 
-	m.logger.Info("Migration validation completed",
-		zap.Int("valid_count", validCount),
-		zap.Int("valid_files", validCount),
-		zap.Int("invalid_files", len(files)-validCount),
-	)
+	c.logger.Warn("Starting database reset - ALL DATA WILL BE LOST")
 
-	if validCount < len(files) {
-		return fmt.Errorf("found %d invalid migration files", len(files)-validCount)
+	if *dryRun {
+		c.logger.Info("DRY RUN: Would reset database")
+		return nil
 	}
 
+	if err := c.migrator.Reset(ctx, *force); err != nil {
+		return fmt.Errorf("database reset failed: %w", err)
+	}
+
+	c.logger.Info("Database reset completed successfully")
+	fmt.Println("✓ Database reset completed - all data has been removed")
+	return nil
+}
+
+// handleValidate handles the validate command
+func (c *CLI) handleValidate(ctx context.Context) error {
+	c.logger.Info("Validating database schema")
+
+	result, err := c.migrator.Validate(ctx, parseTenantID(*tenantID))
+	if err != nil {
+		return fmt.Errorf("validation failed: %w", err)
+	}
+
+	if result.Valid {
+		fmt.Println("✓ Database schema is valid")
+		c.logger.Info("Database schema validation passed")
+	} else {
+		fmt.Println("✗ Database schema validation failed")
+		for _, issue := range result.Issues {
+			fmt.Printf("  • %s: %s\n", issue.Type, issue.Message)
+		}
+		return fmt.Errorf("schema validation failed with %d issues", len(result.Issues))
+	}
+
+	return nil
+}
+
+// handleVersion handles the version command
+func (c *CLI) handleVersion(ctx context.Context) error {
+	if c.migrate == nil {
+		return fmt.Errorf("migration instance not available")
+	}
+
+	currentVersion, dirty, err := c.migrate.Version()
+	if err != nil && err != migrate.ErrNilVersion {
+		return fmt.Errorf("failed to get version: %w", err)
+	}
+
+	if err == migrate.ErrNilVersion {
+		fmt.Println("No migrations applied")
+	} else {
+		fmt.Printf("Current version: %d", currentVersion)
+		if dirty {
+			fmt.Printf(" (dirty)")
+		}
+		fmt.Println()
+	}
+
+	return nil
+}
+
+// handleForceUnlock handles the force-unlock command
+func (c *CLI) handleForceUnlock(ctx context.Context) error {
+	if c.migrate == nil {
+		return fmt.Errorf("migration instance not available")
+	}
+
+	if !*skipConfirm {
+		if !confirmForceUnlock() {
+			fmt.Println("Force unlock cancelled")
+			return nil
+		}
+	}
+
+	if err := c.migrate.Force(-1); err != nil {
+		return fmt.Errorf("failed to force unlock: %w", err)
+	}
+
+	fmt.Println("✓ Migration lock forcefully removed")
+	c.logger.Info("Migration lock forcefully removed")
+	return nil
+}
+
+// handleDrop handles the drop command
+func (c *CLI) handleDrop(ctx context.Context) error {
+	if c.migrate == nil {
+		return fmt.Errorf("migration instance not available")
+	}
+
+	if !*skipConfirm {
+		if !confirmDrop() {
+			fmt.Println("Drop cancelled")
+			return nil
+		}
+	}
+
+	c.logger.Warn("Dropping database schema")
+
+	if err := c.migrate.Drop(); err != nil {
+		return fmt.Errorf("failed to drop database: %w", err)
+	}
+
+	fmt.Println("✓ Database schema dropped successfully")
+	c.logger.Info("Database schema dropped successfully")
 	return nil
 }
 
 // Helper functions
 
-func ensureMigrationsDir(dir string) error {
-	if err := os.MkdirAll(dir, 0755); err != nil {
-		return err
+// parseVersion parses version string to uint
+func parseVersion(versionStr string) (uint, error) {
+	if versionStr == "" {
+		return 0, fmt.Errorf("version cannot be empty")
 	}
+	var version uint
+	if _, err := fmt.Sscanf(versionStr, "%d", &version); err != nil {
+		return 0, fmt.Errorf("invalid version format: %s", versionStr)
+	}
+	return version, nil
+}
+
+// showPendingMigrations shows pending migrations for dry run
+func (c *CLI) showPendingMigrations() error {
+	fmt.Println("Pending migrations would be applied:")
+	// This is a simplified version - in practice you'd iterate through available migrations
+	// and compare with current version
 	return nil
 }
 
-func (m *Migrator) createPlatformOrganization(ctx context.Context) error {
-	orgID := xid.New()
-	query := `
-		INSERT INTO organizations (id, name, slug, org_type, is_platform_organization, active, created_at, updated_at)
-		VALUES ($1, 'Frank Platform', 'frank-platform', 'platform', true, true, NOW(), NOW())
-		ON CONFLICT (slug) DO NOTHING`
-
-	_, err := m.db.ExecContext(ctx, query, orgID.String())
-	return err
-}
-
-func (m *Migrator) createDefaultAdminUser(ctx context.Context) error {
-	userID := xid.New()
-	query := `
-		INSERT INTO users (id, email, username, first_name, last_name, user_type, email_verified, active, created_at, updated_at)
-		VALUES ($1, 'admin@frankauth.dev', 'admin', 'Frank', 'Admin', 'internal', true, true, NOW(), NOW())
-		ON CONFLICT (email) DO NOTHING`
-
-	_, err := m.db.ExecContext(ctx, query, userID.String())
-	return err
-}
-
-func (m *Migrator) createDefaultRoles(ctx context.Context) error {
-	roles := []struct {
-		name        string
-		displayName string
-		roleType    string
-		system      bool
-	}{
-		{"super_admin", "Super Administrator", "system", true},
-		{"platform_admin", "Platform Administrator", "system", true},
-		{"org_admin", "Organization Administrator", "organization", false},
-		{"org_member", "Organization Member", "organization", false},
-		{"user", "User", "application", false},
+// showAvailableMigrations shows available migration files
+func (c *CLI) showAvailableMigrations() error {
+	files, err := os.ReadDir(*migrateDir)
+	if err != nil {
+		return fmt.Errorf("failed to read migration directory: %w", err)
 	}
 
-	for _, role := range roles {
-		roleID := xid.New()
-		query := `
-			INSERT INTO roles (id, name, display_name, role_type, system, created_at, updated_at)
-			VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
-			ON CONFLICT (name, role_type) DO NOTHING`
-
-		_, err := m.db.ExecContext(ctx, query, roleID.String(), role.name, role.displayName, role.roleType, role.system)
-		if err != nil {
-			return err
+	fmt.Printf("\nAvailable Migrations:\n")
+	for _, file := range files {
+		if !file.IsDir() && strings.HasSuffix(file.Name(), ".sql") {
+			fmt.Printf("  • %s\n", file.Name())
 		}
 	}
 
 	return nil
 }
 
-func (m *Migrator) validateMigrationFile(filepath string) error {
-	file, err := os.Open(filepath)
+// parseTenantID parses tenant ID from string
+func parseTenantID(tenantIDStr string) *xid.ID {
+	if tenantIDStr == "" {
+		return nil
+	}
+
+	tenantID, err := xid.FromString(tenantIDStr)
 	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	// Basic validation - check if file is readable and not empty
-	stat, err := file.Stat()
-	if err != nil {
-		return err
+		return nil
 	}
 
-	if stat.Size() == 0 {
-		return fmt.Errorf("migration file is empty")
-	}
-
-	// Additional validation could include SQL syntax checking
-	// For now, just basic file validation
-	return nil
+	return &tenantID
 }
 
-func printUsage() {
-	fmt.Println(`
-Frank Auth Migration Tool
+// Confirmation functions
 
-Usage:
-  migrate [options] [command]
+// confirmRollback asks for confirmation before rollback
+func confirmRollback() bool {
+	fmt.Print("This will rollback your database. Are you sure? (y/N): ")
+	var response string
+	fmt.Scanln(&response)
+	return strings.ToLower(response) == "y" || strings.ToLower(response) == "yes"
+}
+
+// confirmReset asks for confirmation before reset
+func confirmReset() bool {
+	fmt.Print("This will PERMANENTLY DELETE ALL DATA in your database. Are you absolutely sure? (type 'yes' to confirm): ")
+	var response string
+	fmt.Scanln(&response)
+	return response == "yes"
+}
+
+// confirmForceUnlock asks for confirmation before force unlock
+func confirmForceUnlock() bool {
+	fmt.Print("This will forcefully remove the migration lock. Only do this if you're sure no migration is running. Continue? (y/N): ")
+	var response string
+	fmt.Scanln(&response)
+	return strings.ToLower(response) == "y" || strings.ToLower(response) == "yes"
+}
+
+// confirmDrop asks for confirmation before dropping database
+func confirmDrop() bool {
+	fmt.Print("This will DROP ALL TABLES in your database. Are you absolutely sure? (type 'yes' to confirm): ")
+	var response string
+	fmt.Scanln(&response)
+	return response == "yes"
+}
+
+// printUsage prints command usage information
+func printUsage() {
+	fmt.Printf(`Frank Auth SaaS - Database Migration Tool (entgo versioned migrations)
+
+Usage: %s [flags] <command> [command-flags]
 
 Commands:
-  up          Run all pending migrations (default)
-  down        Rollback one migration
-  drop        Drop all tables (destructive)
-  force N     Force migration to version N
-  version     Show current migration version
-  goto N      Migrate to specific version N
-  create NAME Create new migration files
-  status      Show migration status
-  reset       Drop all tables and re-run migrations (destructive)
-  seed        Run database seeding
-  validate    Validate migration files
+  migrate      Apply pending migrations
+  rollback     Rollback applied migrations
+  status       Show migration status
+  create       Create a new migration file (uses entgo generator)
+  seed         Seed the database with initial data
+  reset        Reset the database (DANGEROUS - removes all data)
+  validate     Validate database schema integrity
+  version      Show current migration version
+  force-unlock Remove migration lock (use with caution)
+  drop         Drop all database tables
 
-Options:
-  -database-url     Database connection URL
-  -migrations-dir   Path to migrations directory (default: ./migrations)
-  -driver          Database driver (postgres, sqlite3) (default: postgres)
-  -config          Path to config file
-  -auto-migrate    Automatically run migrations (default: false)
-  -create-db       Create database if it doesn't exist (default: false)
-  -drop-db         Drop database (use with caution) (default: false)
-  -reset-db        Drop and recreate database (use with caution) (default: false)
-  -force           Force migration to specific version (default: false)
-  -number          Migration number for force/goto commands (default: 0)
+Global Flags:
+  --config PATH       Path to configuration file
+  --env ENV          Environment (development, staging, production)
+  --dry-run          Show what would be done without executing
+  --force            Force the operation (use with caution)
+  --timeout DURATION Timeout for migration operations (default: 5m)
+  --verbose          Enable verbose logging
+  --yes              Skip confirmation prompts
+  --migrate-dir PATH Migration directory path (default: ent/migrate/migrations)
+
+Migration Flags:
+  --version VERSION  Target migration version
+  --steps N          Number of steps to rollback
+  --name NAME        Name for new migration
+  --seed-file PATH   Path to seed data file
+  --tenant ID        Tenant ID for tenant-specific operations
 
 Examples:
-  migrate up
-  migrate down
-  migrate create add_users_table
-  migrate force -number=123
-  migrate goto -number=5
-  migrate status
-  migrate -database-url="postgres://user:pass@localhost/db" up
-  migrate -config=config.yaml up
-`)
+  # Apply all pending migrations
+  %s migrate
+
+  # Create a new migration (runs entgo generator)
+  %s --name "add_user_preferences" create
+
+  # Check migration status
+  %s status
+
+  # Rollback last 3 migrations
+  %s --steps 3 rollback
+
+  # Migrate to specific version
+  %s --version 20231201120000 migrate
+
+  # Seed database with initial data
+  %s seed
+
+  # Dry run migration to see what would happen
+  %s --dry-run migrate
+
+Environment Variables:
+  DATABASE_URL       Database connection string
+  DATABASE_DRIVER    Database driver (postgres, mysql, sqlite)
+  ENVIRONMENT        Application environment
+  LOG_LEVEL          Logging level (debug, info, warn, error)
+
+Migration Files:
+  Migrations are stored in %s/ directory
+  Files follow golang-migrate format: {version}_{name}.up.sql and {version}_{name}.down.sql
+  Use 'create' command to generate new migrations using entgo's Atlas integration
+
+`, filepath.Base(os.Args[0]), filepath.Base(os.Args[0]), filepath.Base(os.Args[0]), filepath.Base(os.Args[0]), filepath.Base(os.Args[0]), filepath.Base(os.Args[0]), filepath.Base(os.Args[0]), filepath.Base(os.Args[0]), *migrateDir)
 }

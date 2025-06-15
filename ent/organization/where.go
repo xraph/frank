@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/juicycleff/frank/ent/predicate"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -840,23 +841,33 @@ func OwnerIDContainsFold(v xid.ID) predicate.Organization {
 }
 
 // OrgTypeEQ applies the EQ predicate on the "org_type" field.
-func OrgTypeEQ(v OrgType) predicate.Organization {
-	return predicate.Organization(sql.FieldEQ(FieldOrgType, v))
+func OrgTypeEQ(v model.OrgType) predicate.Organization {
+	vc := v
+	return predicate.Organization(sql.FieldEQ(FieldOrgType, vc))
 }
 
 // OrgTypeNEQ applies the NEQ predicate on the "org_type" field.
-func OrgTypeNEQ(v OrgType) predicate.Organization {
-	return predicate.Organization(sql.FieldNEQ(FieldOrgType, v))
+func OrgTypeNEQ(v model.OrgType) predicate.Organization {
+	vc := v
+	return predicate.Organization(sql.FieldNEQ(FieldOrgType, vc))
 }
 
 // OrgTypeIn applies the In predicate on the "org_type" field.
-func OrgTypeIn(vs ...OrgType) predicate.Organization {
-	return predicate.Organization(sql.FieldIn(FieldOrgType, vs...))
+func OrgTypeIn(vs ...model.OrgType) predicate.Organization {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Organization(sql.FieldIn(FieldOrgType, v...))
 }
 
 // OrgTypeNotIn applies the NotIn predicate on the "org_type" field.
-func OrgTypeNotIn(vs ...OrgType) predicate.Organization {
-	return predicate.Organization(sql.FieldNotIn(FieldOrgType, vs...))
+func OrgTypeNotIn(vs ...model.OrgType) predicate.Organization {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Organization(sql.FieldNotIn(FieldOrgType, v...))
 }
 
 // IsPlatformOrganizationEQ applies the EQ predicate on the "is_platform_organization" field.
@@ -1750,6 +1761,52 @@ func HasAuditLogs() predicate.Organization {
 func HasAuditLogsWith(preds ...predicate.Audit) predicate.Organization {
 	return predicate.Organization(func(s *sql.Selector) {
 		step := newAuditLogsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasOrganizationProviders applies the HasEdge predicate on the "organization_providers" edge.
+func HasOrganizationProviders() predicate.Organization {
+	return predicate.Organization(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, OrganizationProvidersTable, OrganizationProvidersColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasOrganizationProvidersWith applies the HasEdge predicate on the "organization_providers" edge with a given conditions (other predicates).
+func HasOrganizationProvidersWith(preds ...predicate.OrganizationProvider) predicate.Organization {
+	return predicate.Organization(func(s *sql.Selector) {
+		step := newOrganizationProvidersStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasActivities applies the HasEdge predicate on the "activities" edge.
+func HasActivities() predicate.Organization {
+	return predicate.Organization(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ActivitiesTable, ActivitiesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasActivitiesWith applies the HasEdge predicate on the "activities" edge with a given conditions (other predicates).
+func HasActivitiesWith(preds ...predicate.Activity) predicate.Organization {
+	return predicate.Organization(func(s *sql.Selector) {
+		step := newActivitiesStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

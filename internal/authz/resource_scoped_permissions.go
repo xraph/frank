@@ -129,25 +129,25 @@ func (rpc *ResourcePermissionChecker) CanView(ctx context.Context) (bool, error)
 	case ResourceOrganization:
 		viewPermissions = append(viewPermissions, PermissionViewOrganization)
 	case ResourceUser:
-		viewPermissions = append(viewPermissions, PermissionViewUser)
+		viewPermissions = append(viewPermissions, PermissionReadUser)
 	case ResourceAPIKey:
-		viewPermissions = append(viewPermissions, PermissionViewAPIKeys, PermissionViewPersonalAPIKeys)
+		viewPermissions = append(viewPermissions, PermissionReadAPIKey, PermissionViewPersonalAPIKey)
 	case ResourceSession:
-		viewPermissions = append(viewPermissions, PermissionViewSessions, PermissionViewPersonalSessions)
+		viewPermissions = append(viewPermissions, PermissionReadSessions, PermissionViewPersonalSession)
 	case ResourceMFA:
-		viewPermissions = append(viewPermissions, PermissionViewMFA, PermissionViewPersonalMFA)
+		viewPermissions = append(viewPermissions, PermissionReadMFA, PermissionViewPersonalMFA)
 	case ResourceVerification:
-		viewPermissions = append(viewPermissions, PermissionViewVerifications, PermissionViewPersonalVerifications)
+		viewPermissions = append(viewPermissions, PermissionReadVerification, PermissionViewPersonalVerifications)
 	case ResourceWebhook:
-		viewPermissions = append(viewPermissions, PermissionViewWebhooks)
+		viewPermissions = append(viewPermissions, PermissionReadWebhook)
 	case ResourceWebhookEvent:
-		viewPermissions = append(viewPermissions, PermissionViewWebhookEvents)
+		viewPermissions = append(viewPermissions, PermissionReadWebhookEvents)
 	case ResourceEmailTemplate:
-		viewPermissions = append(viewPermissions, PermissionViewEmailTemplates)
+		viewPermissions = append(viewPermissions, PermissionReadEmailTemplate)
 	case ResourceRole:
-		viewPermissions = append(viewPermissions, PermissionViewRoles)
+		viewPermissions = append(viewPermissions, PermissionReadRole)
 	case ResourcePermission:
-		viewPermissions = append(viewPermissions, PermissionViewPermissions)
+		viewPermissions = append(viewPermissions, PermissionReadPermission)
 	}
 
 	return rpc.HasAnyPermission(ctx, viewPermissions)
@@ -166,19 +166,19 @@ func (rpc *ResourcePermissionChecker) CanEdit(ctx context.Context) (bool, error)
 	case ResourceUser:
 		editPermissions = append(editPermissions, PermissionUpdateUser)
 	case ResourceAPIKey:
-		editPermissions = append(editPermissions, PermissionUpdateAPIKey, PermissionManagePersonalAPIKeys)
+		editPermissions = append(editPermissions, PermissionWriteAPIKey, PermissionManagePersonalAPIKey)
 	case ResourceMFA:
-		editPermissions = append(editPermissions, PermissionUpdateMFA, PermissionManagePersonalMFA)
+		editPermissions = append(editPermissions, PermissionWriteMFA, PermissionManagePersonalMFA)
 	case ResourceVerification:
-		editPermissions = append(editPermissions, PermissionUpdateVerification, PermissionManagePersonalVerifications)
+		editPermissions = append(editPermissions, PermissionWriteVerification, PermissionManagePersonalVerifications)
 	case ResourceWebhook:
-		editPermissions = append(editPermissions, PermissionUpdateWebhook)
+		editPermissions = append(editPermissions, PermissionWriteWebhook)
 	case ResourceEmailTemplate:
-		editPermissions = append(editPermissions, PermissionUpdateEmailTemplate)
+		editPermissions = append(editPermissions, PermissionWriteEmailTemplate)
 	case ResourceRole:
-		editPermissions = append(editPermissions, PermissionUpdateRole)
+		editPermissions = append(editPermissions, PermissionWriteRole)
 	case ResourcePermission:
-		editPermissions = append(editPermissions, PermissionUpdatePermission)
+		editPermissions = append(editPermissions, PermissionWritePermission)
 	}
 
 	return rpc.HasAnyPermission(ctx, editPermissions)
@@ -197,9 +197,9 @@ func (rpc *ResourcePermissionChecker) CanDelete(ctx context.Context) (bool, erro
 	case ResourceUser:
 		deletePermissions = append(deletePermissions, PermissionDeleteUser)
 	case ResourceAPIKey:
-		deletePermissions = append(deletePermissions, PermissionDeleteAPIKey, PermissionManagePersonalAPIKeys)
+		deletePermissions = append(deletePermissions, PermissionDeleteAPIKey, PermissionManagePersonalAPIKey)
 	case ResourceSession:
-		deletePermissions = append(deletePermissions, PermissionDeleteSession, PermissionManagePersonalSessions)
+		deletePermissions = append(deletePermissions, PermissionDeleteSession, PermissionManagePersonalSession)
 	case ResourceMFA:
 		deletePermissions = append(deletePermissions, PermissionDeleteMFA, PermissionManagePersonalMFA)
 	case ResourceVerification:

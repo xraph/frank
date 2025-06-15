@@ -15,7 +15,9 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/juicycleff/frank/ent/activity"
 	"github.com/juicycleff/frank/ent/apikey"
+	"github.com/juicycleff/frank/ent/apikeyactivity"
 	"github.com/juicycleff/frank/ent/audit"
 	"github.com/juicycleff/frank/ent/emailtemplate"
 	"github.com/juicycleff/frank/ent/featureflag"
@@ -28,9 +30,11 @@ import (
 	"github.com/juicycleff/frank/ent/oauthtoken"
 	"github.com/juicycleff/frank/ent/organization"
 	"github.com/juicycleff/frank/ent/organizationfeature"
+	"github.com/juicycleff/frank/ent/organizationprovider"
 	"github.com/juicycleff/frank/ent/passkey"
 	"github.com/juicycleff/frank/ent/permission"
 	"github.com/juicycleff/frank/ent/permissiondependency"
+	"github.com/juicycleff/frank/ent/providertemplate"
 	"github.com/juicycleff/frank/ent/role"
 	"github.com/juicycleff/frank/ent/session"
 	"github.com/juicycleff/frank/ent/smstemplate"
@@ -101,7 +105,9 @@ var (
 func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
+			activity.Table:             activity.ValidColumn,
 			apikey.Table:               apikey.ValidColumn,
+			apikeyactivity.Table:       apikeyactivity.ValidColumn,
 			audit.Table:                audit.ValidColumn,
 			emailtemplate.Table:        emailtemplate.ValidColumn,
 			featureflag.Table:          featureflag.ValidColumn,
@@ -114,9 +120,11 @@ func checkColumn(table, column string) error {
 			oauthtoken.Table:           oauthtoken.ValidColumn,
 			organization.Table:         organization.ValidColumn,
 			organizationfeature.Table:  organizationfeature.ValidColumn,
+			organizationprovider.Table: organizationprovider.ValidColumn,
 			passkey.Table:              passkey.ValidColumn,
 			permission.Table:           permission.ValidColumn,
 			permissiondependency.Table: permissiondependency.ValidColumn,
+			providertemplate.Table:     providertemplate.ValidColumn,
 			role.Table:                 role.ValidColumn,
 			smstemplate.Table:          smstemplate.ValidColumn,
 			ssostate.Table:             ssostate.ValidColumn,

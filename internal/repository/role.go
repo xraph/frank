@@ -12,9 +12,9 @@ import (
 	"github.com/juicycleff/frank/ent/role"
 	"github.com/juicycleff/frank/ent/user"
 	"github.com/juicycleff/frank/ent/userrole"
-	"github.com/juicycleff/frank/internal/model"
 	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/juicycleff/frank/pkg/logging"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -23,7 +23,7 @@ type RoleRepository interface {
 	// Basic CRUD operations
 	Create(ctx context.Context, input CreateRoleInput) (*ent.Role, error)
 	GetByID(ctx context.Context, id xid.ID) (*ent.Role, error)
-	GetByName(ctx context.Context, name string, roleType role.RoleType, organizationID *xid.ID, applicationID *xid.ID) (*ent.Role, error)
+	GetByName(ctx context.Context, name string, roleType model.RoleType, organizationID *xid.ID, applicationID *xid.ID) (*ent.Role, error)
 	Update(ctx context.Context, id xid.ID, input UpdateRoleInput) (*ent.Role, error)
 	Delete(ctx context.Context, id xid.ID) error
 
@@ -39,7 +39,7 @@ type RoleRepository interface {
 	GetApplicationRoles(ctx context.Context, applicationID xid.ID, params ListRolesParams) (*model.PaginatedOutput[*ent.Role], error)
 
 	// Default role operations
-	GetDefaultRoles(ctx context.Context, roleType role.RoleType, organizationID *xid.ID, applicationID *xid.ID) ([]*ent.Role, error)
+	GetDefaultRoles(ctx context.Context, roleType model.RoleType, organizationID *xid.ID, applicationID *xid.ID) ([]*ent.Role, error)
 	SetAsDefault(ctx context.Context, id xid.ID) error
 	UnsetAsDefault(ctx context.Context, id xid.ID) error
 
@@ -65,34 +65,84 @@ type RoleRepository interface {
 	// Role validation and checks
 	CanDelete(ctx context.Context, roleID xid.ID) (bool, error)
 	IsInUse(ctx context.Context, roleID xid.ID) (bool, error)
-	ExistsByName(ctx context.Context, name string, roleType role.RoleType, organizationID *xid.ID, applicationID *xid.ID) (bool, error)
+	ExistsByName(ctx context.Context, name string, roleType model.RoleType, organizationID *xid.ID, applicationID *xid.ID) (bool, error)
 
 	// Bulk operations
 	BulkCreate(ctx context.Context, inputs []CreateRoleInput) ([]*ent.Role, error)
 	BulkDelete(ctx context.Context, ids []xid.ID) error
+
+	// #------------------------------------------
+
+	// Basic Role operations
+	CreateRole(ctx context.Context, roleCreate *ent.RoleCreate) (*ent.Role, error)
+	GetRoleByID(ctx context.Context, id xid.ID) (*ent.Role, error)
+	GetRoleByName(ctx context.Context, name string, orgId xid.ID) (*ent.Role, error)
+	ListRoles(ctx context.Context, input ListRolesParams) (*model.PaginatedOutput[*ent.Role], error)
+	UpdateRole(ctx context.Context, roleUpdate *ent.RoleUpdateOne) (*ent.Role, error)
+	DeleteRole(ctx context.Context, id xid.ID) error
+
+	// Enhanced Role operations (from RoleService)
+	CreateRoleAdvanced(ctx context.Context, req CreateRoleRequest) (*ent.Role, error)
+	UpdateRoleAdvanced(ctx context.Context, roleID xid.ID, updates map[string]interface{}) (*ent.Role, error)
+	GetRolesByType(ctx context.Context, roleType model.RoleType, orgID *xid.ID) ([]*ent.Role, error)
+
+	// Role Assignment Methods (from RoleService)
+	AssignSystemRole(ctx context.Context, userID xid.ID, roleName string) error
+	AssignOrganizationRole(ctx context.Context, userID xid.ID, orgID xid.ID, roleName string) error
+	AssignApplicationRole(ctx context.Context, userID xid.ID, orgID xid.ID, roleName string) error
+	RemoveUserRole(ctx context.Context, userID xid.ID, roleID xid.ID, contextType model.ContextType, contextID *xid.ID) error
+
+	// Role Query Methods (from RoleService)
+	GetUserSystemRoles(ctx context.Context, userID xid.ID) ([]*ent.Role, error)
+	GetUserOrganizationRoles(ctx context.Context, userID xid.ID, orgID xid.ID) ([]*ent.Role, error)
+	GetUserApplicationRoles(ctx context.Context, userID xid.ID, orgID xid.ID) ([]*ent.Role, error)
+	GetAllUserRoles(ctx context.Context, userID xid.ID) ([]*ent.UserRole, error)
+
+	// Role Checking Methods (Enhanced from RoleService)
+	HasRole(ctx context.Context, userID xid.ID, roleName string, contextType model.ContextType, contextID *xid.ID) (bool, error)
+	HasAnyRole(ctx context.Context, userID xid.ID, roleNames []string, contextType model.ContextType, contextID *xid.ID) (bool, error)
+
+	// Role-permission operations
+	AddPermissionToRole(ctx context.Context, roleID, permissionID xid.ID) error
+	RemovePermissionFromRole(ctx context.Context, roleID, permissionID xid.ID) error
+	GetRolePermissions(ctx context.Context, roleID xid.ID) ([]*ent.Permission, error)
+
+	// Permission operations
+	CreatePermission(ctx context.Context, permissionCreate *ent.PermissionCreate) (*ent.Permission, error)
+	GetPermissionByID(ctx context.Context, id xid.ID) (*ent.Permission, error)
+	GetPermissionByName(ctx context.Context, name string) (*ent.Permission, error)
+	ListPermissions(ctx context.Context, input ListPermissionsParams) (*model.PaginatedOutput[*ent.Permission], error)
+	UpdatePermission(ctx context.Context, permissionUpdate *ent.PermissionUpdateOne) (*ent.Permission, error)
+	DeletePermission(ctx context.Context, id xid.ID) error
+
+	// Legacy User role operations (kept for backward compatibility)
+	GetUserRoles(ctx context.Context, userID xid.ID) ([]*ent.Role, error)
+	GetUserPermissions(ctx context.Context, userID xid.ID) ([]*ent.Permission, error)
+
+	Client() *ent.Client
 }
 
 // CreateRoleInput represents input for creating a role
 type CreateRoleInput struct {
-	Name                string        `json:"name"`
-	DisplayName         *string       `json:"display_name,omitempty"`
-	Description         *string       `json:"description,omitempty"`
-	RoleType            role.RoleType `json:"role_type"`
-	OrganizationID      *xid.ID       `json:"organization_id,omitempty"`
-	ApplicationID       *xid.ID       `json:"application_id,omitempty"`
-	System              bool          `json:"system"`
-	IsDefault           bool          `json:"is_default"`
-	Priority            int           `json:"priority"`
-	Color               *string       `json:"color,omitempty"`
-	ApplicableUserTypes []string      `json:"applicable_user_types,omitempty"`
-	CreatedBy           *string       `json:"created_by,omitempty"`
-	ParentID            *xid.ID       `json:"parent_id,omitempty"`
+	Name                string         `json:"name"`
+	DisplayName         *string        `json:"display_name,omitempty"`
+	Description         *string        `json:"description,omitempty"`
+	RoleType            model.RoleType `json:"role_type"`
+	OrganizationID      *xid.ID        `json:"organization_id,omitempty"`
+	ApplicationID       *xid.ID        `json:"application_id,omitempty"`
+	System              bool           `json:"system"`
+	IsDefault           bool           `json:"is_default"`
+	Priority            int            `json:"priority"`
+	Color               *string        `json:"color,omitempty"`
+	ApplicableUserTypes []string       `json:"applicable_user_types,omitempty"`
+	CreatedBy           *string        `json:"created_by,omitempty"`
+	ParentID            *xid.ID        `json:"parent_id,omitempty"`
 }
 
 // UpdateRoleInput represents input for updating a role
 type UpdateRoleInput struct {
-	Name                *string  `json:"name,omitempty"`
-	DisplayName         *string  `json:"display_name,omitempty"`
+	Name                string   `json:"name,omitempty"`
+	DisplayName         string   `json:"display_name,omitempty"`
 	Description         *string  `json:"description,omitempty"`
 	IsDefault           *bool    `json:"is_default,omitempty"`
 	Priority            *int     `json:"priority,omitempty"`
@@ -105,28 +155,28 @@ type UpdateRoleInput struct {
 // ListRolesParams represents parameters for listing roles
 type ListRolesParams struct {
 	model.PaginationParams
-	RoleType           *role.RoleType `json:"role_type,omitempty"`
-	OrganizationID     *xid.ID        `json:"organization_id,omitempty"`
-	ApplicationID      *xid.ID        `json:"application_id,omitempty"`
-	System             *bool          `json:"system,omitempty"`
-	IsDefault          *bool          `json:"is_default,omitempty"`
-	Active             *bool          `json:"active,omitempty"`
-	CreatedBy          *string        `json:"created_by,omitempty"`
-	ParentID           *xid.ID        `json:"parent_id,omitempty"`
-	ApplicableUserType *string        `json:"applicable_user_type,omitempty"`
-	Search             *string        `json:"search,omitempty"`
-	IncludeChildren    bool           `json:"include_children,omitempty"`
+	RoleType           *model.RoleType `json:"role_type,omitempty"`
+	OrganizationID     *xid.ID         `json:"organization_id,omitempty"`
+	ApplicationID      *xid.ID         `json:"application_id,omitempty"`
+	System             *bool           `json:"system,omitempty"`
+	IsDefault          *bool           `json:"is_default,omitempty"`
+	Active             *bool           `json:"active,omitempty"`
+	CreatedBy          string          `json:"created_by,omitempty"`
+	ParentID           *xid.ID         `json:"parent_id,omitempty"`
+	ApplicableUserType string          `json:"applicable_user_type,omitempty"`
+	Search             string          `json:"search,omitempty"`
+	IncludeChildren    bool            `json:"include_children,omitempty"`
 }
 
 // SearchRolesParams represents parameters for searching roles
 type SearchRolesParams struct {
 	model.PaginationParams
-	RoleType       *role.RoleType `json:"role_type,omitempty"`
-	OrganizationID *xid.ID        `json:"organization_id,omitempty"`
-	ApplicationID  *xid.ID        `json:"application_id,omitempty"`
-	ExactMatch     bool           `json:"exact_match"`
+	RoleType       *model.RoleType `json:"role_type,omitempty"`
+	OrganizationID *xid.ID         `json:"organization_id,omitempty"`
+	ApplicationID  *xid.ID         `json:"application_id,omitempty"`
+	ExactMatch     bool            `json:"exact_match"`
 
-	RoleTypes       []role.RoleType
+	RoleTypes       []model.RoleType
 	OrganizationIDs []xid.ID
 	ApplicationIDs  []xid.ID
 	UserTypes       []string
@@ -213,7 +263,7 @@ func (r *roleRepository) GetByID(ctx context.Context, id xid.ID) (*ent.Role, err
 }
 
 // GetByName retrieves a role by name within a specific context
-func (r *roleRepository) GetByName(ctx context.Context, name string, roleType role.RoleType, organizationID *xid.ID, applicationID *xid.ID) (*ent.Role, error) {
+func (r *roleRepository) GetByName(ctx context.Context, name string, roleType model.RoleType, organizationID *xid.ID, applicationID *xid.ID) (*ent.Role, error) {
 	query := r.client.Role.Query().
 		Where(
 			role.Name(name),
@@ -244,11 +294,11 @@ func (r *roleRepository) GetByName(ctx context.Context, name string, roleType ro
 func (r *roleRepository) Update(ctx context.Context, id xid.ID, input UpdateRoleInput) (*ent.Role, error) {
 	update := r.client.Role.UpdateOneID(id)
 
-	if input.Name != nil {
-		update.SetName(*input.Name)
+	if input.Name != "" {
+		update.SetName(input.Name)
 	}
-	if input.DisplayName != nil {
-		update.SetDisplayName(*input.DisplayName)
+	if input.DisplayName != "" {
+		update.SetDisplayName(input.DisplayName)
 	}
 	if input.Description != nil {
 		update.SetDescription(*input.Description)
@@ -331,15 +381,15 @@ func (r *roleRepository) List(ctx context.Context, params ListRolesParams) (*mod
 	if params.Active != nil {
 		query = query.Where(role.Active(*params.Active))
 	}
-	if params.CreatedBy != nil {
-		query = query.Where(role.CreatedBy(*params.CreatedBy))
+	if params.CreatedBy != "" {
+		query = query.Where(role.CreatedBy(params.CreatedBy))
 	}
 	if params.ParentID != nil {
 		query = query.Where(role.ParentID(*params.ParentID))
 	}
-	if params.ApplicableUserType != nil {
+	if params.ApplicableUserType != "" {
 		query = query.Where(func(s *sql.Selector) {
-			s.Where(sqljson.ValueContains(role.FieldApplicableUserTypes, *params.ApplicableUserType))
+			s.Where(sqljson.ValueContains(role.FieldApplicableUserTypes, params.ApplicableUserType))
 		})
 	}
 
@@ -396,20 +446,20 @@ func (r *roleRepository) Search(ctx context.Context, query string, params Search
 // Role type specific operations
 
 func (r *roleRepository) GetSystemRoles(ctx context.Context, params ListRolesParams) (*model.PaginatedOutput[*ent.Role], error) {
-	roleType := role.RoleTypeSystem
+	roleType := model.RoleTypeSystem
 	params.RoleType = &roleType
 	return r.List(ctx, params)
 }
 
 func (r *roleRepository) GetOrganizationRoles(ctx context.Context, organizationID xid.ID, params ListRolesParams) (*model.PaginatedOutput[*ent.Role], error) {
-	roleType := role.RoleTypeOrganization
+	roleType := model.RoleTypeOrganization
 	params.RoleType = &roleType
 	params.OrganizationID = &organizationID
 	return r.List(ctx, params)
 }
 
 func (r *roleRepository) GetApplicationRoles(ctx context.Context, applicationID xid.ID, params ListRolesParams) (*model.PaginatedOutput[*ent.Role], error) {
-	roleType := role.RoleTypeApplication
+	roleType := model.RoleTypeApplication
 	params.RoleType = &roleType
 	params.ApplicationID = &applicationID
 	return r.List(ctx, params)
@@ -417,7 +467,7 @@ func (r *roleRepository) GetApplicationRoles(ctx context.Context, applicationID 
 
 // Default role operations
 
-func (r *roleRepository) GetDefaultRoles(ctx context.Context, roleType role.RoleType, organizationID *xid.ID, applicationID *xid.ID) ([]*ent.Role, error) {
+func (r *roleRepository) GetDefaultRoles(ctx context.Context, roleType model.RoleType, organizationID *xid.ID, applicationID *xid.ID) ([]*ent.Role, error) {
 	query := r.client.Role.Query().
 		Where(
 			role.RoleTypeEQ(roleType),
@@ -711,7 +761,7 @@ func (r *roleRepository) IsInUse(ctx context.Context, roleID xid.ID) (bool, erro
 	return len(children) > 0, nil
 }
 
-func (r *roleRepository) ExistsByName(ctx context.Context, name string, roleType role.RoleType, organizationID *xid.ID, applicationID *xid.ID) (bool, error) {
+func (r *roleRepository) ExistsByName(ctx context.Context, name string, roleType model.RoleType, organizationID *xid.ID, applicationID *xid.ID) (bool, error) {
 	query := r.client.Role.Query().
 		Where(
 			role.Name(name),

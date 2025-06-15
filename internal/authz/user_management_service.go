@@ -11,6 +11,7 @@ import (
 	entUser "github.com/juicycleff/frank/ent/user"
 	"github.com/juicycleff/frank/pkg/data"
 	"github.com/juicycleff/frank/pkg/errors"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -27,7 +28,7 @@ func NewUserManagementService(client *data.Clients) *UserManagementService {
 }
 
 // UserType represents the type of user
-type UserType = entUser.UserType
+type UserType = model.UserType
 
 // CreateInternalUserRequest for creating internal platform users
 type CreateInternalUserRequest struct {
@@ -114,7 +115,7 @@ func (ums *UserManagementService) CreateExternalUser(ctx context.Context, req Cr
 	_, err := ums.client.DB.Organization.Query().
 		Where(
 			entOrganization.IDEQ(req.OrganizationID),
-			entOrganization.OrgTypeEQ(entOrganization.OrgTypeCustomer),
+			entOrganization.OrgTypeEQ(model.OrgTypeCustomer),
 			entOrganization.Active(true),
 		).
 		Only(ctx)
@@ -247,7 +248,7 @@ func (ums *UserManagementService) getOrCreatePlatformOrganization(ctx context.Co
 	platformOrg, err := ums.client.DB.Organization.Query().
 		Where(
 			entOrganization.IsPlatformOrganization(true),
-			entOrganization.OrgTypeEQ(entOrganization.OrgTypePlatform),
+			entOrganization.OrgTypeEQ(model.OrgTypePlatform),
 		).
 		Only(ctx)
 
@@ -262,8 +263,8 @@ func (ums *UserManagementService) getOrCreatePlatformOrganization(ctx context.Co
 	// Create platform organization
 	platformOrg, err = ums.client.DB.Organization.Create().
 		SetName("Platform Organization").
-		SetSlug(string(entOrganization.OrgTypePlatform)).
-		SetOrgType(entOrganization.OrgTypePlatform).
+		SetSlug(string(model.OrgTypePlatform)).
+		SetOrgType(model.OrgTypePlatform).
 		SetIsPlatformOrganization(true).
 		// SetMemberLimit(1000). // High limit for internal team
 		SetActive(true).

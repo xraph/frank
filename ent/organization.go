@@ -14,6 +14,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/juicycleff/frank/ent/organization"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -54,7 +55,7 @@ type Organization struct {
 	// Primary owner of the organization
 	OwnerID xid.ID `json:"owner_id,omitempty"`
 	// platform = Your SaaS company, customer = Client organizations
-	OrgType organization.OrgType `json:"org_type,omitempty"`
+	OrgType model.OrgType `json:"org_type,omitempty"`
 	// Whether this is the main platform organization
 	IsPlatformOrganization bool `json:"is_platform_organization,omitempty"`
 	// Maximum external users (organization members) allowed
@@ -119,9 +120,13 @@ type OrganizationEdges struct {
 	UserPermissionContexts []*UserPermission `json:"user_permission_contexts,omitempty"`
 	// AuditLogs holds the value of the audit_logs edge.
 	AuditLogs []*Audit `json:"audit_logs,omitempty"`
+	// OrganizationProviders holds the value of the organization_providers edge.
+	OrganizationProviders []*OrganizationProvider `json:"organization_providers,omitempty"`
+	// Activities holds the value of the activities edge.
+	Activities []*Activity `json:"activities,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes                 [13]bool
+	loadedTypes                 [15]bool
 	namedUsers                  map[string][]*User
 	namedMemberships            map[string][]*Membership
 	namedSmsTemplates           map[string][]*SMSTemplate
@@ -135,6 +140,8 @@ type OrganizationEdges struct {
 	namedUserRoleContexts       map[string][]*UserRole
 	namedUserPermissionContexts map[string][]*UserPermission
 	namedAuditLogs              map[string][]*Audit
+	namedOrganizationProviders  map[string][]*OrganizationProvider
+	namedActivities             map[string][]*Activity
 }
 
 // UsersOrErr returns the Users value or an error if the edge
@@ -252,6 +259,24 @@ func (e OrganizationEdges) AuditLogsOrErr() ([]*Audit, error) {
 		return e.AuditLogs, nil
 	}
 	return nil, &NotLoadedError{edge: "audit_logs"}
+}
+
+// OrganizationProvidersOrErr returns the OrganizationProviders value or an error if the edge
+// was not loaded in eager-loading.
+func (e OrganizationEdges) OrganizationProvidersOrErr() ([]*OrganizationProvider, error) {
+	if e.loadedTypes[13] {
+		return e.OrganizationProviders, nil
+	}
+	return nil, &NotLoadedError{edge: "organization_providers"}
+}
+
+// ActivitiesOrErr returns the Activities value or an error if the edge
+// was not loaded in eager-loading.
+func (e OrganizationEdges) ActivitiesOrErr() ([]*Activity, error) {
+	if e.loadedTypes[14] {
+		return e.Activities, nil
+	}
+	return nil, &NotLoadedError{edge: "activities"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -393,7 +418,7 @@ func (o *Organization) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field org_type", values[i])
 			} else if value.Valid {
-				o.OrgType = organization.OrgType(value.String)
+				o.OrgType = model.OrgType(value.String)
 			}
 		case organization.FieldIsPlatformOrganization:
 			if value, ok := values[i].(*sql.NullBool); !ok {
@@ -563,6 +588,16 @@ func (o *Organization) QueryUserPermissionContexts() *UserPermissionQuery {
 // QueryAuditLogs queries the "audit_logs" edge of the Organization entity.
 func (o *Organization) QueryAuditLogs() *AuditQuery {
 	return NewOrganizationClient(o.config).QueryAuditLogs(o)
+}
+
+// QueryOrganizationProviders queries the "organization_providers" edge of the Organization entity.
+func (o *Organization) QueryOrganizationProviders() *OrganizationProviderQuery {
+	return NewOrganizationClient(o.config).QueryOrganizationProviders(o)
+}
+
+// QueryActivities queries the "activities" edge of the Organization entity.
+func (o *Organization) QueryActivities() *ActivityQuery {
+	return NewOrganizationClient(o.config).QueryActivities(o)
 }
 
 // Update returns a builder for updating this Organization.
@@ -995,6 +1030,54 @@ func (o *Organization) appendNamedAuditLogs(name string, edges ...*Audit) {
 		o.Edges.namedAuditLogs[name] = []*Audit{}
 	} else {
 		o.Edges.namedAuditLogs[name] = append(o.Edges.namedAuditLogs[name], edges...)
+	}
+}
+
+// NamedOrganizationProviders returns the OrganizationProviders named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (o *Organization) NamedOrganizationProviders(name string) ([]*OrganizationProvider, error) {
+	if o.Edges.namedOrganizationProviders == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := o.Edges.namedOrganizationProviders[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (o *Organization) appendNamedOrganizationProviders(name string, edges ...*OrganizationProvider) {
+	if o.Edges.namedOrganizationProviders == nil {
+		o.Edges.namedOrganizationProviders = make(map[string][]*OrganizationProvider)
+	}
+	if len(edges) == 0 {
+		o.Edges.namedOrganizationProviders[name] = []*OrganizationProvider{}
+	} else {
+		o.Edges.namedOrganizationProviders[name] = append(o.Edges.namedOrganizationProviders[name], edges...)
+	}
+}
+
+// NamedActivities returns the Activities named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (o *Organization) NamedActivities(name string) ([]*Activity, error) {
+	if o.Edges.namedActivities == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := o.Edges.namedActivities[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (o *Organization) appendNamedActivities(name string, edges ...*Activity) {
+	if o.Edges.namedActivities == nil {
+		o.Edges.namedActivities = make(map[string][]*Activity)
+	}
+	if len(edges) == 0 {
+		o.Edges.namedActivities[name] = []*Activity{}
+	} else {
+		o.Edges.namedActivities[name] = append(o.Edges.namedActivities[name], edges...)
 	}
 }
 

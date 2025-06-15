@@ -7,7 +7,9 @@ import (
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/juicycleff/frank/internal/authz"
 	"github.com/juicycleff/frank/internal/di"
-	"github.com/juicycleff/frank/internal/model"
+	"github.com/juicycleff/frank/internal/middleware"
+	"github.com/juicycleff/frank/pkg/model"
+	"github.com/juicycleff/frank/pkg/services/organization"
 	"github.com/rs/xid"
 )
 
@@ -160,7 +162,7 @@ func registerGetOrganizationSettings(api huma.API, orgCtrl *organizationControll
 		Path:        "/organizations/{id}/settings",
 		Summary:     "Get organization settings",
 		Description: "Get organization configuration and settings",
-		Tags:        []string{"Organizations", "Settings"},
+		Tags:        []string{"Organizations"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, false, model.NotFoundError("Organization not found")),
 		Security: []map[string][]string{
 			{"jwt": {}},
@@ -178,7 +180,7 @@ func registerUpdateOrganizationSettings(api huma.API, orgCtrl *organizationContr
 		Path:        "/organizations/{id}/settings",
 		Summary:     "Update organization settings",
 		Description: "Update organization configuration and settings",
-		Tags:        []string{"Organizations", "Settings"},
+		Tags:        []string{"Organizations"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, false, model.NotFoundError("Organization not found")),
 		Security: []map[string][]string{
 			{"jwt": {}},
@@ -198,7 +200,7 @@ func registerListOrganizationDomains(api huma.API, orgCtrl *organizationControll
 		Path:        "/organizations/{id}/domains",
 		Summary:     "List organization domains",
 		Description: "List all domains associated with the organization",
-		Tags:        []string{"Organizations", "Domains"},
+		Tags:        []string{"Organizations"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, false, model.NotFoundError("Organization not found")),
 		Security: []map[string][]string{
 			{"jwt": {}},
@@ -216,7 +218,7 @@ func registerAddOrganizationDomain(api huma.API, orgCtrl *organizationController
 		Path:        "/organizations/{id}/domains",
 		Summary:     "Add organization domain",
 		Description: "Add a new domain to the organization",
-		Tags:        []string{"Organizations", "Domains"},
+		Tags:        []string{"Organizations"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, false, model.NotFoundError("Organization not found")),
 		Security: []map[string][]string{
 			{"jwt": {}},
@@ -234,7 +236,7 @@ func registerVerifyOrganizationDomain(api huma.API, orgCtrl *organizationControl
 		Path:        "/organizations/{id}/domains/{domain}/verify",
 		Summary:     "Verify organization domain",
 		Description: "Verify domain ownership via DNS records",
-		Tags:        []string{"Organizations", "Domains"},
+		Tags:        []string{"Organizations"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, false, model.NotFoundError("Organization or domain not found")),
 		Security: []map[string][]string{
 			{"jwt": {}},
@@ -275,7 +277,7 @@ func registerGetOrganizationBilling(api huma.API, orgCtrl *organizationControlle
 		Path:        "/organizations/{id}/billing",
 		Summary:     "Get organization billing",
 		Description: "Get billing information and subscription details",
-		Tags:        []string{"Organizations", "Billing"},
+		Tags:        []string{"Organizations"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, false, model.NotFoundError("Organization not found")),
 		Security: []map[string][]string{
 			{"jwt": {}},
@@ -293,7 +295,7 @@ func registerUpdateOrganizationBilling(api huma.API, orgCtrl *organizationContro
 		Path:        "/organizations/{id}/billing",
 		Summary:     "Update organization billing",
 		Description: "Update billing information and subscription plan",
-		Tags:        []string{"Organizations", "Billing"},
+		Tags:        []string{"Organizations Billing"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, false, model.NotFoundError("Organization not found")),
 		Security: []map[string][]string{
 			{"jwt": {}},
@@ -311,7 +313,7 @@ func registerGetOrganizationUsage(api huma.API, orgCtrl *organizationController)
 		Path:        "/organizations/{id}/usage",
 		Summary:     "Get organization usage",
 		Description: "Get current usage statistics and limits",
-		Tags:        []string{"Organizations", "Usage"},
+		Tags:        []string{"Organizations"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, false, model.NotFoundError("Organization not found")),
 		Security: []map[string][]string{
 			{"jwt": {}},
@@ -329,7 +331,7 @@ func registerGetOrganizationInvoices(api huma.API, orgCtrl *organizationControll
 		Path:        "/organizations/{id}/invoices",
 		Summary:     "Get organization invoices",
 		Description: "Get billing invoices and payment history",
-		Tags:        []string{"Organizations", "Billing"},
+		Tags:        []string{"Organization"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, false, model.NotFoundError("Organization not found")),
 		Security: []map[string][]string{
 			{"jwt": {}},
@@ -349,7 +351,7 @@ func registerListOrganizationFeatures(api huma.API, orgCtrl *organizationControl
 		Path:        "/organizations/{id}/features",
 		Summary:     "List organization features",
 		Description: "List enabled and available features for the organization",
-		Tags:        []string{"Organizations", "Features"},
+		Tags:        []string{"Organizations"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, false, model.NotFoundError("Organization not found")),
 		Security: []map[string][]string{
 			{"jwt": {}},
@@ -367,7 +369,7 @@ func registerEnableOrganizationFeature(api huma.API, orgCtrl *organizationContro
 		Path:        "/organizations/{id}/features/{feature}/enable",
 		Summary:     "Enable organization feature",
 		Description: "Enable a specific feature for the organization",
-		Tags:        []string{"Organizations", "Features"},
+		Tags:        []string{"Organizations"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, false, model.NotFoundError("Organization not found")),
 		Security: []map[string][]string{
 			{"jwt": {}},
@@ -408,7 +410,7 @@ func registerGetOrganizationStats(api huma.API, orgCtrl *organizationController)
 		Path:        "/organizations/{id}/stats",
 		Summary:     "Get organization statistics",
 		Description: "Get comprehensive organization statistics and metrics",
-		Tags:        []string{"Organizations", "Analytics"},
+		Tags:        []string{"Organizations"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, false, model.NotFoundError("Organization not found")),
 		Security: []map[string][]string{
 			{"jwt": {}},
@@ -426,7 +428,7 @@ func registerGetOrganizationActivity(api huma.API, orgCtrl *organizationControll
 		Path:        "/organizations/{id}/activity",
 		Summary:     "Get organization activity",
 		Description: "Get organization activity log and audit trail",
-		Tags:        []string{"Organizations", "Activity"},
+		Tags:        []string{"Activity"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, false, model.NotFoundError("Organization not found")),
 		Security: []map[string][]string{
 			{"jwt": {}},
@@ -444,7 +446,7 @@ func registerExportOrganizationData(api huma.API, orgCtrl *organizationControlle
 		Path:        "/organizations/{id}/export",
 		Summary:     "Export organization data",
 		Description: "Export organization data for backup or compliance",
-		Tags:        []string{"Organizations", "Export"},
+		Tags:        []string{"Organizations"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, false, model.NotFoundError("Organization not found")),
 		Security: []map[string][]string{
 			{"jwt": {}},
@@ -464,7 +466,7 @@ func registerTransferOrganizationOwnership(api huma.API, orgCtrl *organizationCo
 		Path:        "/organizations/{id}/transfer-ownership",
 		Summary:     "Transfer organization ownership",
 		Description: "Transfer ownership of the organization to another user",
-		Tags:        []string{"Organizations", "Ownership"},
+		Tags:        []string{"Organizations"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, false, model.NotFoundError("Organization not found")),
 		Security: []map[string][]string{
 			{"jwt": {}},
@@ -579,200 +581,362 @@ type TransferOrganizationOwnershipInput struct {
 	Body model.TransferUserOwnershipRequest
 }
 
+type TransferOwnershipResponse struct {
+	Message    string `json:"message"`
+	NewOwnerID xid.ID `json:"newOwnerId"`
+}
+type TransferOrganizationOwnershipOutput = model.Output[TransferOwnershipResponse]
+
 // Handler implementations
 
 func (c *organizationController) listOrganizationsHandler(ctx context.Context, input *ListOrganizationsInput) (*ListOrganizationsOutput, error) {
-	// TODO: Implement list organizations logic
-	// 1. Check user permissions (admin sees all, users see their orgs)
-	// 2. Apply filters and pagination
-	// 3. Return organization list
-	return nil, nil
+	orgService := c.di.OrganizationService()
+
+	response, err := orgService.ListOrganizations(ctx, input.OrganizationListRequest)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ListOrganizationsOutput{
+		Body: response,
+	}, nil
 }
 
 func (c *organizationController) getOrganizationHandler(ctx context.Context, input *GetOrganizationInput) (*GetOrganizationOutput, error) {
-	// TODO: Implement get organization logic
-	// 1. Validate organization exists
-	// 2. Check user permissions
-	// 3. Return organization details
-	return nil, nil
+	orgService := c.di.OrganizationService()
+
+	organization, err := orgService.GetOrganization(ctx, input.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &GetOrganizationOutput{
+		Body: organization,
+	}, nil
 }
 
 func (c *organizationController) createOrganizationHandler(ctx context.Context, input *CreateOrganizationInput) (*CreateOrganizationOutput, error) {
-	// TODO: Implement create organization logic
-	// 1. Validate input data
-	// 2. Check organization name/slug uniqueness
-	// 3. Create organization
-	// 4. Set up default roles and permissions
-	// 5. Add creator as owner
-	// 6. Return created organization
-	return nil, nil
+	orgService := c.di.OrganizationService()
+
+	organization, err := orgService.CreateOrganization(ctx, input.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return &CreateOrganizationOutput{
+		Body: organization,
+	}, nil
 }
 
 func (c *organizationController) updateOrganizationHandler(ctx context.Context, input *UpdateOrganizationInput) (*UpdateOrganizationOutput, error) {
-	// TODO: Implement update organization logic
-	// 1. Validate organization exists
-	// 2. Check permissions to update
-	// 3. Update organization information
-	// 4. Return updated organization
-	return nil, nil
+	orgService := c.di.OrganizationService()
+
+	organization, err := orgService.UpdateOrganization(ctx, input.ID, input.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return &UpdateOrganizationOutput{
+		Body: organization,
+	}, nil
 }
 
 func (c *organizationController) deleteOrganizationHandler(ctx context.Context, input *DeleteOrganizationInput) (*model.EmptyOutput, error) {
-	// TODO: Implement delete organization logic
-	// 1. Validate organization exists
-	// 2. Check permissions to delete
-	// 3. Validate deletion requirements (confirmation, etc.)
-	// 4. Schedule or perform deletion
-	// 5. Handle data retention policies
-	// 6. Return success response
-	return nil, nil
+	orgService := c.di.OrganizationService()
+
+	err := orgService.DeleteOrganization(ctx, input.ID, input.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.EmptyOutput{}, nil
 }
 
 func (c *organizationController) getOrganizationSettingsHandler(ctx context.Context, input *GetOrganizationInput) (*GetOrganizationSettingsOutput, error) {
-	// TODO: Implement get organization settings logic
-	// 1. Validate organization exists
-	// 2. Check permissions to view settings
-	// 3. Return organization settings
-	return nil, nil
+	orgService := c.di.OrganizationService()
+
+	settings, err := orgService.GetOrganizationSettings(ctx, input.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &GetOrganizationSettingsOutput{
+		Body: settings,
+	}, nil
 }
 
 func (c *organizationController) updateOrganizationSettingsHandler(ctx context.Context, input *UpdateOrganizationSettingsInput) (*UpdateOrganizationSettingsOutput, error) {
-	// TODO: Implement update organization settings logic
-	// 1. Validate organization exists
-	// 2. Check permissions to update settings
-	// 3. Update settings
-	// 4. Return updated settings
-	return nil, nil
+	orgService := c.di.OrganizationService()
+
+	settings, err := orgService.UpdateOrganizationSettings(ctx, input.ID, input.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return &UpdateOrganizationSettingsOutput{
+		Body: settings,
+	}, nil
 }
 
-func (c *organizationController) listOrganizationDomainsHandler(ctx context.Context, input *GetOrganizationInput) (*model.EmptyOutput, error) {
-	// TODO: Implement list organization domains logic
-	// 1. Get organization domains
-	// 2. Return domain list with verification status
-	return nil, nil
+type DomainsResponse struct {
+	Domains []string `json:"domains"`
 }
 
-func (c *organizationController) addOrganizationDomainHandler(ctx context.Context, input *AddOrganizationDomainInput) (*model.EmptyOutput, error) {
-	// TODO: Implement add organization domain logic
-	// 1. Validate domain format
-	// 2. Check domain availability
-	// 3. Add domain to organization
-	// 4. Generate verification records
-	// 5. Return verification instructions
-	return nil, nil
+type ListOrganizationDomainsOutput = model.Output[*DomainsResponse]
+
+func (c *organizationController) listOrganizationDomainsHandler(ctx context.Context, input *GetOrganizationInput) (*ListOrganizationDomainsOutput, error) {
+	orgService := c.di.OrganizationService()
+
+	domains, err := orgService.ListDomains(ctx, input.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ListOrganizationDomainsOutput{
+		Body: &DomainsResponse{
+			Domains: domains,
+		},
+	}, nil
+}
+
+type DomainResponse struct {
+	Message string `json:"message"`
+	Domain  string `json:"domain"`
+}
+
+type AddOrganizationDomainOutput = model.Output[DomainResponse]
+
+func (c *organizationController) addOrganizationDomainHandler(ctx context.Context, input *AddOrganizationDomainInput) (*AddOrganizationDomainOutput, error) {
+	orgService := c.di.OrganizationService()
+
+	err := orgService.AddDomain(ctx, input.ID, input.Body.Domain)
+	if err != nil {
+		return nil, err
+	}
+
+	return &AddOrganizationDomainOutput{
+		Body: DomainResponse{
+			Message: "Domain added successfully",
+			Domain:  input.Body.Domain,
+		},
+	}, nil
 }
 
 func (c *organizationController) verifyOrganizationDomainHandler(ctx context.Context, input *VerifyOrganizationDomainInput) (*VerifyOrganizationDomainOutput, error) {
-	// TODO: Implement verify organization domain logic
-	// 1. Check DNS records for verification
-	// 2. Update domain verification status
-	// 3. Return verification result
-	return nil, nil
+	orgService := c.di.OrganizationService()
+
+	req := model.DomainVerificationRequest{
+		Domain: input.Domain,
+	}
+
+	response, err := orgService.VerifyDomain(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	return &VerifyOrganizationDomainOutput{
+		Body: response,
+	}, nil
 }
 
 func (c *organizationController) removeOrganizationDomainHandler(ctx context.Context, input *RemoveOrganizationDomainInput) (*model.EmptyOutput, error) {
-	// TODO: Implement remove organization domain logic
-	// 1. Validate domain belongs to organization
-	// 2. Check if domain is used in auth configuration
-	// 3. Remove domain
-	// 4. Return success response
-	return nil, nil
+	orgService := c.di.OrganizationService()
+
+	err := orgService.RemoveDomain(ctx, input.ID, input.Domain)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.EmptyOutput{}, nil
 }
 
 func (c *organizationController) getOrganizationBillingHandler(ctx context.Context, input *GetOrganizationInput) (*GetOrganizationBillingOutput, error) {
-	// TODO: Implement get organization billing logic
-	// 1. Get billing information from payment provider
-	// 2. Return billing details and subscription info
-	return nil, nil
+	orgService := c.di.OrganizationService()
+
+	billing, err := orgService.GetOrganizationBilling(ctx, input.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &GetOrganizationBillingOutput{
+		Body: billing,
+	}, nil
 }
 
 func (c *organizationController) updateOrganizationBillingHandler(ctx context.Context, input *UpdateOrganizationBillingInput) (*UpdateOrganizationBillingOutput, error) {
-	// TODO: Implement update organization billing logic
-	// 1. Validate payment information
-	// 2. Update billing details with payment provider
-	// 3. Update subscription plan if changed
-	// 4. Return updated billing information
-	return nil, nil
+	orgService := c.di.OrganizationService()
+
+	billing, err := orgService.UpdateBilling(ctx, input.ID, input.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return &UpdateOrganizationBillingOutput{
+		Body: billing,
+	}, nil
 }
 
 func (c *organizationController) getOrganizationUsageHandler(ctx context.Context, input *GetOrganizationInput) (*GetOrganizationUsageOutput, error) {
-	// TODO: Implement get organization usage logic
-	// 1. Calculate current usage metrics
-	// 2. Compare against plan limits
-	// 3. Return usage statistics
-	return nil, nil
+	orgService := c.di.OrganizationService()
+
+	usage, err := orgService.GetOrganizationUsage(ctx, input.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &GetOrganizationUsageOutput{
+		Body: usage,
+	}, nil
 }
 
-func (c *organizationController) getOrganizationInvoicesHandler(ctx context.Context, input *GetOrganizationInput) (*model.EmptyOutput, error) {
-	// TODO: Implement get organization invoices logic
-	// 1. Get invoices from payment provider
-	// 2. Return invoice history
-	return nil, nil
+type ListOrganizationInvoicesInput struct {
+	GetOrganizationInput
+	model.ListInvoicesParams
+}
+type ListOrganizationInvoicesOutput = model.Output[*model.InvoiceListResponse]
+
+func (c *organizationController) getOrganizationInvoicesHandler(ctx context.Context, input *ListOrganizationInvoicesInput) (*ListOrganizationInvoicesOutput, error) {
+	orgService := c.di.BillingService()
+
+	invoices, err := orgService.GetInvoices(ctx, input.ID, input.ListInvoicesParams)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ListOrganizationInvoicesOutput{
+		Body: invoices,
+	}, nil
 }
 
-func (c *organizationController) listOrganizationFeaturesHandler(ctx context.Context, input *GetOrganizationInput) (*model.EmptyOutput, error) {
-	// TODO: Implement list organization features logic
-	// 1. Get enabled features for organization
-	// 2. Get available features based on plan
-	// 3. Return feature list with status
-	return nil, nil
+type OrganizationFeatureResponse struct {
+	Message string `json:"message"`
+	Feature string `json:"feature"`
 }
 
-func (c *organizationController) enableOrganizationFeatureHandler(ctx context.Context, input *EnableOrganizationFeatureInput) (*model.EmptyOutput, error) {
-	// TODO: Implement enable organization feature logic
-	// 1. Validate feature exists and is available for plan
-	// 2. Enable feature for organization
-	// 3. Return success response
-	return nil, nil
+type OrganizationFeatureOutput = model.Output[[]model.FeatureSummary]
+
+func (c *organizationController) listOrganizationFeaturesHandler(ctx context.Context, input *GetOrganizationInput) (*OrganizationFeatureOutput, error) {
+	orgService := c.di.OrganizationService()
+
+	features, err := orgService.ListEnabledFeatures(ctx, input.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &OrganizationFeatureOutput{
+		Body: features,
+	}, nil
+}
+
+type EnableOrganizationFeatureResponse struct {
+	Message string `json:"message"`
+	Feature string `json:"feature"`
+}
+
+type EnableOrganizationFeatureOutput = model.Output[EnableOrganizationFeatureResponse]
+
+func (c *organizationController) enableOrganizationFeatureHandler(ctx context.Context, input *EnableOrganizationFeatureInput) (*EnableOrganizationFeatureOutput, error) {
+	orgService := c.di.OrganizationService()
+
+	err := orgService.EnableFeature(ctx, input.ID, input.Feature, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return &EnableOrganizationFeatureOutput{
+		Body: EnableOrganizationFeatureResponse{
+			Message: "Feature enabled successfully",
+			Feature: input.Feature,
+		},
+	}, nil
 }
 
 func (c *organizationController) disableOrganizationFeatureHandler(ctx context.Context, input *DisableOrganizationFeatureInput) (*model.EmptyOutput, error) {
-	// TODO: Implement disable organization feature logic
-	// 1. Validate feature can be disabled
-	// 2. Disable feature for organization
-	// 3. Return success response
-	return nil, nil
+	orgService := c.di.OrganizationService()
+
+	err := orgService.DisableFeature(ctx, input.ID, input.Feature)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.EmptyOutput{}, nil
 }
 
 func (c *organizationController) getOrganizationStatsHandler(ctx context.Context, input *GetOrganizationInput) (*GetOrganizationStatsOutput, error) {
-	// TODO: Implement get organization stats logic
-	// 1. Calculate organization statistics
-	// 2. Aggregate member, usage, and activity metrics
-	// 3. Return comprehensive stats
-	return nil, nil
+	orgService := c.di.OrganizationService()
+
+	stats, err := orgService.GetOrganizationStats(ctx, input.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &GetOrganizationStatsOutput{
+		Body: stats,
+	}, nil
 }
 
-func (c *organizationController) getOrganizationActivityHandler(ctx context.Context, input *GetOrganizationInput) (*model.EmptyOutput, error) {
-	// TODO: Implement get organization activity logic
-	// 1. Get organization activity logs
-	// 2. Apply filters and pagination
-	// 3. Return activity history
-	return nil, nil
+type GetOrganizationActivityOutput = model.Output[*organization.OrganizationActivity]
+
+func (c *organizationController) getOrganizationActivityHandler(ctx context.Context, input *GetOrganizationInput) (*GetOrganizationActivityOutput, error) {
+	orgService := c.di.OrganizationService()
+
+	activity, err := orgService.GetOrganizationActivity(ctx, input.ID, 30) // Last 30 days
+	if err != nil {
+		return nil, err
+	}
+
+	return &GetOrganizationActivityOutput{
+		Body: activity,
+	}, nil
 }
 
-func (c *organizationController) exportOrganizationDataHandler(ctx context.Context, input *GetOrganizationInput) (*model.EmptyOutput, error) {
-	// TODO: Implement export organization data logic
-	// 1. Validate export request
-	// 2. Generate comprehensive data export
-	// 3. Create download link
-	// 4. Return export details
-	return nil, nil
+type ExportOrganizationDataResponse struct {
+	Message  string `json:"message"`
+	Status   string `json:"status"`
+	ExportID string `json:"export_id"`
 }
 
-func (c *organizationController) transferOrganizationOwnershipHandler(ctx context.Context, input *TransferOrganizationOwnershipInput) (*model.EmptyOutput, error) {
-	// TODO: Implement transfer organization ownership logic
-	// 1. Validate new owner exists and is member
-	// 2. Validate current user is owner
-	// 3. Transfer ownership
-	// 4. Update member roles
-	// 5. Send notifications
-	// 6. Return success response
-	return nil, nil
+type ExportOrganizationDataOutput = model.Output[ExportOrganizationDataResponse]
+
+func (c *organizationController) exportOrganizationDataHandler(ctx context.Context, input *GetOrganizationInput) (*ExportOrganizationDataOutput, error) {
+	// TODO: Implement data export functionality
+	return &ExportOrganizationDataOutput{
+		Body: ExportOrganizationDataResponse{
+			Message:  "Data export initiated",
+			Status:   "processing",
+			ExportID: xid.New().String(),
+		},
+	}, nil
 }
 
-func (c *organizationController) getOrganizationOwnershipHandler(ctx context.Context, input *GetOrganizationInput) (*model.EmptyOutput, error) {
-	// TODO: Implement get organization ownership logic
-	// 1. Get current ownership information
-	// 2. Return owner details and transfer history
-	return nil, nil
+func (c *organizationController) transferOrganizationOwnershipHandler(ctx context.Context, input *TransferOrganizationOwnershipInput) (*TransferOrganizationOwnershipOutput, error) {
+	membershipService := c.di.MembershipService()
+	currentOwnerID := middleware.GetUserIDFromContext(ctx)
+
+	err := membershipService.TransferOwnership(ctx, input.ID, *currentOwnerID, input.Body.NewOwnerID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &TransferOrganizationOwnershipOutput{
+		Body: TransferOwnershipResponse{
+			Message:    "Ownership transferred successfully",
+			NewOwnerID: input.Body.NewOwnerID,
+		},
+	}, nil
+}
+
+type OrganizationOwnershipOutput = model.Output[*model.UserSummary]
+
+func (c *organizationController) getOrganizationOwnershipHandler(ctx context.Context, input *GetOrganizationInput) (*OrganizationOwnershipOutput, error) {
+	orgService := c.di.OrganizationService()
+
+	owner, err := orgService.GetOwner(ctx, input.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &OrganizationOwnershipOutput{
+		Body: owner,
+	}, nil
 }

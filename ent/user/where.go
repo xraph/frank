@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/juicycleff/frank/ent/predicate"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -1085,23 +1086,33 @@ func TimezoneContainsFold(v string) predicate.User {
 }
 
 // UserTypeEQ applies the EQ predicate on the "user_type" field.
-func UserTypeEQ(v UserType) predicate.User {
-	return predicate.User(sql.FieldEQ(FieldUserType, v))
+func UserTypeEQ(v model.UserType) predicate.User {
+	vc := v
+	return predicate.User(sql.FieldEQ(FieldUserType, vc))
 }
 
 // UserTypeNEQ applies the NEQ predicate on the "user_type" field.
-func UserTypeNEQ(v UserType) predicate.User {
-	return predicate.User(sql.FieldNEQ(FieldUserType, v))
+func UserTypeNEQ(v model.UserType) predicate.User {
+	vc := v
+	return predicate.User(sql.FieldNEQ(FieldUserType, vc))
 }
 
 // UserTypeIn applies the In predicate on the "user_type" field.
-func UserTypeIn(vs ...UserType) predicate.User {
-	return predicate.User(sql.FieldIn(FieldUserType, vs...))
+func UserTypeIn(vs ...model.UserType) predicate.User {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.User(sql.FieldIn(FieldUserType, v...))
 }
 
 // UserTypeNotIn applies the NotIn predicate on the "user_type" field.
-func UserTypeNotIn(vs ...UserType) predicate.User {
-	return predicate.User(sql.FieldNotIn(FieldUserType, vs...))
+func UserTypeNotIn(vs ...model.UserType) predicate.User {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.User(sql.FieldNotIn(FieldUserType, v...))
 }
 
 // OrganizationIDEQ applies the EQ predicate on the "organization_id" field.
@@ -2174,6 +2185,29 @@ func HasAuditLogs() predicate.User {
 func HasAuditLogsWith(preds ...predicate.Audit) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		step := newAuditLogsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasActivities applies the HasEdge predicate on the "activities" edge.
+func HasActivities() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ActivitiesTable, ActivitiesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasActivitiesWith applies the HasEdge predicate on the "activities" edge with a given conditions (other predicates).
+func HasActivitiesWith(preds ...predicate.Activity) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newActivitiesStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

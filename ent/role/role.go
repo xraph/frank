@@ -11,6 +11,7 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -172,24 +173,10 @@ var (
 	DefaultID func() xid.ID
 )
 
-// RoleType defines the type for the "role_type" enum field.
-type RoleType string
-
-// RoleType values.
-const (
-	RoleTypeSystem       RoleType = "system"
-	RoleTypeOrganization RoleType = "organization"
-	RoleTypeApplication  RoleType = "application"
-)
-
-func (rt RoleType) String() string {
-	return string(rt)
-}
-
 // RoleTypeValidator is a validator for the "role_type" field enum values. It is called by the builders before save.
-func RoleTypeValidator(rt RoleType) error {
-	switch rt {
-	case RoleTypeSystem, RoleTypeOrganization, RoleTypeApplication:
+func RoleTypeValidator(rt model.RoleType) error {
+	switch rt.String() {
+	case "system", "organization", "application":
 		return nil
 	default:
 		return fmt.Errorf("role: invalid enum value for role_type field: %q", rt)

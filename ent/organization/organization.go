@@ -11,6 +11,7 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -107,6 +108,10 @@ const (
 	EdgeUserPermissionContexts = "user_permission_contexts"
 	// EdgeAuditLogs holds the string denoting the audit_logs edge name in mutations.
 	EdgeAuditLogs = "audit_logs"
+	// EdgeOrganizationProviders holds the string denoting the organization_providers edge name in mutations.
+	EdgeOrganizationProviders = "organization_providers"
+	// EdgeActivities holds the string denoting the activities edge name in mutations.
+	EdgeActivities = "activities"
 	// Table holds the table name of the organization in the database.
 	Table = "organizations"
 	// UsersTable is the table that holds the users relation/edge.
@@ -200,6 +205,20 @@ const (
 	AuditLogsInverseTable = "audits"
 	// AuditLogsColumn is the table column denoting the audit_logs relation/edge.
 	AuditLogsColumn = "organization_id"
+	// OrganizationProvidersTable is the table that holds the organization_providers relation/edge.
+	OrganizationProvidersTable = "organization_providers"
+	// OrganizationProvidersInverseTable is the table name for the OrganizationProvider entity.
+	// It exists in this package in order to avoid circular dependency with the "organizationprovider" package.
+	OrganizationProvidersInverseTable = "organization_providers"
+	// OrganizationProvidersColumn is the table column denoting the organization_providers relation/edge.
+	OrganizationProvidersColumn = "organization_id"
+	// ActivitiesTable is the table that holds the activities relation/edge.
+	ActivitiesTable = "activities"
+	// ActivitiesInverseTable is the table name for the Activity entity.
+	// It exists in this package in order to avoid circular dependency with the "activity" package.
+	ActivitiesInverseTable = "activities"
+	// ActivitiesColumn is the table column denoting the activities relation/edge.
+	ActivitiesColumn = "organization_id"
 )
 
 // Columns holds all SQL columns for organization fields.
@@ -287,26 +306,12 @@ var (
 	DefaultID func() xid.ID
 )
 
-// OrgType defines the type for the "org_type" enum field.
-type OrgType string
-
-// OrgTypeCustomer is the default value of the OrgType enum.
-const DefaultOrgType = OrgTypeCustomer
-
-// OrgType values.
-const (
-	OrgTypePlatform OrgType = "platform"
-	OrgTypeCustomer OrgType = "customer"
-)
-
-func (ot OrgType) String() string {
-	return string(ot)
-}
+const DefaultOrgType model.OrgType = "customer"
 
 // OrgTypeValidator is a validator for the "org_type" field enum values. It is called by the builders before save.
-func OrgTypeValidator(ot OrgType) error {
-	switch ot {
-	case OrgTypePlatform, OrgTypeCustomer:
+func OrgTypeValidator(ot model.OrgType) error {
+	switch ot.String() {
+	case "platform", "customer":
 		return nil
 	default:
 		return fmt.Errorf("organization: invalid enum value for org_type field: %q", ot)
@@ -666,6 +671,34 @@ func ByAuditLogs(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newAuditLogsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByOrganizationProvidersCount orders the results by organization_providers count.
+func ByOrganizationProvidersCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newOrganizationProvidersStep(), opts...)
+	}
+}
+
+// ByOrganizationProviders orders the results by organization_providers terms.
+func ByOrganizationProviders(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newOrganizationProvidersStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByActivitiesCount orders the results by activities count.
+func ByActivitiesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newActivitiesStep(), opts...)
+	}
+}
+
+// ByActivities orders the results by activities terms.
+func ByActivities(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newActivitiesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newUsersStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -755,5 +788,19 @@ func newAuditLogsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(AuditLogsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, AuditLogsTable, AuditLogsColumn),
+	)
+}
+func newOrganizationProvidersStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(OrganizationProvidersInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, OrganizationProvidersTable, OrganizationProvidersColumn),
+	)
+}
+func newActivitiesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ActivitiesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ActivitiesTable, ActivitiesColumn),
 	)
 }

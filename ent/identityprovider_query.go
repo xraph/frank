@@ -7,6 +7,7 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"math"
 
@@ -17,6 +18,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/juicycleff/frank/ent/identityprovider"
 	"github.com/juicycleff/frank/ent/organization"
+	"github.com/juicycleff/frank/ent/organizationprovider"
 	"github.com/juicycleff/frank/ent/predicate"
 	"github.com/rs/xid"
 )
@@ -24,12 +26,14 @@ import (
 // IdentityProviderQuery is the builder for querying IdentityProvider entities.
 type IdentityProviderQuery struct {
 	config
-	ctx              *QueryContext
-	order            []identityprovider.OrderOption
-	inters           []Interceptor
-	predicates       []predicate.IdentityProvider
-	withOrganization *OrganizationQuery
-	modifiers        []func(*sql.Selector)
+	ctx                            *QueryContext
+	order                          []identityprovider.OrderOption
+	inters                         []Interceptor
+	predicates                     []predicate.IdentityProvider
+	withOrganization               *OrganizationQuery
+	withOrganizationProviders      *OrganizationProviderQuery
+	modifiers                      []func(*sql.Selector)
+	withNamedOrganizationProviders map[string]*OrganizationProviderQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -81,6 +85,28 @@ func (ipq *IdentityProviderQuery) QueryOrganization() *OrganizationQuery {
 			sqlgraph.From(identityprovider.Table, identityprovider.FieldID, selector),
 			sqlgraph.To(organization.Table, organization.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, identityprovider.OrganizationTable, identityprovider.OrganizationColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(ipq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryOrganizationProviders chains the current query on the "organization_providers" edge.
+func (ipq *IdentityProviderQuery) QueryOrganizationProviders() *OrganizationProviderQuery {
+	query := (&OrganizationProviderClient{config: ipq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := ipq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := ipq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(identityprovider.Table, identityprovider.FieldID, selector),
+			sqlgraph.To(organizationprovider.Table, organizationprovider.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, identityprovider.OrganizationProvidersTable, identityprovider.OrganizationProvidersColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(ipq.driver.Dialect(), step)
 		return fromU, nil
@@ -275,12 +301,13 @@ func (ipq *IdentityProviderQuery) Clone() *IdentityProviderQuery {
 		return nil
 	}
 	return &IdentityProviderQuery{
-		config:           ipq.config,
-		ctx:              ipq.ctx.Clone(),
-		order:            append([]identityprovider.OrderOption{}, ipq.order...),
-		inters:           append([]Interceptor{}, ipq.inters...),
-		predicates:       append([]predicate.IdentityProvider{}, ipq.predicates...),
-		withOrganization: ipq.withOrganization.Clone(),
+		config:                    ipq.config,
+		ctx:                       ipq.ctx.Clone(),
+		order:                     append([]identityprovider.OrderOption{}, ipq.order...),
+		inters:                    append([]Interceptor{}, ipq.inters...),
+		predicates:                append([]predicate.IdentityProvider{}, ipq.predicates...),
+		withOrganization:          ipq.withOrganization.Clone(),
+		withOrganizationProviders: ipq.withOrganizationProviders.Clone(),
 		// clone intermediate query.
 		sql:       ipq.sql.Clone(),
 		path:      ipq.path,
@@ -296,6 +323,17 @@ func (ipq *IdentityProviderQuery) WithOrganization(opts ...func(*OrganizationQue
 		opt(query)
 	}
 	ipq.withOrganization = query
+	return ipq
+}
+
+// WithOrganizationProviders tells the query-builder to eager-load the nodes that are connected to
+// the "organization_providers" edge. The optional arguments are used to configure the query builder of the edge.
+func (ipq *IdentityProviderQuery) WithOrganizationProviders(opts ...func(*OrganizationProviderQuery)) *IdentityProviderQuery {
+	query := (&OrganizationProviderClient{config: ipq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	ipq.withOrganizationProviders = query
 	return ipq
 }
 
@@ -377,8 +415,9 @@ func (ipq *IdentityProviderQuery) sqlAll(ctx context.Context, hooks ...queryHook
 	var (
 		nodes       = []*IdentityProvider{}
 		_spec       = ipq.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [2]bool{
 			ipq.withOrganization != nil,
+			ipq.withOrganizationProviders != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -405,6 +444,30 @@ func (ipq *IdentityProviderQuery) sqlAll(ctx context.Context, hooks ...queryHook
 	if query := ipq.withOrganization; query != nil {
 		if err := ipq.loadOrganization(ctx, query, nodes, nil,
 			func(n *IdentityProvider, e *Organization) { n.Edges.Organization = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := ipq.withOrganizationProviders; query != nil {
+		if err := ipq.loadOrganizationProviders(ctx, query, nodes,
+			func(n *IdentityProvider) { n.Edges.OrganizationProviders = []*OrganizationProvider{} },
+			func(n *IdentityProvider, e *OrganizationProvider) {
+				n.Edges.OrganizationProviders = append(n.Edges.OrganizationProviders, e)
+				if !e.Edges.loadedTypes[1] {
+					e.Edges.Provider = n
+				}
+			}); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range ipq.withNamedOrganizationProviders {
+		if err := ipq.loadOrganizationProviders(ctx, query, nodes,
+			func(n *IdentityProvider) { n.appendNamedOrganizationProviders(name) },
+			func(n *IdentityProvider, e *OrganizationProvider) {
+				n.appendNamedOrganizationProviders(name, e)
+				if !e.Edges.loadedTypes[1] {
+					e.Edges.Provider = n
+				}
+			}); err != nil {
 			return nil, err
 		}
 	}
@@ -437,6 +500,36 @@ func (ipq *IdentityProviderQuery) loadOrganization(ctx context.Context, query *O
 		for i := range nodes {
 			assign(nodes[i], n)
 		}
+	}
+	return nil
+}
+func (ipq *IdentityProviderQuery) loadOrganizationProviders(ctx context.Context, query *OrganizationProviderQuery, nodes []*IdentityProvider, init func(*IdentityProvider), assign func(*IdentityProvider, *OrganizationProvider)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[xid.ID]*IdentityProvider)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(organizationprovider.FieldProviderID)
+	}
+	query.Where(predicate.OrganizationProvider(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(identityprovider.OrganizationProvidersColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.ProviderID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "provider_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
 	}
 	return nil
 }
@@ -561,6 +654,20 @@ func (ipq *IdentityProviderQuery) ForShare(opts ...sql.LockOption) *IdentityProv
 func (ipq *IdentityProviderQuery) Modify(modifiers ...func(s *sql.Selector)) *IdentityProviderSelect {
 	ipq.modifiers = append(ipq.modifiers, modifiers...)
 	return ipq.Select()
+}
+
+// WithNamedOrganizationProviders tells the query-builder to eager-load the nodes that are connected to the "organization_providers"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (ipq *IdentityProviderQuery) WithNamedOrganizationProviders(name string, opts ...func(*OrganizationProviderQuery)) *IdentityProviderQuery {
+	query := (&OrganizationProviderClient{config: ipq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if ipq.withNamedOrganizationProviders == nil {
+		ipq.withNamedOrganizationProviders = make(map[string]*OrganizationProviderQuery)
+	}
+	ipq.withNamedOrganizationProviders[name] = query
+	return ipq
 }
 
 // IdentityProviderGroupBy is the group-by builder for IdentityProvider entities.

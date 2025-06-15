@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/juicycleff/frank/internal/contexts"
+	"github.com/juicycleff/frank/pkg/contexts"
 )
 
 // AddHeader is a middleware that attaches request headers to the context using the specified permission.
@@ -50,6 +50,12 @@ func AddRequestInfo() func(http.Handler) http.Handler {
 			// Add IP address
 			ctx = context.WithValue(ctx, contexts.IPAddressContextKey, GetClientIP(r))
 
+			// Add HTTP Request
+			ctx = context.WithValue(ctx, contexts.HTTPRequestContextKey, r)
+
+			// Add HTTP Writer
+			ctx = context.WithValue(ctx, contexts.HTTPResponseWriterKey, w)
+
 			// Add User Agent
 			ctx = context.WithValue(ctx, contexts.UserAgentContextKey, r.UserAgent())
 
@@ -88,4 +94,29 @@ func GetUserAgentFromContext(ctx context.Context) (string, bool) {
 func GetHeadersFromContext(ctx context.Context) (http.Header, bool) {
 	h, ok := ctx.Value(contexts.HeadersContextKKey).(http.Header)
 	return h, ok
+}
+
+// GetHeaderFromContext retrieves the headers from the context.
+func GetHeaderFromContext(ctx context.Context, header string) string {
+	h, ok := GetHeadersFromContext(ctx)
+	if !ok {
+		return ""
+	}
+
+	return h.Get(header)
+}
+
+// GetCookieFromContext retrieves the cookies from the context.
+func GetCookieFromContext(ctx context.Context, cookie string) string {
+	h, ok := ctx.Value(contexts.HTTPRequestContextKey).(*http.Request)
+	if !ok {
+		return ""
+	}
+
+	c, err := h.Cookie(cookie)
+	if err != nil {
+		return ""
+	}
+
+	return c.Value
 }

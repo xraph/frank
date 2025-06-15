@@ -16,6 +16,7 @@ import (
 	"github.com/juicycleff/frank/ent/apikey"
 	"github.com/juicycleff/frank/ent/organization"
 	"github.com/juicycleff/frank/ent/user"
+	"github.com/juicycleff/frank/pkg/common"
 	"github.com/rs/xid"
 )
 
@@ -31,29 +32,33 @@ type ApiKey struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// DeletedAt holds the value of the "deleted_at" field.
 	DeletedAt time.Time `json:"deleted_at,omitempty"`
-	// Name holds the value of the "name" field.
+	// Human-readable name for the API key
 	Name string `json:"name,omitempty"`
-	// Key holds the value of the "key" field.
+	// The actual API key value (write-only)
 	Key string `json:"-"`
-	// HashedKey holds the value of the "hashed_key" field.
+	// Hashed version of the API key for secure storage
 	HashedKey string `json:"hashed_key,omitempty"`
-	// UserID holds the value of the "user_id" field.
+	// User ID if this is a user-scoped key
 	UserID xid.ID `json:"user_id,omitempty"`
-	// OrganizationID holds the value of the "organization_id" field.
+	// Organization ID for multi-tenant isolation
 	OrganizationID xid.ID `json:"organization_id,omitempty"`
-	// Type holds the value of the "type" field.
+	// Type of API key (server, client, admin)
 	Type string `json:"type,omitempty"`
-	// Active holds the value of the "active" field.
+	// Whether the API key is active
 	Active bool `json:"active,omitempty"`
-	// Permissions holds the value of the "permissions" field.
+	// Granted permissions for this key
 	Permissions []string `json:"permissions,omitempty"`
-	// Scopes holds the value of the "scopes" field.
+	// API scopes for this key
 	Scopes []string `json:"scopes,omitempty"`
+	// Allowed IP addresses/ranges (CIDR notation)
+	IPWhitelist []string `json:"ip_whitelist,omitempty"`
+	// Rate limiting configuration
+	RateLimits common.APIKeyRateLimits `json:"rate_limits,omitempty"`
 	// Additional membership metadata
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
-	// LastUsed holds the value of the "last_used" field.
+	// Last time this key was used
 	LastUsed *time.Time `json:"last_used,omitempty"`
-	// ExpiresAt holds the value of the "expires_at" field.
+	// When this key expires
 	ExpiresAt *time.Time `json:"expires_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the ApiKeyQuery when eager-loading is set.
@@ -67,9 +72,12 @@ type ApiKeyEdges struct {
 	User *User `json:"user,omitempty"`
 	// Organization holds the value of the organization edge.
 	Organization *Organization `json:"organization,omitempty"`
+	// Activity logs for this API key
+	Activities []*ApiKeyActivity `json:"activities,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes     [3]bool
+	namedActivities map[string][]*ApiKeyActivity
 }
 
 // UserOrErr returns the User value or an error if the edge
@@ -94,12 +102,21 @@ func (e ApiKeyEdges) OrganizationOrErr() (*Organization, error) {
 	return nil, &NotLoadedError{edge: "organization"}
 }
 
+// ActivitiesOrErr returns the Activities value or an error if the edge
+// was not loaded in eager-loading.
+func (e ApiKeyEdges) ActivitiesOrErr() ([]*ApiKeyActivity, error) {
+	if e.loadedTypes[2] {
+		return e.Activities, nil
+	}
+	return nil, &NotLoadedError{edge: "activities"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*ApiKey) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case apikey.FieldPermissions, apikey.FieldScopes, apikey.FieldMetadata:
+		case apikey.FieldPermissions, apikey.FieldScopes, apikey.FieldIPWhitelist, apikey.FieldRateLimits, apikey.FieldMetadata:
 			values[i] = new([]byte)
 		case apikey.FieldActive:
 			values[i] = new(sql.NullBool)
@@ -206,6 +223,22 @@ func (ak *ApiKey) assignValues(columns []string, values []any) error {
 					return fmt.Errorf("unmarshal field scopes: %w", err)
 				}
 			}
+		case apikey.FieldIPWhitelist:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field ip_whitelist", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &ak.IPWhitelist); err != nil {
+					return fmt.Errorf("unmarshal field ip_whitelist: %w", err)
+				}
+			}
+		case apikey.FieldRateLimits:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field rate_limits", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &ak.RateLimits); err != nil {
+					return fmt.Errorf("unmarshal field rate_limits: %w", err)
+				}
+			}
 		case apikey.FieldMetadata:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field metadata", values[i])
@@ -249,6 +282,11 @@ func (ak *ApiKey) QueryUser() *UserQuery {
 // QueryOrganization queries the "organization" edge of the ApiKey entity.
 func (ak *ApiKey) QueryOrganization() *OrganizationQuery {
 	return NewApiKeyClient(ak.config).QueryOrganization(ak)
+}
+
+// QueryActivities queries the "activities" edge of the ApiKey entity.
+func (ak *ApiKey) QueryActivities() *ApiKeyActivityQuery {
+	return NewApiKeyClient(ak.config).QueryActivities(ak)
 }
 
 // Update returns a builder for updating this ApiKey.
@@ -309,6 +347,12 @@ func (ak *ApiKey) String() string {
 	builder.WriteString("scopes=")
 	builder.WriteString(fmt.Sprintf("%v", ak.Scopes))
 	builder.WriteString(", ")
+	builder.WriteString("ip_whitelist=")
+	builder.WriteString(fmt.Sprintf("%v", ak.IPWhitelist))
+	builder.WriteString(", ")
+	builder.WriteString("rate_limits=")
+	builder.WriteString(fmt.Sprintf("%v", ak.RateLimits))
+	builder.WriteString(", ")
 	builder.WriteString("metadata=")
 	builder.WriteString(fmt.Sprintf("%v", ak.Metadata))
 	builder.WriteString(", ")
@@ -323,6 +367,30 @@ func (ak *ApiKey) String() string {
 	}
 	builder.WriteByte(')')
 	return builder.String()
+}
+
+// NamedActivities returns the Activities named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (ak *ApiKey) NamedActivities(name string) ([]*ApiKeyActivity, error) {
+	if ak.Edges.namedActivities == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := ak.Edges.namedActivities[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (ak *ApiKey) appendNamedActivities(name string, edges ...*ApiKeyActivity) {
+	if ak.Edges.namedActivities == nil {
+		ak.Edges.namedActivities = make(map[string][]*ApiKeyActivity)
+	}
+	if len(edges) == 0 {
+		ak.Edges.namedActivities[name] = []*ApiKeyActivity{}
+	} else {
+		ak.Edges.namedActivities[name] = append(ak.Edges.namedActivities[name], edges...)
+	}
 }
 
 // ApiKeys is a parsable slice of ApiKey.

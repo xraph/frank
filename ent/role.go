@@ -15,6 +15,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/juicycleff/frank/ent/organization"
 	"github.com/juicycleff/frank/ent/role"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -37,7 +38,7 @@ type Role struct {
 	// Description holds the value of the "description" field.
 	Description string `json:"description,omitempty"`
 	// system = platform roles, organization = org roles, application = customer's app roles
-	RoleType role.RoleType `json:"role_type,omitempty"`
+	RoleType model.RoleType `json:"role_type,omitempty"`
 	// If set, role is scoped to this organization
 	OrganizationID xid.ID `json:"organization_id,omitempty"`
 	// If set, role is scoped to this application (for customer's app roles)
@@ -235,7 +236,7 @@ func (r *Role) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field role_type", values[i])
 			} else if value.Valid {
-				r.RoleType = role.RoleType(value.String)
+				r.RoleType = model.RoleType(value.String)
 			}
 		case role.FieldOrganizationID:
 			if value, ok := values[i].(*xid.ID); !ok {

@@ -19,6 +19,7 @@ import (
 	"github.com/juicycleff/frank/ent/permission"
 	"github.com/juicycleff/frank/ent/user"
 	"github.com/juicycleff/frank/ent/userpermission"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -85,8 +86,8 @@ func (upc *UserPermissionCreate) SetPermissionID(x xid.ID) *UserPermissionCreate
 }
 
 // SetContextType sets the "context_type" field.
-func (upc *UserPermissionCreate) SetContextType(ut userpermission.ContextType) *UserPermissionCreate {
-	upc.mutation.SetContextType(ut)
+func (upc *UserPermissionCreate) SetContextType(mt model.ContextType) *UserPermissionCreate {
+	upc.mutation.SetContextType(mt)
 	return upc
 }
 
@@ -133,15 +134,15 @@ func (upc *UserPermissionCreate) SetNillableResourceID(x *xid.ID) *UserPermissio
 }
 
 // SetPermissionType sets the "permission_type" field.
-func (upc *UserPermissionCreate) SetPermissionType(ut userpermission.PermissionType) *UserPermissionCreate {
-	upc.mutation.SetPermissionType(ut)
+func (upc *UserPermissionCreate) SetPermissionType(mt model.PermissionType) *UserPermissionCreate {
+	upc.mutation.SetPermissionType(mt)
 	return upc
 }
 
 // SetNillablePermissionType sets the "permission_type" field if the given value is not nil.
-func (upc *UserPermissionCreate) SetNillablePermissionType(ut *userpermission.PermissionType) *UserPermissionCreate {
-	if ut != nil {
-		upc.SetPermissionType(*ut)
+func (upc *UserPermissionCreate) SetNillablePermissionType(mt *model.PermissionType) *UserPermissionCreate {
+	if mt != nil {
+		upc.SetPermissionType(*mt)
 	}
 	return upc
 }
@@ -656,7 +657,7 @@ func (u *UserPermissionUpsert) UpdatePermissionID() *UserPermissionUpsert {
 }
 
 // SetContextType sets the "context_type" field.
-func (u *UserPermissionUpsert) SetContextType(v userpermission.ContextType) *UserPermissionUpsert {
+func (u *UserPermissionUpsert) SetContextType(v model.ContextType) *UserPermissionUpsert {
 	u.Set(userpermission.FieldContextType, v)
 	return u
 }
@@ -722,7 +723,7 @@ func (u *UserPermissionUpsert) ClearResourceID() *UserPermissionUpsert {
 }
 
 // SetPermissionType sets the "permission_type" field.
-func (u *UserPermissionUpsert) SetPermissionType(v userpermission.PermissionType) *UserPermissionUpsert {
+func (u *UserPermissionUpsert) SetPermissionType(v model.PermissionType) *UserPermissionUpsert {
 	u.Set(userpermission.FieldPermissionType, v)
 	return u
 }
@@ -944,7 +945,7 @@ func (u *UserPermissionUpsertOne) UpdatePermissionID() *UserPermissionUpsertOne 
 }
 
 // SetContextType sets the "context_type" field.
-func (u *UserPermissionUpsertOne) SetContextType(v userpermission.ContextType) *UserPermissionUpsertOne {
+func (u *UserPermissionUpsertOne) SetContextType(v model.ContextType) *UserPermissionUpsertOne {
 	return u.Update(func(s *UserPermissionUpsert) {
 		s.SetContextType(v)
 	})
@@ -1021,7 +1022,7 @@ func (u *UserPermissionUpsertOne) ClearResourceID() *UserPermissionUpsertOne {
 }
 
 // SetPermissionType sets the "permission_type" field.
-func (u *UserPermissionUpsertOne) SetPermissionType(v userpermission.PermissionType) *UserPermissionUpsertOne {
+func (u *UserPermissionUpsertOne) SetPermissionType(v model.PermissionType) *UserPermissionUpsertOne {
 	return u.Update(func(s *UserPermissionUpsert) {
 		s.SetPermissionType(v)
 	})
@@ -1428,7 +1429,7 @@ func (u *UserPermissionUpsertBulk) UpdatePermissionID() *UserPermissionUpsertBul
 }
 
 // SetContextType sets the "context_type" field.
-func (u *UserPermissionUpsertBulk) SetContextType(v userpermission.ContextType) *UserPermissionUpsertBulk {
+func (u *UserPermissionUpsertBulk) SetContextType(v model.ContextType) *UserPermissionUpsertBulk {
 	return u.Update(func(s *UserPermissionUpsert) {
 		s.SetContextType(v)
 	})
@@ -1505,7 +1506,7 @@ func (u *UserPermissionUpsertBulk) ClearResourceID() *UserPermissionUpsertBulk {
 }
 
 // SetPermissionType sets the "permission_type" field.
-func (u *UserPermissionUpsertBulk) SetPermissionType(v userpermission.PermissionType) *UserPermissionUpsertBulk {
+func (u *UserPermissionUpsertBulk) SetPermissionType(v model.PermissionType) *UserPermissionUpsertBulk {
 	return u.Update(func(s *UserPermissionUpsert) {
 		s.SetPermissionType(v)
 	})

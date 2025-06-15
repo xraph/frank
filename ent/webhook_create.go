@@ -18,6 +18,7 @@ import (
 	"github.com/juicycleff/frank/ent/organization"
 	"github.com/juicycleff/frank/ent/webhook"
 	"github.com/juicycleff/frank/ent/webhookevent"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -158,15 +159,15 @@ func (wc *WebhookCreate) SetNillableTimeoutMs(i *int) *WebhookCreate {
 }
 
 // SetFormat sets the "format" field.
-func (wc *WebhookCreate) SetFormat(w webhook.Format) *WebhookCreate {
-	wc.mutation.SetFormat(w)
+func (wc *WebhookCreate) SetFormat(mf model.WebhookFormat) *WebhookCreate {
+	wc.mutation.SetFormat(mf)
 	return wc
 }
 
 // SetNillableFormat sets the "format" field if the given value is not nil.
-func (wc *WebhookCreate) SetNillableFormat(w *webhook.Format) *WebhookCreate {
-	if w != nil {
-		wc.SetFormat(*w)
+func (wc *WebhookCreate) SetNillableFormat(mf *model.WebhookFormat) *WebhookCreate {
+	if mf != nil {
+		wc.SetFormat(*mf)
 	}
 	return wc
 }
@@ -680,7 +681,7 @@ func (u *WebhookUpsert) AddTimeoutMs(v int) *WebhookUpsert {
 }
 
 // SetFormat sets the "format" field.
-func (u *WebhookUpsert) SetFormat(v webhook.Format) *WebhookUpsert {
+func (u *WebhookUpsert) SetFormat(v model.WebhookFormat) *WebhookUpsert {
 	u.Set(webhook.FieldFormat, v)
 	return u
 }
@@ -954,7 +955,7 @@ func (u *WebhookUpsertOne) UpdateTimeoutMs() *WebhookUpsertOne {
 }
 
 // SetFormat sets the "format" field.
-func (u *WebhookUpsertOne) SetFormat(v webhook.Format) *WebhookUpsertOne {
+func (u *WebhookUpsertOne) SetFormat(v model.WebhookFormat) *WebhookUpsertOne {
 	return u.Update(func(s *WebhookUpsert) {
 		s.SetFormat(v)
 	})
@@ -1403,7 +1404,7 @@ func (u *WebhookUpsertBulk) UpdateTimeoutMs() *WebhookUpsertBulk {
 }
 
 // SetFormat sets the "format" field.
-func (u *WebhookUpsertBulk) SetFormat(v webhook.Format) *WebhookUpsertBulk {
+func (u *WebhookUpsertBulk) SetFormat(v model.WebhookFormat) *WebhookUpsertBulk {
 	return u.Update(func(s *WebhookUpsert) {
 		s.SetFormat(v)
 	})

@@ -17,6 +17,7 @@ import (
 	"github.com/juicycleff/frank/ent/organization"
 	"github.com/juicycleff/frank/ent/role"
 	"github.com/juicycleff/frank/ent/user"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -41,7 +42,7 @@ type Membership struct {
 	// Email holds the value of the "email" field.
 	Email string `json:"email,omitempty"`
 	// Status holds the value of the "status" field.
-	Status membership.Status `json:"status,omitempty"`
+	Status model.MembershipStatus `json:"status,omitempty"`
 	// User ID who sent the invitation
 	InvitedBy xid.ID `json:"invited_by,omitempty"`
 	// InvitedAt holds the value of the "invited_at" field.
@@ -209,7 +210,7 @@ func (m *Membership) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
-				m.Status = membership.Status(value.String)
+				m.Status = model.MembershipStatus(value.String)
 			}
 		case membership.FieldInvitedBy:
 			if value, ok := values[i].(*xid.ID); !ok {

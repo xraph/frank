@@ -16,6 +16,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/juicycleff/frank/ent/activity"
 	"github.com/juicycleff/frank/ent/audit"
 	"github.com/juicycleff/frank/ent/predicate"
 	"github.com/juicycleff/frank/ent/session"
@@ -26,14 +27,16 @@ import (
 // SessionQuery is the builder for querying Session entities.
 type SessionQuery struct {
 	config
-	ctx                *QueryContext
-	order              []session.OrderOption
-	inters             []Interceptor
-	predicates         []predicate.Session
-	withUser           *UserQuery
-	withAuditLogs      *AuditQuery
-	modifiers          []func(*sql.Selector)
-	withNamedAuditLogs map[string]*AuditQuery
+	ctx                 *QueryContext
+	order               []session.OrderOption
+	inters              []Interceptor
+	predicates          []predicate.Session
+	withUser            *UserQuery
+	withAuditLogs       *AuditQuery
+	withActivities      *ActivityQuery
+	modifiers           []func(*sql.Selector)
+	withNamedAuditLogs  map[string]*AuditQuery
+	withNamedActivities map[string]*ActivityQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -107,6 +110,28 @@ func (sq *SessionQuery) QueryAuditLogs() *AuditQuery {
 			sqlgraph.From(session.Table, session.FieldID, selector),
 			sqlgraph.To(audit.Table, audit.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, session.AuditLogsTable, session.AuditLogsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(sq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryActivities chains the current query on the "activities" edge.
+func (sq *SessionQuery) QueryActivities() *ActivityQuery {
+	query := (&ActivityClient{config: sq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := sq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := sq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(session.Table, session.FieldID, selector),
+			sqlgraph.To(activity.Table, activity.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, session.ActivitiesTable, session.ActivitiesColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(sq.driver.Dialect(), step)
 		return fromU, nil
@@ -301,13 +326,14 @@ func (sq *SessionQuery) Clone() *SessionQuery {
 		return nil
 	}
 	return &SessionQuery{
-		config:        sq.config,
-		ctx:           sq.ctx.Clone(),
-		order:         append([]session.OrderOption{}, sq.order...),
-		inters:        append([]Interceptor{}, sq.inters...),
-		predicates:    append([]predicate.Session{}, sq.predicates...),
-		withUser:      sq.withUser.Clone(),
-		withAuditLogs: sq.withAuditLogs.Clone(),
+		config:         sq.config,
+		ctx:            sq.ctx.Clone(),
+		order:          append([]session.OrderOption{}, sq.order...),
+		inters:         append([]Interceptor{}, sq.inters...),
+		predicates:     append([]predicate.Session{}, sq.predicates...),
+		withUser:       sq.withUser.Clone(),
+		withAuditLogs:  sq.withAuditLogs.Clone(),
+		withActivities: sq.withActivities.Clone(),
 		// clone intermediate query.
 		sql:       sq.sql.Clone(),
 		path:      sq.path,
@@ -334,6 +360,17 @@ func (sq *SessionQuery) WithAuditLogs(opts ...func(*AuditQuery)) *SessionQuery {
 		opt(query)
 	}
 	sq.withAuditLogs = query
+	return sq
+}
+
+// WithActivities tells the query-builder to eager-load the nodes that are connected to
+// the "activities" edge. The optional arguments are used to configure the query builder of the edge.
+func (sq *SessionQuery) WithActivities(opts ...func(*ActivityQuery)) *SessionQuery {
+	query := (&ActivityClient{config: sq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	sq.withActivities = query
 	return sq
 }
 
@@ -415,9 +452,10 @@ func (sq *SessionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Sess
 	var (
 		nodes       = []*Session{}
 		_spec       = sq.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [3]bool{
 			sq.withUser != nil,
 			sq.withAuditLogs != nil,
+			sq.withActivities != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -459,11 +497,35 @@ func (sq *SessionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Sess
 			return nil, err
 		}
 	}
+	if query := sq.withActivities; query != nil {
+		if err := sq.loadActivities(ctx, query, nodes,
+			func(n *Session) { n.Edges.Activities = []*Activity{} },
+			func(n *Session, e *Activity) {
+				n.Edges.Activities = append(n.Edges.Activities, e)
+				if !e.Edges.loadedTypes[2] {
+					e.Edges.Session = n
+				}
+			}); err != nil {
+			return nil, err
+		}
+	}
 	for name, query := range sq.withNamedAuditLogs {
 		if err := sq.loadAuditLogs(ctx, query, nodes,
 			func(n *Session) { n.appendNamedAuditLogs(name) },
 			func(n *Session, e *Audit) {
 				n.appendNamedAuditLogs(name, e)
+				if !e.Edges.loadedTypes[2] {
+					e.Edges.Session = n
+				}
+			}); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range sq.withNamedActivities {
+		if err := sq.loadActivities(ctx, query, nodes,
+			func(n *Session) { n.appendNamedActivities(name) },
+			func(n *Session, e *Activity) {
+				n.appendNamedActivities(name, e)
 				if !e.Edges.loadedTypes[2] {
 					e.Edges.Session = n
 				}
@@ -518,6 +580,36 @@ func (sq *SessionQuery) loadAuditLogs(ctx context.Context, query *AuditQuery, no
 	}
 	query.Where(predicate.Audit(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(session.AuditLogsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.SessionID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "session_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (sq *SessionQuery) loadActivities(ctx context.Context, query *ActivityQuery, nodes []*Session, init func(*Session), assign func(*Session, *Activity)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[xid.ID]*Session)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(activity.FieldSessionID)
+	}
+	query.Where(predicate.Activity(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(session.ActivitiesColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
@@ -667,6 +759,20 @@ func (sq *SessionQuery) WithNamedAuditLogs(name string, opts ...func(*AuditQuery
 		sq.withNamedAuditLogs = make(map[string]*AuditQuery)
 	}
 	sq.withNamedAuditLogs[name] = query
+	return sq
+}
+
+// WithNamedActivities tells the query-builder to eager-load the nodes that are connected to the "activities"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (sq *SessionQuery) WithNamedActivities(name string, opts ...func(*ActivityQuery)) *SessionQuery {
+	query := (&ActivityClient{config: sq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if sq.withNamedActivities == nil {
+		sq.withNamedActivities = make(map[string]*ActivityQuery)
+	}
+	sq.withNamedActivities[name] = query
 	return sq
 }
 

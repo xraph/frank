@@ -19,6 +19,7 @@ import (
 	"github.com/juicycleff/frank/ent/predicate"
 	"github.com/juicycleff/frank/ent/webhook"
 	"github.com/juicycleff/frank/ent/webhookevent"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -201,15 +202,15 @@ func (wu *WebhookUpdate) AddTimeoutMs(i int) *WebhookUpdate {
 }
 
 // SetFormat sets the "format" field.
-func (wu *WebhookUpdate) SetFormat(w webhook.Format) *WebhookUpdate {
-	wu.mutation.SetFormat(w)
+func (wu *WebhookUpdate) SetFormat(mf model.WebhookFormat) *WebhookUpdate {
+	wu.mutation.SetFormat(mf)
 	return wu
 }
 
 // SetNillableFormat sets the "format" field if the given value is not nil.
-func (wu *WebhookUpdate) SetNillableFormat(w *webhook.Format) *WebhookUpdate {
-	if w != nil {
-		wu.SetFormat(*w)
+func (wu *WebhookUpdate) SetNillableFormat(mf *model.WebhookFormat) *WebhookUpdate {
+	if mf != nil {
+		wu.SetFormat(*mf)
 	}
 	return wu
 }
@@ -697,15 +698,15 @@ func (wuo *WebhookUpdateOne) AddTimeoutMs(i int) *WebhookUpdateOne {
 }
 
 // SetFormat sets the "format" field.
-func (wuo *WebhookUpdateOne) SetFormat(w webhook.Format) *WebhookUpdateOne {
-	wuo.mutation.SetFormat(w)
+func (wuo *WebhookUpdateOne) SetFormat(mf model.WebhookFormat) *WebhookUpdateOne {
+	wuo.mutation.SetFormat(mf)
 	return wuo
 }
 
 // SetNillableFormat sets the "format" field if the given value is not nil.
-func (wuo *WebhookUpdateOne) SetNillableFormat(w *webhook.Format) *WebhookUpdateOne {
-	if w != nil {
-		wuo.SetFormat(*w)
+func (wuo *WebhookUpdateOne) SetNillableFormat(mf *model.WebhookFormat) *WebhookUpdateOne {
+	if mf != nil {
+		wuo.SetFormat(*mf)
 	}
 	return wuo
 }

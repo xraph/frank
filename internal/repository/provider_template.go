@@ -4,7 +4,13 @@ import (
 	"context"
 	"time"
 
-	"github.com/juicycleff/frank/internal/model"
+	"entgo.io/ent/dialect/sql"
+	"github.com/juicycleff/frank/ent"
+	"github.com/juicycleff/frank/ent/organizationprovider"
+	"github.com/juicycleff/frank/ent/providertemplate"
+	"github.com/juicycleff/frank/pkg/errors"
+	"github.com/juicycleff/frank/pkg/logging"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -14,7 +20,7 @@ type ProviderCatalogRepository interface {
 	UpsertTemplate(ctx context.Context, template model.ProviderTemplate) error
 	GetTemplateByKey(ctx context.Context, key string) (*model.ProviderTemplate, error)
 	GetTemplateByID(ctx context.Context, id xid.ID) (*model.ProviderTemplate, error)
-	ListTemplates(ctx context.Context, params ListTemplatesParams) ([]model.ProviderTemplate, error)
+	ListTemplates(ctx context.Context, params ListTemplatesParams) (*model.PaginatedOutput[model.ProviderTemplate], error)
 	UpdateTemplate(ctx context.Context, key string, template model.ProviderTemplate) error
 	DeleteTemplate(ctx context.Context, key string) error
 
@@ -28,227 +34,449 @@ type ProviderCatalogRepository interface {
 	GetMostUsedTemplates(ctx context.Context, limit int) ([]TemplateUsageStats, error)
 }
 
-// OrganizationProviderRepository manages organization-provider relationships
-type OrganizationProviderRepository interface {
-	// Basic CRUD operations
-	Create(ctx context.Context, input CreateOrganizationProviderInput) (*model.OrganizationProvider, error)
-	GetByID(ctx context.Context, id xid.ID) (*model.OrganizationProvider, error)
-	GetByOrganizationAndProvider(ctx context.Context, orgID, providerID xid.ID) (*model.OrganizationProvider, error)
-	Update(ctx context.Context, id xid.ID, input UpdateOrganizationProviderInput) (*model.OrganizationProvider, error)
-	Delete(ctx context.Context, id xid.ID) error
-
-	// List operations
-	ListByOrganization(ctx context.Context, orgID xid.ID) ([]model.OrganizationProvider, error)
-	ListByProvider(ctx context.Context, providerID xid.ID) ([]model.OrganizationProvider, error)
-	ListByTemplate(ctx context.Context, templateKey string) ([]model.OrganizationProvider, error)
-
-	// Analytics
-	UpdateUsageStats(ctx context.Context, id xid.ID) error
-	GetUsageStats(ctx context.Context, orgID xid.ID) (*OrganizationProviderStats, error)
-
-	// Bulk operations
-	EnableMultipleProviders(ctx context.Context, orgID xid.ID, providerConfigs []EnableProviderConfig) error
-	DisableAllProviders(ctx context.Context, orgID xid.ID) error
-}
-
 // Input types for repository operations
-
-type ListTemplatesParams struct {
-	Category        string
-	Popular         *bool
-	Type            string
-	IncludeInactive bool
-	Search          string
-	Limit           int
-	Offset          int
+// providerCatalogRepository implements ProviderCatalogRepository
+type providerCatalogRepository struct {
+	client *ent.Client
+	logger logging.Logger
 }
 
-type CreateOrganizationProviderInput struct {
-	OrganizationID xid.ID                       `json:"organizationId"`
-	ProviderID     xid.ID                       `json:"providerId"`
-	TemplateKey    string                       `json:"templateKey"`
-	CustomConfig   model.IdentityProviderConfig `json:"customConfig"`
-	EnabledAt      time.Time                    `json:"enabledAt"`
+// NewProviderCatalogRepository creates a new provider catalog repository
+func NewProviderCatalogRepository(client *ent.Client, logger logging.Logger) ProviderCatalogRepository {
+	return &providerCatalogRepository{
+		client: client,
+		logger: logger,
+	}
 }
 
-type UpdateOrganizationProviderInput struct {
-	CustomConfig model.IdentityProviderConfig `json:"customConfig,omitempty"`
-	LastUsed     *time.Time                   `json:"lastUsed,omitempty"`
-	UsageCount   *int                         `json:"usageCount,omitempty"`
-	Enabled      *bool                        `json:"enabled,omitempty"`
+// Template management methods
+
+// UpsertTemplate creates or updates a provider template
+func (r *providerCatalogRepository) UpsertTemplate(ctx context.Context, template model.ProviderTemplate) error {
+	// Try to get existing template by key
+	existing, err := r.client.ProviderTemplate.Query().
+		Where(providertemplate.Key(template.Key)).
+		Only(ctx)
+
+	if ent.IsNotFound(err) {
+		// Create new template
+		_, err = r.client.ProviderTemplate.Create().
+			SetKey(template.Key).
+			SetName(template.Name).
+			SetDisplayName(template.DisplayName).
+			SetType(template.Type).
+			SetProtocol(template.Protocol).
+			SetIconURL(template.IconURL).
+			SetCategory(template.Category).
+			SetPopular(template.Popular).
+			SetActive(template.Active).
+			SetDescription(template.Description).
+			SetConfigTemplate(template.ConfigTemplate).
+			SetRequiredFields(template.RequiredFields).
+			SetSupportedFeatures(template.SupportedFeatures).
+			SetNillableDocumentationURL(template.DocumentationURL).
+			SetNillableSetupGuideURL(template.SetupGuideURL).
+			SetUsageCount(template.UsageCount).
+			SetNillableAverageSetupTime(template.AverageSetupTime).
+			SetSuccessRate(template.SuccessRate).
+			SetPopularityRank(template.PopularityRank).
+			SetMetadata(template.Metadata).
+			Save(ctx)
+		if err != nil {
+			return errors.Wrap(err, errors.CodeDatabaseError, "failed to create provider template")
+		}
+		return nil
+	}
+
+	if err != nil {
+		return errors.Wrap(err, errors.CodeDatabaseError, "failed to query existing template")
+	}
+
+	// Update existing template
+	_, err = existing.Update().
+		SetName(template.Name).
+		SetDisplayName(template.DisplayName).
+		SetType(template.Type).
+		SetProtocol(template.Protocol).
+		SetIconURL(template.IconURL).
+		SetCategory(template.Category).
+		SetPopular(template.Popular).
+		SetActive(template.Active).
+		SetDescription(template.Description).
+		SetConfigTemplate(template.ConfigTemplate).
+		SetRequiredFields(template.RequiredFields).
+		SetSupportedFeatures(template.SupportedFeatures).
+		SetNillableDocumentationURL(template.DocumentationURL).
+		SetNillableSetupGuideURL(template.SetupGuideURL).
+		SetNillableAverageSetupTime(template.AverageSetupTime).
+		SetSuccessRate(template.SuccessRate).
+		SetPopularityRank(template.PopularityRank).
+		SetMetadata(template.Metadata).
+		Save(ctx)
+	if err != nil {
+		return errors.Wrap(err, errors.CodeDatabaseError, "failed to update provider template")
+	}
+
+	return nil
 }
 
-type EnableProviderConfig struct {
-	TemplateKey      string                 `json:"templateKey"`
-	CustomName       string                 `json:"customName,omitempty"`
-	Config           map[string]interface{} `json:"config"`
-	AutoProvision    bool                   `json:"autoProvision"`
-	DefaultRole      string                 `json:"defaultRole,omitempty"`
-	AttributeMapping map[string]string      `json:"attributeMapping,omitempty"`
+// GetTemplateByKey retrieves a template by its key
+func (r *providerCatalogRepository) GetTemplateByKey(ctx context.Context, key string) (*model.ProviderTemplate, error) {
+	template, err := r.client.ProviderTemplate.Query().
+		Where(providertemplate.Key(key)).
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, errors.New(errors.CodeNotFound, "provider template not found")
+		}
+		return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to get provider template by key")
+	}
+
+	return entToModelTemplate(template), nil
 }
 
-// Analytics types
+// GetTemplateByID retrieves a template by its ID
+func (r *providerCatalogRepository) GetTemplateByID(ctx context.Context, id xid.ID) (*model.ProviderTemplate, error) {
+	template, err := r.client.ProviderTemplate.Query().
+		Where(providertemplate.ID(id)).
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, errors.New(errors.CodeNotFound, "provider template not found")
+		}
+		return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to get provider template by ID")
+	}
 
-type TemplateUsageStats struct {
-	TemplateKey       string    `json:"templateKey"`
-	TemplateName      string    `json:"templateName"`
-	OrganizationCount int       `json:"organizationCount"`
-	TotalLogins       int       `json:"totalLogins"`
-	LastUsed          time.Time `json:"lastUsed"`
-	AverageSetupTime  float64   `json:"averageSetupTime"` // in minutes
-	SuccessRate       float64   `json:"successRate"`      // percentage
-	PopularityRank    int       `json:"popularityRank"`
+	return entToModelTemplate(template), nil
 }
 
-type OrganizationProviderStats struct {
-	OrganizationID    xid.ID                    `json:"organizationId"`
-	TotalProviders    int                       `json:"totalProviders"`
-	EnabledProviders  int                       `json:"enabledProviders"`
-	ProvidersByType   map[string]int            `json:"providersByType"`
-	MostUsedProvider  string                    `json:"mostUsedProvider"`
-	LastProviderAdded time.Time                 `json:"lastProviderAdded"`
-	ProviderStats     []IndividualProviderStats `json:"providerStats"`
+// ListTemplates retrieves templates with filtering
+func (r *providerCatalogRepository) ListTemplates(ctx context.Context, params ListTemplatesParams) (*model.PaginatedOutput[model.ProviderTemplate], error) {
+	query := r.client.ProviderTemplate.Query()
+
+	// Apply filters
+	if params.Category != "" {
+		query = query.Where(providertemplate.Category(params.Category))
+	}
+	if params.Popular != nil {
+		query = query.Where(providertemplate.Popular(*params.Popular))
+	}
+	if params.Type != "" {
+		query = query.Where(providertemplate.Type(params.Type))
+	}
+	if !params.IncludeInactive {
+		query = query.Where(providertemplate.Active(true))
+	}
+	if params.Search != "" {
+		query = query.Where(providertemplate.Or(
+			providertemplate.NameContains(params.Search),
+			providertemplate.DisplayNameContains(params.Search),
+			providertemplate.DescriptionContains(params.Search),
+		))
+	}
+
+	// Apply ordering
+	if params.OrderBy == nil {
+		query = query.Order(providertemplate.ByPopularityRank(), providertemplate.ByName())
+	}
+
+	templates, err := model.WithPaginationAndOptions[*ent.ProviderTemplate, *ent.ProviderTemplateQuery](ctx, query, params.PaginationParams)
+	if err != nil {
+		return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to list provider templates")
+	}
+
+	result := make([]model.ProviderTemplate, len(templates.Data))
+	for i, template := range templates.Data {
+		result[i] = *entToModelTemplate(template)
+	}
+
+	return &model.PaginatedOutput[model.ProviderTemplate]{
+		Pagination: templates.Pagination,
+		Data:       result,
+	}, nil
 }
 
-type IndividualProviderStats struct {
-	ProviderID   xid.ID    `json:"providerId"`
-	ProviderName string    `json:"providerName"`
-	TemplateKey  string    `json:"templateKey"`
-	LoginCount   int       `json:"loginCount"`
-	LastUsed     time.Time `json:"lastUsed"`
-	SuccessRate  float64   `json:"successRate"`
-	UniqueUsers  int       `json:"uniqueUsers"`
-	SetupDate    time.Time `json:"setupDate"`
-	ConfigErrors int       `json:"configErrors"`
+// UpdateTemplate updates a template by key
+func (r *providerCatalogRepository) UpdateTemplate(ctx context.Context, key string, template model.ProviderTemplate) error {
+	_, err := r.client.ProviderTemplate.Update().
+		Where(providertemplate.Key(key)).
+		SetName(template.Name).
+		SetDisplayName(template.DisplayName).
+		SetType(template.Type).
+		SetProtocol(template.Protocol).
+		SetIconURL(template.IconURL).
+		SetCategory(template.Category).
+		SetPopular(template.Popular).
+		SetActive(template.Active).
+		SetDescription(template.Description).
+		SetConfigTemplate(template.ConfigTemplate).
+		SetRequiredFields(template.RequiredFields).
+		SetSupportedFeatures(template.SupportedFeatures).
+		SetNillableDocumentationURL(template.DocumentationURL).
+		SetNillableSetupGuideURL(template.SetupGuideURL).
+		SetUsageCount(template.UsageCount).
+		SetNillableAverageSetupTime(template.AverageSetupTime).
+		SetSuccessRate(template.SuccessRate).
+		SetPopularityRank(template.PopularityRank).
+		SetMetadata(template.Metadata).
+		Save(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return errors.New(errors.CodeNotFound, "provider template not found")
+		}
+		return errors.Wrap(err, errors.CodeDatabaseError, "failed to update provider template")
+	}
+
+	return nil
 }
 
-// Extended model types that should be added to the model package
+// DeleteTemplate deletes a template by key
+func (r *providerCatalogRepository) DeleteTemplate(ctx context.Context, key string) error {
+	_, err := r.client.ProviderTemplate.Delete().
+		Where(providertemplate.Key(key)).
+		Exec(ctx)
+	if err != nil {
+		return errors.Wrap(err, errors.CodeDatabaseError, "failed to delete provider template")
+	}
 
-// These types extend the existing model package for the catalog system
-
-func init() {
-	// This ensures the new model types are properly integrated
+	return nil
 }
 
-// ProviderMarketplace represents a curated list of providers
-type ProviderMarketplace struct {
-	FeaturedProviders []model.ProviderTemplate `json:"featuredProviders"`
-	PopularProviders  []model.ProviderTemplate `json:"popularProviders"`
-	Categories        []ProviderCategory       `json:"categories"`
-	RecentlyAdded     []model.ProviderTemplate `json:"recentlyAdded"`
-	RecommendedForOrg []model.ProviderTemplate `json:"recommendedForOrg"`
+// Template query methods
+
+// ListTemplatesByCategory retrieves templates by category
+func (r *providerCatalogRepository) ListTemplatesByCategory(ctx context.Context, category string) ([]model.ProviderTemplate, error) {
+	templates, err := r.client.ProviderTemplate.Query().
+		Where(
+			providertemplate.Category(category),
+			providertemplate.Active(true),
+		).
+		Order(providertemplate.ByPopularityRank(), providertemplate.ByName()).
+		All(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to list templates by category")
+	}
+
+	result := make([]model.ProviderTemplate, len(templates))
+	for i, template := range templates {
+		result[i] = *entToModelTemplate(template)
+	}
+
+	return result, nil
 }
 
-type ProviderCategory struct {
-	Key         string                   `json:"key"`
-	Name        string                   `json:"name"`
-	Description string                   `json:"description"`
-	IconURL     string                   `json:"iconUrl"`
-	Providers   []model.ProviderTemplate `json:"providers"`
-	Count       int                      `json:"count"`
+// ListPopularTemplates retrieves popular templates
+func (r *providerCatalogRepository) ListPopularTemplates(ctx context.Context) ([]model.ProviderTemplate, error) {
+	templates, err := r.client.ProviderTemplate.Query().
+		Where(
+			providertemplate.Popular(true),
+			providertemplate.Active(true),
+		).
+		Order(providertemplate.ByPopularityRank(), providertemplate.ByUsageCount(sql.OrderDesc())).
+		All(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to list popular templates")
+	}
+
+	result := make([]model.ProviderTemplate, len(templates))
+	for i, template := range templates {
+		result[i] = *entToModelTemplate(template)
+	}
+
+	return result, nil
 }
 
-// Marketplace service for advanced provider discovery
-type MarketplaceService interface {
-	GetMarketplace(ctx context.Context, orgID xid.ID) (*ProviderMarketplace, error)
-	GetProvidersByCategory(ctx context.Context, category string) ([]model.ProviderTemplate, error)
-	GetRecommendedProviders(ctx context.Context, orgID xid.ID) ([]model.ProviderTemplate, error)
-	SearchProviders(ctx context.Context, query string, filters ProviderFilters) ([]model.ProviderTemplate, error)
+// SearchTemplates searches templates by query
+func (r *providerCatalogRepository) SearchTemplates(ctx context.Context, query string) ([]model.ProviderTemplate, error) {
+	templates, err := r.client.ProviderTemplate.Query().
+		Where(
+			providertemplate.Active(true),
+			providertemplate.Or(
+				providertemplate.NameContains(query),
+				providertemplate.DisplayNameContains(query),
+				providertemplate.DescriptionContains(query),
+				providertemplate.Key(query),
+			),
+		).
+		Order(providertemplate.ByPopularityRank(), providertemplate.ByName()).
+		All(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to search templates")
+	}
+
+	result := make([]model.ProviderTemplate, len(templates))
+	for i, template := range templates {
+		result[i] = *entToModelTemplate(template)
+	}
+
+	return result, nil
 }
 
-type ProviderFilters struct {
-	Category        []string `json:"category"`
-	Type            []string `json:"type"`
-	Popular         bool     `json:"popular"`
-	Enterprise      bool     `json:"enterprise"`
-	Features        []string `json:"features"`
-	ComplexityLevel string   `json:"complexityLevel"` // "simple", "intermediate", "advanced"
+// Template analytics methods
+
+// GetTemplateUsageStats retrieves usage statistics for a template
+func (r *providerCatalogRepository) GetTemplateUsageStats(ctx context.Context, key string) (*TemplateUsageStats, error) {
+	// Get template
+	template, err := r.client.ProviderTemplate.Query().
+		Where(providertemplate.Key(key)).
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, errors.New(errors.CodeNotFound, "provider template not found")
+		}
+		return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to get template")
+	}
+
+	// Get organization count using this template
+	orgCount, err := r.client.OrganizationProvider.Query().
+		Where(organizationprovider.TemplateKey(key)).
+		Count(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to count organizations")
+	}
+
+	// Calculate total logins
+	var totalLogins int
+	err = r.client.OrganizationProvider.Query().
+		Where(organizationprovider.TemplateKey(key)).
+		Aggregate(ent.Sum(organizationprovider.FieldTotalLogins)).
+		Scan(ctx, &totalLogins)
+	if err != nil {
+		r.logger.Warn("Failed to calculate total logins", logging.Error(err))
+		totalLogins = 0
+	}
+
+	// Get last used time
+	lastUsedTime := time.Time{}
+	orgProvider, err := r.client.OrganizationProvider.Query().
+		Where(
+			organizationprovider.TemplateKey(key),
+			organizationprovider.LastUsedNotNil(),
+		).
+		Order(organizationprovider.ByLastUsed(sql.OrderDesc())).
+		First(ctx)
+	if err == nil && orgProvider.LastUsed != nil {
+		lastUsedTime = *orgProvider.LastUsed
+	}
+
+	// Calculate average success rate
+	var avgSuccessRate float64
+	if orgCount > 0 {
+		err = r.client.OrganizationProvider.Query().
+			Where(organizationprovider.TemplateKey(key)).
+			Aggregate(func(s *sql.Selector) string {
+				return sql.As(sql.Avg(organizationprovider.FieldSuccessRate), "success_rate")
+			}).
+			Scan(ctx, &avgSuccessRate)
+		if err != nil {
+			r.logger.Warn("Failed to calculate average success rate", logging.Error(err))
+			avgSuccessRate = 0.0
+		}
+	}
+
+	stats := &TemplateUsageStats{
+		TemplateKey:       template.Key,
+		TemplateName:      template.Name,
+		OrganizationCount: orgCount,
+		TotalLogins:       totalLogins,
+		LastUsed:          lastUsedTime,
+		AverageSetupTime:  template.AverageSetupTime,
+		SuccessRate:       avgSuccessRate,
+		PopularityRank:    template.PopularityRank,
+	}
+
+	return stats, nil
 }
 
-// Provider setup wizard support
-type ProviderSetupWizard struct {
-	TemplateKey string                 `json:"templateKey"`
-	Steps       []SetupWizardStep      `json:"steps"`
-	Validation  SetupValidation        `json:"validation"`
-	TestResults *ConnectionTestResults `json:"testResults,omitempty"`
+// GetMostUsedTemplates retrieves most used templates
+func (r *providerCatalogRepository) GetMostUsedTemplates(ctx context.Context, limit int) ([]TemplateUsageStats, error) {
+	templates, err := r.client.ProviderTemplate.Query().
+		Where(providertemplate.Active(true)).
+		Order(providertemplate.ByUsageCount(sql.OrderDesc())).
+		Limit(limit).
+		All(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to get most used templates")
+	}
+
+	var result []TemplateUsageStats
+	for _, template := range templates {
+		stats, err := r.GetTemplateUsageStats(ctx, template.Key)
+		if err != nil {
+			r.logger.Warn("Failed to get usage stats for template",
+				logging.String("template", template.Key),
+				logging.Error(err))
+			continue
+		}
+		result = append(result, *stats)
+	}
+
+	return result, nil
 }
 
-type SetupWizardStep struct {
-	StepNumber  int                `json:"stepNumber"`
-	Title       string             `json:"title"`
-	Description string             `json:"description"`
-	Fields      []SetupWizardField `json:"fields"`
-	Optional    bool               `json:"optional"`
-	HelpText    string             `json:"helpText,omitempty"`
-	DocsURL     string             `json:"docsUrl,omitempty"`
+// Helper methods
+
+// entToModelTemplate converts ent.ProviderTemplate to model.ProviderTemplate
+func entToModelTemplate(entTemplate *ent.ProviderTemplate) *model.ProviderTemplate {
+	template := &model.ProviderTemplate{
+		Base: model.Base{
+			ID:        entTemplate.ID,
+			CreatedAt: entTemplate.CreatedAt,
+			UpdatedAt: entTemplate.UpdatedAt,
+		},
+		Key:               entTemplate.Key,
+		Name:              entTemplate.Name,
+		DisplayName:       entTemplate.DisplayName,
+		Type:              entTemplate.Type,
+		Protocol:          entTemplate.Protocol,
+		IconURL:           entTemplate.IconURL,
+		Category:          entTemplate.Category,
+		Popular:           entTemplate.Popular,
+		Active:            entTemplate.Active,
+		Description:       entTemplate.Description,
+		ConfigTemplate:    entTemplate.ConfigTemplate,
+		RequiredFields:    entTemplate.RequiredFields,
+		SupportedFeatures: entTemplate.SupportedFeatures,
+		DocumentationURL:  &entTemplate.DocumentationURL,
+		SetupGuideURL:     &entTemplate.SetupGuideURL,
+		UsageCount:        entTemplate.UsageCount,
+		AverageSetupTime:  &entTemplate.AverageSetupTime,
+		SuccessRate:       entTemplate.SuccessRate,
+		PopularityRank:    entTemplate.PopularityRank,
+		Metadata:          entTemplate.Metadata,
+	}
+
+	return template
 }
 
-type SetupWizardField struct {
-	Key          string      `json:"key"`
-	Label        string      `json:"label"`
-	Type         string      `json:"type"` // "text", "password", "url", "select", "textarea", "file"
-	Required     bool        `json:"required"`
-	Placeholder  string      `json:"placeholder,omitempty"`
-	HelpText     string      `json:"helpText,omitempty"`
-	Validation   string      `json:"validation,omitempty"` // regex pattern
-	Options      []string    `json:"options,omitempty"`    // for select fields
-	DefaultValue interface{} `json:"defaultValue,omitempty"`
-	Sensitive    bool        `json:"sensitive"` // for password/secret fields
+// Helper function to set optional string pointer
+func (r *providerCatalogRepository) setOptionalString(value *string) string {
+	if value == nil {
+		return ""
+	}
+	return *value
 }
 
-type SetupValidation struct {
-	ConfigValid     bool     `json:"configValid"`
-	MissingFields   []string `json:"missingFields,omitempty"`
-	InvalidFields   []string `json:"invalidFields,omitempty"`
-	Warnings        []string `json:"warnings,omitempty"`
-	Recommendations []string `json:"recommendations,omitempty"`
+// Helper function to set optional float pointer
+func (r *providerCatalogRepository) setOptionalFloat(value *float64) float64 {
+	if value == nil {
+		return 0.0
+	}
+	return *value
 }
 
-type ConnectionTestResults struct {
-	Success         bool              `json:"success"`
-	TestsPerformed  []ConnectionTest  `json:"testsPerformed"`
-	OverallLatency  int               `json:"overallLatency"` // milliseconds
-	Recommendations []string          `json:"recommendations,omitempty"`
-	Issues          []ConnectionIssue `json:"issues,omitempty"`
+// Helper function to convert string to pointer if not empty
+func stringPtr(s string) *string {
+	if s == "" {
+		return nil
+	}
+	return &s
 }
 
-type ConnectionTest struct {
-	TestName     string                 `json:"testName"`
-	Success      bool                   `json:"success"`
-	Latency      int                    `json:"latency"` // milliseconds
-	ErrorMessage string                 `json:"errorMessage,omitempty"`
-	Details      map[string]interface{} `json:"details,omitempty"`
+// Helper function to convert float to pointer if not zero
+func floatPtr(f float64) *float64 {
+	if f == 0.0 {
+		return nil
+	}
+	return &f
 }
-
-type ConnectionIssue struct {
-	Severity   string `json:"severity"` // "error", "warning", "info"
-	Message    string `json:"message"`
-	Resolution string `json:"resolution,omitempty"`
-	DocsURL    string `json:"docsUrl,omitempty"`
-}
-
-// Usage example for the enhanced catalog system:
-/*
-// 1. Seed the catalog on application startup
-catalogService.SeedProviderCatalog(ctx)
-
-// 2. Organization admin sees available providers
-availableProviders, _ := catalogService.GetAvailableProviders(ctx)
-
-// 3. Organization enables Google SSO
-enableReq := model.EnableProviderRequest{
-    OrganizationID: orgID,
-    TemplateKey:    "google",
-    Config: map[string]interface{}{
-        "client_id":     "your-google-client-id",
-        "client_secret": "your-google-client-secret",
-    },
-    AutoProvision: true,
-    Domain: "company.com",
-}
-
-provider, _ := catalogService.EnableProviderForOrganization(ctx, enableReq)
-
-// 4. Users can now login with Google SSO
-// The provider is automatically configured with Google's endpoints
-*/

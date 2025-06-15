@@ -11,6 +11,7 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -128,26 +129,12 @@ var (
 	DefaultID func() xid.ID
 )
 
-// Format defines the type for the "format" enum field.
-type Format string
-
-// FormatJSON is the default value of the Format enum.
-const DefaultFormat = FormatJSON
-
-// Format values.
-const (
-	FormatJSON Format = "json"
-	FormatForm Format = "form"
-)
-
-func (f Format) String() string {
-	return string(f)
-}
+const DefaultFormat model.WebhookFormat = "json"
 
 // FormatValidator is a validator for the "format" field enum values. It is called by the builders before save.
-func FormatValidator(f Format) error {
-	switch f {
-	case FormatJSON, FormatForm:
+func FormatValidator(f model.WebhookFormat) error {
+	switch f.String() {
+	case "json", "form":
 		return nil
 	default:
 		return fmt.Errorf("webhook: invalid enum value for format field: %q", f)

@@ -3,10 +3,10 @@ package authz
 import (
 	"context"
 
-	entUser "github.com/juicycleff/frank/ent/user"
-	"github.com/juicycleff/frank/internal/contexts"
+	"github.com/juicycleff/frank/pkg/contexts"
 	"github.com/juicycleff/frank/pkg/data"
 	"github.com/juicycleff/frank/pkg/errors"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -24,7 +24,7 @@ const (
 
 	// Auth service configuration (customer organizations)
 	PermissionConfigureAuthService Permission = "configure:auth:service"
-	// PermissionManageAuthProviders      Permission = "manage:auth:providers"
+	// PermissionManageAuthProvider      Permission = "manage:auth:providers"
 	PermissionViewAuthServiceAnalytics Permission = "view:auth:service:analytics"
 	PermissionManageAuthServiceDomain  Permission = "manage:auth:service:domain"
 
@@ -97,11 +97,11 @@ func (epc *EnhancedPermissionChecker) IsExternalUser(ctx context.Context, userID
 	if err != nil {
 		return false, err
 	}
-	return userType == entUser.UserTypeExternal, nil
+	return userType == model.UserTypeExternal, nil
 }
 
 // GetUserType returns the user's type
-func (epc *EnhancedPermissionChecker) GetUserType(ctx context.Context, userID xid.ID) (entUser.UserType, error) {
+func (epc *EnhancedPermissionChecker) GetUserType(ctx context.Context, userID xid.ID) (model.UserType, error) {
 	userCtx, err := epc.userMgmt.GetUserContext(ctx, userID)
 	if err != nil {
 		return "", err
@@ -152,7 +152,7 @@ func (epc *EnhancedPermissionChecker) HasPermissionForUserType(ctx context.Conte
 	}
 
 	for _, platPerm := range platformPermissions {
-		if permission == platPerm && userType != entUser.UserTypeInternal {
+		if permission == platPerm && userType != model.UserTypeInternal {
 			return false, errors.New(errors.CodeForbidden, "permission requires internal user")
 		}
 	}
@@ -169,7 +169,7 @@ func (epc *EnhancedPermissionChecker) HasPermissionForUserType(ctx context.Conte
 	}
 
 	for _, euPerm := range endUserPermissions {
-		if permission == euPerm && userType != entUser.UserTypeExternal {
+		if permission == euPerm && userType != model.UserTypeExternal {
 			return false, errors.New(errors.CodeForbidden, "permission requires external customer user")
 		}
 	}

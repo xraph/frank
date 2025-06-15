@@ -10,7 +10,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/juicycleff/frank/ent"
 	"github.com/juicycleff/frank/ent/smstemplate"
-	"github.com/juicycleff/frank/internal/model"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 
 	"github.com/juicycleff/frank/pkg/errors"

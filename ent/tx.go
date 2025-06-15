@@ -17,8 +17,12 @@ import (
 // Tx is a transactional client that is created by calling Client.Tx().
 type Tx struct {
 	config
+	// Activity is the client for interacting with the Activity builders.
+	Activity *ActivityClient
 	// ApiKey is the client for interacting with the ApiKey builders.
 	ApiKey *ApiKeyClient
+	// ApiKeyActivity is the client for interacting with the ApiKeyActivity builders.
+	ApiKeyActivity *ApiKeyActivityClient
 	// Audit is the client for interacting with the Audit builders.
 	Audit *AuditClient
 	// EmailTemplate is the client for interacting with the EmailTemplate builders.
@@ -43,12 +47,16 @@ type Tx struct {
 	Organization *OrganizationClient
 	// OrganizationFeature is the client for interacting with the OrganizationFeature builders.
 	OrganizationFeature *OrganizationFeatureClient
+	// OrganizationProvider is the client for interacting with the OrganizationProvider builders.
+	OrganizationProvider *OrganizationProviderClient
 	// Passkey is the client for interacting with the Passkey builders.
 	Passkey *PasskeyClient
 	// Permission is the client for interacting with the Permission builders.
 	Permission *PermissionClient
 	// PermissionDependency is the client for interacting with the PermissionDependency builders.
 	PermissionDependency *PermissionDependencyClient
+	// ProviderTemplate is the client for interacting with the ProviderTemplate builders.
+	ProviderTemplate *ProviderTemplateClient
 	// Role is the client for interacting with the Role builders.
 	Role *RoleClient
 	// SMSTemplate is the client for interacting with the SMSTemplate builders.
@@ -200,7 +208,9 @@ func (tx *Tx) Client() *Client {
 }
 
 func (tx *Tx) init() {
+	tx.Activity = NewActivityClient(tx.config)
 	tx.ApiKey = NewApiKeyClient(tx.config)
+	tx.ApiKeyActivity = NewApiKeyActivityClient(tx.config)
 	tx.Audit = NewAuditClient(tx.config)
 	tx.EmailTemplate = NewEmailTemplateClient(tx.config)
 	tx.FeatureFlag = NewFeatureFlagClient(tx.config)
@@ -213,9 +223,11 @@ func (tx *Tx) init() {
 	tx.OAuthToken = NewOAuthTokenClient(tx.config)
 	tx.Organization = NewOrganizationClient(tx.config)
 	tx.OrganizationFeature = NewOrganizationFeatureClient(tx.config)
+	tx.OrganizationProvider = NewOrganizationProviderClient(tx.config)
 	tx.Passkey = NewPasskeyClient(tx.config)
 	tx.Permission = NewPermissionClient(tx.config)
 	tx.PermissionDependency = NewPermissionDependencyClient(tx.config)
+	tx.ProviderTemplate = NewProviderTemplateClient(tx.config)
 	tx.Role = NewRoleClient(tx.config)
 	tx.SMSTemplate = NewSMSTemplateClient(tx.config)
 	tx.SSOState = NewSSOStateClient(tx.config)
@@ -235,7 +247,7 @@ func (tx *Tx) init() {
 // of them in order to commit or rollback the transaction.
 //
 // If a closed transaction is embedded in one of the generated entities, and the entity
-// applies a query, for example: ApiKey.QueryXXX(), the query will be executed
+// applies a query, for example: Activity.QueryXXX(), the query will be executed
 // through the driver which created this transaction.
 //
 // Note that txDriver is not goroutine safe.

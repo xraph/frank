@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/juicycleff/frank/ent/predicate"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -665,23 +666,33 @@ func TimeoutMsLTE(v int) predicate.Webhook {
 }
 
 // FormatEQ applies the EQ predicate on the "format" field.
-func FormatEQ(v Format) predicate.Webhook {
-	return predicate.Webhook(sql.FieldEQ(FieldFormat, v))
+func FormatEQ(v model.WebhookFormat) predicate.Webhook {
+	vc := v
+	return predicate.Webhook(sql.FieldEQ(FieldFormat, vc))
 }
 
 // FormatNEQ applies the NEQ predicate on the "format" field.
-func FormatNEQ(v Format) predicate.Webhook {
-	return predicate.Webhook(sql.FieldNEQ(FieldFormat, v))
+func FormatNEQ(v model.WebhookFormat) predicate.Webhook {
+	vc := v
+	return predicate.Webhook(sql.FieldNEQ(FieldFormat, vc))
 }
 
 // FormatIn applies the In predicate on the "format" field.
-func FormatIn(vs ...Format) predicate.Webhook {
-	return predicate.Webhook(sql.FieldIn(FieldFormat, vs...))
+func FormatIn(vs ...model.WebhookFormat) predicate.Webhook {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Webhook(sql.FieldIn(FieldFormat, v...))
 }
 
 // FormatNotIn applies the NotIn predicate on the "format" field.
-func FormatNotIn(vs ...Format) predicate.Webhook {
-	return predicate.Webhook(sql.FieldNotIn(FieldFormat, vs...))
+func FormatNotIn(vs ...model.WebhookFormat) predicate.Webhook {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Webhook(sql.FieldNotIn(FieldFormat, v...))
 }
 
 // MetadataIsNil applies the IsNil predicate on the "metadata" field.

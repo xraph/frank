@@ -7,8 +7,8 @@ import (
 
 	"github.com/juicycleff/frank/ent"
 	"github.com/juicycleff/frank/ent/audit"
-	"github.com/juicycleff/frank/internal/model"
 	"github.com/juicycleff/frank/pkg/errors"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 

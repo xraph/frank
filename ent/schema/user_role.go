@@ -7,6 +7,7 @@ import (
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -28,8 +29,8 @@ func (UserRole) Fields() []ent.Field {
 
 		// Context fields - determine the scope of this role assignment
 		field.Enum("context_type").
-			Values("system", "organization", "application").
-			Comment("system = platform-wide, organization = org-specific, application = customer's app"),
+			GoType(model.ContextType("")).
+			Comment("platform = platform-wide, organization = org-specific, application = customer's app"),
 
 		field.String("context_id").
 			GoType(xid.ID{}).

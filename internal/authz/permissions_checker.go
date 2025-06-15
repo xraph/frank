@@ -8,7 +8,7 @@ import (
 	entOrganization "github.com/juicycleff/frank/ent/organization"
 	entRole "github.com/juicycleff/frank/ent/role"
 	entUser "github.com/juicycleff/frank/ent/user"
-	"github.com/juicycleff/frank/internal/contexts"
+	"github.com/juicycleff/frank/pkg/contexts"
 	"github.com/juicycleff/frank/pkg/data"
 	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/rs/xid"

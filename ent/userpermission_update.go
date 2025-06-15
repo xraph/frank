@@ -19,6 +19,7 @@ import (
 	"github.com/juicycleff/frank/ent/predicate"
 	"github.com/juicycleff/frank/ent/user"
 	"github.com/juicycleff/frank/ent/userpermission"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -91,15 +92,15 @@ func (upu *UserPermissionUpdate) SetNillablePermissionID(x *xid.ID) *UserPermiss
 }
 
 // SetContextType sets the "context_type" field.
-func (upu *UserPermissionUpdate) SetContextType(ut userpermission.ContextType) *UserPermissionUpdate {
-	upu.mutation.SetContextType(ut)
+func (upu *UserPermissionUpdate) SetContextType(mt model.ContextType) *UserPermissionUpdate {
+	upu.mutation.SetContextType(mt)
 	return upu
 }
 
 // SetNillableContextType sets the "context_type" field if the given value is not nil.
-func (upu *UserPermissionUpdate) SetNillableContextType(ut *userpermission.ContextType) *UserPermissionUpdate {
-	if ut != nil {
-		upu.SetContextType(*ut)
+func (upu *UserPermissionUpdate) SetNillableContextType(mt *model.ContextType) *UserPermissionUpdate {
+	if mt != nil {
+		upu.SetContextType(*mt)
 	}
 	return upu
 }
@@ -165,15 +166,15 @@ func (upu *UserPermissionUpdate) ClearResourceID() *UserPermissionUpdate {
 }
 
 // SetPermissionType sets the "permission_type" field.
-func (upu *UserPermissionUpdate) SetPermissionType(ut userpermission.PermissionType) *UserPermissionUpdate {
-	upu.mutation.SetPermissionType(ut)
+func (upu *UserPermissionUpdate) SetPermissionType(mt model.PermissionType) *UserPermissionUpdate {
+	upu.mutation.SetPermissionType(mt)
 	return upu
 }
 
 // SetNillablePermissionType sets the "permission_type" field if the given value is not nil.
-func (upu *UserPermissionUpdate) SetNillablePermissionType(ut *userpermission.PermissionType) *UserPermissionUpdate {
-	if ut != nil {
-		upu.SetPermissionType(*ut)
+func (upu *UserPermissionUpdate) SetNillablePermissionType(mt *model.PermissionType) *UserPermissionUpdate {
+	if mt != nil {
+		upu.SetPermissionType(*mt)
 	}
 	return upu
 }
@@ -684,15 +685,15 @@ func (upuo *UserPermissionUpdateOne) SetNillablePermissionID(x *xid.ID) *UserPer
 }
 
 // SetContextType sets the "context_type" field.
-func (upuo *UserPermissionUpdateOne) SetContextType(ut userpermission.ContextType) *UserPermissionUpdateOne {
-	upuo.mutation.SetContextType(ut)
+func (upuo *UserPermissionUpdateOne) SetContextType(mt model.ContextType) *UserPermissionUpdateOne {
+	upuo.mutation.SetContextType(mt)
 	return upuo
 }
 
 // SetNillableContextType sets the "context_type" field if the given value is not nil.
-func (upuo *UserPermissionUpdateOne) SetNillableContextType(ut *userpermission.ContextType) *UserPermissionUpdateOne {
-	if ut != nil {
-		upuo.SetContextType(*ut)
+func (upuo *UserPermissionUpdateOne) SetNillableContextType(mt *model.ContextType) *UserPermissionUpdateOne {
+	if mt != nil {
+		upuo.SetContextType(*mt)
 	}
 	return upuo
 }
@@ -758,15 +759,15 @@ func (upuo *UserPermissionUpdateOne) ClearResourceID() *UserPermissionUpdateOne 
 }
 
 // SetPermissionType sets the "permission_type" field.
-func (upuo *UserPermissionUpdateOne) SetPermissionType(ut userpermission.PermissionType) *UserPermissionUpdateOne {
-	upuo.mutation.SetPermissionType(ut)
+func (upuo *UserPermissionUpdateOne) SetPermissionType(mt model.PermissionType) *UserPermissionUpdateOne {
+	upuo.mutation.SetPermissionType(mt)
 	return upuo
 }
 
 // SetNillablePermissionType sets the "permission_type" field if the given value is not nil.
-func (upuo *UserPermissionUpdateOne) SetNillablePermissionType(ut *userpermission.PermissionType) *UserPermissionUpdateOne {
-	if ut != nil {
-		upuo.SetPermissionType(*ut)
+func (upuo *UserPermissionUpdateOne) SetNillablePermissionType(mt *model.PermissionType) *UserPermissionUpdateOne {
+	if mt != nil {
+		upuo.SetPermissionType(*mt)
 	}
 	return upuo
 }

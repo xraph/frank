@@ -5,18 +5,19 @@ package routes
 
 import (
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/adapters/humachi"
 	"github.com/go-chi/chi/v5"
 	chimw "github.com/go-chi/chi/v5/middleware"
-	user2 "github.com/juicycleff/frank/ent/user"
 	"github.com/juicycleff/frank/internal/di"
 	customMiddleware "github.com/juicycleff/frank/internal/middleware"
-	"github.com/juicycleff/frank/internal/server"
 	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/juicycleff/frank/pkg/logging"
+	"github.com/juicycleff/frank/pkg/model"
+	"github.com/juicycleff/frank/pkg/server"
 )
 
 // Router represents the main application router with support for:
@@ -28,17 +29,29 @@ import (
 // - Real-time features (WebSockets, SSE) compatibility
 // - Production-ready middleware stack
 type Router struct {
-	di       di.Container
-	router   chi.Router
-	api      huma.API
-	authMw   *customMiddleware.AuthMiddleware
-	tenantMw *customMiddleware.TenantMiddleware
-	logger   logging.Logger
+	di         di.Container
+	router     chi.Router
+	api        huma.API
+	authMw     *customMiddleware.AuthMiddleware
+	tenantMw   *customMiddleware.TenantMiddleware
+	logger     logging.Logger
+	mountOpts  *server.MountOptions
+	isEmbedded bool
 }
 
 // NewRouter creates a new router instance with all middleware and route configurations
 func NewRouter(di di.Container, existingRouter chi.Router) server.Router {
+	return NewRouterWithOptions(di, existingRouter, nil)
+}
+
+// NewRouterWithOptions creates a new router with custom mounting options
+func NewRouterWithOptions(di di.Container, existingRouter chi.Router, opts *server.MountOptions) server.Router {
 	logger := di.Logger().Named("router")
+
+	if opts == nil {
+		opts = server.DefaultMountOptions()
+		opts.BasePath = "" // No base path for standalone usage
+	}
 
 	// Create or use existing Chi router
 	var r chi.Router
@@ -50,27 +63,42 @@ func NewRouter(di di.Container, existingRouter chi.Router) server.Router {
 	}
 
 	// Create Huma API configuration
-	api := createHumaAPI(r, di, logger)
+	api := createHumaAPI(r, di, logger, opts)
 
 	tenantConfig := customMiddleware.DefaultTenantConfig()
 	tenantConfig.EnableTenantCache = true
 	tenantConfig.Logger = di.Logger()
 
 	router := &Router{
-		di:       di,
-		router:   r,
-		api:      api,
-		authMw:   customMiddleware.NewAuthMiddleware(di, api),
-		tenantMw: customMiddleware.NewTenantMiddleware(api, di, tenantConfig),
-		logger:   logger,
+		di:         di,
+		router:     r,
+		api:        api,
+		authMw:     customMiddleware.NewAuthMiddleware(di, api),
+		tenantMw:   customMiddleware.NewTenantMiddleware(api, di, tenantConfig),
+		logger:     logger,
+		mountOpts:  opts,
+		isEmbedded: existingRouter != nil,
 	}
 
-	router.setupDocsRoutes()
+	if opts.EnableDocs {
+		router.setupDocsRoutes()
+	}
+
+	// Apply custom middleware if provided
+	for _, mw := range opts.CustomMiddleware {
+		router.Use(mw)
+	}
 
 	// Register all routes
 	router.RegisterRoutes()
 
 	return router
+}
+
+// NewEmbeddedRouter creates a router optimized for embedding in larger applications
+func NewEmbeddedRouter(parentRouter chi.Router, di di.Container, basePath string) server.Router {
+	opts := server.EmbeddedMountOptions(basePath)
+	return NewRouterWithOptions(di, parentRouter, opts)
 }
 
 // setupMiddleware configures all Chi middleware for the router
@@ -164,60 +192,31 @@ func setupMiddleware(r chi.Router, di di.Container, logger logging.Logger) {
 }
 
 // createHumaAPI creates and configures the Huma API instance
-func createHumaAPI(r chi.Router, di di.Container, logger logging.Logger) huma.API {
+func createHumaAPI(r chi.Router, di di.Container, logger logging.Logger, opts *server.MountOptions) huma.API {
 	config := huma.DefaultConfig("Frank Auth API", "1.0.0")
 
 	// Configure OpenAPI documentation
-	config.Info = &huma.Info{
-		Title:       "Frank Authentication API",
-		Description: "Multi-tenant authentication SaaS platform API with Clerk.js compatibility",
-		Version:     "1.0.0",
-		Contact: &huma.Contact{
-			Name:  "Frank Auth Support",
-			Email: "support@frankauth.com",
-			URL:   "https://frankauth.com/support",
-		},
-		License: &huma.License{
-			Name: "MIT",
-			URL:  "https://opensource.org/licenses/MIT",
-		},
+	if opts.CustomAPIInfo != nil {
+		config.Info = opts.CustomAPIInfo
+	} else {
+		config.Info = &huma.Info{
+			Title:       "Frank Authentication API",
+			Description: "Multi-tenant authentication SaaS platform API with Clerk.js compatibility",
+			Version:     "1.0.0",
+			Contact: &huma.Contact{
+				Name:  "Frank Auth Support",
+				Email: "support@frankauth.com",
+				URL:   "https://frankauth.com/support",
+			},
+			License: &huma.License{
+				Name: "MIT",
+				URL:  "https://opensource.org/licenses/MIT",
+			},
+		}
 	}
 
-	// Server configurations
-	config.Servers = []*huma.Server{
-		{
-			URL:         "http://localhost:{port}",
-			Description: "Local development server",
-			Variables: map[string]*huma.ServerVariable{
-				"port": {
-					Default:     "8998",
-					Description: "API port",
-				},
-			},
-		},
-		{
-			URL:         "https://api.frankauth.com/{version}",
-			Description: "Production server",
-			Variables: map[string]*huma.ServerVariable{
-				"version": {
-					Default:     "v1",
-					Enum:        []string{"v1", "v2"},
-					Description: "API version",
-				},
-			},
-		},
-		{
-			URL:         "https://api-staging.frankauth.com/{version}",
-			Description: "Staging server",
-			Variables: map[string]*huma.ServerVariable{
-				"version": {
-					Default:     "v1",
-					Enum:        []string{"v1", "v2"},
-					Description: "API version",
-				},
-			},
-		},
-	}
+	// Configure server URLs based on mount options
+	config.Servers = buildServerConfigurations(opts, di.Config().Server.BaseURL)
 
 	// Security schemes supporting the three-tier user system and multi-tenant architecture
 	config.Components = &huma.Components{
@@ -233,9 +232,9 @@ func createHumaAPI(r chi.Router, di di.Container, logger logging.Logger) huma.AP
 				Description: "OAuth2 authentication with multi-tenant support and granular scopes",
 				Flows: &huma.OAuthFlows{
 					AuthorizationCode: &huma.OAuthFlow{
-						AuthorizationURL: "/v1/oauth/authorize",
-						TokenURL:         "/v1/oauth/token",
-						RefreshURL:       "/v1/oauth/refresh",
+						AuthorizationURL: buildURL(opts.BasePath, "/v1/oauth/authorize"),
+						TokenURL:         buildURL(opts.BasePath, "/v1/oauth/token"),
+						RefreshURL:       buildURL(opts.BasePath, "/v1/oauth/refresh"),
 						Scopes: map[string]string{
 							// Standard OpenID Connect scopes
 							"profile":        "Access user profile information",
@@ -269,7 +268,7 @@ func createHumaAPI(r chi.Router, di di.Container, logger logging.Logger) huma.AP
 						},
 					},
 					ClientCredentials: &huma.OAuthFlow{
-						TokenURL: "/v1/oauth/token",
+						TokenURL: buildURL(opts.BasePath, "/v1/oauth/token"),
 						Scopes: map[string]string{
 							"api":            "General API access for server-to-server communication",
 							"read:users":     "Read user information (server-to-server)",
@@ -314,18 +313,101 @@ func createHumaAPI(r chi.Router, di di.Container, logger logging.Logger) huma.AP
 	return api
 }
 
+// buildServerConfigurations creates server configurations based on mount options
+func buildServerConfigurations(opts *server.MountOptions, baseURL string) []*huma.Server {
+	servers := []*huma.Server{}
+
+	// Development server
+	servers = append(servers, &huma.Server{
+		URL:         "http://localhost:{port}" + opts.BasePath,
+		Description: "Local development server",
+		Variables: map[string]*huma.ServerVariable{
+			"port": {
+				Default:     "8998",
+				Description: "API port",
+			},
+		},
+	})
+
+	// Production servers with custom base path
+	if opts.OpenAPIBasePath != "" {
+		servers = append(servers, &huma.Server{
+			URL:         "https://api.frankauth.com" + opts.OpenAPIBasePath + "/{version}",
+			Description: "Production server",
+			Variables: map[string]*huma.ServerVariable{
+				"version": {
+					Default:     "v1",
+					Enum:        []string{"v1", "v2"},
+					Description: "API version",
+				},
+			},
+		})
+	} else {
+		servers = append(servers, &huma.Server{
+			URL:         "https://api.frankauth.com/{version}",
+			Description: "Production server",
+			Variables: map[string]*huma.ServerVariable{
+				"version": {
+					Default:     "v1",
+					Enum:        []string{"v1", "v2"},
+					Description: "API version",
+				},
+			},
+		})
+	}
+
+	return servers
+}
+
+// buildURL helper function to construct URLs with base paths
+func buildURL(basePath, path string) string {
+	if basePath == "" {
+		return path
+	}
+	return strings.TrimSuffix(basePath, "/") + path
+}
+
 // RegisterRoutes registers all API routes and route groups
 func (router *Router) RegisterRoutes() {
-	// Create API version groups
-	apiGroup := huma.NewGroup(router.api, "/api")
-	v1Group := huma.NewGroup(apiGroup, "/v1")
+	// Create API version groups with base path consideration
+	var apiGroup, v1Group huma.API
 
-	// Setup route groups with different security requirements
-	router.setupPublicRoutes(v1Group)
-	router.setupProtectedRoutes(v1Group)
-	router.setupInternalRoutes(v1Group)
-	router.setupWebhookRoutes(v1Group)
-	router.setupHealthRoutes(router.api)
+	if router.mountOpts.BasePath != "" {
+		baseGroup := huma.NewGroup(router.api, router.mountOpts.BasePath)
+		apiGroup = huma.NewGroup(baseGroup, "/api")
+	} else {
+		apiGroup = huma.NewGroup(router.api, "/api")
+	}
+
+	v1Group = huma.NewGroup(apiGroup, "/v1")
+
+	// Setup route groups based on mount options
+	if router.mountOpts.IncludeRoutes.Public && !router.mountOpts.ExcludeRoutes.Public {
+		router.setupPublicRoutes(v1Group)
+	}
+
+	if router.mountOpts.IncludeRoutes.Protected && !router.mountOpts.ExcludeRoutes.Protected {
+		router.setupProtectedRoutes(v1Group)
+	}
+
+	if router.mountOpts.IncludeRoutes.Internal && !router.mountOpts.ExcludeRoutes.Internal {
+		router.setupInternalRoutes(v1Group)
+	}
+
+	if router.mountOpts.IncludeRoutes.Webhooks && !router.mountOpts.ExcludeRoutes.Webhooks {
+		router.setupWebhookRoutes(v1Group)
+	}
+
+	if router.mountOpts.IncludeRoutes.Health && !router.mountOpts.ExcludeRoutes.Health {
+		// Health routes at the base API level (not versioned)
+		var healthAPI huma.API
+		if router.mountOpts.BasePath != "" {
+			healthAPI = huma.NewGroup(router.api, router.mountOpts.BasePath)
+		} else {
+			healthAPI = router.api
+		}
+		router.setupHealthRoutes(healthAPI)
+	}
 }
 
 // setupPublicRoutes configures routes that don't require authentication
@@ -389,6 +471,12 @@ func (router *Router) setupProtectedRoutes(v1Group huma.API) {
 
 	// Webhook management endpoints
 	RegisterWebhookAPI(tenantGroup, router.di)
+
+	// Activity management endpoints
+	RegisterActivityAPI(tenantGroup, router.di)
+
+	// Activity management endpoints
+	RegisterAPIKeyAPI(tenantGroup, router.di)
 }
 
 // setupInternalRoutes configures routes for internal platform users only
@@ -396,7 +484,7 @@ func (router *Router) setupInternalRoutes(v1Group huma.API) {
 	internalGroup := huma.NewGroup(v1Group, "/internal")
 
 	// Note: Authentication and authorization middleware for internal users
-	internalGroup.UseMiddleware(router.authMw.RequireAuthHuma(), router.authMw.RequireUserTypeHuma(user2.UserTypeInternal))
+	internalGroup.UseMiddleware(router.authMw.RequireAuthHuma(), router.authMw.RequireUserTypeHuma(model.UserTypeInternal))
 
 	// Platform administration endpoints
 	RegisterPlatformAdminAPI(internalGroup, router.di)
@@ -412,7 +500,7 @@ func (router *Router) setupInternalRoutes(v1Group huma.API) {
 func (router *Router) setupWebhookRoutes(v1Group huma.API) {
 	webhookGroup := huma.NewGroup(v1Group, "/webhooks")
 
-	// // Apply webhook-specific CORS middleware
+	// Apply webhook-specific CORS middleware
 	webhookGroup.UseMiddleware(customMiddleware.HumaWebhookCORSMiddleware(router.api))
 
 	// Note: Webhook signature verification middleware should be applied here
@@ -430,6 +518,64 @@ func (router *Router) setupHealthRoutes(api huma.API) {
 	if router.di.Config().Monitoring.Enabled {
 		RegisterMetricsAPI(api, router.di)
 	}
+}
+
+// MountOn mounts this router on a parent router with advanced options
+func (router *Router) MountOn(parent chi.Router, opts *server.MountOptions) {
+	if opts == nil {
+		opts = server.DefaultMountOptions()
+	}
+
+	// Create a new sub-router with the specified options
+	subRouter := NewRouterWithOptions(router.di, parent, opts)
+	parent.Mount(opts.BasePath, subRouter.Handler())
+}
+
+// MountSubset mounts only specific route groups on a parent router
+func (router *Router) MountSubset(parent chi.Router, basePath string, routeGroups server.RouteGroups) {
+	opts := &server.MountOptions{
+		BasePath:              basePath,
+		IncludeRoutes:         routeGroups,
+		SkipBuiltinMiddleware: true,
+		EnableDocs:            false,
+		TenantAware:           true,
+	}
+
+	subRouter := NewRouterWithOptions(router.di, parent, opts)
+	parent.Mount(basePath, subRouter.Handler())
+}
+
+// MountAuthOnly mounts only authentication-related routes
+func (router *Router) MountAuthOnly(parent chi.Router, basePath string) {
+	router.MountSubset(parent, basePath, server.RouteGroups{
+		Public:    true,
+		Protected: false,
+		Internal:  false,
+		Webhooks:  false,
+		Health:    false,
+		Docs:      false,
+	})
+}
+
+// MountUserManagement mounts user and organization management routes
+func (router *Router) MountUserManagement(parent chi.Router, basePath string) {
+	router.MountSubset(parent, basePath, server.RouteGroups{
+		Public:    true,
+		Protected: true,
+		Internal:  false,
+		Webhooks:  false,
+		Health:    false,
+		Docs:      false,
+	})
+}
+
+// CreateEmbeddedHandler creates an HTTP handler optimized for embedding
+func (router *Router) CreateEmbeddedHandler(basePath string, customMiddleware ...func(http.Handler) http.Handler) http.Handler {
+	opts := server.EmbeddedMountOptions(basePath)
+	opts.CustomMiddleware = customMiddleware
+
+	embeddedRouter := NewRouterWithOptions(router.di, nil, opts)
+	return embeddedRouter.Handler()
 }
 
 // Handler returns the HTTP handler
@@ -492,121 +638,12 @@ func (router *Router) Chi() chi.Router {
 	return router.router
 }
 
-// Placeholder functions for route registration - these will be implemented in separate files
-
-// func RegisterAuthAPI(group huma.API, di di.Container) {
-// 	// Will be implemented in routes_auth.go
-// 	di.Logger().Info("Registering authentication API routes")
-// }
-
-func RegisterRBACAPI(group huma.API, di di.Container) {
-	// Will be implemented in routes_rbac.go
-	di.Logger().Info("Registering RBAC API routes")
+// GetMountOptions returns the current mount options
+func (router *Router) GetMountOptions() *server.MountOptions {
+	return router.mountOpts
 }
 
-func RegisterMFAAPI(group huma.API, di di.Container) {
-	// Will be implemented in routes_mfa.go
-	di.Logger().Info("Registering MFA API routes")
+// IsEmbedded returns whether this router is running in embedded mode
+func (router *Router) IsEmbedded() bool {
+	return router.isEmbedded
 }
-
-func RegisterOAuthAPI(group huma.API, di di.Container) {
-	// Will be implemented in routes_oauth.go
-	di.Logger().Info("Registering OAuth API routes")
-}
-
-func RegisterOAuthPublicAPI(group huma.API, di di.Container) {
-	// Will be implemented in routes_oauth.go
-	di.Logger().Info("Registering public OAuth API routes")
-}
-
-func RegisterSSOAPI(group huma.API, di di.Container) {
-	// Will be implemented in routes_sso.go
-	di.Logger().Info("Registering SSO API routes")
-}
-
-func RegisterSSOPublicAPI(group huma.API, di di.Container) {
-	// Will be implemented in routes_sso.go
-	di.Logger().Info("Registering public SSO API routes")
-}
-
-func RegisterPasskeyAPI(group huma.API, di di.Container) {
-	// Will be implemented in routes_passkeys.go
-	di.Logger().Info("Registering passkey API routes")
-}
-
-func RegisterPasskeyPublicAPI(group huma.API, di di.Container) {
-	// Will be implemented in routes_passkeys.go
-	di.Logger().Info("Registering public passkey API routes")
-}
-
-func RegisterWebhookAPI(group huma.API, di di.Container) {
-	// Will be implemented in routes_webhooks.go
-	di.Logger().Info("Registering webhook management API routes")
-}
-
-func RegisterWebhookPublicAPI(group huma.API, di di.Container) {
-	// Will be implemented in routes_webhooks.go
-	di.Logger().Info("Registering public webhook API routes")
-}
-
-func RegisterWebhookEndpointsAPI(group huma.API, di di.Container) {
-	// Will be implemented in routes_webhooks.go
-	di.Logger().Info("Registering webhook endpoint API routes")
-}
-
-func RegisterPlatformAdminAPI(group huma.API, di di.Container) {
-	// Will be implemented in internal admin routes
-	di.Logger().Info("Registering platform admin API routes")
-}
-
-func RegisterSystemAPI(group huma.API, di di.Container) {
-	// Will be implemented in system monitoring routes
-	di.Logger().Info("Registering system API routes")
-}
-
-func RegisterComplianceAPI(group huma.API, di di.Container) {
-	// Will be implemented in compliance routes
-	di.Logger().Info("Registering compliance API routes")
-}
-
-func RegisterHealthAPI(api huma.API, di di.Container) {
-	// Will be implemented with health check endpoints
-	di.Logger().Info("Registering health API routes")
-}
-
-func RegisterMetricsAPI(api huma.API, di di.Container) {
-	// Will be implemented with metrics endpoints
-	di.Logger().Info("Registering metrics API routes")
-}
-
-// Usage Example:
-//
-// To integrate this router in your main application:
-//
-//	func main() {
-//		// Initialize dependency injection container
-//		container := di.NewContainer(config)
-//
-//		// Create router with full middleware stack
-//		router := routes.NewRouter(container, nil)
-//
-//		// Start HTTP server
-//		server := &http.Server{
-//			Addr:    ":8080",
-//			Handler: router.Handler(),
-//		}
-//
-//		log.Fatal(server.ListenAndServe())
-//	}
-//
-// Key Features Provided:
-// - Multi-tenant architecture with organization isolation
-// - Three-tier user system (Internal, External, End Users)
-// - Multiple authentication methods (JWT, OAuth2, API Keys, Sessions)
-// - Comprehensive RBAC with context-aware permissions
-// - Production-ready security middleware stack
-// - WebSocket and SSE compatibility
-// - Comprehensive API documentation via OpenAPI/Swagger
-// - Audit logging and compliance features
-// - Rate limiting and throttling
-// - CORS handling for multi-origin support

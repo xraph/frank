@@ -67,7 +67,7 @@ func TestHashAPIKey(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			hash := HashAPIKey(tt.apiKey)
 			if len(hash) != 64 {
-				t.Errorf("HashAPIKey() length mismatch: %s", hash)
+				t.Errorf("hashAPIKey() length mismatch: %s", hash)
 			}
 		})
 	}

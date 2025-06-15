@@ -8,7 +8,7 @@ package routes
 // 	"github.com/juicycleff/frank/ent"
 // 	"github.com/juicycleff/frank/internal/authz"
 // 	"github.com/juicycleff/frank/internal/di"
-// 	"github.com/juicycleff/frank/internal/model"
+// 	"github.com/juicycleff/frank/pkg/model"
 // 	"github.com/juicycleff/frank/pkg/email"
 // 	"github.com/juicycleff/frank/pkg/errors"
 // 	"github.com/rs/xid"

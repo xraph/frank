@@ -67,11 +67,11 @@ func (e *Error) GetStatus() int {
 }
 
 // New creates a new error with a message
-func New(code string, message string) *Error {
+func New(code string, message string, a ...any) *Error {
 	return &Error{
 		Code:       code,
 		StatusCode: GetStatusCode(code),
-		Message:    message,
+		Message:    fmt.Sprintf(message, a),
 	}
 }
 

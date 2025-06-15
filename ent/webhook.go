@@ -15,6 +15,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/juicycleff/frank/ent/organization"
 	"github.com/juicycleff/frank/ent/webhook"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -49,7 +50,7 @@ type Webhook struct {
 	// TimeoutMs holds the value of the "timeout_ms" field.
 	TimeoutMs int `json:"timeout_ms,omitempty"`
 	// Format holds the value of the "format" field.
-	Format webhook.Format `json:"format,omitempty"`
+	Format model.WebhookFormat `json:"format,omitempty"`
 	// Additional membership metadata
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
 	// Headers holds the value of the "headers" field.
@@ -208,7 +209,7 @@ func (w *Webhook) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field format", values[i])
 			} else if value.Valid {
-				w.Format = webhook.Format(value.String)
+				w.Format = model.WebhookFormat(value.String)
 			}
 		case webhook.FieldMetadata:
 			if value, ok := values[i].(*[]byte); !ok {

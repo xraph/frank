@@ -8,6 +8,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 	"github.com/juicycleff/frank/pkg/entity"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -31,8 +32,8 @@ func (Membership) Fields() []ent.Field {
 		field.String("email").
 			NotEmpty(),
 		field.Enum("status").
-			Values("pending", "active", "inactive", "suspended").
-			Default("pending"),
+			GoType(model.MembershipStatus("")).
+			Default(model.MembershipStatusPending.String()),
 		field.String("invited_by").
 			GoType(xid.ID{}).
 			Optional().

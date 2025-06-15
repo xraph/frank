@@ -62,10 +62,13 @@ type SessionEdges struct {
 	User *User `json:"user,omitempty"`
 	// AuditLogs holds the value of the audit_logs edge.
 	AuditLogs []*Audit `json:"audit_logs,omitempty"`
+	// Activities holds the value of the activities edge.
+	Activities []*Activity `json:"activities,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes    [2]bool
-	namedAuditLogs map[string][]*Audit
+	loadedTypes     [3]bool
+	namedAuditLogs  map[string][]*Audit
+	namedActivities map[string][]*Activity
 }
 
 // UserOrErr returns the User value or an error if the edge
@@ -86,6 +89,15 @@ func (e SessionEdges) AuditLogsOrErr() ([]*Audit, error) {
 		return e.AuditLogs, nil
 	}
 	return nil, &NotLoadedError{edge: "audit_logs"}
+}
+
+// ActivitiesOrErr returns the Activities value or an error if the edge
+// was not loaded in eager-loading.
+func (e SessionEdges) ActivitiesOrErr() ([]*Activity, error) {
+	if e.loadedTypes[2] {
+		return e.Activities, nil
+	}
+	return nil, &NotLoadedError{edge: "activities"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -227,6 +239,11 @@ func (s *Session) QueryAuditLogs() *AuditQuery {
 	return NewSessionClient(s.config).QueryAuditLogs(s)
 }
 
+// QueryActivities queries the "activities" edge of the Session entity.
+func (s *Session) QueryActivities() *ActivityQuery {
+	return NewSessionClient(s.config).QueryActivities(s)
+}
+
 // Update returns a builder for updating this Session.
 // Note that you need to call Session.Unwrap() before calling this method if this Session
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -312,6 +329,30 @@ func (s *Session) appendNamedAuditLogs(name string, edges ...*Audit) {
 		s.Edges.namedAuditLogs[name] = []*Audit{}
 	} else {
 		s.Edges.namedAuditLogs[name] = append(s.Edges.namedAuditLogs[name], edges...)
+	}
+}
+
+// NamedActivities returns the Activities named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (s *Session) NamedActivities(name string) ([]*Activity, error) {
+	if s.Edges.namedActivities == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := s.Edges.namedActivities[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (s *Session) appendNamedActivities(name string, edges ...*Activity) {
+	if s.Edges.namedActivities == nil {
+		s.Edges.namedActivities = make(map[string][]*Activity)
+	}
+	if len(edges) == 0 {
+		s.Edges.namedActivities[name] = []*Activity{}
+	} else {
+		s.Edges.namedActivities[name] = append(s.Edges.namedActivities[name], edges...)
 	}
 }
 

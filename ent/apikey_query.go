@@ -7,6 +7,7 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"math"
 
@@ -16,6 +17,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/juicycleff/frank/ent/apikey"
+	"github.com/juicycleff/frank/ent/apikeyactivity"
 	"github.com/juicycleff/frank/ent/organization"
 	"github.com/juicycleff/frank/ent/predicate"
 	"github.com/juicycleff/frank/ent/user"
@@ -25,13 +27,15 @@ import (
 // ApiKeyQuery is the builder for querying ApiKey entities.
 type ApiKeyQuery struct {
 	config
-	ctx              *QueryContext
-	order            []apikey.OrderOption
-	inters           []Interceptor
-	predicates       []predicate.ApiKey
-	withUser         *UserQuery
-	withOrganization *OrganizationQuery
-	modifiers        []func(*sql.Selector)
+	ctx                 *QueryContext
+	order               []apikey.OrderOption
+	inters              []Interceptor
+	predicates          []predicate.ApiKey
+	withUser            *UserQuery
+	withOrganization    *OrganizationQuery
+	withActivities      *ApiKeyActivityQuery
+	modifiers           []func(*sql.Selector)
+	withNamedActivities map[string]*ApiKeyActivityQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -105,6 +109,28 @@ func (akq *ApiKeyQuery) QueryOrganization() *OrganizationQuery {
 			sqlgraph.From(apikey.Table, apikey.FieldID, selector),
 			sqlgraph.To(organization.Table, organization.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, apikey.OrganizationTable, apikey.OrganizationColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(akq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryActivities chains the current query on the "activities" edge.
+func (akq *ApiKeyQuery) QueryActivities() *ApiKeyActivityQuery {
+	query := (&ApiKeyActivityClient{config: akq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := akq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := akq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(apikey.Table, apikey.FieldID, selector),
+			sqlgraph.To(apikeyactivity.Table, apikeyactivity.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, apikey.ActivitiesTable, apikey.ActivitiesColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(akq.driver.Dialect(), step)
 		return fromU, nil
@@ -306,6 +332,7 @@ func (akq *ApiKeyQuery) Clone() *ApiKeyQuery {
 		predicates:       append([]predicate.ApiKey{}, akq.predicates...),
 		withUser:         akq.withUser.Clone(),
 		withOrganization: akq.withOrganization.Clone(),
+		withActivities:   akq.withActivities.Clone(),
 		// clone intermediate query.
 		sql:       akq.sql.Clone(),
 		path:      akq.path,
@@ -332,6 +359,17 @@ func (akq *ApiKeyQuery) WithOrganization(opts ...func(*OrganizationQuery)) *ApiK
 		opt(query)
 	}
 	akq.withOrganization = query
+	return akq
+}
+
+// WithActivities tells the query-builder to eager-load the nodes that are connected to
+// the "activities" edge. The optional arguments are used to configure the query builder of the edge.
+func (akq *ApiKeyQuery) WithActivities(opts ...func(*ApiKeyActivityQuery)) *ApiKeyQuery {
+	query := (&ApiKeyActivityClient{config: akq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	akq.withActivities = query
 	return akq
 }
 
@@ -413,9 +451,10 @@ func (akq *ApiKeyQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*ApiK
 	var (
 		nodes       = []*ApiKey{}
 		_spec       = akq.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [3]bool{
 			akq.withUser != nil,
 			akq.withOrganization != nil,
+			akq.withActivities != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -448,6 +487,30 @@ func (akq *ApiKeyQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*ApiK
 	if query := akq.withOrganization; query != nil {
 		if err := akq.loadOrganization(ctx, query, nodes, nil,
 			func(n *ApiKey, e *Organization) { n.Edges.Organization = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := akq.withActivities; query != nil {
+		if err := akq.loadActivities(ctx, query, nodes,
+			func(n *ApiKey) { n.Edges.Activities = []*ApiKeyActivity{} },
+			func(n *ApiKey, e *ApiKeyActivity) {
+				n.Edges.Activities = append(n.Edges.Activities, e)
+				if !e.Edges.loadedTypes[0] {
+					e.Edges.Key = n
+				}
+			}); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range akq.withNamedActivities {
+		if err := akq.loadActivities(ctx, query, nodes,
+			func(n *ApiKey) { n.appendNamedActivities(name) },
+			func(n *ApiKey, e *ApiKeyActivity) {
+				n.appendNamedActivities(name, e)
+				if !e.Edges.loadedTypes[0] {
+					e.Edges.Key = n
+				}
+			}); err != nil {
 			return nil, err
 		}
 	}
@@ -509,6 +572,36 @@ func (akq *ApiKeyQuery) loadOrganization(ctx context.Context, query *Organizatio
 		for i := range nodes {
 			assign(nodes[i], n)
 		}
+	}
+	return nil
+}
+func (akq *ApiKeyQuery) loadActivities(ctx context.Context, query *ApiKeyActivityQuery, nodes []*ApiKey, init func(*ApiKey), assign func(*ApiKey, *ApiKeyActivity)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[xid.ID]*ApiKey)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(apikeyactivity.FieldKeyID)
+	}
+	query.Where(predicate.ApiKeyActivity(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(apikey.ActivitiesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.KeyID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "key_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
 	}
 	return nil
 }
@@ -636,6 +729,20 @@ func (akq *ApiKeyQuery) ForShare(opts ...sql.LockOption) *ApiKeyQuery {
 func (akq *ApiKeyQuery) Modify(modifiers ...func(s *sql.Selector)) *ApiKeySelect {
 	akq.modifiers = append(akq.modifiers, modifiers...)
 	return akq.Select()
+}
+
+// WithNamedActivities tells the query-builder to eager-load the nodes that are connected to the "activities"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (akq *ApiKeyQuery) WithNamedActivities(name string, opts ...func(*ApiKeyActivityQuery)) *ApiKeyQuery {
+	query := (&ApiKeyActivityClient{config: akq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if akq.withNamedActivities == nil {
+		akq.withNamedActivities = make(map[string]*ApiKeyActivityQuery)
+	}
+	akq.withNamedActivities[name] = query
+	return akq
 }
 
 // ApiKeyGroupBy is the group-by builder for ApiKey entities.

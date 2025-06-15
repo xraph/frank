@@ -15,6 +15,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/juicycleff/frank/ent/organization"
 	"github.com/juicycleff/frank/ent/user"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -61,7 +62,7 @@ type User struct {
 	// Timezone holds the value of the "timezone" field.
 	Timezone string `json:"timezone,omitempty"`
 	// internal = platform staff, external = customer org members, end_user = auth service users
-	UserType user.UserType `json:"user_type,omitempty"`
+	UserType model.UserType `json:"user_type,omitempty"`
 	// Which organization this user belongs to
 	OrganizationID xid.ID `json:"organization_id,omitempty"`
 	// Primary organization for external users who belong to multiple orgs
@@ -126,9 +127,11 @@ type UserEdges struct {
 	AssignedUserPermissions []*UserPermission `json:"assigned_user_permissions,omitempty"`
 	// AuditLogs holds the value of the audit_logs edge.
 	AuditLogs []*Audit `json:"audit_logs,omitempty"`
+	// Activities holds the value of the activities edge.
+	Activities []*Activity `json:"activities,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes                  [16]bool
+	loadedTypes                  [17]bool
 	namedMemberships             map[string][]*Membership
 	namedSentInvitations         map[string][]*Membership
 	namedSessions                map[string][]*Session
@@ -144,6 +147,7 @@ type UserEdges struct {
 	namedAssignedUserRoles       map[string][]*UserRole
 	namedAssignedUserPermissions map[string][]*UserPermission
 	namedAuditLogs               map[string][]*Audit
+	namedActivities              map[string][]*Activity
 }
 
 // OrganizationOrErr returns the Organization value or an error if the edge
@@ -290,6 +294,15 @@ func (e UserEdges) AuditLogsOrErr() ([]*Audit, error) {
 		return e.AuditLogs, nil
 	}
 	return nil, &NotLoadedError{edge: "audit_logs"}
+}
+
+// ActivitiesOrErr returns the Activities value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) ActivitiesOrErr() ([]*Activity, error) {
+	if e.loadedTypes[16] {
+		return e.Activities, nil
+	}
+	return nil, &NotLoadedError{edge: "activities"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -446,7 +459,7 @@ func (u *User) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field user_type", values[i])
 			} else if value.Valid {
-				u.UserType = user.UserType(value.String)
+				u.UserType = model.UserType(value.String)
 			}
 		case user.FieldOrganizationID:
 			if value, ok := values[i].(*xid.ID); !ok {
@@ -614,6 +627,11 @@ func (u *User) QueryAssignedUserPermissions() *UserPermissionQuery {
 // QueryAuditLogs queries the "audit_logs" edge of the User entity.
 func (u *User) QueryAuditLogs() *AuditQuery {
 	return NewUserClient(u.config).QueryAuditLogs(u)
+}
+
+// QueryActivities queries the "activities" edge of the User entity.
+func (u *User) QueryActivities() *ActivityQuery {
+	return NewUserClient(u.config).QueryActivities(u)
 }
 
 // Update returns a builder for updating this User.
@@ -1096,6 +1114,30 @@ func (u *User) appendNamedAuditLogs(name string, edges ...*Audit) {
 		u.Edges.namedAuditLogs[name] = []*Audit{}
 	} else {
 		u.Edges.namedAuditLogs[name] = append(u.Edges.namedAuditLogs[name], edges...)
+	}
+}
+
+// NamedActivities returns the Activities named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (u *User) NamedActivities(name string) ([]*Activity, error) {
+	if u.Edges.namedActivities == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := u.Edges.namedActivities[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (u *User) appendNamedActivities(name string, edges ...*Activity) {
+	if u.Edges.namedActivities == nil {
+		u.Edges.namedActivities = make(map[string][]*Activity)
+	}
+	if len(edges) == 0 {
+		u.Edges.namedActivities[name] = []*Activity{}
+	} else {
+		u.Edges.namedActivities[name] = append(u.Edges.namedActivities[name], edges...)
 	}
 }
 

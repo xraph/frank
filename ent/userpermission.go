@@ -17,6 +17,7 @@ import (
 	"github.com/juicycleff/frank/ent/permission"
 	"github.com/juicycleff/frank/ent/user"
 	"github.com/juicycleff/frank/ent/userpermission"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -37,7 +38,7 @@ type UserPermission struct {
 	// PermissionID holds the value of the "permission_id" field.
 	PermissionID xid.ID `json:"permission_id,omitempty"`
 	// Scope where this permission applies
-	ContextType userpermission.ContextType `json:"context_type,omitempty"`
+	ContextType model.ContextType `json:"context_type,omitempty"`
 	// ID of the context
 	ContextID xid.ID `json:"context_id,omitempty"`
 	// Specific resource type this permission applies to
@@ -45,7 +46,7 @@ type UserPermission struct {
 	// Specific resource instance this permission applies to
 	ResourceID xid.ID `json:"resource_id,omitempty"`
 	// Whether this grants or explicitly denies the permission
-	PermissionType userpermission.PermissionType `json:"permission_type,omitempty"`
+	PermissionType model.PermissionType `json:"permission_type,omitempty"`
 	// Who assigned this permission (field-only, no edge)
 	AssignedBy xid.ID `json:"assigned_by,omitempty"`
 	// AssignedAt holds the value of the "assigned_at" field.
@@ -193,7 +194,7 @@ func (up *UserPermission) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field context_type", values[i])
 			} else if value.Valid {
-				up.ContextType = userpermission.ContextType(value.String)
+				up.ContextType = model.ContextType(value.String)
 			}
 		case userpermission.FieldContextID:
 			if value, ok := values[i].(*xid.ID); !ok {
@@ -217,7 +218,7 @@ func (up *UserPermission) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field permission_type", values[i])
 			} else if value.Valid {
-				up.PermissionType = userpermission.PermissionType(value.String)
+				up.PermissionType = model.PermissionType(value.String)
 			}
 		case userpermission.FieldAssignedBy:
 			if value, ok := values[i].(*xid.ID); !ok {

@@ -14,6 +14,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/juicycleff/frank/ent/permission"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -40,7 +41,7 @@ type Permission struct {
 	// The action this permission allows (create, read, update, delete, etc.)
 	Action string `json:"action,omitempty"`
 	// Category helps organize permissions by scope
-	Category permission.Category `json:"category,omitempty"`
+	Category model.ContextType `json:"category,omitempty"`
 	// Which user types this permission can apply to
 	ApplicableUserTypes []string `json:"applicable_user_types,omitempty"`
 	// Which contexts this permission can be used in
@@ -234,7 +235,7 @@ func (pe *Permission) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field category", values[i])
 			} else if value.Valid {
-				pe.Category = permission.Category(value.String)
+				pe.Category = model.ContextType(value.String)
 			}
 		case permission.FieldApplicableUserTypes:
 			if value, ok := values[i].(*[]byte); !ok {

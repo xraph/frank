@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/juicycleff/frank/ent/predicate"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -380,23 +381,33 @@ func RoleIDContainsFold(v xid.ID) predicate.UserRole {
 }
 
 // ContextTypeEQ applies the EQ predicate on the "context_type" field.
-func ContextTypeEQ(v ContextType) predicate.UserRole {
-	return predicate.UserRole(sql.FieldEQ(FieldContextType, v))
+func ContextTypeEQ(v model.ContextType) predicate.UserRole {
+	vc := v
+	return predicate.UserRole(sql.FieldEQ(FieldContextType, vc))
 }
 
 // ContextTypeNEQ applies the NEQ predicate on the "context_type" field.
-func ContextTypeNEQ(v ContextType) predicate.UserRole {
-	return predicate.UserRole(sql.FieldNEQ(FieldContextType, v))
+func ContextTypeNEQ(v model.ContextType) predicate.UserRole {
+	vc := v
+	return predicate.UserRole(sql.FieldNEQ(FieldContextType, vc))
 }
 
 // ContextTypeIn applies the In predicate on the "context_type" field.
-func ContextTypeIn(vs ...ContextType) predicate.UserRole {
-	return predicate.UserRole(sql.FieldIn(FieldContextType, vs...))
+func ContextTypeIn(vs ...model.ContextType) predicate.UserRole {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.UserRole(sql.FieldIn(FieldContextType, v...))
 }
 
 // ContextTypeNotIn applies the NotIn predicate on the "context_type" field.
-func ContextTypeNotIn(vs ...ContextType) predicate.UserRole {
-	return predicate.UserRole(sql.FieldNotIn(FieldContextType, vs...))
+func ContextTypeNotIn(vs ...model.ContextType) predicate.UserRole {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.UserRole(sql.FieldNotIn(FieldContextType, v...))
 }
 
 // ContextIDEQ applies the EQ predicate on the "context_id" field.

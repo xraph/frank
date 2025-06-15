@@ -699,6 +699,26 @@ func ScopesNotNil() predicate.ApiKey {
 	return predicate.ApiKey(sql.FieldNotNull(FieldScopes))
 }
 
+// IPWhitelistIsNil applies the IsNil predicate on the "ip_whitelist" field.
+func IPWhitelistIsNil() predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldIsNull(FieldIPWhitelist))
+}
+
+// IPWhitelistNotNil applies the NotNil predicate on the "ip_whitelist" field.
+func IPWhitelistNotNil() predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldNotNull(FieldIPWhitelist))
+}
+
+// RateLimitsIsNil applies the IsNil predicate on the "rate_limits" field.
+func RateLimitsIsNil() predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldIsNull(FieldRateLimits))
+}
+
+// RateLimitsNotNil applies the NotNil predicate on the "rate_limits" field.
+func RateLimitsNotNil() predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldNotNull(FieldRateLimits))
+}
+
 // MetadataIsNil applies the IsNil predicate on the "metadata" field.
 func MetadataIsNil() predicate.ApiKey {
 	return predicate.ApiKey(sql.FieldIsNull(FieldMetadata))
@@ -847,6 +867,29 @@ func HasOrganization() predicate.ApiKey {
 func HasOrganizationWith(preds ...predicate.Organization) predicate.ApiKey {
 	return predicate.ApiKey(func(s *sql.Selector) {
 		step := newOrganizationStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasActivities applies the HasEdge predicate on the "activities" edge.
+func HasActivities() predicate.ApiKey {
+	return predicate.ApiKey(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ActivitiesTable, ActivitiesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasActivitiesWith applies the HasEdge predicate on the "activities" edge with a given conditions (other predicates).
+func HasActivitiesWith(preds ...predicate.ApiKeyActivity) predicate.ApiKey {
+	return predicate.ApiKey(func(s *sql.Selector) {
+		step := newActivitiesStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

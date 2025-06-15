@@ -15,6 +15,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/juicycleff/frank/ent/activity"
 	"github.com/juicycleff/frank/ent/apikey"
 	"github.com/juicycleff/frank/ent/audit"
 	"github.com/juicycleff/frank/ent/membership"
@@ -29,6 +30,7 @@ import (
 	"github.com/juicycleff/frank/ent/userpermission"
 	"github.com/juicycleff/frank/ent/userrole"
 	"github.com/juicycleff/frank/ent/verification"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -277,15 +279,15 @@ func (uc *UserCreate) SetNillableTimezone(s *string) *UserCreate {
 }
 
 // SetUserType sets the "user_type" field.
-func (uc *UserCreate) SetUserType(ut user.UserType) *UserCreate {
-	uc.mutation.SetUserType(ut)
+func (uc *UserCreate) SetUserType(mt model.UserType) *UserCreate {
+	uc.mutation.SetUserType(mt)
 	return uc
 }
 
 // SetNillableUserType sets the "user_type" field if the given value is not nil.
-func (uc *UserCreate) SetNillableUserType(ut *user.UserType) *UserCreate {
-	if ut != nil {
-		uc.SetUserType(*ut)
+func (uc *UserCreate) SetNillableUserType(mt *model.UserType) *UserCreate {
+	if mt != nil {
+		uc.SetUserType(*mt)
 	}
 	return uc
 }
@@ -692,6 +694,21 @@ func (uc *UserCreate) AddAuditLogs(a ...*Audit) *UserCreate {
 		ids[i] = a[i].ID
 	}
 	return uc.AddAuditLogIDs(ids...)
+}
+
+// AddActivityIDs adds the "activities" edge to the Activity entity by IDs.
+func (uc *UserCreate) AddActivityIDs(ids ...xid.ID) *UserCreate {
+	uc.mutation.AddActivityIDs(ids...)
+	return uc
+}
+
+// AddActivities adds the "activities" edges to the Activity entity.
+func (uc *UserCreate) AddActivities(a ...*Activity) *UserCreate {
+	ids := make([]xid.ID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return uc.AddActivityIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -1240,6 +1257,22 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
+	if nodes := uc.mutation.ActivitiesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ActivitiesTable,
+			Columns: []string{user.ActivitiesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(activity.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
 	return _node, _spec
 }
 
@@ -1557,7 +1590,7 @@ func (u *UserUpsert) ClearTimezone() *UserUpsert {
 }
 
 // SetUserType sets the "user_type" field.
-func (u *UserUpsert) SetUserType(v user.UserType) *UserUpsert {
+func (u *UserUpsert) SetUserType(v model.UserType) *UserUpsert {
 	u.Set(user.FieldUserType, v)
 	return u
 }
@@ -2132,7 +2165,7 @@ func (u *UserUpsertOne) ClearTimezone() *UserUpsertOne {
 }
 
 // SetUserType sets the "user_type" field.
-func (u *UserUpsertOne) SetUserType(v user.UserType) *UserUpsertOne {
+func (u *UserUpsertOne) SetUserType(v model.UserType) *UserUpsertOne {
 	return u.Update(func(s *UserUpsert) {
 		s.SetUserType(v)
 	})
@@ -2910,7 +2943,7 @@ func (u *UserUpsertBulk) ClearTimezone() *UserUpsertBulk {
 }
 
 // SetUserType sets the "user_type" field.
-func (u *UserUpsertBulk) SetUserType(v user.UserType) *UserUpsertBulk {
+func (u *UserUpsertBulk) SetUserType(v model.UserType) *UserUpsertBulk {
 	return u.Update(func(s *UserUpsert) {
 		s.SetUserType(v)
 	})

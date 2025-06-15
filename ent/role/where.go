@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/juicycleff/frank/ent/predicate"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -480,23 +481,33 @@ func DescriptionContainsFold(v string) predicate.Role {
 }
 
 // RoleTypeEQ applies the EQ predicate on the "role_type" field.
-func RoleTypeEQ(v RoleType) predicate.Role {
-	return predicate.Role(sql.FieldEQ(FieldRoleType, v))
+func RoleTypeEQ(v model.RoleType) predicate.Role {
+	vc := v
+	return predicate.Role(sql.FieldEQ(FieldRoleType, vc))
 }
 
 // RoleTypeNEQ applies the NEQ predicate on the "role_type" field.
-func RoleTypeNEQ(v RoleType) predicate.Role {
-	return predicate.Role(sql.FieldNEQ(FieldRoleType, v))
+func RoleTypeNEQ(v model.RoleType) predicate.Role {
+	vc := v
+	return predicate.Role(sql.FieldNEQ(FieldRoleType, vc))
 }
 
 // RoleTypeIn applies the In predicate on the "role_type" field.
-func RoleTypeIn(vs ...RoleType) predicate.Role {
-	return predicate.Role(sql.FieldIn(FieldRoleType, vs...))
+func RoleTypeIn(vs ...model.RoleType) predicate.Role {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Role(sql.FieldIn(FieldRoleType, v...))
 }
 
 // RoleTypeNotIn applies the NotIn predicate on the "role_type" field.
-func RoleTypeNotIn(vs ...RoleType) predicate.Role {
-	return predicate.Role(sql.FieldNotIn(FieldRoleType, vs...))
+func RoleTypeNotIn(vs ...model.RoleType) predicate.Role {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Role(sql.FieldNotIn(FieldRoleType, v...))
 }
 
 // OrganizationIDEQ applies the EQ predicate on the "organization_id" field.

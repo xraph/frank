@@ -10,8 +10,8 @@ import (
 	"github.com/juicycleff/frank/ent"
 	"github.com/juicycleff/frank/ent/webhook"
 	"github.com/juicycleff/frank/ent/webhookevent"
-	"github.com/juicycleff/frank/internal/model"
 	"github.com/juicycleff/frank/pkg/errors"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -91,33 +91,33 @@ func NewWebhookEventRepository(client *ent.Client) WebhookEventRepository {
 
 // CreateWebhookInput defines the input for creating a webhook
 type CreateWebhookInput struct {
-	Name           string            `json:"name"`
-	URL            string            `json:"url"`
-	OrganizationID xid.ID            `json:"organization_id"`
-	Secret         string            `json:"secret"`
-	Active         bool              `json:"active"`
-	EventTypes     []string          `json:"event_types"`
-	Version        string            `json:"version"`
-	RetryCount     int               `json:"retry_count"`
-	TimeoutMs      int               `json:"timeout_ms"`
-	Format         string            `json:"format"`
-	Metadata       map[string]any    `json:"metadata,omitempty"`
-	Headers        map[string]string `json:"headers,omitempty"`
+	Name           string              `json:"name"`
+	URL            string              `json:"url"`
+	OrganizationID xid.ID              `json:"organization_id"`
+	Secret         string              `json:"secret"`
+	Active         bool                `json:"active"`
+	EventTypes     []string            `json:"event_types"`
+	Version        string              `json:"version"`
+	RetryCount     int                 `json:"retry_count"`
+	TimeoutMs      int                 `json:"timeout_ms"`
+	Format         model.WebhookFormat `json:"format"`
+	Metadata       map[string]any      `json:"metadata,omitempty"`
+	Headers        map[string]string   `json:"headers,omitempty"`
 }
 
 // UpdateWebhookInput defines the input for updating a webhook
 type UpdateWebhookInput struct {
-	Name       *string           `json:"name,omitempty"`
-	URL        *string           `json:"url,omitempty"`
-	Secret     *string           `json:"secret,omitempty"`
-	Active     *bool             `json:"active,omitempty"`
-	EventTypes []string          `json:"event_types,omitempty"`
-	Version    *string           `json:"version,omitempty"`
-	RetryCount *int              `json:"retry_count,omitempty"`
-	TimeoutMs  *int              `json:"timeout_ms,omitempty"`
-	Format     *string           `json:"format,omitempty"`
-	Metadata   map[string]any    `json:"metadata,omitempty"`
-	Headers    map[string]string `json:"headers,omitempty"`
+	Name       *string              `json:"name,omitempty"`
+	URL        *string              `json:"url,omitempty"`
+	Secret     *string              `json:"secret,omitempty"`
+	Active     *bool                `json:"active,omitempty"`
+	EventTypes []string             `json:"event_types,omitempty"`
+	Version    *string              `json:"version,omitempty"`
+	RetryCount *int                 `json:"retry_count,omitempty"`
+	TimeoutMs  *int                 `json:"timeout_ms,omitempty"`
+	Format     *model.WebhookFormat `json:"format,omitempty"`
+	Metadata   map[string]any       `json:"metadata,omitempty"`
+	Headers    map[string]string    `json:"headers,omitempty"`
 }
 
 // CreateWebhookEventInput defines the input for creating a webhook event
@@ -163,7 +163,7 @@ func (r *webhookRepository) Create(ctx context.Context, input CreateWebhookInput
 		SetVersion(input.Version).
 		SetRetryCount(input.RetryCount).
 		SetTimeoutMs(input.TimeoutMs).
-		SetFormat(webhook.Format(input.Format))
+		SetFormat(input.Format)
 
 	if input.Metadata != nil {
 		builder.SetMetadata(input.Metadata)
@@ -233,7 +233,7 @@ func (r *webhookRepository) Update(ctx context.Context, id xid.ID, input UpdateW
 	}
 
 	if input.Format != nil {
-		builder.SetFormat(webhook.Format(*input.Format))
+		builder.SetFormat(*input.Format)
 	}
 
 	if input.Metadata != nil {

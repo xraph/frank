@@ -92,9 +92,12 @@ type IdentityProvider struct {
 type IdentityProviderEdges struct {
 	// Organization holds the value of the organization edge.
 	Organization *Organization `json:"organization,omitempty"`
+	// OrganizationProviders holds the value of the organization_providers edge.
+	OrganizationProviders []*OrganizationProvider `json:"organization_providers,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes                [2]bool
+	namedOrganizationProviders map[string][]*OrganizationProvider
 }
 
 // OrganizationOrErr returns the Organization value or an error if the edge
@@ -106,6 +109,15 @@ func (e IdentityProviderEdges) OrganizationOrErr() (*Organization, error) {
 		return nil, &NotFoundError{label: organization.Label}
 	}
 	return nil, &NotLoadedError{edge: "organization"}
+}
+
+// OrganizationProvidersOrErr returns the OrganizationProviders value or an error if the edge
+// was not loaded in eager-loading.
+func (e IdentityProviderEdges) OrganizationProvidersOrErr() ([]*OrganizationProvider, error) {
+	if e.loadedTypes[1] {
+		return e.OrganizationProviders, nil
+	}
+	return nil, &NotLoadedError{edge: "organization_providers"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -342,6 +354,11 @@ func (ip *IdentityProvider) QueryOrganization() *OrganizationQuery {
 	return NewIdentityProviderClient(ip.config).QueryOrganization(ip)
 }
 
+// QueryOrganizationProviders queries the "organization_providers" edge of the IdentityProvider entity.
+func (ip *IdentityProvider) QueryOrganizationProviders() *OrganizationProviderQuery {
+	return NewIdentityProviderClient(ip.config).QueryOrganizationProviders(ip)
+}
+
 // Update returns a builder for updating this IdentityProvider.
 // Note that you need to call IdentityProvider.Unwrap() before calling this method if this IdentityProvider
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -450,6 +467,30 @@ func (ip *IdentityProvider) String() string {
 	builder.WriteString(fmt.Sprintf("%v", ip.Metadata))
 	builder.WriteByte(')')
 	return builder.String()
+}
+
+// NamedOrganizationProviders returns the OrganizationProviders named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (ip *IdentityProvider) NamedOrganizationProviders(name string) ([]*OrganizationProvider, error) {
+	if ip.Edges.namedOrganizationProviders == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := ip.Edges.namedOrganizationProviders[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (ip *IdentityProvider) appendNamedOrganizationProviders(name string, edges ...*OrganizationProvider) {
+	if ip.Edges.namedOrganizationProviders == nil {
+		ip.Edges.namedOrganizationProviders = make(map[string][]*OrganizationProvider)
+	}
+	if len(edges) == 0 {
+		ip.Edges.namedOrganizationProviders[name] = []*OrganizationProvider{}
+	} else {
+		ip.Edges.namedOrganizationProviders[name] = append(ip.Edges.namedOrganizationProviders[name], edges...)
+	}
 }
 
 // IdentityProviders is a parsable slice of IdentityProvider.

@@ -11,20 +11,32 @@ import (
 
 // setupDocsRoutes configures modern API documentation routes
 func (router *Router) setupDocsRoutes() {
+	if !router.mountOpts.IncludeRoutes.Docs || router.mountOpts.ExcludeRoutes.Docs {
+		return
+	}
+
 	router.logger.Info("Setting up API documentation routes")
 
 	// Get the OpenAPI specification URL
 	openAPIPath := "/openapi.json"
+	docsPath := "/docs"
+	indexPath := "/"
+	if router.mountOpts.BasePath != "" {
+		indexPath = router.mountOpts.BasePath
+		docsPath = router.mountOpts.BasePath + "/docs"
+		openAPIPath = router.mountOpts.BasePath + "/openapi.json"
+	}
+
 	openAPIURL := openAPIPath
 	if router.di.Config().Server.BaseURL != "" {
-		openAPIURL = fmt.Sprintf("http://%s/openapi.json", router.di.Config().GetServerAddress())
+		openAPIURL = fmt.Sprintf("http://%s/%s", router.di.Config().GetServerAddress(), openAPIPath)
 	}
 
 	// Apply CSP middleware to all docs routes
 	docsMiddleware := customMiddleware.DocsCORSMiddleware(openAPIURL)
 
 	// Scalar API Documentation (Modern, beautiful UI)
-	router.router.With(docsMiddleware).Get("/docs/scalar", func(w http.ResponseWriter, r *http.Request) {
+	router.router.With(docsMiddleware).Get(docsPath+"/scalar", func(w http.ResponseWriter, r *http.Request) {
 		scalarHTML, err := scalar.ApiReferenceHTML(&scalar.Options{
 			SpecURL: openAPIURL,
 			CustomOptions: scalar.CustomOptions{
@@ -45,7 +57,7 @@ func (router *Router) setupDocsRoutes() {
 	})
 
 	// Redoc Documentation (Clean, responsive)
-	router.router.With(docsMiddleware).Get("/docs/redoc", func(w http.ResponseWriter, r *http.Request) {
+	router.router.With(docsMiddleware).Get(docsPath+"/redoc", func(w http.ResponseWriter, r *http.Request) {
 		redocHTML := `<!DOCTYPE html>
 <html>
 <head>
@@ -69,7 +81,7 @@ func (router *Router) setupDocsRoutes() {
 	})
 
 	// Swagger UI Documentation (Classic)
-	router.router.With(docsMiddleware).Get("/docs/swagger", func(w http.ResponseWriter, r *http.Request) {
+	router.router.With(docsMiddleware).Get(docsPath+"/swagger", func(w http.ResponseWriter, r *http.Request) {
 		swaggerHTML := `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -113,7 +125,7 @@ func (router *Router) setupDocsRoutes() {
 	})
 
 	// RapiDoc Documentation (Fast, lightweight)
-	router.router.With(docsMiddleware).Get("/docs/rapidoc", func(w http.ResponseWriter, r *http.Request) {
+	router.router.With(docsMiddleware).Get(docsPath+"/rapidoc", func(w http.ResponseWriter, r *http.Request) {
 		rapidocHTML := `<!doctype html>
 <html>
 <head>
@@ -157,7 +169,7 @@ func (router *Router) setupDocsRoutes() {
 	})
 
 	// Elements by Stoplight (Modern, component-based)
-	router.router.With(docsMiddleware).Get("/docs/elements", func(w http.ResponseWriter, r *http.Request) {
+	router.router.With(docsMiddleware).Get(docsPath+"/elements", func(w http.ResponseWriter, r *http.Request) {
 		elementsHTML := `<!doctype html>
 <html lang="en">
 <head>
@@ -186,7 +198,7 @@ func (router *Router) setupDocsRoutes() {
 	})
 
 	// Postman Documentation (API Testing & Collaboration)
-	router.router.With(docsMiddleware).Get("/docs/postman", func(w http.ResponseWriter, r *http.Request) {
+	router.router.With(docsMiddleware).Get(docsPath+"/postman", func(w http.ResponseWriter, r *http.Request) {
 		postmanHTML := `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -281,7 +293,7 @@ Tenant ID: {{your_tenant_id}}</div>
 	})
 
 	// ApiDog Documentation (API Design & Testing)
-	router.router.With(docsMiddleware).Get("/docs/apidog", func(w http.ResponseWriter, r *http.Request) {
+	router.router.With(docsMiddleware).Get(docsPath+"/apidog", func(w http.ResponseWriter, r *http.Request) {
 		apidogHTML := `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -388,7 +400,7 @@ Tenant ID: {{your_tenant_id}}</div>
 	})
 
 	// Readme UI Documentation (Developer Hub)
-	router.router.With(docsMiddleware).Get("/docs/readme", func(w http.ResponseWriter, r *http.Request) {
+	router.router.With(docsMiddleware).Get(docsPath+"/readme", func(w http.ResponseWriter, r *http.Request) {
 		readmeHTML := `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -553,7 +565,7 @@ Tenant ID: {{your_tenant_id}}</div>
 	})
 
 	// Documentation index page with links to all documentation variants
-	router.router.With(docsMiddleware).Get("/docs", func(w http.ResponseWriter, r *http.Request) {
+	router.router.With(docsMiddleware).Get(docsPath, func(w http.ResponseWriter, r *http.Request) {
 		indexHTML := `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -665,20 +677,20 @@ Tenant ID: {{your_tenant_id}}</div>
 	})
 
 	// Default docs redirect
-	router.router.Get("/", func(w http.ResponseWriter, r *http.Request) {
+	router.router.Get(indexPath, func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/docs", http.StatusTemporaryRedirect)
 	})
 
 	router.logger.Info("API documentation routes configured",
-		logging.String("scalar", "/docs/scalar"),
-		logging.String("redoc", "/docs/redoc"),
-		logging.String("swagger", "/docs/swagger"),
-		logging.String("rapidoc", "/docs/rapidoc"),
-		logging.String("elements", "/docs/elements"),
-		logging.String("postman", "/docs/postman"),
-		logging.String("apidog", "/docs/apidog"),
-		logging.String("readme", "/docs/readme"),
-		logging.String("reference", "/reference"),
+		logging.String("docsPath", docsPath),
+		logging.String("scalar", docsPath+"/scalar"),
+		logging.String("redoc", docsPath+"/redoc"),
+		logging.String("swagger", docsPath+"/swagger"),
+		logging.String("rapidoc", docsPath+"/rapidoc"),
+		logging.String("elements", docsPath+"/elements"),
+		logging.String("postman", docsPath+"/postman"),
+		logging.String("apidog", docsPath+"/apidog"),
+		logging.String("readme", docsPath+"/readme"),
 		logging.String("openapi", openAPIURL),
 	)
 }

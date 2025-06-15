@@ -8,9 +8,9 @@ import (
 
 	"github.com/juicycleff/frank/ent"
 	"github.com/juicycleff/frank/ent/organization"
-	"github.com/juicycleff/frank/internal/model"
 	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/juicycleff/frank/pkg/logging"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -90,7 +90,7 @@ type CreateOrganizationInput struct {
 	LogoURL                *string                         `json:"logo_url,omitempty"`
 	Plan                   string                          `json:"plan"`
 	OwnerID                *xid.ID                         `json:"owner_id,omitempty"`
-	OrgType                organization.OrgType            `json:"org_type"`
+	OrgType                model.OrgType                   `json:"org_type"`
 	IsPlatformOrganization bool                            `json:"is_platform_organization"`
 	ExternalUserLimit      int                             `json:"external_user_limit"`
 	EndUserLimit           int                             `json:"end_user_limit"`
@@ -139,7 +139,7 @@ type UpdateOrganizationInput struct {
 // ListOrganizationsParams represents parameters for listing organizations
 type ListOrganizationsParams struct {
 	model.PaginationParams
-	OrgType            *organization.OrgType            `json:"org_type,omitempty"`
+	OrgType            *model.OrgType                   `json:"org_type,omitempty"`
 	Plan               *string                          `json:"plan,omitempty"`
 	Active             *bool                            `json:"active,omitempty"`
 	SubscriptionStatus *organization.SubscriptionStatus `json:"subscription_status,omitempty"`
@@ -150,8 +150,8 @@ type ListOrganizationsParams struct {
 // SearchOrganizationsParams represents parameters for searching organizations
 type SearchOrganizationsParams struct {
 	model.PaginationParams
-	OrgType    *organization.OrgType `json:"org_type,omitempty"`
-	ExactMatch bool                  `json:"exact_match"`
+	OrgType    *model.OrgType `json:"org_type,omitempty"`
+	ExactMatch bool           `json:"exact_match"`
 }
 
 // UpdateUsageInput represents input for updating organization usage
@@ -598,7 +598,7 @@ func (r *organizationRepository) GetPlatformOrganization(ctx context.Context) (*
 }
 
 func (r *organizationRepository) GetCustomerOrganizations(ctx context.Context, params ListOrganizationsParams) (*model.PaginatedOutput[*ent.Organization], error) {
-	orgType := organization.OrgTypeCustomer
+	orgType := model.OrgTypeCustomer
 	params.OrgType = &orgType
 	return r.List(ctx, params)
 }

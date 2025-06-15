@@ -1,0 +1,429 @@
+# Frank Auth SaaS - Production Configuration
+# This configuration file is used for production deployments
+# All sensitive values should be overridden by environment variables
+
+# Application Information
+app:
+  name: "Frank Auth SaaS"
+  version: "1.0.0"
+  description: "Multi-tenant authentication platform with Clerk.js compatibility"
+  environment: "production"
+  debug: false
+  log_level: "info"
+
+# Server Configuration
+server:
+  host: "0.0.0.0"
+  port: 8080
+  read_timeout: 15s
+  write_timeout: 15s
+  idle_timeout: 60s
+  shutdown_timeout: 30s
+  max_header_bytes: 1048576 # 1MB
+  enable_pprof: false # Disabled in production for security
+  enable_metrics: true
+  metrics_port: 9090
+
+# Database Configuration
+database:
+  driver: "postgres"
+  host: "${DATABASE_HOST:db}"
+  port: "${DATABASE_PORT:5432}"
+  name: "${DATABASE_NAME:frank_auth_prod}"
+  user: "${DATABASE_USER:frank_auth}"
+  password: "${DATABASE_PASSWORD:}" # Must be set via environment
+  ssl_mode: "require"
+  timezone: "UTC"
+  max_connections: 100
+  max_idle_connections: 25
+  max_lifetime: "1h"
+  log_queries: false # Disabled in production for performance
+  migration_path: "./migrations"
+  auto_migrate: false # Migrations should be run manually in production
+
+# Redis Configuration
+redis:
+  host: "${REDIS_HOST:redis}"
+  port: "${REDIS_PORT:6379}"
+  password: "${REDIS_PASSWORD:}"
+  database: "${REDIS_DATABASE:0}"
+  pool_size: 20
+  min_idle_connections: 5
+  max_retries: 3
+  dial_timeout: 5s
+  read_timeout: 3s
+  write_timeout: 3s
+  pool_timeout: 4s
+  idle_timeout: 5m
+  key_prefix: "frank_auth:prod:"
+
+# Authentication Configuration
+auth:
+  # JWT Configuration - All secrets must be set via environment variables
+  jwt_secret: "${JWT_SECRET:}" # Must be set via environment
+  jwt_expiry: "1h" # Shorter expiry in production
+  jwt_refresh_expiry: "7d"
+  jwt_issuer: "frank-auth-prod"
+  jwt_audience: "frank-auth-users"
+
+  # Session Configuration
+  session_secret: "${SESSION_SECRET:}" # Must be set via environment
+  session_expiry: "24h"
+  session_cookie_name: "frank_auth_session"
+  session_cookie_domain: "${SESSION_COOKIE_DOMAIN:.frankauth.com}"
+  session_cookie_secure: true # Always true in production
+  session_cookie_http_only: true
+  session_cookie_same_site: "strict" # Stricter in production
+
+  # Password Policy - Stricter in production
+  password_policy:
+    min_length: 12
+    max_length: 100
+    require_uppercase: true
+    require_lowercase: true
+    require_digit: true
+    require_special: true
+    max_reused_passwords: 5
+    prevent_reuse: true
+    expiry_days: 90
+    strength_check: true
+
+  # Account Settings
+  require_email_verification: true
+  allow_registration: true
+  allow_password_reset: true
+  max_login_attempts: 3 # Stricter in production
+  lockout_duration: "30m" # Longer lockout in production
+
+  # CAPTCHA Configuration - Enabled in production
+  enable_captcha: true
+  captcha_secret_key: "${CAPTCHA_SECRET_KEY:}"
+  captcha_site_key: "${CAPTCHA_SITE_KEY:}"
+
+# Multi-Factor Authentication Configuration
+mfa:
+  totp_issuer: "Frank Auth"
+  totp_digits: 6
+  totp_period: 30
+  totp_skew: 1
+  totp_algorithm: "SHA1"
+  sms_code_length: 6
+  sms_code_expiry: "5m" # Shorter expiry in production
+  email_code_length: 6
+  email_code_expiry: "5m"
+  backup_codes_count: 10
+  backup_codes_length: 8
+  enforce_for_admins: true # Always enforced in production
+  default_methods: ["totp", "sms"]
+
+# Organization Configuration
+organization:
+  default_name: "Default Organization"
+  default_features: ["email", "sms", "magic_link", "oauth"]
+  max_members_free: 5
+  max_members_paid: 10000
+  allow_domain_verification: true
+  require_domain_verification: true # Required in production
+  invitation_expiry: "3d" # Shorter expiry in production
+
+  # Signup Configuration
+  signup_fields:
+    - name: "email"
+      type: "email"
+      required: true
+      label: "Email Address"
+      validation: "email"
+    - name: "first_name"
+      type: "text"
+      required: true
+      label: "First Name"
+      max_length: 50
+    - name: "last_name"
+      type: "text"
+      required: true
+      label: "Last Name"
+      max_length: 50
+    - name: "company"
+      type: "text"
+      required: false
+      label: "Company"
+      max_length: 100
+
+  # Verification Settings
+  verification:
+    require_email: true
+    require_phone: false
+    email_verification_expiry: "30m" # Shorter in production
+    phone_verification_expiry: "3m"
+
+# Security Configuration - Enhanced for production
+security:
+  # Rate Limiting - Stricter limits in production
+  rate_limit_enabled: true
+  rate_limit_per_second: 5
+  rate_limit_burst: 10
+  rate_limit_cleanup_interval: "5m"
+
+  # CORS Configuration - Restricted to known domains
+  cors_enabled: true
+  cors_allowed_origins:
+    - "https://app.frankauth.com"
+    - "https://dashboard.frankauth.com"
+    - "${CORS_ALLOWED_ORIGINS:}"
+  cors_allowed_methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"]
+  cors_allowed_headers:
+    - "Authorization"
+    - "Content-Type"
+    - "X-Requested-With"
+    - "X-Organization-Id"
+    - "X-User-Type"
+    - "X-API-Key"
+  cors_exposed_headers: ["X-Total-Count", "X-Page-Count", "X-Rate-Limit-Remaining"]
+  cors_allow_credentials: true
+  cors_max_age: 86400
+
+  # Security Headers - Enhanced for production
+  security_headers_enabled: true
+  security_headers:
+    x_frame_options: "DENY"
+    x_content_type_options: "nosniff"
+    x_xss_protection: "1; mode=block"
+    strict_transport_security: "max-age=31536000; includeSubDomains; preload"
+    content_security_policy: "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:; frame-ancestors 'none';"
+    referrer_policy: "strict-origin-when-cross-origin"
+    permissions_policy: "geolocation=(), microphone=(), camera=()"
+
+  # API Keys
+  api_key_length: 40
+  api_key_prefix: "fa_prod_"
+  api_key_expiry: "1y"
+
+# Email Configuration - Production email service
+email:
+  provider: "${EMAIL_PROVIDER:sendgrid}" # sendgrid, ses, mailgun
+
+  # SendGrid Configuration
+  sendgrid:
+    api_key: "${SENDGRID_API_KEY:}"
+
+  # AWS SES Configuration
+  ses:
+    region: "${AWS_REGION:us-east-1}"
+    access_key_id: "${AWS_ACCESS_KEY_ID:}"
+    secret_access_key: "${AWS_SECRET_ACCESS_KEY:}"
+
+  # Email Settings
+  from_email: "${EMAIL_FROM:auth@frankauth.com}"
+  from_name: "Frank Auth"
+  reply_to: "${EMAIL_REPLY_TO:support@frankauth.com}"
+
+  # Template Settings
+  template_path: "./templates/email"
+  default_template: "default"
+  enable_tracking: true
+
+# SMS Configuration - Production SMS service
+sms:
+  provider: "${SMS_PROVIDER:twilio}" # twilio, aws_sns
+
+  # Twilio Configuration
+  twilio:
+    account_sid: "${TWILIO_ACCOUNT_SID:}"
+    auth_token: "${TWILIO_AUTH_TOKEN:}"
+    from_number: "${TWILIO_FROM_NUMBER:}"
+
+  # AWS SNS Configuration
+  aws_sns:
+    region: "${AWS_REGION:us-east-1}"
+    access_key_id: "${AWS_ACCESS_KEY_ID:}"
+    secret_access_key: "${AWS_SECRET_ACCESS_KEY:}"
+
+  # Default Settings
+  from_number: "${SMS_FROM_NUMBER:}"
+  default_country_code: "+1"
+
+# OAuth Configuration - Production OAuth settings
+oauth:
+  # Google OAuth
+  google:
+    enabled: true
+    client_id: "${GOOGLE_CLIENT_ID:}"
+    client_secret: "${GOOGLE_CLIENT_SECRET:}"
+    scopes: ["openid", "profile", "email"]
+    redirect_url: "${GOOGLE_OAUTH_REDIRECT_URL:https://api.frankauth.com/v1/oauth/google/callback}"
+
+  # GitHub OAuth
+  github:
+    enabled: true
+    client_id: "${GITHUB_CLIENT_ID:}"
+    client_secret: "${GITHUB_CLIENT_SECRET:}"
+    scopes: ["user:email", "read:user"]
+    redirect_url: "${GITHUB_OAUTH_REDIRECT_URL:https://api.frankauth.com/v1/oauth/github/callback}"
+
+  # Microsoft OAuth
+  microsoft:
+    enabled: true
+    client_id: "${MICROSOFT_CLIENT_ID:}"
+    client_secret: "${MICROSOFT_CLIENT_SECRET:}"
+    tenant_id: "${MICROSOFT_TENANT_ID:common}"
+    scopes: ["openid", "profile", "email"]
+    redirect_url: "${MICROSOFT_OAUTH_REDIRECT_URL:https://api.frankauth.com/v1/oauth/microsoft/callback}"
+
+# Webhook Configuration - Production webhook settings
+webhooks:
+  enabled: true
+  max_retries: 5
+  retry_delay: "60s"
+  timeout: "30s"
+  batch_size: 1000
+  worker_count: 10
+
+  # Event Configuration
+  events:
+    - "user.created"
+    - "user.updated"
+    - "user.deleted"
+    - "user.login"
+    - "user.logout"
+    - "session.created"
+    - "session.ended"
+    - "organization.created"
+    - "organization.updated"
+    - "organization.deleted"
+    - "membership.created"
+    - "membership.updated"
+    - "membership.deleted"
+    - "security.mfa_enabled"
+    - "security.mfa_disabled"
+    - "security.suspicious_login"
+
+# Audit Configuration - Enhanced for production
+audit:
+  enabled: true
+  retention_days: 2555 # 7 years for compliance
+  batch_size: 5000
+  flush_interval: "10s"
+
+  # Events to Audit - All events in production
+  events:
+    authentication: true
+    authorization: true
+    user_management: true
+    organization_management: true
+    configuration_changes: true
+    security_events: true
+    api_access: true
+    admin_actions: true
+
+# Monitoring Configuration - Full monitoring in production
+monitoring:
+  # Metrics
+  metrics_enabled: true
+  metrics_endpoint: "http://localhost:9090/metrics"
+
+  # Health Checks
+  health_enabled: true
+  health_endpoint: "http://localhost:8080/health"
+
+  # Tracing
+  tracing_enabled: true
+  jaeger_endpoint: "${JAEGER_ENDPOINT:}"
+  otlp_endpoint: "${OTLP_ENDPOINT:}"
+  sample_rate: 0.1
+
+# Logging Configuration - Structured logging for production
+logging:
+  level: "info"
+  format: "json" # JSON format for production
+  enable_caller: false
+  enable_stacktrace: true
+
+  # File Logging
+  file_enabled: true
+  file_path: "/var/log/frank-auth/app.log"
+  file_max_size: 100 # MB
+  file_max_backups: 10
+  file_max_age: 90 # days
+  file_compress: true
+
+# Templates Configuration
+templates:
+  path: "./templates"
+  email_path: "./templates/email"
+  auth_path: "./templates/auth"
+  enable_file_watcher: false # Disabled in production
+
+# Feature Flags - Production feature set
+features:
+  enable_passkeys: true
+  enable_magic_links: true
+  enable_social_login: true
+  enable_enterprise_sso: true
+  enable_advanced_analytics: true
+  enable_compliance_mode: true
+  enable_multi_region: false
+
+# Production-Specific Settings
+production:
+  # Performance settings
+  enable_connection_pooling: true
+  enable_query_caching: true
+  enable_response_compression: true
+
+  # Security settings
+  require_https: true
+  enable_csrf_protection: true
+  enable_content_security_policy: true
+
+  # Scaling settings
+  max_concurrent_requests: 10000
+  request_timeout: "30s"
+  graceful_shutdown_timeout: "30s"
+
+  # Backup settings
+  backup_enabled: true
+  backup_schedule: "0 2 * * *" # Daily at 2 AM
+  backup_retention_days: 30
+
+# External Service Configuration
+external_services:
+  # Payment Processing (for billing)
+  stripe:
+    public_key: "${STRIPE_PUBLIC_KEY:}"
+    secret_key: "${STRIPE_SECRET_KEY:}"
+    webhook_secret: "${STRIPE_WEBHOOK_SECRET:}"
+
+  # Analytics
+  analytics:
+    provider: "${ANALYTICS_PROVIDER:}"
+    api_key: "${ANALYTICS_API_KEY:}"
+
+  # Customer Support
+  intercom:
+    app_id: "${INTERCOM_APP_ID:}"
+    access_token: "${INTERCOM_ACCESS_TOKEN:}"
+
+# Compliance Configuration
+compliance:
+  # SOC 2 Configuration
+  soc2:
+    enabled: true
+    audit_retention_years: 7
+    require_mfa_for_admin: true
+    require_password_rotation: true
+    log_all_access: true
+
+  # GDPR Configuration
+  gdpr:
+    enabled: true
+    data_retention_days: 2555 # 7 years
+    allow_data_export: true
+    allow_data_deletion: true
+    cookie_consent_required: true
+
+  # HIPAA Configuration (if handling healthcare data)
+  hipaa:
+    enabled: false
+    encryption_at_rest: true
+    encryption_in_transit: true
+    audit_all_access: true

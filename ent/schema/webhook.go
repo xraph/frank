@@ -6,6 +6,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 	"github.com/juicycleff/frank/pkg/entity"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -37,8 +38,8 @@ func (Webhook) Fields() []ent.Field {
 		field.Int("timeout_ms").
 			Default(5000),
 		field.Enum("format").
-			Values("json", "form").
-			Default("json"),
+			GoType(model.WebhookFormat("")).
+			Default(model.WebhookFormatJSON.String()),
 		entity.JSONMapField("metadata", true),
 		entity.JSONMapStringField("headers", true),
 	}

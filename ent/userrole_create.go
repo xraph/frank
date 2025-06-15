@@ -19,6 +19,7 @@ import (
 	"github.com/juicycleff/frank/ent/role"
 	"github.com/juicycleff/frank/ent/user"
 	"github.com/juicycleff/frank/ent/userrole"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -85,8 +86,8 @@ func (urc *UserRoleCreate) SetRoleID(x xid.ID) *UserRoleCreate {
 }
 
 // SetContextType sets the "context_type" field.
-func (urc *UserRoleCreate) SetContextType(ut userrole.ContextType) *UserRoleCreate {
-	urc.mutation.SetContextType(ut)
+func (urc *UserRoleCreate) SetContextType(mt model.ContextType) *UserRoleCreate {
+	urc.mutation.SetContextType(mt)
 	return urc
 }
 
@@ -572,7 +573,7 @@ func (u *UserRoleUpsert) UpdateRoleID() *UserRoleUpsert {
 }
 
 // SetContextType sets the "context_type" field.
-func (u *UserRoleUpsert) SetContextType(v userrole.ContextType) *UserRoleUpsert {
+func (u *UserRoleUpsert) SetContextType(v model.ContextType) *UserRoleUpsert {
 	u.Set(userrole.FieldContextType, v)
 	return u
 }
@@ -794,7 +795,7 @@ func (u *UserRoleUpsertOne) UpdateRoleID() *UserRoleUpsertOne {
 }
 
 // SetContextType sets the "context_type" field.
-func (u *UserRoleUpsertOne) SetContextType(v userrole.ContextType) *UserRoleUpsertOne {
+func (u *UserRoleUpsertOne) SetContextType(v model.ContextType) *UserRoleUpsertOne {
 	return u.Update(func(s *UserRoleUpsert) {
 		s.SetContextType(v)
 	})
@@ -1201,7 +1202,7 @@ func (u *UserRoleUpsertBulk) UpdateRoleID() *UserRoleUpsertBulk {
 }
 
 // SetContextType sets the "context_type" field.
-func (u *UserRoleUpsertBulk) SetContextType(v userrole.ContextType) *UserRoleUpsertBulk {
+func (u *UserRoleUpsertBulk) SetContextType(v model.ContextType) *UserRoleUpsertBulk {
 	return u.Update(func(s *UserRoleUpsert) {
 		s.SetContextType(v)
 	})

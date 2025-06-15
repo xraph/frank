@@ -3,19 +3,18 @@ package routes
 import (
 	"context"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/juicycleff/frank/config"
-	"github.com/juicycleff/frank/ent/user"
-	"github.com/juicycleff/frank/ent/userpermission"
 	"github.com/juicycleff/frank/internal/di"
 	"github.com/juicycleff/frank/internal/middleware"
-	"github.com/juicycleff/frank/internal/model"
 	"github.com/juicycleff/frank/internal/repository"
-	"github.com/juicycleff/frank/internal/services/audit"
 	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/juicycleff/frank/pkg/logging"
+	"github.com/juicycleff/frank/pkg/model"
+	"github.com/juicycleff/frank/pkg/services/audit"
 	"github.com/rs/xid"
 )
 
@@ -42,16 +41,17 @@ func RegisterPublicAuthAPI(group huma.API, di di.Container) {
 
 	// MFA endpoints
 	registerMFARecovery(group, authCtrl)
+	registerMFAVerify(group, authCtrl)
 
 	// Passkey endpoints
 	registerPasskeyAuthenticationBegin(group, authCtrl)
 	registerPasskeyAuthenticationFinish(group, authCtrl)
 
 	// OAuth endpoints
-	registerOAuthAuthorize(group, authCtrl)
+	registerOAuthAuthorizeByAuth(group, authCtrl)
 	registerOAuthCallback(group, authCtrl)
-	registerOAuthToken(group, authCtrl)
-	registerOAuthUserInfo(group, authCtrl)
+	registerOAuthTokenByAuth(group, authCtrl)
+	registerOAuthUserInfoByAuth(group, authCtrl)
 	registerListOAuthProviders(group, authCtrl)
 }
 
@@ -64,7 +64,7 @@ func RegisterAuthAPI(group huma.API, di di.Container) {
 
 	// MFA endpoints
 	registerMFASetup(group, authCtrl)
-	registerMFAVerify(group, authCtrl)
+	registerMFASetupVerify(group, authCtrl)
 	registerMFADisable(group, authCtrl)
 	registerMFABackupCodes(group, authCtrl)
 
@@ -206,7 +206,7 @@ func registerMagicLink(group huma.API, authCtrl *authController) {
 		Path:        "/auth/magic-link",
 		Summary:     "Send magic link",
 		Description: "Send passwordless magic link for authentication",
-		Tags:        []string{"Authentication", "Passwordless"},
+		Tags:        []string{"Authentication"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, false),
 	}, authCtrl.magicLinkHandler)
 }
@@ -218,7 +218,7 @@ func registerVerifyMagicLink(group huma.API, authCtrl *authController) {
 		Path:        "/auth/magic-link/verify/{token}",
 		Summary:     "Verify magic link token via GET",
 		Description: "Verify magic link token and authenticate user (typically called from email link)",
-		Tags:        []string{"Authentication", "Passwordless"},
+		Tags:        []string{"Authentication"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, false),
 	}, authCtrl.verifyMagicLinkHandler)
 }
@@ -247,7 +247,7 @@ func registerMFASetup(group huma.API, authCtrl *authController) {
 		Path:        "/auth/mfa/setup",
 		Summary:     "Setup MFA",
 		Description: "Setup multi-factor authentication",
-		Tags:        []string{"Authentication", "MFA"},
+		Tags:        []string{"Authentication"},
 		Security: []map[string][]string{
 			{"jwt": {}},
 		},
@@ -255,14 +255,29 @@ func registerMFASetup(group huma.API, authCtrl *authController) {
 	}, authCtrl.mfaSetupHandler)
 }
 
+// Register the new setup verification endpoint
+func registerMFASetupVerify(group huma.API, authCtrl *authController) {
+	huma.Register(group, huma.Operation{
+		OperationID: "verifyMFASetup",
+		Method:      http.MethodPost,
+		Path:        "/auth/mfa/setup/verify",
+		Summary:     "Verify MFA setup",
+		Description: "Verify MFA method setup with code to complete configuration",
+		Tags:        []string{"Authentication"},
+		Security: []map[string][]string{
+			{"jwt": {}},
+		},
+		Responses: model.MergeErrorResponses(map[string]*huma.Response{}, false),
+	}, authCtrl.mfaSetupVerifyHandler)
+}
 func registerMFAVerify(group huma.API, authCtrl *authController) {
 	huma.Register(group, huma.Operation{
-		OperationID: "verifyMFA",
+		OperationID: "verifyMFAAuth",
 		Method:      http.MethodPost,
 		Path:        "/auth/mfa/verify",
 		Summary:     "Verify MFA",
 		Description: "Verify multi-factor authentication code",
-		Tags:        []string{"Authentication", "MFA"},
+		Tags:        []string{"Authentication"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, false),
 	}, authCtrl.mfaVerifyHandler)
 }
@@ -274,7 +289,7 @@ func registerMFADisable(group huma.API, authCtrl *authController) {
 		Path:        "/auth/mfa",
 		Summary:     "Disable MFA",
 		Description: "Disable multi-factor authentication",
-		Tags:        []string{"Authentication", "MFA"},
+		Tags:        []string{"Authentication"},
 		Security: []map[string][]string{
 			{"jwt": {}},
 		},
@@ -292,7 +307,7 @@ func registerMFABackupCodes(group huma.API, authCtrl *authController) {
 		Path:        "/auth/mfa/backup-codes",
 		Summary:     "Get MFA backup codes",
 		Description: "Get or regenerate MFA backup codes",
-		Tags:        []string{"Authentication", "MFA"},
+		Tags:        []string{"Authentication"},
 		Security: []map[string][]string{
 			{"jwt": {}},
 		},
@@ -307,7 +322,7 @@ func registerMFARecovery(group huma.API, authCtrl *authController) {
 		Path:        "/auth/mfa/recovery",
 		Summary:     "MFA recovery",
 		Description: "Use backup code for MFA recovery",
-		Tags:        []string{"Authentication", "MFA"},
+		Tags:        []string{"Authentication"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, false),
 	}, authCtrl.mfaRecoveryHandler)
 }
@@ -316,12 +331,12 @@ func registerMFARecovery(group huma.API, authCtrl *authController) {
 
 func registerPasskeyRegistrationBegin(group huma.API, authCtrl *authController) {
 	huma.Register(group, huma.Operation{
-		OperationID: "beginPasskeyRegistration",
+		OperationID: "beginPasskeyRegistrationAuth",
 		Method:      http.MethodPost,
 		Path:        "/auth/passkeys/register/begin",
 		Summary:     "Begin passkey registration",
 		Description: "Begin WebAuthn passkey registration process",
-		Tags:        []string{"Authentication", "Passkeys"},
+		Tags:        []string{"Authentication"},
 		Security: []map[string][]string{
 			{"jwt": {}},
 		},
@@ -331,7 +346,7 @@ func registerPasskeyRegistrationBegin(group huma.API, authCtrl *authController) 
 
 func registerPasskeyRegistrationFinish(group huma.API, authCtrl *authController) {
 	huma.Register(group, huma.Operation{
-		OperationID: "finishPasskeyRegistration",
+		OperationID: "finishPasskeyRegistrationAuth",
 		Method:      http.MethodPost,
 		Path:        "/auth/passkeys/register/finish",
 		Summary:     "Finish passkey registration",
@@ -346,7 +361,7 @@ func registerPasskeyRegistrationFinish(group huma.API, authCtrl *authController)
 
 func registerPasskeyAuthenticationBegin(group huma.API, authCtrl *authController) {
 	huma.Register(group, huma.Operation{
-		OperationID: "beginPasskeyAuthentication",
+		OperationID: "beginPasskeyAuthenticationAuth",
 		Method:      http.MethodPost,
 		Path:        "/auth/passkeys/authenticate/begin",
 		Summary:     "Begin passkey authentication",
@@ -358,7 +373,7 @@ func registerPasskeyAuthenticationBegin(group huma.API, authCtrl *authController
 
 func registerPasskeyAuthenticationFinish(group huma.API, authCtrl *authController) {
 	huma.Register(group, huma.Operation{
-		OperationID: "finishPasskeyAuthentication",
+		OperationID: "finishPasskeyAuthenticationAuth",
 		Method:      http.MethodPost,
 		Path:        "/auth/passkeys/authenticate/finish",
 		Summary:     "Finish passkey authentication",
@@ -403,9 +418,9 @@ func registerDeletePasskey(group huma.API, authCtrl *authController) {
 
 // OAuth Endpoints
 
-func registerOAuthAuthorize(group huma.API, authCtrl *authController) {
+func registerOAuthAuthorizeByAuth(group huma.API, authCtrl *authController) {
 	huma.Register(group, huma.Operation{
-		OperationID: "oauthAuthorize",
+		OperationID: "oauthAuthorizeByAuth",
 		Method:      http.MethodGet,
 		Path:        "/auth/oauth/{provider}/authorize",
 		Summary:     "OAuth authorization",
@@ -427,9 +442,9 @@ func registerOAuthCallback(group huma.API, authCtrl *authController) {
 	}, authCtrl.oauthCallbackHandler)
 }
 
-func registerOAuthToken(group huma.API, authCtrl *authController) {
+func registerOAuthTokenByAuth(group huma.API, authCtrl *authController) {
 	huma.Register(group, huma.Operation{
-		OperationID: "oauthToken",
+		OperationID: "oauthTokenByAuth",
 		Method:      http.MethodPost,
 		Path:        "/auth/oauth/token",
 		Summary:     "OAuth token exchange",
@@ -439,9 +454,9 @@ func registerOAuthToken(group huma.API, authCtrl *authController) {
 	}, authCtrl.oauthTokenHandler)
 }
 
-func registerOAuthUserInfo(group huma.API, authCtrl *authController) {
+func registerOAuthUserInfoByAuth(group huma.API, authCtrl *authController) {
 	huma.Register(group, huma.Operation{
-		OperationID: "oauthUserInfo",
+		OperationID: "oauthUserInfoByAuth",
 		Method:      http.MethodGet,
 		Path:        "/auth/oauth/userinfo",
 		Summary:     "OAuth user info",
@@ -633,19 +648,6 @@ type ListPasskeysInput struct {
 type ListPasskeysOutput = model.Output[model.PasskeyListResponse]
 
 // Input/Output type definitions for OAuth and session handlers
-
-type OAuthTokenInput struct {
-	Body model.TokenRequest
-}
-
-type OAuthTokenOutput = model.Output[model.TokenResponse]
-
-type OAuthUserInfoInput struct {
-	Authorization string `header:"Authorization" doc:"Bearer access token"`
-}
-
-type OAuthUserInfoOutput = model.Output[map[string]interface{}]
-
 type ListOAuthProvidersOutput = model.Output[[]model.AuthProvider]
 
 type ListSessionsInput struct {
@@ -1073,12 +1075,12 @@ func (c *authController) authStatusHandler(ctx context.Context, input *struct{})
 		sessId = &currentSession.ID
 	}
 
-	ctxType := userpermission.ContextTypeApplication
+	ctxType := model.ContextTypeApplication
 
-	if currentUser.UserType == user.UserTypeInternal {
-		ctxType = userpermission.ContextTypeSystem
-	} else if currentUser.UserType == user.UserTypeEndUser {
-		ctxType = userpermission.ContextTypeOrganization
+	if currentUser.UserType == model.UserTypeInternal {
+		ctxType = model.ContextTypePlatform
+	} else if currentUser.UserType == model.UserTypeEndUser {
+		ctxType = model.ContextTypeOrganization
 	}
 
 	response, err := c.di.Auth().GetAuthStatus(
@@ -1101,12 +1103,12 @@ func (c *authController) authStatusHandler(ctx context.Context, input *struct{})
 }
 
 type SetupTOTPInput struct {
-	Body model.SetupTOTPRequest
+	Body model.SetupMFARequest
 }
 
-type SetupTOTPOutput = model.Output[model.TOTPSetupResponse]
+type SetupMFAOutput = model.Output[model.MFASetupResponse]
 
-func (c *authController) mfaSetupHandler(ctx context.Context, input *SetupTOTPInput) (*SetupTOTPOutput, error) {
+func (c *authController) mfaSetupHandler(ctx context.Context, input *SetupTOTPInput) (*SetupMFAOutput, error) {
 	mfaSvc := c.di.MFAService()
 	if mfaSvc == nil {
 		return nil, errors.New(errors.CodeInternalServer, "MFA service not available")
@@ -1117,26 +1119,226 @@ func (c *authController) mfaSetupHandler(ctx context.Context, input *SetupTOTPIn
 		return nil, err
 	}
 
+	// Validate method type
+	if input.Body.Method == "" {
+		return nil, errors.New(errors.CodeBadRequest, "MFA method is required")
+	}
+
+	// Check if method is already set up
+	existing, err := mfaSvc.GetMFAMethodByUserAndType(ctx, user.ID, input.Body.Method)
+	if err != nil && !errors.IsNotFound(err) {
+		return nil, err
+	}
+	if existing != nil && existing.Verified {
+		return nil, errors.New(errors.CodeConflict, "MFA method already set up and verified")
+	}
+
 	auditEvent := audit.AuditEvent{
 		Action: audit.ActionMFASetup,
-		Status: audit.StatusFailure, // Will be updated if login fails
+		Status: audit.StatusFailure,
 		Details: map[string]interface{}{
-			"name": input.Body.Name,
+			"method": input.Body.Method,
+			"name":   input.Body.Name,
 		},
 		Source: audit.SourceWeb,
 	}
-
 	defer c.logAuditEvent(ctx, auditEvent)
 
-	response, err := mfaSvc.SetupTOTP(ctx, user.ID)
+	var response *model.MFASetupResponse
+
+	// Handle different MFA method setups
+	switch input.Body.Method {
+	case "totp":
+		totpResponse, err := mfaSvc.SetupTOTP(ctx, user.ID)
+		if err != nil {
+			return nil, err
+		}
+		response = &model.MFASetupResponse{
+			Method:                   "totp",
+			MethodID:                 totpResponse.MethodID,
+			Secret:                   totpResponse.Secret,
+			QRCode:                   totpResponse.QRCode,
+			BackupURL:                totpResponse.BackupURL,
+			RequiresVerification:     true,
+			VerificationInstructions: "Scan the QR code with your authenticator app and enter the 6-digit code to complete setup",
+		}
+
+	case "sms":
+		if input.Body.PhoneNumber == "" {
+			return nil, errors.New(errors.CodeBadRequest, "phone number is required for SMS MFA")
+		}
+		smsRequest := model.SetupSMSRequest{
+			PhoneNumber: input.Body.PhoneNumber,
+			Name:        input.Body.Name,
+		}
+		smsResponse, err := mfaSvc.SetupSMS(ctx, user.ID, smsRequest)
+		if err != nil {
+			return nil, err
+		}
+		response = &model.MFASetupResponse{
+			Method:                   "sms",
+			MethodID:                 smsResponse.MethodID,
+			PhoneNumber:              smsResponse.PhoneNumber,
+			RequiresVerification:     true,
+			VerificationInstructions: "Enter the 6-digit code sent to your phone to complete setup",
+			Message:                  smsResponse.Message,
+		}
+
+	case "email":
+		if input.Body.Email == "" {
+			input.Body.Email = user.Email // Use user's primary email
+		}
+		emailResponse, err := mfaSvc.SetupEmail(ctx, user.ID, input.Body.Email)
+		if err != nil {
+			return nil, err
+		}
+		// Send email code immediately
+		_, err = mfaSvc.SendEmailCode(ctx, user.ID)
+		if err != nil {
+			return nil, err
+		}
+		response = &model.MFASetupResponse{
+			Method:                   "email",
+			MethodID:                 emailResponse.MethodID,
+			Email:                    emailResponse.Email,
+			RequiresVerification:     true,
+			VerificationInstructions: "Enter the 6-digit code sent to your email to complete setup",
+			Message:                  "Verification code sent to your email",
+		}
+
+	default:
+		return nil, errors.New(errors.CodeBadRequest, "unsupported MFA method")
+	}
+
+	auditEvent.Status = audit.StatusSuccess
+	auditEvent.Details["method_id"] = response.MethodID.String()
+
+	return &SetupMFAOutput{
+		Body: *response,
+	}, nil
+}
+
+type VerifyMFASetupInput struct {
+	Body model.VerifyMFASetupRequest
+}
+
+type VerifyMFASetupOutput = model.Output[model.MFASetupVerifyResponse]
+
+func (c *authController) mfaSetupVerifyHandler(ctx context.Context, input *VerifyMFASetupInput) (*VerifyMFASetupOutput, error) {
+	mfaSvc := c.di.MFAService()
+	if mfaSvc == nil {
+		return nil, errors.New(errors.CodeInternalServer, "MFA service not available")
+	}
+
+	user, err := middleware.GetUserFromContextSafe(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	auditEvent.Status = audit.StatusSuccess
+	if input.Body.Code == "" {
+		return nil, errors.New(errors.CodeBadRequest, "verification code is required")
+	}
 
-	return &SetupTOTPOutput{
-		Body: *response,
+	if input.Body.MethodID == nil && input.Body.Method == "" {
+		return nil, errors.New(errors.CodeBadRequest, "method ID or method type is required")
+	}
+
+	auditEvent := audit.AuditEvent{
+		Action: audit.ActionMFASetupVerify,
+		Status: audit.StatusFailure,
+		Details: map[string]interface{}{
+			"method":    input.Body.Method,
+			"method_id": input.Body.MethodID,
+		},
+		Source: audit.SourceWeb,
+	}
+	defer c.logAuditEvent(ctx, auditEvent)
+
+	// Get MFA method to verify
+	var mfaMethod *model.MFA
+	if input.Body.MethodID != nil {
+		mfaMethod, err = mfaSvc.GetMFAMethod(ctx, *input.Body.MethodID)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		// Find by method type (get most recent unverified)
+		methods, err := mfaSvc.ListUserMFAMethods(ctx, user.ID)
+		if err != nil {
+			return nil, err
+		}
+		for _, method := range methods {
+			if method.Method == input.Body.Method && !method.Verified {
+				mfaMethod = method
+				break
+			}
+		}
+	}
+
+	if mfaMethod == nil {
+		return nil, errors.New(errors.CodeNotFound, "MFA method not found or already verified")
+	}
+
+	// Verify the method belongs to the current user
+	if mfaMethod.UserID != user.ID {
+		return nil, errors.New(errors.CodeForbidden, "you can only verify your own MFA methods")
+	}
+
+	// Check if already verified
+	if mfaMethod.Verified {
+		return &VerifyMFASetupOutput{
+			Body: model.MFASetupVerifyResponse{
+				Success:    true,
+				Method:     mfaMethod.Method,
+				MethodID:   mfaMethod.ID,
+				Message:    "MFA method is already verified and active",
+				IsVerified: true,
+			},
+		}, nil
+	}
+
+	// Verify the code
+	verifyResponse, err := mfaSvc.VerifyMFA(ctx, user.ID, mfaMethod.Method, input.Body.Code)
+	if err != nil {
+		return nil, err
+	}
+
+	if !verifyResponse.Success {
+		return &VerifyMFASetupOutput{
+			Body: model.MFASetupVerifyResponse{
+				Success:  false,
+				Method:   mfaMethod.Method,
+				MethodID: mfaMethod.ID,
+				Message:  verifyResponse.Message,
+			},
+		}, nil
+	}
+
+	// Generate backup codes for verified TOTP methods
+	var backupCodes []string
+	if mfaMethod.Method == "totp" && input.Body.GenerateBackupCodes {
+		backupRequest := &model.GenerateBackupCodesRequest{Count: 10}
+		backupResponse, err := mfaSvc.GenerateBackupCodes(ctx, user.ID, backupRequest)
+		if err != nil {
+			c.di.Logger().Error("Failed to generate backup codes", logging.Error(err))
+		} else {
+			backupCodes = backupResponse.Codes
+		}
+	}
+
+	auditEvent.Status = audit.StatusSuccess
+	auditEvent.Details["method_id"] = mfaMethod.ID.String()
+	auditEvent.Details["backup_codes_generated"] = len(backupCodes) > 0
+
+	return &VerifyMFASetupOutput{
+		Body: model.MFASetupVerifyResponse{
+			Success:     true,
+			Method:      mfaMethod.Method,
+			MethodID:    mfaMethod.ID,
+			Message:     "MFA method verified and activated successfully",
+			IsVerified:  true,
+			BackupCodes: backupCodes,
+		},
 	}, nil
 }
 
@@ -1160,33 +1362,138 @@ func (c *authController) mfaVerifyHandler(ctx context.Context, input *VerifyMFAI
 		input.Body.Method = "totp" // Default to TOTP
 	}
 
-	user, err := middleware.GetUserFromContextSafe(ctx)
-	if err != nil {
-		return nil, err
-	}
-
 	auditEvent := audit.AuditEvent{
-		Action: audit.ActionMFAEnable,
-		Status: audit.StatusFailure, // Will be updated if login fails
+		Action: audit.ActionMFAVerify,
+		Status: audit.StatusFailure,
 		Details: map[string]interface{}{
 			"method": input.Body.Method,
-			"code":   input.Body.Code,
 		},
 		Source: audit.SourceWeb,
 	}
-
 	defer c.logAuditEvent(ctx, auditEvent)
 
+	// Determine if this is MFA management or login completion
+	currentUser := middleware.GetUserFromContext(ctx)
+
+	if currentUser != nil {
+		// Scenario 1: MFA Management (user already logged in)
+		return c.handleMFAManagement(ctx, currentUser, input, auditEvent)
+	} else {
+		// Scenario 2: MFA Login Completion (complete authentication flow)
+		return c.handleMFALoginCompletion(ctx, input, auditEvent)
+	}
+}
+
+// handleMFAManagement handles MFA verification for already authenticated users
+func (c *authController) handleMFAManagement(ctx context.Context, user *middleware.UserContext, input *VerifyMFAInput, auditEvent audit.AuditEvent) (*VerifyMFAOutput, error) {
+	mfaSvc := c.di.MFAService()
+
+	// Verify MFA code
 	response, err := mfaSvc.VerifyMFA(ctx, user.ID, input.Body.Method, input.Body.Code)
 	if err != nil {
 		return nil, err
 	}
 
-	auditEvent.Status = audit.StatusSuccess
+	if response.Success {
+		auditEvent.Status = audit.StatusSuccess
+	}
+
+	auditEvent.Details["user_id"] = user.ID.String()
 
 	return &VerifyMFAOutput{
 		Body: *response,
 	}, nil
+}
+
+// handleMFALoginCompletion handles MFA verification during login flow
+func (c *authController) handleMFALoginCompletion(ctx context.Context, input *VerifyMFAInput, auditEvent audit.AuditEvent) (*VerifyMFAOutput, error) {
+	// Extract MFA session token from request (could be from header, body, or cookie)
+	mfaToken := c.extractMFAToken(ctx, input)
+	if mfaToken == "" {
+		return nil, errors.New(errors.CodeUnauthorized, "MFA session token required for login completion")
+	}
+
+	// Validate MFA session token and get pending login info
+	authSvc := c.di.Auth()
+	pendingLogin, err := authSvc.ValidateMFASession(ctx, mfaToken)
+	if err != nil {
+		return nil, errors.New(errors.CodeUnauthorized, "invalid or expired MFA session")
+	}
+
+	mfaSvc := c.di.MFAService()
+
+	// Verify MFA code for the user from pending login
+	mfaResponse, err := mfaSvc.VerifyMFA(ctx, pendingLogin.UserID, input.Body.Method, input.Body.Code)
+	if err != nil {
+		return nil, err
+	}
+
+	if !mfaResponse.Success {
+		// MFA verification failed
+		auditEvent.Details["user_id"] = pendingLogin.UserID.String()
+		return &VerifyMFAOutput{
+			Body: *mfaResponse,
+		}, nil
+	}
+
+	// MFA verification succeeded - complete the login
+
+	// Complete the authentication and get tokens
+	loginResponse, err := authSvc.CompleteMFALogin(ctx, mfaToken, input.Body.Method)
+	if err != nil {
+		return nil, errors.Wrap(err, errors.CodeInternalServer, "failed to complete MFA login")
+	}
+
+	auditEvent.Status = audit.StatusSuccess
+	auditEvent.Action = audit.ActionUserLogin // Change to login action
+	auditEvent.Details["login_completed"] = true
+	auditEvent.Details["user_id"] = loginResponse.User.ID.String()
+
+	// Create response with login tokens
+	response := &model.MFAVerifyResponse{
+		Success:   true,
+		Method:    input.Body.Method,
+		Message:   "MFA verification and login completed successfully",
+		LoginData: loginResponse, // Include full login response
+	}
+
+	verifyOutput := &VerifyMFAOutput{
+		Body: *response,
+	}
+
+	// Set session cookie if configured
+	if loginResponse.Session.Token != "" && c.di.Config().Auth.AllowSession {
+		verifyOutput.SetCookie = c.createCookie(loginResponse.Session.Token)
+	}
+
+	return verifyOutput, nil
+}
+
+// extractMFAToken extracts MFA session token from request
+func (c *authController) extractMFAToken(ctx context.Context, input *VerifyMFAInput) string {
+	// Option 1: From request body
+	if input.Body.MFAToken != "" {
+		return input.Body.MFAToken
+	}
+
+	// Option 2: From Authorization header
+	if authHeader := middleware.GetHeaderFromContext(ctx, "Authorization"); authHeader != "" {
+		if strings.HasPrefix(authHeader, "MFA ") {
+			return authHeader[4:] // Remove "MFA " prefix
+		}
+	}
+
+	// Option 3: From X-MFA-Token header
+	if mfaHeader := middleware.GetHeaderFromContext(ctx, "X-MFA-Token"); mfaHeader != "" {
+		return mfaHeader
+	}
+
+	// Option 4: From cookie (if you want to support that)
+	if mfaCookie := middleware.GetCookieFromContext(ctx, "mfa_token"); mfaCookie != "" {
+		return mfaCookie
+	}
+
+	return ""
 }
 
 func (c *authController) mfaDisableHandler(ctx context.Context, input *struct{}) (*model.EmptyOutput, error) {
@@ -1655,11 +1962,11 @@ func (c *authController) deletePasskeyHandler(ctx context.Context, input *Delete
 	return &model.EmptyOutput{}, nil
 }
 
-type OAuthAuthorizeOutput struct {
+type OAuthAuthorize2Output struct {
 	model.RedirectOutput
 }
 
-func (c *authController) oauthAuthorizeHandler(ctx context.Context, input *OAuthProviderPathInput) (*OAuthAuthorizeOutput, error) {
+func (c *authController) oauthAuthorizeHandler(ctx context.Context, input *OAuthProviderPathInput) (*OAuthAuthorize2Output, error) {
 	authSvc := c.di.Auth()
 	if authSvc == nil {
 		return nil, errors.New(errors.CodeInternalServer, "auth service not available")
@@ -1687,7 +1994,7 @@ func (c *authController) oauthAuthorizeHandler(ctx context.Context, input *OAuth
 
 	auditEvent.Status = audit.StatusSuccess
 
-	return &OAuthAuthorizeOutput{
+	return &OAuthAuthorize2Output{
 		RedirectOutput: model.RedirectOutput{
 			Status:   http.StatusFound,
 			Location: oauthURL,
@@ -1836,7 +2143,7 @@ func (c *authController) oauthTokenHandler(ctx context.Context, input *OAuthToke
 		logging.Int("expires_in", response.ExpiresIn))
 
 	return &OAuthTokenOutput{
-		Body: *response,
+		Body: response,
 	}, nil
 }
 
@@ -1865,7 +2172,7 @@ func (c *authController) oauthUserInfoHandler(ctx context.Context, input *OAuthU
 		Action: audit.ActionOAuthUserInfo,
 		Status: audit.StatusFailure,
 		Details: map[string]interface{}{
-			"token_prefix": c.getTokenPrefix(accessToken),
+			"token_prefix": getTokenPrefix(accessToken),
 		},
 		Source: audit.SourceAPI,
 	}
@@ -2100,13 +2407,6 @@ func (c *authController) revokeAllSessionsHandler(ctx context.Context, input *Re
 
 // Helper methods
 
-func (c *authController) getTokenPrefix(token string) string {
-	if len(token) > 8 {
-		return token[:8] + "..."
-	}
-	return token
-}
-
 func (c *authController) logAuditEvent(ctx context.Context, event audit.AuditEvent) {
 	if event.Resource == "" {
 		event.Resource = "auth"
@@ -2183,4 +2483,11 @@ func logAuditEvent(ctx context.Context, event audit.AuditEvent, auditService aud
 		logging.String("ip", event.IPAddress),
 		logging.String("source", event.Source),
 		logging.Any("details", event.Details))
+}
+
+func getTokenPrefix(token string) string {
+	if len(token) > 8 {
+		return token[:8] + "..."
+	}
+	return token
 }

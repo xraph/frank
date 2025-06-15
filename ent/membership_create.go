@@ -19,6 +19,7 @@ import (
 	"github.com/juicycleff/frank/ent/organization"
 	"github.com/juicycleff/frank/ent/role"
 	"github.com/juicycleff/frank/ent/user"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -97,15 +98,15 @@ func (mc *MembershipCreate) SetEmail(s string) *MembershipCreate {
 }
 
 // SetStatus sets the "status" field.
-func (mc *MembershipCreate) SetStatus(m membership.Status) *MembershipCreate {
-	mc.mutation.SetStatus(m)
+func (mc *MembershipCreate) SetStatus(ms model.MembershipStatus) *MembershipCreate {
+	mc.mutation.SetStatus(ms)
 	return mc
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (mc *MembershipCreate) SetNillableStatus(m *membership.Status) *MembershipCreate {
-	if m != nil {
-		mc.SetStatus(*m)
+func (mc *MembershipCreate) SetNillableStatus(ms *model.MembershipStatus) *MembershipCreate {
+	if ms != nil {
+		mc.SetStatus(*ms)
 	}
 	return mc
 }
@@ -704,7 +705,7 @@ func (u *MembershipUpsert) UpdateEmail() *MembershipUpsert {
 }
 
 // SetStatus sets the "status" field.
-func (u *MembershipUpsert) SetStatus(v membership.Status) *MembershipUpsert {
+func (u *MembershipUpsert) SetStatus(v model.MembershipStatus) *MembershipUpsert {
 	u.Set(membership.FieldStatus, v)
 	return u
 }
@@ -1020,7 +1021,7 @@ func (u *MembershipUpsertOne) UpdateEmail() *MembershipUpsertOne {
 }
 
 // SetStatus sets the "status" field.
-func (u *MembershipUpsertOne) SetStatus(v membership.Status) *MembershipUpsertOne {
+func (u *MembershipUpsertOne) SetStatus(v model.MembershipStatus) *MembershipUpsertOne {
 	return u.Update(func(s *MembershipUpsert) {
 		s.SetStatus(v)
 	})
@@ -1532,7 +1533,7 @@ func (u *MembershipUpsertBulk) UpdateEmail() *MembershipUpsertBulk {
 }
 
 // SetStatus sets the "status" field.
-func (u *MembershipUpsertBulk) SetStatus(v membership.Status) *MembershipUpsertBulk {
+func (u *MembershipUpsertBulk) SetStatus(v model.MembershipStatus) *MembershipUpsertBulk {
 	return u.Update(func(s *MembershipUpsert) {
 		s.SetStatus(v)
 	})

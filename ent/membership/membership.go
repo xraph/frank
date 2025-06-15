@@ -11,6 +11,7 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -153,28 +154,12 @@ var (
 	DefaultID func() xid.ID
 )
 
-// Status defines the type for the "status" enum field.
-type Status string
-
-// StatusPending is the default value of the Status enum.
-const DefaultStatus = StatusPending
-
-// Status values.
-const (
-	StatusPending   Status = "pending"
-	StatusActive    Status = "active"
-	StatusInactive  Status = "inactive"
-	StatusSuspended Status = "suspended"
-)
-
-func (s Status) String() string {
-	return string(s)
-}
+const DefaultStatus model.MembershipStatus = "pending"
 
 // StatusValidator is a validator for the "status" field enum values. It is called by the builders before save.
-func StatusValidator(s Status) error {
-	switch s {
-	case StatusPending, StatusActive, StatusInactive, StatusSuspended:
+func StatusValidator(s model.MembershipStatus) error {
+	switch s.String() {
+	case "pending", "active", "inactive", "suspended":
 		return nil
 	default:
 		return fmt.Errorf("membership: invalid enum value for status field: %q", s)

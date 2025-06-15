@@ -11,6 +11,193 @@ import (
 )
 
 var (
+	// ActivitiesColumns holds the columns for the "activities" table.
+	ActivitiesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "resource_type", Type: field.TypeEnum, Enums: []string{"api_key", "user", "organization", "session", "common", "oauth", "membership", "mfa", "provider", "passkey", "sso", "permission"}, Default: "common"},
+		{Name: "resource_id", Type: field.TypeString},
+		{Name: "action", Type: field.TypeString},
+		{Name: "category", Type: field.TypeString, Default: "general"},
+		{Name: "source", Type: field.TypeString, Nullable: true},
+		{Name: "endpoint", Type: field.TypeString, Nullable: true},
+		{Name: "method", Type: field.TypeString, Nullable: true},
+		{Name: "status_code", Type: field.TypeInt, Nullable: true},
+		{Name: "response_time", Type: field.TypeInt, Nullable: true},
+		{Name: "ip_address", Type: field.TypeString, Nullable: true},
+		{Name: "user_agent", Type: field.TypeString, Nullable: true},
+		{Name: "location", Type: field.TypeString, Nullable: true},
+		{Name: "success", Type: field.TypeBool, Default: true},
+		{Name: "error", Type: field.TypeString, Nullable: true},
+		{Name: "error_code", Type: field.TypeString, Nullable: true},
+		{Name: "size", Type: field.TypeInt, Nullable: true},
+		{Name: "count", Type: field.TypeInt, Nullable: true},
+		{Name: "value", Type: field.TypeFloat64, Nullable: true},
+		{Name: "timestamp", Type: field.TypeTime},
+		{Name: "expires_at", Type: field.TypeTime, Nullable: true},
+		{Name: "metadata", Type: field.TypeJSON, Nullable: true, SchemaType: map[string]string{"mysql": "json", "postgres": "jsonb", "sqlite3": "text"}},
+		{Name: "tags", Type: field.TypeJSON, Nullable: true},
+		{Name: "organization_id", Type: field.TypeString, Nullable: true},
+		{Name: "session_id", Type: field.TypeString, Nullable: true},
+		{Name: "user_id", Type: field.TypeString, Nullable: true},
+	}
+	// ActivitiesTable holds the schema information for the "activities" table.
+	ActivitiesTable = &schema.Table{
+		Name:       "activities",
+		Columns:    ActivitiesColumns,
+		PrimaryKey: []*schema.Column{ActivitiesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "activities_organizations_activities",
+				Columns:    []*schema.Column{ActivitiesColumns[23]},
+				RefColumns: []*schema.Column{OrganizationsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "activities_sessions_activities",
+				Columns:    []*schema.Column{ActivitiesColumns[24]},
+				RefColumns: []*schema.Column{SessionsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "activities_users_activities",
+				Columns:    []*schema.Column{ActivitiesColumns[25]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "activity_resource_type_resource_id",
+				Unique:  false,
+				Columns: []*schema.Column{ActivitiesColumns[1], ActivitiesColumns[2]},
+			},
+			{
+				Name:    "activity_resource_type_resource_id_timestamp",
+				Unique:  false,
+				Columns: []*schema.Column{ActivitiesColumns[1], ActivitiesColumns[2], ActivitiesColumns[19]},
+			},
+			{
+				Name:    "activity_user_id",
+				Unique:  false,
+				Columns: []*schema.Column{ActivitiesColumns[25]},
+			},
+			{
+				Name:    "activity_organization_id",
+				Unique:  false,
+				Columns: []*schema.Column{ActivitiesColumns[23]},
+			},
+			{
+				Name:    "activity_session_id",
+				Unique:  false,
+				Columns: []*schema.Column{ActivitiesColumns[24]},
+			},
+			{
+				Name:    "activity_action",
+				Unique:  false,
+				Columns: []*schema.Column{ActivitiesColumns[3]},
+			},
+			{
+				Name:    "activity_resource_type_action",
+				Unique:  false,
+				Columns: []*schema.Column{ActivitiesColumns[1], ActivitiesColumns[3]},
+			},
+			{
+				Name:    "activity_category",
+				Unique:  false,
+				Columns: []*schema.Column{ActivitiesColumns[4]},
+			},
+			{
+				Name:    "activity_source",
+				Unique:  false,
+				Columns: []*schema.Column{ActivitiesColumns[5]},
+			},
+			{
+				Name:    "activity_timestamp",
+				Unique:  false,
+				Columns: []*schema.Column{ActivitiesColumns[19]},
+			},
+			{
+				Name:    "activity_timestamp_resource_type",
+				Unique:  false,
+				Columns: []*schema.Column{ActivitiesColumns[19], ActivitiesColumns[1]},
+			},
+			{
+				Name:    "activity_timestamp_action",
+				Unique:  false,
+				Columns: []*schema.Column{ActivitiesColumns[19], ActivitiesColumns[3]},
+			},
+			{
+				Name:    "activity_timestamp_success",
+				Unique:  false,
+				Columns: []*schema.Column{ActivitiesColumns[19], ActivitiesColumns[13]},
+			},
+			{
+				Name:    "activity_endpoint",
+				Unique:  false,
+				Columns: []*schema.Column{ActivitiesColumns[6]},
+			},
+			{
+				Name:    "activity_method",
+				Unique:  false,
+				Columns: []*schema.Column{ActivitiesColumns[7]},
+			},
+			{
+				Name:    "activity_status_code",
+				Unique:  false,
+				Columns: []*schema.Column{ActivitiesColumns[8]},
+			},
+			{
+				Name:    "activity_success",
+				Unique:  false,
+				Columns: []*schema.Column{ActivitiesColumns[13]},
+			},
+			{
+				Name:    "activity_resource_type_timestamp_success",
+				Unique:  false,
+				Columns: []*schema.Column{ActivitiesColumns[1], ActivitiesColumns[19], ActivitiesColumns[13]},
+			},
+			{
+				Name:    "activity_organization_id_timestamp",
+				Unique:  false,
+				Columns: []*schema.Column{ActivitiesColumns[23], ActivitiesColumns[19]},
+			},
+			{
+				Name:    "activity_user_id_timestamp",
+				Unique:  false,
+				Columns: []*schema.Column{ActivitiesColumns[25], ActivitiesColumns[19]},
+			},
+			{
+				Name:    "activity_resource_type_action_timestamp",
+				Unique:  false,
+				Columns: []*schema.Column{ActivitiesColumns[1], ActivitiesColumns[3], ActivitiesColumns[19]},
+			},
+			{
+				Name:    "activity_organization_id_resource_type_timestamp",
+				Unique:  false,
+				Columns: []*schema.Column{ActivitiesColumns[23], ActivitiesColumns[1], ActivitiesColumns[19]},
+			},
+			{
+				Name:    "activity_user_id_resource_type_timestamp",
+				Unique:  false,
+				Columns: []*schema.Column{ActivitiesColumns[25], ActivitiesColumns[1], ActivitiesColumns[19]},
+			},
+			{
+				Name:    "activity_ip_address",
+				Unique:  false,
+				Columns: []*schema.Column{ActivitiesColumns[10]},
+			},
+			{
+				Name:    "activity_user_agent",
+				Unique:  false,
+				Columns: []*schema.Column{ActivitiesColumns[11]},
+			},
+			{
+				Name:    "activity_expires_at",
+				Unique:  false,
+				Columns: []*schema.Column{ActivitiesColumns[20]},
+			},
+		},
+	}
 	// APIKeysColumns holds the columns for the "api_keys" table.
 	APIKeysColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString, Unique: true},
@@ -24,6 +211,8 @@ var (
 		{Name: "active", Type: field.TypeBool, Default: true},
 		{Name: "permissions", Type: field.TypeJSON, Nullable: true},
 		{Name: "scopes", Type: field.TypeJSON, Nullable: true},
+		{Name: "ip_whitelist", Type: field.TypeJSON, Nullable: true},
+		{Name: "rate_limits", Type: field.TypeJSON, Nullable: true},
 		{Name: "metadata", Type: field.TypeJSON, Nullable: true, SchemaType: map[string]string{"mysql": "json", "postgres": "jsonb", "sqlite3": "text"}},
 		{Name: "last_used", Type: field.TypeTime, Nullable: true},
 		{Name: "expires_at", Type: field.TypeTime, Nullable: true},
@@ -38,13 +227,13 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "api_keys_organizations_api_keys",
-				Columns:    []*schema.Column{APIKeysColumns[14]},
+				Columns:    []*schema.Column{APIKeysColumns[16]},
 				RefColumns: []*schema.Column{OrganizationsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "api_keys_users_api_keys",
-				Columns:    []*schema.Column{APIKeysColumns[15]},
+				Columns:    []*schema.Column{APIKeysColumns[17]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -53,17 +242,194 @@ var (
 			{
 				Name:    "apikey_user_id",
 				Unique:  false,
-				Columns: []*schema.Column{APIKeysColumns[15]},
+				Columns: []*schema.Column{APIKeysColumns[17]},
 			},
 			{
 				Name:    "apikey_organization_id",
 				Unique:  false,
-				Columns: []*schema.Column{APIKeysColumns[14]},
+				Columns: []*schema.Column{APIKeysColumns[16]},
 			},
 			{
 				Name:    "apikey_hashed_key",
 				Unique:  false,
 				Columns: []*schema.Column{APIKeysColumns[6]},
+			},
+			{
+				Name:    "apikey_type",
+				Unique:  false,
+				Columns: []*schema.Column{APIKeysColumns[7]},
+			},
+			{
+				Name:    "apikey_active",
+				Unique:  false,
+				Columns: []*schema.Column{APIKeysColumns[8]},
+			},
+			{
+				Name:    "apikey_expires_at",
+				Unique:  false,
+				Columns: []*schema.Column{APIKeysColumns[15]},
+			},
+			{
+				Name:    "apikey_last_used",
+				Unique:  false,
+				Columns: []*schema.Column{APIKeysColumns[14]},
+			},
+			{
+				Name:    "apikey_user_id_active",
+				Unique:  false,
+				Columns: []*schema.Column{APIKeysColumns[17], APIKeysColumns[8]},
+			},
+			{
+				Name:    "apikey_organization_id_active",
+				Unique:  false,
+				Columns: []*schema.Column{APIKeysColumns[16], APIKeysColumns[8]},
+			},
+			{
+				Name:    "apikey_user_id_type",
+				Unique:  false,
+				Columns: []*schema.Column{APIKeysColumns[17], APIKeysColumns[7]},
+			},
+			{
+				Name:    "apikey_organization_id_type",
+				Unique:  false,
+				Columns: []*schema.Column{APIKeysColumns[16], APIKeysColumns[7]},
+			},
+			{
+				Name:    "apikey_active_expires_at",
+				Unique:  false,
+				Columns: []*schema.Column{APIKeysColumns[8], APIKeysColumns[15]},
+			},
+			{
+				Name:    "apikey_name",
+				Unique:  false,
+				Columns: []*schema.Column{APIKeysColumns[4]},
+			},
+			{
+				Name:    "apikey_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{APIKeysColumns[1]},
+			},
+			{
+				Name:    "apikey_updated_at",
+				Unique:  false,
+				Columns: []*schema.Column{APIKeysColumns[2]},
+			},
+		},
+	}
+	// APIKeyActivitiesColumns holds the columns for the "api_key_activities" table.
+	APIKeyActivitiesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "action", Type: field.TypeString},
+		{Name: "endpoint", Type: field.TypeString, Nullable: true},
+		{Name: "method", Type: field.TypeString, Nullable: true},
+		{Name: "status_code", Type: field.TypeInt, Nullable: true},
+		{Name: "response_time", Type: field.TypeInt, Nullable: true},
+		{Name: "ip_address", Type: field.TypeString, Nullable: true},
+		{Name: "user_agent", Type: field.TypeString, Nullable: true},
+		{Name: "success", Type: field.TypeBool, Default: true},
+		{Name: "error", Type: field.TypeString, Nullable: true},
+		{Name: "timestamp", Type: field.TypeTime},
+		{Name: "metadata", Type: field.TypeJSON, Nullable: true, SchemaType: map[string]string{"mysql": "json", "postgres": "jsonb", "sqlite3": "text"}},
+		{Name: "key_id", Type: field.TypeString},
+	}
+	// APIKeyActivitiesTable holds the schema information for the "api_key_activities" table.
+	APIKeyActivitiesTable = &schema.Table{
+		Name:       "api_key_activities",
+		Columns:    APIKeyActivitiesColumns,
+		PrimaryKey: []*schema.Column{APIKeyActivitiesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "api_key_activities_api_keys_activities",
+				Columns:    []*schema.Column{APIKeyActivitiesColumns[12]},
+				RefColumns: []*schema.Column{APIKeysColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "apikeyactivity_key_id",
+				Unique:  false,
+				Columns: []*schema.Column{APIKeyActivitiesColumns[12]},
+			},
+			{
+				Name:    "apikeyactivity_timestamp",
+				Unique:  false,
+				Columns: []*schema.Column{APIKeyActivitiesColumns[10]},
+			},
+			{
+				Name:    "apikeyactivity_key_id_timestamp",
+				Unique:  false,
+				Columns: []*schema.Column{APIKeyActivitiesColumns[12], APIKeyActivitiesColumns[10]},
+			},
+			{
+				Name:    "apikeyactivity_action",
+				Unique:  false,
+				Columns: []*schema.Column{APIKeyActivitiesColumns[1]},
+			},
+			{
+				Name:    "apikeyactivity_endpoint",
+				Unique:  false,
+				Columns: []*schema.Column{APIKeyActivitiesColumns[2]},
+			},
+			{
+				Name:    "apikeyactivity_method",
+				Unique:  false,
+				Columns: []*schema.Column{APIKeyActivitiesColumns[3]},
+			},
+			{
+				Name:    "apikeyactivity_status_code",
+				Unique:  false,
+				Columns: []*schema.Column{APIKeyActivitiesColumns[4]},
+			},
+			{
+				Name:    "apikeyactivity_success",
+				Unique:  false,
+				Columns: []*schema.Column{APIKeyActivitiesColumns[8]},
+			},
+			{
+				Name:    "apikeyactivity_ip_address",
+				Unique:  false,
+				Columns: []*schema.Column{APIKeyActivitiesColumns[6]},
+			},
+			{
+				Name:    "apikeyactivity_key_id_action",
+				Unique:  false,
+				Columns: []*schema.Column{APIKeyActivitiesColumns[12], APIKeyActivitiesColumns[1]},
+			},
+			{
+				Name:    "apikeyactivity_key_id_success",
+				Unique:  false,
+				Columns: []*schema.Column{APIKeyActivitiesColumns[12], APIKeyActivitiesColumns[8]},
+			},
+			{
+				Name:    "apikeyactivity_key_id_endpoint",
+				Unique:  false,
+				Columns: []*schema.Column{APIKeyActivitiesColumns[12], APIKeyActivitiesColumns[2]},
+			},
+			{
+				Name:    "apikeyactivity_action_timestamp",
+				Unique:  false,
+				Columns: []*schema.Column{APIKeyActivitiesColumns[1], APIKeyActivitiesColumns[10]},
+			},
+			{
+				Name:    "apikeyactivity_success_timestamp",
+				Unique:  false,
+				Columns: []*schema.Column{APIKeyActivitiesColumns[8], APIKeyActivitiesColumns[10]},
+			},
+			{
+				Name:    "apikeyactivity_timestamp_key_id",
+				Unique:  false,
+				Columns: []*schema.Column{APIKeyActivitiesColumns[10], APIKeyActivitiesColumns[12]},
+			},
+			{
+				Name:    "apikeyactivity_timestamp_action",
+				Unique:  false,
+				Columns: []*schema.Column{APIKeyActivitiesColumns[10], APIKeyActivitiesColumns[1]},
+			},
+			{
+				Name:    "apikeyactivity_timestamp_success",
+				Unique:  false,
+				Columns: []*schema.Column{APIKeyActivitiesColumns[10], APIKeyActivitiesColumns[8]},
 			},
 		},
 	}
@@ -831,6 +1197,135 @@ var (
 			},
 		},
 	}
+	// OrganizationProvidersColumns holds the columns for the "organization_providers" table.
+	OrganizationProvidersColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "template_key", Type: field.TypeString},
+		{Name: "custom_config", Type: field.TypeJSON, Nullable: true, SchemaType: map[string]string{"mysql": "json", "postgres": "jsonb", "sqlite3": "text"}},
+		{Name: "enabled_at", Type: field.TypeTime},
+		{Name: "last_used", Type: field.TypeTime, Nullable: true},
+		{Name: "usage_count", Type: field.TypeInt, Default: 0},
+		{Name: "enabled", Type: field.TypeBool, Default: true},
+		{Name: "success_rate", Type: field.TypeFloat64, Default: 0},
+		{Name: "total_logins", Type: field.TypeInt, Default: 0},
+		{Name: "successful_logins", Type: field.TypeInt, Default: 0},
+		{Name: "failed_logins", Type: field.TypeInt, Default: 0},
+		{Name: "last_success", Type: field.TypeTime, Nullable: true},
+		{Name: "last_failure", Type: field.TypeTime, Nullable: true},
+		{Name: "config_errors", Type: field.TypeInt, Default: 0},
+		{Name: "average_response_time", Type: field.TypeFloat64, Default: 0},
+		{Name: "analytics_data", Type: field.TypeJSON, Nullable: true, SchemaType: map[string]string{"mysql": "json", "postgres": "jsonb", "sqlite3": "text"}},
+		{Name: "metadata", Type: field.TypeJSON, Nullable: true, SchemaType: map[string]string{"mysql": "json", "postgres": "jsonb", "sqlite3": "text"}},
+		{Name: "provider_id", Type: field.TypeString},
+		{Name: "organization_id", Type: field.TypeString},
+		{Name: "template_id", Type: field.TypeString},
+	}
+	// OrganizationProvidersTable holds the schema information for the "organization_providers" table.
+	OrganizationProvidersTable = &schema.Table{
+		Name:       "organization_providers",
+		Columns:    OrganizationProvidersColumns,
+		PrimaryKey: []*schema.Column{OrganizationProvidersColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "organization_providers_identity_providers_organization_providers",
+				Columns:    []*schema.Column{OrganizationProvidersColumns[20]},
+				RefColumns: []*schema.Column{IdentityProvidersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "organization_providers_organizations_organization_providers",
+				Columns:    []*schema.Column{OrganizationProvidersColumns[21]},
+				RefColumns: []*schema.Column{OrganizationsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "organization_providers_provider_templates_organization_providers",
+				Columns:    []*schema.Column{OrganizationProvidersColumns[22]},
+				RefColumns: []*schema.Column{ProviderTemplatesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "organizationprovider_organization_id",
+				Unique:  false,
+				Columns: []*schema.Column{OrganizationProvidersColumns[21]},
+			},
+			{
+				Name:    "organizationprovider_provider_id",
+				Unique:  false,
+				Columns: []*schema.Column{OrganizationProvidersColumns[20]},
+			},
+			{
+				Name:    "organizationprovider_template_key",
+				Unique:  false,
+				Columns: []*schema.Column{OrganizationProvidersColumns[4]},
+			},
+			{
+				Name:    "organizationprovider_template_id",
+				Unique:  false,
+				Columns: []*schema.Column{OrganizationProvidersColumns[22]},
+			},
+			{
+				Name:    "organizationprovider_enabled",
+				Unique:  false,
+				Columns: []*schema.Column{OrganizationProvidersColumns[9]},
+			},
+			{
+				Name:    "organizationprovider_organization_id_provider_id",
+				Unique:  true,
+				Columns: []*schema.Column{OrganizationProvidersColumns[21], OrganizationProvidersColumns[20]},
+			},
+			{
+				Name:    "organizationprovider_organization_id_template_key",
+				Unique:  false,
+				Columns: []*schema.Column{OrganizationProvidersColumns[21], OrganizationProvidersColumns[4]},
+			},
+			{
+				Name:    "organizationprovider_organization_id_template_id",
+				Unique:  false,
+				Columns: []*schema.Column{OrganizationProvidersColumns[21], OrganizationProvidersColumns[22]},
+			},
+			{
+				Name:    "organizationprovider_organization_id_enabled",
+				Unique:  false,
+				Columns: []*schema.Column{OrganizationProvidersColumns[21], OrganizationProvidersColumns[9]},
+			},
+			{
+				Name:    "organizationprovider_template_key_enabled",
+				Unique:  false,
+				Columns: []*schema.Column{OrganizationProvidersColumns[4], OrganizationProvidersColumns[9]},
+			},
+			{
+				Name:    "organizationprovider_template_id_enabled",
+				Unique:  false,
+				Columns: []*schema.Column{OrganizationProvidersColumns[22], OrganizationProvidersColumns[9]},
+			},
+			{
+				Name:    "organizationprovider_last_used",
+				Unique:  false,
+				Columns: []*schema.Column{OrganizationProvidersColumns[7]},
+			},
+			{
+				Name:    "organizationprovider_usage_count",
+				Unique:  false,
+				Columns: []*schema.Column{OrganizationProvidersColumns[8]},
+			},
+			{
+				Name:    "organizationprovider_success_rate",
+				Unique:  false,
+				Columns: []*schema.Column{OrganizationProvidersColumns[10]},
+			},
+			{
+				Name:    "organizationprovider_enabled_at",
+				Unique:  false,
+				Columns: []*schema.Column{OrganizationProvidersColumns[6]},
+			},
+		},
+	}
 	// PasskeysColumns holds the columns for the "passkeys" table.
 	PasskeysColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString, Unique: true},
@@ -1016,6 +1511,81 @@ var (
 				Name:    "permissiondependency_created_by",
 				Unique:  false,
 				Columns: []*schema.Column{PermissionDependenciesColumns[7]},
+			},
+		},
+	}
+	// ProviderTemplatesColumns holds the columns for the "provider_templates" table.
+	ProviderTemplatesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "key", Type: field.TypeString, Unique: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "display_name", Type: field.TypeString},
+		{Name: "type", Type: field.TypeString},
+		{Name: "protocol", Type: field.TypeString},
+		{Name: "icon_url", Type: field.TypeString, Nullable: true},
+		{Name: "category", Type: field.TypeString, Default: "general"},
+		{Name: "popular", Type: field.TypeBool, Default: false},
+		{Name: "active", Type: field.TypeBool, Default: true},
+		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "config_template", Type: field.TypeJSON, SchemaType: map[string]string{"mysql": "json", "postgres": "jsonb", "sqlite3": "text"}},
+		{Name: "required_fields", Type: field.TypeJSON, Nullable: true},
+		{Name: "supported_features", Type: field.TypeJSON, Nullable: true},
+		{Name: "documentation_url", Type: field.TypeString, Nullable: true},
+		{Name: "setup_guide_url", Type: field.TypeString, Nullable: true},
+		{Name: "usage_count", Type: field.TypeInt, Default: 0},
+		{Name: "average_setup_time", Type: field.TypeFloat64, Nullable: true},
+		{Name: "success_rate", Type: field.TypeFloat64, Default: 0},
+		{Name: "popularity_rank", Type: field.TypeInt, Default: 0},
+		{Name: "metadata", Type: field.TypeJSON, Nullable: true, SchemaType: map[string]string{"mysql": "json", "postgres": "jsonb", "sqlite3": "text"}},
+	}
+	// ProviderTemplatesTable holds the schema information for the "provider_templates" table.
+	ProviderTemplatesTable = &schema.Table{
+		Name:       "provider_templates",
+		Columns:    ProviderTemplatesColumns,
+		PrimaryKey: []*schema.Column{ProviderTemplatesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "providertemplate_key",
+				Unique:  true,
+				Columns: []*schema.Column{ProviderTemplatesColumns[4]},
+			},
+			{
+				Name:    "providertemplate_category",
+				Unique:  false,
+				Columns: []*schema.Column{ProviderTemplatesColumns[10]},
+			},
+			{
+				Name:    "providertemplate_type",
+				Unique:  false,
+				Columns: []*schema.Column{ProviderTemplatesColumns[7]},
+			},
+			{
+				Name:    "providertemplate_popular",
+				Unique:  false,
+				Columns: []*schema.Column{ProviderTemplatesColumns[11]},
+			},
+			{
+				Name:    "providertemplate_active",
+				Unique:  false,
+				Columns: []*schema.Column{ProviderTemplatesColumns[12]},
+			},
+			{
+				Name:    "providertemplate_popularity_rank",
+				Unique:  false,
+				Columns: []*schema.Column{ProviderTemplatesColumns[22]},
+			},
+			{
+				Name:    "providertemplate_category_popular",
+				Unique:  false,
+				Columns: []*schema.Column{ProviderTemplatesColumns[10], ProviderTemplatesColumns[11]},
+			},
+			{
+				Name:    "providertemplate_type_active",
+				Unique:  false,
+				Columns: []*schema.Column{ProviderTemplatesColumns[7], ProviderTemplatesColumns[12]},
 			},
 		},
 	}
@@ -1450,7 +2020,7 @@ var (
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
-		{Name: "context_type", Type: field.TypeEnum, Enums: []string{"system", "organization", "application", "resource"}},
+		{Name: "context_type", Type: field.TypeEnum, Enums: []string{"platform", "organization", "application", "resource"}},
 		{Name: "resource_type", Type: field.TypeString, Nullable: true},
 		{Name: "resource_id", Type: field.TypeString, Nullable: true},
 		{Name: "permission_type", Type: field.TypeEnum, Enums: []string{"grant", "deny"}, Default: "grant"},
@@ -1574,7 +2144,7 @@ var (
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
-		{Name: "context_type", Type: field.TypeEnum, Enums: []string{"system", "organization", "application"}},
+		{Name: "context_type", Type: field.TypeEnum, Enums: []string{"platform", "organization", "application", "resource"}},
 		{Name: "assigned_at", Type: field.TypeTime},
 		{Name: "expires_at", Type: field.TypeTime, Nullable: true},
 		{Name: "active", Type: field.TypeBool, Default: true},
@@ -1976,7 +2546,9 @@ var (
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		ActivitiesTable,
 		APIKeysTable,
+		APIKeyActivitiesTable,
 		AuditsTable,
 		EmailTemplatesTable,
 		FeatureFlagsTable,
@@ -1989,9 +2561,11 @@ var (
 		OauthTokensTable,
 		OrganizationsTable,
 		OrganizationFeaturesTable,
+		OrganizationProvidersTable,
 		PasskeysTable,
 		PermissionsTable,
 		PermissionDependenciesTable,
+		ProviderTemplatesTable,
 		RolesTable,
 		SmsTemplatesTable,
 		SSOStatesTable,
@@ -2012,8 +2586,12 @@ var (
 )
 
 func init() {
+	ActivitiesTable.ForeignKeys[0].RefTable = OrganizationsTable
+	ActivitiesTable.ForeignKeys[1].RefTable = SessionsTable
+	ActivitiesTable.ForeignKeys[2].RefTable = UsersTable
 	APIKeysTable.ForeignKeys[0].RefTable = OrganizationsTable
 	APIKeysTable.ForeignKeys[1].RefTable = UsersTable
+	APIKeyActivitiesTable.ForeignKeys[0].RefTable = APIKeysTable
 	AuditsTable.ForeignKeys[0].RefTable = OrganizationsTable
 	AuditsTable.ForeignKeys[1].RefTable = SessionsTable
 	AuditsTable.ForeignKeys[2].RefTable = UsersTable
@@ -2031,6 +2609,9 @@ func init() {
 	OauthTokensTable.ForeignKeys[1].RefTable = UsersTable
 	OrganizationFeaturesTable.ForeignKeys[0].RefTable = FeatureFlagsTable
 	OrganizationFeaturesTable.ForeignKeys[1].RefTable = OrganizationsTable
+	OrganizationProvidersTable.ForeignKeys[0].RefTable = IdentityProvidersTable
+	OrganizationProvidersTable.ForeignKeys[1].RefTable = OrganizationsTable
+	OrganizationProvidersTable.ForeignKeys[2].RefTable = ProviderTemplatesTable
 	PasskeysTable.ForeignKeys[0].RefTable = UsersTable
 	PermissionDependenciesTable.ForeignKeys[0].RefTable = PermissionsTable
 	PermissionDependenciesTable.ForeignKeys[1].RefTable = PermissionsTable

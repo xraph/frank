@@ -22,6 +22,7 @@ import (
 	"github.com/juicycleff/frank/ent/role"
 	"github.com/juicycleff/frank/ent/user"
 	"github.com/juicycleff/frank/ent/userrole"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -120,15 +121,15 @@ func (ru *RoleUpdate) ClearDescription() *RoleUpdate {
 }
 
 // SetRoleType sets the "role_type" field.
-func (ru *RoleUpdate) SetRoleType(rt role.RoleType) *RoleUpdate {
-	ru.mutation.SetRoleType(rt)
+func (ru *RoleUpdate) SetRoleType(mt model.RoleType) *RoleUpdate {
+	ru.mutation.SetRoleType(mt)
 	return ru
 }
 
 // SetNillableRoleType sets the "role_type" field if the given value is not nil.
-func (ru *RoleUpdate) SetNillableRoleType(rt *role.RoleType) *RoleUpdate {
-	if rt != nil {
-		ru.SetRoleType(*rt)
+func (ru *RoleUpdate) SetNillableRoleType(mt *model.RoleType) *RoleUpdate {
+	if mt != nil {
+		ru.SetRoleType(*mt)
 	}
 	return ru
 }
@@ -1038,15 +1039,15 @@ func (ruo *RoleUpdateOne) ClearDescription() *RoleUpdateOne {
 }
 
 // SetRoleType sets the "role_type" field.
-func (ruo *RoleUpdateOne) SetRoleType(rt role.RoleType) *RoleUpdateOne {
-	ruo.mutation.SetRoleType(rt)
+func (ruo *RoleUpdateOne) SetRoleType(mt model.RoleType) *RoleUpdateOne {
+	ruo.mutation.SetRoleType(mt)
 	return ruo
 }
 
 // SetNillableRoleType sets the "role_type" field if the given value is not nil.
-func (ruo *RoleUpdateOne) SetNillableRoleType(rt *role.RoleType) *RoleUpdateOne {
-	if rt != nil {
-		ruo.SetRoleType(*rt)
+func (ruo *RoleUpdateOne) SetNillableRoleType(mt *model.RoleType) *RoleUpdateOne {
+	if mt != nil {
+		ruo.SetRoleType(*mt)
 	}
 	return ruo
 }

@@ -25,30 +25,48 @@ type Repository interface {
 	Webhook() WebhookRepository
 	WebhookEvent() WebhookEventRepository
 	Permission() PermissionRepository
+	ProviderCatalog() ProviderCatalogRepository
+	OrganizationProvider() OrganizationProviderRepository
+	Activity() ActivityRepository
 }
 
 type repository struct {
 	client *data.Clients
 
-	apiKey              ApiKeyRepository
-	audit               AuditRepository
-	email               EmailTemplateRepository
-	identityProvider    IdentityProviderRepository
-	membership          MembershipRepository
-	mfa                 MFARepository
-	oauth               OAuthRepository
-	organization        OrganizationRepository
-	organizationFeature OrganizationFeatureRepository
-	passKey             PasskeyRepository
-	role                RoleRepository
-	user                UserRepository
-	session             SessionRepository
-	smstemplate         SMSTemplateRepository
-	webhook             WebhookRepository
-	webhookEvent        WebhookEventRepository
-	verification        VerificationRepository
-	ssoState            SSOStateRepository
-	permission          PermissionRepository
+	apiKey               ApiKeyRepository
+	activity             ActivityRepository
+	audit                AuditRepository
+	email                EmailTemplateRepository
+	identityProvider     IdentityProviderRepository
+	membership           MembershipRepository
+	mfa                  MFARepository
+	oauth                OAuthRepository
+	organization         OrganizationRepository
+	organizationFeature  OrganizationFeatureRepository
+	passKey              PasskeyRepository
+	role                 RoleRepository
+	user                 UserRepository
+	session              SessionRepository
+	smstemplate          SMSTemplateRepository
+	webhook              WebhookRepository
+	webhookEvent         WebhookEventRepository
+	verification         VerificationRepository
+	ssoState             SSOStateRepository
+	permission           PermissionRepository
+	providerCatalog      ProviderCatalogRepository
+	organizationProvider OrganizationProviderRepository
+}
+
+func (r *repository) Activity() ActivityRepository {
+	return r.activity
+}
+
+func (r *repository) ProviderCatalog() ProviderCatalogRepository {
+	return r.providerCatalog
+}
+
+func (r *repository) OrganizationProvider() OrganizationProviderRepository {
+	return r.organizationProvider
 }
 
 func (r *repository) Permission() PermissionRepository {
@@ -129,25 +147,28 @@ func (r *repository) SMSTemplate() SMSTemplateRepository {
 
 func New(client *data.Clients, logger logging.Logger) Repository {
 	return &repository{
-		client:              client,
-		apiKey:              NewApiKeyRepository(client.DB),
-		audit:               NewAuditRepository(client.DB),
-		email:               NewEmailTemplateRepository(client.DB),
-		identityProvider:    NewIdentityProviderRepository(client.DB),
-		membership:          NewMembershipRepository(client.DB, logger),
-		mfa:                 NewMFARepository(client.DB),
-		oauth:               NewOAuthRepository(client.DB, logger),
-		organization:        NewOrganizationRepository(client.DB, logger),
-		organizationFeature: NewOrganizationFeatureRepository(client.DB),
-		passKey:             NewPasskeyRepository(client.DB, logger),
-		role:                NewRoleRepository(client.DB, logger),
-		user:                NewUserRepository(client.DB, logger),
-		session:             NewSessionRepository(client.DB, logger),
-		smstemplate:         NewSMSTemplateRepository(client.DB),
-		webhook:             NewWebhookRepository(client.DB),
-		webhookEvent:        NewWebhookEventRepository(client.DB),
-		verification:        NewVerificationRepository(client.DB),
-		ssoState:            NewSSOStateRepository(client.DB),
-		permission:          NewPermissionRepository(client.DB, logger),
+		client:               client,
+		activity:             NewActivityRepository(client, logger),
+		apiKey:               NewApiKeyRepository(client.DB),
+		audit:                NewAuditRepository(client.DB),
+		email:                NewEmailTemplateRepository(client.DB),
+		identityProvider:     NewIdentityProviderRepository(client.DB),
+		membership:           NewMembershipRepository(client.DB, logger),
+		mfa:                  NewMFARepository(client.DB),
+		oauth:                NewOAuthRepository(client.DB, logger),
+		organization:         NewOrganizationRepository(client.DB, logger),
+		organizationFeature:  NewOrganizationFeatureRepository(client.DB),
+		passKey:              NewPasskeyRepository(client.DB, logger),
+		role:                 NewRoleRepository(client.DB, logger),
+		user:                 NewUserRepository(client.DB, logger),
+		session:              NewSessionRepository(client.DB, logger),
+		smstemplate:          NewSMSTemplateRepository(client.DB),
+		webhook:              NewWebhookRepository(client.DB),
+		webhookEvent:         NewWebhookEventRepository(client.DB),
+		verification:         NewVerificationRepository(client.DB),
+		ssoState:             NewSSOStateRepository(client.DB),
+		permission:           NewPermissionRepository(client.DB, logger),
+		providerCatalog:      NewProviderCatalogRepository(client.DB, logger),
+		organizationProvider: NewOrganizationProviderRepository(client.DB, logger),
 	}
 }

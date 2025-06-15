@@ -7,8 +7,8 @@ import (
 
 	"github.com/juicycleff/frank/ent"
 	"github.com/juicycleff/frank/ent/mfa"
-	"github.com/juicycleff/frank/internal/model"
 	"github.com/juicycleff/frank/pkg/errors"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -109,6 +109,7 @@ func (r *mfaRepository) Create(ctx context.Context, input CreateMFAInput) (*ent.
 		if ent.IsConstraintError(err) {
 			return nil, errors.New(errors.CodeConflict, fmt.Sprintf("MFA method '%s' already exists for this user", input.Method))
 		}
+		fmt.Println("Error:", err)
 		return nil, errors.Wrap(err, errors.CodeDatabaseError, "Failed to create MFA method")
 	}
 

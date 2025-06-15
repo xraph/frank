@@ -19,6 +19,7 @@ import (
 	"github.com/juicycleff/frank/ent/permissiondependency"
 	"github.com/juicycleff/frank/ent/role"
 	"github.com/juicycleff/frank/ent/userpermission"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -111,8 +112,8 @@ func (pc *PermissionCreate) SetAction(s string) *PermissionCreate {
 }
 
 // SetCategory sets the "category" field.
-func (pc *PermissionCreate) SetCategory(pe permission.Category) *PermissionCreate {
-	pc.mutation.SetCategory(pe)
+func (pc *PermissionCreate) SetCategory(mt model.ContextType) *PermissionCreate {
+	pc.mutation.SetCategory(mt)
 	return pc
 }
 
@@ -814,7 +815,7 @@ func (u *PermissionUpsert) UpdateAction() *PermissionUpsert {
 }
 
 // SetCategory sets the "category" field.
-func (u *PermissionUpsert) SetCategory(v permission.Category) *PermissionUpsert {
+func (u *PermissionUpsert) SetCategory(v model.ContextType) *PermissionUpsert {
 	u.Set(permission.FieldCategory, v)
 	return u
 }
@@ -1121,7 +1122,7 @@ func (u *PermissionUpsertOne) UpdateAction() *PermissionUpsertOne {
 }
 
 // SetCategory sets the "category" field.
-func (u *PermissionUpsertOne) SetCategory(v permission.Category) *PermissionUpsertOne {
+func (u *PermissionUpsertOne) SetCategory(v model.ContextType) *PermissionUpsertOne {
 	return u.Update(func(s *PermissionUpsert) {
 		s.SetCategory(v)
 	})
@@ -1619,7 +1620,7 @@ func (u *PermissionUpsertBulk) UpdateAction() *PermissionUpsertBulk {
 }
 
 // SetCategory sets the "category" field.
-func (u *PermissionUpsertBulk) SetCategory(v permission.Category) *PermissionUpsertBulk {
+func (u *PermissionUpsertBulk) SetCategory(v model.ContextType) *PermissionUpsertBulk {
 	return u.Update(func(s *PermissionUpsert) {
 		s.SetCategory(v)
 	})

@@ -11,6 +11,7 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -129,24 +130,10 @@ var (
 	DefaultID func() xid.ID
 )
 
-// ContextType defines the type for the "context_type" enum field.
-type ContextType string
-
-// ContextType values.
-const (
-	ContextTypeSystem       ContextType = "system"
-	ContextTypeOrganization ContextType = "organization"
-	ContextTypeApplication  ContextType = "application"
-)
-
-func (ct ContextType) String() string {
-	return string(ct)
-}
-
 // ContextTypeValidator is a validator for the "context_type" field enum values. It is called by the builders before save.
-func ContextTypeValidator(ct ContextType) error {
-	switch ct {
-	case ContextTypeSystem, ContextTypeOrganization, ContextTypeApplication:
+func ContextTypeValidator(ct model.ContextType) error {
+	switch ct.String() {
+	case "platform", "organization", "application", "resource":
 		return nil
 	default:
 		return fmt.Errorf("userrole: invalid enum value for context_type field: %q", ct)

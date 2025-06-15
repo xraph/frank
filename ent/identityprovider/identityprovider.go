@@ -78,6 +78,8 @@ const (
 	FieldMetadata = "metadata"
 	// EdgeOrganization holds the string denoting the organization edge name in mutations.
 	EdgeOrganization = "organization"
+	// EdgeOrganizationProviders holds the string denoting the organization_providers edge name in mutations.
+	EdgeOrganizationProviders = "organization_providers"
 	// Table holds the table name of the identityprovider in the database.
 	Table = "identity_providers"
 	// OrganizationTable is the table that holds the organization relation/edge.
@@ -87,6 +89,13 @@ const (
 	OrganizationInverseTable = "organizations"
 	// OrganizationColumn is the table column denoting the organization relation/edge.
 	OrganizationColumn = "organization_id"
+	// OrganizationProvidersTable is the table that holds the organization_providers relation/edge.
+	OrganizationProvidersTable = "organization_providers"
+	// OrganizationProvidersInverseTable is the table name for the OrganizationProvider entity.
+	// It exists in this package in order to avoid circular dependency with the "organizationprovider" package.
+	OrganizationProvidersInverseTable = "organization_providers"
+	// OrganizationProvidersColumn is the table column denoting the organization_providers relation/edge.
+	OrganizationProvidersColumn = "provider_id"
 )
 
 // Columns holds all SQL columns for identityprovider fields.
@@ -302,10 +311,31 @@ func ByOrganizationField(field string, opts ...sql.OrderTermOption) OrderOption 
 		sqlgraph.OrderByNeighborTerms(s, newOrganizationStep(), sql.OrderByField(field, opts...))
 	}
 }
+
+// ByOrganizationProvidersCount orders the results by organization_providers count.
+func ByOrganizationProvidersCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newOrganizationProvidersStep(), opts...)
+	}
+}
+
+// ByOrganizationProviders orders the results by organization_providers terms.
+func ByOrganizationProviders(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newOrganizationProvidersStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newOrganizationStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(OrganizationInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, OrganizationTable, OrganizationColumn),
+	)
+}
+func newOrganizationProvidersStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(OrganizationProvidersInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, OrganizationProvidersTable, OrganizationProvidersColumn),
 	)
 }

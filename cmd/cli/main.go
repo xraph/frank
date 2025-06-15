@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	commands2 "github.com/juicycleff/frank/commands"
 	"github.com/juicycleff/frank/config"
+	"github.com/juicycleff/frank/internal/commands"
 	"github.com/juicycleff/frank/internal/di"
 	"github.com/juicycleff/frank/pkg/logging"
 	"github.com/spf13/cobra"
@@ -19,8 +19,8 @@ type CLI struct {
 	container di.Container
 	logger    logging.Logger
 	ctx       context.Context
-	base      *commands2.BaseCommand
-	allCmds   *commands2.AllCommands
+	base      *commands.BaseCommand
+	allCmds   *commands.AllCommands
 }
 
 func main() {
@@ -77,8 +77,8 @@ func (cli *CLI) registerCommands(rootCmd *cobra.Command) {
 	}
 
 	// Create base command with minimal setup for registration
-	cli.base = commands2.NewBaseCommand(cli.config, nil, cli.logger, cli.ctx)
-	cli.allCmds = commands2.NewAllCommands(cli.base)
+	cli.base = commands.NewBaseCommand(cli.config, nil, cli.logger, cli.ctx)
+	cli.allCmds = commands.NewAllCommands(cli.base)
 
 	// Register all commands
 	cli.allCmds.RegisterAllCommands(rootCmd)
@@ -140,8 +140,8 @@ func (cli *CLI) initialize(cmd *cobra.Command, args []string) error {
 	}
 
 	// Update the base command with full dependencies
-	cli.base = commands2.NewBaseCommand(cli.config, cli.container, cli.logger, cli.ctx)
-	cli.allCmds = commands2.NewAllCommands(cli.base)
+	cli.base = commands.NewBaseCommand(cli.config, cli.container, cli.logger, cli.ctx)
+	cli.allCmds = commands.NewAllCommands(cli.base)
 	cli.allCmds.RegisterAllCommands(cmd.Root())
 
 	cli.logger.Debug("CLI initialized successfully")

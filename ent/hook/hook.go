@@ -12,6 +12,18 @@ import (
 	"github.com/juicycleff/frank/ent"
 )
 
+// The ActivityFunc type is an adapter to allow the use of ordinary
+// function as Activity mutator.
+type ActivityFunc func(context.Context, *ent.ActivityMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ActivityFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ActivityMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ActivityMutation", m)
+}
+
 // The ApiKeyFunc type is an adapter to allow the use of ordinary
 // function as ApiKey mutator.
 type ApiKeyFunc func(context.Context, *ent.ApiKeyMutation) (ent.Value, error)
@@ -22,6 +34,18 @@ func (f ApiKeyFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, erro
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ApiKeyMutation", m)
+}
+
+// The ApiKeyActivityFunc type is an adapter to allow the use of ordinary
+// function as ApiKeyActivity mutator.
+type ApiKeyActivityFunc func(context.Context, *ent.ApiKeyActivityMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ApiKeyActivityFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ApiKeyActivityMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ApiKeyActivityMutation", m)
 }
 
 // The AuditFunc type is an adapter to allow the use of ordinary
@@ -168,6 +192,18 @@ func (f OrganizationFeatureFunc) Mutate(ctx context.Context, m ent.Mutation) (en
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.OrganizationFeatureMutation", m)
 }
 
+// The OrganizationProviderFunc type is an adapter to allow the use of ordinary
+// function as OrganizationProvider mutator.
+type OrganizationProviderFunc func(context.Context, *ent.OrganizationProviderMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f OrganizationProviderFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.OrganizationProviderMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.OrganizationProviderMutation", m)
+}
+
 // The PasskeyFunc type is an adapter to allow the use of ordinary
 // function as Passkey mutator.
 type PasskeyFunc func(context.Context, *ent.PasskeyMutation) (ent.Value, error)
@@ -202,6 +238,18 @@ func (f PermissionDependencyFunc) Mutate(ctx context.Context, m ent.Mutation) (e
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PermissionDependencyMutation", m)
+}
+
+// The ProviderTemplateFunc type is an adapter to allow the use of ordinary
+// function as ProviderTemplate mutator.
+type ProviderTemplateFunc func(context.Context, *ent.ProviderTemplateMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ProviderTemplateFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ProviderTemplateMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ProviderTemplateMutation", m)
 }
 
 // The RoleFunc type is an adapter to allow the use of ordinary

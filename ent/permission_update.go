@@ -20,6 +20,7 @@ import (
 	"github.com/juicycleff/frank/ent/predicate"
 	"github.com/juicycleff/frank/ent/role"
 	"github.com/juicycleff/frank/ent/userpermission"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -140,15 +141,15 @@ func (pu *PermissionUpdate) SetNillableAction(s *string) *PermissionUpdate {
 }
 
 // SetCategory sets the "category" field.
-func (pu *PermissionUpdate) SetCategory(pe permission.Category) *PermissionUpdate {
-	pu.mutation.SetCategory(pe)
+func (pu *PermissionUpdate) SetCategory(mt model.ContextType) *PermissionUpdate {
+	pu.mutation.SetCategory(mt)
 	return pu
 }
 
 // SetNillableCategory sets the "category" field if the given value is not nil.
-func (pu *PermissionUpdate) SetNillableCategory(pe *permission.Category) *PermissionUpdate {
-	if pe != nil {
-		pu.SetCategory(*pe)
+func (pu *PermissionUpdate) SetNillableCategory(mt *model.ContextType) *PermissionUpdate {
+	if mt != nil {
+		pu.SetCategory(*mt)
 	}
 	return pu
 }
@@ -1079,15 +1080,15 @@ func (puo *PermissionUpdateOne) SetNillableAction(s *string) *PermissionUpdateOn
 }
 
 // SetCategory sets the "category" field.
-func (puo *PermissionUpdateOne) SetCategory(pe permission.Category) *PermissionUpdateOne {
-	puo.mutation.SetCategory(pe)
+func (puo *PermissionUpdateOne) SetCategory(mt model.ContextType) *PermissionUpdateOne {
+	puo.mutation.SetCategory(mt)
 	return puo
 }
 
 // SetNillableCategory sets the "category" field if the given value is not nil.
-func (puo *PermissionUpdateOne) SetNillableCategory(pe *permission.Category) *PermissionUpdateOne {
-	if pe != nil {
-		puo.SetCategory(*pe)
+func (puo *PermissionUpdateOne) SetNillableCategory(mt *model.ContextType) *PermissionUpdateOne {
+	if mt != nil {
+		puo.SetCategory(*mt)
 	}
 	return puo
 }

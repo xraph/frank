@@ -11,6 +11,7 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -113,6 +114,8 @@ const (
 	EdgeAssignedUserPermissions = "assigned_user_permissions"
 	// EdgeAuditLogs holds the string denoting the audit_logs edge name in mutations.
 	EdgeAuditLogs = "audit_logs"
+	// EdgeActivities holds the string denoting the activities edge name in mutations.
+	EdgeActivities = "activities"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// OrganizationTable is the table that holds the organization relation/edge.
@@ -225,6 +228,13 @@ const (
 	AuditLogsInverseTable = "audits"
 	// AuditLogsColumn is the table column denoting the audit_logs relation/edge.
 	AuditLogsColumn = "user_id"
+	// ActivitiesTable is the table that holds the activities relation/edge.
+	ActivitiesTable = "activities"
+	// ActivitiesInverseTable is the table name for the Activity entity.
+	// It exists in this package in order to avoid circular dependency with the "activity" package.
+	ActivitiesInverseTable = "activities"
+	// ActivitiesColumn is the table column denoting the activities relation/edge.
+	ActivitiesColumn = "user_id"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -308,27 +318,12 @@ var (
 	DefaultID func() xid.ID
 )
 
-// UserType defines the type for the "user_type" enum field.
-type UserType string
-
-// UserTypeExternal is the default value of the UserType enum.
-const DefaultUserType = UserTypeExternal
-
-// UserType values.
-const (
-	UserTypeInternal UserType = "internal"
-	UserTypeExternal UserType = "external"
-	UserTypeEndUser  UserType = "end_user"
-)
-
-func (ut UserType) String() string {
-	return string(ut)
-}
+const DefaultUserType model.UserType = "external"
 
 // UserTypeValidator is a validator for the "user_type" field enum values. It is called by the builders before save.
-func UserTypeValidator(ut UserType) error {
-	switch ut {
-	case UserTypeInternal, UserTypeExternal, UserTypeEndUser:
+func UserTypeValidator(ut model.UserType) error {
+	switch ut.String() {
+	case "internal", "external", "end_user":
 		return nil
 	default:
 		return fmt.Errorf("user: invalid enum value for user_type field: %q", ut)
@@ -704,6 +699,20 @@ func ByAuditLogs(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newAuditLogsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByActivitiesCount orders the results by activities count.
+func ByActivitiesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newActivitiesStep(), opts...)
+	}
+}
+
+// ByActivities orders the results by activities terms.
+func ByActivities(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newActivitiesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newOrganizationStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -814,5 +823,12 @@ func newAuditLogsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(AuditLogsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, AuditLogsTable, AuditLogsColumn),
+	)
+}
+func newActivitiesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ActivitiesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ActivitiesTable, ActivitiesColumn),
 	)
 }

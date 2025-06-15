@@ -11,9 +11,9 @@ import (
 	"github.com/juicycleff/frank/ent/oauthclient"
 	"github.com/juicycleff/frank/ent/oauthscope"
 	"github.com/juicycleff/frank/ent/oauthtoken"
-	"github.com/juicycleff/frank/internal/model"
 	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/juicycleff/frank/pkg/logging"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -238,7 +238,7 @@ type TokenUsageStats struct {
 	ScopeBreakdown  map[string]int `json:"scope_breakdown"`
 }
 
-// DailyUsage represents daily usage statistics
+// OAuthDailyUsage represents daily usage statistics
 type DailyUsage struct {
 	Date     time.Time `json:"date"`
 	Messages int       `json:"messages"`

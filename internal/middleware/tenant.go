@@ -10,14 +10,12 @@ import (
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/go-chi/chi/v5"
 	"github.com/juicycleff/frank/ent"
-	"github.com/juicycleff/frank/ent/organization"
-	"github.com/juicycleff/frank/ent/user"
-	"github.com/juicycleff/frank/internal/contexts"
 	"github.com/juicycleff/frank/internal/di"
-	"github.com/juicycleff/frank/internal/model"
 	"github.com/juicycleff/frank/internal/repository"
+	contexts2 "github.com/juicycleff/frank/pkg/contexts"
 	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/juicycleff/frank/pkg/logging"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -54,14 +52,14 @@ type TenantConfig struct {
 
 // TenantContext represents the current tenant context
 type TenantContext struct {
-	Organization *model.Organization  `json:"organization"`
-	Plan         string               `json:"plan"`
-	Type         organization.OrgType `json:"type"`
-	Features     []string             `json:"features,omitempty"`
-	Limits       *TenantLimits        `json:"limits,omitempty"`
-	Settings     map[string]any       `json:"settings,omitempty"`
-	Active       bool                 `json:"active"`
-	Trial        *TrialInfo           `json:"trial,omitempty"`
+	Organization *model.Organization `json:"organization"`
+	Plan         string              `json:"plan"`
+	Type         model.OrgType       `json:"type"`
+	Features     []string            `json:"features,omitempty"`
+	Limits       *TenantLimits       `json:"limits,omitempty"`
+	Settings     map[string]any      `json:"settings,omitempty"`
+	Active       bool                `json:"active"`
+	Trial        *TrialInfo          `json:"trial,omitempty"`
 }
 
 // TenantLimits represents tenant-specific limits
@@ -189,11 +187,12 @@ func (tm *TenantMiddleware) Middleware() func(http.Handler) http.Handler {
 // HumaMiddleware returns the tenant middleware handler
 func (tm *TenantMiddleware) HumaMiddleware() func(huma.Context, func(huma.Context)) {
 	return func(ctx huma.Context, next func(huma.Context)) {
-		r := ctx.Context().Value("http_request").(*http.Request)
+		info, _ := GetRequestInfoFromContext(ctx.Context())
+		r := info.Req
 		rctx := r.Context()
 
 		// Skip tenant resolution for certain paths
-		if tm.shouldSkipPath(r.URL.Path) {
+		if tm.shouldSkipPath(ctx.URL().Path) {
 			next(ctx)
 			return
 		}
@@ -233,7 +232,7 @@ func (tm *TenantMiddleware) HumaMiddleware() func(huma.Context, func(huma.Contex
 		}
 
 		// Update context and continue
-		*r = *r.WithContext(rctx)
+		ctx = huma.WithContext(ctx, rctx)
 		next(ctx)
 	}
 }
@@ -320,7 +319,7 @@ func (tm *TenantMiddleware) TenantIsolation() func(http.Handler) http.Handler {
 
 			// Ensure user belongs to the tenant organization
 			if tenant != nil && currentUser != nil {
-				if currentUser.UserType == user.UserTypeExternal || currentUser.UserType == user.UserTypeEndUser {
+				if currentUser.UserType == model.UserTypeExternal || currentUser.UserType == model.UserTypeEndUser {
 					// External and end users must belong to the same organization
 					if currentUser.OrganizationID == nil || *currentUser.OrganizationID != tenant.Organization.ID {
 						tm.respondError(w, r, errors.New(errors.CodeForbidden, "user does not belong to tenant organization"))
@@ -409,7 +408,7 @@ func (tm *TenantMiddleware) TenantIsolationHuma() func(huma.Context, func(huma.C
 
 		// Ensure user belongs to the tenant organization
 		if tenant != nil && currentUser != nil {
-			if currentUser.UserType == user.UserTypeExternal || currentUser.UserType == user.UserTypeEndUser {
+			if currentUser.UserType == model.UserTypeExternal || currentUser.UserType == model.UserTypeEndUser {
 				// External and end users must belong to the same organization
 				if currentUser.OrganizationID == nil || *currentUser.OrganizationID != tenant.Organization.ID {
 					tm.respondErrorHuma(ctx, errors.New(errors.CodeForbidden, "user does not belong to tenant organization"))
@@ -631,13 +630,13 @@ func (tm *TenantMiddleware) validateTenantAccess(ctx context.Context, r *http.Re
 	}
 
 	// Internal users can access any tenant
-	if currentUser.UserType == user.UserTypeInternal {
+	if currentUser.UserType == model.UserTypeInternal {
 		return true
 	}
 
 	// Platform organization access
 	if tenant.Organization.IsPlatformOrganization {
-		return tm.config.AllowPlatformAccess && currentUser.UserType == user.UserTypeInternal
+		return tm.config.AllowPlatformAccess && currentUser.UserType == model.UserTypeInternal
 	}
 
 	// User must belong to the tenant organization
@@ -669,15 +668,15 @@ func (tm *TenantMiddleware) shouldSkipPath(path string) bool {
 // Context helper methods
 
 func (tm *TenantMiddleware) setTenantContext(ctx context.Context, tenant *TenantContext) context.Context {
-	ctx = context.WithValue(ctx, contexts.TenantContextKey, tenant)
-	ctx = context.WithValue(ctx, contexts.TenantIDContextKey, tenant.Organization.ID)
-	ctx = context.WithValue(ctx, contexts.TenantSlugContextKey, tenant.Organization.Slug)
-	ctx = context.WithValue(ctx, contexts.TenantPlanContextKey, tenant.Plan)
-	ctx = context.WithValue(ctx, contexts.TenantTypeContextKey, tenant.Type)
+	ctx = context.WithValue(ctx, contexts2.TenantContextKey, tenant)
+	ctx = context.WithValue(ctx, contexts2.TenantIDContextKey, tenant.Organization.ID)
+	ctx = context.WithValue(ctx, contexts2.TenantSlugContextKey, tenant.Organization.Slug)
+	ctx = context.WithValue(ctx, contexts2.TenantPlanContextKey, tenant.Plan)
+	ctx = context.WithValue(ctx, contexts2.TenantTypeContextKey, tenant.Type)
 
 	// Also set organization context for backward compatibility
-	ctx = context.WithValue(ctx, contexts.OrganizationContextKey, tenant.Organization)
-	ctx = context.WithValue(ctx, contexts.OrganizationIDContextKey, tenant.Organization.ID)
+	ctx = context.WithValue(ctx, contexts2.OrganizationContextKey, tenant.Organization)
+	ctx = context.WithValue(ctx, contexts2.OrganizationIDContextKey, tenant.Organization.ID)
 
 	return ctx
 }
@@ -712,7 +711,7 @@ func (tm *TenantMiddleware) respondErrorHuma(ctx huma.Context, err error) {
 
 // GetTenantFromContext retrieves the tenant from request context
 func GetTenantFromContext(ctx context.Context) *TenantContext {
-	if tenant, ok := ctx.Value(contexts.TenantContextKey).(*TenantContext); ok {
+	if tenant, ok := ctx.Value(contexts2.TenantContextKey).(*TenantContext); ok {
 		return tenant
 	}
 	return nil
@@ -720,7 +719,7 @@ func GetTenantFromContext(ctx context.Context) *TenantContext {
 
 // GetTenantIDFromContext retrieves the tenant ID from request context
 func GetTenantIDFromContext(ctx context.Context) *xid.ID {
-	if tenantID, ok := ctx.Value(contexts.TenantIDContextKey).(xid.ID); ok {
+	if tenantID, ok := ctx.Value(contexts2.TenantIDContextKey).(xid.ID); ok {
 		return &tenantID
 	}
 	return nil
@@ -728,7 +727,7 @@ func GetTenantIDFromContext(ctx context.Context) *xid.ID {
 
 // GetTenantSlugFromContext retrieves the tenant slug from request context
 func GetTenantSlugFromContext(ctx context.Context) string {
-	if slug, ok := ctx.Value(contexts.TenantSlugContextKey).(string); ok {
+	if slug, ok := ctx.Value(contexts2.TenantSlugContextKey).(string); ok {
 		return slug
 	}
 	return ""
@@ -736,15 +735,15 @@ func GetTenantSlugFromContext(ctx context.Context) string {
 
 // GetTenantPlanFromContext retrieves the tenant plan from request context
 func GetTenantPlanFromContext(ctx context.Context) string {
-	if plan, ok := ctx.Value(contexts.TenantPlanContextKey).(string); ok {
+	if plan, ok := ctx.Value(contexts2.TenantPlanContextKey).(string); ok {
 		return plan
 	}
 	return ""
 }
 
 // GetTenantTypeFromContext retrieves the tenant type from request context
-func GetTenantTypeFromContext(ctx context.Context) organization.OrgType {
-	if tenantType, ok := ctx.Value(contexts.TenantTypeContextKey).(organization.OrgType); ok {
+func GetTenantTypeFromContext(ctx context.Context) model.OrgType {
+	if tenantType, ok := ctx.Value(contexts2.TenantTypeContextKey).(model.OrgType); ok {
 		return tenantType
 	}
 	return ""

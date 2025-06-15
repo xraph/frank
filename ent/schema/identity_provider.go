@@ -78,6 +78,7 @@ func (IdentityProvider) Edges() []ent.Edge {
 			Field("organization_id").
 			Unique().
 			Required(),
+		edge.To("organization_providers", OrganizationProvider.Type),
 	}
 }
 

@@ -16,9 +16,11 @@ import (
 	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
 	"github.com/juicycleff/frank/ent/apikey"
+	"github.com/juicycleff/frank/ent/apikeyactivity"
 	"github.com/juicycleff/frank/ent/organization"
 	"github.com/juicycleff/frank/ent/predicate"
 	"github.com/juicycleff/frank/ent/user"
+	"github.com/juicycleff/frank/pkg/common"
 	"github.com/rs/xid"
 )
 
@@ -208,6 +210,44 @@ func (aku *ApiKeyUpdate) ClearScopes() *ApiKeyUpdate {
 	return aku
 }
 
+// SetIPWhitelist sets the "ip_whitelist" field.
+func (aku *ApiKeyUpdate) SetIPWhitelist(s []string) *ApiKeyUpdate {
+	aku.mutation.SetIPWhitelist(s)
+	return aku
+}
+
+// AppendIPWhitelist appends s to the "ip_whitelist" field.
+func (aku *ApiKeyUpdate) AppendIPWhitelist(s []string) *ApiKeyUpdate {
+	aku.mutation.AppendIPWhitelist(s)
+	return aku
+}
+
+// ClearIPWhitelist clears the value of the "ip_whitelist" field.
+func (aku *ApiKeyUpdate) ClearIPWhitelist() *ApiKeyUpdate {
+	aku.mutation.ClearIPWhitelist()
+	return aku
+}
+
+// SetRateLimits sets the "rate_limits" field.
+func (aku *ApiKeyUpdate) SetRateLimits(ckrl common.APIKeyRateLimits) *ApiKeyUpdate {
+	aku.mutation.SetRateLimits(ckrl)
+	return aku
+}
+
+// SetNillableRateLimits sets the "rate_limits" field if the given value is not nil.
+func (aku *ApiKeyUpdate) SetNillableRateLimits(ckrl *common.APIKeyRateLimits) *ApiKeyUpdate {
+	if ckrl != nil {
+		aku.SetRateLimits(*ckrl)
+	}
+	return aku
+}
+
+// ClearRateLimits clears the value of the "rate_limits" field.
+func (aku *ApiKeyUpdate) ClearRateLimits() *ApiKeyUpdate {
+	aku.mutation.ClearRateLimits()
+	return aku
+}
+
 // SetMetadata sets the "metadata" field.
 func (aku *ApiKeyUpdate) SetMetadata(m map[string]interface{}) *ApiKeyUpdate {
 	aku.mutation.SetMetadata(m)
@@ -270,6 +310,21 @@ func (aku *ApiKeyUpdate) SetOrganization(o *Organization) *ApiKeyUpdate {
 	return aku.SetOrganizationID(o.ID)
 }
 
+// AddActivityIDs adds the "activities" edge to the ApiKeyActivity entity by IDs.
+func (aku *ApiKeyUpdate) AddActivityIDs(ids ...xid.ID) *ApiKeyUpdate {
+	aku.mutation.AddActivityIDs(ids...)
+	return aku
+}
+
+// AddActivities adds the "activities" edges to the ApiKeyActivity entity.
+func (aku *ApiKeyUpdate) AddActivities(a ...*ApiKeyActivity) *ApiKeyUpdate {
+	ids := make([]xid.ID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return aku.AddActivityIDs(ids...)
+}
+
 // Mutation returns the ApiKeyMutation object of the builder.
 func (aku *ApiKeyUpdate) Mutation() *ApiKeyMutation {
 	return aku.mutation
@@ -285,6 +340,27 @@ func (aku *ApiKeyUpdate) ClearUser() *ApiKeyUpdate {
 func (aku *ApiKeyUpdate) ClearOrganization() *ApiKeyUpdate {
 	aku.mutation.ClearOrganization()
 	return aku
+}
+
+// ClearActivities clears all "activities" edges to the ApiKeyActivity entity.
+func (aku *ApiKeyUpdate) ClearActivities() *ApiKeyUpdate {
+	aku.mutation.ClearActivities()
+	return aku
+}
+
+// RemoveActivityIDs removes the "activities" edge to ApiKeyActivity entities by IDs.
+func (aku *ApiKeyUpdate) RemoveActivityIDs(ids ...xid.ID) *ApiKeyUpdate {
+	aku.mutation.RemoveActivityIDs(ids...)
+	return aku
+}
+
+// RemoveActivities removes "activities" edges to ApiKeyActivity entities.
+func (aku *ApiKeyUpdate) RemoveActivities(a ...*ApiKeyActivity) *ApiKeyUpdate {
+	ids := make([]xid.ID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return aku.RemoveActivityIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -402,6 +478,23 @@ func (aku *ApiKeyUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if aku.mutation.ScopesCleared() {
 		_spec.ClearField(apikey.FieldScopes, field.TypeJSON)
 	}
+	if value, ok := aku.mutation.IPWhitelist(); ok {
+		_spec.SetField(apikey.FieldIPWhitelist, field.TypeJSON, value)
+	}
+	if value, ok := aku.mutation.AppendedIPWhitelist(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, apikey.FieldIPWhitelist, value)
+		})
+	}
+	if aku.mutation.IPWhitelistCleared() {
+		_spec.ClearField(apikey.FieldIPWhitelist, field.TypeJSON)
+	}
+	if value, ok := aku.mutation.RateLimits(); ok {
+		_spec.SetField(apikey.FieldRateLimits, field.TypeJSON, value)
+	}
+	if aku.mutation.RateLimitsCleared() {
+		_spec.ClearField(apikey.FieldRateLimits, field.TypeJSON)
+	}
 	if value, ok := aku.mutation.Metadata(); ok {
 		_spec.SetField(apikey.FieldMetadata, field.TypeJSON, value)
 	}
@@ -471,6 +564,51 @@ func (aku *ApiKeyUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(organization.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if aku.mutation.ActivitiesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   apikey.ActivitiesTable,
+			Columns: []string{apikey.ActivitiesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(apikeyactivity.FieldID, field.TypeString),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := aku.mutation.RemovedActivitiesIDs(); len(nodes) > 0 && !aku.mutation.ActivitiesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   apikey.ActivitiesTable,
+			Columns: []string{apikey.ActivitiesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(apikeyactivity.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := aku.mutation.ActivitiesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   apikey.ActivitiesTable,
+			Columns: []string{apikey.ActivitiesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(apikeyactivity.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -672,6 +810,44 @@ func (akuo *ApiKeyUpdateOne) ClearScopes() *ApiKeyUpdateOne {
 	return akuo
 }
 
+// SetIPWhitelist sets the "ip_whitelist" field.
+func (akuo *ApiKeyUpdateOne) SetIPWhitelist(s []string) *ApiKeyUpdateOne {
+	akuo.mutation.SetIPWhitelist(s)
+	return akuo
+}
+
+// AppendIPWhitelist appends s to the "ip_whitelist" field.
+func (akuo *ApiKeyUpdateOne) AppendIPWhitelist(s []string) *ApiKeyUpdateOne {
+	akuo.mutation.AppendIPWhitelist(s)
+	return akuo
+}
+
+// ClearIPWhitelist clears the value of the "ip_whitelist" field.
+func (akuo *ApiKeyUpdateOne) ClearIPWhitelist() *ApiKeyUpdateOne {
+	akuo.mutation.ClearIPWhitelist()
+	return akuo
+}
+
+// SetRateLimits sets the "rate_limits" field.
+func (akuo *ApiKeyUpdateOne) SetRateLimits(ckrl common.APIKeyRateLimits) *ApiKeyUpdateOne {
+	akuo.mutation.SetRateLimits(ckrl)
+	return akuo
+}
+
+// SetNillableRateLimits sets the "rate_limits" field if the given value is not nil.
+func (akuo *ApiKeyUpdateOne) SetNillableRateLimits(ckrl *common.APIKeyRateLimits) *ApiKeyUpdateOne {
+	if ckrl != nil {
+		akuo.SetRateLimits(*ckrl)
+	}
+	return akuo
+}
+
+// ClearRateLimits clears the value of the "rate_limits" field.
+func (akuo *ApiKeyUpdateOne) ClearRateLimits() *ApiKeyUpdateOne {
+	akuo.mutation.ClearRateLimits()
+	return akuo
+}
+
 // SetMetadata sets the "metadata" field.
 func (akuo *ApiKeyUpdateOne) SetMetadata(m map[string]interface{}) *ApiKeyUpdateOne {
 	akuo.mutation.SetMetadata(m)
@@ -734,6 +910,21 @@ func (akuo *ApiKeyUpdateOne) SetOrganization(o *Organization) *ApiKeyUpdateOne {
 	return akuo.SetOrganizationID(o.ID)
 }
 
+// AddActivityIDs adds the "activities" edge to the ApiKeyActivity entity by IDs.
+func (akuo *ApiKeyUpdateOne) AddActivityIDs(ids ...xid.ID) *ApiKeyUpdateOne {
+	akuo.mutation.AddActivityIDs(ids...)
+	return akuo
+}
+
+// AddActivities adds the "activities" edges to the ApiKeyActivity entity.
+func (akuo *ApiKeyUpdateOne) AddActivities(a ...*ApiKeyActivity) *ApiKeyUpdateOne {
+	ids := make([]xid.ID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return akuo.AddActivityIDs(ids...)
+}
+
 // Mutation returns the ApiKeyMutation object of the builder.
 func (akuo *ApiKeyUpdateOne) Mutation() *ApiKeyMutation {
 	return akuo.mutation
@@ -749,6 +940,27 @@ func (akuo *ApiKeyUpdateOne) ClearUser() *ApiKeyUpdateOne {
 func (akuo *ApiKeyUpdateOne) ClearOrganization() *ApiKeyUpdateOne {
 	akuo.mutation.ClearOrganization()
 	return akuo
+}
+
+// ClearActivities clears all "activities" edges to the ApiKeyActivity entity.
+func (akuo *ApiKeyUpdateOne) ClearActivities() *ApiKeyUpdateOne {
+	akuo.mutation.ClearActivities()
+	return akuo
+}
+
+// RemoveActivityIDs removes the "activities" edge to ApiKeyActivity entities by IDs.
+func (akuo *ApiKeyUpdateOne) RemoveActivityIDs(ids ...xid.ID) *ApiKeyUpdateOne {
+	akuo.mutation.RemoveActivityIDs(ids...)
+	return akuo
+}
+
+// RemoveActivities removes "activities" edges to ApiKeyActivity entities.
+func (akuo *ApiKeyUpdateOne) RemoveActivities(a ...*ApiKeyActivity) *ApiKeyUpdateOne {
+	ids := make([]xid.ID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return akuo.RemoveActivityIDs(ids...)
 }
 
 // Where appends a list predicates to the ApiKeyUpdate builder.
@@ -896,6 +1108,23 @@ func (akuo *ApiKeyUpdateOne) sqlSave(ctx context.Context) (_node *ApiKey, err er
 	if akuo.mutation.ScopesCleared() {
 		_spec.ClearField(apikey.FieldScopes, field.TypeJSON)
 	}
+	if value, ok := akuo.mutation.IPWhitelist(); ok {
+		_spec.SetField(apikey.FieldIPWhitelist, field.TypeJSON, value)
+	}
+	if value, ok := akuo.mutation.AppendedIPWhitelist(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, apikey.FieldIPWhitelist, value)
+		})
+	}
+	if akuo.mutation.IPWhitelistCleared() {
+		_spec.ClearField(apikey.FieldIPWhitelist, field.TypeJSON)
+	}
+	if value, ok := akuo.mutation.RateLimits(); ok {
+		_spec.SetField(apikey.FieldRateLimits, field.TypeJSON, value)
+	}
+	if akuo.mutation.RateLimitsCleared() {
+		_spec.ClearField(apikey.FieldRateLimits, field.TypeJSON)
+	}
 	if value, ok := akuo.mutation.Metadata(); ok {
 		_spec.SetField(apikey.FieldMetadata, field.TypeJSON, value)
 	}
@@ -965,6 +1194,51 @@ func (akuo *ApiKeyUpdateOne) sqlSave(ctx context.Context) (_node *ApiKey, err er
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(organization.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if akuo.mutation.ActivitiesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   apikey.ActivitiesTable,
+			Columns: []string{apikey.ActivitiesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(apikeyactivity.FieldID, field.TypeString),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := akuo.mutation.RemovedActivitiesIDs(); len(nodes) > 0 && !akuo.mutation.ActivitiesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   apikey.ActivitiesTable,
+			Columns: []string{apikey.ActivitiesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(apikeyactivity.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := akuo.mutation.ActivitiesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   apikey.ActivitiesTable,
+			Columns: []string{apikey.ActivitiesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(apikeyactivity.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {

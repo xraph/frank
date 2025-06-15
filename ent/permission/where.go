@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/juicycleff/frank/ent/predicate"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -600,23 +601,33 @@ func ActionContainsFold(v string) predicate.Permission {
 }
 
 // CategoryEQ applies the EQ predicate on the "category" field.
-func CategoryEQ(v Category) predicate.Permission {
-	return predicate.Permission(sql.FieldEQ(FieldCategory, v))
+func CategoryEQ(v model.ContextType) predicate.Permission {
+	vc := v
+	return predicate.Permission(sql.FieldEQ(FieldCategory, vc))
 }
 
 // CategoryNEQ applies the NEQ predicate on the "category" field.
-func CategoryNEQ(v Category) predicate.Permission {
-	return predicate.Permission(sql.FieldNEQ(FieldCategory, v))
+func CategoryNEQ(v model.ContextType) predicate.Permission {
+	vc := v
+	return predicate.Permission(sql.FieldNEQ(FieldCategory, vc))
 }
 
 // CategoryIn applies the In predicate on the "category" field.
-func CategoryIn(vs ...Category) predicate.Permission {
-	return predicate.Permission(sql.FieldIn(FieldCategory, vs...))
+func CategoryIn(vs ...model.ContextType) predicate.Permission {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Permission(sql.FieldIn(FieldCategory, v...))
 }
 
 // CategoryNotIn applies the NotIn predicate on the "category" field.
-func CategoryNotIn(vs ...Category) predicate.Permission {
-	return predicate.Permission(sql.FieldNotIn(FieldCategory, vs...))
+func CategoryNotIn(vs ...model.ContextType) predicate.Permission {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Permission(sql.FieldNotIn(FieldCategory, v...))
 }
 
 // ConditionsEQ applies the EQ predicate on the "conditions" field.

@@ -4,16 +4,18 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-redis/redis/v8"
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/internal/di"
 	"github.com/juicycleff/frank/internal/routes"
-	"github.com/juicycleff/frank/internal/server"
 	"github.com/juicycleff/frank/pkg/data"
 	"github.com/juicycleff/frank/pkg/hooks"
 	"github.com/juicycleff/frank/pkg/logging"
+	"github.com/juicycleff/frank/pkg/model"
+	server2 "github.com/juicycleff/frank/pkg/server"
 	"go.uber.org/zap"
 )
 
@@ -29,7 +31,7 @@ func WithChiRouter(mux chi.Router) Option {
 }
 
 // WithHooks sets up Frank to use custom hooks
-func WithHooks(hooks *hooks.Hooks) Option {
+func WithHooks(hooks hooks.Hooks) Option {
 	return func(f *Frank) error {
 		f.hooks = hooks
 		return nil
@@ -37,7 +39,7 @@ func WithHooks(hooks *hooks.Hooks) Option {
 }
 
 // WithCustomRouter allows setting a custom router implementation
-func WithCustomRouter(customRouter server.Router) Option {
+func WithCustomRouter(customRouter server2.Router) Option {
 	return func(f *Frank) error {
 		f.router = customRouter
 		return nil
@@ -47,6 +49,34 @@ func WithCustomRouter(customRouter server.Router) Option {
 func WithDataClients(clients *data.Clients) Option {
 	return func(f *Frank) error {
 		f.clients = clients
+		return nil
+	}
+}
+
+// WithPluginManager sets up Frank to use a plugin manager
+func WithPluginManager(pluginManager *hooks.PluginManager) Option {
+	return func(f *Frank) error {
+		f.pluginManager = pluginManager
+		return nil
+	}
+}
+
+// WithAutoHooksSetup automatically sets up enhanced hooks system
+func WithAutoHooksSetup() Option {
+	return func(f *Frank) error {
+		if f.log == nil {
+			f.log = logging.NewDefaultLogger()
+		}
+
+		// Create enhanced hooks system
+		f.hooks = hooks.NewHooks(f.log)
+
+		// Create plugin manager
+		f.pluginManager = hooks.NewPluginManager(f.log)
+
+		// Setup default hooks
+		setupDefaultHooks(f.hooks, f.log)
+
 		return nil
 	}
 }
@@ -87,6 +117,23 @@ func WithDefaultConfig() Option {
 			return fmt.Errorf("failed to load default config: %w", err)
 		}
 		f.cfg = cfg
+		return nil
+	}
+}
+
+func WithNoOpsForTesting() Option {
+	return func(f *Frank) error {
+		if f.log == nil {
+			f.log = logging.NewDefaultLogger()
+		}
+
+		// Create mock registry with NoOps
+		mockRegistry := hooks.NewMockHookRegistry(f.log)
+		f.hooks = hooks.NewNoOpHooks(f.log)
+
+		// Enable mock mode immediately
+		mockRegistry.EnableMockMode()
+
 		return nil
 	}
 }
@@ -138,6 +185,19 @@ func WithServerEnabled() Option {
 func WithRoutesDisabled() Option {
 	return func(f *Frank) error {
 		f.disableRoutes = true
+		return nil
+	}
+}
+
+func WithMountOptions(mountOpts *server2.MountOptions) Option {
+	return func(f *Frank) error {
+		f.mountOpts = mountOpts
+		return nil
+	}
+}
+func WithBasePath(baseEndpoint string) Option {
+	return func(f *Frank) error {
+		f.basePath = baseEndpoint
 		return nil
 	}
 }
@@ -196,21 +256,26 @@ func WithDevelopmentDefaults() Option {
 }
 
 type Frank struct {
-	router        server.Router
+	router        server2.Router
 	cfg           *config.Config
 	log           logging.Logger
 	clients       *data.Clients
-	hooks         *hooks.Hooks
+	hooks         hooks.Hooks
 	chiMux        chi.Router
 	di            di.Container
-	server        *server.Server
+	server        *server2.Server
+	mountOpts     *server2.MountOptions
+	basePath      string
 	withServer    bool
 	disableRoutes bool
+
+	// Plugin system
+	pluginManager *hooks.PluginManager
 }
 
 // New initializes and returns a new instance of Frank, setting up session store, repositories, services, and routes.
 // If cfg is nil, config must be provided via options or defaults will be used.
-func New(flagsOpts *server.ConfigFlags, opts ...Option) (*Frank, error) {
+func New(flagsOpts *server2.ConfigFlags, opts ...Option) (*Frank, error) {
 	// Initialize Frank with minimal setup
 	f := &Frank{}
 
@@ -283,16 +348,27 @@ func New(flagsOpts *server.ConfigFlags, opts ...Option) (*Frank, error) {
 	}
 
 	// Init repos - ensure this happens after migration attempt
-	container, err := di.NewContainerWithData(f.cfg, f.log, f.clients)
+	container, err := di.NewContainerWithData(f.cfg, f.log, f.clients, f.hooks)
 	if err != nil {
 		return nil, fmt.Errorf("failed to init container: %w", err)
 	}
 	f.di = container
 
+	// Initialize plugins with the hook registry
+	if f.pluginManager != nil && f.hooks != nil {
+		if err := f.pluginManager.Initialize(f.hooks.Registry()); err != nil {
+			f.log.Error("Failed to initialize plugins", zap.Error(err))
+		}
+	}
+
 	// Initialize router if not set via options
 	if f.router == nil {
 		f.log.Info("Using Huma framework (default)")
-		f.router = routes.NewRouter(f.di, f.chiMux)
+		if f.basePath != "" && f.mountOpts == nil {
+			f.router = routes.NewEmbeddedRouter(f.chiMux, f.di, f.basePath)
+		} else {
+			f.router = routes.NewRouterWithOptions(f.di, f.chiMux, f.mountOpts)
+		}
 	}
 
 	if !f.disableRoutes {
@@ -300,49 +376,49 @@ func New(flagsOpts *server.ConfigFlags, opts ...Option) (*Frank, error) {
 	}
 
 	if f.withServer {
-		f.server = server.NewServer(f.router.Chi(), f.di.Config(), f.di.Logger())
+		f.server = server2.NewServer(f.router.Chi(), f.di.Config(), f.di.Logger())
 	}
 
 	return f, nil
 }
 
 // NewWithDefaults creates a new Frank instance with explicit defaults applied
-func NewWithDefaults(flagsOpts *server.ConfigFlags, opts ...Option) (*Frank, error) {
+func NewWithDefaults(flagsOpts *server2.ConfigFlags, opts ...Option) (*Frank, error) {
 	// Prepend defaults to user options
 	allOpts := append(Defaults(), opts...)
 	return New(flagsOpts, allOpts...)
 }
 
 // NewForProduction creates a new Frank instance optimized for production
-func NewForProduction(flagsOpts *server.ConfigFlags, opts ...Option) (*Frank, error) {
+func NewForProduction(flagsOpts *server2.ConfigFlags, opts ...Option) (*Frank, error) {
 	// Prepend production defaults to user options
 	allOpts := append([]Option{WithProductionDefaults()}, opts...)
 	return New(flagsOpts, allOpts...)
 }
 
 // NewForDevelopment creates a new Frank instance optimized for development
-func NewForDevelopment(flagsOpts *server.ConfigFlags, opts ...Option) (*Frank, error) {
+func NewForDevelopment(flagsOpts *server2.ConfigFlags, opts ...Option) (*Frank, error) {
 	// Prepend development defaults to user options
 	allOpts := append([]Option{WithDevelopmentDefaults()}, opts...)
 	return New(flagsOpts, allOpts...)
 }
 
 // NewWithConfigPath creates a new Frank instance loading config from specified path
-func NewWithConfigPath(flagsOpts *server.ConfigFlags, configPath string, opts ...Option) (*Frank, error) {
+func NewWithConfigPath(flagsOpts *server2.ConfigFlags, configPath string, opts ...Option) (*Frank, error) {
 	// Prepend config loading option
 	allOpts := append([]Option{WithConfigPath(configPath)}, opts...)
 	return New(flagsOpts, allOpts...)
 }
 
 // NewWithConfigOrDefaults creates a Frank instance, trying to load config or falling back to defaults
-func NewWithConfigOrDefaults(flagsOpts *server.ConfigFlags, configPath string, opts ...Option) (*Frank, error) {
+func NewWithConfigOrDefaults(flagsOpts *server2.ConfigFlags, configPath string, opts ...Option) (*Frank, error) {
 	// Use the flexible config loading option
 	allOpts := append([]Option{WithConfigOrDefault(configPath)}, opts...)
 	return New(flagsOpts, allOpts...)
 }
 
 // NewFromConfigFile loads both framework config and app config, with fallbacks
-func NewFromConfigFile(flagsOpts *server.ConfigFlags, configPath string, appCfg *config.Config, opts ...Option) (*Frank, error) {
+func NewFromConfigFile(flagsOpts *server2.ConfigFlags, configPath string, appCfg *config.Config, opts ...Option) (*Frank, error) {
 	var configOpts []Option
 
 	// Handle app config priority
@@ -378,16 +454,44 @@ func LoadConfigWithFallback(configPath string, appCfg *config.Config) (*config.C
 // Start starts the Frank server (add this method for completeness)
 func (f *Frank) Start() error {
 	f.log.Info("Starting Frank systems")
+
+	// Execute system startup hooks
+	if f.hooks != nil {
+		ctx := context.Background()
+		result := f.hooks.Registry().Execute(ctx, hooks.HookSystemStartup, nil)
+		if !result.Success && result.Error != nil {
+			f.log.Error("Startup hooks failed", zap.Error(result.Error))
+			// Continue startup even if hooks fail
+		}
+	}
+
 	return f.DI().Start(context.Background())
 }
 
 // Stop gracefully stops the Frank server
 func (f *Frank) Stop() error {
 	f.log.Info("Stopping Frank systems")
+
+	// Execute system shutdown hooks
+	if f.hooks != nil {
+		ctx := context.Background()
+		result := f.hooks.Registry().Execute(ctx, hooks.HookSystemShutdown, nil)
+		if !result.Success && result.Error != nil {
+			f.log.Error("Shutdown hooks failed", zap.Error(result.Error))
+		}
+	}
+
+	// Shutdown plugin manager
+	if f.pluginManager != nil {
+		if err := f.pluginManager.Shutdown(); err != nil {
+			f.log.Error("Failed to shutdown plugin manager", zap.Error(err))
+		}
+	}
+
 	return f.di.Stop(context.Background())
 }
 
-func (f *Frank) Router() server.Router {
+func (f *Frank) Router() server2.Router {
 	return f.router
 }
 
@@ -395,7 +499,7 @@ func (f *Frank) DI() di.Container {
 	return f.di
 }
 
-func (f *Frank) Server() *server.Server {
+func (f *Frank) Server() *server2.Server {
 	// Add nil checks to prevent panic
 	if f == nil {
 		return nil
@@ -413,7 +517,7 @@ func (f *Frank) Server() *server.Server {
 			return nil
 		}
 
-		f.server = server.NewServer(f.router.Chi(), f.di.Config(), f.di.Logger())
+		f.server = server2.NewServer(f.router.Chi(), f.di.Config(), f.di.Logger())
 	}
 	return f.server
 }
@@ -421,6 +525,34 @@ func (f *Frank) Server() *server.Server {
 // IsReady checks if Frank is properly initialized and ready to use
 func (f *Frank) IsReady() bool {
 	return f != nil && f.router != nil && f.di != nil && f.cfg != nil && f.log != nil
+}
+
+// Hooks returns the enhanced hooks system
+func (f *Frank) Hooks() hooks.Hooks {
+	return f.hooks
+}
+
+// PluginManager returns the plugin manager
+func (f *Frank) PluginManager() *hooks.PluginManager {
+	return f.pluginManager
+}
+
+// RegisterPlugin registers a new plugin
+func (f *Frank) RegisterPlugin(plugin hooks.HookPlugin) error {
+	if f.pluginManager == nil {
+		return fmt.Errorf("plugin manager not initialized")
+	}
+
+	if err := f.pluginManager.Register(plugin); err != nil {
+		return err
+	}
+
+	// Initialize the plugin with the hook registry
+	if f.hooks != nil {
+		return plugin.Initialize(f.hooks.Registry())
+	}
+
+	return nil
 }
 
 /*
@@ -480,3 +612,68 @@ Usage Examples:
     // Use this:
     frank, err := frank.NewFromConfigFile(clients, opts.ConfigPath, appCfg)
 */
+
+func setupDefaultHooks(enhancedHooks hooks.Hooks, logger logging.Logger) {
+	// Default login hook - log successful logins
+	enhancedHooks.OnLogin(func(ctx *hooks.HookContext) *hooks.HookResult {
+		if loginResponse, ok := ctx.Data.(*model.LoginResponse); ok {
+			logger.Info("User login successful",
+				logging.String("user_id", loginResponse.User.ID.String()),
+				logging.String("email", loginResponse.User.Email),
+				logging.String("ip", ctx.IPAddress),
+				logging.String("user_agent", ctx.UserAgent),
+			)
+		}
+		return &hooks.HookResult{Success: true}
+	})
+
+	// Default registration hook - log new user registrations
+	enhancedHooks.OnRegister(func(ctx *hooks.HookContext) *hooks.HookResult {
+		if registerResponse, ok := ctx.Data.(*model.RegisterResponse); ok {
+			logger.Info("New user registered",
+				logging.String("user_id", registerResponse.User.ID.String()),
+				logging.String("email", registerResponse.User.Email),
+				logging.String("ip", ctx.IPAddress),
+			)
+		}
+		return &hooks.HookResult{Success: true}
+	})
+
+	// Default user creation hook - initialize user defaults
+	enhancedHooks.OnUserCreate(func(ctx *hooks.HookContext) *hooks.HookResult {
+		if user, ok := ctx.Data.(*model.User); ok {
+			logger.Info("User created",
+				logging.String("user_id", user.ID.String()),
+				logging.String("email", user.Email),
+				logging.String("type", user.UserType.String()),
+			)
+		}
+		return &hooks.HookResult{Success: true}
+	})
+
+	// Security monitoring hook - detect suspicious activities
+	enhancedHooks.Registry().Register(hooks.HookAfterLogin,
+		hooks.NewBaseHookHandler("security_monitor").
+			WithPriority(hooks.PriorityCritical).
+			WithTimeout(5*time.Second).
+			WithExecuteFunc(func(ctx *hooks.HookContext) *hooks.HookResult {
+				// Basic security checks
+				if ctx.IPAddress != "" {
+					// Could integrate with threat intelligence, rate limiting, etc.
+					logger.Debug("Security check passed",
+						logging.String("ip", ctx.IPAddress),
+						logging.String("user_agent", ctx.UserAgent),
+					)
+				}
+				return &hooks.HookResult{Success: true}
+			}))
+
+	// System health check hook
+	enhancedHooks.Registry().Register(hooks.HookHealthCheck,
+		hooks.NewBaseHookHandler("health_check").
+			WithExecuteFunc(func(ctx *hooks.HookContext) *hooks.HookResult {
+				// Perform health checks
+				logger.Debug("Health check executed")
+				return &hooks.HookResult{Success: true}
+			}))
+}

@@ -15,6 +15,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/juicycleff/frank/ent/activity"
 	"github.com/juicycleff/frank/ent/apikey"
 	"github.com/juicycleff/frank/ent/audit"
 	"github.com/juicycleff/frank/ent/emailtemplate"
@@ -23,12 +24,14 @@ import (
 	"github.com/juicycleff/frank/ent/oauthclient"
 	"github.com/juicycleff/frank/ent/organization"
 	"github.com/juicycleff/frank/ent/organizationfeature"
+	"github.com/juicycleff/frank/ent/organizationprovider"
 	"github.com/juicycleff/frank/ent/role"
 	"github.com/juicycleff/frank/ent/smstemplate"
 	"github.com/juicycleff/frank/ent/user"
 	"github.com/juicycleff/frank/ent/userpermission"
 	"github.com/juicycleff/frank/ent/userrole"
 	"github.com/juicycleff/frank/ent/webhook"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -211,15 +214,15 @@ func (oc *OrganizationCreate) SetNillableOwnerID(x *xid.ID) *OrganizationCreate 
 }
 
 // SetOrgType sets the "org_type" field.
-func (oc *OrganizationCreate) SetOrgType(ot organization.OrgType) *OrganizationCreate {
-	oc.mutation.SetOrgType(ot)
+func (oc *OrganizationCreate) SetOrgType(mt model.OrgType) *OrganizationCreate {
+	oc.mutation.SetOrgType(mt)
 	return oc
 }
 
 // SetNillableOrgType sets the "org_type" field if the given value is not nil.
-func (oc *OrganizationCreate) SetNillableOrgType(ot *organization.OrgType) *OrganizationCreate {
-	if ot != nil {
-		oc.SetOrgType(*ot)
+func (oc *OrganizationCreate) SetNillableOrgType(mt *model.OrgType) *OrganizationCreate {
+	if mt != nil {
+		oc.SetOrgType(*mt)
 	}
 	return oc
 }
@@ -633,6 +636,36 @@ func (oc *OrganizationCreate) AddAuditLogs(a ...*Audit) *OrganizationCreate {
 		ids[i] = a[i].ID
 	}
 	return oc.AddAuditLogIDs(ids...)
+}
+
+// AddOrganizationProviderIDs adds the "organization_providers" edge to the OrganizationProvider entity by IDs.
+func (oc *OrganizationCreate) AddOrganizationProviderIDs(ids ...xid.ID) *OrganizationCreate {
+	oc.mutation.AddOrganizationProviderIDs(ids...)
+	return oc
+}
+
+// AddOrganizationProviders adds the "organization_providers" edges to the OrganizationProvider entity.
+func (oc *OrganizationCreate) AddOrganizationProviders(o ...*OrganizationProvider) *OrganizationCreate {
+	ids := make([]xid.ID, len(o))
+	for i := range o {
+		ids[i] = o[i].ID
+	}
+	return oc.AddOrganizationProviderIDs(ids...)
+}
+
+// AddActivityIDs adds the "activities" edge to the Activity entity by IDs.
+func (oc *OrganizationCreate) AddActivityIDs(ids ...xid.ID) *OrganizationCreate {
+	oc.mutation.AddActivityIDs(ids...)
+	return oc
+}
+
+// AddActivities adds the "activities" edges to the Activity entity.
+func (oc *OrganizationCreate) AddActivities(a ...*Activity) *OrganizationCreate {
+	ids := make([]xid.ID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return oc.AddActivityIDs(ids...)
 }
 
 // Mutation returns the OrganizationMutation object of the builder.
@@ -1184,6 +1217,38 @@ func (oc *OrganizationCreate) createSpec() (*Organization, *sqlgraph.CreateSpec)
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
+	if nodes := oc.mutation.OrganizationProvidersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   organization.OrganizationProvidersTable,
+			Columns: []string{organization.OrganizationProvidersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(organizationprovider.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := oc.mutation.ActivitiesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   organization.ActivitiesTable,
+			Columns: []string{organization.ActivitiesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(activity.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
 	return _node, _spec
 }
 
@@ -1453,7 +1518,7 @@ func (u *OrganizationUpsert) ClearOwnerID() *OrganizationUpsert {
 }
 
 // SetOrgType sets the "org_type" field.
-func (u *OrganizationUpsert) SetOrgType(v organization.OrgType) *OrganizationUpsert {
+func (u *OrganizationUpsert) SetOrgType(v model.OrgType) *OrganizationUpsert {
 	u.Set(organization.FieldOrgType, v)
 	return u
 }
@@ -2014,7 +2079,7 @@ func (u *OrganizationUpsertOne) ClearOwnerID() *OrganizationUpsertOne {
 }
 
 // SetOrgType sets the "org_type" field.
-func (u *OrganizationUpsertOne) SetOrgType(v organization.OrgType) *OrganizationUpsertOne {
+func (u *OrganizationUpsertOne) SetOrgType(v model.OrgType) *OrganizationUpsertOne {
 	return u.Update(func(s *OrganizationUpsert) {
 		s.SetOrgType(v)
 	})
@@ -2785,7 +2850,7 @@ func (u *OrganizationUpsertBulk) ClearOwnerID() *OrganizationUpsertBulk {
 }
 
 // SetOrgType sets the "org_type" field.
-func (u *OrganizationUpsertBulk) SetOrgType(v organization.OrgType) *OrganizationUpsertBulk {
+func (u *OrganizationUpsertBulk) SetOrgType(v model.OrgType) *OrganizationUpsertBulk {
 	return u.Update(func(s *OrganizationUpsert) {
 		s.SetOrgType(v)
 	})

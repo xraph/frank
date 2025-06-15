@@ -17,6 +17,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/juicycleff/frank/ent/identityprovider"
 	"github.com/juicycleff/frank/ent/organization"
+	"github.com/juicycleff/frank/ent/organizationprovider"
 	"github.com/rs/xid"
 )
 
@@ -405,6 +406,21 @@ func (ipc *IdentityProviderCreate) SetOrganization(o *Organization) *IdentityPro
 	return ipc.SetOrganizationID(o.ID)
 }
 
+// AddOrganizationProviderIDs adds the "organization_providers" edge to the OrganizationProvider entity by IDs.
+func (ipc *IdentityProviderCreate) AddOrganizationProviderIDs(ids ...xid.ID) *IdentityProviderCreate {
+	ipc.mutation.AddOrganizationProviderIDs(ids...)
+	return ipc
+}
+
+// AddOrganizationProviders adds the "organization_providers" edges to the OrganizationProvider entity.
+func (ipc *IdentityProviderCreate) AddOrganizationProviders(o ...*OrganizationProvider) *IdentityProviderCreate {
+	ids := make([]xid.ID, len(o))
+	for i := range o {
+		ids[i] = o[i].ID
+	}
+	return ipc.AddOrganizationProviderIDs(ids...)
+}
+
 // Mutation returns the IdentityProviderMutation object of the builder.
 func (ipc *IdentityProviderCreate) Mutation() *IdentityProviderMutation {
 	return ipc.mutation
@@ -680,6 +696,22 @@ func (ipc *IdentityProviderCreate) createSpec() (*IdentityProvider, *sqlgraph.Cr
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.OrganizationID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := ipc.mutation.OrganizationProvidersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   identityprovider.OrganizationProvidersTable,
+			Columns: []string{identityprovider.OrganizationProvidersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(organizationprovider.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

@@ -1,0 +1,367 @@
+# Frank Auth SaaS - Development Docker Compose
+# This docker-compose file sets up a complete development environment
+
+version: '3.8'
+
+services:
+  # Main application service
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: development
+      args:
+        - VERSION=1.0.0-dev
+        - BUILD_TIME=${BUILD_TIME:-}
+        - GIT_COMMIT=${GIT_COMMIT:-}
+        - ENVIRONMENT=development
+    container_name: frank-auth-app
+    hostname: frank-auth-app
+    restart: unless-stopped
+    ports:
+      - "8080:8080"   # Main API port
+      - "9090:9090"   # Metrics port
+      - "2345:2345"   # Debugger port (delve)
+    environment:
+      # Database configuration
+      - DATABASE_HOST=db
+      - DATABASE_PORT=5432
+      - DATABASE_NAME=frank_auth_dev
+      - DATABASE_USER=frank_auth
+      - DATABASE_PASSWORD=frank_auth_password
+      - DATABASE_SSL_MODE=disable
+
+      # Redis configuration
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=
+      - REDIS_DATABASE=0
+
+      # Application configuration
+      - ENVIRONMENT=development
+      - LOG_LEVEL=debug
+      - CONFIG_PATH=/app/configs
+      - SERVER_PORT=8080
+      - SERVER_HOST=0.0.0.0
+
+      # Authentication
+      - JWT_SECRET=dev-jwt-secret-change-in-production
+      - SESSION_SECRET=dev-session-secret-change-in-production
+
+      # Email (using MailHog for development)
+      - EMAIL_PROVIDER=smtp
+      - SMTP_HOST=mailhog
+      - SMTP_PORT=1025
+      - SMTP_USERNAME=
+      - SMTP_PASSWORD=
+      - EMAIL_FROM=noreply@frankauth.local
+
+      # SMS (using console provider for development)
+      - SMS_PROVIDER=console
+
+      # OAuth (development keys - replace with real keys)
+      - GOOGLE_CLIENT_ID=your-google-client-id
+      - GOOGLE_CLIENT_SECRET=your-google-client-secret
+      - GITHUB_CLIENT_ID=your-github-client-id
+      - GITHUB_CLIENT_SECRET=your-github-client-secret
+
+      # Feature flags
+      - ENABLE_SWAGGER=true
+      - ENABLE_PROFILING=true
+      - ENABLE_METRICS=true
+    volumes:
+      - ../:/app:cached
+      - go-mod-cache:/go/pkg/mod
+      - go-build-cache:/root/.cache/go-build
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mailhog:
+        condition: service_started
+    networks:
+      - frank-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # PostgreSQL database
+  db:
+    image: postgres:15-alpine
+    container_name: frank-auth-db
+    hostname: frank-auth-db
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=frank_auth_dev
+      - POSTGRES_USER=frank_auth
+      - POSTGRES_PASSWORD=frank_auth_password
+      - POSTGRES_INITDB_ARGS=--auth-host=md5
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ../scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    networks:
+      - frank-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U frank_auth -d frank_auth_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    command: >
+      postgres
+      -c shared_preload_libraries=pg_stat_statements
+      -c pg_stat_statements.track=all
+      -c max_connections=200
+      -c shared_buffers=256MB
+      -c effective_cache_size=1GB
+      -c maintenance_work_mem=64MB
+      -c checkpoint_completion_target=0.9
+      -c wal_buffers=16MB
+      -c default_statistics_target=100
+      -c random_page_cost=1.1
+      -c effective_io_concurrency=200
+      -c work_mem=4MB
+      -c min_wal_size=1GB
+      -c max_wal_size=4GB
+
+  # Redis cache and session store
+  redis:
+    image: redis:7-alpine
+    container_name: frank-auth-redis
+    hostname: frank-auth-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+      - ../docker/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    networks:
+      - frank-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    command: redis-server /usr/local/etc/redis/redis.conf
+
+  # MailHog for email testing
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: frank-auth-mailhog
+    hostname: frank-auth-mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025"  # SMTP port
+      - "8025:8025"  # Web UI port
+    networks:
+      - frank-network
+    environment:
+      - MH_HOSTNAME=mailhog.frankauth.local
+
+  # Adminer for database management
+  adminer:
+    image: adminer:latest
+    container_name: frank-auth-adminer
+    hostname: frank-auth-adminer
+    restart: unless-stopped
+    ports:
+      - "8081:8080"
+    networks:
+      - frank-network
+    environment:
+      - ADMINER_DEFAULT_SERVER=db
+      - ADMINER_DESIGN=pepa-linha
+
+  # Redis Commander for Redis management
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: frank-auth-redis-commander
+    hostname: frank-auth-redis-commander
+    restart: unless-stopped
+    ports:
+      - "8082:8081"
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+      - HTTP_USER=admin
+      - HTTP_PASSWORD=admin
+    networks:
+      - frank-network
+    depends_on:
+      - redis
+
+  # Jaeger for distributed tracing (optional)
+  jaeger:
+    image: jaegertracing/all-in-one:1.50
+    container_name: frank-auth-jaeger
+    hostname: frank-auth-jaeger
+    restart: unless-stopped
+    ports:
+      - "16686:16686"  # Jaeger UI
+      - "14268:14268"  # Jaeger collector HTTP
+      - "14250:14250"  # Jaeger collector gRPC
+      - "6831:6831/udp"  # Jaeger agent UDP
+      - "6832:6832/udp"  # Jaeger agent UDP
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+      - COLLECTOR_ZIPKIN_HOST_PORT=:9411
+    networks:
+      - frank-network
+
+  # Prometheus for metrics collection (optional)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: frank-auth-prometheus
+    hostname: frank-auth-prometheus
+    restart: unless-stopped
+    ports:
+      - "9091:9090"
+    volumes:
+      - ../docker/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    networks:
+      - frank-network
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+
+  # Grafana for metrics visualization (optional)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: frank-auth-grafana
+    hostname: frank-auth-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ../docker/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ../docker/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    networks:
+      - frank-network
+    depends_on:
+      - prometheus
+
+  # Nginx reverse proxy (optional)
+  nginx:
+    image: nginx:alpine
+    container_name: frank-auth-nginx
+    hostname: frank-auth-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ../docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ../docker/nginx/sites-enabled:/etc/nginx/sites-enabled:ro
+      - ../docker/nginx/ssl:/etc/nginx/ssl:ro
+    networks:
+      - frank-network
+    depends_on:
+      - app
+
+  # Testing database (separate from main db)
+  test-db:
+    image: postgres:15-alpine
+    container_name: frank-auth-test-db
+    hostname: frank-auth-test-db
+    restart: unless-stopped
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_DB=frank_auth_test
+      - POSTGRES_USER=frank_auth_test
+      - POSTGRES_PASSWORD=frank_auth_test_password
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres-test-data:/var/lib/postgresql/data
+    networks:
+      - frank-network
+    profiles:
+      - testing
+
+  # Load balancer for testing multiple instances
+  haproxy:
+    image: haproxy:alpine
+    container_name: frank-auth-haproxy
+    hostname: frank-auth-haproxy
+    restart: unless-stopped
+    ports:
+      - "8083:80"
+      - "8443:443"
+    volumes:
+      - ../docker/haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    networks:
+      - frank-network
+    depends_on:
+      - app
+    profiles:
+      - load-balancing
+
+# Named volumes for data persistence
+volumes:
+  postgres-data:
+    name: frank-auth-postgres-data
+  postgres-test-data:
+    name: frank-auth-postgres-test-data
+  redis-data:
+    name: frank-auth-redis-data
+  prometheus-data:
+    name: frank-auth-prometheus-data
+  grafana-data:
+    name: frank-auth-grafana-data
+  go-mod-cache:
+    name: frank-auth-go-mod-cache
+  go-build-cache:
+    name: frank-auth-go-build-cache
+
+# Networks
+networks:
+  frank-network:
+    name: frank-auth-network
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# Development shortcuts
+# Use these commands for common development tasks:
+#
+# Start all services:
+#   docker-compose up -d
+#
+# View logs:
+#   docker-compose logs -f app
+#
+# Run migrations:
+#   docker-compose exec app make migrate-up
+#
+# Run tests:
+#   docker-compose run --rm app make test
+#
+# Access database:
+#   docker-compose exec db psql -U frank_auth -d frank_auth_dev
+#
+# Clean up:
+#   docker-compose down -v --remove-orphans
+#
+# Rebuild app:
+#   docker-compose up --build app
+#
+# Scale app instances:
+#   docker-compose up --scale app=3

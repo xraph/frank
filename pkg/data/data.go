@@ -60,7 +60,15 @@ func (c *Clients) Close() error {
 }
 
 func (c *Clients) PingDB() error {
-	return nil
+	return c.DBPinger.Ping(context.Background())
+}
+
+func (c *Clients) Driver() *entsql.Driver {
+	return c.dbDriver
+}
+
+func (c *Clients) Dialect() string {
+	return c.cfg.Database.Driver
 }
 
 func (c *Clients) DBName() string {

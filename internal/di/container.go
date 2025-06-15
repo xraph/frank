@@ -9,22 +9,24 @@ import (
 	"github.com/juicycleff/frank/ent"
 	"github.com/juicycleff/frank/internal/authz"
 	"github.com/juicycleff/frank/internal/repository"
-	"github.com/juicycleff/frank/internal/services/audit"
-	"github.com/juicycleff/frank/internal/services/auth"
-	"github.com/juicycleff/frank/internal/services/mfa"
-	"github.com/juicycleff/frank/internal/services/notification"
-	"github.com/juicycleff/frank/internal/services/oauth"
-	"github.com/juicycleff/frank/internal/services/organization"
-	"github.com/juicycleff/frank/internal/services/passkey"
-	"github.com/juicycleff/frank/internal/services/rbac"
-	"github.com/juicycleff/frank/internal/services/sso"
-	"github.com/juicycleff/frank/internal/services/user"
-	"github.com/juicycleff/frank/internal/services/webhook"
-	"github.com/juicycleff/frank/internal/sms"
 	"github.com/juicycleff/frank/pkg/crypto"
 	"github.com/juicycleff/frank/pkg/data"
 	"github.com/juicycleff/frank/pkg/email"
+	"github.com/juicycleff/frank/pkg/hooks"
 	"github.com/juicycleff/frank/pkg/logging"
+	"github.com/juicycleff/frank/pkg/services/activity"
+	"github.com/juicycleff/frank/pkg/services/audit"
+	auth2 "github.com/juicycleff/frank/pkg/services/auth"
+	"github.com/juicycleff/frank/pkg/services/mfa"
+	"github.com/juicycleff/frank/pkg/services/notification"
+	"github.com/juicycleff/frank/pkg/services/oauth"
+	organization2 "github.com/juicycleff/frank/pkg/services/organization"
+	passkey2 "github.com/juicycleff/frank/pkg/services/passkey"
+	rbac2 "github.com/juicycleff/frank/pkg/services/rbac"
+	sso2 "github.com/juicycleff/frank/pkg/services/sso"
+	user2 "github.com/juicycleff/frank/pkg/services/user"
+	"github.com/juicycleff/frank/pkg/services/webhook"
+	sms2 "github.com/juicycleff/frank/pkg/sms"
 	"github.com/juicycleff/frank/pkg/validation"
 )
 
@@ -40,28 +42,47 @@ type Container interface {
 	Repo() repository.Repository
 	EmailSender() email.Sender
 
+	ActivityService() activity.Service
+
 	// Services
-	Auth() auth.AuthService
+	Auth() auth2.AuthService
 	AuthZ() authz.Service
-	UserService() user.Service
-	ProfileService() user.ProfileService
-	UserPrefService() user.PreferencesService
-	OrganizationService() organization.Service
-	MembershipService() organization.MembershipService
-	RBACService() rbac.Service
+	UserService() user2.Service
+	ProfileService() user2.ProfileService
+	UserPrefService() user2.PreferencesService
+	OrganizationService() organization2.Service
+	BillingService() organization2.BillingService
+	MembershipService() organization2.MembershipService
+
+	RBACService() rbac2.Service
+	RoleService() rbac2.RoleService
+	PermissionService() rbac2.PermissionService
+	PermissionTemplateService() *rbac2.PermissionTemplateService
+	ResourceDiscoveryService() *rbac2.ResourceDiscoveryService
+	ConditionalPermissionEngine() *rbac2.ConditionalPermissionEngine
+	RoleHierarchyService() *rbac2.RoleHierarchyService
+	RoleAuditService() *rbac2.AuditTrailService
+	RoleAnalyticsService() *rbac2.AnalyticsService
+	RBACChecker() *rbac2.RBACChecker
+	Enforcer() rbac2.Enforcer
+	RBACServiceV2() *rbac2.PerformanceOptimizedRBACService
+
 	EmailService() email.Service
 	NotificationService() notification.Service
 	WebhookService() webhook.Service
 	MFAService() mfa.Service
-	PasskeyService() passkey.Service
+	PasskeyService() passkey2.Service
 	OAuthService() oauth.Service
-	SSOService() sso.Service
+	SSOService() sso2.Service
+	ProviderCatalogService() sso2.ProviderCatalogService
 	AuditService() audit.Service
-	TokenService() auth.TokenService
-	SessionService() auth.SessionService
-	PasswordService() auth.PasswordService
-	SAMLService() sso.SAMLService
-	OIDCService() sso.OIDCService
+	TokenService() auth2.TokenService
+	SessionService() auth2.SessionService
+	PasswordService() auth2.PasswordService
+	SAMLService() sso2.SAMLService
+	OIDCService() sso2.OIDCService
+
+	Hooks() hooks.Hooks
 
 	// Utilities
 	Crypto() crypto.Util
@@ -78,50 +99,124 @@ type container struct {
 	logger      logging.Logger
 	dataClients *data.Clients
 	repo        repository.Repository
+	hooks       hooks.Hooks
 
 	// Utilities
 	validator validation.Validator
 	crypto    crypto.Util
 
 	// Core services
-	tokenService        auth.TokenService
-	sessionService      auth.SessionService
-	passwordService     auth.PasswordService
-	authService         auth.AuthService
-	authzService        authz.Service
-	userService         user.Service
-	userPrefService     user.PreferencesService
-	profileService      user.ProfileService
-	organizationService organization.Service
-	membershipService   organization.MembershipService
-	rbacService         rbac.Service
+	tokenService    auth2.TokenService
+	sessionService  auth2.SessionService
+	passwordService auth2.PasswordService
+	authService     auth2.AuthService
+	authzService    authz.Service
+	userService     user2.Service
+	userPrefService user2.PreferencesService
+	profileService  user2.ProfileService
+
+	organizationService organization2.Service
+	membershipService   organization2.MembershipService
+	billingService      organization2.BillingService
+
 	emailService        email.Service
 	notificationService notification.Service
 	webhookService      webhook.Service
-	mfaService          mfa.Service
-	passkeyService      passkey.Service
-	webAuthn            passkey.WebAuthnService
-	oauthService        oauth.Service
-	samlService         sso.SAMLService
-	oidcService         sso.OIDCService
-	ssoService          sso.Service
-	auditService        audit.Service
+
+	mfaService             mfa.Service
+	passkeyService         passkey2.Service
+	webAuthn               passkey2.WebAuthnService
+	oauthService           oauth.Service
+	samlService            sso2.SAMLService
+	oidcService            sso2.OIDCService
+	ssoService             sso2.Service
+	providerCatalogService sso2.ProviderCatalogService
+
+	auditService    audit.Service
+	activityService activity.Service
 
 	emailSender      email.Sender
 	templatesManager *email.TemplateManager
-	smsSender        sms.Provider
+	smsSender        sms2.Provider
+
+	rbacService               rbac2.Service
+	enforcer                  rbac2.Enforcer
+	permissionService         rbac2.PermissionService
+	userRoleCache             rbac2.UserRoleCache
+	rbacServiceV2             *rbac2.PerformanceOptimizedRBACService
+	roleService               rbac2.RoleService
+	rbacChecker               *rbac2.RBACChecker
+	roleHierarchyService      *rbac2.RoleHierarchyService
+	roleAuditService          *rbac2.AuditTrailService
+	roleAnalyticsService      *rbac2.AnalyticsService
+	permissionTemplateService *rbac2.PermissionTemplateService
+	resourceDiscoveryService  *rbac2.ResourceDiscoveryService
+	rbacConditionalEngine     *rbac2.ConditionalPermissionEngine
 
 	// Internal state
 	started bool
 }
 
+func (c *container) ActivityService() activity.Service {
+	return c.activityService
+}
+
+func (c *container) PermissionTemplateService() *rbac2.PermissionTemplateService {
+	return c.permissionTemplateService
+}
+
+func (c *container) ResourceDiscoveryService() *rbac2.ResourceDiscoveryService {
+	return c.resourceDiscoveryService
+}
+
+func (c *container) ConditionalPermissionEngine() *rbac2.ConditionalPermissionEngine {
+	return c.rbacConditionalEngine
+}
+
+func (c *container) RoleHierarchyService() *rbac2.RoleHierarchyService {
+	return c.roleHierarchyService
+}
+
+func (c *container) RoleAuditService() *rbac2.AuditTrailService {
+	return c.roleAuditService
+}
+
+func (c *container) RoleAnalyticsService() *rbac2.AnalyticsService {
+	return c.roleAnalyticsService
+}
+
+func (c *container) RBACChecker() *rbac2.RBACChecker {
+	return c.rbacChecker
+}
+
+func (c *container) Enforcer() rbac2.Enforcer {
+	return c.enforcer
+}
+
+func (c *container) RBACServiceV2() *rbac2.PerformanceOptimizedRBACService {
+	return c.rbacServiceV2
+}
+
+func (c *container) BillingService() organization2.BillingService {
+	return c.billingService
+}
+
+func (c *container) Hooks() hooks.Hooks {
+	return c.hooks
+}
+
 // NewContainer creates a new dependency injection container
 func NewContainer(cfg *config.Config, logger logging.Logger) (Container, error) {
-	return NewContainerWithData(cfg, logger, nil)
+	return NewContainerWithData(cfg, logger, nil, nil)
 }
 
 // NewContainerWithData creates a new dependency injection container with optional data clients
-func NewContainerWithData(cfg *config.Config, logger logging.Logger, dataClients *data.Clients) (Container, error) {
+func NewContainerWithData(
+	cfg *config.Config,
+	logger logging.Logger,
+	dataClients *data.Clients,
+	hooks hooks.Hooks,
+) (Container, error) {
 	if cfg == nil {
 		return nil, fmt.Errorf("config cannot be nil")
 	}
@@ -132,6 +227,7 @@ func NewContainerWithData(cfg *config.Config, logger logging.Logger, dataClients
 	c := &container{
 		config: cfg,
 		logger: logger,
+		hooks:  hooks,
 	}
 
 	// Initialize core dependencies
@@ -159,6 +255,11 @@ func (c *container) initCore(dataClients *data.Clients) error {
 	// Initialize validator
 	c.validator = validation.New()
 
+	// Initialize hooks
+	if c.hooks == nil {
+		c.hooks = hooks.NewNoOpHooks(c.logger)
+	}
+
 	// Initialize crypto utilities
 	c.crypto, err = crypto.New(c.config)
 	if err != nil {
@@ -174,7 +275,10 @@ func (c *container) initCore(dataClients *data.Clients) error {
 	c.emailSender = email.SenderFactory(&c.config.Email, c.logger)
 
 	// Initialize sms sender
-	c.smsSender = sms.SenderFactory(&c.config.SMS, c.logger)
+	c.smsSender = sms2.SenderFactory(&c.config.SMS, c.logger)
+
+	// Initialize activity service
+	c.activityService = activity.NewService(c.repo.Activity(), c.logger)
 
 	return err
 }
@@ -247,47 +351,65 @@ func (c *container) initServices() error {
 	c.webhookService = webhook.NewService(c.repo.Webhook(), nil, c.logger)
 
 	// Initialize RBAC service first (required by others)
-	c.rbacService = rbac.NewService(
+	c.enforcer = rbac2.NewEnforcer(c.repo, c.logger)
+	c.permissionService = rbac2.NewPermissionService(c.repo, c.logger)
+	c.roleHierarchyService = rbac2.NewRoleHierarchyService(
 		c.repo.Role(),
-		c.repo.Permission(),
-		c.repo.User(),
-		c.repo.Organization(),
+		rbac2.NewMemoryHierarchyCache(),
 		c.logger,
 	)
+	c.roleAuditService = rbac2.NewAuditTrailService(c.repo.Role(), c.logger)
+	c.roleAnalyticsService = rbac2.NewAnalyticsService(c.repo, c.roleAuditService, c.logger)
+	c.resourceDiscoveryService = rbac2.NewResourceDiscoveryService(c.repo.Role(), c.logger)
+	c.permissionTemplateService = rbac2.NewPermissionTemplateService(c.repo, c.resourceDiscoveryService, c.logger)
+	c.rbacConditionalEngine = rbac2.NewConditionalPermissionEngine(c.repo.Role(), c.logger)
+	c.roleService = rbac2.NewRoleService(c.repo, c.logger)
+	c.rbacService = rbac2.NewService(
+		c.enforcer,
+		c.repo,
+		c.roleHierarchyService,
+		c.roleAuditService,
+		c.roleAnalyticsService,
+		c.permissionTemplateService,
+		c.resourceDiscoveryService,
+		c.rbacConditionalEngine,
+		c.logger,
+	)
+	c.rbacChecker = rbac2.NewRBACChecker(c.rbacService, c.logger)
 
 	// Initialize user service
-	c.profileService = user.NewProfileService(
+	c.profileService = user2.NewProfileService(
 		c.repo.User(),
 		c.repo.Verification(),
 		c.repo.Audit(),
 		c.logger,
 	)
-	c.userPrefService = user.NewPreferencesService(
+	c.userPrefService = user2.NewPreferencesService(
 		c.repo.User(),
 		c.repo.Audit(),
 		c.logger,
 	)
-	c.userService = user.NewService(
-		c.repo.User(),
-		c.repo.Verification(),
-		c.repo.Audit(),
+	c.userService = user2.NewService(
+		c.repo,
+		c.hooks,
 		c.logger,
 	)
 
 	// Initialize organization member service
-	c.membershipService = organization.NewMembershipService(
+	c.membershipService = organization2.NewMembershipService(
 		c.repo,
 		c.logger,
 	)
 
 	// Initialize organization service
-	c.organizationService = organization.NewService(
+	c.organizationService = organization2.NewService(
 		c.repo.Organization(),
 		c.repo.Membership(),
 		c.repo.User(),
 		c.repo.Audit(),
 		c.logger,
 	)
+	c.billingService = organization2.NewBillingService(c.repo, nil, c.logger)
 
 	// Initialize notification service
 	c.notificationService, err = notification.NewService(c.repo, c.emailSender, c.smsSender, c.config, c.logger)
@@ -299,9 +421,9 @@ func (c *container) initServices() error {
 	// c.emailService = c.notificationService.Email()
 
 	// Initialize session and passwords services
-	c.tokenService = auth.NewTokenService(c.repo, c.crypto, c.logger, &c.config.Auth)
-	c.sessionService = auth.NewSessionService(c.repo, c.crypto, c.logger, &c.config.Auth)
-	c.passwordService = auth.NewPasswordService(
+	c.tokenService = auth2.NewTokenService(c.repo, c.crypto, c.logger, &c.config.Auth)
+	c.sessionService = auth2.NewSessionService(c.repo, c.crypto, c.logger, &c.config.Auth)
+	c.passwordService = auth2.NewPasswordService(
 		c.repo,
 		c.userService,
 		c.notificationService,
@@ -312,25 +434,31 @@ func (c *container) initServices() error {
 	)
 
 	// Initialize MFA service
-	c.mfaService = mfa.NewService(c.repo, c.smsSender, c.logger, c.config)
+	c.mfaService = mfa.NewService(c.repo, c.dataClients, c.smsSender, c.logger, c.config)
 
 	// Initialize passkey service
-	c.webAuthn = passkey.NewWebAuthnService(passkey.WebAuthnConfig{}, c.logger)
-	c.passkeyService = passkey.NewService(c.repo.PassKey(), c.repo.User(), c.webAuthn, c.logger)
+	c.webAuthn = passkey2.NewWebAuthnService(passkey2.WebAuthnConfig{}, c.logger)
+	c.passkeyService = passkey2.NewService(c.repo.PassKey(), c.repo.User(), c.webAuthn, c.logger)
 
 	// Initialize OAuth service
 	c.oauthService = oauth.NewService(c.repo, c.crypto, c.logger)
 
 	// Initialize SSO service
-	c.samlService, err = sso.NewSAMLService(c.config.BasePath, c.logger)
+	c.samlService, err = sso2.NewSAMLService(c.config.BasePath, c.logger)
 	if err != nil {
 		return fmt.Errorf("failed to create SAML service: %w", err)
 	}
-	c.oidcService = sso.NewOIDCService(c.config.BasePath, c.logger)
-	c.ssoService = sso.NewService(c.repo, c.samlService, c.oidcService, c.logger)
+
+	c.oidcService = sso2.NewOIDCService(c.config.BasePath, c.logger)
+	c.ssoService = sso2.NewService(c.repo, c.samlService, c.oidcService, c.logger)
+	c.providerCatalogService = sso2.NewProviderCatalogService(
+		c.repo,
+		c.ssoService,
+		c.logger,
+	)
 
 	// initialize Auth service
-	c.authService = auth.NewAuthService(
+	c.authService = auth2.NewAuthService(
 		c.config,
 		c.repo,
 		c.tokenService,
@@ -341,6 +469,7 @@ func (c *container) initServices() error {
 		c.mfaService,
 		c.oauthService,
 		c.auditService,
+		c.hooks,
 		c.crypto,
 		c.logger,
 	)
@@ -377,27 +506,27 @@ func (c *container) AuthZ() authz.Service {
 	return c.authzService
 }
 
-func (c *container) UserService() user.Service {
+func (c *container) UserService() user2.Service {
 	return c.userService
 }
 
-func (c *container) ProfileService() user.ProfileService {
+func (c *container) ProfileService() user2.ProfileService {
 	return c.profileService
 }
 
-func (c *container) UserPrefService() user.PreferencesService {
+func (c *container) UserPrefService() user2.PreferencesService {
 	return c.userPrefService
 }
 
-func (c *container) OrganizationService() organization.Service {
+func (c *container) OrganizationService() organization2.Service {
 	return c.organizationService
 }
 
-func (c *container) MembershipService() organization.MembershipService {
+func (c *container) MembershipService() organization2.MembershipService {
 	return c.membershipService
 }
 
-func (c *container) RBACService() rbac.Service {
+func (c *container) RBACService() rbac2.Service {
 	return c.rbacService
 }
 
@@ -417,7 +546,7 @@ func (c *container) MFAService() mfa.Service {
 	return c.mfaService
 }
 
-func (c *container) PasskeyService() passkey.Service {
+func (c *container) PasskeyService() passkey2.Service {
 	return c.passkeyService
 }
 
@@ -425,7 +554,7 @@ func (c *container) OAuthService() oauth.Service {
 	return c.oauthService
 }
 
-func (c *container) SSOService() sso.Service {
+func (c *container) SSOService() sso2.Service {
 	return c.ssoService
 }
 
@@ -437,23 +566,27 @@ func (c *container) Repo() repository.Repository {
 	return c.repo
 }
 
+func (c *container) ProviderCatalogService() sso2.ProviderCatalogService {
+	return c.providerCatalogService
+}
+
 func (c *container) EmailSender() email.Sender {
 	return c.emailSender
 }
 
-func (c *container) Auth() auth.AuthService {
+func (c *container) Auth() auth2.AuthService {
 	return c.authService
 }
 
-func (c *container) TokenService() auth.TokenService {
+func (c *container) TokenService() auth2.TokenService {
 	return c.tokenService
 }
 
-func (c *container) SessionService() auth.SessionService {
+func (c *container) SessionService() auth2.SessionService {
 	return c.sessionService
 }
 
-func (c *container) PasswordService() auth.PasswordService {
+func (c *container) PasswordService() auth2.PasswordService {
 	return c.passwordService
 }
 
@@ -461,12 +594,20 @@ func (c *container) Crypto() crypto.Util {
 	return c.crypto
 }
 
-func (c *container) SAMLService() sso.SAMLService {
+func (c *container) SAMLService() sso2.SAMLService {
 	return c.samlService
 }
 
-func (c *container) OIDCService() sso.OIDCService {
+func (c *container) OIDCService() sso2.OIDCService {
 	return c.oidcService
+}
+
+func (c *container) RoleService() rbac2.RoleService {
+	return c.roleService
+}
+
+func (c *container) PermissionService() rbac2.PermissionService {
+	return c.permissionService
 }
 
 func (c *container) Start(ctx context.Context) error {
@@ -475,6 +616,12 @@ func (c *container) Start(ctx context.Context) error {
 	}
 
 	c.logger.Info("Starting application container")
+
+	c.logger.Info("Initializing email templates")
+	err := c.providerCatalogService.SeedProviderCatalog(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to seed provider catalog: %w", err)
+	}
 
 	// Start services that need lifecycle management
 	if starter, ok := c.webhookService.(interface{ Start(context.Context) error }); ok {
@@ -562,13 +709,13 @@ func NewContainerFromConfig(cfg *config.Config) (Container, error) {
 }
 
 // NewContainerFromConfigWithData creates a container from config with existing data clients
-func NewContainerFromConfigWithData(cfg *config.Config, dataClients *data.Clients) (Container, error) {
+func NewContainerFromConfigWithData(cfg *config.Config, dataClients *data.Clients, hooks hooks.Hooks) (Container, error) {
 	logger := logging.NewLogger(&logging.LoggerConfig{
 		Level:       cfg.Logging.Level,
 		Environment: cfg.Environment,
 	})
 
-	return NewContainerWithData(cfg, logger, dataClients)
+	return NewContainerWithData(cfg, logger, dataClients, hooks)
 }
 
 // MustNewContainer creates a container and panics on error (for use in main functions)
@@ -581,8 +728,8 @@ func MustNewContainer(cfg *config.Config, logger logging.Logger) Container {
 }
 
 // MustNewContainerWithData creates a container with data clients and panics on error
-func MustNewContainerWithData(cfg *config.Config, logger logging.Logger, dataClients *data.Clients) Container {
-	container, err := NewContainerWithData(cfg, logger, dataClients)
+func MustNewContainerWithData(cfg *config.Config, logger logging.Logger, dataClients *data.Clients, hooks hooks.Hooks) Container {
+	container, err := NewContainerWithData(cfg, logger, dataClients, hooks)
 	if err != nil {
 		panic(fmt.Sprintf("failed to create container: %v", err))
 	}

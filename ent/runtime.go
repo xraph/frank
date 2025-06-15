@@ -8,7 +8,9 @@ package ent
 import (
 	"time"
 
+	"github.com/juicycleff/frank/ent/activity"
 	"github.com/juicycleff/frank/ent/apikey"
+	"github.com/juicycleff/frank/ent/apikeyactivity"
 	"github.com/juicycleff/frank/ent/audit"
 	"github.com/juicycleff/frank/ent/emailtemplate"
 	"github.com/juicycleff/frank/ent/featureflag"
@@ -21,9 +23,11 @@ import (
 	"github.com/juicycleff/frank/ent/oauthtoken"
 	"github.com/juicycleff/frank/ent/organization"
 	"github.com/juicycleff/frank/ent/organizationfeature"
+	"github.com/juicycleff/frank/ent/organizationprovider"
 	"github.com/juicycleff/frank/ent/passkey"
 	"github.com/juicycleff/frank/ent/permission"
 	"github.com/juicycleff/frank/ent/permissiondependency"
+	"github.com/juicycleff/frank/ent/providertemplate"
 	"github.com/juicycleff/frank/ent/role"
 	"github.com/juicycleff/frank/ent/schema"
 	"github.com/juicycleff/frank/ent/session"
@@ -42,6 +46,31 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	activityMixin := schema.Activity{}.Mixin()
+	activityMixinFields0 := activityMixin[0].Fields()
+	_ = activityMixinFields0
+	activityFields := schema.Activity{}.Fields()
+	_ = activityFields
+	// activityDescResourceID is the schema descriptor for resource_id field.
+	activityDescResourceID := activityFields[1].Descriptor()
+	// activity.ResourceIDValidator is a validator for the "resource_id" field. It is called by the builders before save.
+	activity.ResourceIDValidator = activityDescResourceID.Validators[0].(func(string) error)
+	// activityDescAction is the schema descriptor for action field.
+	activityDescAction := activityFields[5].Descriptor()
+	// activity.ActionValidator is a validator for the "action" field. It is called by the builders before save.
+	activity.ActionValidator = activityDescAction.Validators[0].(func(string) error)
+	// activityDescCategory is the schema descriptor for category field.
+	activityDescCategory := activityFields[6].Descriptor()
+	// activity.DefaultCategory holds the default value on creation for the category field.
+	activity.DefaultCategory = activityDescCategory.Default.(string)
+	// activityDescSuccess is the schema descriptor for success field.
+	activityDescSuccess := activityFields[15].Descriptor()
+	// activity.DefaultSuccess holds the default value on creation for the success field.
+	activity.DefaultSuccess = activityDescSuccess.Default.(bool)
+	// activityDescID is the schema descriptor for id field.
+	activityDescID := activityMixinFields0[0].Descriptor()
+	// activity.DefaultID holds the default value on creation for the id field.
+	activity.DefaultID = activityDescID.Default.(func() xid.ID)
 	apikeyMixin := schema.ApiKey{}.Mixin()
 	apikeyMixinFields0 := apikeyMixin[0].Fields()
 	_ = apikeyMixinFields0
@@ -79,6 +108,27 @@ func init() {
 	apikeyDescID := apikeyMixinFields0[0].Descriptor()
 	// apikey.DefaultID holds the default value on creation for the id field.
 	apikey.DefaultID = apikeyDescID.Default.(func() xid.ID)
+	apikeyactivityMixin := schema.ApiKeyActivity{}.Mixin()
+	apikeyactivityMixinFields0 := apikeyactivityMixin[0].Fields()
+	_ = apikeyactivityMixinFields0
+	apikeyactivityFields := schema.ApiKeyActivity{}.Fields()
+	_ = apikeyactivityFields
+	// apikeyactivityDescKeyID is the schema descriptor for key_id field.
+	apikeyactivityDescKeyID := apikeyactivityFields[0].Descriptor()
+	// apikeyactivity.KeyIDValidator is a validator for the "key_id" field. It is called by the builders before save.
+	apikeyactivity.KeyIDValidator = apikeyactivityDescKeyID.Validators[0].(func(string) error)
+	// apikeyactivityDescAction is the schema descriptor for action field.
+	apikeyactivityDescAction := apikeyactivityFields[1].Descriptor()
+	// apikeyactivity.ActionValidator is a validator for the "action" field. It is called by the builders before save.
+	apikeyactivity.ActionValidator = apikeyactivityDescAction.Validators[0].(func(string) error)
+	// apikeyactivityDescSuccess is the schema descriptor for success field.
+	apikeyactivityDescSuccess := apikeyactivityFields[8].Descriptor()
+	// apikeyactivity.DefaultSuccess holds the default value on creation for the success field.
+	apikeyactivity.DefaultSuccess = apikeyactivityDescSuccess.Default.(bool)
+	// apikeyactivityDescID is the schema descriptor for id field.
+	apikeyactivityDescID := apikeyactivityMixinFields0[0].Descriptor()
+	// apikeyactivity.DefaultID holds the default value on creation for the id field.
+	apikeyactivity.DefaultID = apikeyactivityDescID.Default.(func() xid.ID)
 	auditMixin := schema.Audit{}.Mixin()
 	auditMixinFields0 := auditMixin[0].Fields()
 	_ = auditMixinFields0
@@ -631,6 +681,79 @@ func init() {
 	organizationfeatureDescID := organizationfeatureMixinFields0[0].Descriptor()
 	// organizationfeature.DefaultID holds the default value on creation for the id field.
 	organizationfeature.DefaultID = organizationfeatureDescID.Default.(func() xid.ID)
+	organizationproviderMixin := schema.OrganizationProvider{}.Mixin()
+	organizationproviderMixinFields0 := organizationproviderMixin[0].Fields()
+	_ = organizationproviderMixinFields0
+	organizationproviderMixinFields1 := organizationproviderMixin[1].Fields()
+	_ = organizationproviderMixinFields1
+	organizationproviderFields := schema.OrganizationProvider{}.Fields()
+	_ = organizationproviderFields
+	// organizationproviderDescCreatedAt is the schema descriptor for created_at field.
+	organizationproviderDescCreatedAt := organizationproviderMixinFields1[0].Descriptor()
+	// organizationprovider.DefaultCreatedAt holds the default value on creation for the created_at field.
+	organizationprovider.DefaultCreatedAt = organizationproviderDescCreatedAt.Default.(func() time.Time)
+	// organizationproviderDescUpdatedAt is the schema descriptor for updated_at field.
+	organizationproviderDescUpdatedAt := organizationproviderMixinFields1[1].Descriptor()
+	// organizationprovider.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	organizationprovider.DefaultUpdatedAt = organizationproviderDescUpdatedAt.Default.(func() time.Time)
+	// organizationprovider.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	organizationprovider.UpdateDefaultUpdatedAt = organizationproviderDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// organizationproviderDescOrganizationID is the schema descriptor for organization_id field.
+	organizationproviderDescOrganizationID := organizationproviderFields[0].Descriptor()
+	// organizationprovider.OrganizationIDValidator is a validator for the "organization_id" field. It is called by the builders before save.
+	organizationprovider.OrganizationIDValidator = organizationproviderDescOrganizationID.Validators[0].(func(string) error)
+	// organizationproviderDescProviderID is the schema descriptor for provider_id field.
+	organizationproviderDescProviderID := organizationproviderFields[1].Descriptor()
+	// organizationprovider.ProviderIDValidator is a validator for the "provider_id" field. It is called by the builders before save.
+	organizationprovider.ProviderIDValidator = organizationproviderDescProviderID.Validators[0].(func(string) error)
+	// organizationproviderDescTemplateID is the schema descriptor for template_id field.
+	organizationproviderDescTemplateID := organizationproviderFields[2].Descriptor()
+	// organizationprovider.TemplateIDValidator is a validator for the "template_id" field. It is called by the builders before save.
+	organizationprovider.TemplateIDValidator = organizationproviderDescTemplateID.Validators[0].(func(string) error)
+	// organizationproviderDescTemplateKey is the schema descriptor for template_key field.
+	organizationproviderDescTemplateKey := organizationproviderFields[3].Descriptor()
+	// organizationprovider.TemplateKeyValidator is a validator for the "template_key" field. It is called by the builders before save.
+	organizationprovider.TemplateKeyValidator = organizationproviderDescTemplateKey.Validators[0].(func(string) error)
+	// organizationproviderDescEnabledAt is the schema descriptor for enabled_at field.
+	organizationproviderDescEnabledAt := organizationproviderFields[5].Descriptor()
+	// organizationprovider.DefaultEnabledAt holds the default value on creation for the enabled_at field.
+	organizationprovider.DefaultEnabledAt = organizationproviderDescEnabledAt.Default.(func() time.Time)
+	// organizationproviderDescUsageCount is the schema descriptor for usage_count field.
+	organizationproviderDescUsageCount := organizationproviderFields[7].Descriptor()
+	// organizationprovider.DefaultUsageCount holds the default value on creation for the usage_count field.
+	organizationprovider.DefaultUsageCount = organizationproviderDescUsageCount.Default.(int)
+	// organizationproviderDescEnabled is the schema descriptor for enabled field.
+	organizationproviderDescEnabled := organizationproviderFields[8].Descriptor()
+	// organizationprovider.DefaultEnabled holds the default value on creation for the enabled field.
+	organizationprovider.DefaultEnabled = organizationproviderDescEnabled.Default.(bool)
+	// organizationproviderDescSuccessRate is the schema descriptor for success_rate field.
+	organizationproviderDescSuccessRate := organizationproviderFields[9].Descriptor()
+	// organizationprovider.DefaultSuccessRate holds the default value on creation for the success_rate field.
+	organizationprovider.DefaultSuccessRate = organizationproviderDescSuccessRate.Default.(float64)
+	// organizationproviderDescTotalLogins is the schema descriptor for total_logins field.
+	organizationproviderDescTotalLogins := organizationproviderFields[10].Descriptor()
+	// organizationprovider.DefaultTotalLogins holds the default value on creation for the total_logins field.
+	organizationprovider.DefaultTotalLogins = organizationproviderDescTotalLogins.Default.(int)
+	// organizationproviderDescSuccessfulLogins is the schema descriptor for successful_logins field.
+	organizationproviderDescSuccessfulLogins := organizationproviderFields[11].Descriptor()
+	// organizationprovider.DefaultSuccessfulLogins holds the default value on creation for the successful_logins field.
+	organizationprovider.DefaultSuccessfulLogins = organizationproviderDescSuccessfulLogins.Default.(int)
+	// organizationproviderDescFailedLogins is the schema descriptor for failed_logins field.
+	organizationproviderDescFailedLogins := organizationproviderFields[12].Descriptor()
+	// organizationprovider.DefaultFailedLogins holds the default value on creation for the failed_logins field.
+	organizationprovider.DefaultFailedLogins = organizationproviderDescFailedLogins.Default.(int)
+	// organizationproviderDescConfigErrors is the schema descriptor for config_errors field.
+	organizationproviderDescConfigErrors := organizationproviderFields[15].Descriptor()
+	// organizationprovider.DefaultConfigErrors holds the default value on creation for the config_errors field.
+	organizationprovider.DefaultConfigErrors = organizationproviderDescConfigErrors.Default.(int)
+	// organizationproviderDescAverageResponseTime is the schema descriptor for average_response_time field.
+	organizationproviderDescAverageResponseTime := organizationproviderFields[16].Descriptor()
+	// organizationprovider.DefaultAverageResponseTime holds the default value on creation for the average_response_time field.
+	organizationprovider.DefaultAverageResponseTime = organizationproviderDescAverageResponseTime.Default.(float64)
+	// organizationproviderDescID is the schema descriptor for id field.
+	organizationproviderDescID := organizationproviderMixinFields0[0].Descriptor()
+	// organizationprovider.DefaultID holds the default value on creation for the id field.
+	organizationprovider.DefaultID = organizationproviderDescID.Default.(func() xid.ID)
 	passkeyMixin := schema.Passkey{}.Mixin()
 	passkeyMixinFields0 := passkeyMixin[0].Fields()
 	_ = passkeyMixinFields0
@@ -762,6 +885,71 @@ func init() {
 	permissiondependencyDescID := permissiondependencyMixinFields0[0].Descriptor()
 	// permissiondependency.DefaultID holds the default value on creation for the id field.
 	permissiondependency.DefaultID = permissiondependencyDescID.Default.(func() xid.ID)
+	providertemplateMixin := schema.ProviderTemplate{}.Mixin()
+	providertemplateMixinFields0 := providertemplateMixin[0].Fields()
+	_ = providertemplateMixinFields0
+	providertemplateMixinFields1 := providertemplateMixin[1].Fields()
+	_ = providertemplateMixinFields1
+	providertemplateFields := schema.ProviderTemplate{}.Fields()
+	_ = providertemplateFields
+	// providertemplateDescCreatedAt is the schema descriptor for created_at field.
+	providertemplateDescCreatedAt := providertemplateMixinFields1[0].Descriptor()
+	// providertemplate.DefaultCreatedAt holds the default value on creation for the created_at field.
+	providertemplate.DefaultCreatedAt = providertemplateDescCreatedAt.Default.(func() time.Time)
+	// providertemplateDescUpdatedAt is the schema descriptor for updated_at field.
+	providertemplateDescUpdatedAt := providertemplateMixinFields1[1].Descriptor()
+	// providertemplate.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	providertemplate.DefaultUpdatedAt = providertemplateDescUpdatedAt.Default.(func() time.Time)
+	// providertemplate.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	providertemplate.UpdateDefaultUpdatedAt = providertemplateDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// providertemplateDescKey is the schema descriptor for key field.
+	providertemplateDescKey := providertemplateFields[0].Descriptor()
+	// providertemplate.KeyValidator is a validator for the "key" field. It is called by the builders before save.
+	providertemplate.KeyValidator = providertemplateDescKey.Validators[0].(func(string) error)
+	// providertemplateDescName is the schema descriptor for name field.
+	providertemplateDescName := providertemplateFields[1].Descriptor()
+	// providertemplate.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	providertemplate.NameValidator = providertemplateDescName.Validators[0].(func(string) error)
+	// providertemplateDescDisplayName is the schema descriptor for display_name field.
+	providertemplateDescDisplayName := providertemplateFields[2].Descriptor()
+	// providertemplate.DisplayNameValidator is a validator for the "display_name" field. It is called by the builders before save.
+	providertemplate.DisplayNameValidator = providertemplateDescDisplayName.Validators[0].(func(string) error)
+	// providertemplateDescType is the schema descriptor for type field.
+	providertemplateDescType := providertemplateFields[3].Descriptor()
+	// providertemplate.TypeValidator is a validator for the "type" field. It is called by the builders before save.
+	providertemplate.TypeValidator = providertemplateDescType.Validators[0].(func(string) error)
+	// providertemplateDescProtocol is the schema descriptor for protocol field.
+	providertemplateDescProtocol := providertemplateFields[4].Descriptor()
+	// providertemplate.ProtocolValidator is a validator for the "protocol" field. It is called by the builders before save.
+	providertemplate.ProtocolValidator = providertemplateDescProtocol.Validators[0].(func(string) error)
+	// providertemplateDescCategory is the schema descriptor for category field.
+	providertemplateDescCategory := providertemplateFields[6].Descriptor()
+	// providertemplate.DefaultCategory holds the default value on creation for the category field.
+	providertemplate.DefaultCategory = providertemplateDescCategory.Default.(string)
+	// providertemplateDescPopular is the schema descriptor for popular field.
+	providertemplateDescPopular := providertemplateFields[7].Descriptor()
+	// providertemplate.DefaultPopular holds the default value on creation for the popular field.
+	providertemplate.DefaultPopular = providertemplateDescPopular.Default.(bool)
+	// providertemplateDescActive is the schema descriptor for active field.
+	providertemplateDescActive := providertemplateFields[8].Descriptor()
+	// providertemplate.DefaultActive holds the default value on creation for the active field.
+	providertemplate.DefaultActive = providertemplateDescActive.Default.(bool)
+	// providertemplateDescUsageCount is the schema descriptor for usage_count field.
+	providertemplateDescUsageCount := providertemplateFields[15].Descriptor()
+	// providertemplate.DefaultUsageCount holds the default value on creation for the usage_count field.
+	providertemplate.DefaultUsageCount = providertemplateDescUsageCount.Default.(int)
+	// providertemplateDescSuccessRate is the schema descriptor for success_rate field.
+	providertemplateDescSuccessRate := providertemplateFields[17].Descriptor()
+	// providertemplate.DefaultSuccessRate holds the default value on creation for the success_rate field.
+	providertemplate.DefaultSuccessRate = providertemplateDescSuccessRate.Default.(float64)
+	// providertemplateDescPopularityRank is the schema descriptor for popularity_rank field.
+	providertemplateDescPopularityRank := providertemplateFields[18].Descriptor()
+	// providertemplate.DefaultPopularityRank holds the default value on creation for the popularity_rank field.
+	providertemplate.DefaultPopularityRank = providertemplateDescPopularityRank.Default.(int)
+	// providertemplateDescID is the schema descriptor for id field.
+	providertemplateDescID := providertemplateMixinFields0[0].Descriptor()
+	// providertemplate.DefaultID holds the default value on creation for the id field.
+	providertemplate.DefaultID = providertemplateDescID.Default.(func() xid.ID)
 	roleMixin := schema.Role{}.Mixin()
 	roleMixinFields0 := roleMixin[0].Fields()
 	_ = roleMixinFields0

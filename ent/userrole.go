@@ -17,6 +17,7 @@ import (
 	"github.com/juicycleff/frank/ent/role"
 	"github.com/juicycleff/frank/ent/user"
 	"github.com/juicycleff/frank/ent/userrole"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -36,8 +37,8 @@ type UserRole struct {
 	UserID xid.ID `json:"user_id,omitempty"`
 	// RoleID holds the value of the "role_id" field.
 	RoleID xid.ID `json:"role_id,omitempty"`
-	// system = platform-wide, organization = org-specific, application = customer's app
-	ContextType userrole.ContextType `json:"context_type,omitempty"`
+	// platform = platform-wide, organization = org-specific, application = customer's app
+	ContextType model.ContextType `json:"context_type,omitempty"`
 	// ID of the context (org_id for org context, app_id for app context, null for system)
 	ContextID xid.ID `json:"context_id,omitempty"`
 	// Who assigned this role (field-only, no edge)
@@ -185,7 +186,7 @@ func (ur *UserRole) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field context_type", values[i])
 			} else if value.Valid {
-				ur.ContextType = userrole.ContextType(value.String)
+				ur.ContextType = model.ContextType(value.String)
 			}
 		case userrole.FieldContextID:
 			if value, ok := values[i].(*xid.ID); !ok {

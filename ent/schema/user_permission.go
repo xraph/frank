@@ -7,6 +7,7 @@ import (
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -28,7 +29,7 @@ func (UserPermission) Fields() []ent.Field {
 
 		// Context and scope (similar to UserRole)
 		field.Enum("context_type").
-			Values("system", "organization", "application", "resource").
+			GoType(model.ContextType("")).
 			Comment("Scope where this permission applies"),
 
 		field.String("context_id").
@@ -48,8 +49,8 @@ func (UserPermission) Fields() []ent.Field {
 
 		// Permission type
 		field.Enum("permission_type").
-			Values("grant", "deny").
-			Default("grant").
+			GoType(model.PermissionType("")).
+			Default(model.PermissionTypeGrant.String()).
 			Comment("Whether this grants or explicitly denies the permission"),
 
 		// Assignment metadata

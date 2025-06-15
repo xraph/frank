@@ -14,9 +14,9 @@ import (
 	"github.com/juicycleff/frank/ent/user"
 	"github.com/juicycleff/frank/ent/userpermission"
 	"github.com/juicycleff/frank/ent/userrole"
-	"github.com/juicycleff/frank/internal/model"
 	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/juicycleff/frank/pkg/logging"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -35,7 +35,7 @@ type PermissionRepository interface {
 	Search(ctx context.Context, query string, params SearchPermissionsParams) (*model.PaginatedOutput[*ent.Permission], error)
 
 	// Category and grouping operations
-	GetByCategory(ctx context.Context, category permission.Category, params ListPermissionsParams) (*model.PaginatedOutput[*ent.Permission], error)
+	GetByCategory(ctx context.Context, category model.ContextType, params ListPermissionsParams) (*model.PaginatedOutput[*ent.Permission], error)
 	GetByGroup(ctx context.Context, group string, params ListPermissionsParams) (*model.PaginatedOutput[*ent.Permission], error)
 	GetByResource(ctx context.Context, resource string, params ListPermissionsParams) (*model.PaginatedOutput[*ent.Permission], error)
 	GetSystemPermissions(ctx context.Context, params ListPermissionsParams) (*model.PaginatedOutput[*ent.Permission], error)
@@ -47,8 +47,8 @@ type PermissionRepository interface {
 
 	// User operations
 	GetUsersWithPermission(ctx context.Context, permissionID xid.ID) ([]*ent.User, error)
-	GetUserPermissions(ctx context.Context, userID xid.ID, contextType userrole.ContextType, contextID *xid.ID) ([]*ent.Permission, error)
-	GetEffectiveUserPermissions(ctx context.Context, userID xid.ID, contextType userrole.ContextType, contextID *xid.ID) ([]*ent.Permission, error)
+	GetUserPermissions(ctx context.Context, userID xid.ID, contextType model.ContextType, contextID *xid.ID) ([]*ent.Permission, error)
+	GetEffectiveUserPermissions(ctx context.Context, userID xid.ID, contextType model.ContextType, contextID *xid.ID) ([]*ent.Permission, error)
 
 	// Permission dependencies
 	GetDependencies(ctx context.Context, permissionID xid.ID) ([]*ent.Permission, error)
@@ -70,24 +70,37 @@ type PermissionRepository interface {
 	GetPermissionStats(ctx context.Context) (*PermissionStats, error)
 	GetMostUsedPermissions(ctx context.Context, limit int) ([]*PermissionUsage, error)
 	GetUnusedPermissions(ctx context.Context) ([]*ent.Permission, error)
+
+	// ================================
+	// PERMISSION OPERATIONS (Enhanced from rbac2)
+	// ================================
+	CreatePermission(ctx context.Context, permissionCreate *ent.PermissionCreate) (*ent.Permission, error)
+	GetPermissionByID(ctx context.Context, id xid.ID) (*ent.Permission, error)
+	GetPermissionByName(ctx context.Context, name string) (*ent.Permission, error)
+	GetPermissionByResourceAndAction(ctx context.Context, resource, action string) (*ent.Permission, error)
+	ListPermissions(ctx context.Context, input ListPermissionsParams) (*model.PaginatedOutput[*ent.Permission], error)
+	UpdatePermission(ctx context.Context, permissionUpdate *ent.PermissionUpdateOne) (*ent.Permission, error)
+	DeletePermission(ctx context.Context, id xid.ID) error
+
+	Client() *ent.Client
 }
 
 // CreatePermissionInput represents input for creating a permission
 type CreatePermissionInput struct {
-	Name                string              `json:"name"`
-	DisplayName         string              `json:"display_name,omitempty"`
-	Description         string              `json:"description"`
-	Resource            string              `json:"resource"`
-	Action              string              `json:"action"`
-	Category            permission.Category `json:"category"`
-	ApplicableUserTypes []string            `json:"applicable_user_types,omitempty"`
-	ApplicableContexts  []string            `json:"applicable_contexts,omitempty"`
-	Conditions          *string             `json:"conditions,omitempty"`
-	System              bool                `json:"system"`
-	Dangerous           bool                `json:"dangerous"`
-	RiskLevel           int                 `json:"risk_level"`
-	PermissionGroup     *string             `json:"permission_group,omitempty"`
-	CreatedBy           *string             `json:"created_by,omitempty"`
+	Name                string            `json:"name"`
+	DisplayName         string            `json:"display_name,omitempty"`
+	Description         string            `json:"description"`
+	Resource            string            `json:"resource"`
+	Action              string            `json:"action"`
+	Category            model.ContextType `json:"category"`
+	ApplicableUserTypes []string          `json:"applicable_user_types,omitempty"`
+	ApplicableContexts  []string          `json:"applicable_contexts,omitempty"`
+	Conditions          *string           `json:"conditions,omitempty"`
+	System              bool              `json:"system"`
+	Dangerous           bool              `json:"dangerous"`
+	RiskLevel           int               `json:"risk_level"`
+	PermissionGroup     string            `json:"permission_group,omitempty"`
+	CreatedBy           *string           `json:"created_by,omitempty"`
 }
 
 // UpdatePermissionInput represents input for updating a permission
@@ -106,28 +119,27 @@ type UpdatePermissionInput struct {
 // ListPermissionsParams represents parameters for listing permissions
 type ListPermissionsParams struct {
 	model.PaginationParams
-	Category           *permission.Category `json:"category,omitempty"`
-	Resource           *string              `json:"resource,omitempty"`
-	Action             *string              `json:"action,omitempty"`
-	System             *bool                `json:"system,omitempty"`
-	Dangerous          *bool                `json:"dangerous,omitempty"`
-	RiskLevel          *int                 `json:"risk_level,omitempty"`
-	PermissionGroup    *string              `json:"permission_group,omitempty"`
-	Active             *bool                `json:"active,omitempty"`
-	CreatedBy          *string              `json:"created_by,omitempty"`
-	ApplicableUserType *string              `json:"applicable_user_type,omitempty"`
-	ApplicableContext  *string              `json:"applicable_context,omitempty"`
-	IncludeRoles       *bool                `json:"include_roles,omitempty"`
-	Search             string               `json:"search,omitempty"`
+	Category           *model.ContextType `json:"category,omitempty"`
+	Resource           string             `json:"resource,omitempty"`
+	Action             string             `json:"action,omitempty"`
+	System             *bool              `json:"system,omitempty"`
+	Dangerous          *bool              `json:"dangerous,omitempty"`
+	RiskLevel          *int               `json:"risk_level,omitempty"`
+	PermissionGroup    string             `json:"permission_group,omitempty"`
+	Active             *bool              `json:"active,omitempty"`
+	CreatedBy          string             `json:"created_by,omitempty"`
+	ApplicableUserType string             `json:"applicable_user_type,omitempty"`
+	ApplicableContext  string             `json:"applicable_context,omitempty"`
+	IncludeRoles       *bool              `json:"include_roles,omitempty"`
+	Search             string             `json:"search,omitempty"`
 }
 
 // SearchPermissionsParams represents parameters for searching permissions
 type SearchPermissionsParams struct {
 	model.PaginationParams
-	Category         *permission.Category `json:"category,omitempty"`
-	Resource         *string              `json:"resource,omitempty"`
-	ExactMatch       bool                 `json:"exact_match"`
-	Categories       []permission.Category
+	Resource         *string `json:"resource,omitempty"`
+	ExactMatch       bool    `json:"exact_match"`
+	Categories       []model.ContextType
 	Resources        []string
 	Actions          []string
 	RiskLevels       []int
@@ -140,14 +152,14 @@ type SearchPermissionsParams struct {
 
 // PermissionStats represents permission statistics
 type PermissionStats struct {
-	TotalPermissions     int                         `json:"total_permissions"`
-	SystemPermissions    int                         `json:"system_permissions"`
-	CustomPermissions    int                         `json:"custom_permissions"`
-	DangerousPermissions int                         `json:"dangerous_permissions"`
-	CategoryBreakdown    map[permission.Category]int `json:"category_breakdown"`
-	ResourceBreakdown    map[string]int              `json:"resource_breakdown"`
-	RiskLevelBreakdown   map[int]int                 `json:"risk_level_breakdown"`
-	UnusedPermissions    int                         `json:"unused_permissions"`
+	TotalPermissions     int                       `json:"total_permissions"`
+	SystemPermissions    int                       `json:"system_permissions"`
+	CustomPermissions    int                       `json:"custom_permissions"`
+	DangerousPermissions int                       `json:"dangerous_permissions"`
+	CategoryBreakdown    map[model.ContextType]int `json:"category_breakdown"`
+	ResourceBreakdown    map[string]int            `json:"resource_breakdown"`
+	RiskLevelBreakdown   map[int]int               `json:"risk_level_breakdown"`
+	UnusedPermissions    int                       `json:"unused_permissions"`
 }
 
 // PermissionUsage represents permission usage statistics
@@ -191,8 +203,8 @@ func (r *permissionRepository) Create(ctx context.Context, input CreatePermissio
 	if input.Conditions != nil {
 		create.SetConditions(*input.Conditions)
 	}
-	if input.PermissionGroup != nil {
-		create.SetPermissionGroup(*input.PermissionGroup)
+	if input.PermissionGroup != "" {
+		create.SetPermissionGroup(input.PermissionGroup)
 	}
 	if input.CreatedBy != nil {
 		create.SetCreatedBy(*input.CreatedBy)
@@ -331,11 +343,11 @@ func (r *permissionRepository) List(ctx context.Context, params ListPermissionsP
 	if params.Category != nil {
 		query = query.Where(permission.CategoryEQ(*params.Category))
 	}
-	if params.Resource != nil {
-		query = query.Where(permission.Resource(*params.Resource))
+	if params.Resource != "" {
+		query = query.Where(permission.Resource(params.Resource))
 	}
-	if params.Action != nil {
-		query = query.Where(permission.Action(*params.Action))
+	if params.Action != "" {
+		query = query.Where(permission.Action(params.Action))
 	}
 	if params.System != nil {
 		query = query.Where(permission.System(*params.System))
@@ -346,23 +358,23 @@ func (r *permissionRepository) List(ctx context.Context, params ListPermissionsP
 	if params.RiskLevel != nil {
 		query = query.Where(permission.RiskLevel(*params.RiskLevel))
 	}
-	if params.PermissionGroup != nil {
-		query = query.Where(permission.PermissionGroup(*params.PermissionGroup))
+	if params.PermissionGroup != "" {
+		query = query.Where(permission.PermissionGroup(params.PermissionGroup))
 	}
 	if params.Active != nil {
 		query = query.Where(permission.Active(*params.Active))
 	}
-	if params.CreatedBy != nil {
-		query = query.Where(permission.CreatedBy(*params.CreatedBy))
+	if params.CreatedBy != "" {
+		query = query.Where(permission.CreatedBy(params.CreatedBy))
 	}
-	if params.ApplicableUserType != nil {
+	if params.ApplicableUserType != "" {
 		query = query.Where(func(s *sql.Selector) {
-			s.Where(sqljson.ValueContains(permission.FieldApplicableUserTypes, *params.ApplicableUserType))
+			s.Where(sqljson.ValueContains(permission.FieldApplicableUserTypes, params.ApplicableUserType))
 		})
 	}
-	if params.ApplicableContext != nil {
+	if params.ApplicableContext != "" {
 		query = query.Where(func(s *sql.Selector) {
-			s.Where(sqljson.ValueContains(permission.FieldApplicableContexts, *params.ApplicableContext))
+			s.Where(sqljson.ValueContains(permission.FieldApplicableContexts, params.ApplicableContext))
 		})
 	}
 
@@ -375,8 +387,8 @@ func (r *permissionRepository) Search(ctx context.Context, query string, params 
 	q := r.client.Permission.Query()
 
 	// Apply filters
-	if params.Category != nil {
-		q = q.Where(permission.CategoryEQ(*params.Category))
+	if params.Categories != nil {
+		q = q.Where(permission.CategoryIn(params.Categories...))
 	}
 	if params.Resource != nil {
 		q = q.Where(permission.Resource(*params.Resource))
@@ -405,18 +417,18 @@ func (r *permissionRepository) Search(ctx context.Context, query string, params 
 
 // Category and grouping operations
 
-func (r *permissionRepository) GetByCategory(ctx context.Context, category permission.Category, params ListPermissionsParams) (*model.PaginatedOutput[*ent.Permission], error) {
+func (r *permissionRepository) GetByCategory(ctx context.Context, category model.ContextType, params ListPermissionsParams) (*model.PaginatedOutput[*ent.Permission], error) {
 	params.Category = &category
 	return r.List(ctx, params)
 }
 
 func (r *permissionRepository) GetByGroup(ctx context.Context, group string, params ListPermissionsParams) (*model.PaginatedOutput[*ent.Permission], error) {
-	params.PermissionGroup = &group
+	params.PermissionGroup = group
 	return r.List(ctx, params)
 }
 
 func (r *permissionRepository) GetByResource(ctx context.Context, resource string, params ListPermissionsParams) (*model.PaginatedOutput[*ent.Permission], error) {
-	params.Resource = &resource
+	params.Resource = resource
 	return r.List(ctx, params)
 }
 
@@ -471,10 +483,10 @@ func (r *permissionRepository) GetUsersWithPermission(ctx context.Context, permi
 	return users, nil
 }
 
-func (r *permissionRepository) GetUserPermissions(ctx context.Context, userID xid.ID, contextType userrole.ContextType, contextID *xid.ID) ([]*ent.Permission, error) {
+func (r *permissionRepository) GetUserPermissions(ctx context.Context, userID xid.ID, contextType model.ContextType, contextID *xid.ID) ([]*ent.Permission, error) {
 	userPermsQuery := []predicate.UserPermission{userpermission.UserID(userID)}
 	if contextID != nil {
-		userPermsQuery = append(userPermsQuery, userpermission.ContextTypeEQ(userpermission.ContextType(contextType)))
+		userPermsQuery = append(userPermsQuery, userpermission.ContextTypeEQ(model.ContextType(contextType)))
 	}
 
 	if contextID != nil {
@@ -490,7 +502,7 @@ func (r *permissionRepository) GetUserPermissions(ctx context.Context, userID xi
 	return permissions, nil
 }
 
-func (r *permissionRepository) GetEffectiveUserPermissions(ctx context.Context, userID xid.ID, contextType userrole.ContextType, contextID *xid.ID) ([]*ent.Permission, error) {
+func (r *permissionRepository) GetEffectiveUserPermissions(ctx context.Context, userID xid.ID, contextType model.ContextType, contextID *xid.ID) ([]*ent.Permission, error) {
 	// Get direct permissions
 	directPermissions, err := r.GetUserPermissions(ctx, userID, contextType, contextID)
 	if err != nil {
@@ -705,8 +717,8 @@ func (r *permissionRepository) BulkCreate(ctx context.Context, inputs []CreatePe
 		if input.Conditions != nil {
 			create.SetConditions(*input.Conditions)
 		}
-		if input.PermissionGroup != nil {
-			create.SetPermissionGroup(*input.PermissionGroup)
+		if input.PermissionGroup != "" {
+			create.SetPermissionGroup(input.PermissionGroup)
 		}
 		if input.CreatedBy != nil {
 			create.SetCreatedBy(*input.CreatedBy)
@@ -776,12 +788,12 @@ func (r *permissionRepository) GetPermissionStats(ctx context.Context) (*Permiss
 	}
 
 	// Get category breakdown
-	categoryBreakdown := make(map[permission.Category]int)
-	for _, cat := range []permission.Category{
-		permission.CategoryPlatform,
-		permission.CategoryOrganization,
-		permission.CategoryApplication,
-		permission.CategoryResource,
+	categoryBreakdown := make(map[model.ContextType]int)
+	for _, cat := range []model.ContextType{
+		model.ContextTypePlatform,
+		model.ContextTypeOrganization,
+		model.ContextTypeApplication,
+		model.ContextTypeResource,
 	} {
 		count, err := r.client.Permission.Query().
 			Where(permission.CategoryEQ(cat)).
@@ -874,4 +886,43 @@ func (r *permissionRepository) GetUnusedPermissions(ctx context.Context) ([]*ent
 		return nil, fmt.Errorf("failed to get unused permissions: %w", err)
 	}
 	return permissions, nil
+}
+
+func (r *permissionRepository) CreatePermission(ctx context.Context, permissionCreate *ent.PermissionCreate) (*ent.Permission, error) {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (r *permissionRepository) GetPermissionByID(ctx context.Context, id xid.ID) (*ent.Permission, error) {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (r *permissionRepository) GetPermissionByName(ctx context.Context, name string) (*ent.Permission, error) {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (r *permissionRepository) GetPermissionByResourceAndAction(ctx context.Context, resource, action string) (*ent.Permission, error) {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (r *permissionRepository) ListPermissions(ctx context.Context, input ListPermissionsParams) (*model.PaginatedOutput[*ent.Permission], error) {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (r *permissionRepository) UpdatePermission(ctx context.Context, permissionUpdate *ent.PermissionUpdateOne) (*ent.Permission, error) {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (r *permissionRepository) DeletePermission(ctx context.Context, id xid.ID) error {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (r *permissionRepository) Client() *ent.Client {
+	return r.client
 }

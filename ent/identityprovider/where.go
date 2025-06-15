@@ -1812,6 +1812,29 @@ func HasOrganizationWith(preds ...predicate.Organization) predicate.IdentityProv
 	})
 }
 
+// HasOrganizationProviders applies the HasEdge predicate on the "organization_providers" edge.
+func HasOrganizationProviders() predicate.IdentityProvider {
+	return predicate.IdentityProvider(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, OrganizationProvidersTable, OrganizationProvidersColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasOrganizationProvidersWith applies the HasEdge predicate on the "organization_providers" edge with a given conditions (other predicates).
+func HasOrganizationProvidersWith(preds ...predicate.OrganizationProvider) predicate.IdentityProvider {
+	return predicate.IdentityProvider(func(s *sql.Selector) {
+		step := newOrganizationProvidersStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.IdentityProvider) predicate.IdentityProvider {
 	return predicate.IdentityProvider(sql.AndPredicates(predicates...))

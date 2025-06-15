@@ -14,6 +14,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/juicycleff/frank/ent/activity"
 	"github.com/juicycleff/frank/ent/audit"
 	"github.com/juicycleff/frank/ent/predicate"
 	"github.com/juicycleff/frank/ent/session"
@@ -235,6 +236,21 @@ func (su *SessionUpdate) AddAuditLogs(a ...*Audit) *SessionUpdate {
 	return su.AddAuditLogIDs(ids...)
 }
 
+// AddActivityIDs adds the "activities" edge to the Activity entity by IDs.
+func (su *SessionUpdate) AddActivityIDs(ids ...xid.ID) *SessionUpdate {
+	su.mutation.AddActivityIDs(ids...)
+	return su
+}
+
+// AddActivities adds the "activities" edges to the Activity entity.
+func (su *SessionUpdate) AddActivities(a ...*Activity) *SessionUpdate {
+	ids := make([]xid.ID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return su.AddActivityIDs(ids...)
+}
+
 // Mutation returns the SessionMutation object of the builder.
 func (su *SessionUpdate) Mutation() *SessionMutation {
 	return su.mutation
@@ -265,6 +281,27 @@ func (su *SessionUpdate) RemoveAuditLogs(a ...*Audit) *SessionUpdate {
 		ids[i] = a[i].ID
 	}
 	return su.RemoveAuditLogIDs(ids...)
+}
+
+// ClearActivities clears all "activities" edges to the Activity entity.
+func (su *SessionUpdate) ClearActivities() *SessionUpdate {
+	su.mutation.ClearActivities()
+	return su
+}
+
+// RemoveActivityIDs removes the "activities" edge to Activity entities by IDs.
+func (su *SessionUpdate) RemoveActivityIDs(ids ...xid.ID) *SessionUpdate {
+	su.mutation.RemoveActivityIDs(ids...)
+	return su
+}
+
+// RemoveActivities removes "activities" edges to Activity entities.
+func (su *SessionUpdate) RemoveActivities(a ...*Activity) *SessionUpdate {
+	ids := make([]xid.ID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return su.RemoveActivityIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -456,6 +493,51 @@ func (su *SessionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(audit.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if su.mutation.ActivitiesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   session.ActivitiesTable,
+			Columns: []string{session.ActivitiesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(activity.FieldID, field.TypeString),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := su.mutation.RemovedActivitiesIDs(); len(nodes) > 0 && !su.mutation.ActivitiesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   session.ActivitiesTable,
+			Columns: []string{session.ActivitiesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(activity.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := su.mutation.ActivitiesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   session.ActivitiesTable,
+			Columns: []string{session.ActivitiesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(activity.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -685,6 +767,21 @@ func (suo *SessionUpdateOne) AddAuditLogs(a ...*Audit) *SessionUpdateOne {
 	return suo.AddAuditLogIDs(ids...)
 }
 
+// AddActivityIDs adds the "activities" edge to the Activity entity by IDs.
+func (suo *SessionUpdateOne) AddActivityIDs(ids ...xid.ID) *SessionUpdateOne {
+	suo.mutation.AddActivityIDs(ids...)
+	return suo
+}
+
+// AddActivities adds the "activities" edges to the Activity entity.
+func (suo *SessionUpdateOne) AddActivities(a ...*Activity) *SessionUpdateOne {
+	ids := make([]xid.ID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return suo.AddActivityIDs(ids...)
+}
+
 // Mutation returns the SessionMutation object of the builder.
 func (suo *SessionUpdateOne) Mutation() *SessionMutation {
 	return suo.mutation
@@ -715,6 +812,27 @@ func (suo *SessionUpdateOne) RemoveAuditLogs(a ...*Audit) *SessionUpdateOne {
 		ids[i] = a[i].ID
 	}
 	return suo.RemoveAuditLogIDs(ids...)
+}
+
+// ClearActivities clears all "activities" edges to the Activity entity.
+func (suo *SessionUpdateOne) ClearActivities() *SessionUpdateOne {
+	suo.mutation.ClearActivities()
+	return suo
+}
+
+// RemoveActivityIDs removes the "activities" edge to Activity entities by IDs.
+func (suo *SessionUpdateOne) RemoveActivityIDs(ids ...xid.ID) *SessionUpdateOne {
+	suo.mutation.RemoveActivityIDs(ids...)
+	return suo
+}
+
+// RemoveActivities removes "activities" edges to Activity entities.
+func (suo *SessionUpdateOne) RemoveActivities(a ...*Activity) *SessionUpdateOne {
+	ids := make([]xid.ID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return suo.RemoveActivityIDs(ids...)
 }
 
 // Where appends a list predicates to the SessionUpdate builder.
@@ -936,6 +1054,51 @@ func (suo *SessionUpdateOne) sqlSave(ctx context.Context) (_node *Session, err e
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(audit.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if suo.mutation.ActivitiesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   session.ActivitiesTable,
+			Columns: []string{session.ActivitiesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(activity.FieldID, field.TypeString),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := suo.mutation.RemovedActivitiesIDs(); len(nodes) > 0 && !suo.mutation.ActivitiesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   session.ActivitiesTable,
+			Columns: []string{session.ActivitiesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(activity.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := suo.mutation.ActivitiesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   session.ActivitiesTable,
+			Columns: []string{session.ActivitiesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(activity.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {

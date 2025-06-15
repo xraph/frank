@@ -19,6 +19,7 @@ import (
 	"github.com/juicycleff/frank/ent/predicate"
 	"github.com/juicycleff/frank/ent/role"
 	"github.com/juicycleff/frank/ent/user"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -119,15 +120,15 @@ func (mu *MembershipUpdate) SetNillableEmail(s *string) *MembershipUpdate {
 }
 
 // SetStatus sets the "status" field.
-func (mu *MembershipUpdate) SetStatus(m membership.Status) *MembershipUpdate {
-	mu.mutation.SetStatus(m)
+func (mu *MembershipUpdate) SetStatus(ms model.MembershipStatus) *MembershipUpdate {
+	mu.mutation.SetStatus(ms)
 	return mu
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (mu *MembershipUpdate) SetNillableStatus(m *membership.Status) *MembershipUpdate {
-	if m != nil {
-		mu.SetStatus(*m)
+func (mu *MembershipUpdate) SetNillableStatus(ms *model.MembershipStatus) *MembershipUpdate {
+	if ms != nil {
+		mu.SetStatus(*ms)
 	}
 	return mu
 }
@@ -735,15 +736,15 @@ func (muo *MembershipUpdateOne) SetNillableEmail(s *string) *MembershipUpdateOne
 }
 
 // SetStatus sets the "status" field.
-func (muo *MembershipUpdateOne) SetStatus(m membership.Status) *MembershipUpdateOne {
-	muo.mutation.SetStatus(m)
+func (muo *MembershipUpdateOne) SetStatus(ms model.MembershipStatus) *MembershipUpdateOne {
+	muo.mutation.SetStatus(ms)
 	return muo
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (muo *MembershipUpdateOne) SetNillableStatus(m *membership.Status) *MembershipUpdateOne {
-	if m != nil {
-		muo.SetStatus(*m)
+func (muo *MembershipUpdateOne) SetNillableStatus(ms *model.MembershipStatus) *MembershipUpdateOne {
+	if ms != nil {
+		muo.SetStatus(*ms)
 	}
 	return muo
 }

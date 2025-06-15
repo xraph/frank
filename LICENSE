@@ -1,0 +1,126 @@
+MIT License
+
+Copyright (c) 2024 Frank Auth SaaS
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+================================================================================
+
+ADDITIONAL TERMS FOR COMMERCIAL USE:
+
+While this software is provided under the MIT License, the following additional
+terms apply to commercial use:
+
+1. COMMERCIAL USE DEFINITION:
+   Commercial use means using this software for any purpose that results in
+   commercial gain, including but not limited to:
+   - Operating a paid authentication service
+   - Integrating into commercial products or services
+   - Using in production environments for revenue-generating applications
+   - Offering as a managed service to third parties
+
+2. ATTRIBUTION REQUIREMENTS:
+   All commercial deployments must include proper attribution to Frank Auth SaaS
+   in one of the following ways:
+   - "Powered by Frank Auth" notice in the user interface
+   - Attribution in API documentation or developer documentation
+   - Link to https://frankauth.com in the service footer or about page
+
+3. TRADEMARK USAGE:
+   The name "Frank Auth" and associated logos are trademarks and may not be
+   used to endorse or promote products derived from this software without
+   specific prior written permission.
+
+4. SUPPORT AND WARRANTY:
+   Commercial users are encouraged to purchase support contracts for:
+   - Production support and maintenance
+   - Security updates and patches
+   - Custom feature development
+   - Compliance certifications
+
+   Contact enterprise@frankauth.com for commercial support options.
+
+5. COMPLIANCE CERTIFICATIONS:
+   While the software includes SOC 2 compliance features, commercial users
+   are responsible for their own compliance certifications and audits.
+   Professional services are available to assist with compliance requirements.
+
+6. ENTERPRISE FEATURES:
+   Certain enterprise features may require separate licensing:
+   - Advanced analytics and reporting
+   - Custom SSO integrations
+   - White-label solutions
+   - Professional services and consulting
+
+   Contact enterprise@frankauth.com for enterprise licensing options.
+
+================================================================================
+
+THIRD-PARTY LICENSES:
+
+This software includes components from third-party libraries. The licenses
+for these components are included below:
+
+Go Standard Library - BSD-3-Clause License
+Chi Router - MIT License
+Viper Configuration - Apache License 2.0
+Zap Logging - MIT License
+Ent ORM - Apache License 2.0
+Huma API Framework - MIT License
+PostgreSQL Driver - MIT License
+Redis Client - BSD-2-Clause License
+JWT Library - MIT License
+Crypto Libraries - BSD-3-Clause License
+
+For complete third-party license information, see the THIRD-PARTY-LICENSES
+file in the source distribution or visit:
+https://github.com/juicycleff/frank/blob/main/THIRD-PARTY-LICENSES
+
+================================================================================
+
+EXPORT CONTROL:
+
+This software may be subject to export control laws and regulations. Users
+are responsible for compliance with all applicable export control laws when
+using, distributing, or exporting this software.
+
+================================================================================
+
+SECURITY REPORTING:
+
+If you discover a security vulnerability, please report it to:
+security@frankauth.com
+
+Please do not report security vulnerabilities through public GitHub issues.
+
+================================================================================
+
+PRIVACY:
+
+This software may collect telemetry data for improvement purposes. All data
+collection is opt-in and can be disabled through configuration. For more
+information about data collection and privacy, see:
+https://frankauth.com/privacy
+
+================================================================================
+
+For questions about this license, contact:
+legal@frankauth.com
+
+Last updated: December 2024
