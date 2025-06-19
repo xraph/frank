@@ -154,8 +154,8 @@ importers:
         specifier: ^0.2.1
         version: 0.2.1
       '@frank-auth/sdk':
-        specifier: ^0.2.3
-        version: 0.2.3(react@19.0.0)
+        specifier: ^0.2.5
+        version: 0.2.5(react@19.0.0)
       '@heroicons/react':
         specifier: ^2.2.0
         version: 2.2.0(react@19.0.0)
@@ -992,8 +992,8 @@ packages:
   '@frank-auth/client@0.2.1':
     resolution: {integrity: sha512-koBHm+IVbWnbWeHLi4J0Nh1dWmfRk/u9vpriTvMXDIfknL6m9Qw21KfwCVgIAyfUTowSCWztjW0FZpi0DhHiXA==}
 
-  '@frank-auth/sdk@0.2.3':
-    resolution: {integrity: sha512-qfavbdbWG2KB3UUO9YGOYckKokXds8qqp8xvoovFAbkYe7OtRIayIwDSdD9UxFLDOiNbaOph3TKuFuhehlws7A==}
+  '@frank-auth/sdk@0.2.5':
+    resolution: {integrity: sha512-fNVP0IFtpqG1CbXNHs/c5JQ2JxBb5ktZ8+FM2faWwaA3+M3x9YumxmQteasNykPhy7WxDC1a9smohKZT2OyPIg==}
     peerDependencies:
       react: ^19.0.0
 
@@ -8903,7 +8903,7 @@ snapshots:
 
   '@frank-auth/client@0.2.1': {}
 
-  '@frank-auth/sdk@0.2.3(react@19.0.0)':
+  '@frank-auth/sdk@0.2.5(react@19.0.0)':
     dependencies:
       '@frank-auth/client': 0.2.1
       react: 19.0.0
