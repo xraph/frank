@@ -1,46 +1,51 @@
-# [0.3.0](https://github.com/juicycleff/frank/compare/v0.2.0...v0.3.0) (2025-05-28)
+# [0.8.0](https://github.com/juicycleff/frank/compare/v0.7.0...v0.8.0) (2025-06-19)
 
 
 ### Features
 
-* **react:** add "use client" directive for React components and hooks, update default storage type to memory, and bump package version to 0.1.8 ([fc727e7](https://github.com/juicycleff/frank/commit/fc727e767ba2a4ee6a3754d9bbec2f39d837c40b))
-* **react:** add "use client" directive for React components and hooks, update default storage type to memory, and bump package version to 0.1.8 ([c10d4c4](https://github.com/juicycleff/frank/commit/c10d4c46a8d6f1a130ee23a18c31ed1e19487c8f))
+* migrate from goa to huma ([290f20f](https://github.com/juicycleff/frank/commit/290f20f4eac0a7d55a13eed22dd078319b68d7ee))
+* migrate from goa to huma ([ccc121b](https://github.com/juicycleff/frank/commit/ccc121bfe3b453a34a402b22006dd3cb0e225cc4))
+* migrate from goa to huma ([ad50f16](https://github.com/juicycleff/frank/commit/ad50f16da35fc5f4172b73ae8665e1321b62919e))
+* migrate from goa to huma ([c38109d](https://github.com/juicycleff/frank/commit/c38109da0441813af8bd970be4c8e976bd26c975))
+* migrate from goa to huma ([2400f0e](https://github.com/juicycleff/frank/commit/2400f0ef1774ac64301e9170eb2d13a4a3742d68))
+* **react:** fixed nextjs edge runtime bug ([e121ff6](https://github.com/juicycleff/frank/commit/e121ff6a00b0e283a50beeeb4cb25b8a6b4d66e8))
 
 
 
-# [0.2.0](https://github.com/juicycleff/frank/compare/v0.1.9...v0.2.0) (2025-04-28)
+# [0.7.0](https://github.com/juicycleff/frank/compare/v0.6.0...v0.7.0) (2025-06-04)
 
 
 ### Features
 
-* add migration scripts and improve auto migration logging ([6ef7f11](https://github.com/juicycleff/frank/commit/6ef7f11158652efa0df91a9dbe1341e7c44d007d))
+* **react:** fixed nextjs edge runtime bug ([26f1c63](https://github.com/juicycleff/frank/commit/26f1c635d5fec630a01558380c2f73460c58a875))
 
 
 
-## [0.1.9](https://github.com/juicycleff/frank/compare/v0.1.8...v0.1.9) (2025-04-27)
+# [0.6.0](https://github.com/juicycleff/frank/compare/v0.5.0...v0.6.0) (2025-06-02)
 
 
-### Bug Fixes
+### Features
 
-* CORS MaxAge header and add SQLite dependency in tests ([9c4e988](https://github.com/juicycleff/frank/commit/9c4e988eaccb890865393ace1cda56738c774384))
-
-
-
-## [0.1.8](https://github.com/juicycleff/frank/compare/v0.1.7...v0.1.8) (2025-04-27)
-
-
-### Bug Fixes
-
-* CORS MaxAge header and add SQLite dependency in tests ([698b18a](https://github.com/juicycleff/frank/commit/698b18a1494b75219b3369e8c4189a12a2ea6542))
+* **react:** fixed nextjs edge runtime bug ([f92b39b](https://github.com/juicycleff/frank/commit/f92b39b5c8b3372648dc48e5b18fd467c5944794))
+* **react:** fixed nextjs edge runtime bug ([e3a86df](https://github.com/juicycleff/frank/commit/e3a86df23822d14001430a21c50187622c9ef4aa))
 
 
 
-## [0.1.7](https://github.com/juicycleff/frank/compare/v0.1.6...v0.1.7) (2025-04-27)
+# [0.5.0](https://github.com/juicycleff/frank/compare/v0.4.0...v0.5.0) (2025-06-02)
 
 
-### Bug Fixes
+### Features
 
-* CORS MaxAge header and add SQLite dependency in tests ([8ad6c18](https://github.com/juicycleff/frank/commit/8ad6c18b5eb4eb414298fc130030b26b9a4e5e7a))
+* **react:** add "use client" directive for React components and hooks, update default storage type to memory, and bump package version to 0.1.8 ([1b7699e](https://github.com/juicycleff/frank/commit/1b7699e7f1493d6da8e4dc9a11b48fd8f66cf9ed))
+
+
+
+# [0.4.0](https://github.com/juicycleff/frank/compare/v0.3.0...v0.4.0) (2025-06-02)
+
+
+### Features
+
+* **react:** add "use client" directive for React components and hooks, update default storage type to memory, and bump package version to 0.1.8 ([2dca90a](https://github.com/juicycleff/frank/commit/2dca90a78d44a24eba7854cafa0316e0fbef09e5))
 
 
 
