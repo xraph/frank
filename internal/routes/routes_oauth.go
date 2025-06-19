@@ -84,7 +84,7 @@ func registerListOAuthClients(api huma.API, oauthCtrl *oauthController) {
 		Path:          "/organizations/{orgId}/oauth/clients",
 		Summary:       "List OAuth clients",
 		Description:   "Get a paginated list of OAuth clients for the organization",
-		Tags:          []string{"OAuth", "Clients"},
+		Tags:          []string{"OAuth"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -103,7 +103,7 @@ func registerCreateOAuthClient(api huma.API, oauthCtrl *oauthController) {
 		Path:          "/organizations/{orgId}/oauth/clients",
 		Summary:       "Create OAuth client",
 		Description:   "Create a new OAuth client for the organization",
-		Tags:          []string{"OAuth", "Clients"},
+		Tags:          []string{"OAuth"},
 		DefaultStatus: 201,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.BadRequestError("Invalid client configuration")),
 		Security: []map[string][]string{
@@ -122,7 +122,7 @@ func registerGetOAuthClient(api huma.API, oauthCtrl *oauthController) {
 		Path:          "/organizations/{orgId}/oauth/clients/{id}",
 		Summary:       "Get OAuth client",
 		Description:   "Get an OAuth client by ID",
-		Tags:          []string{"OAuth", "Clients"},
+		Tags:          []string{"OAuth"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("OAuth client not found")),
 		Security: []map[string][]string{
@@ -141,7 +141,7 @@ func registerUpdateOAuthClient(api huma.API, oauthCtrl *oauthController) {
 		Path:          "/organizations/{orgId}/oauth/clients/{id}",
 		Summary:       "Update OAuth client",
 		Description:   "Update an OAuth client",
-		Tags:          []string{"OAuth", "Clients"},
+		Tags:          []string{"OAuth"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("OAuth client not found"), model.BadRequestError("Invalid client configuration")),
 		Security: []map[string][]string{
@@ -160,7 +160,7 @@ func registerDeleteOAuthClient(api huma.API, oauthCtrl *oauthController) {
 		Path:          "/organizations/{orgId}/oauth/clients/{id}",
 		Summary:       "Delete OAuth client",
 		Description:   "Delete an OAuth client",
-		Tags:          []string{"OAuth", "Clients"},
+		Tags:          []string{"OAuth"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("OAuth client not found")),
 		Security: []map[string][]string{
@@ -179,7 +179,7 @@ func registerRegenerateClientSecret(api huma.API, oauthCtrl *oauthController) {
 		Path:          "/organizations/{orgId}/oauth/clients/{id}/regenerate-secret",
 		Summary:       "Regenerate client secret",
 		Description:   "Regenerate the client secret for an OAuth client",
-		Tags:          []string{"OAuth", "Clients"},
+		Tags:          []string{"OAuth"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("OAuth client not found")),
 		Security: []map[string][]string{
@@ -198,7 +198,7 @@ func registerActivateOAuthClient(api huma.API, oauthCtrl *oauthController) {
 		Path:          "/organizations/{orgId}/oauth/clients/{id}/activate",
 		Summary:       "Activate OAuth client",
 		Description:   "Activate an OAuth client",
-		Tags:          []string{"OAuth", "Clients"},
+		Tags:          []string{"OAuth"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("OAuth client not found")),
 		Security: []map[string][]string{
@@ -217,7 +217,7 @@ func registerDeactivateOAuthClient(api huma.API, oauthCtrl *oauthController) {
 		Path:          "/organizations/{orgId}/oauth/clients/{id}/deactivate",
 		Summary:       "Deactivate OAuth client",
 		Description:   "Deactivate an OAuth client",
-		Tags:          []string{"OAuth", "Clients"},
+		Tags:          []string{"OAuth"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("OAuth client not found")),
 		Security: []map[string][]string{
@@ -236,7 +236,7 @@ func registerListOAuthTokens(api huma.API, oauthCtrl *oauthController) {
 		Path:          "/organizations/{orgId}/oauth/tokens",
 		Summary:       "List OAuth tokens",
 		Description:   "Get a paginated list of OAuth tokens for the organization",
-		Tags:          []string{"OAuth", "Tokens"},
+		Tags:          []string{"OAuth"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -255,7 +255,7 @@ func registerGetOAuthToken(api huma.API, oauthCtrl *oauthController) {
 		Path:          "/organizations/{orgId}/oauth/tokens/{id}",
 		Summary:       "Get OAuth token",
 		Description:   "Get an OAuth token by ID",
-		Tags:          []string{"OAuth", "Tokens"},
+		Tags:          []string{"OAuth"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("OAuth token not found")),
 		Security: []map[string][]string{
@@ -274,7 +274,7 @@ func registerRevokeOAuthToken(api huma.API, oauthCtrl *oauthController) {
 		Path:          "/organizations/{orgId}/oauth/tokens/{id}/revoke",
 		Summary:       "Revoke OAuth token",
 		Description:   "Revoke an OAuth token",
-		Tags:          []string{"OAuth", "Tokens"},
+		Tags:          []string{"OAuth"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("OAuth token not found")),
 		Security: []map[string][]string{
@@ -293,7 +293,7 @@ func registerListUserTokens(api huma.API, oauthCtrl *oauthController) {
 		Path:          "/organizations/{orgId}/users/{userId}/oauth/tokens",
 		Summary:       "List user OAuth tokens",
 		Description:   "Get a paginated list of OAuth tokens for a specific user",
-		Tags:          []string{"OAuth", "Tokens", "Users"},
+		Tags:          []string{"OAuth"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("User not found")),
 		Security: []map[string][]string{
@@ -312,7 +312,7 @@ func registerListClientTokens(api huma.API, oauthCtrl *oauthController) {
 		Path:          "/organizations/{orgId}/oauth/clients/{clientId}/tokens",
 		Summary:       "List client OAuth tokens",
 		Description:   "Get a paginated list of OAuth tokens for a specific client",
-		Tags:          []string{"OAuth", "Tokens", "Clients"},
+		Tags:          []string{"OAuth"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("OAuth client not found")),
 		Security: []map[string][]string{
@@ -331,7 +331,7 @@ func registerBulkRevokeTokens(api huma.API, oauthCtrl *oauthController) {
 		Path:          "/organizations/{orgId}/oauth/tokens/bulk-revoke",
 		Summary:       "Bulk revoke OAuth tokens",
 		Description:   "Revoke multiple OAuth tokens based on criteria",
-		Tags:          []string{"OAuth", "Tokens"},
+		Tags:          []string{"OAuth"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -350,7 +350,7 @@ func registerListOAuthScopes(api huma.API, oauthCtrl *oauthController) {
 		Path:          "/organizations/{orgId}/oauth/scopes",
 		Summary:       "List OAuth scopes",
 		Description:   "Get a paginated list of OAuth scopes for the organization",
-		Tags:          []string{"OAuth", "Scopes"},
+		Tags:          []string{"OAuth"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -369,7 +369,7 @@ func registerCreateOAuthScope(api huma.API, oauthCtrl *oauthController) {
 		Path:          "/organizations/{orgId}/oauth/scopes",
 		Summary:       "Create OAuth scope",
 		Description:   "Create a new OAuth scope for the organization",
-		Tags:          []string{"OAuth", "Scopes"},
+		Tags:          []string{"OAuth"},
 		DefaultStatus: 201,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.BadRequestError("Invalid scope configuration")),
 		Security: []map[string][]string{
@@ -388,7 +388,7 @@ func registerGetOAuthScope(api huma.API, oauthCtrl *oauthController) {
 		Path:          "/organizations/{orgId}/oauth/scopes/{id}",
 		Summary:       "Get OAuth scope",
 		Description:   "Get an OAuth scope by ID",
-		Tags:          []string{"OAuth", "Scopes"},
+		Tags:          []string{"OAuth"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("OAuth scope not found")),
 		Security: []map[string][]string{
@@ -407,7 +407,7 @@ func registerUpdateOAuthScope(api huma.API, oauthCtrl *oauthController) {
 		Path:          "/organizations/{orgId}/oauth/scopes/{id}",
 		Summary:       "Update OAuth scope",
 		Description:   "Update an OAuth scope",
-		Tags:          []string{"OAuth", "Scopes"},
+		Tags:          []string{"OAuth"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("OAuth scope not found"), model.BadRequestError("Invalid scope configuration")),
 		Security: []map[string][]string{
@@ -426,7 +426,7 @@ func registerDeleteOAuthScope(api huma.API, oauthCtrl *oauthController) {
 		Path:          "/organizations/{orgId}/oauth/scopes/{id}",
 		Summary:       "Delete OAuth scope",
 		Description:   "Delete an OAuth scope",
-		Tags:          []string{"OAuth", "Scopes"},
+		Tags:          []string{"OAuth"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("OAuth scope not found")),
 		Security: []map[string][]string{
@@ -447,7 +447,7 @@ func registerOAuthAuthorize(api huma.API, oauthCtrl *oauthController) {
 		Path:          "/oauth/authorize",
 		Summary:       "OAuth authorization endpoint",
 		Description:   "OAuth 2.0 authorization endpoint for starting authorization flow",
-		Tags:          []string{"OAuth", "Authorization"},
+		Tags:          []string{"OAuth"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, false, model.BadRequestError("Invalid authorization request")),
 	}, oauthCtrl.oauthAuthorizeHandler)
@@ -460,7 +460,7 @@ func registerOAuthToken(api huma.API, oauthCtrl *oauthController) {
 		Path:          "/oauth/token",
 		Summary:       "OAuth token endpoint",
 		Description:   "OAuth 2.0 token endpoint for exchanging authorization codes for access tokens",
-		Tags:          []string{"OAuth", "Authorization"},
+		Tags:          []string{"OAuth"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, false, model.BadRequestError("Invalid token request")),
 	}, oauthCtrl.oauthTokenHandler)
@@ -473,7 +473,7 @@ func registerOAuthUserInfo(api huma.API, oauthCtrl *oauthController) {
 		Path:          "/oauth/userinfo",
 		Summary:       "OAuth user info endpoint",
 		Description:   "OAuth 2.0 user info endpoint for getting user information from access token",
-		Tags:          []string{"OAuth", "Authorization"},
+		Tags:          []string{"OAuth"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, false, model.UnauthorizedError()),
 		Security: []map[string][]string{
@@ -489,7 +489,7 @@ func registerOAuthRevoke(api huma.API, oauthCtrl *oauthController) {
 		Path:          "/oauth/revoke",
 		Summary:       "OAuth token revocation endpoint",
 		Description:   "OAuth 2.0 token revocation endpoint for revoking access and refresh tokens",
-		Tags:          []string{"OAuth", "Authorization"},
+		Tags:          []string{"OAuth"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, false),
 	}, oauthCtrl.oauthRevokeHandler)
@@ -502,7 +502,7 @@ func registerOAuthIntrospect(api huma.API, oauthCtrl *oauthController) {
 		Path:          "/oauth/introspect",
 		Summary:       "OAuth token introspection endpoint",
 		Description:   "OAuth 2.0 token introspection endpoint for validating and getting information about tokens",
-		Tags:          []string{"OAuth", "Authorization"},
+		Tags:          []string{"OAuth"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, false),
 	}, oauthCtrl.oauthIntrospectHandler)
@@ -515,7 +515,7 @@ func registerOAuthWellKnown(api huma.API, oauthCtrl *oauthController) {
 		Path:          "/.well-known/oauth-authorization-server",
 		Summary:       "OAuth well-known configuration",
 		Description:   "OAuth 2.0 authorization server metadata endpoint",
-		Tags:          []string{"OAuth", "Well-Known"},
+		Tags:          []string{"OAuth"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, false),
 	}, oauthCtrl.oauthWellKnownHandler)
@@ -528,7 +528,7 @@ func registerOAuthJWKS(api huma.API, oauthCtrl *oauthController) {
 		Path:          "/.well-known/jwks.json",
 		Summary:       "OAuth JWKS endpoint",
 		Description:   "JSON Web Key Set endpoint for OAuth 2.0 token verification",
-		Tags:          []string{"OAuth", "Well-Known"},
+		Tags:          []string{"OAuth"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, false),
 	}, oauthCtrl.oauthJWKSHandler)
@@ -541,7 +541,7 @@ func registerGetOAuthStats(api huma.API, oauthCtrl *oauthController) {
 		Path:          "/organizations/{orgId}/oauth/stats",
 		Summary:       "Get OAuth statistics",
 		Description:   "Get OAuth usage statistics for the organization",
-		Tags:          []string{"OAuth", "Statistics"},
+		Tags:          []string{"OAuth"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -560,7 +560,7 @@ func registerGetClientStats(api huma.API, oauthCtrl *oauthController) {
 		Path:          "/organizations/{orgId}/oauth/clients/{id}/stats",
 		Summary:       "Get OAuth client statistics",
 		Description:   "Get usage statistics for a specific OAuth client",
-		Tags:          []string{"OAuth", "Clients", "Statistics"},
+		Tags:          []string{"OAuth"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("OAuth client not found")),
 		Security: []map[string][]string{
@@ -579,7 +579,7 @@ func registerGetTokenStats(api huma.API, oauthCtrl *oauthController) {
 		Path:          "/organizations/{orgId}/oauth/tokens/stats",
 		Summary:       "Get OAuth token statistics",
 		Description:   "Get token usage statistics for the organization",
-		Tags:          []string{"OAuth", "Tokens", "Statistics"},
+		Tags:          []string{"OAuth"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{

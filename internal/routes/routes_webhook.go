@@ -261,11 +261,14 @@ type GetWebhookHealthInput struct {
 
 type GetWebhookHealthOutput = model.Output[*model.WebhookHealthCheck]
 
+// ReceiveWebhookInputBody represents input for receiving webhook from external service
+type ReceiveWebhookInputBody = model.JSONObject
+
 // ReceiveWebhookInput represents input for receiving webhook from external service
 type ReceiveWebhookInput struct {
-	WebhookID xid.ID                 `path:"webhookId" doc:"Webhook ID"`
-	Headers   map[string]string      `header:"*" doc:"All headers"`
-	Body      map[string]interface{} `json:"body"`
+	WebhookID xid.ID `path:"webhookId" doc:"Webhook ID"`
+	// Headers   model.JSONObject `json:"-" header:"*" doc:"All headers"`
+	Body ReceiveWebhookInputBody
 }
 
 type ReceiveWebhookOutput = model.Output[map[string]interface{}]
@@ -424,7 +427,7 @@ func registerRegenerateWebhookSecret(api huma.API, webhookCtrl *webhookControlle
 		Path:          "/organizations/{orgId}/webhooks/{id}/regenerate-secret",
 		Summary:       "Regenerate webhook secret",
 		Description:   "Generate a new secret for webhook signature verification",
-		Tags:          []string{"Webhooks", "Security"},
+		Tags:          []string{"Webhooks"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("Webhook not found")),
 		Security: []map[string][]string{
@@ -443,7 +446,7 @@ func registerTestWebhook(api huma.API, webhookCtrl *webhookController) {
 		Path:          "/organizations/{orgId}/webhooks/test",
 		Summary:       "Test webhook",
 		Description:   "Send a test event to a webhook endpoint",
-		Tags:          []string{"Webhooks", "Testing"},
+		Tags:          []string{"Webhooks"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("Webhook not found")),
 		Security: []map[string][]string{
@@ -462,7 +465,7 @@ func registerValidateWebhookURL(api huma.API, webhookCtrl *webhookController) {
 		Path:          "/webhooks/validate-url",
 		Summary:       "Validate webhook URL",
 		Description:   "Validate a webhook URL for security and accessibility",
-		Tags:          []string{"Webhooks", "Validation"},
+		Tags:          []string{"Webhooks"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.ValidationError("Invalid URL")),
 		Security: []map[string][]string{
@@ -478,7 +481,7 @@ func registerListWebhookEvents(api huma.API, webhookCtrl *webhookController) {
 		Path:          "/organizations/{orgId}/webhook-events",
 		Summary:       "List webhook events",
 		Description:   "Get a paginated list of webhook events",
-		Tags:          []string{"Webhooks", "Events"},
+		Tags:          []string{"Webhooks"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -497,7 +500,7 @@ func registerGetWebhookEvent(api huma.API, webhookCtrl *webhookController) {
 		Path:          "/organizations/{orgId}/webhook-events/{id}",
 		Summary:       "Get webhook event",
 		Description:   "Get details of a specific webhook event",
-		Tags:          []string{"Webhooks", "Events"},
+		Tags:          []string{"Webhooks"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("Webhook event not found")),
 		Security: []map[string][]string{
@@ -516,7 +519,7 @@ func registerRetryWebhookEvent(api huma.API, webhookCtrl *webhookController) {
 		Path:          "/organizations/{orgId}/webhook-events/retry",
 		Summary:       "Retry webhook event",
 		Description:   "Retry delivery of a failed webhook event",
-		Tags:          []string{"Webhooks", "Events"},
+		Tags:          []string{"Webhooks"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("Webhook event not found")),
 		Security: []map[string][]string{
@@ -535,7 +538,7 @@ func registerGetWebhookSecurity(api huma.API, webhookCtrl *webhookController) {
 		Path:          "/organizations/{orgId}/webhooks/{id}/security",
 		Summary:       "Get webhook security settings",
 		Description:   "Get security configuration for a webhook",
-		Tags:          []string{"Webhooks", "Security"},
+		Tags:          []string{"Webhooks"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("Webhook not found")),
 		Security: []map[string][]string{
@@ -554,7 +557,7 @@ func registerUpdateWebhookSecurity(api huma.API, webhookCtrl *webhookController)
 		Path:          "/organizations/{orgId}/webhooks/{id}/security",
 		Summary:       "Update webhook security settings",
 		Description:   "Update security configuration for a webhook",
-		Tags:          []string{"Webhooks", "Security"},
+		Tags:          []string{"Webhooks"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("Webhook not found"), model.ValidationError("Invalid security configuration")),
 		Security: []map[string][]string{
@@ -573,7 +576,7 @@ func registerGetWebhookStats(api huma.API, webhookCtrl *webhookController) {
 		Path:          "/organizations/{orgId}/webhooks/{id}/stats",
 		Summary:       "Get webhook statistics",
 		Description:   "Get detailed statistics for a specific webhook",
-		Tags:          []string{"Webhooks", "Analytics"},
+		Tags:          []string{"Webhooks"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("Webhook not found")),
 		Security: []map[string][]string{
@@ -592,7 +595,7 @@ func registerGetGlobalWebhookStats(api huma.API, webhookCtrl *webhookController)
 		Path:          "/organizations/{orgId}/webhooks/stats",
 		Summary:       "Get global webhook statistics",
 		Description:   "Get statistics for all webhooks in the organization",
-		Tags:          []string{"Webhooks", "Analytics"},
+		Tags:          []string{"Webhooks"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -611,7 +614,7 @@ func registerBulkWebhookOperation(api huma.API, webhookCtrl *webhookController) 
 		Path:          "/organizations/{orgId}/webhooks/bulk",
 		Summary:       "Bulk webhook operation",
 		Description:   "Perform bulk operations on multiple webhooks",
-		Tags:          []string{"Webhooks", "Bulk Operations"},
+		Tags:          []string{"Webhooks"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.ValidationError("Invalid bulk operation request")),
 		Security: []map[string][]string{
@@ -630,7 +633,7 @@ func registerBulkRetryEvents(api huma.API, webhookCtrl *webhookController) {
 		Path:          "/organizations/{orgId}/webhooks/bulk-retry",
 		Summary:       "Bulk retry webhook events",
 		Description:   "Retry multiple failed webhook events",
-		Tags:          []string{"Webhooks", "Events", "Bulk Operations"},
+		Tags:          []string{"Webhooks"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.ValidationError("Invalid bulk retry request")),
 		Security: []map[string][]string{
@@ -649,7 +652,7 @@ func registerExportWebhookData(api huma.API, webhookCtrl *webhookController) {
 		Path:          "/organizations/{orgId}/webhooks/export",
 		Summary:       "Export webhook data",
 		Description:   "Export webhook configuration and event data",
-		Tags:          []string{"Webhooks", "Export"},
+		Tags:          []string{"Webhooks"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -668,7 +671,7 @@ func registerGetWebhookHealth(api huma.API, webhookCtrl *webhookController) {
 		Path:          "/organizations/{orgId}/webhooks/{id}/health",
 		Summary:       "Get webhook health",
 		Description:   "Check the health status of a webhook endpoint",
-		Tags:          []string{"Webhooks", "Health"},
+		Tags:          []string{"Webhooks"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("Webhook not found")),
 		Security: []map[string][]string{
@@ -687,7 +690,7 @@ func registerReceiveWebhook(api huma.API, webhookCtrl *webhookController) {
 		Path:          "/webhooks/receive/{webhookId}",
 		Summary:       "Receive webhook",
 		Description:   "Endpoint for receiving webhooks from external services",
-		Tags:          []string{"Webhooks", "Public"},
+		Tags:          []string{"Webhooks"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("Webhook not found"), model.UnauthorizedErrorWithMessage("Invalid webhook signature")),
 	}, webhookCtrl.receiveWebhookHandler)

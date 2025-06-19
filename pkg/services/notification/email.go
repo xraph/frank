@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/ent"
 	"github.com/juicycleff/frank/internal/repository"
 	"github.com/juicycleff/frank/pkg/contexts"
@@ -236,6 +237,7 @@ type EmailConfig struct {
 
 // emailService implements the EmailService interface
 type emailService struct {
+	cfg           *config.Config
 	templateRepo  repository.EmailTemplateRepository
 	orgRepo       repository.OrganizationRepository
 	userRepo      repository.UserRepository
@@ -270,6 +272,7 @@ type ProviderConfig struct {
 
 // NewEmailService creates a new email service
 func NewEmailService(
+	cfg *config.Config,
 	sender email.Sender,
 	templateRepo repository.EmailTemplateRepository,
 	orgRepo repository.OrganizationRepository,
@@ -282,6 +285,7 @@ func NewEmailService(
 	}
 
 	service := &emailService{
+		cfg:           cfg,
 		templateRepo:  templateRepo,
 		orgRepo:       orgRepo,
 		userRepo:      userRepo,
@@ -493,7 +497,7 @@ func (s *emailService) SendVerificationEmail(ctx context.Context, user *model.Us
 		"Code":              code,
 		"verification_code": code,
 		"has_both":          true,
-		"app_name":          s.config.AppName,
+		"app_name":          s.getConfig().App.Name,
 		"expires_in":        "24 hours",
 		"ExpiryTime":        "24 hours",
 		"request_time":      time.Now().Format("2006-01-02 15:04:05"),
@@ -517,6 +521,10 @@ func (s *emailService) SendPasswordResetEmail(ctx context.Context, user *model.U
 	}
 
 	return s.SendSystemEmail(ctx, "password_reset", user.Email, data)
+}
+
+func (s *emailService) getConfig() *config.Config {
+	return s.cfg
 }
 
 func (s *emailService) SendMagicLinkEmail(ctx context.Context, user *model.User, token string, redirectURL string) error {
@@ -693,7 +701,7 @@ func (s *emailService) validateEmailRequest(email email.Email) error {
 }
 
 func (s *emailService) isValidEmail(email string) bool {
-	// Simple email validation - in production, use a proper library
+	// todo: Simple email validation - in production, use a proper library
 	return strings.Contains(email, "@") && strings.Contains(email, ".")
 }
 
@@ -711,12 +719,11 @@ func (s *emailService) getUserDisplayName(user *model.User) string {
 }
 
 func (s *emailService) getLoginURL() string {
-	// Return login URL - should come from config
-	return "https://app.frank.com/login"
+	return s.getConfig().GetFrontendAddressWithPath(s.getConfig().Frontend.LoginPath)
 }
 
 func (s *emailService) buildVerificationURL(token, redirectURL string) string {
-	baseURL := "https://app.frank.com/verify"
+	baseURL := s.getConfig().GetFrontendAddressWithPath(s.getConfig().Frontend.VerifyPath)
 	if redirectURL != "" {
 		return fmt.Sprintf("%s?token=%s&redirect=%s", baseURL, token, redirectURL)
 	}
@@ -724,7 +731,7 @@ func (s *emailService) buildVerificationURL(token, redirectURL string) string {
 }
 
 func (s *emailService) buildPasswordResetURL(token, redirectURL string) string {
-	baseURL := "https://app.frank.com/reset-password"
+	baseURL := s.getConfig().GetFrontendAddressWithPath(s.getConfig().Frontend.ResetPasswordPath)
 	if redirectURL != "" {
 		return fmt.Sprintf("%s?token=%s&redirect=%s", baseURL, token, redirectURL)
 	}
@@ -732,7 +739,7 @@ func (s *emailService) buildPasswordResetURL(token, redirectURL string) string {
 }
 
 func (s *emailService) buildMagicLinkURL(token, redirectURL string) string {
-	baseURL := "https://app.frank.com/magic-link"
+	baseURL := s.getConfig().GetFrontendAddressWithPath(s.getConfig().Frontend.MagicLinkPath)
 	if redirectURL != "" {
 		return fmt.Sprintf("%s?token=%s&redirect=%s", baseURL, token, redirectURL)
 	}

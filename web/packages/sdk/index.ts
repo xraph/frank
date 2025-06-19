@@ -1,6 +1,12 @@
-export * from "./vanilla/index";
-export * from "./vanilla/transformers.gen";
-// export * from './vanilla/zod.gen'
-export * from "./vanilla/client.gen";
+/**
+ * Frank Auth SDK - Main Entry Point
+ *
+ * A comprehensive authentication SDK for Frank Auth platform
+ * Supporting multi-tenant architecture with three-tier user system:
+ * - Internal users (platform staff)
+ * - External users (customer organization members)
+ * - End users (application users)
+ */
 
-export { Client } from "@hey-api/client-fetch";
+// Core SDK modules
+export * from './core';

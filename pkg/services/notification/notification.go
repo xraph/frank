@@ -26,7 +26,7 @@ func NewService(
 	cfg *config.Config,
 	logger logging.Logger,
 ) (Service, error) {
-	emailServ := NewEmailService(sender, repo.EmailTemplate(), repo.Organization(), repo.User(), logger, &EmailServiceConfig{
+	emailServ := NewEmailService(cfg, sender, repo.EmailTemplate(), repo.Organization(), repo.User(), logger, &EmailServiceConfig{
 		DefaultProvider:     cfg.Email.Provider,
 		EnableTemplateCache: true,
 		TrackClicks:         true,
@@ -52,6 +52,7 @@ func NewService(
 	}
 
 	smsServ, err := NewSMSService(
+		cfg,
 		smsProvider,
 		SMSServiceConfig{},
 		repo.SMSTemplate(),

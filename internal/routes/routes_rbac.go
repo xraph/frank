@@ -726,7 +726,7 @@ func registerAssignUserRoleAdvance(api huma.API, rbacCtrl *rbacController) {
 		Path:        "/organizations/{orgId}/users/roles/assign",
 		Summary:     "Assign role to user",
 		Description: "Assign a role to a user in a specific context",
-		Tags:        []string{"RBAC", "User Roles"},
+		Tags:        []string{"RBAC"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
 			{"jwt": {}},
@@ -744,7 +744,7 @@ func registerRemoveUserRoleAdvance(api huma.API, rbacCtrl *rbacController) {
 		Path:          "/organizations/{orgId}/users/roles/remove",
 		Summary:       "Remove role from user",
 		Description:   "Remove a role assignment from a user",
-		Tags:          []string{"RBAC", "User Roles"},
+		Tags:          []string{"RBAC"},
 		DefaultStatus: 204,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -763,7 +763,7 @@ func registerGetUserRoles(api huma.API, rbacCtrl *rbacController) {
 		Path:        "/organizations/{orgId}/users/{userId}/roles",
 		Summary:     "Get user roles",
 		Description: "Get all roles assigned to a user",
-		Tags:        []string{"RBAC", "User Roles"},
+		Tags:        []string{"RBAC"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
 			{"jwt": {}},
@@ -781,7 +781,7 @@ func registerGetUserPermissions(api huma.API, rbacCtrl *rbacController) {
 		Path:        "/organizations/{orgId}/users/{userId}/permissions",
 		Summary:     "Get user permissions",
 		Description: "Get all effective permissions for a user",
-		Tags:        []string{"RBAC", "User Permissions"},
+		Tags:        []string{"RBAC"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
 			{"jwt": {}},
@@ -799,7 +799,7 @@ func registerCheckUserPermission(api huma.API, rbacCtrl *rbacController) {
 		Path:        "/organizations/{orgId}/users/permissions/check",
 		Summary:     "Check user permission",
 		Description: "Check if a user has a specific permission",
-		Tags:        []string{"RBAC", "Permission Check"},
+		Tags:        []string{"RBAC"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
 			{"jwt": {}},
@@ -817,7 +817,7 @@ func registerBulkAssignRoles(api huma.API, rbacCtrl *rbacController) {
 		Path:        "/organizations/{orgId}/users/roles/bulk-assign",
 		Summary:     "Bulk assign roles",
 		Description: "Assign roles to multiple users at once",
-		Tags:        []string{"RBAC", "Bulk Operations"},
+		Tags:        []string{"RBAC"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
 			{"jwt": {}},
@@ -839,7 +839,7 @@ func registerGetRBACStats(api huma.API, rbacCtrl *rbacController) {
 		Path:        "/organizations/{orgId}/rbac/stats",
 		Summary:     "Get RBAC statistics",
 		Description: "Get comprehensive RBAC statistics for the organization",
-		Tags:        []string{"RBAC", "Analytics"},
+		Tags:        []string{"RBAC"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
 			{"jwt": {}},
@@ -857,7 +857,7 @@ func registerGetRoleStats(api huma.API, rbacCtrl *rbacController) {
 		Path:        "/organizations/{orgId}/roles/stats",
 		Summary:     "Get role statistics",
 		Description: "Get detailed role usage statistics",
-		Tags:        []string{"RBAC", "Analytics"},
+		Tags:        []string{"RBAC"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
 			{"jwt": {}},
@@ -875,7 +875,7 @@ func registerGetPermissionStats(api huma.API, rbacCtrl *rbacController) {
 		Path:        "/organizations/{orgId}/permissions/stats",
 		Summary:     "Get permission statistics",
 		Description: "Get detailed permission usage statistics",
-		Tags:        []string{"RBAC", "Analytics"},
+		Tags:        []string{"RBAC"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
 			{"jwt": {}},
@@ -897,7 +897,7 @@ func registerGetDefaultRoles(api huma.API, rbacCtrl *rbacController) {
 		Path:        "/organizations/{orgId}/roles/default",
 		Summary:     "Get default roles",
 		Description: "Get all default roles for the organization",
-		Tags:        []string{"RBAC", "Default Roles"},
+		Tags:        []string{"RBAC"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
 			{"jwt": {}},
@@ -915,7 +915,7 @@ func registerSetDefaultRole(api huma.API, rbacCtrl *rbacController) {
 		Path:        "/organizations/{orgId}/roles/{id}/default",
 		Summary:     "Set role as default",
 		Description: "Set a role as default for new users",
-		Tags:        []string{"RBAC", "Default Roles"},
+		Tags:        []string{"RBAC"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
 			{"jwt": {}},
@@ -933,7 +933,7 @@ func registerUnsetDefaultRole(api huma.API, rbacCtrl *rbacController) {
 		Path:          "/organizations/{orgId}/roles/{id}/default",
 		Summary:       "Unset role as default",
 		Description:   "Remove default status from a role",
-		Tags:          []string{"RBAC", "Default Roles"},
+		Tags:          []string{"RBAC"},
 		DefaultStatus: 204,
 		Responses: model.MergeErrorResponses(map[string]*huma.Response{
 			"204": {Description: "Role default status successfully removed"},

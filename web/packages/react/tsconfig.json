@@ -1,21 +1,92 @@
 {
 	"compilerOptions": {
-		"target": "es2020",
-		"module": "es2020",
-		"moduleResolution": "node",
-		"declaration": true,
-		"jsx": "react-jsx",
-		"declarationDir": "./dist/types",
-		"outDir": "./dist/esm",
-		"strict": true,
+		// Base configuration
+		"target": "ES2022",
+		"lib": ["DOM", "DOM.Iterable", "ES2022"],
+		"allowJs": true,
+		"skipLibCheck": true,
 		"esModuleInterop": true,
 		"allowSyntheticDefaultImports": true,
-		"skipLibCheck": true,
+		"strict": true,
 		"forceConsistentCasingInFileNames": true,
+
+		// Module resolution
+		"module": "ESNext",
+		"moduleResolution": "bundler",
+		"resolveJsonModule": true,
+		"isolatedModules": true,
+		"noEmit": false,
+
+		// React JSX
+		"jsx": "react-jsx",
+		"jsxImportSource": "react",
+
+		// Output configuration
+		"outDir": "./dist/esm",
+		"declaration": true,
+		"declarationMap": true,
+		"sourceMap": true,
+		"removeComments": false,
+
+		// Path mapping
+		"baseUrl": ".",
 		"paths": {
-			"@/*": ["./*"]
-		}
+			"@/*": ["./src/*"],
+			"@/components/*": ["./src/components/*"],
+			"@/hooks/*": ["./src/hooks/*"],
+			"@/utils/*": ["./src/utils/*"],
+			"@/config/*": ["./src/config/*"],
+			"@/styles/*": ["./src/styles/*"],
+			"@/types/*": ["./src/types/*"]
+		},
+
+		// Strict type checking
+		"noImplicitAny": true,
+		"noImplicitReturns": true,
+		"noImplicitThis": true,
+		"noUnusedLocals": false,
+		"noUnusedParameters": false,
+		"exactOptionalPropertyTypes": false,
+		"noUncheckedIndexedAccess": false,
+		"noImplicitOverride": true,
+
+		// Advanced features
+		"experimentalDecorators": false,
+		"emitDecoratorMetadata": false,
+		"useDefineForClassFields": true,
+
+		// Import/Export
+		"verbatimModuleSyntax": false,
+		"importsNotUsedAsValues": "remove",
+
+		// Performance
+		"incremental": true,
+		"tsBuildInfoFile": "./dist/.tsbuildinfo"
 	},
-	"include": ["./**/*"],
-	"exclude": ["node_modules", "dist"]
+	"include": [
+		"src/**/*",
+		"src/**/*.ts",
+		"src/**/*.tsx",
+		"src/**/*.json"
+	],
+	"exclude": [
+		"node_modules",
+		"dist",
+		"build",
+		"storybook-static",
+		"**/*.test.ts",
+		"**/*.test.tsx",
+		"**/*.spec.ts",
+		"**/*.spec.tsx",
+		"**/*.stories.ts",
+		"**/*.stories.tsx",
+		"coverage"
+	],
+	"ts-node": {
+		"esm": true,
+		"compilerOptions": {
+			"module": "ESNext",
+			"moduleResolution": "bundler"
+		}
+	}
 }

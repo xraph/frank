@@ -272,6 +272,7 @@ func (c *container) initCore(dataClients *data.Clients) error {
 	// Initialize email / sms templates
 	oldRepo := email.NewTemplateRepository(c.dataClients.DB)
 	c.templatesManager = email.NewTemplateManager(oldRepo, c.repo.SMSTemplate(), &c.config.Email, c.logger)
+	fmt.Println(c.config.Email)
 	c.emailSender = email.SenderFactory(&c.config.Email, c.logger)
 
 	// Initialize sms sender
@@ -395,6 +396,30 @@ func (c *container) initServices() error {
 		c.logger,
 	)
 
+	// Initialize MFA service
+	c.mfaService = mfa.NewService(c.repo, c.dataClients, c.smsSender, c.logger, c.config)
+
+	// Initialize passkey service
+	c.webAuthn = passkey2.NewWebAuthnService(passkey2.WebAuthnConfig{}, c.logger)
+	c.passkeyService = passkey2.NewService(c.repo.PassKey(), c.repo.User(), c.webAuthn, c.logger)
+
+	// Initialize OAuth service
+	c.oauthService = oauth.NewService(c.repo, c.crypto, c.logger)
+
+	// Initialize SSO service
+	c.samlService, err = sso2.NewSAMLService(c.config.App.BasePath, c.logger)
+	if err != nil {
+		return fmt.Errorf("failed to create SAML service: %w", err)
+	}
+
+	c.oidcService = sso2.NewOIDCService(c.config.App.BasePath, c.logger)
+	c.ssoService = sso2.NewService(c.repo, c.samlService, c.oidcService, c.logger)
+	c.providerCatalogService = sso2.NewProviderCatalogService(
+		c.repo,
+		c.ssoService,
+		c.logger,
+	)
+
 	// Initialize organization member service
 	c.membershipService = organization2.NewMembershipService(
 		c.repo,
@@ -403,10 +428,9 @@ func (c *container) initServices() error {
 
 	// Initialize organization service
 	c.organizationService = organization2.NewService(
-		c.repo.Organization(),
-		c.repo.Membership(),
-		c.repo.User(),
-		c.repo.Audit(),
+		c.repo,
+		c.ssoService,
+		c.membershipService,
 		c.logger,
 	)
 	c.billingService = organization2.NewBillingService(c.repo, nil, c.logger)
@@ -431,30 +455,6 @@ func (c *container) initServices() error {
 		c.crypto,
 		c.logger,
 		&c.config.Auth,
-	)
-
-	// Initialize MFA service
-	c.mfaService = mfa.NewService(c.repo, c.dataClients, c.smsSender, c.logger, c.config)
-
-	// Initialize passkey service
-	c.webAuthn = passkey2.NewWebAuthnService(passkey2.WebAuthnConfig{}, c.logger)
-	c.passkeyService = passkey2.NewService(c.repo.PassKey(), c.repo.User(), c.webAuthn, c.logger)
-
-	// Initialize OAuth service
-	c.oauthService = oauth.NewService(c.repo, c.crypto, c.logger)
-
-	// Initialize SSO service
-	c.samlService, err = sso2.NewSAMLService(c.config.BasePath, c.logger)
-	if err != nil {
-		return fmt.Errorf("failed to create SAML service: %w", err)
-	}
-
-	c.oidcService = sso2.NewOIDCService(c.config.BasePath, c.logger)
-	c.ssoService = sso2.NewService(c.repo, c.samlService, c.oidcService, c.logger)
-	c.providerCatalogService = sso2.NewProviderCatalogService(
-		c.repo,
-		c.ssoService,
-		c.logger,
 	)
 
 	// initialize Auth service
@@ -702,7 +702,7 @@ func (c *container) Health(ctx context.Context) error {
 func NewContainerFromConfig(cfg *config.Config) (Container, error) {
 	logger := logging.NewLogger(&logging.LoggerConfig{
 		Level:       cfg.Logging.Level,
-		Environment: cfg.Environment,
+		Environment: cfg.App.Environment,
 	})
 
 	return NewContainer(cfg, logger)
@@ -712,7 +712,7 @@ func NewContainerFromConfig(cfg *config.Config) (Container, error) {
 func NewContainerFromConfigWithData(cfg *config.Config, dataClients *data.Clients, hooks hooks.Hooks) (Container, error) {
 	logger := logging.NewLogger(&logging.LoggerConfig{
 		Level:       cfg.Logging.Level,
-		Environment: cfg.Environment,
+		Environment: cfg.App.Environment,
 	})
 
 	return NewContainerWithData(cfg, logger, dataClients, hooks)

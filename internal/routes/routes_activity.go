@@ -144,7 +144,7 @@ func registerListActivities(api huma.API, activityCtrl *activityController) {
 		Path:          "/organizations/{orgId}/activities",
 		Summary:       "List activities",
 		Description:   "Get a paginated list of activities for the organization with comprehensive filtering options",
-		Tags:          []string{"Activities", "Audit"},
+		Tags:          []string{"Activities"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -182,7 +182,7 @@ func registerGetResourceActivities(api huma.API, activityCtrl *activityControlle
 		Path:          "/organizations/{orgId}/activities/resources/{resourceType}/{resourceId}",
 		Summary:       "Get resource activities",
 		Description:   "Get all activities for a specific resource (API key, user, etc.)",
-		Tags:          []string{"Activities", "Audit", "Resources"},
+		Tags:          []string{"Activities"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -201,7 +201,7 @@ func registerGetUserActivities(api huma.API, activityCtrl *activityController) {
 		Path:          "/organizations/{orgId}/activities/users/{userId}",
 		Summary:       "Get user activities",
 		Description:   "Get all activities for a specific user within the organization",
-		Tags:          []string{"Activities", "Audit", "Users"},
+		Tags:          []string{"Activities"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -239,7 +239,7 @@ func registerGetActivityStats(api huma.API, activityCtrl *activityController) {
 		Path:          "/organizations/{orgId}/activities/stats",
 		Summary:       "Get activity statistics",
 		Description:   "Get comprehensive activity statistics and analytics for the organization",
-		Tags:          []string{"Activities", "Analytics", "Statistics"},
+		Tags:          []string{"Activities"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -258,7 +258,7 @@ func registerGetUsageMetrics(api huma.API, activityCtrl *activityController) {
 		Path:          "/organizations/{orgId}/activities/usage",
 		Summary:       "Get usage metrics",
 		Description:   "Get usage metrics and analytics for billing and monitoring purposes",
-		Tags:          []string{"Activities", "Analytics", "Usage", "Billing"},
+		Tags:          []string{"Activities"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -277,7 +277,7 @@ func registerGetTrendAnalysis(api huma.API, activityCtrl *activityController) {
 		Path:          "/organizations/{orgId}/activities/trends",
 		Summary:       "Get trend analysis",
 		Description:   "Get trend analysis and predictions for activity patterns",
-		Tags:          []string{"Activities", "Analytics", "Trends"},
+		Tags:          []string{"Activities"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -296,7 +296,7 @@ func registerCleanupExpiredActivities(api huma.API, activityCtrl *activityContro
 		Path:          "/organizations/{orgId}/activities/cleanup",
 		Summary:       "Cleanup expired activities",
 		Description:   "Delete expired activities for the organization (admin only)",
-		Tags:          []string{"Activities", "Maintenance", "Admin"},
+		Tags:          []string{"Admin"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -315,7 +315,7 @@ func registerGetGlobalActivityStats(api huma.API, activityCtrl *activityControll
 		Path:          "/admin/activities/stats",
 		Summary:       "Get global activity statistics",
 		Description:   "Get platform-wide activity statistics (internal users only)",
-		Tags:          []string{"Activities", "Analytics", "Admin"},
+		Tags:          []string{"Admin"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -334,7 +334,7 @@ func registerGetSystemUsageMetrics(api huma.API, activityCtrl *activityControlle
 		Path:          "/admin/activities/usage",
 		Summary:       "Get system usage metrics",
 		Description:   "Get platform-wide usage metrics (internal users only)",
-		Tags:          []string{"Activities", "Analytics", "Usage", "Admin"},
+		Tags:          []string{"Admin"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{

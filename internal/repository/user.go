@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/juicycleff/frank/ent"
@@ -657,6 +658,7 @@ func (r *userRepository) ExistsByEmail(ctx context.Context, email string, userTy
 
 	exists, err := query.Exist(ctx)
 	if err != nil {
+		fmt.Println(err)
 		return false, errors.Wrap(err, errors.CodeDatabaseError, "failed to check if user exists by email")
 	}
 	return exists, nil

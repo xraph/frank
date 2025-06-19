@@ -312,7 +312,7 @@ func registerListProviders(api huma.API, ssoCtrl *ssoController) {
 		Path:          "/organizations/{orgId}/sso/providers",
 		Summary:       "List SSO providers",
 		Description:   "Get a paginated list of SSO providers for the organization",
-		Tags:          []string{"SSO", "Providers"},
+		Tags:          []string{"SSO"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -331,7 +331,7 @@ func registerCreateProvider(api huma.API, ssoCtrl *ssoController) {
 		Path:          "/organizations/{orgId}/sso/providers",
 		Summary:       "Create SSO provider",
 		Description:   "Create a new SSO provider for the organization",
-		Tags:          []string{"SSO", "Providers"},
+		Tags:          []string{"SSO"},
 		DefaultStatus: 201,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -350,7 +350,7 @@ func registerGetProvider(api huma.API, ssoCtrl *ssoController) {
 		Path:          "/organizations/{orgId}/sso/providers/{id}",
 		Summary:       "Get SSO provider",
 		Description:   "Get details of a specific SSO provider",
-		Tags:          []string{"SSO", "Providers"},
+		Tags:          []string{"SSO"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("Provider not found")),
 		Security: []map[string][]string{
@@ -369,7 +369,7 @@ func registerUpdateProvider(api huma.API, ssoCtrl *ssoController) {
 		Path:          "/organizations/{orgId}/sso/providers/{id}",
 		Summary:       "Update SSO provider",
 		Description:   "Update an existing SSO provider configuration",
-		Tags:          []string{"SSO", "Providers"},
+		Tags:          []string{"SSO"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("Provider not found")),
 		Security: []map[string][]string{
@@ -388,7 +388,7 @@ func registerDeleteProvider(api huma.API, ssoCtrl *ssoController) {
 		Path:          "/organizations/{orgId}/sso/providers/{id}",
 		Summary:       "Delete SSO provider",
 		Description:   "Delete an SSO provider",
-		Tags:          []string{"SSO", "Providers"},
+		Tags:          []string{"SSO"},
 		DefaultStatus: 204,
 		Responses: model.MergeErrorResponses(map[string]*huma.Response{
 			"204": {
@@ -411,7 +411,7 @@ func registerEnableProvider(api huma.API, ssoCtrl *ssoController) {
 		Path:          "/organizations/{orgId}/sso/providers/{id}/enable",
 		Summary:       "Enable SSO provider",
 		Description:   "Enable an SSO provider for authentication",
-		Tags:          []string{"SSO", "Providers"},
+		Tags:          []string{"SSO"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("Provider not found")),
 		Security: []map[string][]string{
@@ -430,7 +430,7 @@ func registerDisableProvider(api huma.API, ssoCtrl *ssoController) {
 		Path:          "/organizations/{orgId}/sso/providers/{id}/disable",
 		Summary:       "Disable SSO provider",
 		Description:   "Disable an SSO provider from authentication",
-		Tags:          []string{"SSO", "Providers"},
+		Tags:          []string{"SSO"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("Provider not found")),
 		Security: []map[string][]string{
@@ -449,7 +449,7 @@ func registerInitiateSSOLogin(api huma.API, ssoCtrl *ssoController) {
 		Path:          "/auth/sso/login",
 		Summary:       "Initiate SSO login",
 		Description:   "Start the SSO authentication flow",
-		Tags:          []string{"SSO", "Authentication"},
+		Tags:          []string{"SSO"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("Provider not found")),
 	}, ssoCtrl.initiateSSOLoginHandler)
@@ -462,7 +462,7 @@ func registerHandleSSOCallback(api huma.API, ssoCtrl *ssoController) {
 		Path:          "/auth/sso/callback",
 		Summary:       "Handle SSO callback",
 		Description:   "Process SSO authentication callback",
-		Tags:          []string{"SSO", "Authentication"},
+		Tags:          []string{"SSO"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 	}, ssoCtrl.handleSSOCallbackHandler)
@@ -475,7 +475,7 @@ func registerHandleSAMLCallback(api huma.API, ssoCtrl *ssoController) {
 		Path:          "/auth/saml/callback/{providerId}",
 		Summary:       "Handle SAML callback",
 		Description:   "Process SAML authentication callback",
-		Tags:          []string{"SSO", "SAML", "Authentication"},
+		Tags:          []string{"SSO"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 	}, ssoCtrl.handleSAMLCallbackHandler)
@@ -488,7 +488,7 @@ func registerTestProviderConnection(api huma.API, ssoCtrl *ssoController) {
 		Path:          "/organizations/{orgId}/sso/providers/{id}/test",
 		Summary:       "Test SSO provider connection",
 		Description:   "Test connectivity and configuration of an SSO provider",
-		Tags:          []string{"SSO", "Providers", "Testing"},
+		Tags:          []string{"SSO"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("Provider not found")),
 		Security: []map[string][]string{
@@ -507,7 +507,7 @@ func registerBulkProvisionUsers(api huma.API, ssoCtrl *ssoController) {
 		Path:          "/organizations/{orgId}/sso/bulk-provision",
 		Summary:       "Bulk provision users",
 		Description:   "Provision multiple users through SSO",
-		Tags:          []string{"SSO", "Users", "Provisioning"},
+		Tags:          []string{"SSO"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -526,7 +526,7 @@ func registerVerifyDomain(api huma.API, ssoCtrl *ssoController) {
 		Path:          "/organizations/{orgId}/sso/domains/verify",
 		Summary:       "Verify domain ownership",
 		Description:   "Verify domain ownership for SSO configuration",
-		Tags:          []string{"SSO", "Domains"},
+		Tags:          []string{"SSO"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -545,7 +545,7 @@ func registerGetProviderByDomain(api huma.API, ssoCtrl *ssoController) {
 		Path:          "/auth/sso/discover",
 		Summary:       "Discover SSO provider by domain",
 		Description:   "Find SSO provider configuration for a given domain",
-		Tags:          []string{"SSO", "Discovery"},
+		Tags:          []string{"SSO"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("No provider found for domain")),
 	}, ssoCtrl.getProviderByDomainHandler)
@@ -558,7 +558,7 @@ func registerGetProviderMetadata(api huma.API, ssoCtrl *ssoController) {
 		Path:          "/organizations/{orgId}/sso/providers/{id}/metadata",
 		Summary:       "Get SSO provider metadata",
 		Description:   "Get SAML metadata or OIDC configuration for an SSO provider",
-		Tags:          []string{"SSO", "Metadata"},
+		Tags:          []string{"SSO"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("Provider not found")),
 		Security: []map[string][]string{
@@ -577,7 +577,7 @@ func registerGetPublicProviderMetadata(api huma.API, ssoCtrl *ssoController) {
 		Path:          "/auth/sso/metadata/{providerId}",
 		Summary:       "Get public SSO provider metadata",
 		Description:   "Get publicly accessible SAML metadata or OIDC configuration",
-		Tags:          []string{"SSO", "Metadata"},
+		Tags:          []string{"SSO"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("Provider not found")),
 	}, ssoCtrl.getPublicProviderMetadataHandler)
@@ -590,7 +590,7 @@ func registerExportSSOData(api huma.API, ssoCtrl *ssoController) {
 		Path:          "/organizations/{orgId}/sso/export",
 		Summary:       "Export SSO data",
 		Description:   "Export SSO configuration and activity data",
-		Tags:          []string{"SSO", "Export"},
+		Tags:          []string{"SSO"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -609,7 +609,7 @@ func registerGetSSOStats(api huma.API, ssoCtrl *ssoController) {
 		Path:          "/organizations/{orgId}/sso/stats",
 		Summary:       "Get SSO statistics",
 		Description:   "Get SSO usage statistics for the organization",
-		Tags:          []string{"SSO", "Analytics"},
+		Tags:          []string{"SSO"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -628,7 +628,7 @@ func registerGetProviderStats(api huma.API, ssoCtrl *ssoController) {
 		Path:          "/organizations/{orgId}/sso/providers/{id}/stats",
 		Summary:       "Get provider statistics",
 		Description:   "Get detailed statistics for a specific SSO provider",
-		Tags:          []string{"SSO", "Analytics", "Providers"},
+		Tags:          []string{"SSO"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("Provider not found")),
 		Security: []map[string][]string{
@@ -647,7 +647,7 @@ func registerGetSSOActivity(api huma.API, ssoCtrl *ssoController) {
 		Path:          "/organizations/{orgId}/sso/activity",
 		Summary:       "Get SSO activity",
 		Description:   "Get SSO activity logs and events",
-		Tags:          []string{"SSO", "Activity", "Audit"},
+		Tags:          []string{"SSO"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -666,7 +666,7 @@ func registerGetProviderMetrics(api huma.API, ssoCtrl *ssoController) {
 		Path:          "/organizations/{orgId}/sso/providers/{id}/metrics",
 		Summary:       "Get provider metrics",
 		Description:   "Get detailed metrics for a specific SSO provider",
-		Tags:          []string{"SSO", "Metrics", "Providers"},
+		Tags:          []string{"SSO"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("Provider not found")),
 		Security: []map[string][]string{
@@ -685,7 +685,7 @@ func registerCheckProviderHealth(api huma.API, ssoCtrl *ssoController) {
 		Path:          "/organizations/{orgId}/sso/providers/{id}/health",
 		Summary:       "Check provider health",
 		Description:   "Check the health status of an SSO provider",
-		Tags:          []string{"SSO", "Health", "Providers"},
+		Tags:          []string{"SSO"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("Provider not found")),
 		Security: []map[string][]string{
@@ -704,7 +704,7 @@ func registerGetProviderHealthStatus(api huma.API, ssoCtrl *ssoController) {
 		Path:          "/organizations/{orgId}/sso/health",
 		Summary:       "Get provider health status",
 		Description:   "Get health status for all SSO providers in the organization",
-		Tags:          []string{"SSO", "Health"},
+		Tags:          []string{"SSO"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -724,7 +724,7 @@ func registerGetProviderCatalog(api huma.API, ssoCtrl *ssoController) {
 		Path:          "/sso/catalog",
 		Summary:       "Get provider catalog",
 		Description:   "Get available SSO provider templates from the catalog",
-		Tags:          []string{"SSO", "Catalog"},
+		Tags:          []string{"SSO"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -740,7 +740,7 @@ func registerGetProviderTemplate(api huma.API, ssoCtrl *ssoController) {
 		Path:          "/sso/catalog/{templateKey}",
 		Summary:       "Get provider template",
 		Description:   "Get details of a specific provider template",
-		Tags:          []string{"SSO", "Catalog"},
+		Tags:          []string{"SSO"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("Provider template not found")),
 		Security: []map[string][]string{
@@ -756,7 +756,7 @@ func registerEnableProviderFromTemplate(api huma.API, ssoCtrl *ssoController) {
 		Path:          "/organizations/{orgId}/sso/catalog/enable",
 		Summary:       "Enable provider from template",
 		Description:   "Enable an SSO provider for the organization using a catalog template",
-		Tags:          []string{"SSO", "Catalog"},
+		Tags:          []string{"SSO"},
 		DefaultStatus: 201,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("Provider template not found")),
 		Security: []map[string][]string{
@@ -775,7 +775,7 @@ func registerGetOrganizationProviders(api huma.API, ssoCtrl *ssoController) {
 		Path:          "/organizations/{orgId}/sso/organization-providers",
 		Summary:       "Get organization providers",
 		Description:   "Get SSO providers configured for the organization with template details",
-		Tags:          []string{"SSO", "Organizations"},
+		Tags:          []string{"SSO"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -794,7 +794,7 @@ func registerConfigureProvider(api huma.API, ssoCtrl *ssoController) {
 		Path:          "/organizations/{orgId}/sso/providers/{id}/configure",
 		Summary:       "Configure provider",
 		Description:   "Update provider configuration with advanced settings",
-		Tags:          []string{"SSO", "Providers"},
+		Tags:          []string{"SSO"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("Provider not found")),
 		Security: []map[string][]string{

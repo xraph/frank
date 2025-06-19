@@ -135,7 +135,7 @@ func registerDeleteMFAMethod(api huma.API, mfaCtrl *mfaController) {
 		Path:          "/organizations/{orgId}/users/{userId}/mfa/methods/{id}",
 		Summary:       "Delete MFA method",
 		Description:   "Delete an MFA method",
-		Tags:          []string{"MFA", "Methods"},
+		Tags:          []string{"MFA"},
 		DefaultStatus: 204,
 		Responses: model.MergeErrorResponses(map[string]*huma.Response{
 			"204": {
@@ -198,7 +198,7 @@ func registerDisableTOTP(api huma.API, mfaCtrl *mfaController) {
 		Path:          "/organizations/{orgId}/users/{userId}/mfa/totp",
 		Summary:       "Disable TOTP",
 		Description:   "Disable TOTP authentication for a user",
-		Tags:          []string{"MFA", "TOTP"},
+		Tags:          []string{"MFA"},
 		DefaultStatus: 204,
 		Responses: model.MergeErrorResponses(map[string]*huma.Response{
 			"204": {
@@ -445,7 +445,7 @@ func registerVerifyMFA(api huma.API, mfaCtrl *mfaController) {
 		Path:        "/organizations/{orgId}/users/{userId}/mfa/verify",
 		Summary:     "Verify MFA",
 		Description: "Verify MFA using any available method",
-		Tags:        []string{"MFA", "Verification"},
+		Tags:        []string{"MFA"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true, model.BadRequestError("Invalid MFA code or method")),
 		Security: []map[string][]string{
 			{"jwt": {}},
@@ -463,7 +463,7 @@ func registerCreateMFAChallenge(api huma.API, mfaCtrl *mfaController) {
 		Path:        "/organizations/{orgId}/users/{userId}/mfa/challenge",
 		Summary:     "Create MFA challenge",
 		Description: "Create an MFA challenge for user verification",
-		Tags:        []string{"MFA", "Challenge"},
+		Tags:        []string{"MFA"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
 			{"jwt": {}},
@@ -481,7 +481,7 @@ func registerValidateMFAChallenge(api huma.API, mfaCtrl *mfaController) {
 		Path:        "/organizations/{orgId}/users/{userId}/mfa/challenge/validate",
 		Summary:     "Validate MFA challenge",
 		Description: "Validate an MFA challenge response",
-		Tags:        []string{"MFA", "Challenge"},
+		Tags:        []string{"MFA"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true, model.BadRequestError("Invalid challenge or code")),
 		Security: []map[string][]string{
 			{"jwt": {}},
@@ -499,7 +499,7 @@ func registerCheckMFARequirement(api huma.API, mfaCtrl *mfaController) {
 		Path:        "/organizations/{orgId}/users/{userId}/mfa/requirement",
 		Summary:     "Check MFA requirement",
 		Description: "Check if MFA is required for a user and what methods are available",
-		Tags:        []string{"MFA", "Verification"},
+		Tags:        []string{"MFA"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
 			{"jwt": {}},
@@ -521,7 +521,7 @@ func registerDisableAllMFA(api huma.API, mfaCtrl *mfaController) {
 		Path:          "/organizations/{orgId}/users/{userId}/mfa/all",
 		Summary:       "Disable all MFA",
 		Description:   "Disable all MFA methods for a user (recovery operation)",
-		Tags:          []string{"MFA", "Recovery"},
+		Tags:          []string{"MFA"},
 		DefaultStatus: 204,
 		Responses: model.MergeErrorResponses(map[string]*huma.Response{
 			"204": {
@@ -544,7 +544,7 @@ func registerGetRecoveryOptions(api huma.API, mfaCtrl *mfaController) {
 		Path:        "/organizations/{orgId}/users/{userId}/mfa/recovery",
 		Summary:     "Get recovery options",
 		Description: "Get available MFA recovery options for a user",
-		Tags:        []string{"MFA", "Recovery"},
+		Tags:        []string{"MFA"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
 			{"jwt": {}},
@@ -566,7 +566,7 @@ func registerGetMFAActivity(api huma.API, mfaCtrl *mfaController) {
 		Path:        "/organizations/{orgId}/users/{userId}/mfa/activity",
 		Summary:     "Get MFA activity",
 		Description: "Get MFA activity logs for a user with pagination and filtering",
-		Tags:        []string{"MFA", "Activity"},
+		Tags:        []string{"MFA"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
 			{"jwt": {}},
@@ -584,7 +584,7 @@ func registerResendMFACode(api huma.API, mfaCtrl *mfaController) {
 		Path:        "/organizations/{orgId}/users/{userId}/mfa/resend",
 		Summary:     "Resend MFA code",
 		Description: "Resend MFA verification code for SMS or email methods",
-		Tags:        []string{"MFA", "Resend"},
+		Tags:        []string{"MFA"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true, model.TooManyRequestsError(), model.NotFoundError("MFA method not found")),
 		Security: []map[string][]string{
 			{"jwt": {}},
@@ -697,7 +697,7 @@ type SendEmailCodeOutput = model.Output[*model.EmailCodeResponse]
 type VerifyEmailCodeInput struct {
 	model.OrganisationPathParams
 	UserID xid.ID `path:"userId" doc:"User ID"`
-	Body   model.VerifyEmailRequest
+	Body   model.VerifyEmailRequestBody
 }
 
 type VerifyEmailCodeOutput = model.Output[*model.MFAVerifyResponse]

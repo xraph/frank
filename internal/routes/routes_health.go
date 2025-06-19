@@ -133,8 +133,8 @@ func (h *healthController) healthCheckHandler(ctx context.Context, input *Health
 	health := &HealthStatus{
 		Status:      "healthy",
 		Timestamp:   time.Now(),
-		Version:     h.di.Config().Version,
-		Environment: h.di.Config().Environment,
+		Version:     h.di.Config().App.Version,
+		Environment: h.di.Config().App.Environment,
 		Uptime:      int64(time.Since(startTime).Seconds()),
 	}
 
@@ -180,8 +180,8 @@ func (h *healthController) readinessCheckHandler(ctx context.Context, input *Rea
 	health := &HealthStatus{
 		Status:      status,
 		Timestamp:   time.Now(),
-		Version:     h.di.Config().Version,
-		Environment: h.di.Config().Environment,
+		Version:     h.di.Config().App.Version,
+		Environment: h.di.Config().App.Environment,
 		Uptime:      int64(time.Since(startTime).Seconds()),
 		Components:  components,
 	}
@@ -205,8 +205,8 @@ func (h *healthController) livenessCheckHandler(ctx context.Context, input *Live
 	health := &HealthStatus{
 		Status:      "alive",
 		Timestamp:   time.Now(),
-		Version:     h.di.Config().Version,
-		Environment: h.di.Config().Environment,
+		Version:     h.di.Config().App.Version,
+		Environment: h.di.Config().App.Environment,
 	}
 
 	return &LivenessCheckOutput{
@@ -259,8 +259,8 @@ func (h *healthController) detailedHealthCheckHandler(ctx context.Context, input
 	health := &HealthStatus{
 		Status:      status,
 		Timestamp:   time.Now(),
-		Version:     h.di.Config().Version,
-		Environment: h.di.Config().Environment,
+		Version:     h.di.Config().App.Version,
+		Environment: h.di.Config().App.Environment,
 		Uptime:      int64(time.Since(startTime).Seconds()),
 		Components:  components,
 	}

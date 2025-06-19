@@ -59,6 +59,7 @@ func NewRouterWithOptions(di di.Container, existingRouter chi.Router, opts *serv
 		r = chi.NewRouter()
 		setupMiddleware(r, di, logger)
 	} else {
+		logger.Debug("Using existing Chi router")
 		r = existingRouter
 	}
 
@@ -146,7 +147,7 @@ func setupMiddleware(r chi.Router, di di.Container, logger logging.Logger) {
 	})
 
 	// Production logging middleware
-	if di.Config().Environment == "production" {
+	if di.Config().App.Environment == "production" {
 		r.Use(customMiddleware.ProductionLogging(logger))
 	} else {
 		r.Use(customMiddleware.DevelopmentLogging(logger))
@@ -177,8 +178,12 @@ func setupMiddleware(r chi.Router, di di.Container, logger logging.Logger) {
 	r.Use(customMiddleware.Recovery(logger))
 	r.Use(customMiddleware.ErrorHandler(logger))
 
-	// CORS configuration
-	r.Use(customMiddleware.CORS(di.Config()))
+	// CORS configuration // r.Use(customMiddleware.CORS(di.Config()))
+	if di.Config().App.Environment == "development" {
+		r.Use(customMiddleware.DevelopmentCORS())
+	} else {
+		r.Use(customMiddleware.CORS(di.Config()))
+	}
 
 	// Security headers
 	if di.Config().Security.SecHeadersEnabled {
@@ -186,7 +191,7 @@ func setupMiddleware(r chi.Router, di di.Container, logger logging.Logger) {
 	}
 
 	// Mount debug routes in development
-	if di.Config().Environment == "development" {
+	if di.Config().App.Environment == "development" {
 		r.Mount("/debug", chimw.Profiler())
 	}
 }

@@ -104,7 +104,7 @@ func registerListAllOrganizations(api huma.API, ctrl *platformAdminController) {
 		Path:          "/platform/organizations",
 		Summary:       "List all organizations",
 		Description:   "Get a paginated list of all organizations on the platform",
-		Tags:          []string{"Platform Admin", "Organizations"},
+		Tags:          []string{"Platform Admin"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -123,7 +123,7 @@ func registerGetOrganizationDetails(api huma.API, ctrl *platformAdminController)
 		Path:          "/platform/organizations/{id}",
 		Summary:       "Get organization details",
 		Description:   "Get detailed information about a specific organization",
-		Tags:          []string{"Platform Admin", "Organizations"},
+		Tags:          []string{"Platform Admin"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("Organization not found")),
 		Security: []map[string][]string{
@@ -142,7 +142,7 @@ func registerSuspendOrganization(api huma.API, ctrl *platformAdminController) {
 		Path:          "/platform/organizations/{id}/suspend",
 		Summary:       "Suspend organization",
 		Description:   "Suspend an organization and disable all access",
-		Tags:          []string{"Platform Admin", "Organizations"},
+		Tags:          []string{"Platform Admin"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("Organization not found")),
 		Security: []map[string][]string{
@@ -161,7 +161,7 @@ func registerActivateOrganization(api huma.API, ctrl *platformAdminController) {
 		Path:          "/platform/organizations/{id}/activate",
 		Summary:       "Activate organization",
 		Description:   "Activate a suspended organization",
-		Tags:          []string{"Platform Admin", "Organizations"},
+		Tags:          []string{"Platform Admin"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("Organization not found")),
 		Security: []map[string][]string{
@@ -180,7 +180,7 @@ func registerDeleteOrganizationPlatform(api huma.API, ctrl *platformAdminControl
 		Path:          "/platform/organizations/{id}",
 		Summary:       "Delete organization",
 		Description:   "Permanently delete an organization and all associated data",
-		Tags:          []string{"Platform Admin", "Organizations"},
+		Tags:          []string{"Platform Admin"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("Organization not found")),
 		Security: []map[string][]string{
@@ -199,7 +199,7 @@ func registerGetOrganizationStatsPlatform(api huma.API, ctrl *platformAdminContr
 		Path:          "/platform/organizations/{id}/stats",
 		Summary:       "Get organization statistics",
 		Description:   "Get usage and performance statistics for an organization",
-		Tags:          []string{"Platform Admin", "Organizations", "Analytics"},
+		Tags:          []string{"Platform Admin"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("Organization not found")),
 		Security: []map[string][]string{
@@ -218,7 +218,7 @@ func registerGetOrganizationUsagePlatform(api huma.API, ctrl *platformAdminContr
 		Path:        "/platform/organizations/{id}/usage",
 		Summary:     "Get organization usage",
 		Description: "Get detailed usage metrics for billing and monitoring",
-		// Tags:          []string{"Platform Admin", "Organizations", "Billing"},
+		// Tags:          []string{"Platform Admin"},
 		Tags:          []string{"Platform Admin"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("Organization not found")),
@@ -240,7 +240,7 @@ func registerListAllUsers(api huma.API, ctrl *platformAdminController) {
 		Path:          "/platform/users",
 		Summary:       "List all users",
 		Description:   "Get a paginated list of all users across all organizations",
-		Tags:          []string{"Platform Admin", "Users"},
+		Tags:          []string{"Platform Admin"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -259,7 +259,7 @@ func registerGetUserDetails(api huma.API, ctrl *platformAdminController) {
 		Path:          "/platform/users/{id}",
 		Summary:       "Get user details",
 		Description:   "Get detailed information about a specific user",
-		Tags:          []string{"Platform Admin", "Users"},
+		Tags:          []string{"Platform Admin"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("User not found")),
 		Security: []map[string][]string{
@@ -278,7 +278,7 @@ func registerImpersonateUser(api huma.API, ctrl *platformAdminController) {
 		Path:          "/platform/users/{id}/impersonate",
 		Summary:       "Impersonate user",
 		Description:   "Create an impersonation session for troubleshooting",
-		Tags:          []string{"Platform Admin", "Users"},
+		Tags:          []string{"Platform Admin"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("User not found")),
 		Security: []map[string][]string{
@@ -297,7 +297,7 @@ func registerBlockUser(api huma.API, ctrl *platformAdminController) {
 		Path:          "/platform/users/{id}/block",
 		Summary:       "Block user",
 		Description:   "Block a user account for security or compliance reasons",
-		Tags:          []string{"Platform Admin", "Users"},
+		Tags:          []string{"Platform Admin"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("User not found")),
 		Security: []map[string][]string{
@@ -316,7 +316,7 @@ func registerUnblockUser(api huma.API, ctrl *platformAdminController) {
 		Path:          "/platform/users/{id}/unblock",
 		Summary:       "Unblock user",
 		Description:   "Unblock a previously blocked user account",
-		Tags:          []string{"Platform Admin", "Users"},
+		Tags:          []string{"Platform Admin"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("User not found")),
 		Security: []map[string][]string{
@@ -335,7 +335,7 @@ func registerResetUserPassword(api huma.API, ctrl *platformAdminController) {
 		Path:          "/platform/users/{id}/reset-password",
 		Summary:       "Reset user password",
 		Description:   "Force a password reset for a user account",
-		Tags:          []string{"Platform Admin", "Users"},
+		Tags:          []string{"Platform Admin"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("User not found")),
 		Security: []map[string][]string{
@@ -354,7 +354,7 @@ func registerGetUserSessionsPlatform(api huma.API, ctrl *platformAdminController
 		Path:          "/platform/users/{id}/sessions",
 		Summary:       "Get user sessions",
 		Description:   "Get all active sessions for a user",
-		Tags:          []string{"Platform Admin", "Users", "Sessions"},
+		Tags:          []string{"Platform Admin"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("User not found")),
 		Security: []map[string][]string{
@@ -373,7 +373,7 @@ func registerRevokeUserSessions(api huma.API, ctrl *platformAdminController) {
 		Path:          "/platform/users/{id}/revoke-sessions",
 		Summary:       "Revoke user sessions",
 		Description:   "Revoke all active sessions for a user",
-		Tags:          []string{"Platform Admin", "Users", "Sessions"},
+		Tags:          []string{"Platform Admin"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("User not found")),
 		Security: []map[string][]string{
@@ -394,7 +394,7 @@ func registerGetPlatformStats(api huma.API, ctrl *platformAdminController) {
 		Path:          "/platform/stats",
 		Summary:       "Get platform statistics",
 		Description:   "Get overall platform statistics and KPIs",
-		Tags:          []string{"Platform Admin", "Analytics"},
+		Tags:          []string{"Platform Admin"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -413,7 +413,7 @@ func registerGetPlatformMetrics(api huma.API, ctrl *platformAdminController) {
 		Path:          "/platform/metrics",
 		Summary:       "Get platform metrics",
 		Description:   "Get detailed platform performance and usage metrics",
-		Tags:          []string{"Platform Admin", "Analytics"},
+		Tags:          []string{"Platform Admin"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -432,7 +432,7 @@ func registerGetGrowthMetrics(api huma.API, ctrl *platformAdminController) {
 		Path:          "/platform/metrics/growth",
 		Summary:       "Get growth metrics",
 		Description:   "Get platform growth and adoption metrics",
-		Tags:          []string{"Platform Admin", "Analytics"},
+		Tags:          []string{"Platform Admin"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -451,7 +451,7 @@ func registerGetRevenueMetrics(api huma.API, ctrl *platformAdminController) {
 		Path:          "/platform/metrics/revenue",
 		Summary:       "Get revenue metrics",
 		Description:   "Get platform revenue and financial metrics",
-		Tags:          []string{"Platform Admin", "Analytics", "Revenue"},
+		Tags:          []string{"Platform Admin"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -470,7 +470,7 @@ func registerGetUsageAnalytics(api huma.API, ctrl *platformAdminController) {
 		Path:          "/platform/analytics/usage",
 		Summary:       "Get usage analytics",
 		Description:   "Get detailed usage analytics across all features",
-		Tags:          []string{"Platform Admin", "Analytics"},
+		Tags:          []string{"Platform Admin"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -491,7 +491,7 @@ func registerGetSystemHealth(api huma.API, ctrl *platformAdminController) {
 		Path:          "/platform/system/health",
 		Summary:       "Get system health",
 		Description:   "Get overall system health status and checks",
-		Tags:          []string{"Platform Admin", "Monitoring"},
+		Tags:          []string{"Platform Admin"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -510,7 +510,7 @@ func registerGetSystemMetrics(api huma.API, ctrl *platformAdminController) {
 		Path:          "/platform/system/metrics",
 		Summary:       "Get system metrics",
 		Description:   "Get system performance metrics and resource usage",
-		Tags:          []string{"Platform Admin", "Monitoring"},
+		Tags:          []string{"Platform Admin"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -529,7 +529,7 @@ func registerGetPerformanceMetrics(api huma.API, ctrl *platformAdminController) 
 		Path:          "/platform/system/performance",
 		Summary:       "Get performance metrics",
 		Description:   "Get detailed system performance metrics",
-		Tags:          []string{"Platform Admin", "Monitoring"},
+		Tags:          []string{"Platform Admin"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -548,7 +548,7 @@ func registerGetErrorRates(api huma.API, ctrl *platformAdminController) {
 		Path:          "/platform/system/errors",
 		Summary:       "Get error rates",
 		Description:   "Get system error rates and error analysis",
-		Tags:          []string{"Platform Admin", "Monitoring"},
+		Tags:          []string{"Platform Admin"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -567,7 +567,7 @@ func registerGetAuditSummary(api huma.API, ctrl *platformAdminController) {
 		Path:          "/platform/audit/summary",
 		Summary:       "Get audit summary",
 		Description:   "Get high-level audit activity summary",
-		Tags:          []string{"Platform Admin", "Audit"},
+		Tags:          []string{"Platform Admin"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -588,7 +588,7 @@ func registerListFeatureFlags(api huma.API, ctrl *platformAdminController) {
 		Path:          "/platform/features",
 		Summary:       "List feature flags",
 		Description:   "Get all platform feature flags and their status",
-		Tags:          []string{"Platform Admin", "Features"},
+		Tags:          []string{"Platform Admin"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -607,7 +607,7 @@ func registerCreateFeatureFlag(api huma.API, ctrl *platformAdminController) {
 		Path:          "/platform/features",
 		Summary:       "Create feature flag",
 		Description:   "Create a new platform feature flag",
-		Tags:          []string{"Platform Admin", "Features"},
+		Tags:          []string{"Platform Admin"},
 		DefaultStatus: 201,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.BadRequestError("Invalid feature flag configuration")),
 		Security: []map[string][]string{
@@ -626,7 +626,7 @@ func registerUpdateFeatureFlag(api huma.API, ctrl *platformAdminController) {
 		Path:          "/platform/features/{id}",
 		Summary:       "Update feature flag",
 		Description:   "Update an existing feature flag",
-		Tags:          []string{"Platform Admin", "Features"},
+		Tags:          []string{"Platform Admin"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("Feature flag not found")),
 		Security: []map[string][]string{
@@ -645,7 +645,7 @@ func registerDeleteFeatureFlag(api huma.API, ctrl *platformAdminController) {
 		Path:          "/platform/features/{id}",
 		Summary:       "Delete feature flag",
 		Description:   "Delete a feature flag",
-		Tags:          []string{"Platform Admin", "Features"},
+		Tags:          []string{"Platform Admin"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("Feature flag not found")),
 		Security: []map[string][]string{
@@ -664,7 +664,7 @@ func registerGetFeatureUsage(api huma.API, ctrl *platformAdminController) {
 		Path:          "/platform/features/usage",
 		Summary:       "Get feature usage",
 		Description:   "Get usage statistics for all platform features",
-		Tags:          []string{"Platform Admin", "Features", "Analytics"},
+		Tags:          []string{"Platform Admin"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -685,7 +685,7 @@ func registerGetBillingOverview(api huma.API, ctrl *platformAdminController) {
 		Path:          "/platform/billing/overview",
 		Summary:       "Get billing overview",
 		Description:   "Get platform-wide billing overview and metrics",
-		Tags:          []string{"Platform Admin", "Billing"},
+		Tags:          []string{"Platform Admin"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -704,7 +704,7 @@ func registerListSubscriptions(api huma.API, ctrl *platformAdminController) {
 		Path:          "/platform/subscriptions",
 		Summary:       "List subscriptions",
 		Description:   "Get all active subscriptions across the platform",
-		Tags:          []string{"Platform Admin", "Billing"},
+		Tags:          []string{"Platform Admin"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -723,7 +723,7 @@ func registerGetSubscriptionDetails(api huma.API, ctrl *platformAdminController)
 		Path:          "/platform/subscriptions/{id}",
 		Summary:       "Get subscription details",
 		Description:   "Get detailed information about a specific subscription",
-		Tags:          []string{"Platform Admin", "Billing"},
+		Tags:          []string{"Platform Admin"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("Subscription not found")),
 		Security: []map[string][]string{
@@ -742,7 +742,7 @@ func registerUpdateSubscription(api huma.API, ctrl *platformAdminController) {
 		Path:          "/platform/subscriptions/{id}",
 		Summary:       "Update subscription",
 		Description:   "Update subscription details or status",
-		Tags:          []string{"Platform Admin", "Billing"},
+		Tags:          []string{"Platform Admin"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("Subscription not found")),
 		Security: []map[string][]string{
@@ -761,7 +761,7 @@ func registerCancelSubscription(api huma.API, ctrl *platformAdminController) {
 		Path:          "/platform/subscriptions/{id}/cancel",
 		Summary:       "Cancel subscription",
 		Description:   "Cancel a subscription",
-		Tags:          []string{"Platform Admin", "Billing"},
+		Tags:          []string{"Platform Admin"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("Subscription not found")),
 		Security: []map[string][]string{
@@ -780,7 +780,7 @@ func registerGetRevenueReport(api huma.API, ctrl *platformAdminController) {
 		Path:          "/platform/billing/revenue",
 		Summary:       "Get revenue report",
 		Description:   "Get detailed revenue report and projections",
-		Tags:          []string{"Platform Admin", "Billing", "Reports"},
+		Tags:          []string{"Platform Admin"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -801,7 +801,7 @@ func registerGetSecurityDashboard(api huma.API, ctrl *platformAdminController) {
 		Path:          "/platform/security/dashboard",
 		Summary:       "Get security dashboard",
 		Description:   "Get security overview and threat analysis",
-		Tags:          []string{"Platform Admin", "Security"},
+		Tags:          []string{"Platform Admin"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -820,7 +820,7 @@ func registerListSecurityIncidents(api huma.API, ctrl *platformAdminController) 
 		Path:          "/platform/security/incidents",
 		Summary:       "List security incidents",
 		Description:   "Get all security incidents and alerts",
-		Tags:          []string{"Platform Admin", "Security"},
+		Tags:          []string{"Platform Admin"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -839,7 +839,7 @@ func registerGetComplianceReport(api huma.API, ctrl *platformAdminController) {
 		Path:          "/platform/compliance/report",
 		Summary:       "Get compliance report",
 		Description:   "Get comprehensive compliance status report",
-		Tags:          []string{"Platform Admin", "Compliance"},
+		Tags:          []string{"Platform Admin"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -858,7 +858,7 @@ func registerRunSecurityScan(api huma.API, ctrl *platformAdminController) {
 		Path:          "/platform/security/scan",
 		Summary:       "Run security scan",
 		Description:   "Initiate a comprehensive security scan",
-		Tags:          []string{"Platform Admin", "Security"},
+		Tags:          []string{"Platform Admin"},
 		DefaultStatus: 202,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -877,7 +877,7 @@ func registerGetAuditTrail(api huma.API, ctrl *platformAdminController) {
 		Path:          "/platform/audit/trail",
 		Summary:       "Get audit trail",
 		Description:   "Get comprehensive audit trail with advanced filtering",
-		Tags:          []string{"Platform Admin", "Audit"},
+		Tags:          []string{"Platform Admin"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -898,7 +898,7 @@ func registerGetAPIUsage(api huma.API, ctrl *platformAdminController) {
 		Path:          "/platform/api/usage",
 		Summary:       "Get API usage",
 		Description:   "Get platform-wide API usage statistics",
-		Tags:          []string{"Platform Admin", "API"},
+		Tags:          []string{"Platform Admin"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -917,7 +917,7 @@ func registerListAPIKeysPlatform(api huma.API, ctrl *platformAdminController) {
 		Path:          "/platform/api/keys",
 		Summary:       "List API keys",
 		Description:   "Get all API keys across all organizations",
-		Tags:          []string{"Platform Admin", "API"},
+		Tags:          []string{"Platform Admin"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -936,7 +936,7 @@ func registerRevokeAPIKey(api huma.API, ctrl *platformAdminController) {
 		Path:          "/platform/api/keys/{id}/revoke",
 		Summary:       "Revoke API key",
 		Description:   "Revoke an API key for security reasons",
-		Tags:          []string{"Platform Admin", "API"},
+		Tags:          []string{"Platform Admin"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("API key not found")),
 		Security: []map[string][]string{
@@ -955,7 +955,7 @@ func registerGetRateLimitStats(api huma.API, ctrl *platformAdminController) {
 		Path:          "/platform/api/rate-limits",
 		Summary:       "Get rate limit statistics",
 		Description:   "Get API rate limiting statistics and violations",
-		Tags:          []string{"Platform Admin", "API"},
+		Tags:          []string{"Platform Admin"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -976,7 +976,7 @@ func registerListSupportTickets(api huma.API, ctrl *platformAdminController) {
 		Path:          "/platform/support/tickets",
 		Summary:       "List support tickets",
 		Description:   "Get all support tickets across the platform",
-		Tags:          []string{"Platform Admin", "Support"},
+		Tags:          []string{"Platform Admin"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -995,7 +995,7 @@ func registerGetMaintenanceWindows(api huma.API, ctrl *platformAdminController) 
 		Path:          "/platform/maintenance",
 		Summary:       "Get maintenance windows",
 		Description:   "Get scheduled and completed maintenance windows",
-		Tags:          []string{"Platform Admin", "Operations"},
+		Tags:          []string{"Platform Admin"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -1014,7 +1014,7 @@ func registerScheduleMaintenance(api huma.API, ctrl *platformAdminController) {
 		Path:          "/platform/maintenance",
 		Summary:       "Schedule maintenance",
 		Description:   "Schedule a maintenance window",
-		Tags:          []string{"Platform Admin", "Operations"},
+		Tags:          []string{"Platform Admin"},
 		DefaultStatus: 201,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.BadRequestError("Invalid maintenance schedule")),
 		Security: []map[string][]string{
@@ -1033,7 +1033,7 @@ func registerSendPlatformNotification(api huma.API, ctrl *platformAdminControlle
 		Path:          "/platform/notifications",
 		Summary:       "Send platform notification",
 		Description:   "Send a notification to all or specific organizations",
-		Tags:          []string{"Platform Admin", "Communications"},
+		Tags:          []string{"Platform Admin"},
 		DefaultStatus: 202,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.BadRequestError("Invalid notification")),
 		Security: []map[string][]string{

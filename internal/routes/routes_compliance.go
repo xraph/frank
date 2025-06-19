@@ -92,7 +92,7 @@ func registerGenerateSOC2Report(api huma.API, ctrl *complianceController) {
 		Path:          "/organizations/{orgId}/compliance/soc2/reports",
 		Summary:       "Generate SOC 2 compliance report",
 		Description:   "Generate a comprehensive SOC 2 Type II compliance report for the organization",
-		Tags:          []string{"Compliance", "SOC2"},
+		Tags:          []string{"Compliance"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -111,7 +111,7 @@ func registerCheckSOC2Compliance(api huma.API, ctrl *complianceController) {
 		Path:          "/organizations/{orgId}/compliance/soc2/status",
 		Summary:       "Check SOC 2 compliance status",
 		Description:   "Get current SOC 2 compliance status and assessment results",
-		Tags:          []string{"Compliance", "SOC2"},
+		Tags:          []string{"Compliance"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -132,7 +132,7 @@ func registerGenerateHIPAAReport(api huma.API, ctrl *complianceController) {
 		Path:          "/organizations/{orgId}/compliance/hipaa/reports",
 		Summary:       "Generate HIPAA compliance report",
 		Description:   "Generate a comprehensive HIPAA compliance report with safeguards assessment",
-		Tags:          []string{"Compliance", "HIPAA"},
+		Tags:          []string{"Compliance"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -151,7 +151,7 @@ func registerCheckHIPAACompliance(api huma.API, ctrl *complianceController) {
 		Path:          "/organizations/{orgId}/compliance/hipaa/status",
 		Summary:       "Check HIPAA compliance status",
 		Description:   "Get current HIPAA compliance status and safeguards assessment",
-		Tags:          []string{"Compliance", "HIPAA"},
+		Tags:          []string{"Compliance"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -172,7 +172,7 @@ func registerGeneratePCIDSSReport(api huma.API, ctrl *complianceController) {
 		Path:          "/organizations/{orgId}/compliance/pci-dss/reports",
 		Summary:       "Generate PCI DSS compliance report",
 		Description:   "Generate a comprehensive PCI DSS compliance report with security requirements assessment",
-		Tags:          []string{"Compliance", "PCI-DSS"},
+		Tags:          []string{"Compliance"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -191,7 +191,7 @@ func registerCheckPCIDSSCompliance(api huma.API, ctrl *complianceController) {
 		Path:          "/organizations/{orgId}/compliance/pci-dss/status",
 		Summary:       "Check PCI DSS compliance status",
 		Description:   "Get current PCI DSS compliance status and security requirements assessment",
-		Tags:          []string{"Compliance", "PCI-DSS"},
+		Tags:          []string{"Compliance"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -212,7 +212,7 @@ func registerGenerateGDPRReport(api huma.API, ctrl *complianceController) {
 		Path:          "/organizations/{orgId}/compliance/gdpr/reports",
 		Summary:       "Generate GDPR compliance report",
 		Description:   "Generate a comprehensive GDPR compliance report with data processing records",
-		Tags:          []string{"Compliance", "GDPR"},
+		Tags:          []string{"Compliance"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -231,7 +231,7 @@ func registerCheckGDPRCompliance(api huma.API, ctrl *complianceController) {
 		Path:          "/organizations/{orgId}/compliance/gdpr/status",
 		Summary:       "Check GDPR compliance status",
 		Description:   "Get current GDPR compliance status and data protection assessment",
-		Tags:          []string{"Compliance", "GDPR"},
+		Tags:          []string{"Compliance"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -252,7 +252,7 @@ func registerDetectViolations(api huma.API, ctrl *complianceController) {
 		Path:          "/organizations/{orgId}/compliance/violations/detect",
 		Summary:       "Detect compliance violations",
 		Description:   "Run compliance violation detection for specified compliance type",
-		Tags:          []string{"Compliance", "Violations"},
+		Tags:          []string{"Compliance"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -271,7 +271,7 @@ func registerGetActiveViolations(api huma.API, ctrl *complianceController) {
 		Path:          "/organizations/{orgId}/compliance/violations",
 		Summary:       "Get active compliance violations",
 		Description:   "Get list of active compliance violations for the organization",
-		Tags:          []string{"Compliance", "Violations"},
+		Tags:          []string{"Compliance"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -290,7 +290,7 @@ func registerResolveViolation(api huma.API, ctrl *complianceController) {
 		Path:          "/compliance/violations/{violationId}/resolve",
 		Summary:       "Resolve compliance violation",
 		Description:   "Mark a compliance violation as resolved with resolution details",
-		Tags:          []string{"Compliance", "Violations"},
+		Tags:          []string{"Compliance"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("Violation not found")),
 		Security: []map[string][]string{
@@ -311,7 +311,7 @@ func registerApplyDataRetentionPolicies(api huma.API, ctrl *complianceController
 		Path:          "/organizations/{orgId}/compliance/data-retention/apply",
 		Summary:       "Apply data retention policies",
 		Description:   "Apply data retention policies and archive/delete old data",
-		Tags:          []string{"Compliance", "Data Retention"},
+		Tags:          []string{"Compliance"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -330,7 +330,7 @@ func registerProcessDataDeletionRequest(api huma.API, ctrl *complianceController
 		Path:          "/organizations/{orgId}/compliance/data-deletion",
 		Summary:       "Process data deletion request",
 		Description:   "Process GDPR right to erasure or other data deletion requests",
-		Tags:          []string{"Compliance", "Data Deletion", "GDPR"},
+		Tags:          []string{"Compliance"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.BadRequestError("Invalid deletion request")),
 		Security: []map[string][]string{
@@ -349,7 +349,7 @@ func registerExportUserData(api huma.API, ctrl *complianceController) {
 		Path:          "/organizations/{orgId}/users/{userId}/export",
 		Summary:       "Export user data",
 		Description:   "Export all user data for GDPR data portability or other compliance requirements",
-		Tags:          []string{"Compliance", "Data Export", "GDPR"},
+		Tags:          []string{"Compliance"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("User not found")),
 		Security: []map[string][]string{
@@ -370,7 +370,7 @@ func registerLogDataAccess(api huma.API, ctrl *complianceController) {
 		Path:          "/compliance/data-access/log",
 		Summary:       "Log data access event",
 		Description:   "Log a data access event for compliance tracking",
-		Tags:          []string{"Compliance", "Data Access"},
+		Tags:          []string{"Compliance"},
 		DefaultStatus: 201,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.BadRequestError("Invalid access event")),
 		Security: []map[string][]string{
@@ -389,7 +389,7 @@ func registerGetDataAccessLogs(api huma.API, ctrl *complianceController) {
 		Path:          "/organizations/{orgId}/compliance/data-access/logs",
 		Summary:       "Get data access logs",
 		Description:   "Get data access logs for compliance auditing",
-		Tags:          []string{"Compliance", "Data Access"},
+		Tags:          []string{"Compliance"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -410,7 +410,7 @@ func registerCreateAttestation(api huma.API, ctrl *complianceController) {
 		Path:          "/organizations/{orgId}/compliance/attestations",
 		Summary:       "Create compliance attestation",
 		Description:   "Create a new compliance attestation statement",
-		Tags:          []string{"Compliance", "Attestations"},
+		Tags:          []string{"Compliance"},
 		DefaultStatus: 201,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.BadRequestError("Invalid attestation request")),
 		Security: []map[string][]string{
@@ -429,7 +429,7 @@ func registerGetAttestations(api huma.API, ctrl *complianceController) {
 		Path:          "/organizations/{orgId}/compliance/attestations",
 		Summary:       "Get compliance attestations",
 		Description:   "Get compliance attestations for the organization",
-		Tags:          []string{"Compliance", "Attestations"},
+		Tags:          []string{"Compliance"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -450,7 +450,7 @@ func registerConductRiskAssessment(api huma.API, ctrl *complianceController) {
 		Path:          "/organizations/{orgId}/compliance/risk-assessment",
 		Summary:       "Conduct risk assessment",
 		Description:   "Conduct a comprehensive risk assessment for compliance",
-		Tags:          []string{"Compliance", "Risk Assessment"},
+		Tags:          []string{"Compliance"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -469,7 +469,7 @@ func registerUpdateRiskMitigation(api huma.API, ctrl *complianceController) {
 		Path:          "/compliance/risks/{riskId}/mitigation",
 		Summary:       "Update risk mitigation",
 		Description:   "Update risk mitigation measures for identified risks",
-		Tags:          []string{"Compliance", "Risk Management"},
+		Tags:          []string{"Compliance"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("Risk not found")),
 		Security: []map[string][]string{
@@ -490,7 +490,7 @@ func registerGetComplianceOverview(api huma.API, ctrl *complianceController) {
 		Path:          "/organizations/{orgId}/compliance/overview",
 		Summary:       "Get compliance overview",
 		Description:   "Get overall compliance status across all frameworks",
-		Tags:          []string{"Compliance", "Overview"},
+		Tags:          []string{"Compliance"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
@@ -509,7 +509,7 @@ func registerGetComplianceMetrics(api huma.API, ctrl *complianceController) {
 		Path:          "/organizations/{orgId}/compliance/metrics",
 		Summary:       "Get compliance metrics",
 		Description:   "Get detailed compliance metrics and trends",
-		Tags:          []string{"Compliance", "Metrics"},
+		Tags:          []string{"Compliance"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{

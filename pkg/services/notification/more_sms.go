@@ -11,7 +11,7 @@ import (
 // // UpdatedSMSService methods to use system templates
 // func (s *smsService) SendVerificationSMS(ctx context.Context, user *ent.User, code string) error {
 // 	data := map[string]interface{}{
-// 		"appName":   "Frank Auth",
+// 		"appName":   s.getConfig().App.Name,
 // 		"userName":  getUserDisplayName(user),
 // 		"code":      code,
 // 		"expiresIn": "10 minutes",
@@ -22,7 +22,7 @@ import (
 //
 // func (s *smsService) SendWelcomeSMS(ctx context.Context, user *ent.User, organizationName string) error {
 // 	data := map[string]interface{}{
-// 		"appName":          "Frank Auth",
+// 		"appName":          s.getConfig().App.Name,
 // 		"userName":         getUserDisplayName(user),
 // 		"organizationName": organizationName,
 // 		"loginUrl":         "https://app.frank.com/login",
@@ -33,7 +33,7 @@ import (
 //
 // func (s *smsService) SendPasswordResetSMS(ctx context.Context, user *ent.User, code string) error {
 // 	data := map[string]interface{}{
-// 		"appName":   "Frank Auth",
+// 		"appName":   s.getConfig().App.Name,
 // 		"userName":  getUserDisplayName(user),
 // 		"code":      code,
 // 		"expiresIn": "15 minutes",
@@ -44,7 +44,7 @@ import (
 //
 // func (s *smsService) SendMagicLinkSMS(ctx context.Context, user *ent.User, magicLinkUrl string) error {
 // 	data := map[string]interface{}{
-// 		"appName":      "Frank Auth",
+// 		"appName":      s.getConfig().App.Name,
 // 		"userName":     getUserDisplayName(user),
 // 		"magicLinkUrl": magicLinkUrl,
 // 		"expiresIn":    "15 minutes",
@@ -55,7 +55,7 @@ import (
 //
 // func (s *smsService) SendMFACodeSMS(ctx context.Context, user *ent.User, code string) error {
 // 	data := map[string]interface{}{
-// 		"appName":   "Frank Auth",
+// 		"appName":   s.getConfig().App.Name,
 // 		"userName":  getUserDisplayName(user),
 // 		"code":      code,
 // 		"expiresIn": "5 minutes",
@@ -71,12 +71,12 @@ func (s *smsService) SendLoginSuccessSMS(ctx context.Context, user *ent.User, lo
 	}
 
 	data := map[string]interface{}{
-		"appName":     "Frank Auth",
+		"appName":     s.getConfig().App.Name,
 		"userName":    getUserDisplayName(user),
 		"location":    login.Location,
 		"timestamp":   login.Timestamp.Format("Jan 2, 15:04"),
 		"ipAddress":   login.IPAddress,
-		"securityUrl": "https://app.frank.com/security",
+		"securityUrl": s.getConfig().GetFrontendAddressWithPath(s.getConfig().Frontend.SecurityPath),
 	}
 
 	return s.SendSystemSMS(ctx, templateType, user.PhoneNumber, data)
@@ -84,7 +84,7 @@ func (s *smsService) SendLoginSuccessSMS(ctx context.Context, user *ent.User, lo
 
 // func (s *smsService) SendPasswordChangedSMS(ctx context.Context, user *ent.User) error {
 // 	data := map[string]interface{}{
-// 		"appName":   "Frank Auth",
+// 		"appName":   s.getConfig().App.Name,
 // 		"userName":  getUserDisplayName(user),
 // 		"timestamp": time.Now().Format("Jan 2, 15:04"),
 // 	}
@@ -94,7 +94,7 @@ func (s *smsService) SendLoginSuccessSMS(ctx context.Context, user *ent.User, lo
 //
 // func (s *smsService) SendAccountLockedSMS(ctx context.Context, user *ent.User, reason string) error {
 // 	data := map[string]interface{}{
-// 		"appName":     "Frank Auth",
+// 		"appName":     s.getConfig().App.Name,
 // 		"userName":    getUserDisplayName(user),
 // 		"reason":      reason,
 // 		"supportUrl":  "https://support.frank.com",
@@ -106,7 +106,7 @@ func (s *smsService) SendLoginSuccessSMS(ctx context.Context, user *ent.User, lo
 
 func (s *smsService) SendOrganizationInvitationSMS(ctx context.Context, invitation SMSInvitation) error {
 	data := map[string]interface{}{
-		"appName":          "Frank Auth",
+		"appName":          s.getConfig().App.Name,
 		"inviterName":      invitation.InviterName,
 		"organizationName": invitation.OrganizationName,
 		"role":             invitation.Role,
@@ -119,7 +119,7 @@ func (s *smsService) SendOrganizationInvitationSMS(ctx context.Context, invitati
 
 func (s *smsService) SendUserJoinedNotificationSMS(ctx context.Context, adminPhoneNumbers []string, notification UserJoinedNotification) error {
 	data := map[string]interface{}{
-		"appName":          "Frank Auth",
+		"appName":          s.getConfig().App.Name,
 		"newMemberName":    notification.NewMemberName,
 		"organizationName": notification.OrganizationName,
 		"role":             notification.Role,
@@ -150,7 +150,7 @@ func (s *smsService) SendUserJoinedNotificationSMS(ctx context.Context, adminPho
 // 	}
 //
 // 	data := map[string]interface{}{
-// 		"appName":          "Frank Auth",
+// 		"appName":          s.getConfig().App.Name,
 // 		"inviterName":      invitation.InviterName,
 // 		"organizationName": invitation.OrganizationName,
 // 		"timeLeft":         timeLeftStr,
@@ -162,7 +162,7 @@ func (s *smsService) SendUserJoinedNotificationSMS(ctx context.Context, adminPho
 
 func (s *smsService) SendAPIKeyGeneratedSMS(ctx context.Context, user *ent.User, keyName string) error {
 	data := map[string]interface{}{
-		"appName": "Frank Auth",
+		"appName": s.getConfig().App.Name,
 		"keyName": keyName,
 	}
 
@@ -171,8 +171,8 @@ func (s *smsService) SendAPIKeyGeneratedSMS(ctx context.Context, user *ent.User,
 
 func (s *smsService) SendSessionTerminatedSMS(ctx context.Context, user *ent.User) error {
 	data := map[string]interface{}{
-		"appName":  "Frank Auth",
-		"loginUrl": "https://app.frank.com/login",
+		"appName":  s.getConfig().App.Name,
+		"loginUrl": s.getConfig().GetFrontendAddressWithPath(s.getConfig().Frontend.LoginPath),
 	}
 
 	return s.SendSystemSMS(ctx, "session_terminated_sms", user.PhoneNumber, data)
@@ -180,7 +180,7 @@ func (s *smsService) SendSessionTerminatedSMS(ctx context.Context, user *ent.Use
 
 func (s *smsService) SendBackupCodesGeneratedSMS(ctx context.Context, user *ent.User, codeCount int) error {
 	data := map[string]interface{}{
-		"appName":   "Frank Auth",
+		"appName":   s.getConfig().App.Name,
 		"codeCount": codeCount,
 		"timestamp": time.Now().Format("Jan 2, 15:04"),
 	}
@@ -190,7 +190,7 @@ func (s *smsService) SendBackupCodesGeneratedSMS(ctx context.Context, user *ent.
 
 func (s *smsService) SendRoleChangedSMS(ctx context.Context, user *ent.User, roleChange RoleChangeNotification) error {
 	data := map[string]interface{}{
-		"appName":          "Frank Auth",
+		"appName":          s.getConfig().App.Name,
 		"organizationName": roleChange.OrganizationName,
 		"oldRole":          roleChange.OldRole,
 		"newRole":          roleChange.NewRole,
@@ -203,7 +203,7 @@ func (s *smsService) SendRoleChangedSMS(ctx context.Context, user *ent.User, rol
 
 func (s *smsService) SendDeviceAddedSMS(ctx context.Context, user *ent.User, device DeviceInfo) error {
 	data := map[string]interface{}{
-		"appName":    "Frank Auth",
+		"appName":    s.getConfig().App.Name,
 		"deviceName": device.DeviceName,
 		"deviceType": device.DeviceType,
 	}
@@ -213,7 +213,7 @@ func (s *smsService) SendDeviceAddedSMS(ctx context.Context, user *ent.User, dev
 
 // func (s *smsService) SendPaymentFailedSMS(ctx context.Context, phoneNumbers []string, payment PaymentFailedNotification) error {
 // 	data := map[string]interface{}{
-// 		"appName":          "Frank Auth",
+// 		"appName":          s.getConfig().App.Name,
 // 		"organizationName": payment.OrganizationName,
 // 		"amount":           payment.Amount,
 // 		"currency":         payment.Currency,
@@ -235,7 +235,7 @@ func (s *smsService) SendDeviceAddedSMS(ctx context.Context, user *ent.User, dev
 //
 // func (s *smsService) SendUsageAlertSMS(ctx context.Context, phoneNumbers []string, usage UsageAlertNotification) error {
 // 	data := map[string]interface{}{
-// 		"appName":          "Frank Auth",
+// 		"appName":          s.getConfig().App.Name,
 // 		"organizationName": usage.OrganizationName,
 // 		"resourceType":     usage.ResourceType,
 // 		"percentage":       int(usage.PercentageUsed),

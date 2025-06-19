@@ -440,7 +440,7 @@ func registerGetAPIKeyStats(api huma.API, apikeyCtrl *apikeyController) {
 		Path:          "/organizations/{orgId}/api-keys/stats",
 		Summary:       "Get API key statistics",
 		Description:   "Get statistical information about API keys for an organization",
-		Tags:          []string{"API Keys", "Analytics"},
+		Tags:          []string{"API Keys"},
 		DefaultStatus: 200,
 		Responses: model.MergeErrorResponses(map[string]*huma.Response{
 			"200": {
@@ -463,7 +463,7 @@ func registerGetAPIKeyUsage(api huma.API, apikeyCtrl *apikeyController) {
 		Path:          "/organizations/{orgId}/api-keys/{id}/usage",
 		Summary:       "Get API key usage",
 		Description:   "Get usage statistics for a specific API key",
-		Tags:          []string{"API Keys", "Analytics"},
+		Tags:          []string{"API Keys"},
 		DefaultStatus: 200,
 		Responses: model.MergeErrorResponses(map[string]*huma.Response{
 			"200": {
@@ -486,7 +486,7 @@ func registerGetAPIKeyActivity(api huma.API, apikeyCtrl *apikeyController) {
 		Path:          "/organizations/{orgId}/api-keys/activity",
 		Summary:       "Get API key activity",
 		Description:   "Get activity logs for API keys",
-		Tags:          []string{"API Keys", "Analytics"},
+		Tags:          []string{"API Keys"},
 		DefaultStatus: 200,
 		Responses: model.MergeErrorResponses(map[string]*huma.Response{
 			"200": {
@@ -509,7 +509,7 @@ func registerExportAPIKeyData(api huma.API, apikeyCtrl *apikeyController) {
 		Path:          "/organizations/{orgId}/api-keys/export",
 		Summary:       "Export API key data",
 		Description:   "Export API key data and activity logs",
-		Tags:          []string{"API Keys", "Export"},
+		Tags:          []string{"API Keys"},
 		DefaultStatus: 200,
 		Responses: model.MergeErrorResponses(map[string]*huma.Response{
 			"200": {
@@ -532,7 +532,7 @@ func registerCheckAPIKeyPermissions(api huma.API, apikeyCtrl *apikeyController) 
 		Path:          "/organizations/{orgId}/api-keys/{id}/check-permissions",
 		Summary:       "Check API key permissions",
 		Description:   "Check if an API key has specific permissions",
-		Tags:          []string{"API Keys", "Permissions"},
+		Tags:          []string{"API Keys"},
 		DefaultStatus: 200,
 		Responses: model.MergeErrorResponses(map[string]*huma.Response{
 			"200": {

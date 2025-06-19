@@ -123,3 +123,5 @@ func ParseMembershipStatus(status string) MembershipStatus {
 		return MembershipStatusActive
 	}
 }
+
+type JSONObject = map[string]interface{}

@@ -172,6 +172,7 @@ security:
     - "X-Requested-With"
     - "X-Organization-Id"
     - "X-User-Type"
+    - "X-Publishable-Key"
   cors_exposed_headers: ["X-Total-Count", "X-Page-Count"]
   cors_allow_credentials: true
   cors_max_age: 86400
@@ -204,7 +205,7 @@ email:
     use_tls: false
     use_ssl: false
     skip_verify: true
-  
+
   # Email Settings
   from_email: "noreply@frankauth.local"
   from_name: "Frank Auth Dev"

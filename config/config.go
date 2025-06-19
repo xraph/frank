@@ -21,19 +21,12 @@ var (
 
 // Config represents the application configuration
 type Config struct {
-	Environment     string `json:"environment" yaml:"environment" mapstructure:"environment" env:"ENVIRONMENT" envDefault:"development"`
-	Version         string `json:"version" yaml:"version" mapstructure:"version" env:"VERSION" envDefault:"0.0.0"`
-	GenerateSwagger bool   `json:"generate_swagger" yaml:"generate_swagger" mapstructure:"generate_swagger" env:"GENERATE_SWAGGER" envDefault:"false"`
-	UseHuma         bool   `json:"useHuma" yaml:"useHuma" mapstructure:"useHuma" env:"USE_HUMA" envDefault:"false"`
-	UseGoa          bool   `json:"useGoa" yaml:"useGoa" mapstructure:"useGoa" env:"USE_GOA" envDefault:"true"`
-	GitCommit       string `json:"git_commit" yaml:"git_commit" mapstructure:"git_commit" env:"GIT_COMMIT" envDefault:""`
-	GitBranch       string `json:"git_branch" yaml:"git_branch" mapstructure:"git_branch" env:"GIT_BRANCH" envDefault:""`
-	GitTag          string `json:"git_tag" yaml:"git_tag" mapstructure:"git_tag" env:"GIT_TAG" envDefault:""`
-	BuildDate       string `json:"build_date" yaml:"build_date" mapstructure:"build_date" env:"BUILD_DATE" envDefault:""`
-	StandaloneMode  bool   `json:"standalone_mode" yaml:"standalone_mode" mapstructure:"standalone_mode" env:"STANDALONE_MODE" envDefault:"false"`
-	BasePath        string `json:"base_path" yaml:"base_path" mapstructure:"base_path" env:"BASE_PATH" envDefault:"/"`
-	RedirectURL     string `json:"redirect_url" yaml:"redirect_url" mapstructure:"redirect_url" env:"REDIRECT_URL" envDefault:"http://localhost:8998/ui"`
-	EnableUI        bool   `json:"enable_ui" yaml:"enable_ui" mapstructure:"enable_ui" env:"ENABLE_UI" envDefault:"false"`
+	App      AppConfig      `json:"app" yaml:"app" mapstructure:"app"`
+	Frontend FrontendConfig `json:"frontend" yaml:"frontend" mapstructure:"frontend"`
+
+	// GitCommit   string    `json:"git_commit" yaml:"git_commit" mapstructure:"git_commit" env:"GIT_COMMIT" envDefault:""`
+	// GitBranch   string    `json:"git_branch" yaml:"git_branch" mapstructure:"git_branch" env:"GIT_BRANCH" envDefault:""`
+	// GitTag      string    `json:"git_tag" yaml:"git_tag" mapstructure:"git_tag" env:"GIT_TAG" envDefault:""`
 
 	Server       *ServerConfig      `json:"server" yaml:"server" mapstructure:"server"`
 	Database     DatabaseConfig     `json:"database" yaml:"database" mapstructure:"database"`
@@ -54,6 +47,50 @@ type Config struct {
 
 func (c *Config) GetServerAddress() string {
 	return fmt.Sprintf("%s:%d", c.Server.Host, c.Server.Port)
+}
+
+func (c *Config) GetServerExternalAddress() string {
+	return c.Server.BaseURL
+}
+
+func (c *Config) GetFrontendAddress() string {
+	return c.App.FrontendURL
+}
+
+func (c *Config) GetFrontendAddressWithPath(path string) string {
+	return fmt.Sprintf("%s%s", c.App.FrontendURL, path)
+}
+
+type AppConfig struct {
+	Name                 string `json:"name" yaml:"name" mapstructure:"name" env:"APP_NAME" envDefault:"Frank Auth SaaS"`
+	Version              string `json:"version" yaml:"version" mapstructure:"version" env:"APP_VERSION" envDefault:"1.0.0"`
+	Description          string `json:"description" yaml:"description" mapstructure:"description" env:"APP_DESCRIPTION" envDefault:"Multi-tenant authentication platform with Clerk.js compatibility"`
+	Environment          string `json:"environment" yaml:"environment" mapstructure:"environment" env:"APP_ENVIRONMENT" envDefault:"development"`
+	BaseURL              string `json:"base_url" yaml:"base_url" mapstructure:"base_url" env:"APP_BASE_URL" envDefault:"http://localhost:8998"`
+	FrontendURL          string `json:"frontend_url" yaml:"frontend_url" mapstructure:"frontend_url" env:"APP_FRONTEND_URL" envDefault:"http://localhost:3000"`
+	DashboardRedirectURL string `json:"dashboard_redirect_url" yaml:"dashboard_redirect_url" mapstructure:"dashboard_redirect_url" env:"APP_DASHBOARD_REDIRECT_URL" envDefault:"http://localhost:8998/ui"`
+	Debug                bool   `json:"debug" yaml:"debug" mapstructure:"debug" env:"APP_DEBUG" envDefault:"true"`
+	LogLevel             string `json:"log_level" yaml:"log_level" mapstructure:"log_level" env:"APP_LOG_LEVEL" envDefault:"debug"`
+	LogOutput            string `json:"log_output" yaml:"log_output" mapstructure:"log_output" env:"APP_LOG_OUTPUT" envDefault:"stdout"`
+	EnableUI             bool   `json:"enable_ui" yaml:"enable_ui" mapstructure:"enable_ui" env:"APP_ENABLE_UI" envDefault:"false"`
+	BasePath             string `json:"base_path" yaml:"base_path" mapstructure:"base_path" env:"APP_BASE_PATH" envDefault:"/"`
+}
+
+type FrontendConfig struct {
+	LoginPath          string `json:"login_path" yaml:"login_path" mapstructure:"login_path" env:"FRONTEND_LOGIN_PATH" envDefault:"/login"`
+	LogoutPath         string `json:"logout_path" yaml:"logout_path" mapstructure:"logout_path" env:"FRONTEND_LOGOUT_PATH" envDefault:"/logout"`
+	RegisterPath       string `json:"register_path" yaml:"register_path" mapstructure:"register_path" env:"FRONTEND_REGISTER_PATH" envDefault:"/signup"`
+	VerifyPath         string `json:"verify_path" yaml:"verify_path" mapstructure:"verify_path" env:"FRONTEND_VERIFY_PATH" envDefault:"/verify"`
+	MagicLinkPath      string `json:"magic_link_path" yaml:"magic_link_path" mapstructure:"magic_link_path" env:"FRONTEND_MAGIC_LINK_PATH" envDefault:"/magic-link"`
+	ResetPasswordPath  string `json:"reset_password_path" yaml:"reset_password_path" mapstructure:"reset_password_path" env:"FRONTEND_RESET_PASSWORD_PATH" envDefault:"/reset-password"`
+	DashboardPath      string `json:"dashboard_path" yaml:"dashboard_path" mapstructure:"dashboard_path" env:"FRONTEND_DASHBOARD_PATH" envDefault:"/dashboard"`
+	ProfilePath        string `json:"profile_path" yaml:"profile_path" mapstructure:"profile_path" env:"FRONTEND_PROFILE_PATH" envDefault:"/profile"`
+	ChangePasswordPath string `json:"change_password_path" yaml:"change_password_path" mapstructure:"change_password_path" env:"FRONTEND_CHANGE_PASSWORD_PATH" envDefault:"/change-password"`
+	ForgotPasswordPath string `json:"forgot_password_path" yaml:"forgot_password_path" mapstructure:"forgot_password_path" env:"FRONTEND_FORGOT_PASSWORD_PATH" envDefault:"/forgot-password"`
+	MFAPath            string `json:"mfa_path" yaml:"mfa_path" mapstructure:"mfa_path" env:"FRONTEND_MFA_PATH" envDefault:"/mfa"`
+	SSOPath            string `json:"sso_path" yaml:"sso_path" mapstructure:"sso_path" env:"FRONTEND_SSO_PATH" envDefault:"/sso"`
+	PasskeyPath        string `json:"passkey_path" yaml:"passkey_path" mapstructure:"passkey_path" env:"FRONTEND_PASSKEY_PATH" envDefault:"/passkey"`
+	SecurityPath       string `json:"security_path" yaml:"security_path" mapstructure:"security_path" env:"FRONTEND_SECURITY_PATH" envDefault:"/security"`
 }
 
 // ServerConfig represents server-specific configuration
@@ -599,6 +636,9 @@ func Load(configPaths ...string) (*Config, error) {
 		v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 		v.AutomaticEnv()
 
+		// Email provider configuration
+		loadEmailProviderConfig(v)
+
 		// Step 4: Read configuration files if provided
 		if len(configPaths) > 0 {
 			for _, path := range configPaths {
@@ -628,7 +668,9 @@ func Load(configPaths ...string) (*Config, error) {
 
 		// Step 6: Parse environment variables directly (this overrides viper values)
 		// This is where your env: tags take effect
-		if err := env.Parse(config); err != nil {
+		if err := env.Parse(config, env.Options{
+			Prefix: fmt.Sprintf("%s_", envPrefix),
+		}); err != nil {
 			loadErr = fmt.Errorf("error parsing config env: %w", err)
 			return
 		}

@@ -254,7 +254,7 @@ func registerRemoveOrganizationDomain(api huma.API, orgCtrl *organizationControl
 		Path:          "/organizations/{id}/domains/{domain}",
 		Summary:       "Remove organization domain",
 		Description:   "Remove a domain from the organization",
-		Tags:          []string{"Organizations", "Domains"},
+		Tags:          []string{"Organizations"},
 		DefaultStatus: 204,
 		Responses: model.MergeErrorResponses(map[string]*huma.Response{
 			"204": {Description: "Domain successfully removed"},
@@ -331,7 +331,7 @@ func registerGetOrganizationInvoices(api huma.API, orgCtrl *organizationControll
 		Path:        "/organizations/{id}/invoices",
 		Summary:     "Get organization invoices",
 		Description: "Get billing invoices and payment history",
-		Tags:        []string{"Organization"},
+		Tags:        []string{"Organizations"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, false, model.NotFoundError("Organization not found")),
 		Security: []map[string][]string{
 			{"jwt": {}},
@@ -387,7 +387,7 @@ func registerDisableOrganizationFeature(api huma.API, orgCtrl *organizationContr
 		Path:          "/organizations/{id}/features/{feature}",
 		Summary:       "Disable organization feature",
 		Description:   "Disable a specific feature for the organization",
-		Tags:          []string{"Organizations", "Features"},
+		Tags:          []string{"Organizations"},
 		DefaultStatus: 204,
 		Responses: model.MergeErrorResponses(map[string]*huma.Response{
 			"204": {Description: "Feature successfully disabled"},
@@ -484,7 +484,7 @@ func registerGetOrganizationOwnership(api huma.API, orgCtrl *organizationControl
 		Path:        "/organizations/{id}/ownership",
 		Summary:     "Get organization ownership",
 		Description: "Get current ownership information for the organization",
-		Tags:        []string{"Organizations", "Ownership"},
+		Tags:        []string{"Organizations"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, false, model.NotFoundError("Organization not found")),
 		Security: []map[string][]string{
 			{"jwt": {}},

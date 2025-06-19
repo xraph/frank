@@ -366,7 +366,7 @@ func registerRevokeUserSession(api huma.API, userCtrl *userController) {
 		Path:          "/organizations/{orgId}/users/{id}/sessions/{sessionId}",
 		Summary:       "Revoke user session",
 		Description:   "Revoke a specific session for a user",
-		Tags:          []string{"Users", "Sessions"},
+		Tags:          []string{"Users"},
 		DefaultStatus: 204,
 		Responses: model.MergeErrorResponses(map[string]*huma.Response{
 			"204": {Description: "Session successfully revoked"},
@@ -387,7 +387,7 @@ func registerRevokeAllUserSessions(api huma.API, userCtrl *userController) {
 		Path:          "/organizations/{orgId}/users/{id}/sessions",
 		Summary:       "Revoke all user sessions",
 		Description:   "Revoke all sessions for a user",
-		Tags:          []string{"Users", "Sessions"},
+		Tags:          []string{"Users"},
 		DefaultStatus: 204,
 		Responses: model.MergeErrorResponses(map[string]*huma.Response{
 			"204": {Description: "All sessions successfully revoked"},
@@ -410,7 +410,7 @@ func registerGetUserMFA(api huma.API, userCtrl *userController) {
 		Path:        "/organizations/{orgId}/users/{id}/mfa",
 		Summary:     "Get user MFA status",
 		Description: "Get MFA configuration and status for a user",
-		Tags:        []string{"Users", "MFA"},
+		Tags:        []string{"Users"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("User not found")),
 		Security: []map[string][]string{
 			{"jwt": {}},
@@ -428,7 +428,7 @@ func registerEnableUserMFA(api huma.API, userCtrl *userController) {
 		Path:        "/organizations/{orgId}/users/{id}/mfa/enable",
 		Summary:     "Enable MFA for user",
 		Description: "Enable MFA for a user (admin action)",
-		Tags:        []string{"Users", "MFA"},
+		Tags:        []string{"Users"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("User not found")),
 		Security: []map[string][]string{
 			{"jwt": {}},
@@ -446,7 +446,7 @@ func registerDisableUserMFA(api huma.API, userCtrl *userController) {
 		Path:          "/organizations/{orgId}/users/{id}/mfa",
 		Summary:       "Disable MFA for user",
 		Description:   "Disable MFA for a user (admin action)",
-		Tags:          []string{"Users", "MFA"},
+		Tags:          []string{"Users"},
 		DefaultStatus: 204,
 		Responses: model.MergeErrorResponses(map[string]*huma.Response{
 			"204": {Description: "MFA successfully disabled"},
@@ -467,7 +467,7 @@ func registerResetUserMFA(api huma.API, userCtrl *userController) {
 		Path:        "/organizations/{orgId}/users/{id}/mfa/reset",
 		Summary:     "Reset user MFA",
 		Description: "Reset MFA configuration for a user (admin action)",
-		Tags:        []string{"Users", "MFA"},
+		Tags:        []string{"Users"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("User not found")),
 		Security: []map[string][]string{
 			{"jwt": {}},
@@ -487,7 +487,7 @@ func registerGetUserStats(api huma.API, userCtrl *userController) {
 		Path:        "/organizations/{orgId}/users/stats",
 		Summary:     "Get user statistics",
 		Description: "Get user statistics for the organization",
-		Tags:        []string{"Users", "Analytics"},
+		Tags:        []string{"Users"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
 			{"jwt": {}},
@@ -505,7 +505,7 @@ func registerExportUsers(api huma.API, userCtrl *userController) {
 		Path:        "/organizations/{orgId}/users/export",
 		Summary:     "Export users",
 		Description: "Export user data to CSV or JSON format",
-		Tags:        []string{"Users", "Export"},
+		Tags:        []string{"Users"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true),
 		Security: []map[string][]string{
 			{"jwt": {}},

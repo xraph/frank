@@ -357,7 +357,7 @@ func registerGetMembershipStats(api huma.API, ctrl *membershipController) {
 		Path:        "/organizations/{orgId}/members/stats",
 		Summary:     "Get membership statistics",
 		Description: "Get comprehensive membership statistics for the organization",
-		Tags:        []string{"Membership", "Analytics"},
+		Tags:        []string{"Membership"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, false),
 		Security: []map[string][]string{
 			{"jwt": {}},
@@ -375,7 +375,7 @@ func registerGetMemberActivity(api huma.API, ctrl *membershipController) {
 		Path:        "/organizations/{orgId}/members/activity",
 		Summary:     "Get member activity",
 		Description: "Get recent member activity and changes",
-		Tags:        []string{"Membership", "Activity"},
+		Tags:        []string{"Membership"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, false),
 		Security: []map[string][]string{
 			{"jwt": {}},
@@ -393,7 +393,7 @@ func registerGetMemberMetrics(api huma.API, ctrl *membershipController) {
 		Path:        "/organizations/{orgId}/members/metrics",
 		Summary:     "Get member metrics",
 		Description: "Get member metrics for a specific time period",
-		Tags:        []string{"Membership", "Metrics"},
+		Tags:        []string{"Membership"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, false),
 		Security: []map[string][]string{
 			{"jwt": {}},
@@ -413,7 +413,7 @@ func registerBulkUpdateMemberRoles(api huma.API, ctrl *membershipController) {
 		Path:        "/organizations/{orgId}/members/bulk/roles",
 		Summary:     "Bulk update member roles",
 		Description: "Update roles for multiple members at once",
-		Tags:        []string{"Membership", "Bulk Operations"},
+		Tags:        []string{"Membership"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, false),
 		Security: []map[string][]string{
 			{"jwt": {}},
@@ -431,7 +431,7 @@ func registerBulkUpdateMemberStatus(api huma.API, ctrl *membershipController) {
 		Path:        "/organizations/{orgId}/members/bulk/status",
 		Summary:     "Bulk update member status",
 		Description: "Update status for multiple members at once",
-		Tags:        []string{"Membership", "Bulk Operations"},
+		Tags:        []string{"Membership"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, false),
 		Security: []map[string][]string{
 			{"jwt": {}},
@@ -449,7 +449,7 @@ func registerBulkRemoveMembers(api huma.API, ctrl *membershipController) {
 		Path:        "/organizations/{orgId}/members/bulk",
 		Summary:     "Bulk remove members",
 		Description: "Remove multiple members from the organization at once",
-		Tags:        []string{"Membership", "Bulk Operations"},
+		Tags:        []string{"Membership"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, false),
 		Security: []map[string][]string{
 			{"jwt": {}},
@@ -469,7 +469,7 @@ func registerSetPrimaryContact(api huma.API, ctrl *membershipController) {
 		Path:        "/organizations/{orgId}/members/{userId}/primary-contact",
 		Summary:     "Set primary contact",
 		Description: "Set a member as the primary contact for the organization",
-		Tags:        []string{"Membership", "Contacts"},
+		Tags:        []string{"Membership"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, false, model.NotFoundError("Member not found")),
 		Security: []map[string][]string{
 			{"jwt": {}},
@@ -487,7 +487,7 @@ func registerSetBillingContact(api huma.API, ctrl *membershipController) {
 		Path:        "/organizations/{orgId}/members/{userId}/billing-contact",
 		Summary:     "Set billing contact",
 		Description: "Set a member as a billing contact for the organization",
-		Tags:        []string{"Membership", "Contacts", "Billing"},
+		Tags:        []string{"Membership"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, false, model.NotFoundError("Member not found")),
 		Security: []map[string][]string{
 			{"jwt": {}},
@@ -505,7 +505,7 @@ func registerRemoveBillingContact(api huma.API, ctrl *membershipController) {
 		Path:          "/organizations/{orgId}/members/{userId}/billing-contact",
 		Summary:       "Remove billing contact",
 		Description:   "Remove a member as a billing contact for the organization",
-		Tags:          []string{"Membership", "Contacts", "Billing"},
+		Tags:          []string{"Membership"},
 		DefaultStatus: 204,
 		Responses: model.MergeErrorResponses(map[string]*huma.Response{
 			"204": {Description: "Billing contact successfully removed"},
@@ -528,7 +528,7 @@ func registerGetMemberPermissions(api huma.API, ctrl *membershipController) {
 		Path:        "/organizations/{orgId}/members/{userId}/permissions",
 		Summary:     "Get member permissions",
 		Description: "Get all permissions for a specific member",
-		Tags:        []string{"Membership", "Permissions"},
+		Tags:        []string{"Membership"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, false, model.NotFoundError("Member not found")),
 		Security: []map[string][]string{
 			{"jwt": {}},
@@ -546,7 +546,7 @@ func registerCheckMemberPermission(api huma.API, ctrl *membershipController) {
 		Path:        "/organizations/{orgId}/members/{userId}/permissions/{permission}",
 		Summary:     "Check member permission",
 		Description: "Check if a member has a specific permission",
-		Tags:        []string{"Membership", "Permissions"},
+		Tags:        []string{"Membership"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, false, model.NotFoundError("Member not found")),
 		Security: []map[string][]string{
 			{"jwt": {}},
@@ -873,7 +873,7 @@ func (c *membershipController) createInvitationHandler(ctx context.Context, inpu
 		c.di.Repo().Audit(),
 		nil, // email service - would need to implement
 		c.di.Logger(),
-		c.di.Config().BasePath,
+		c.di.Config().App.BaseURL,
 	)
 
 	// Get inviter from context
@@ -910,7 +910,7 @@ func (c *membershipController) listInvitationsHandler(ctx context.Context, input
 		c.di.Repo().Audit(),
 		nil,
 		c.di.Logger(),
-		c.di.Config().BasePath,
+		c.di.Config().Server.BaseURL,
 	)
 
 	response, err := invitationService.ListInvitations(ctx, input.OrgID, input.ListInvitationsParams)
@@ -932,7 +932,7 @@ func (c *membershipController) getInvitationHandler(ctx context.Context, input *
 		c.di.Repo().Audit(),
 		nil,
 		c.di.Logger(),
-		c.di.Config().BasePath,
+		c.di.Config().App.BaseURL,
 	)
 
 	invitation, err := invitationService.GetInvitation(ctx, input.InvitationID)
@@ -954,7 +954,7 @@ func (c *membershipController) acceptInvitationHandler(ctx context.Context, inpu
 		c.di.Repo().Audit(),
 		nil,
 		c.di.Logger(),
-		c.di.Config().BasePath,
+		c.di.Config().App.BaseURL,
 	)
 
 	// Get accepting user from context
@@ -990,7 +990,7 @@ func (c *membershipController) declineInvitationHandler(ctx context.Context, inp
 		c.di.Repo().Audit(),
 		nil,
 		c.di.Logger(),
-		c.di.Config().BasePath,
+		c.di.Config().App.BaseURL,
 	)
 
 	err := invitationService.DeclineInvitation(ctx, input.Body.Token, input.Body.Reason)
@@ -1014,7 +1014,7 @@ func (c *membershipController) resendInvitationHandler(ctx context.Context, inpu
 		c.di.Repo().Audit(),
 		nil,
 		c.di.Logger(),
-		c.di.Config().BasePath,
+		c.di.Config().App.BaseURL,
 	)
 
 	err := invitationService.ResendInvitation(ctx, input.InvitationID)
@@ -1038,7 +1038,7 @@ func (c *membershipController) cancelInvitationHandler(ctx context.Context, inpu
 		c.di.Repo().Audit(),
 		nil,
 		c.di.Logger(),
-		c.di.Config().BasePath,
+		c.di.Config().App.BaseURL,
 	)
 
 	err := invitationService.CancelInvitation(ctx, input.InvitationID, input.Body.Reason)
@@ -1062,7 +1062,7 @@ func (c *membershipController) bulkInvitationsHandler(ctx context.Context, input
 		c.di.Repo().Audit(),
 		nil,
 		c.di.Logger(),
-		c.di.Config().BasePath,
+		c.di.Config().App.BaseURL,
 	)
 
 	// Convert request to bulk invitation input
@@ -1095,7 +1095,7 @@ func (c *membershipController) validateInvitationHandler(ctx context.Context, in
 		c.di.Repo().Audit(),
 		nil,
 		c.di.Logger(),
-		c.di.Config().BasePath,
+		c.di.Config().App.BaseURL,
 	)
 
 	invitation, err := invitationService.ValidateInvitationToken(ctx, input.Body.Token)

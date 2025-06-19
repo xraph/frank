@@ -116,8 +116,8 @@ type EmailMFASetupResponse struct {
 	Message   string    `json:"message" example:"SMS verification code"`
 }
 
-// VerifyEmailRequest represents a request to verify email code
-type VerifyEmailRequest struct {
+// VerifyEmailRequestBody represents a request to verify email code
+type VerifyEmailRequestBody struct {
 	MethodID xid.ID `json:"methodId" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"MFA method ID"`
 	Code     string `json:"code" example:"123456" doc:"Email verification code"`
 }

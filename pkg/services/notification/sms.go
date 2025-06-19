@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/ent"
 	"github.com/juicycleff/frank/internal/repository"
 	"github.com/juicycleff/frank/pkg/errors"
@@ -337,6 +338,7 @@ type SMSRoute struct {
 
 // smsService implements the SMSService interface
 type smsService struct {
+	cfg             *config.Config
 	defaultProvider sms.Provider                     // SMS providers (Twilio, AWS SNS, etc.)
 	templateRepo    repository.SMSTemplateRepository // Template repository
 	deliveryRepo    SMSDeliveryRepository            // Delivery tracking repository
@@ -371,6 +373,7 @@ type RateLimitConfig struct {
 
 // NewSMSService creates a new SMS service instance
 func NewSMSService(
+	cfg *config.Config,
 	provider sms.Provider,
 	config SMSServiceConfig,
 	templateRepo repository.SMSTemplateRepository,
@@ -385,6 +388,7 @@ func NewSMSService(
 	}
 
 	return &smsService{
+		cfg:             cfg,
 		defaultProvider: provider,
 		templateRepo:    templateRepo,
 		deliveryRepo:    deliveryRepo,
@@ -583,7 +587,7 @@ func (s *smsService) SendVerificationSMS(ctx context.Context, user *ent.User, co
 	data := map[string]interface{}{
 		"userName": getUserDisplayName(user),
 		"code":     code,
-		"appName":  "Frank Auth",
+		"appName":  s.getConfig().App.Name,
 	}
 
 	return s.SendSystemSMS(ctx, "verification", user.PhoneNumber, data)
@@ -594,7 +598,7 @@ func (s *smsService) SendMFACodeSMS(ctx context.Context, user *ent.User, code st
 	data := map[string]interface{}{
 		"userName": getUserDisplayName(user),
 		"code":     code,
-		"appName":  "Frank Auth",
+		"appName":  s.getConfig().App.Name,
 	}
 
 	return s.SendSystemSMS(ctx, "mfa_code", user.PhoneNumber, data)
@@ -605,7 +609,7 @@ func (s *smsService) SendPasswordResetSMS(ctx context.Context, user *ent.User, c
 	data := map[string]interface{}{
 		"userName": getUserDisplayName(user),
 		"code":     code,
-		"appName":  "Frank Auth",
+		"appName":  s.getConfig().App.Name,
 	}
 
 	return s.SendSystemSMS(ctx, "password_reset", user.PhoneNumber, data)
@@ -616,10 +620,14 @@ func (s *smsService) SendWelcomeSMS(ctx context.Context, user *ent.User, organiz
 	data := map[string]interface{}{
 		"userName":         getUserDisplayName(user),
 		"organizationName": organizationName,
-		"appName":          "Frank Auth",
+		"appName":          s.getConfig().App.Name,
 	}
 
 	return s.SendSystemSMS(ctx, "welcome", user.PhoneNumber, data)
+}
+
+func (s *smsService) getConfig() *config.Config {
+	return s.cfg
 }
 
 // SendMagicLinkSMS sends magic link SMS
@@ -628,7 +636,7 @@ func (s *smsService) SendMagicLinkSMS(ctx context.Context, user *ent.User, code,
 		"userName":    getUserDisplayName(user),
 		"code":        code,
 		"redirectUrl": redirectURL,
-		"appName":     "Frank Auth",
+		"appName":     s.getConfig().App.Name,
 	}
 
 	return s.SendSystemSMS(ctx, "magic_link", user.PhoneNumber, data)
@@ -639,7 +647,7 @@ func (s *smsService) SendLoginVerificationSMS(ctx context.Context, user *ent.Use
 	data := map[string]interface{}{
 		"userName": getUserDisplayName(user),
 		"code":     code,
-		"appName":  "Frank Auth",
+		"appName":  s.getConfig().App.Name,
 	}
 
 	return s.SendSystemSMS(ctx, "login_verification", user.PhoneNumber, data)
@@ -654,7 +662,7 @@ func (s *smsService) SendSecurityAlertSMS(ctx context.Context, user *ent.User, a
 		"ipAddress":   alert.IPAddress,
 		"location":    alert.Location,
 		"timestamp":   alert.Timestamp.Format("Jan 2, 2006 15:04"),
-		"appName":     "Frank Auth",
+		"appName":     s.getConfig().App.Name,
 	}
 
 	return s.SendSystemSMS(ctx, "security_alert", user.PhoneNumber, data)
@@ -802,7 +810,7 @@ func (s *smsService) SendInvitationSMS(ctx context.Context, invitation SMSInvita
 		"joinUrl":          invitation.JoinURL,
 		"expiresAt":        invitation.ExpiresAt.Format("Jan 2, 2006 15:04"),
 		"customMessage":    invitation.CustomMessage,
-		"appName":          "Frank Auth",
+		"appName":          s.getConfig().App.Name,
 	}
 
 	return s.SendSystemSMS(ctx, "invitation", invitation.PhoneNumber, data)
@@ -817,7 +825,7 @@ func (s *smsService) SendInvitationReminderSMS(ctx context.Context, invitation S
 		"joinUrl":          invitation.JoinURL,
 		"expiresAt":        invitation.ExpiresAt.Format("Jan 2, 2006 15:04"),
 		"customMessage":    invitation.CustomMessage,
-		"appName":          "Frank Auth",
+		"appName":          s.getConfig().App.Name,
 	}
 
 	return s.SendSystemSMS(ctx, "invitation_reminder", invitation.PhoneNumber, data)
@@ -833,7 +841,7 @@ func (s *smsService) SendOrganizationUpdateSMS(ctx context.Context, phoneNumbers
 		"actionRequired": update.ActionRequired,
 		"actionUrl":      update.ActionURL,
 		"actionDeadline": "",
-		"appName":        "Frank Auth",
+		"appName":        s.getConfig().App.Name,
 	}
 
 	// // Format deadline if provided
@@ -868,7 +876,7 @@ func (s *smsService) SendLoginNotificationSMS(ctx context.Context, user *ent.Use
 		"timestamp":     login.Timestamp.Format("Jan 2, 2006 15:04"),
 		"isNewDevice":   login.IsNewDevice,
 		"isNewLocation": login.IsNewLocation,
-		"appName":       "Frank Auth",
+		"appName":       s.getConfig().App.Name,
 	}
 
 	return s.SendSystemSMS(ctx, "login_notification", user.PhoneNumber, data)
@@ -879,7 +887,7 @@ func (s *smsService) SendPasswordChangedSMS(ctx context.Context, user *ent.User)
 	data := map[string]interface{}{
 		"userName":  getUserDisplayName(user),
 		"timestamp": time.Now().Format("Jan 2, 2006 15:04"),
-		"appName":   "Frank Auth",
+		"appName":   s.getConfig().App.Name,
 	}
 
 	return s.SendSystemSMS(ctx, "password_changed", user.PhoneNumber, data)
@@ -891,7 +899,7 @@ func (s *smsService) SendAccountLockedSMS(ctx context.Context, user *ent.User, r
 		"userName":  getUserDisplayName(user),
 		"reason":    reason,
 		"timestamp": time.Now().Format("Jan 2, 2006 15:04"),
-		"appName":   "Frank Auth",
+		"appName":   s.getConfig().App.Name,
 	}
 
 	return s.SendSystemSMS(ctx, "account_locked", user.PhoneNumber, data)
@@ -908,7 +916,7 @@ func (s *smsService) SendSuspiciousActivitySMS(ctx context.Context, user *ent.Us
 		"timestamp":    activity.Timestamp.Format("Jan 2, 2006 15:04"),
 		"riskLevel":    activity.RiskLevel,
 		"actionTaken":  activity.ActionTaken,
-		"appName":      "Frank Auth",
+		"appName":      s.getConfig().App.Name,
 	}
 
 	return s.SendSystemSMS(ctx, "suspicious_activity", user.PhoneNumber, data)
@@ -927,7 +935,7 @@ func (s *smsService) SendBillingSMS(ctx context.Context, organizationID xid.ID, 
 		"invoiceId":      billingEvent.InvoiceID,
 		"actionRequired": billingEvent.ActionRequired,
 		"actionUrl":      billingEvent.ActionURL,
-		"appName":        "Frank Auth",
+		"appName":        s.getConfig().App.Name,
 	}
 
 	if billingEvent.DueDate != nil {
@@ -963,7 +971,7 @@ func (s *smsService) SendUsageAlertSMS(ctx context.Context, organizationID xid.I
 		"period":         usage.BillingPeriodEnd,
 		"actionRequired": usage.ActionRecommended,
 		"actionUrl":      usage.UpgradeURL,
-		"appName":        "Frank Auth",
+		"appName":        s.getConfig().App.Name,
 	}
 
 	if usage.BillingPeriodEnd != nil {
@@ -998,7 +1006,7 @@ func (s *smsService) SendPaymentFailedSMS(ctx context.Context, organizationID xi
 		"attemptCount":   paymentInfo.AttemptCount,
 		"invoiceId":      paymentInfo.InvoiceID,
 		"subscriptionId": paymentInfo.SubscriptionID,
-		"appName":        "Frank Auth",
+		"appName":        s.getConfig().App.Name,
 	}
 
 	if paymentInfo.NextRetryAt != nil {

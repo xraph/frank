@@ -10,8 +10,9 @@
 		"esModuleInterop": true,
 		"allowSyntheticDefaultImports": true,
 		"skipLibCheck": true,
-		"forceConsistentCasingInFileNames": true
-	},
+		"forceConsistentCasingInFileNames": true,
+      "jsx": "react"
+    },
 	"include": ["./**/*"],
 	"exclude": ["node_modules", "dist", "openapi-ts.config.ts"]
 }

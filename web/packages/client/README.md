@@ -1,45 +1,184 @@
-## @frank-auth/client@1.0.0
+# Frank Auth TypeScript Client
 
-This generator creates TypeScript/JavaScript client that utilizes [Fetch API](https://fetch.spec.whatwg.org/). The generated Node module can be used in the following environments:
+Official TypeScript client for the Frank Authentication API. Uses native fetch API for HTTP requests.
 
-Environment
-* Node.js
-* Webpack
-* Browserify
+## Installation
 
-Language level
-* ES5 - you must have a Promises/A+ library installed
-* ES6
-
-Module system
-* CommonJS
-* ES6 module system
-
-It can be used in both TypeScript and JavaScript. In TypeScript, the definition should be automatically resolved via `package.json`. ([Reference](http://www.typescriptlang.org/docs/handbook/typings-for-npm-packages.html))
-
-### Building
-
-To build and compile the typescript sources to javascript use:
+```bash
+npm install @frank-auth/client
 ```
+
+## Usage
+
+```typescript
+import { Configuration, AuthApi, UsersApi } from '@frank-auth/client';
+
+// Configure the client
+const config = new Configuration({
+  basePath: 'https://api.frankauth.com/v1',
+  apiKey: 'your-api-key',
+  // or use Bearer token
+  // accessToken: 'your-access-token',
+});
+
+// Create API instances
+const authApi = new AuthApi(config);
+const usersApi = new UsersApi(config);
+
+// Example: Login
+try {
+  const response = await authApi.login({
+    loginRequest: {
+      email: 'user@example.com',
+      password: 'password123'
+    }
+  });
+  console.log('Login successful:', response);
+} catch (error) {
+  console.error('Login failed:', error);
+}
+
+// Example: Get user profile
+try {
+  const profile = await usersApi.getCurrentUser();
+  console.log('User profile:', profile);
+} catch (error) {
+  console.error('Failed to get user profile:', error);
+}
+```
+
+## Advanced Configuration
+
+```typescript
+import { Configuration, AuthApi } from '@frank-auth/client';
+
+const config = new Configuration({
+  basePath: 'https://api.frankauth.com/v1',
+  apiKey: 'your-api-key',
+  fetchApi: fetch, // Use custom fetch implementation if needed
+  middleware: [
+    {
+      pre: async (context) => {
+        // Custom request middleware
+        console.log('Making request to:', context.url);
+        return Promise.resolve(context);
+      },
+      post: async (context) => {
+        // Custom response middleware
+        console.log('Response status:', context.response.status);
+        return Promise.resolve(context.response);
+      }
+    }
+  ]
+});
+
+const authApi = new AuthApi(config);
+```
+
+## API Reference
+
+This client provides full access to the Frank Authentication API. See the [API documentation](https://docs.frankauth.com) for detailed information about available endpoints and operations.
+
+## Error Handling
+
+The client uses the native fetch API for HTTP requests. All API methods return promises that resolve to the response data or reject with an error.
+
+```typescript
+try {
+  const result = await authApi.login({
+    loginRequest: {
+      email: 'user@example.com',
+      password: 'password123'
+    }
+  });
+  // Handle success
+  console.log('Login successful:', result);
+} catch (error) {
+  if (error instanceof Response) {
+    // HTTP error response
+    console.error('HTTP Error:', error.status, error.statusText);
+    const errorBody = await error.text();
+    console.error('Error body:', errorBody);
+  } else {
+    // Network error or other issue
+    console.error('Network/Other error:', error.message);
+  }
+}
+```
+
+## Configuration Options
+
+- `basePath`: API base URL (default: 'https://api.frankauth.com/v1')
+- `apiKey`: API key for authentication
+- `accessToken`: Bearer token for authentication
+- `username`: Username for basic auth
+- `password`: Password for basic auth
+- `fetchApi`: Custom fetch implementation (defaults to global fetch)
+- `middleware`: Array of middleware for request/response processing
+
+## Browser Compatibility
+
+This client uses the native fetch API, which is supported in:
+- Chrome 42+
+- Firefox 39+
+- Safari 10.1+
+- Edge 14+
+
+For older browsers, you may need to include a fetch polyfill:
+
+```bash
+npm install whatwg-fetch
+```
+
+```typescript
+import 'whatwg-fetch';
+import { Configuration, AuthApi } from '@frank-auth/client';
+```
+
+## Development
+
+```bash
+# Install dependencies
 npm install
+
+# Build the client
 npm run build
+
+# Run tests
+npm test
+
+# Lint code
+npm run lint
 ```
 
-### Publishing
-
-First build the package then run ```npm publish```
-
-### Consuming
-
-navigate to the folder of your consuming project and run one of the following commands.
-
-_published:_
+## Project Structure
 
 ```
-npm install @frank-auth/client@1.0.0 --save
+typescript/
+├── src/           # Generated TypeScript source files
+│   ├── apis/      # API endpoint classes
+│   ├── models/    # Type definitions and models
+│   └── runtime.ts # Runtime utilities
+├── dist/          # Compiled JavaScript output
+├── package.json
+├── tsconfig.json
+└── README.md
 ```
 
-_unPublished (not recommended):_
+## TypeScript Support
 
+This client is written in TypeScript and provides full type safety:
+
+```typescript
+import { User, Organization, LoginRequest } from '@frank-auth/client';
+
+// All types are automatically inferred
+const loginRequest: LoginRequest = {
+  email: 'user@example.com',
+  password: 'password123'
+};
+
+// Response types are strongly typed
+const user: User = await usersApi.getCurrentUser();
+const org: Organization = await orgApi.getOrganization({ orgId: user.organizationId });
 ```
-npm install PATH_TO_GENERATED_PACKAGE --save

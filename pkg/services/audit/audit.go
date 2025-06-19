@@ -118,6 +118,7 @@ const (
 	ActionPasskeyRegisterFinish = "user.passkey_register_finish"
 	ActionPasskeyAuthBegin      = "user.passkey_auth_begin"
 	ActionSessionCreate         = "session.create"
+	ActionSessionRefresh        = "session.refresh"
 	ActionSessionRevoke         = "session.revoke"
 	ActionSessionRevokeAll      = "session.revoke_all"
 	ActionAPIKeyCreate          = "api_key.create"
@@ -590,6 +591,9 @@ func (s *auditService) convertEventToInput(event AuditEvent) repository.CreateAu
 		RiskLevel:      event.RiskLevel,
 		Tags:           event.Tags,
 		Source:         event.Source,
+		Timestamp:      event.Timestamp,
+		Metadata:       map[string]interface{}{},
+		NewValues:      event.Details,
 	}
 }
 

@@ -44,6 +44,7 @@ func DefaultCORSConfig() *CORSConfig {
 			"Content-Language",
 			"Authorization",
 			"X-API-Key",
+			"X-Publishable-Key",
 			"X-Requested-With",
 			"X-Request-ID",
 			"X-Correlation-ID",
@@ -86,7 +87,7 @@ func NewCORSConfig(cfg *config.Config) *CORSConfig {
 	}
 
 	corsConfig.AllowCredentials = cfg.Security.AllowCredentials
-	corsConfig.Debug = cfg.Environment == "development"
+	corsConfig.Debug = cfg.App.Environment == "development"
 
 	return corsConfig
 }
@@ -331,10 +332,12 @@ func DevelopmentCORS() func(http.Handler) http.Handler {
 			"http://localhost:3001",
 			"http://localhost:8080",
 			"http://localhost:8998",
+			"http://localhost:4000",
 			"http://127.0.0.1:3000",
 			"http://127.0.0.1:3001",
 			"http://127.0.0.1:8080",
 			"http://127.0.0.1:8998",
+			"http://127.0.0.1:4000",
 		},
 		AllowedMethods: []string{
 			http.MethodGet,
@@ -352,6 +355,7 @@ func DevelopmentCORS() func(http.Handler) http.Handler {
 			"Content-Language",
 			"Authorization",
 			"X-API-Key",
+			"X-Publishable-Key",
 			"X-Requested-With",
 			"X-Request-ID",
 			"X-Correlation-ID",
@@ -393,6 +397,7 @@ func ProductionCORS(allowedOrigins []string) func(http.Handler) http.Handler {
 			"Content-Type",
 			"Authorization",
 			"X-API-Key",
+			"X-Publishable-Key",
 			"X-Requested-With",
 			"X-Request-ID",
 			"Cache-Control",
@@ -431,6 +436,7 @@ func APICORSMiddleware(cfg *config.Config) func(http.Handler) http.Handler {
 			"Content-Type",
 			"Authorization",
 			"X-API-Key",
+			"X-Publishable-Key",
 			"X-Requested-With",
 			"X-Request-ID",
 			"X-Organization-ID",
@@ -447,11 +453,11 @@ func APICORSMiddleware(cfg *config.Config) func(http.Handler) http.Handler {
 		AllowCredentials:   cfg.Security.AllowCredentials,
 		MaxAge:             3600, // 1 hour for API endpoints
 		OptionsPassthrough: false,
-		Debug:              cfg.Environment == "development",
+		Debug:              cfg.App.Environment == "development",
 	}
 
 	// Use wildcard for development
-	if cfg.Environment == "development" {
+	if cfg.App.Environment == "development" {
 		corsConfig.AllowedOrigins = []string{"*"}
 		corsConfig.AllowCredentials = false // Can't use credentials with wildcard
 	}
@@ -608,6 +614,7 @@ func AuthCORSMiddleware(cfg *config.Config) func(http.Handler) http.Handler {
 			"X-Request-ID",
 			"X-CSRF-Token",
 			"Cache-Control",
+			"X-Publishable-Key",
 		},
 		ExposedHeaders: []string{
 			"X-Request-ID",
@@ -616,7 +623,7 @@ func AuthCORSMiddleware(cfg *config.Config) func(http.Handler) http.Handler {
 		AllowCredentials:   true, // Required for cookies
 		MaxAge:             3600,
 		OptionsPassthrough: false,
-		Debug:              cfg.Environment == "development",
+		Debug:              cfg.App.Environment == "development",
 	}
 
 	return CORSWithConfig(corsConfig)
@@ -699,6 +706,7 @@ func DevelopmentWebhookCORSMiddleware(api huma.API) func(huma.Context, func(huma
 		"http://localhost:3001",
 		"http://localhost:8080",
 		"http://localhost:8998",
+		"http://localhost:4000",
 		"http://127.0.0.1:3000",
 		"http://127.0.0.1:3001",
 		"http://127.0.0.1:8080",

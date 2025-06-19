@@ -183,7 +183,7 @@ func registerGetUserPasskeys(api huma.API, passkeyCtrl *passkeyController) {
 		Path:          "/organizations/{orgId}/users/{userId}/passkeys",
 		Summary:       "Get user passkeys",
 		Description:   "Get all passkeys for a specific user",
-		Tags:          []string{"Passkeys", "Users"},
+		Tags:          []string{"Passkeys"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("User not found")),
 		Security: []map[string][]string{
@@ -202,7 +202,7 @@ func registerDeactivateUserPasskeys(api huma.API, passkeyCtrl *passkeyController
 		Path:          "/organizations/{orgId}/users/{userId}/passkeys",
 		Summary:       "Deactivate user passkeys",
 		Description:   "Deactivate all passkeys for a specific user",
-		Tags:          []string{"Passkeys", "Users"},
+		Tags:          []string{"Passkeys"},
 		DefaultStatus: 204,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("User not found")),
 		Security: []map[string][]string{
@@ -223,7 +223,7 @@ func registerBulkDeletePasskeys(api huma.API, passkeyCtrl *passkeyController) {
 		Path:          "/organizations/{orgId}/passkeys/bulk",
 		Summary:       "Bulk delete passkeys",
 		Description:   "Delete multiple passkeys at once",
-		Tags:          []string{"Passkeys", "Bulk Operations"},
+		Tags:          []string{"Passkeys"},
 		DefaultStatus: 200,
 		Responses: model.MergeErrorResponses(map[string]*huma.Response{
 			"200": {
@@ -246,7 +246,7 @@ func registerUpdateBackupState(api huma.API, passkeyCtrl *passkeyController) {
 		Path:          "/organizations/{orgId}/passkeys/backup",
 		Summary:       "Update backup state",
 		Description:   "Update backup state for multiple passkeys",
-		Tags:          []string{"Passkeys", "Backup"},
+		Tags:          []string{"Passkeys"},
 		DefaultStatus: 200,
 		Responses: model.MergeErrorResponses(map[string]*huma.Response{
 			"200": {
@@ -271,7 +271,7 @@ func registerGetPasskeyStats(api huma.API, passkeyCtrl *passkeyController) {
 		Path:          "/organizations/{orgId}/passkeys/stats",
 		Summary:       "Get passkey statistics",
 		Description:   "Get comprehensive passkey usage statistics",
-		Tags:          []string{"Passkeys", "Analytics"},
+		Tags:          []string{"Passkeys"},
 		DefaultStatus: 200,
 		Responses: model.MergeErrorResponses(map[string]*huma.Response{
 			"200": {
@@ -294,7 +294,7 @@ func registerGetPasskeyActivity(api huma.API, passkeyCtrl *passkeyController) {
 		Path:          "/organizations/{orgId}/passkeys/activity",
 		Summary:       "Get passkey activity",
 		Description:   "Get passkey activity logs with filtering",
-		Tags:          []string{"Passkeys", "Activity"},
+		Tags:          []string{"Passkeys"},
 		DefaultStatus: 200,
 		Responses: model.MergeErrorResponses(map[string]*huma.Response{
 			"200": {
@@ -317,7 +317,7 @@ func registerExportPasskeyData(api huma.API, passkeyCtrl *passkeyController) {
 		Path:          "/organizations/{orgId}/passkeys/export",
 		Summary:       "Export passkey data",
 		Description:   "Export passkey data in various formats",
-		Tags:          []string{"Passkeys", "Export"},
+		Tags:          []string{"Passkeys"},
 		DefaultStatus: 200,
 		Responses: model.MergeErrorResponses(map[string]*huma.Response{
 			"200": {
@@ -342,7 +342,7 @@ func registerVerifyPasskey(api huma.API, passkeyCtrl *passkeyController) {
 		Path:          "/organizations/{orgId}/passkeys/verify",
 		Summary:       "Verify passkey",
 		Description:   "Verify a passkey credential",
-		Tags:          []string{"Passkeys", "Verification"},
+		Tags:          []string{"Passkeys"},
 		DefaultStatus: 200,
 		Responses: model.MergeErrorResponses(map[string]*huma.Response{
 			"200": {
@@ -365,7 +365,7 @@ func registerValidateCredentialID(api huma.API, passkeyCtrl *passkeyController) 
 		Path:          "/organizations/{orgId}/passkeys/validate",
 		Summary:       "Validate credential ID",
 		Description:   "Validate a WebAuthn credential ID",
-		Tags:          []string{"Passkeys", "Validation"},
+		Tags:          []string{"Passkeys"},
 		DefaultStatus: 200,
 		Responses: model.MergeErrorResponses(map[string]*huma.Response{
 			"200": {
@@ -388,7 +388,7 @@ func registerCleanupUnusedPasskeys(api huma.API, passkeyCtrl *passkeyController)
 		Path:          "/organizations/{orgId}/passkeys/cleanup",
 		Summary:       "Cleanup unused passkeys",
 		Description:   "Remove passkeys that haven't been used for a specified period",
-		Tags:          []string{"Passkeys", "Maintenance"},
+		Tags:          []string{"Passkeys"},
 		DefaultStatus: 200,
 		Responses: model.MergeErrorResponses(map[string]*huma.Response{
 			"200": {
@@ -411,7 +411,7 @@ func registerGetUnusedPasskeys(api huma.API, passkeyCtrl *passkeyController) {
 		Path:          "/organizations/{orgId}/users/{userId}/passkeys/unused",
 		Summary:       "Get unused passkeys",
 		Description:   "Get passkeys that haven't been used for a specified period",
-		Tags:          []string{"Passkeys", "Users"},
+		Tags:          []string{"Passkeys"},
 		DefaultStatus: 200,
 		Responses: model.MergeErrorResponses(map[string]*huma.Response{
 			"200": {
@@ -436,7 +436,7 @@ func registerBeginRegistration(api huma.API, passkeyCtrl *passkeyController) {
 		Path:          "/passkeys/registration/begin",
 		Summary:       "Begin passkey registration",
 		Description:   "Start the WebAuthn passkey registration process",
-		Tags:          []string{"Passkeys", "Authentication", "Public"},
+		Tags:          []string{"Passkeys"},
 		DefaultStatus: 200,
 		Responses: model.MergeErrorResponses(map[string]*huma.Response{
 			"200": {
@@ -453,7 +453,7 @@ func registerFinishRegistration(api huma.API, passkeyCtrl *passkeyController) {
 		Path:          "/passkeys/registration/finish",
 		Summary:       "Finish passkey registration",
 		Description:   "Complete the WebAuthn passkey registration process",
-		Tags:          []string{"Passkeys", "Authentication", "Public"},
+		Tags:          []string{"Passkeys"},
 		DefaultStatus: 201,
 		Responses: model.MergeErrorResponses(map[string]*huma.Response{
 			"201": {
@@ -473,7 +473,7 @@ func registerBeginAuthentication(api huma.API, passkeyCtrl *passkeyController) {
 		Path:          "/passkeys/authentication/begin",
 		Summary:       "Begin passkey authentication",
 		Description:   "Start the WebAuthn passkey authentication process",
-		Tags:          []string{"Passkeys", "Authentication", "Public"},
+		Tags:          []string{"Passkeys"},
 		DefaultStatus: 200,
 		Responses: model.MergeErrorResponses(map[string]*huma.Response{
 			"200": {
@@ -490,7 +490,7 @@ func registerFinishAuthentication(api huma.API, passkeyCtrl *passkeyController) 
 		Path:          "/passkeys/authentication/finish",
 		Summary:       "Finish passkey authentication",
 		Description:   "Complete the WebAuthn passkey authentication process",
-		Tags:          []string{"Passkeys", "Authentication", "Public"},
+		Tags:          []string{"Passkeys"},
 		DefaultStatus: 200,
 		Responses: model.MergeErrorResponses(map[string]*huma.Response{
 			"200": {
@@ -510,7 +510,7 @@ func registerDiscoverPasskeys(api huma.API, passkeyCtrl *passkeyController) {
 		Path:          "/passkeys/discover",
 		Summary:       "Discover passkeys",
 		Description:   "Discover available passkeys for a user",
-		Tags:          []string{"Passkeys", "Discovery", "Public"},
+		Tags:          []string{"Passkeys"},
 		DefaultStatus: 200,
 		Responses: model.MergeErrorResponses(map[string]*huma.Response{
 			"200": {

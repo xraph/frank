@@ -391,6 +391,142 @@ migration-logs: ## Show migration logs
 		echo "No migration log file found."; \
 	fi
 
+# Client Generation
+client-generate: ## Generate TypeScript and Go API clients from OpenAPI spec
+	@echo "🔧 Generating API clients..."
+	@chmod +x scripts/client.sh
+	@./scripts/client.sh
+	@echo "✅ API clients generated successfully"
+
+client-generate-ts: ## Generate only TypeScript client
+	@echo "🔧 Generating TypeScript API client..."
+	@chmod +x scripts/client.sh
+	@./scripts/client.sh --skip-go
+	@echo "✅ TypeScript client generated successfully"
+
+client-generate-go: ## Generate only Go client
+	@echo "🔧 Generating Go API client..."
+	@chmod +x scripts/client.sh
+	@./scripts/client.sh --skip-ts
+	@echo "✅ Go client generated successfully"
+
+client-install-deps: ## Install client generation dependencies
+	@echo "📦 Installing client generation dependencies..."
+	@if ! command -v openapi-generator-cli > /dev/null 2>&1; then \
+		echo "Installing OpenAPI Generator CLI..."; \
+		npm install -g @openapitools/openapi-generator-cli; \
+	fi
+	@if ! command -v oapi-codegen > /dev/null 2>&1; then \
+		echo "Installing oapi-codegen..."; \
+		go install github.com/deepmap/oapi-codegen/cmd/oapi-codegen@latest; \
+	fi
+	@echo "✅ Client generation dependencies installed"
+
+client-clean: ## Clean generated client files
+	@echo "🧹 Cleaning generated client files..."
+	@rm -rf web/packages/client/typescript
+	@rm -rf pkg/client/*.go
+	@rm -rf pkg/client/go.mod
+	@rm -rf pkg/client/go.sum
+	@echo "✅ Client files cleaned"
+
+client-build-ts: ## Build TypeScript client
+	@echo "🔨 Building TypeScript client..."
+	@if [ -d "web/packages/client/typescript" ]; then \
+		cd web/packages/client/typescript && npm install && npm run build; \
+		echo "✅ TypeScript client built successfully"; \
+	else \
+		echo "❌ TypeScript client not found. Run 'make client-generate' first"; \
+		exit 1; \
+	fi
+
+client-test-ts: ## Test TypeScript client
+	@echo "🧪 Testing TypeScript client..."
+	@if [ -d "web/packages/client/typescript" ]; then \
+		cd web/packages/client/typescript && npm test; \
+		echo "✅ TypeScript client tests passed"; \
+	else \
+		echo "❌ TypeScript client not found. Run 'make client-generate' first"; \
+		exit 1; \
+	fi
+
+client-test-go: ## Test Go client
+	@echo "🧪 Testing Go client..."
+	@if [ -f "pkg/client/client.go" ]; then \
+		cd pkg/client && go test -v .; \
+		echo "✅ Go client tests passed"; \
+	else \
+		echo "❌ Go client not found. Run 'make client-generate' first"; \
+		exit 1; \
+	fi
+
+client-publish-ts: ## Publish TypeScript client to npm (requires npm login)
+	@echo "📦 Publishing TypeScript client to npm..."
+	@if [ -d "web/packages/client/typescript" ]; then \
+		cd web/packages/client/typescript && npm publish; \
+		echo "✅ TypeScript client published to npm"; \
+	else \
+		echo "❌ TypeScript client not found. Run 'make client-generate' first"; \
+		exit 1; \
+	fi
+
+client-generate-debug: ## Generate clients with debug logging
+	@echo "🔧 Generating API clients (debug mode)..."
+	@chmod +x scripts/client.sh
+	@./scripts/client.sh --debug
+	@echo "✅ API clients generated successfully"
+
+client-generate-ts-debug: ## Generate only TypeScript client with debug logging
+	@echo "🔧 Generating TypeScript API client (debug mode)..."
+	@chmod +x scripts/client.sh
+	@./scripts/client.sh --skip-go --debug
+	@echo "✅ TypeScript client generated successfully"
+
+client-generate-go-debug: ## Generate only Go client with debug logging
+	@echo "🔧 Generating Go API client (debug mode)..."
+	@chmod +x scripts/client.sh
+	@./scripts/client.sh --skip-ts --debug
+	@echo "✅ Go client generated successfully"
+
+client-dev: ## Generate clients and start development with live reload
+	@echo "🚀 Starting client development mode..."
+	@$(MAKE) client-generate
+	@$(MAKE) dev
+
+client-help: ## Show client generation help
+	@echo "📚 Frank Auth Client Generation Commands:"
+	@echo ""
+	@echo "🔧 Generation:"
+	@echo "  make client-generate        # Generate both TypeScript and Go clients"
+	@echo "  make client-generate-ts     # Generate only TypeScript client"
+	@echo "  make client-generate-go     # Generate only Go client"
+	@echo ""
+	@echo "🐛 Debug Generation:"
+	@echo "  make client-generate-debug     # Generate both clients with debug logging"
+	@echo "  make client-generate-ts-debug  # Generate TypeScript client with debug logging"
+	@echo "  make client-generate-go-debug  # Generate Go client with debug logging"
+	@echo ""
+	@echo "🛠️  Development:"
+	@echo "  make client-install-deps    # Install client generation dependencies"
+	@echo "  make client-clean           # Clean generated client files"
+	@echo "  make client-build-ts        # Build TypeScript client"
+	@echo "  make client-dev             # Generate clients and start dev mode"
+	@echo ""
+	@echo "🧪 Testing:"
+	@echo "  make client-test-ts         # Test TypeScript client"
+	@echo "  make client-test-go         # Test Go client"
+	@echo ""
+	@echo "📦 Publishing:"
+	@echo "  make client-publish-ts      # Publish TypeScript client to npm"
+	@echo ""
+	@echo "🎯 Examples:"
+	@echo "  make client-generate                    # Generate both clients"
+	@echo "  make client-clean && make client-generate  # Clean and regenerate"
+	@echo "  make client-generate-ts-debug           # Debug TypeScript generation issues"
+	@echo "  ./scripts/client.sh --skip-server      # Generate without starting server"
+	@echo "  ./scripts/client.sh --port 3000        # Use custom port"
+	@echo "  DEBUG=true ./scripts/client.sh         # Enable debug via environment"
+
 # Test parameter passing (for debugging)
 test-params: ## Test parameter passing (usage: make test-params name=test steps=2 version=123)
 	@echo "Testing parameter values:"

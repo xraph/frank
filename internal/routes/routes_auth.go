@@ -75,6 +75,7 @@ func RegisterAuthAPI(group huma.API, di di.Container) {
 	registerDeletePasskey(group, authCtrl)
 
 	// Session management
+	registerRefreshSession(group, authCtrl)
 	registerListSessions(group, authCtrl)
 	registerRevokeSession(group, authCtrl)
 	registerRevokeAllSessions(group, authCtrl)
@@ -351,7 +352,7 @@ func registerPasskeyRegistrationFinish(group huma.API, authCtrl *authController)
 		Path:        "/auth/passkeys/register/finish",
 		Summary:     "Finish passkey registration",
 		Description: "Complete WebAuthn passkey registration process",
-		Tags:        []string{"Authentication", "Passkeys"},
+		Tags:        []string{"Authentication"},
 		Security: []map[string][]string{
 			{"jwt": {}},
 		},
@@ -366,7 +367,7 @@ func registerPasskeyAuthenticationBegin(group huma.API, authCtrl *authController
 		Path:        "/auth/passkeys/authenticate/begin",
 		Summary:     "Begin passkey authentication",
 		Description: "Begin WebAuthn passkey authentication process",
-		Tags:        []string{"Authentication", "Passkeys"},
+		Tags:        []string{"Authentication"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, false),
 	}, authCtrl.passkeyAuthenticationBeginHandler)
 }
@@ -378,7 +379,7 @@ func registerPasskeyAuthenticationFinish(group huma.API, authCtrl *authControlle
 		Path:        "/auth/passkeys/authenticate/finish",
 		Summary:     "Finish passkey authentication",
 		Description: "Complete WebAuthn passkey authentication process",
-		Tags:        []string{"Authentication", "Passkeys"},
+		Tags:        []string{"Authentication"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, false),
 	}, authCtrl.passkeyAuthenticationFinishHandler)
 }
@@ -390,7 +391,7 @@ func registerListPasskeys(group huma.API, authCtrl *authController) {
 		Path:        "/auth/passkeys",
 		Summary:     "List user passkeys",
 		Description: "List all passkeys registered for the current user",
-		Tags:        []string{"Authentication", "Passkeys"},
+		Tags:        []string{"Authentication"},
 		Security: []map[string][]string{
 			{"jwt": {}},
 		},
@@ -405,7 +406,7 @@ func registerDeletePasskey(group huma.API, authCtrl *authController) {
 		Path:        "/auth/passkeys/{id}",
 		Summary:     "Delete passkey",
 		Description: "Delete a specific passkey",
-		Tags:        []string{"Authentication", "Passkeys"},
+		Tags:        []string{"Authentication"},
 		Security: []map[string][]string{
 			{"jwt": {}},
 		},
@@ -425,7 +426,7 @@ func registerOAuthAuthorizeByAuth(group huma.API, authCtrl *authController) {
 		Path:        "/auth/oauth/{provider}/authorize",
 		Summary:     "OAuth authorization",
 		Description: "Redirect to OAuth provider for authorization",
-		Tags:        []string{"Authentication", "OAuth"},
+		Tags:        []string{"Authentication"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, false),
 	}, authCtrl.oauthAuthorizeHandler)
 }
@@ -437,7 +438,7 @@ func registerOAuthCallback(group huma.API, authCtrl *authController) {
 		Path:        "/auth/oauth/{provider}/callback",
 		Summary:     "OAuth callback",
 		Description: "Handle OAuth provider callback",
-		Tags:        []string{"Authentication", "OAuth"},
+		Tags:        []string{"Authentication"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, false),
 	}, authCtrl.oauthCallbackHandler)
 }
@@ -449,7 +450,7 @@ func registerOAuthTokenByAuth(group huma.API, authCtrl *authController) {
 		Path:        "/auth/oauth/token",
 		Summary:     "OAuth token exchange",
 		Description: "Exchange OAuth authorization code for tokens",
-		Tags:        []string{"Authentication", "OAuth"},
+		Tags:        []string{"Authentication"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, false),
 	}, authCtrl.oauthTokenHandler)
 }
@@ -461,7 +462,7 @@ func registerOAuthUserInfoByAuth(group huma.API, authCtrl *authController) {
 		Path:        "/auth/oauth/userinfo",
 		Summary:     "OAuth user info",
 		Description: "Get user information from OAuth token",
-		Tags:        []string{"Authentication", "OAuth"},
+		Tags:        []string{"Authentication"},
 		Security: []map[string][]string{
 			{"jwt": {}},
 		},
@@ -476,12 +477,26 @@ func registerListOAuthProviders(group huma.API, authCtrl *authController) {
 		Path:        "/auth/oauth/providers",
 		Summary:     "List OAuth providers",
 		Description: "List available OAuth providers",
-		Tags:        []string{"Authentication", "OAuth"},
+		Tags:        []string{"Authentication"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, false),
 	}, authCtrl.listOAuthProvidersHandler)
 }
 
 // Session Management Endpoints
+func registerRefreshSession(group huma.API, authCtrl *authController) {
+	huma.Register(group, huma.Operation{
+		OperationID: "refreshSession",
+		Method:      http.MethodPost,
+		Path:        "/auth/sessions/{id}/refresh",
+		Summary:     "Refresh session",
+		Description: "Extend a session's expiration time",
+		Tags:        []string{"Authentication"},
+		Security: []map[string][]string{
+			{"jwt": {}},
+		},
+		Responses: model.MergeErrorResponses(map[string]*huma.Response{}, false, model.NotFoundError("Session not found")),
+	}, authCtrl.refreshSessionHandler)
+}
 
 func registerListSessions(group huma.API, authCtrl *authController) {
 	huma.Register(group, huma.Operation{
@@ -490,7 +505,7 @@ func registerListSessions(group huma.API, authCtrl *authController) {
 		Path:        "/auth/sessions",
 		Summary:     "List user sessions",
 		Description: "List all active sessions for the current user",
-		Tags:        []string{"Authentication", "Sessions"},
+		Tags:        []string{"Authentication"},
 		Security: []map[string][]string{
 			{"jwt": {}},
 		},
@@ -505,7 +520,7 @@ func registerRevokeSession(group huma.API, authCtrl *authController) {
 		Path:        "/auth/sessions/{id}",
 		Summary:     "Revoke session",
 		Description: "Revoke a specific session",
-		Tags:        []string{"Authentication", "Sessions"},
+		Tags:        []string{"Authentication"},
 		Security: []map[string][]string{
 			{"jwt": {}},
 		},
@@ -523,7 +538,7 @@ func registerRevokeAllSessions(group huma.API, authCtrl *authController) {
 		Path:        "/auth/sessions",
 		Summary:     "Revoke all sessions",
 		Description: "Revoke all sessions for the current user",
-		Tags:        []string{"Authentication", "Sessions"},
+		Tags:        []string{"Authentication"},
 		Security: []map[string][]string{
 			{"jwt": {}},
 		},
@@ -2267,6 +2282,90 @@ func (c *authController) listSessionsHandler(ctx context.Context, input *ListSes
 	}, nil
 }
 
+type RefreshSessionInput struct {
+}
+
+type RefreshSessionOutput = model.Output[model.Session]
+
+// Add this handler method to the authController
+func (c *authController) refreshSessionHandler(ctx context.Context, input *RefreshSessionInput) (*RefreshSessionOutput, error) {
+	logger := c.di.Logger().Named("refresh-session")
+
+	// Get current user from context
+	user, err := middleware.GetUserFromContextSafe(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	logger.Debug("Refreshing user session",
+		logging.String("userId", user.ID.String()),
+		logging.String("sessionId", user.SessionID.String()))
+
+	sessionService := c.di.SessionService()
+	if sessionService == nil {
+		return nil, errors.New(errors.CodeInternalServer, "session service not available")
+	}
+
+	// First, verify the session exists and belongs to the current user
+	session, err := sessionService.GetSession(ctx, user.SessionID)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			return nil, errors.New(errors.CodeNotFound, "session not found")
+		}
+		return nil, errors.Wrap(err, errors.CodeInternalServer, "failed to retrieve session")
+	}
+
+	// Check ownership - users can only refresh their own sessions
+	if session.UserID != user.ID {
+		return nil, errors.New(errors.CodeForbidden, "you can only refresh your own sessions")
+	}
+
+	// Check if session is still active
+	if !session.Active {
+		return nil, errors.New(errors.CodeBadRequest, "cannot refresh inactive session")
+	}
+
+	// Check if session is expired
+	if time.Now().After(session.ExpiresAt) {
+		return nil, errors.New(errors.CodeBadRequest, "cannot refresh expired session")
+	}
+
+	auditEvent := audit.AuditEvent{
+		Action: audit.ActionSessionRefresh,
+		Status: audit.StatusFailure,
+		Details: map[string]interface{}{
+			"session_id":      user.SessionID.String(),
+			"original_expiry": session.ExpiresAt.Format(time.RFC3339),
+		},
+		Source: audit.SourceWeb,
+	}
+
+	defer c.logAuditEvent(ctx, auditEvent)
+
+	// Refresh the session
+	refreshedSession, err := sessionService.RefreshSession(ctx, user.SessionID)
+	if err != nil {
+		logger.Error("Failed to refresh session",
+			logging.Error(err),
+			logging.String("sessionId", user.SessionID.String()))
+		return nil, errors.Wrap(err, errors.CodeInternalServer, "failed to refresh session")
+	}
+
+	auditEvent.Status = audit.StatusSuccess
+	auditEvent.Details["new_expiry"] = refreshedSession.ExpiresAt.Format(time.RFC3339)
+	auditEvent.Details["extended_by"] = refreshedSession.ExpiresAt.Sub(session.ExpiresAt).String()
+
+	logger.Info("Session refreshed successfully",
+		logging.String("userId", user.ID.String()),
+		logging.String("sessionId", user.SessionID.String()),
+		logging.Time("originalExpiry", session.ExpiresAt),
+		logging.Time("newExpiry", refreshedSession.ExpiresAt))
+
+	return &RefreshSessionOutput{
+		Body: *refreshedSession,
+	}, nil
+}
+
 func (c *authController) revokeSessionHandler(ctx context.Context, input *RevokeSessionInput) (*model.EmptyOutput, error) {
 	logger := c.di.Logger().Named("revoke-session")
 
@@ -2440,6 +2539,15 @@ func (c *authController) deleteCookie() http.Cookie {
 }
 
 func (c *authController) createCookie(token string) http.Cookie {
+	sameSite := http.SameSiteDefaultMode
+	if c.di.Config().Auth.CookieSameSite == "none" {
+		sameSite = http.SameSiteNoneMode
+	} else if c.di.Config().Auth.CookieSameSite == "strict" {
+		sameSite = http.SameSiteStrictMode
+	} else if c.di.Config().Auth.CookieSameSite == "lax" {
+		sameSite = http.SameSiteLaxMode
+	}
+
 	return http.Cookie{
 		Name:     c.di.Config().Auth.SessionName,
 		Value:    token,
@@ -2448,6 +2556,7 @@ func (c *authController) createCookie(token string) http.Cookie {
 		Secure:   c.di.Config().Auth.CookieSecure,
 		HttpOnly: c.di.Config().Auth.CookieHTTPOnly,
 		MaxAge:   int(c.di.Config().Auth.CookieMaxAge.Seconds()),
+		SameSite: sameSite,
 	}
 }
 

@@ -3,6 +3,7 @@ module github.com/juicycleff/frank
 go 1.24.2
 
 require (
+	ariga.io/atlas v0.32.0
 	entgo.io/contrib v0.6.0
 	entgo.io/ent v0.14.4
 	github.com/MarceloPetrucio/go-scalar-api-reference v0.0.0-20240521013641-ce5d2efe0e06
@@ -26,7 +27,6 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/golang-migrate/migrate/v4 v4.18.3
 	github.com/google/uuid v1.6.0
-	github.com/google/wire v0.6.0
 	github.com/gorilla/sessions v1.4.0
 	github.com/gosimple/slug v1.15.0
 	github.com/jackc/pgx/v5 v5.7.2
@@ -50,7 +50,6 @@ require (
 )
 
 require (
-	ariga.io/atlas v0.32.0 // indirect
 	github.com/99designs/gqlgen v0.17.70 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/agnivade/levenshtein v1.2.1 // indirect
@@ -100,7 +99,6 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hashicorp/hcl/v2 v2.23.0 // indirect
-	github.com/hedwigz/entviz v0.0.0-20221011080911-9d47f6f1d818 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect

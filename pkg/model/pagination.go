@@ -345,7 +345,7 @@ type Pagination struct {
 
 // PaginatedOutput provides a generic structure for paginated responses, containing data and pagination metadata.
 type PaginatedOutput[T any] struct {
-	Data       []T         `json:"data"`
+	Data       []T         `json:"data" required:"true"`
 	Pagination *Pagination `json:"pagination"`
 }
 
@@ -360,7 +360,7 @@ type PaginationParams struct {
 	Last    int      `json:"last" xml:"last" query:"last"`
 	Limit   int      `json:"limit" xml:"limit" query:"limit"`
 	Offset  int      `json:"offset" xml:"offset" query:"offset"`
-	Fields  []string `json:"fields" xml:"fields" query:"fields"`
+	Fields  []string `json:"fields" xml:"fields" query:"fields" required:"true"`
 	OrderBy []string `json:"orderBy" xml:"orderBy" query:"orderBy"`
 
 	// Add page navigation support

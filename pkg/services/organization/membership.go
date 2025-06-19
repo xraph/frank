@@ -29,6 +29,7 @@ type MembershipService interface {
 
 	// Role and permission queries
 	GetMemberRole(ctx context.Context, organizationID, userID xid.ID) (*model.Role, error)
+	IsMember(ctx context.Context, organizationID, userID xid.ID) (bool, error)
 	GetMemberPermissions(ctx context.Context, organizationID, userID xid.ID) ([]string, error)
 	HasPermission(ctx context.Context, organizationID, userID xid.ID, permission string) (bool, error)
 
@@ -442,6 +443,16 @@ func (s *membershipService) GetMemberRole(ctx context.Context, organizationID, u
 	}
 
 	return s.entRoleToModel(role), nil
+}
+
+// IsMember gets a member's role in an organization
+func (s *membershipService) IsMember(ctx context.Context, organizationID, userID xid.ID) (bool, error) {
+	exists, err := s.membershipRepo.ExistsByUserAndOrganization(ctx, userID, organizationID)
+	if err != nil {
+		return false, errors.Wrap(err, errors.CodeNotFound, "Membership not found")
+	}
+
+	return exists, nil
 }
 
 // GetMemberPermissions gets a member's permissions in an organization

@@ -37,7 +37,6 @@ func newSqlServer(drv *entsql.Driver, cfg *config.Config) (*ent.Client, *entsql.
 			dsn = fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
 				cfg.Database.Host, cfg.Database.Port, cfg.Database.User,
 				cfg.Database.Password, cfg.Database.Database, cfg.Database.SSLMode)
-			fmt.Println("dsn ===> ", dsn)
 		}
 		db, err = sql.Open("pgx", dsn)
 		if err != nil {
