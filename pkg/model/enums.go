@@ -132,15 +132,22 @@ type ContextType string
 
 // ContextType values.
 const (
-	ContextTypePlatform     ContextType = "platform"
-	ContextTypeOrganization ContextType = "organization"
-	ContextTypeApplication  ContextType = "application"
-	ContextTypeResource     ContextType = "resource"
+	ContextPlatform     ContextType = "platform"
+	ContextOrganization ContextType = "organization"
+	ContextApplication  ContextType = "application"
+	ContextResource     ContextType = "resource"
+	ContextSelf         ContextType = "self"
+	ContextGlobal       ContextType = "global"
 )
 
 func (c ContextType) Values() []string {
-	return []string{string(ContextTypePlatform), string(ContextTypeOrganization),
-		string(ContextTypeApplication), string(ContextTypeResource)}
+	return []string{
+		string(ContextPlatform),
+		string(ContextOrganization),
+		string(ContextApplication),
+		string(ContextResource),
+		string(ContextSelf),
+		string(ContextGlobal)}
 }
 
 func (c ContextType) String() string {
@@ -157,80 +164,6 @@ func (c ContextType) Schema(r huma.Registry) *huma.Schema {
 		r.Map()["ContextType"] = schemaRef
 	}
 	return &huma.Schema{Ref: "#/components/schemas/ContextType"}
-}
-
-// UserPermissionCategory defines the type for the "category" enum field.
-type UserPermissionCategory string
-
-// ContextType values.
-const (
-	UserPermissionCategoryPlatform     UserPermissionCategory = "platform"
-	UserPermissionCategoryOrganization UserPermissionCategory = "organization"
-	UserPermissionCategoryApplication  UserPermissionCategory = "application"
-	UserPermissionCategoryResource     UserPermissionCategory = "resource"
-)
-
-func (c UserPermissionCategory) Values() []string {
-	return []string{string(UserPermissionCategoryPlatform), string(UserPermissionCategoryOrganization),
-		string(UserPermissionCategoryApplication), string(UserPermissionCategoryResource)}
-}
-
-func (c UserPermissionCategory) String() string {
-	return string(c)
-}
-
-func (c UserPermissionCategory) Schema(r huma.Registry) *huma.Schema {
-	if r.Map()["UserPermissionCategory"] == nil {
-		schemaRef := r.Schema(reflect.TypeOf(""), true, "UserPermissionCategory")
-		schemaRef.Title = "UserPermissionCategory"
-		for _, v := range c.Values() {
-			schemaRef.Enum = append(schemaRef.Enum, v)
-		}
-		r.Map()["UserPermissionCategory"] = schemaRef
-	}
-	return &huma.Schema{Ref: "#/components/schemas/UserPermissionCategory"}
-}
-
-// ResourceType defines the type for the "resource_type" enum field.
-type ResourceType string
-
-// ResourceType values.
-const (
-	ResourceTypeAPIKey       ResourceType = "api_key"
-	ResourceTypeUser         ResourceType = "user"
-	ResourceTypeOrganization ResourceType = "organization"
-	ResourceTypeSession      ResourceType = "session"
-	ResourceTypeCommon       ResourceType = "common"
-	ResourceTypeOauth        ResourceType = "oauth"
-	ResourceTypeMembership   ResourceType = "membership"
-	ResourceTypeMfa          ResourceType = "mfa"
-	ResourceTypeProvider     ResourceType = "provider"
-	ResourceTypePasskey      ResourceType = "passkey"
-	ResourceTypeSSO          ResourceType = "sso"
-	ResourceTypePermission   ResourceType = "permission"
-)
-
-func (rt ResourceType) Values() []string {
-	return []string{string(ResourceTypeAPIKey), string(ResourceTypeUser), string(ResourceTypeOrganization),
-		string(ResourceTypeSession), string(ResourceTypeCommon), string(ResourceTypeOauth),
-		string(ResourceTypeMembership), string(ResourceTypeMfa), string(ResourceTypeProvider),
-		string(ResourceTypePasskey), string(ResourceTypeSSO), string(ResourceTypePermission)}
-}
-
-func (rt ResourceType) String() string {
-	return string(rt)
-}
-
-func (rt ResourceType) Schema(r huma.Registry) *huma.Schema {
-	if r.Map()["ResourceType"] == nil {
-		schemaRef := r.Schema(reflect.TypeOf(""), true, "ResourceType")
-		schemaRef.Title = "ResourceType"
-		for _, v := range rt.Values() {
-			schemaRef.Enum = append(schemaRef.Enum, v)
-		}
-		r.Map()["ResourceType"] = schemaRef
-	}
-	return &huma.Schema{Ref: "#/components/schemas/ResourceType"}
 }
 
 // RoleType defines the type for the "role_type" enum field.
@@ -322,4 +255,103 @@ func (f InvoiceStatus) InvoicesStatus(r huma.Registry) *huma.Schema {
 		r.Map()["InvoiceStatus"] = schemaRef
 	}
 	return &huma.Schema{Ref: "#/components/schemas/InvoiceStatus"}
+}
+
+type APIKeyType string
+
+const (
+	// APIKeyTypeClient represents client-side API keys
+	// These provide organization context but don't act as authenticated users
+	// Used by frontend SDKs for public operations like signup/login
+	APIKeyTypeClient APIKeyType = "client"
+
+	// APIKeyTypeServer represents server-side API keys
+	// These act as authenticated users with full permissions
+	// Used for server-to-server communication
+	APIKeyTypeServer APIKeyType = "server"
+
+	// APIKeyTypeAdmin represents administrative API keys
+	// These act as authenticated users with elevated permissions
+	// Used for administrative operations
+	APIKeyTypeAdmin APIKeyType = "admin"
+)
+
+func (t APIKeyType) String() string {
+	return string(t)
+}
+
+func (t APIKeyType) Values() []string {
+	return []string{string(APIKeyTypeServer), string(APIKeyTypeClient), string(APIKeyTypeAdmin)}
+}
+
+func (t APIKeyType) Schema(r huma.Registry) *huma.Schema {
+	if r.Map()["APIKeyType"] == nil {
+		schemaRef := r.Schema(reflect.TypeOf(""), true, "APIKeyType")
+		schemaRef.Title = "APIKeyType"
+		for _, v := range t.Values() {
+			schemaRef.Enum = append(schemaRef.Enum, v)
+		}
+		r.Map()["APIKeyType"] = schemaRef
+	}
+	return &huma.Schema{Ref: "#/components/schemas/APIKeyType"}
+}
+
+// IsValid checks if the API key type is valid
+func (t APIKeyType) IsValid() bool {
+	switch t {
+	case APIKeyTypeClient, APIKeyTypeServer, APIKeyTypeAdmin:
+		return true
+	default:
+		return false
+	}
+}
+
+// IsClientType checks if the API key type is client
+func (t APIKeyType) IsClientType() bool {
+	return t == APIKeyTypeClient
+}
+
+// IsServerType checks if the API key type is server
+func (t APIKeyType) IsServerType() bool {
+	return t == APIKeyTypeServer
+}
+
+// IsAdminType checks if the API key type is admin
+func (t APIKeyType) IsAdminType() bool {
+	return t == APIKeyTypeAdmin
+}
+
+// RequiresUserContext returns true if this API key type should create a user context
+func (t APIKeyType) RequiresUserContext() bool {
+	return t == APIKeyTypeServer || t == APIKeyTypeAdmin
+}
+
+type Environment string
+
+const (
+	EnvironmentTest        Environment = "test"
+	EnvironmentLive        Environment = "live"
+	EnvironmentDevelopment Environment = "development"
+	EnvironmentStaging     Environment = "staging"
+	EnvironmentProduction  Environment = "production"
+)
+
+func (e Environment) String() string {
+	return string(e)
+}
+
+func (e Environment) Values() []string {
+	return []string{string(EnvironmentTest), string(EnvironmentLive), string(EnvironmentDevelopment), string(EnvironmentStaging), string(EnvironmentProduction)}
+}
+
+func (e Environment) Schema(r huma.Registry) *huma.Schema {
+	if r.Map()["Environment"] == nil {
+		schemaRef := r.Schema(reflect.TypeOf(""), true, "Environment")
+		schemaRef.Title = "Environment"
+		for _, v := range e.Values() {
+			schemaRef.Enum = append(schemaRef.Enum, v)
+		}
+		r.Map()["Environment"] = schemaRef
+	}
+	return &huma.Schema{Ref: "#/components/schemas/Environment"}
 }

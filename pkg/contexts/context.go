@@ -3,34 +3,44 @@ package contexts
 // Context keys for request context
 type contextKey string
 
+// Authentication context keys
 const (
-	// User context keys
-	UserContextKey      contextKey = "user"
-	UserIDContextKey    contextKey = "user_id"
-	UserTypeContextKey  contextKey = "user_type"
-	SessionContextKey   contextKey = "session"
-	SessionIDContextKey contextKey = "session_id"
-
-	// Organization context keys
-	OrganizationContextKey   contextKey = "organization"
-	OrganizationIDContextKey contextKey = "organization_id"
-
-	// Authentication context keys
-	AuthMethodContextKey  contextKey = "auth_method"
+	UserContextKey        contextKey = "user"
+	UserIDContextKey      contextKey = "user_id"
+	UserTypeContextKey    contextKey = "user_type"
+	SessionContextKey     contextKey = "session"
+	SessionIDContextKey   contextKey = "session_id"
 	APIKeyContextKey      contextKey = "api_key"
 	APIKeyIDContextKey    contextKey = "api_key_id"
-	TokenClaimsContextKey contextKey = "token_claims"
-
-	// Request context keys
-	RequestIDContextKey contextKey = "request_id"
-	IPAddressContextKey contextKey = "ip_address"
-	UserAgentContextKey contextKey = "user_agent"
-
-	// Permission context keys
+	AuthMethodContextKey  contextKey = "auth_method"
 	PermissionsContextKey contextKey = "permissions"
 	RolesContextKey       contextKey = "roles"
+	TokenClaimsContextKey contextKey = "token_claims"
+)
 
-	HeadersContextKKey    contextKey = "frank-headers"
+// Organization/Tenant context keys
+const (
+	OrganizationContextKey   contextKey = "organization"
+	OrganizationIDContextKey contextKey = "organization_id"
+	TenantContextKey         contextKey = "tenant"
+	TenantIDContextKey       contextKey = "tenant_id"
+	TenantSlugContextKey     contextKey = "tenant_slug"
+	TenantPlanContextKey     contextKey = "tenant_plan"
+	TenantTypeContextKey     contextKey = "tenant_type"
+)
+
+// Detection context keys (for pre-authentication detection)
+const (
+	DetectedUserTypeKey       contextKey = "detected_user_type"
+	DetectedOrganizationIDKey contextKey = "detected_organization_id"
+)
+
+// Request context keys
+const (
+	RequestIDContextKey   contextKey = "request_id"
+	IPAddressContextKey   contextKey = "ip_address"
+	UserAgentContextKey   contextKey = "user_agent"
+	HeadersContextKKey    contextKey = "headers"
 	RequestInfoContextKey contextKey = "request_info"
 	HTTPRequestContextKey contextKey = "http_request"
 	HTTPResponseWriterKey contextKey = "http_response_writer"
@@ -42,4 +52,9 @@ const (
 	HTTPRequestHostKey    contextKey = "http_request_host"
 	HTTPRequestSchemeKey  contextKey = "http_request_scheme"
 	HTTPRequestProtoKey   contextKey = "http_request_proto"
+)
+
+// RegistrationFlowKey Context keys for registration flows
+const (
+	RegistrationFlowKey contextKey = "registration_flow"
 )

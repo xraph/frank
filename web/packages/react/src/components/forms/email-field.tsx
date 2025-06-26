@@ -446,7 +446,6 @@ export function EmailField({
             errorMessage=""
             startContent={startContent || emailIcon}
             endContent={endContent || verificationContent}
-            labelPlacement="outside"
         />
     );
 

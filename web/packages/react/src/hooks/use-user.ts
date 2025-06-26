@@ -143,8 +143,8 @@ export interface UseUserReturn {
  * ```
  */
 export function useUser(): UseUserReturn {
-    const { user, updateUser, deleteUser, reload, session } = useAuth();
-    const { apiUrl, publishableKey } = useConfig();
+    const {user, updateUser, deleteUser, reload, session, userType} = useAuth();
+    const {apiUrl, publishableKey} = useConfig();
 
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<AuthError | null>(null);
@@ -155,6 +155,7 @@ export function useUser(): UseUserReturn {
         return new FrankUser({
             publishableKey,
             apiUrl,
+            userType: userType ?? 'end_user',
         }, session.accessToken);
     }, [publishableKey, apiUrl, session?.accessToken]);
 
@@ -163,6 +164,7 @@ export function useUser(): UseUserReturn {
         return new FrankAuth({
             publishableKey,
             apiUrl,
+            userType: userType ?? 'end_user',
         });
     }, [publishableKey, apiUrl, session?.accessToken]);
 
@@ -231,7 +233,7 @@ export function useUser(): UseUserReturn {
             setIsLoading(true);
             setError(null);
 
-            await updateProfile({ primaryEmailAddress: email });
+            await updateProfile({primaryEmailAddress: email});
         } catch (err) {
             handleError(err);
         } finally {
@@ -281,7 +283,7 @@ export function useUser(): UseUserReturn {
             setIsLoading(true);
             setError(null);
 
-            await updateProfile({ primaryPhoneNumber: phone });
+            await updateProfile({primaryPhoneNumber: phone});
         } catch (err) {
             handleError(err);
         } finally {
@@ -327,16 +329,16 @@ export function useUser(): UseUserReturn {
 
     // Profile image management
     const updateProfileImage = useCallback(async (imageUrl: string): Promise<User> => {
-        return updateProfile({ profileImageUrl: imageUrl });
+        return updateProfile({profileImageUrl: imageUrl});
     }, [updateProfile]);
 
     const removeProfileImage = useCallback(async (): Promise<User> => {
-        return updateProfile({ profileImageUrl: undefined() });
+        return updateProfile({profileImageUrl: undefined()});
     }, [updateProfile]);
 
     // Metadata management
     const updateMetadata = useCallback(async (metadata: Record<string, any>): Promise<User> => {
-        return updateProfile({ unsafeMetadata: metadata });
+        return updateProfile({unsafeMetadata: metadata});
     }, [updateProfile]);
 
     // Convenience properties

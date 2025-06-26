@@ -10,12 +10,21 @@ import (
 // APIKey represents an API key for authentication
 type APIKey struct {
 	Base
-	Name           string                 `json:"name" example:"Production API Key" doc:"API key name"`
-	Key            string                 `json:"key,omitempty" example:"frank_sk_123abc..." doc:"API key value (write-only)"`
-	HashedKey      string                 `json:"hashedKey,omitempty" doc:"Hashed API key (internal use)"`
+	Name string `json:"name" example:"Production API Key" doc:"API key name"`
+
+	// Public/Secret key pair
+	PublicKey       string `json:"publicKey,omitempty" example:"pk_test_123abc..." doc:"Public API key (safe to display)"`
+	SecretKey       string `json:"secretKey,omitempty" example:"sk_test_456def..." doc:"Secret API key value (write-only)"`
+	HashedSecretKey string `json:"hashedSecretKey,omitempty" doc:"Hashed secret key (internal use)"`
+
+	// Legacy support (deprecated)
+	Key       string `json:"key,omitempty" example:"frank_sk_123abc..." doc:"Legacy API key value (deprecated)"`
+	HashedKey string `json:"hashedKey,omitempty" doc:"Legacy hashed API key (deprecated)"`
+
 	UserID         xid.ID                 `json:"userId,omitempty" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"User ID (for user-scoped keys)"`
 	OrganizationID xid.ID                 `json:"organizationId,omitempty" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"Organization ID"`
-	Type           string                 `json:"type" example:"server" doc:"API key type (server, client, admin)"`
+	Type           APIKeyType             `json:"type" example:"server" doc:"API key type (server, client, admin)"`
+	Environment    Environment            `json:"environment" example:"test" doc:"Environment (test, live)"`
 	Active         bool                   `json:"active" example:"true" doc:"Whether API key is active"`
 	Permissions    []string               `json:"permissions,omitempty" example:"[\"read:users\", \"write:organizations\"]" doc:"Granted permissions"`
 	Scopes         []string               `json:"scopes,omitempty" example:"[\"api:read\", \"api:write\"]" doc:"API scopes"`
@@ -33,16 +42,18 @@ type APIKey struct {
 
 // APIKeySummary represents a simplified API key for listings
 type APIKeySummary struct {
-	ID              xid.ID     `json:"id" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"API key ID"`
-	Name            string     `json:"name" example:"Production API Key" doc:"API key name"`
-	Type            string     `json:"type" example:"server" doc:"API key type"`
-	Active          bool       `json:"active" example:"true" doc:"Whether key is active"`
-	LastUsed        *time.Time `json:"lastUsed,omitempty" example:"2023-01-01T12:00:00Z" doc:"Last usage"`
-	ExpiresAt       *time.Time `json:"expiresAt,omitempty" example:"2023-12-31T23:59:59Z" doc:"Expiration"`
-	CreatedAt       time.Time  `json:"createdAt" example:"2023-01-01T10:00:00Z" doc:"Creation timestamp"`
-	UsageCount      int        `json:"usageCount" example:"1500" doc:"Total usage count"`
-	KeyPrefix       string     `json:"keyPrefix" example:"frank_sk_123..." doc:"Key prefix for identification"`
-	PermissionCount int        `json:"permissionCount" example:"5" doc:"Number of permissions"`
+	ID              xid.ID      `json:"id" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"API key ID"`
+	Name            string      `json:"name" example:"Production API Key" doc:"API key name"`
+	PublicKey       string      `json:"publicKey" example:"pk_test_123abc..." doc:"Public key (safe to display)"`
+	Type            APIKeyType  `json:"type" example:"server" doc:"API key type"`
+	Environment     Environment `json:"environment" example:"test" doc:"Environment"`
+	Active          bool        `json:"active" example:"true" doc:"Whether key is active"`
+	LastUsed        *time.Time  `json:"lastUsed,omitempty" example:"2023-01-01T12:00:00Z" doc:"Last usage"`
+	ExpiresAt       *time.Time  `json:"expiresAt,omitempty" example:"2023-12-31T23:59:59Z" doc:"Expiration"`
+	CreatedAt       time.Time   `json:"createdAt" example:"2023-01-01T10:00:00Z" doc:"Creation timestamp"`
+	UsageCount      int         `json:"usageCount" example:"1500" doc:"Total usage count"`
+	SecretKeyPrefix string      `json:"secretKeyPrefix" example:"sk_test_123..." doc:"Secret key prefix for identification"`
+	PermissionCount int         `json:"permissionCount" example:"5" doc:"Number of permissions"`
 }
 
 // APIKeyRateLimits represents rate limiting configuration for API keys
@@ -74,7 +85,8 @@ type EndpointUsage struct {
 // CreateAPIKeyRequest represents a request to create an API key
 type CreateAPIKeyRequest struct {
 	Name        string                 `json:"name" example:"My API Key" doc:"API key name"`
-	Type        string                 `json:"type,omitempty" example:"server" doc:"API key type"`
+	Type        APIKeyType             `json:"type,omitempty" example:"server" doc:"API key type"`
+	Environment Environment            `json:"environment,omitempty" example:"test" doc:"Environment (test, live)"`
 	Permissions []string               `json:"permissions,omitempty" example:"[\"read:users\"]" doc:"Granted permissions"`
 	Scopes      []string               `json:"scopes,omitempty" example:"[\"api:read\"]" doc:"API scopes"`
 	ExpiresAt   *time.Time             `json:"expiresAt,omitempty" example:"2023-12-31T23:59:59Z" doc:"Expiration timestamp"`
@@ -85,9 +97,10 @@ type CreateAPIKeyRequest struct {
 
 // CreateAPIKeyResponse represents the response to API key creation
 type CreateAPIKeyResponse struct {
-	APIKey  APIKey `json:"apiKey" doc:"Created API key information"`
-	Key     string `json:"key" example:"frank_sk_123abc456def..." doc:"Generated API key value"`
-	Warning string `json:"warning,omitempty" example:"Store this key securely. It will not be shown again." doc:"Security warning"`
+	APIKey    APIKey `json:"apiKey" doc:"Created API key information"`
+	PublicKey string `json:"publicKey" example:"pk_test_123abc456def..." doc:"Generated public key (safe to display)"`
+	SecretKey string `json:"secretKey" example:"sk_test_789ghi012jkl..." doc:"Generated secret key (store securely)"`
+	Warning   string `json:"warning,omitempty" example:"Store the secret key securely. It will not be shown again." doc:"Security warning"`
 }
 
 // UpdateAPIKeyRequest represents a request to update an API key
@@ -107,7 +120,8 @@ type APIKeyListRequest struct {
 	PaginationParams
 	OrganizationID OptionalParam[xid.ID] `json:"organizationId,omitempty" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"Filter by organization" query:"organizationId"`
 	UserID         OptionalParam[xid.ID] `json:"userId,omitempty" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"Filter by user" query:"userId"`
-	Type           string                `json:"type,omitempty" example:"server" doc:"Filter by type" query:"type"`
+	Type           APIKeyType            `json:"type,omitempty" example:"server" doc:"Filter by type" query:"type"`
+	Environment    Environment           `json:"environment,omitempty" example:"test" doc:"Filter by environment" query:"environment"`
 	Active         OptionalParam[bool]   `json:"active,omitempty" example:"true" doc:"Filter by active status" query:"active"`
 	Expired        OptionalParam[bool]   `json:"expired,omitempty" example:"false" doc:"Filter by expiration status" query:"expired"`
 	Used           OptionalParam[bool]   `json:"used,omitempty" example:"true" doc:"Filter by usage status" query:"used"`
@@ -121,20 +135,21 @@ type APIKeyListResponse = PaginatedOutput[APIKeySummary]
 
 // APIKeyStats represents API key statistics
 type APIKeyStats struct {
-	TotalKeys          int             `json:"totalKeys" example:"25" doc:"Total API keys"`
-	ActiveKeys         int             `json:"activeKeys" example:"20" doc:"Active API keys"`
-	ExpiredKeys        int             `json:"expiredKeys" example:"3" doc:"Expired API keys"`
-	KeysByType         map[string]int  `json:"keysByType" example:"{\"server\": 15, \"client\": 8, \"admin\": 2}" doc:"Keys by type"`
-	TotalRequests      int             `json:"totalRequests" example:"500000" doc:"Total API requests"`
-	RequestsToday      int             `json:"requestsToday" example:"5000" doc:"Requests today"`
-	RequestsWeek       int             `json:"requestsWeek" example:"35000" doc:"Requests this week"`
-	RequestsMonth      int             `json:"requestsMonth" example:"150000" doc:"Requests this month"`
-	AverageSuccessRate float64         `json:"averageSuccessRate" example:"98.5" doc:"Average success rate"`
-	TopEndpoints       []EndpointUsage `json:"topEndpoints" doc:"Most used endpoints"`
-	ErrorRate          float64         `json:"errorRate" example:"1.5" doc:"Error rate percentage"`
-	UniqueUsers        int             `json:"uniqueUsers" example:"150" doc:"Unique users with API keys"`
-	KeysCreatedWeek    int             `json:"keysCreatedWeek" example:"5" doc:"Keys created this week"`
-	KeysCreatedMonth   int             `json:"keysCreatedMonth" example:"18" doc:"Keys created this month"`
+	TotalKeys          int                 `json:"totalKeys" example:"25" doc:"Total API keys"`
+	ActiveKeys         int                 `json:"activeKeys" example:"20" doc:"Active API keys"`
+	ExpiredKeys        int                 `json:"expiredKeys" example:"3" doc:"Expired API keys"`
+	KeysByType         map[APIKeyType]int  `json:"keysByType" example:"{\"server\": 15, \"client\": 8, \"admin\": 2}" doc:"Keys by type"`
+	KeysByEnvironment  map[Environment]int `json:"keysByEnvironment" example:"{\"test\": 18, \"live\": 7}" doc:"Keys by environment"`
+	TotalRequests      int                 `json:"totalRequests" example:"500000" doc:"Total API requests"`
+	RequestsToday      int                 `json:"requestsToday" example:"5000" doc:"Requests today"`
+	RequestsWeek       int                 `json:"requestsWeek" example:"35000" doc:"Requests this week"`
+	RequestsMonth      int                 `json:"requestsMonth" example:"150000" doc:"Requests this month"`
+	AverageSuccessRate float64             `json:"averageSuccessRate" example:"98.5" doc:"Average success rate"`
+	TopEndpoints       []EndpointUsage     `json:"topEndpoints" doc:"Most used endpoints"`
+	ErrorRate          float64             `json:"errorRate" example:"1.5" doc:"Error rate percentage"`
+	UniqueUsers        int                 `json:"uniqueUsers" example:"150" doc:"Unique users with API keys"`
+	KeysCreatedWeek    int                 `json:"keysCreatedWeek" example:"5" doc:"Keys created this week"`
+	KeysCreatedMonth   int                 `json:"keysCreatedMonth" example:"18" doc:"Keys created this month"`
 }
 
 // RotateAPIKeyRequest represents a request to rotate an API key
@@ -146,16 +161,17 @@ type RotateAPIKeyRequest struct {
 
 // RotateAPIKeyResponse represents API key rotation response
 type RotateAPIKeyResponse struct {
-	NewKey    string     `json:"newKey" example:"frank_sk_new123abc..." doc:"New API key value"`
-	OldKeyID  xid.ID     `json:"oldKeyId" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"Old key ID"`
-	NewKeyID  xid.ID     `json:"newKeyId" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"New key ID"`
-	ExpiresAt *time.Time `json:"expiresAt,omitempty" example:"2024-12-31T23:59:59Z" doc:"New key expiration"`
-	Warning   string     `json:"warning" example:"Update your applications with the new key. Old key will be deactivated." doc:"Rotation warning"`
+	NewPublicKey string     `json:"newPublicKey" example:"pk_test_new123abc..." doc:"New public key"`
+	NewSecretKey string     `json:"newSecretKey" example:"sk_test_new456def..." doc:"New secret key value"`
+	OldKeyID     xid.ID     `json:"oldKeyId" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"Old key ID"`
+	NewKeyID     xid.ID     `json:"newKeyId" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"New key ID"`
+	ExpiresAt    *time.Time `json:"expiresAt,omitempty" example:"2024-12-31T23:59:59Z" doc:"New key expiration"`
+	Warning      string     `json:"warning" example:"Update your applications with the new secret key. Old key will be deactivated." doc:"Rotation warning"`
 }
 
 // ValidateAPIKeyRequest represents a request to validate an API key
 type ValidateAPIKeyRequest struct {
-	Key       string `json:"key" example:"frank_sk_123abc..." doc:"API key to validate"`
+	SecretKey string `json:"secretKey" example:"sk_test_123abc..." doc:"Secret API key to validate"`
 	IPAddress string `json:"ipAddress,omitempty" example:"192.168.1.1" doc:"Request IP address"`
 	UserAgent string `json:"userAgent,omitempty" example:"MyApp/1.0" doc:"User agent"`
 	Endpoint  string `json:"endpoint,omitempty" example:"/api/v1/users" doc:"Requested endpoint"`
@@ -166,8 +182,11 @@ type ValidateAPIKeyRequest struct {
 type ValidateAPIKeyResponse struct {
 	Valid          bool           `json:"valid" example:"true" doc:"Whether key is valid"`
 	KeyID          xid.ID         `json:"keyId,omitempty" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"API key ID"`
+	PublicKey      string         `json:"publicKey,omitempty" example:"pk_test_123abc..." doc:"Public key"`
 	UserID         xid.ID         `json:"userId,omitempty" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"User ID"`
 	OrganizationID xid.ID         `json:"organizationId,omitempty" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"Organization ID"`
+	Type           APIKeyType     `json:"type,omitempty" example:"server" doc:"API key type"`
+	Environment    Environment    `json:"environment,omitempty" example:"test" doc:"Environment"`
 	Permissions    []string       `json:"permissions,omitempty" example:"[\"read:users\"]" doc:"Granted permissions"`
 	Scopes         []string       `json:"scopes,omitempty" example:"[\"api:read\"]" doc:"API scopes"`
 	RateLimitInfo  *RateLimitInfo `json:"rateLimitInfo,omitempty" doc:"Rate limit information"`
@@ -204,6 +223,7 @@ type BulkAPIKeyOperationResponse struct {
 type APIKeyActivity struct {
 	ID           xid.ID                 `json:"id" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"Activity ID"`
 	KeyID        xid.ID                 `json:"keyId" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"API key ID"`
+	PublicKey    string                 `json:"publicKey,omitempty" example:"pk_test_123abc..." doc:"Public key used"`
 	Action       string                 `json:"action" example:"api_request" doc:"Action type"`
 	Endpoint     string                 `json:"endpoint,omitempty" example:"/api/v1/users" doc:"API endpoint"`
 	Method       string                 `json:"method,omitempty" example:"GET" doc:"HTTP method"`
@@ -221,6 +241,7 @@ type APIKeyActivity struct {
 type APIKeyActivityRequest struct {
 	PaginationParams
 	KeyID      OptionalParam[xid.ID]    `json:"keyId,omitempty" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"Filter by API key" query:"keyId"`
+	PublicKey  string                   `json:"publicKey,omitempty" example:"pk_test_123abc..." doc:"Filter by public key" query:"publicKey"`
 	Action     string                   `json:"action,omitempty" example:"api_request" doc:"Filter by action" query:"action"`
 	Endpoint   string                   `json:"endpoint,omitempty" example:"/api/v1/users" doc:"Filter by endpoint" query:"endpoint"`
 	Method     string                   `json:"method,omitempty" example:"GET" doc:"Filter by HTTP method" query:"method"`

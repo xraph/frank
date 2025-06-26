@@ -5,7 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
-	"net"
+	"strings"
 	"time"
 
 	"github.com/juicycleff/frank/ent"
@@ -18,6 +18,7 @@ import (
 	"github.com/juicycleff/frank/pkg/model"
 	"github.com/juicycleff/frank/pkg/services/activity"
 	"github.com/juicycleff/frank/pkg/services/audit"
+	"github.com/juicycleff/frank/pkg/services/rbac"
 	"github.com/rs/xid"
 )
 
@@ -26,7 +27,8 @@ type Service interface {
 	// Core CRUD operations
 	CreateAPIKey(ctx context.Context, req *model.CreateAPIKeyRequest) (*model.CreateAPIKeyResponse, error)
 	GetAPIKey(ctx context.Context, keyID xid.ID, opts *GetOptions) (*model.APIKey, error)
-	GetAPIKeyByKey(ctx context.Context, key string) (*model.APIKey, error)
+	GetAPIKeyByPublicKey(ctx context.Context, publicKey string) (*model.APIKey, error)
+	GetAPIKeyBySecretKey(ctx context.Context, secretKey string) (*model.APIKey, error)
 	UpdateAPIKey(ctx context.Context, keyID xid.ID, req *model.UpdateAPIKeyRequest) (*model.APIKey, error)
 	DeleteAPIKey(ctx context.Context, keyID xid.ID, opts *DeleteOptions) error
 	ListAPIKeys(ctx context.Context, req *model.APIKeyListRequest) (*model.APIKeyListResponse, error)
@@ -36,7 +38,7 @@ type Service interface {
 	ValidateAPIKey(ctx context.Context, req *model.ValidateAPIKeyRequest) (*model.ValidateAPIKeyResponse, error)
 	DeactivateAPIKey(ctx context.Context, keyID xid.ID, reason string, opts *DeactivateOptions) error
 	ActivateAPIKey(ctx context.Context, keyID xid.ID, opts *ActivateOptions) error
-	AuthenticateAPIKey(ctx context.Context, keyValue string) (*model.APIKey, error)
+	AuthenticateAPIKey(ctx context.Context, secretKey string) (*model.APIKey, error)
 
 	// Bulk operations
 	BulkAPIKeyOperation(ctx context.Context, req *model.BulkAPIKeyOperationRequest, opts *BulkOptions) (*model.BulkAPIKeyOperationResponse, error)
@@ -65,6 +67,7 @@ type service struct {
 	crypto          crypto.Util
 	auditService    audit.Service
 	activityService activity.Service
+	rbacService     rbac.Service
 }
 
 // NewService creates a new API key service
@@ -73,38 +76,49 @@ func NewService(
 	crypto crypto.Util,
 	auditService audit.Service,
 	activityService activity.Service,
+	rbacService rbac.Service,
 	logger logging.Logger,
 ) Service {
 	return &service{
-		repo:         repo,
-		logger:       logger,
-		crypto:       crypto,
-		auditService: auditService,
+		repo:            repo,
+		logger:          logger,
+		crypto:          crypto,
+		auditService:    auditService,
+		activityService: activityService,
+		rbacService:     rbacService,
 	}
 }
 
-// CreateAPIKey creates a new API key
+// CreateAPIKey creates a new API key with both public and secret keys
 func (s *service) CreateAPIKey(ctx context.Context, req *model.CreateAPIKeyRequest) (*model.CreateAPIKeyResponse, error) {
 	// Validate request
-	if err := s.validateCreateRequest(req); err != nil {
+	if err := s.validateCreateRequest(ctx, req); err != nil {
 		return nil, err
-	}
-
-	// Generate API key
-	apiKey, err := s.generateAPIKey(req.Type)
-	if err != nil {
-		return nil, errors.Newf(errors.CodeInternalServer, "failed to generate API key: %v", err)
-	}
-
-	// Hash the API key
-	hashedKey, err := s.hashAPIKey(apiKey)
-	if err != nil {
-		return nil, errors.Newf(errors.CodeInternalServer, "failed to hash API key: %v", err)
 	}
 
 	// Set defaults
 	if req.Type == "" {
-		req.Type = TypeServer
+		req.Type = model.APIKeyTypeServer
+	}
+	if req.Environment == "" {
+		req.Environment = "test"
+	}
+
+	// Validate permissions exist and are applicable
+	if err := s.validatePermissions(ctx, req.Permissions); err != nil {
+		return nil, errors.Newf(errors.CodeInvalidInput, "invalid permissions: %v", err)
+	}
+
+	// Generate key pair
+	publicKey, secretKey, err := s.generateAPIKeyPair(string(req.Type), string(req.Environment))
+	if err != nil {
+		return nil, errors.Newf(errors.CodeInternalServer, "failed to generate API key pair: %v", err)
+	}
+
+	// Hash the secret key
+	hashedSecretKey, err := s.hashAPIKey(secretKey)
+	if err != nil {
+		return nil, errors.Newf(errors.CodeInternalServer, "failed to hash secret key: %v", err)
 	}
 
 	// Get current user and organization from context
@@ -126,18 +140,21 @@ func (s *service) CreateAPIKey(ctx context.Context, req *model.CreateAPIKeyReque
 
 	// Create API key model
 	createReq := repository.CreateApiKeyInput{
-		Name:           req.Name,
-		HashedKey:      hashedKey,
-		UserID:         *userID,
-		OrganizationID: *organizationID,
-		Type:           req.Type,
-		Active:         true,
-		Permissions:    req.Permissions,
-		Scopes:         req.Scopes,
-		Metadata:       req.Metadata,
-		ExpiresAt:      req.ExpiresAt,
-		IPWhitelist:    req.IPWhitelist,
-		RateLimits:     req.RateLimits,
+		Name:            req.Name,
+		PublicKey:       publicKey,
+		SecretKey:       secretKey,
+		HashedSecretKey: hashedSecretKey,
+		UserID:          *userID,
+		OrganizationID:  *organizationID,
+		Type:            req.Type,
+		Environment:     req.Environment,
+		Active:          true,
+		Permissions:     req.Permissions,
+		Scopes:          req.Scopes,
+		Metadata:        req.Metadata,
+		ExpiresAt:       req.ExpiresAt,
+		IPWhitelist:     req.IPWhitelist,
+		RateLimits:      req.RateLimits,
 	}
 
 	// Save to database
@@ -158,8 +175,10 @@ func (s *service) CreateAPIKey(ctx context.Context, req *model.CreateAPIKeyReque
 			Details: map[string]interface{}{
 				"name":        req.Name,
 				"type":        req.Type,
+				"environment": req.Environment,
 				"permissions": req.Permissions,
 				"scopes":      req.Scopes,
+				"public_key":  publicKey,
 			},
 			RiskLevel: "medium",
 			Tags:      []string{"apikey", "security"},
@@ -173,25 +192,31 @@ func (s *service) CreateAPIKey(ctx context.Context, req *model.CreateAPIKeyReque
 	s.logger.Info("API key created successfully",
 		logging.String("keyId", keyModel.ID.String()),
 		logging.String("name", req.Name),
-		logging.String("type", req.Type),
+		logging.String("type", string(req.Type)),
+		logging.String("environment", string(req.Environment)),
+		logging.String("publicKey", publicKey),
 	)
 
 	// Log the creation
 	if err = s.logAPIKeyEvent(ctx, keyModel.ID, "api_key_created", map[string]interface{}{
-		"key_name": req.Name,
-		"key_type": req.Type,
+		"key_name":    req.Name,
+		"key_type":    req.Type,
+		"environment": req.Environment,
+		"public_key":  publicKey,
 	}); err != nil {
 		s.logger.Warn("Failed to log API key creation", logging.Error(err))
 	}
 
 	response := &model.CreateAPIKeyResponse{
-		APIKey:  *convertEntToApiKeyDTO(keyModel),
-		Key:     apiKey,
-		Warning: "Store this key securely. It will not be shown again.",
+		APIKey:    *convertEntToApiKeyDTO(keyModel),
+		PublicKey: publicKey,
+		SecretKey: secretKey,
+		Warning:   "Store the secret key securely. It will not be shown again.",
 	}
 
 	// Remove sensitive data from the response
-	response.APIKey.HashedKey = ""
+	response.APIKey.HashedSecretKey = ""
+	response.APIKey.SecretKey = ""
 
 	return response, nil
 }
@@ -264,31 +289,319 @@ func (s *service) GetAPIKey(ctx context.Context, keyID xid.ID, opts *GetOptions)
 	}
 
 	// Remove sensitive data
-	apiKey.HashedKey = ""
+	apiKey.HashedSecretKey = ""
+	apiKey.SecretKey = ""
 
 	return apiKey, nil
 }
 
-// GetAPIKeyByKey retrieves an API key by its value
-func (s *service) GetAPIKeyByKey(ctx context.Context, keyValue string) (*model.APIKey, error) {
-	s.logger.Debug("Getting API key by value")
+// GetAPIKeyByPublicKey retrieves an API key by its public key
+func (s *service) GetAPIKeyByPublicKey(ctx context.Context, publicKey string) (*model.APIKey, error) {
+	s.logger.Debug("Getting API key by public key")
 
-	// Hash the provided key
-	hashedKey, err := s.hashAPIKey(keyValue)
-	if err != nil {
-		return nil, errors.New(errors.CodeBadRequest, "invalid API key format")
-	}
-
-	apiKey, err := s.repo.APIKey().GetByHashedKey(ctx, hashedKey)
+	apiKey, err := s.repo.APIKey().GetByPublicKey(ctx, publicKey)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			return nil, errors.New(errors.CodeNotFound, "API key not found")
 		}
-		s.logger.Error("Failed to get API key by value", logging.Error(err))
+		s.logger.Error("Failed to get API key by public key", logging.Error(err))
 		return nil, errors.New(errors.CodeInternalServer, "failed to get API key")
 	}
 
-	return convertEntToApiKeyDTO(apiKey), nil
+	result := convertEntToApiKeyDTO(apiKey)
+	// Remove sensitive data
+	result.HashedSecretKey = ""
+	result.SecretKey = ""
+
+	return result, nil
+}
+
+// GetAPIKeyBySecretKey retrieves an API key by its secret key value
+func (s *service) GetAPIKeyBySecretKey(ctx context.Context, secretKey string) (*model.APIKey, error) {
+	s.logger.Debug("Getting API key by secret key")
+
+	// Hash the provided secret key
+	hashedSecretKey, err := s.hashAPIKey(secretKey)
+	if err != nil {
+		return nil, errors.New(errors.CodeBadRequest, "invalid secret key format")
+	}
+
+	apiKey, err := s.repo.APIKey().GetByHashedSecretKey(ctx, hashedSecretKey)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			return nil, errors.New(errors.CodeNotFound, "API key not found")
+		}
+		s.logger.Error("Failed to get API key by secret key", logging.Error(err))
+		return nil, errors.New(errors.CodeInternalServer, "failed to get API key")
+	}
+
+	result := convertEntToApiKeyDTO(apiKey)
+	// Remove sensitive data
+	result.HashedSecretKey = ""
+	result.SecretKey = ""
+
+	return result, nil
+}
+
+// AuthenticateAPIKey authenticates a secret key and returns the key if valid
+func (s *service) AuthenticateAPIKey(ctx context.Context, secretKey string) (*model.APIKey, error) {
+	req := &model.ValidateAPIKeyRequest{SecretKey: secretKey}
+
+	response, err := s.ValidateAPIKey(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	if !response.Valid {
+		return nil, errors.New(errors.CodeUnauthorized, response.Error)
+	}
+
+	return s.GetAPIKey(ctx, response.KeyID, nil)
+}
+
+// ValidateAPIKey validates a secret key and returns its details
+func (s *service) ValidateAPIKey(ctx context.Context, req *model.ValidateAPIKeyRequest) (*model.ValidateAPIKeyResponse, error) {
+	s.logger.Debug("Validating API key")
+
+	// Get API key by secret key
+	apiKey, err := s.GetAPIKeyBySecretKey(ctx, req.SecretKey)
+	if err != nil {
+		return &model.ValidateAPIKeyResponse{
+			Valid: false,
+			Error: "invalid API key",
+		}, nil
+	}
+
+	// Check if key is active
+	if !apiKey.Active {
+		return &model.ValidateAPIKeyResponse{
+			Valid: false,
+			Error: "API key is inactive",
+		}, nil
+	}
+
+	// Check expiration
+	if apiKey.ExpiresAt != nil && time.Now().After(*apiKey.ExpiresAt) {
+		return &model.ValidateAPIKeyResponse{
+			Valid: false,
+			Error: "API key has expired",
+		}, nil
+	}
+
+	// Check IP whitelist
+	if len(apiKey.IPWhitelist) > 0 && req.IPAddress != "" {
+		if !s.isIPAllowed(req.IPAddress, apiKey.IPWhitelist) {
+			return &model.ValidateAPIKeyResponse{
+				Valid: false,
+				Error: "IP address not allowed",
+			}, nil
+		}
+	}
+
+	// Check rate limits
+	rateLimitInfo, err := s.CheckRateLimit(ctx, apiKey.ID, req.Endpoint)
+	if err != nil {
+		s.logger.Warn("Failed to check rate limit", logging.Error(err))
+	}
+
+	// Update last used timestamp and record activity
+	go func() {
+		// Update last used timestamp
+		if err := s.updateLastUsed(context.Background(), apiKey.ID); err != nil {
+			s.logger.Warn("Failed to update last used timestamp", logging.Error(err))
+		}
+
+		// Record validation activity
+		if err := s.activityService.RecordActivity(context.Background(), &activity.ActivityRecord{
+			ID:             xid.New(),
+			ResourceType:   "api_key",
+			ResourceID:     apiKey.ID,
+			UserID:         &apiKey.UserID,
+			OrganizationID: &apiKey.OrganizationID,
+			Action:         "key_validated",
+			Category:       "api",
+			Source:         "api",
+			IPAddress:      req.IPAddress,
+			UserAgent:      req.UserAgent,
+			Success:        true,
+			Timestamp:      time.Now(),
+			Metadata: map[string]interface{}{
+				"endpoint":    req.Endpoint,
+				"method":      req.Method,
+				"public_key":  apiKey.PublicKey,
+				"environment": apiKey.Environment,
+			},
+			Tags: []string{"validation", "api_key"},
+		}); err != nil {
+			s.logger.Warn("Failed to record key validation activity", logging.Error(err))
+		}
+	}()
+
+	return &model.ValidateAPIKeyResponse{
+		Valid:          true,
+		KeyID:          apiKey.ID,
+		PublicKey:      apiKey.PublicKey,
+		UserID:         apiKey.UserID,
+		OrganizationID: apiKey.OrganizationID,
+		Type:           apiKey.Type,
+		Environment:    apiKey.Environment,
+		Permissions:    apiKey.Permissions,
+		Scopes:         apiKey.Scopes,
+		RateLimitInfo:  rateLimitInfo,
+		ExpiresAt:      apiKey.ExpiresAt,
+	}, nil
+}
+
+// RotateAPIKey rotates an API key by creating a new key pair and marking the old one as inactive
+func (s *service) RotateAPIKey(ctx context.Context, keyID xid.ID, req *model.RotateAPIKeyRequest) (*model.RotateAPIKeyResponse, error) {
+	s.logger.Info("Rotating API key", logging.String("key_id", keyID.String()))
+
+	// Get existing API key
+	existingKey, err := s.repo.APIKey().GetByID(ctx, keyID)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			return nil, errors.New(errors.CodeNotFound, "API key not found")
+		}
+		return nil, errors.New(errors.CodeInternalServer, "failed to get API key")
+	}
+
+	// Generate new key pair
+	newPublicKey, newSecretKey, err := s.generateAPIKeyPair(string(existingKey.Type), string(existingKey.Environment))
+	if err != nil {
+		return nil, errors.New(errors.CodeInternalServer, "failed to generate new API key pair")
+	}
+
+	// Hash the new secret key
+	newHashedSecretKey, err := s.hashAPIKey(newSecretKey)
+	if err != nil {
+		return nil, errors.New(errors.CodeInternalServer, "failed to hash new secret key")
+	}
+
+	// Create new API key
+	newAPIKey := &model.APIKey{
+		Base: model.Base{
+			ID:        xid.New(),
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+		},
+		Name:            existingKey.Name,
+		PublicKey:       newPublicKey,
+		SecretKey:       newSecretKey,
+		HashedSecretKey: newHashedSecretKey,
+		UserID:          existingKey.UserID,
+		OrganizationID:  existingKey.OrganizationID,
+		Type:            existingKey.Type,
+		Environment:     existingKey.Environment,
+		Active:          true,
+		Permissions:     existingKey.Permissions,
+		Scopes:          existingKey.Scopes,
+		Metadata:        existingKey.Metadata,
+		ExpiresAt:       req.ExpiresAt,
+		IPWhitelist:     existingKey.IPWhitelist,
+		RateLimits:      &existingKey.RateLimits,
+	}
+
+	// Save new key and deactivate old key in transaction
+	if err := s.repo.APIKey().RotateKey(ctx, existingKey.ID, newAPIKey); err != nil {
+		s.logger.Error("Failed to rotate API key", logging.Error(err))
+		return nil, errors.New(errors.CodeInternalServer, "failed to rotate API key")
+	}
+
+	// Audit the action
+	if s.auditService != nil {
+		auditReq := audit.AuditEvent{
+			OrganizationID: &existingKey.OrganizationID,
+			UserID:         &existingKey.UserID,
+			Action:         "apikey.rotate",
+			Resource:       "apikey",
+			ResourceID:     &req.KeyID,
+			Status:         "success",
+			Details: map[string]interface{}{
+				"old_key_id":     req.KeyID.String(),
+				"new_key_id":     newAPIKey.ID.String(),
+				"old_public_key": existingKey.PublicKey,
+				"new_public_key": newPublicKey,
+				"reason":         req.Reason,
+			},
+			RiskLevel: "high",
+			Tags:      []string{"apikey", "security", "rotation"},
+		}
+
+		if err := s.auditService.LogEvent(ctx, auditReq); err != nil {
+			s.logger.Warn("failed to create audit log", logging.Error(err))
+		}
+	}
+
+	// Log the rotation
+	if err := s.logAPIKeyEvent(ctx, keyID, "api_key_rotated", map[string]interface{}{
+		"old_key_id":     existingKey.ID.String(),
+		"new_key_id":     newAPIKey.ID.String(),
+		"old_public_key": existingKey.PublicKey,
+		"new_public_key": newPublicKey,
+		"reason":         req.Reason,
+	}); err != nil {
+		s.logger.Warn("Failed to log API key rotation", logging.Error(err))
+	}
+
+	s.logger.Info("API key rotated successfully",
+		logging.String("oldKeyId", req.KeyID.String()),
+		logging.String("newKeyId", newAPIKey.ID.String()),
+		logging.String("oldPublicKey", existingKey.PublicKey),
+		logging.String("newPublicKey", newPublicKey),
+		logging.String("reason", req.Reason),
+	)
+
+	return &model.RotateAPIKeyResponse{
+		NewPublicKey: newPublicKey,
+		NewSecretKey: newSecretKey,
+		OldKeyID:     existingKey.ID,
+		NewKeyID:     newAPIKey.ID,
+		ExpiresAt:    newAPIKey.ExpiresAt,
+		Warning:      "Update your applications with the new secret key. Old key will be deactivated.",
+	}, nil
+}
+
+// generateAPIKeyPair generates a public/secret key pair
+func (s *service) generateAPIKeyPair(keyType, environment string) (publicKey, secretKey string, err error) {
+	// Generate random bytes for both keys
+	publicBytes := make([]byte, KeyLength)
+	secretBytes := make([]byte, KeyLength)
+
+	if _, err := rand.Read(publicBytes); err != nil {
+		return "", "", fmt.Errorf("failed to generate public key bytes: %v", err)
+	}
+
+	if _, err := rand.Read(secretBytes); err != nil {
+		return "", "", fmt.Errorf("failed to generate secret key bytes: %v", err)
+	}
+
+	// Create key prefixes based on type and environment
+	var publicPrefix, secretPrefix string
+
+	switch strings.ToLower(environment) {
+	case "live", "production":
+		publicPrefix = "pk_live_"
+		secretPrefix = "sk_live_"
+	default: // test, development, etc.
+		publicPrefix = "pk_test_"
+		secretPrefix = "sk_test_"
+	}
+
+	// Generate the keys
+	publicKey = publicPrefix + hex.EncodeToString(publicBytes)
+	secretKey = secretPrefix + hex.EncodeToString(secretBytes)
+
+	return publicKey, secretKey, nil
+}
+
+// hashAPIKey hashes an API key for storage
+func (s *service) hashAPIKey(key string) (string, error) {
+	if s.crypto == nil {
+		return "", fmt.Errorf("crypto utility not available")
+	}
+
+	hash := s.crypto.Hasher().HashAPIKey(key)
+	return hash, nil
 }
 
 // UpdateAPIKey updates an existing API key
@@ -297,6 +610,13 @@ func (s *service) UpdateAPIKey(ctx context.Context, keyID xid.ID, req *model.Upd
 	existingKey, err := s.GetAPIKey(ctx, keyID, nil)
 	if err != nil {
 		return nil, err
+	}
+
+	// Validate permissions if being updated
+	if req.Permissions != nil {
+		if err := s.validatePermissions(ctx, req.Permissions); err != nil {
+			return nil, errors.Newf(errors.CodeInvalidInput, "invalid permissions: %v", err)
+		}
 	}
 
 	// Prepare changes map for audit
@@ -385,8 +705,10 @@ func (s *service) UpdateAPIKey(ctx context.Context, keyID xid.ID, req *model.Upd
 			Status:         "success",
 			Changes:        changes,
 			Details: map[string]interface{}{
-				"name": existingKey.Name,
-				"type": existingKey.Type,
+				"name":        existingKey.Name,
+				"type":        existingKey.Type,
+				"environment": existingKey.Environment,
+				"public_key":  existingKey.PublicKey,
 			},
 			RiskLevel: "medium",
 			Tags:      []string{"apikey", "security"},
@@ -399,8 +721,9 @@ func (s *service) UpdateAPIKey(ctx context.Context, keyID xid.ID, req *model.Upd
 
 	// Log the update
 	if err := s.logAPIKeyEvent(ctx, keyID, "api_key_updated", map[string]interface{}{
-		"key_name": updatedKey.Name,
-		"changes":  changes,
+		"key_name":   updatedKey.Name,
+		"public_key": updatedKey.PublicKey,
+		"changes":    changes,
 	}); err != nil {
 		s.logger.Warn("Failed to log API key update", logging.Error(err))
 	}
@@ -408,10 +731,13 @@ func (s *service) UpdateAPIKey(ctx context.Context, keyID xid.ID, req *model.Upd
 	s.logger.Info("API key updated successfully",
 		logging.String("keyId", keyID.String()),
 		logging.String("name", existingKey.Name),
+		logging.String("publicKey", existingKey.PublicKey),
 	)
 
 	return existingKey, nil
 }
+
+// ----
 
 // DeleteAPIKey deletes an API key
 func (s *service) DeleteAPIKey(ctx context.Context, keyID xid.ID, opts *DeleteOptions) error {
@@ -481,6 +807,7 @@ func (s *service) ListAPIKeys(ctx context.Context, req *model.APIKeyListRequest)
 		Scopes:           req.Scopes,
 		Permission:       req.Permission,
 		Type:             req.Type,
+		Environment:      model.EnvironmentTest,
 	}
 
 	// Apply organization and user filters from options
@@ -519,193 +846,6 @@ func (s *service) ListAPIKeys(ctx context.Context, req *model.APIKeyListRequest)
 	return &model.APIKeyListResponse{
 		Data:       summaries,
 		Pagination: apiKeys.Pagination,
-	}, nil
-}
-
-// RotateAPIKey rotates an API key by creating a new key and marking the old one as inactive
-func (s *service) RotateAPIKey(ctx context.Context, keyID xid.ID, req *model.RotateAPIKeyRequest) (*model.RotateAPIKeyResponse, error) {
-	s.logger.Info("Rotating API key", logging.String("key_id", keyID.String()))
-
-	// Get existing API key
-	existingKey, err := s.repo.APIKey().GetByID(ctx, keyID)
-	if err != nil {
-		if errors.IsNotFound(err) {
-			return nil, errors.New(errors.CodeNotFound, "API key not found")
-		}
-		return nil, errors.New(errors.CodeInternalServer, "failed to get API key")
-	}
-
-	// Generate new API key
-	newKeyValue, err := s.generateAPIKey(existingKey.Type)
-	if err != nil {
-		return nil, errors.New(errors.CodeInternalServer, "failed to generate new API key")
-	}
-
-	// Hash the new key
-	newHashedKey, err := s.hashAPIKey(newKeyValue)
-	if err != nil {
-		return nil, errors.New(errors.CodeInternalServer, "failed to hash new API key")
-	}
-
-	// Create new API key
-	newAPIKey := &model.APIKey{
-		Base: model.Base{
-			ID:        xid.New(),
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-		},
-		Name:           existingKey.Name,
-		HashedKey:      newHashedKey,
-		UserID:         existingKey.UserID,
-		OrganizationID: existingKey.OrganizationID,
-		Type:           existingKey.Type,
-		Active:         true,
-		Permissions:    existingKey.Permissions,
-		Scopes:         existingKey.Scopes,
-		Metadata:       existingKey.Metadata,
-		ExpiresAt:      req.ExpiresAt,
-		IPWhitelist:    existingKey.IPWhitelist,
-		RateLimits:     &existingKey.RateLimits,
-	}
-
-	// Save new key and deactivate old key in transaction
-	if err := s.repo.APIKey().RotateKey(ctx, existingKey.ID, newAPIKey); err != nil {
-		s.logger.Error("Failed to rotate API key", logging.Error(err))
-		return nil, errors.New(errors.CodeInternalServer, "failed to rotate API key")
-	}
-
-	// Audit the action
-	if s.auditService != nil {
-		auditReq := audit.AuditEvent{
-			OrganizationID: &existingKey.OrganizationID,
-			UserID:         &existingKey.UserID,
-			Action:         "apikey.rotate",
-			Resource:       "apikey",
-			ResourceID:     &req.KeyID,
-			Status:         "success",
-			Details: map[string]interface{}{
-				"old_key_id": req.KeyID.String(),
-				"new_key_id": newAPIKey.ID.String(),
-				"reason":     req.Reason,
-			},
-			RiskLevel: "high",
-			Tags:      []string{"apikey", "security", "rotation"},
-		}
-
-		if err := s.auditService.LogEvent(ctx, auditReq); err != nil {
-			s.logger.Warn("failed to create audit log", logging.Error(err))
-		}
-	}
-
-	// Log the rotation
-	if err := s.logAPIKeyEvent(ctx, keyID, "api_key_rotated", map[string]interface{}{
-		"old_key_id": existingKey.ID.String(),
-		"new_key_id": newAPIKey.ID.String(),
-		"reason":     req.Reason,
-	}); err != nil {
-		s.logger.Warn("Failed to log API key rotation", logging.Error(err))
-	}
-
-	s.logger.Info("API key rotated successfully",
-		logging.String("oldKeyId", req.KeyID.String()),
-		logging.String("newKeyId", newAPIKey.ID.String()),
-		logging.String("reason", req.Reason),
-	)
-
-	return &model.RotateAPIKeyResponse{
-		NewKey:    newKeyValue,
-		OldKeyID:  existingKey.ID,
-		NewKeyID:  newAPIKey.ID,
-		ExpiresAt: newAPIKey.ExpiresAt,
-		Warning:   "Update your applications with the new key. Old key will be deactivated.",
-	}, nil
-}
-
-// ValidateAPIKey validates an API key and returns its details
-func (s *service) ValidateAPIKey(ctx context.Context, req *model.ValidateAPIKeyRequest) (*model.ValidateAPIKeyResponse, error) {
-	s.logger.Debug("Validating API key")
-
-	// Get API key
-	apiKey, err := s.GetAPIKeyByKey(ctx, req.Key)
-	if err != nil {
-		return &model.ValidateAPIKeyResponse{
-			Valid: false,
-			Error: "invalid API key",
-		}, nil
-	}
-
-	// Check if key is active
-	if !apiKey.Active {
-		return &model.ValidateAPIKeyResponse{
-			Valid: false,
-			Error: "API key is inactive",
-		}, nil
-	}
-
-	// Check expiration
-	if apiKey.ExpiresAt != nil && time.Now().After(*apiKey.ExpiresAt) {
-		return &model.ValidateAPIKeyResponse{
-			Valid: false,
-			Error: "API key has expired",
-		}, nil
-	}
-
-	// Check IP whitelist
-	if len(apiKey.IPWhitelist) > 0 && req.IPAddress != "" {
-		if !s.isIPAllowed(req.IPAddress, apiKey.IPWhitelist) {
-			return &model.ValidateAPIKeyResponse{
-				Valid: false,
-				Error: "IP address not allowed",
-			}, nil
-		}
-	}
-
-	// Check rate limits
-	rateLimitInfo, err := s.CheckRateLimit(ctx, apiKey.ID, req.Endpoint)
-	if err != nil {
-		s.logger.Warn("Failed to check rate limit", logging.Error(err))
-	}
-
-	// Update last used timestamp and record activity
-	go func() {
-		// Update last used timestamp
-		if err := s.updateLastUsed(context.Background(), apiKey.ID); err != nil {
-			s.logger.Warn("Failed to update last used timestamp", logging.Error(err))
-		}
-
-		// Record validation activity
-		if err := s.activityService.RecordActivity(context.Background(), &activity.ActivityRecord{
-			ID:             xid.New(),
-			ResourceType:   "api_key",
-			ResourceID:     apiKey.ID,
-			UserID:         &apiKey.UserID,
-			OrganizationID: &apiKey.OrganizationID,
-			Action:         "key_validated",
-			Category:       "api",
-			Source:         "api",
-			IPAddress:      req.IPAddress,
-			UserAgent:      req.UserAgent,
-			Success:        true,
-			Timestamp:      time.Now(),
-			Metadata: map[string]interface{}{
-				"endpoint": req.Endpoint,
-				"method":   req.Method,
-			},
-			Tags: []string{"validation", "api_key"},
-		}); err != nil {
-			s.logger.Warn("Failed to record key validation activity", logging.Error(err))
-		}
-	}()
-
-	return &model.ValidateAPIKeyResponse{
-		Valid:          true,
-		KeyID:          apiKey.ID,
-		UserID:         apiKey.UserID,
-		OrganizationID: apiKey.OrganizationID,
-		Permissions:    apiKey.Permissions,
-		Scopes:         apiKey.Scopes,
-		RateLimitInfo:  rateLimitInfo,
-		ExpiresAt:      apiKey.ExpiresAt,
 	}, nil
 }
 
@@ -832,22 +972,6 @@ func (s *service) ActivateAPIKey(ctx context.Context, keyID xid.ID, opts *Activa
 	return nil
 }
 
-// AuthenticateAPIKey authenticates an API key and returns the key if valid
-func (s *service) AuthenticateAPIKey(ctx context.Context, keyValue string) (*model.APIKey, error) {
-	req := &model.ValidateAPIKeyRequest{Key: keyValue}
-
-	response, err := s.ValidateAPIKey(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-
-	if !response.Valid {
-		return nil, errors.New(errors.CodeUnauthorized, response.Error)
-	}
-
-	return s.GetAPIKey(ctx, response.KeyID, nil)
-}
-
 // BulkAPIKeyOperation performs bulk operations on API keys
 func (s *service) BulkAPIKeyOperation(ctx context.Context, req *model.BulkAPIKeyOperationRequest, opts *BulkOptions) (*model.BulkAPIKeyOperationResponse, error) {
 	if opts == nil {
@@ -952,7 +1076,7 @@ func (s *service) BulkAPIKeyOperation(ctx context.Context, req *model.BulkAPIKey
 func (s *service) GetAPIKeyStats(ctx context.Context, organizationID *xid.ID) (*model.APIKeyStats, error) {
 	// Get basic API key counts from repository
 	stats := &model.APIKeyStats{
-		KeysByType:   make(map[string]int),
+		KeysByType:   make(map[model.APIKeyType]int),
 		TopEndpoints: []model.EndpointUsage{},
 	}
 
@@ -975,7 +1099,7 @@ func (s *service) GetAPIKeyStats(ctx context.Context, organizationID *xid.ID) (*
 	// Process API key counts
 	stats.TotalKeys = len(apiKeys.Data)
 	expiredCount := 0
-	keysByType := make(map[string]int)
+	keysByType := make(map[model.APIKeyType]int)
 	uniqueUsers := make(map[xid.ID]bool)
 
 	for _, key := range apiKeys.Data {
@@ -1258,16 +1382,6 @@ func (s *service) generateAPIKey(keyType string) (string, error) {
 	return key, nil
 }
 
-// hashAPIKey hashes an API key for storage
-func (s *service) hashAPIKey(key string) (string, error) {
-	if s.crypto == nil {
-		return "", fmt.Errorf("crypto utility not available")
-	}
-
-	hash := s.crypto.Hasher().HashAPIKey(key)
-	return hash, nil
-}
-
 // CheckAPIKeyPermissions checks if an API key has the required permissions
 func (s *service) CheckAPIKeyPermissions(ctx context.Context, keyID xid.ID, requiredPermissions []string) error {
 	apiKey, err := s.GetAPIKey(ctx, keyID, &GetOptions{})
@@ -1285,17 +1399,20 @@ func (s *service) CheckAPIKeyPermissions(ctx context.Context, keyID xid.ID, requ
 	}
 
 	// Check permissions
+	apiKeyPermMap := make(map[string]bool)
+	for _, granted := range apiKey.Permissions {
+		apiKeyPermMap[granted] = true
+	}
+
+	var missingPermissions []string
 	for _, required := range requiredPermissions {
-		found := false
-		for _, granted := range apiKey.Permissions {
-			if granted == required {
-				found = true
-				break
-			}
+		if !apiKeyPermMap[required] {
+			missingPermissions = append(missingPermissions, required)
 		}
-		if !found {
-			return errors.New(errors.CodeForbidden, "insufficient permissions: missing %s", required)
-		}
+	}
+
+	if len(missingPermissions) > 0 {
+		return errors.Newf(errors.CodeForbidden, "insufficient permissions: missing %v", missingPermissions)
 	}
 
 	return nil
@@ -1317,12 +1434,9 @@ func (s *service) logAPIKeyEvent(ctx context.Context, keyID xid.ID, action strin
 	userID, organizationID, err := s.getContextInfo(ctx)
 	if err != nil {
 		s.logger.Warn("Failed to get context for audit logging", logging.Error(err))
-		// Don't fail the operation if audit logging fails
 		return nil
 	}
 
-	// Use generic activity service for audit-type activities
-	// These are marked as audit activities with longer retention
 	activityRecord := &activity.ActivityRecord{
 		ID:             xid.New(),
 		ResourceType:   "api_key",
@@ -1346,109 +1460,6 @@ func (s *service) logAPIKeyEvent(ctx context.Context, keyID xid.ID, action strin
 // updateLastUsed updates the last used timestamp for an API key
 func (s *service) updateLastUsed(ctx context.Context, keyID xid.ID) error {
 	return s.repo.APIKey().UpdateLastUsed(ctx, keyID)
-}
-
-// Helper methods
-
-// validateCreateRequest validates a create API key request
-func (s *service) validateCreateRequest(req *model.CreateAPIKeyRequest) error {
-	if req.Name == "" {
-		return errors.New(errors.CodeBadRequest, "API key name is required")
-	}
-
-	if len(req.Name) > 255 {
-		return errors.New(errors.CodeBadRequest, "API key name too long (max 255 characters)")
-	}
-
-	// Validate API key type
-	if req.Type != "" {
-		validTypes := []string{TypeServer, TypeClient, TypeAdmin}
-		found := false
-		for _, validType := range validTypes {
-			if req.Type == validType {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return errors.New(errors.CodeBadRequest, "invalid API key type: %s", req.Type)
-		}
-	}
-
-	// Validate expiration date
-	if req.ExpiresAt != nil && req.ExpiresAt.Before(time.Now()) {
-		return errors.New(errors.CodeBadRequest, "expiration date cannot be in the past")
-	}
-
-	// Validate IP whitelist
-	for _, ip := range req.IPWhitelist {
-		if !s.isValidIPOrCIDR(ip) {
-			return errors.New(errors.CodeBadRequest, "invalid IP address or CIDR: %s", ip)
-		}
-	}
-
-	return nil
-}
-
-// isValidIPOrCIDR checks if a string is a valid IP address or CIDR range
-func (s *service) isValidIPOrCIDR(ipStr string) bool {
-	// Try parsing as IP
-	if net.ParseIP(ipStr) != nil {
-		return true
-	}
-
-	// Try parsing as CIDR
-	_, _, err := net.ParseCIDR(ipStr)
-	return err == nil
-}
-
-// isIPAllowed checks if an IP address is allowed by the whitelist
-func (s *service) isIPAllowed(ipStr string, whitelist []string) bool {
-	ip := net.ParseIP(ipStr)
-	if ip == nil {
-		return false
-	}
-
-	for _, allowed := range whitelist {
-		// Check exact IP match
-		if allowedIP := net.ParseIP(allowed); allowedIP != nil {
-			if ip.Equal(allowedIP) {
-				return true
-			}
-			continue
-		}
-
-		// Check CIDR match
-		if _, network, err := net.ParseCIDR(allowed); err == nil {
-			if network.Contains(ip) {
-				return true
-			}
-		}
-	}
-
-	return false
-}
-
-func (s *service) convertToAPIKeySummary(key *ent.ApiKey) model.APIKeySummary {
-	return model.APIKeySummary{
-		ID:              key.ID,
-		Name:            key.Name,
-		Type:            key.Type,
-		Active:          key.Active,
-		LastUsed:        key.LastUsed,
-		ExpiresAt:       key.ExpiresAt,
-		CreatedAt:       key.CreatedAt,
-		KeyPrefix:       s.getKeyPrefix(key.HashedKey),
-		PermissionCount: len(key.Permissions),
-	}
-}
-
-// getKeyPrefix extracts a prefix from a hashed key for display purposes
-func (s *service) getKeyPrefix(hashedKey string) string {
-	if len(hashedKey) < 16 {
-		return hashedKey
-	}
-	return hashedKey[:16] + "..."
 }
 
 type endpointMetrics struct {
@@ -1628,24 +1639,32 @@ func (s *service) getRateLimitInfo(ctx context.Context, keyID xid.ID, limits *mo
 }
 
 func convertEntToApiKeyDTO(key *ent.ApiKey) *model.APIKey {
+
 	newKey := &model.APIKey{
 		Base: model.Base{
 			ID:        key.ID,
 			CreatedAt: key.CreatedAt,
 			UpdatedAt: key.UpdatedAt,
 		},
-		Type:        key.Type,
-		Active:      key.Active,
-		Name:        key.Name,
-		HashedKey:   key.HashedKey,
-		Key:         key.Key,
-		Permissions: key.Permissions,
-		Scopes:      key.Scopes,
-		Metadata:    key.Metadata,
-		ExpiresAt:   key.ExpiresAt,
-		// IPWhitelist: key., // todo add whitelist
-		// RateLimits: key,
-		LastUsed: key.LastUsed,
+		Name:            key.Name,
+		PublicKey:       key.PublicKey,
+		SecretKey:       key.SecretKey,
+		HashedSecretKey: key.HashedSecretKey,
+		Type:            key.Type,
+		Environment:     key.Environment,
+		Active:          key.Active,
+		Permissions:     key.Permissions,
+		Scopes:          key.Scopes,
+		Metadata:        key.Metadata,
+		ExpiresAt:       key.ExpiresAt,
+		IPWhitelist:     key.IPWhitelist,
+		LastUsed:        key.LastUsed,
+
+		// Legacy support
+		Key:       key.Key,
+		HashedKey: key.HashedKey,
+
+		RateLimits: &key.RateLimits,
 	}
 
 	if !key.OrganizationID.IsNil() {
@@ -1655,12 +1674,23 @@ func convertEntToApiKeyDTO(key *ent.ApiKey) *model.APIKey {
 		newKey.UserID = key.UserID
 	}
 
+	// Handle relationships
 	if key.Edges.User != nil {
-		// handle
+		newKey.User = &model.UserSummary{
+			ID:              key.Edges.User.ID,
+			Email:           key.Edges.User.Email,
+			FirstName:       key.Edges.User.FirstName,
+			LastName:        key.Edges.User.LastName,
+			ProfileImageURL: key.Edges.User.ProfileImageURL,
+		}
 	}
 
 	if key.Edges.Organization != nil {
-		// handle
+		newKey.Organization = &model.OrganizationSummary{
+			ID:   key.Edges.Organization.ID,
+			Name: key.Edges.Organization.Name,
+			Slug: key.Edges.Organization.Slug,
+		}
 	}
 
 	return newKey

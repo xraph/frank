@@ -91,7 +91,7 @@ func registerListOAuthClients(api huma.API, oauthCtrl *oauthController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, oauthCtrl.di.AuthZ().Checker(), oauthCtrl.di.Logger())(
-			authz.PermissionReadOAuth, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadOAuth, model.ResourceOrganization, "orgId",
 		)},
 	}, oauthCtrl.listOAuthClientsHandler)
 }
@@ -110,7 +110,7 @@ func registerCreateOAuthClient(api huma.API, oauthCtrl *oauthController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, oauthCtrl.di.AuthZ().Checker(), oauthCtrl.di.Logger())(
-			authz.PermissionWriteOAuth, authz.ResourceOrganization, "orgId",
+			authz.PermissionWriteOAuth, model.ResourceOrganization, "orgId",
 		)},
 	}, oauthCtrl.createOAuthClientHandler)
 }
@@ -129,7 +129,7 @@ func registerGetOAuthClient(api huma.API, oauthCtrl *oauthController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, oauthCtrl.di.AuthZ().Checker(), oauthCtrl.di.Logger())(
-			authz.PermissionReadOAuth, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadOAuth, model.ResourceOrganization, "orgId",
 		)},
 	}, oauthCtrl.getOAuthClientHandler)
 }
@@ -148,7 +148,7 @@ func registerUpdateOAuthClient(api huma.API, oauthCtrl *oauthController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, oauthCtrl.di.AuthZ().Checker(), oauthCtrl.di.Logger())(
-			authz.PermissionWriteOAuth, authz.ResourceOrganization, "orgId",
+			authz.PermissionWriteOAuth, model.ResourceOrganization, "orgId",
 		)},
 	}, oauthCtrl.updateOAuthClientHandler)
 }
@@ -167,7 +167,7 @@ func registerDeleteOAuthClient(api huma.API, oauthCtrl *oauthController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, oauthCtrl.di.AuthZ().Checker(), oauthCtrl.di.Logger())(
-			authz.PermissionWriteOAuth, authz.ResourceOrganization, "orgId",
+			authz.PermissionWriteOAuth, model.ResourceOrganization, "orgId",
 		)},
 	}, oauthCtrl.deleteOAuthClientHandler)
 }
@@ -186,7 +186,7 @@ func registerRegenerateClientSecret(api huma.API, oauthCtrl *oauthController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, oauthCtrl.di.AuthZ().Checker(), oauthCtrl.di.Logger())(
-			authz.PermissionWriteOAuth, authz.ResourceOrganization, "orgId",
+			authz.PermissionWriteOAuth, model.ResourceOrganization, "orgId",
 		)},
 	}, oauthCtrl.regenerateClientSecretHandler)
 }
@@ -205,7 +205,7 @@ func registerActivateOAuthClient(api huma.API, oauthCtrl *oauthController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, oauthCtrl.di.AuthZ().Checker(), oauthCtrl.di.Logger())(
-			authz.PermissionWriteOAuth, authz.ResourceOrganization, "orgId",
+			authz.PermissionWriteOAuth, model.ResourceOrganization, "orgId",
 		)},
 	}, oauthCtrl.activateOAuthClientHandler)
 }
@@ -224,7 +224,7 @@ func registerDeactivateOAuthClient(api huma.API, oauthCtrl *oauthController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, oauthCtrl.di.AuthZ().Checker(), oauthCtrl.di.Logger())(
-			authz.PermissionWriteOAuth, authz.ResourceOrganization, "orgId",
+			authz.PermissionWriteOAuth, model.ResourceOrganization, "orgId",
 		)},
 	}, oauthCtrl.deactivateOAuthClientHandler)
 }
@@ -243,7 +243,7 @@ func registerListOAuthTokens(api huma.API, oauthCtrl *oauthController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, oauthCtrl.di.AuthZ().Checker(), oauthCtrl.di.Logger())(
-			authz.PermissionReadOAuth, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadOAuth, model.ResourceOrganization, "orgId",
 		)},
 	}, oauthCtrl.listOAuthTokensHandler)
 }
@@ -262,7 +262,7 @@ func registerGetOAuthToken(api huma.API, oauthCtrl *oauthController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, oauthCtrl.di.AuthZ().Checker(), oauthCtrl.di.Logger())(
-			authz.PermissionReadOAuth, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadOAuth, model.ResourceOrganization, "orgId",
 		)},
 	}, oauthCtrl.getOAuthTokenHandler)
 }
@@ -281,7 +281,7 @@ func registerRevokeOAuthToken(api huma.API, oauthCtrl *oauthController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, oauthCtrl.di.AuthZ().Checker(), oauthCtrl.di.Logger())(
-			authz.PermissionWriteOAuth, authz.ResourceOrganization, "orgId",
+			authz.PermissionWriteOAuth, model.ResourceOrganization, "orgId",
 		)},
 	}, oauthCtrl.revokeOAuthTokenHandler)
 }
@@ -300,7 +300,7 @@ func registerListUserTokens(api huma.API, oauthCtrl *oauthController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, oauthCtrl.di.AuthZ().Checker(), oauthCtrl.di.Logger())(
-			authz.PermissionReadOAuth, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadOAuth, model.ResourceOrganization, "orgId",
 		)},
 	}, oauthCtrl.listUserTokensHandler)
 }
@@ -319,7 +319,7 @@ func registerListClientTokens(api huma.API, oauthCtrl *oauthController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, oauthCtrl.di.AuthZ().Checker(), oauthCtrl.di.Logger())(
-			authz.PermissionReadOAuth, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadOAuth, model.ResourceOrganization, "orgId",
 		)},
 	}, oauthCtrl.listClientTokensHandler)
 }
@@ -338,7 +338,7 @@ func registerBulkRevokeTokens(api huma.API, oauthCtrl *oauthController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, oauthCtrl.di.AuthZ().Checker(), oauthCtrl.di.Logger())(
-			authz.PermissionWriteOAuth, authz.ResourceOrganization, "orgId",
+			authz.PermissionWriteOAuth, model.ResourceOrganization, "orgId",
 		)},
 	}, oauthCtrl.bulkRevokeTokensHandler)
 }
@@ -357,7 +357,7 @@ func registerListOAuthScopes(api huma.API, oauthCtrl *oauthController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, oauthCtrl.di.AuthZ().Checker(), oauthCtrl.di.Logger())(
-			authz.PermissionReadOAuth, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadOAuth, model.ResourceOrganization, "orgId",
 		)},
 	}, oauthCtrl.listOAuthScopesHandler)
 }
@@ -376,7 +376,7 @@ func registerCreateOAuthScope(api huma.API, oauthCtrl *oauthController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, oauthCtrl.di.AuthZ().Checker(), oauthCtrl.di.Logger())(
-			authz.PermissionWriteOAuth, authz.ResourceOrganization, "orgId",
+			authz.PermissionWriteOAuth, model.ResourceOrganization, "orgId",
 		)},
 	}, oauthCtrl.createOAuthScopeHandler)
 }
@@ -395,7 +395,7 @@ func registerGetOAuthScope(api huma.API, oauthCtrl *oauthController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, oauthCtrl.di.AuthZ().Checker(), oauthCtrl.di.Logger())(
-			authz.PermissionReadOAuth, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadOAuth, model.ResourceOrganization, "orgId",
 		)},
 	}, oauthCtrl.getOAuthScopeHandler)
 }
@@ -414,7 +414,7 @@ func registerUpdateOAuthScope(api huma.API, oauthCtrl *oauthController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, oauthCtrl.di.AuthZ().Checker(), oauthCtrl.di.Logger())(
-			authz.PermissionWriteOAuth, authz.ResourceOrganization, "orgId",
+			authz.PermissionWriteOAuth, model.ResourceOrganization, "orgId",
 		)},
 	}, oauthCtrl.updateOAuthScopeHandler)
 }
@@ -433,7 +433,7 @@ func registerDeleteOAuthScope(api huma.API, oauthCtrl *oauthController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, oauthCtrl.di.AuthZ().Checker(), oauthCtrl.di.Logger())(
-			authz.PermissionWriteOAuth, authz.ResourceOrganization, "orgId",
+			authz.PermissionWriteOAuth, model.ResourceOrganization, "orgId",
 		)},
 	}, oauthCtrl.deleteOAuthScopeHandler)
 }
@@ -548,7 +548,7 @@ func registerGetOAuthStats(api huma.API, oauthCtrl *oauthController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, oauthCtrl.di.AuthZ().Checker(), oauthCtrl.di.Logger())(
-			authz.PermissionReadOAuth, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadOAuth, model.ResourceOrganization, "orgId",
 		)},
 	}, oauthCtrl.getOAuthStatsHandler)
 }
@@ -567,7 +567,7 @@ func registerGetClientStats(api huma.API, oauthCtrl *oauthController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, oauthCtrl.di.AuthZ().Checker(), oauthCtrl.di.Logger())(
-			authz.PermissionReadOAuth, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadOAuth, model.ResourceOrganization, "orgId",
 		)},
 	}, oauthCtrl.getClientStatsHandler)
 }
@@ -586,7 +586,7 @@ func registerGetTokenStats(api huma.API, oauthCtrl *oauthController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, oauthCtrl.di.AuthZ().Checker(), oauthCtrl.di.Logger())(
-			authz.PermissionReadRole, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadRoles, model.ResourceOrganization, "orgId",
 		)},
 	}, oauthCtrl.getTokenStatsHandler)
 }

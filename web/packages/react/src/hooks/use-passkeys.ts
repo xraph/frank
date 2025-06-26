@@ -355,8 +355,8 @@ function serializeCredential(credential: PublicKeyCredential): any {
  * ```
  */
 export function usePasskeys(): UsePasskeysReturn {
-    const { user, session, reload } = useAuth();
-    const { apiUrl, publishableKey, features } = useConfig();
+    const {user, session, userType} = useAuth();
+    const {apiUrl, publishableKey, features} = useConfig();
 
     const [passkeys, setPasskeys] = useState<PasskeySummary[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -369,6 +369,7 @@ export function usePasskeys(): UsePasskeysReturn {
         return new FrankUser({
             publishableKey,
             apiUrl,
+            userType: userType ?? 'end_user',
         }, session.accessToken);
     }, [publishableKey, apiUrl, session?.accessToken]);
 
@@ -646,7 +647,7 @@ export function usePasskeys(): UsePasskeysReturn {
 
     // Rename passkey (convenience method)
     const renamePasskey = useCallback(async (passkeyId: string, name: string): Promise<PasskeySummary> => {
-        return updatePasskey(passkeyId, { name });
+        return updatePasskey(passkeyId, {name});
     }, [updatePasskey]);
 
     // Refresh passkeys

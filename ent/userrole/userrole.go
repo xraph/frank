@@ -133,7 +133,7 @@ var (
 // ContextTypeValidator is a validator for the "context_type" field enum values. It is called by the builders before save.
 func ContextTypeValidator(ct model.ContextType) error {
 	switch ct.String() {
-	case "platform", "organization", "application", "resource":
+	case "platform", "organization", "application", "resource", "self", "global":
 		return nil
 	default:
 		return fmt.Errorf("userrole: invalid enum value for context_type field: %q", ct)

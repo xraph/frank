@@ -293,8 +293,8 @@ export const MAGIC_LINK_CONFIG = {
  * ```
  */
 export function useMagicLink(): UseMagicLinkReturn {
-    const { activeOrganization, reload } = useAuth();
-    const { apiUrl, publishableKey, features, linksPath, frontendUrl } = useConfig();
+    const {activeOrganization, reload, userType} = useAuth();
+    const {apiUrl, publishableKey, features, linksPath, frontendUrl} = useConfig();
 
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<AuthError | null>(null);
@@ -306,6 +306,7 @@ export function useMagicLink(): UseMagicLinkReturn {
         return new FrankAuth({
             publishableKey,
             apiUrl,
+            userType: userType ?? 'end_user',
         });
     }, [publishableKey, apiUrl]);
 
@@ -629,7 +630,7 @@ export function useMagicLinkVerification() {
  * Hook for magic link password reset flow
  */
 export function useMagicLinkPasswordReset() {
-    const { sendMagicLink, isValidEmail } = useMagicLink();
+    const {sendMagicLink, isValidEmail} = useMagicLink();
 
     const sendResetLink = useCallback(async (email: string) => {
         if (!isValidEmail(email)) {

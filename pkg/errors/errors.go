@@ -1,14 +1,10 @@
 package errors
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"strings"
 	"unicode"
-
-	goahttp "goa.design/goa/v3/http"
-	goa "goa.design/goa/v3/pkg"
 )
 
 // Error represents a custom error with context information
@@ -68,20 +64,30 @@ func (e *Error) GetStatus() int {
 
 // New creates a new error with a message
 func New(code string, message string, a ...any) *Error {
-	return &Error{
+	e := &Error{
 		Code:       code,
 		StatusCode: GetStatusCode(code),
-		Message:    fmt.Sprintf(message, a),
+		Message:    message,
 	}
+
+	if len(a) > 0 {
+		e.Message = fmt.Sprintf(message, a)
+	}
+	return e
 }
 
 // Newf creates a new error with a message
 func Newf(code string, message string, a ...any) *Error {
-	return &Error{
+	e := &Error{
 		Code:       code,
 		StatusCode: GetStatusCode(code),
-		Message:    fmt.Sprintf(message, a),
+		Message:    message,
 	}
+
+	if len(a) > 0 {
+		e.Message = fmt.Sprintf(message, a)
+	}
+	return e
 }
 
 // Wrap wraps an existing error with additional context
@@ -232,144 +238,6 @@ func IsInternalServer(err error) bool {
 func IsBadRequest(err error) bool {
 	e, ok := err.(*Error)
 	return ok && e.Code == CodeBadRequest
-}
-
-// CustomErrorFormatter is a goa HTTP error formatter that formats errors according to our API standards
-func CustomErrorFormatter(ctx context.Context, err error) goahttp.Statuser {
-	// Check if it's already our custom error type
-	if e, ok := err.(*ErrorResponse); ok {
-		return e
-	}
-
-	// Check if it's already our custom error type
-	if e, ok := err.(*Error); ok {
-		return NewErrorResponse(e)
-	}
-
-	// Handle Goa's built-in ServiceError type (used for validation errors)
-	if serr, ok := err.(*goa.ServiceError); ok {
-		var code string
-		var message string
-		metadata := make(map[string]interface{})
-
-		switch serr.Name {
-		case "missing_field", "required":
-			code = CodeMissingRequiredField
-			if serr.Field != nil {
-				message = fmt.Sprintf("The field '%s' is required", *serr.Field)
-				metadata["field"] = *serr.Field
-			} else {
-				message = "A required field is missing"
-			}
-
-		case "invalid_field_type":
-			code = CodeInvalidFormat
-			message = serr.Message
-			if serr.Field != nil {
-				metadata["field"] = *serr.Field
-			}
-
-		case "invalid_format":
-			code = CodeInvalidFormat
-			message = serr.Message
-			if serr.Field != nil {
-				metadata["field"] = *serr.Field
-				metadata["format_error"] = serr.Message
-			}
-
-		case "invalid_pattern":
-			code = CodeInvalidFormat
-			message = serr.Message
-			if serr.Field != nil {
-				metadata["field"] = *serr.Field
-				metadata["pattern_error"] = serr.Message
-			}
-
-		case "invalid_range":
-			code = CodeInvalidInput
-			message = serr.Message
-			if serr.Field != nil {
-				metadata["field"] = *serr.Field
-				metadata["range_error"] = serr.Message
-			}
-
-		case "invalid_length":
-			code = CodeInvalidInput
-			message = serr.Message
-			if serr.Field != nil {
-				metadata["field"] = *serr.Field
-				metadata["length_error"] = serr.Message
-			}
-
-		case "enum":
-			code = CodeInvalidInput
-			message = serr.Message
-			if serr.Field != nil {
-				metadata["field"] = *serr.Field
-				metadata["enum_error"] = serr.Message
-			}
-
-		default:
-			code = CodeInvalidInput
-			message = serr.Message
-			if serr.ID != "" {
-				metadata["error_id"] = serr.ID
-			}
-			if serr.Field != nil {
-				metadata["field"] = *serr.Field
-			}
-		}
-
-		return &ErrorResponse{
-			Code:    code,
-			Message: message,
-			Details: metadata,
-		}
-	}
-
-	// Check if it's another type of goa error with an HTTP status
-	if statuser, ok := err.(goahttp.Statuser); ok {
-		status := statuser.StatusCode()
-
-		// Convert goa errors to our error format based on status code
-		var code string
-		switch status {
-		case http.StatusBadRequest:
-			code = CodeBadRequest
-		case http.StatusUnauthorized:
-			code = CodeUnauthorized
-		case http.StatusForbidden:
-			code = CodeForbidden
-		case http.StatusNotFound:
-			code = CodeNotFound
-		case http.StatusMethodNotAllowed:
-			code = CodeMethodNotAllowed
-		case http.StatusConflict:
-			code = CodeConflict
-		case http.StatusUnprocessableEntity:
-			code = CodeUnprocessableEntity
-		case http.StatusTooManyRequests:
-			code = CodeTooManyRequests
-		case http.StatusInternalServerError:
-			code = CodeInternalServer
-		case http.StatusServiceUnavailable:
-			code = CodeServiceUnavailable
-		default:
-			code = CodeInternalServer
-		}
-		return &ErrorResponse{
-			Code:      toUpperSnakeCase(code),
-			StatsCode: code,
-			Message:   err.Error(),
-		}
-	}
-
-	// Default to internal server error for unknown error types
-	return &ErrorResponse{
-		Code:      CodeInternalServer,
-		StatsCode: CodeInternalServer,
-		Message:   err.Error(),
-	}
 }
 
 // ErrorResponse formats an error for HTTP response

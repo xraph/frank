@@ -5,7 +5,7 @@
  * member management, invitations, and organization-specific settings.
  */
 
-import {useCallback, useEffect, useMemo, useState} from 'react';
+import {useCallback, useEffect, useMemo, useState} from "react";
 
 import type {
     AcceptInvitationRequest,
@@ -15,11 +15,12 @@ import type {
     Organization,
     OrganizationSettings,
     UpdateOrganizationRequest,
-} from '@frank-auth/client';
+} from "@frank-auth/client";
 
-import {FrankOrganization} from '@frank-auth/sdk';
-import {useAuth, useAuth as useAuthProvider} from './use-auth';
-import {useConfig} from '../provider/config-provider';
+import {FrankOrganization} from "@frank-auth/sdk";
+import {useAuth} from "./use-auth";
+import {useAuth as useAuthProvider} from "../provider/auth-provider";
+import {useConfig} from "../provider/config-provider";
 
 import type {
     AuthError,
@@ -28,7 +29,7 @@ import type {
     OrganizationInvitation,
     OrganizationMembership,
     UpdateOrganizationParams,
-} from '../provider/types';
+} from "../provider/types";
 
 // ============================================================================
 // Organization Hook Interface
@@ -46,8 +47,13 @@ export interface UseOrganizationReturn {
     error: AuthError | null;
 
     // Organization management
-    createOrganization: (params: CreateOrganizationParams) => Promise<Organization>;
-    updateOrganization: (organizationId: string, params: UpdateOrganizationParams) => Promise<Organization>;
+    createOrganization: (
+        params: CreateOrganizationParams,
+    ) => Promise<Organization>;
+    updateOrganization: (
+        organizationId: string,
+        params: UpdateOrganizationParams,
+    ) => Promise<Organization>;
     deleteOrganization: (organizationId: string) => Promise<void>;
     switchOrganization: (organizationId: string) => Promise<void>;
 
@@ -64,7 +70,9 @@ export interface UseOrganizationReturn {
     resendInvitation: (invitationId: string) => Promise<void>;
 
     // Settings management
-    updateSettings: (settings: Partial<OrganizationSettings>) => Promise<OrganizationSettings>;
+    updateSettings: (
+        settings: Partial<OrganizationSettings>,
+    ) => Promise<OrganizationSettings>;
 
     // Convenience properties
     organizationId: string | null;
@@ -87,7 +95,7 @@ export interface OrganizationMember {
     userId: string;
     organizationId: string;
     role: string;
-    status: 'active' | 'invited' | 'suspended';
+    status: "active" | "invited" | "suspended";
     joinedAt: Date;
     invitedBy?: string;
     user: {
@@ -198,7 +206,7 @@ export function useOrganization(): UseOrganizationReturn {
     } = useAuth();
     const {frankOrg} = useAuthProvider();
 
-    const { apiUrl, publishableKey, userType } = useConfig();
+    const {apiUrl, publishableKey, userType} = useConfig();
 
     const [organizations, setOrganizations] = useState<Organization[]>([]);
     const [invitations, setInvitations] = useState<OrganizationInvitation[]>([]);
@@ -207,18 +215,31 @@ export function useOrganization(): UseOrganizationReturn {
 
     // Initialize Frank Organization SDK
     const frankOrganization = useMemo(() => {
-        if (!session?.accessToken) return null;
-        return new FrankOrganization({
-            publishableKey,
+        // if (frankOrg) return frankOrg;
+        console.log(
+            "Initializing Frank Organization SDK",
+            session,
             apiUrl,
-        }, session.accessToken);
+            publishableKey,
+            userType,
+        );
+
+        // if (!session?.accessToken) return null;
+        return new FrankOrganization(
+            {
+                publishableKey,
+                apiUrl,
+                userType: userType ?? 'end_user',
+            },
+            session?.accessToken,
+        );
     }, [publishableKey, apiUrl, session?.accessToken]);
 
     // Error handler
     const handleError = useCallback((err: any) => {
         const authError: AuthError = {
-            code: err.code || 'UNKNOWN_ERROR',
-            message: err.message || 'An unknown error occurred',
+            code: err.code || "UNKNOWN_ERROR",
+            message: err.message || "An unknown error occurred",
             details: err.details,
             field: err.field,
         };
@@ -235,17 +256,19 @@ export function useOrganization(): UseOrganizationReturn {
             setError(null);
 
             // Load organizations user belongs to
-            const orgsData = await frankOrganization.listOrganizations();
-            setOrganizations(orgsData.data ?? []);
+            const orgsData = await frankOrganization.listOrganizations({
+                fields: [],
+            });
+            setOrganizations((orgsData.data ?? []) as any);
 
             // Load pending invitations
-            const invitationsData = await frankOrganization.listInvitations();
-            setInvitations(invitationsData?.data ?? []);
+            // const invitationsData = await frankOrganization.listInvitations();
+            // setInvitations(invitationsData?.data ?? []);
         } catch (err) {
-            console.error('Failed to load organizations:', err);
+            console.error("Failed to load organizations:", err);
             setError({
-                code: 'ORGANIZATIONS_LOAD_FAILED',
-                message: 'Failed to load organizations',
+                code: "ORGANIZATIONS_LOAD_FAILED",
+                message: "Failed to load organizations",
             });
         } finally {
             setIsLoading(false);
@@ -257,185 +280,225 @@ export function useOrganization(): UseOrganizationReturn {
     }, [loadOrganizations]);
 
     // Organization management methods
-    const createOrganization = useCallback(async (params: CreateOrganizationParams): Promise<Organization> => {
-        if (!frankOrganization) throw new Error('Organization service not available');
+    const createOrganization = useCallback(
+        async (params: CreateOrganizationParams): Promise<Organization> => {
+            if (!frankOrganization)
+                throw new Error("Organization service not available");
 
-        try {
-            setIsLoading(true);
-            setError(null);
+            try {
+                setIsLoading(true);
+                setError(null);
 
-            const createRequest: CreateOrganizationRequest = {
-                name: params.name,
-                slug: params.slug,
-                description: params.description,
-                logoUrl: params.logoUrl,
-                websiteUrl: params.websiteUrl,
-                settings: params.settings,
+                const createRequest: CreateOrganizationRequest = {
+                    name: params.name,
+                    slug: params.slug,
+                    // description: params.description,
+                    logoUrl: params.logoUrl,
+                    websiteUrl: params.websiteUrl,
+                    settings: params.settings,
+                    plan: params.planId ?? 'free',
 
-                createTrialPeriod: true,
-                enableAuthService: true,
-                endUserLimit: 10000000,
-                externalUserLimit: 0,
-                orgType: 'platform',
-                plan: ''
-            };
+                    // createTrialPeriod: true,
+                    // enableAuthService: true,
+                    // endUserLimit: 10000000,
+                    // externalUserLimit: 0,
+                    // orgType: "platform",
+                    // plan: "",
+                };
 
-            const newOrganization = await frankOrganization.createOrganization(createRequest);
+                const newOrganization =
+                    await frankOrganization.createOrganization(createRequest);
 
-            // Refresh organizations list
-            await loadOrganizations();
-            await reload(); // Refresh auth state
+                // Refresh organizations list
+                await loadOrganizations();
+                await reload(); // Refresh auth state
 
-            return newOrganization;
-        } catch (err) {
-            return handleError(err);
-        } finally {
-            setIsLoading(false);
-        }
-    }, [frankOrganization, loadOrganizations, reload, handleError]);
+                return newOrganization;
+            } catch (err) {
+                return handleError(err);
+            } finally {
+                setIsLoading(false);
+            }
+        },
+        [frankOrganization, loadOrganizations, reload, handleError],
+    );
 
-    const updateOrganization = useCallback(async (
-        organizationId: string,
-        params: UpdateOrganizationParams
-    ): Promise<Organization> => {
-        if (!frankOrganization) throw new Error('Organization service not available');
+    const updateOrganization = useCallback(
+        async (
+            organizationId: string,
+            params: UpdateOrganizationParams,
+        ): Promise<Organization> => {
+            if (!frankOrganization)
+                throw new Error("Organization service not available");
 
-        try {
-            setIsLoading(true);
-            setError(null);
+            try {
+                setIsLoading(true);
+                setError(null);
 
-            const updateRequest: UpdateOrganizationRequest = {
-                name: params.name,
-                slug: params.slug,
-                description: params.description,
-                logoUrl: params.logoUrl,
-                websiteUrl: params.websiteUrl,
-                settings: params.settings,
-            };
+                const updateRequest: UpdateOrganizationRequest = {
+                    name: params.name,
+                    slug: params.slug,
+                    description: params.description,
+                    logoUrl: params.logoUrl,
+                    websiteUrl: params.websiteUrl,
+                    settings: params.settings,
+                };
 
-            const updatedOrganization = await frankOrganization.updateOrganization(organizationId, updateRequest);
+                const updatedOrganization = await frankOrganization.updateOrganization(
+                    organizationId,
+                    updateRequest,
+                );
 
-            // Refresh organizations list and auth state
-            await loadOrganizations();
-            await reload();
+                // Refresh organizations list and auth state
+                await loadOrganizations();
+                await reload();
 
-            return updatedOrganization;
-        } catch (err) {
-            return handleError(err);
-        } finally {
-            setIsLoading(false);
-        }
-    }, [frankOrganization, loadOrganizations, reload, handleError]);
+                return updatedOrganization;
+            } catch (err) {
+                return handleError(err);
+            } finally {
+                setIsLoading(false);
+            }
+        },
+        [frankOrganization, loadOrganizations, reload, handleError],
+    );
 
-    const deleteOrganization = useCallback(async (organizationId: string): Promise<void> => {
-        if (!frankOrganization) throw new Error('Organization service not available');
+    const deleteOrganization = useCallback(
+        async (organizationId: string): Promise<void> => {
+            if (!frankOrganization)
+                throw new Error("Organization service not available");
 
-        try {
-            setIsLoading(true);
-            setError(null);
+            try {
+                setIsLoading(true);
+                setError(null);
 
-            await frankOrganization.deleteOrganization(organizationId, {
-                notifyMembers: true,
-                confirm: true,
-                dataRetention: 0
-            });
+                await frankOrganization.deleteOrganization(organizationId, {
+                    notifyMembers: true,
+                    confirm: true,
+                    dataRetention: 0,
+                });
 
-            // Refresh organizations list and auth state
-            await loadOrganizations();
-            await reload();
-        } catch (err) {
-            handleError(err);
-        } finally {
-            setIsLoading(false);
-        }
-    }, [frankOrganization, loadOrganizations, reload, handleError]);
+                // Refresh organizations list and auth state
+                await loadOrganizations();
+                await reload();
+            } catch (err) {
+                handleError(err);
+            } finally {
+                setIsLoading(false);
+            }
+        },
+        [frankOrganization, loadOrganizations, reload, handleError],
+    );
 
-    const switchOrganization = useCallback(async (organizationId: string): Promise<void> => {
-        await authSwitchOrganization(organizationId);
-        await loadOrganizations(); // Refresh data for new organization
-    }, [authSwitchOrganization, loadOrganizations]);
+    const switchOrganization = useCallback(
+        async (organizationId: string): Promise<void> => {
+            await authSwitchOrganization(organizationId);
+            await loadOrganizations(); // Refresh data for new organization
+        },
+        [authSwitchOrganization, loadOrganizations],
+    );
 
     // Member management methods
-    const inviteMember = useCallback(async (params: InviteMemberParams): Promise<void> => {
-        if (!frankOrganization || !activeOrganization) throw new Error('Organization service not available');
+    const inviteMember = useCallback(
+        async (params: InviteMemberParams): Promise<void> => {
+            if (!frankOrganization || !activeOrganization)
+                throw new Error("Organization service not available");
 
-        try {
-            setIsLoading(true);
-            setError(null);
+            try {
+                setIsLoading(true);
+                setError(null);
 
-            const inviteRequest: InviteMemberRequest = {
-                emailAddress: params.emailAddress,
-                role: params.role,
-                redirectUrl: params.redirectUrl,
-                publicMetadata: params.publicMetadata,
-                privateMetadata: params.privateMetadata,
-            };
+                const inviteRequest: InviteMemberRequest = {
+                    emailAddress: params.emailAddress,
+                    role: params.role,
+                    redirectUrl: params.redirectUrl,
+                    publicMetadata: params.publicMetadata,
+                    privateMetadata: params.privateMetadata,
+                };
 
-            await frankOrganization.addMember(activeOrganization.id, inviteRequest);
+                await frankOrganization.addMember(activeOrganization.id, inviteRequest);
 
-            // Refresh invitations
-            await loadOrganizations();
-        } catch (err) {
-            handleError(err);
-        } finally {
-            setIsLoading(false);
-        }
-    }, [frankOrganization, activeOrganization, loadOrganizations, handleError]);
+                // Refresh invitations
+                await loadOrganizations();
+            } catch (err) {
+                handleError(err);
+            } finally {
+                setIsLoading(false);
+            }
+        },
+        [frankOrganization, activeOrganization, loadOrganizations, handleError],
+    );
 
-    const removeMember = useCallback(async (memberId: string): Promise<void> => {
-        if (!frankOrganization || !activeOrganization) throw new Error('Organization service not available');
+    const removeMember = useCallback(
+        async (memberId: string): Promise<void> => {
+            if (!frankOrganization || !activeOrganization)
+                throw new Error("Organization service not available");
 
-        try {
-            setIsLoading(true);
-            setError(null);
+            try {
+                setIsLoading(true);
+                setError(null);
 
-            await frankOrganization.removeMember(activeOrganization.id, memberId, {
-                notifyUser: true,
-            });
+                await frankOrganization.removeMember(activeOrganization.id, memberId, {
+                    notifyUser: true,
+                });
 
-            // Refresh organizations data
-            await loadOrganizations();
-        } catch (err) {
-            handleError(err);
-        } finally {
-            setIsLoading(false);
-        }
-    }, [frankOrganization, activeOrganization, loadOrganizations, handleError]);
+                // Refresh organizations data
+                await loadOrganizations();
+            } catch (err) {
+                handleError(err);
+            } finally {
+                setIsLoading(false);
+            }
+        },
+        [frankOrganization, activeOrganization, loadOrganizations, handleError],
+    );
 
-    const updateMemberRole = useCallback(async (memberId: string, role: string): Promise<void> => {
-        if (!frankOrganization || !activeOrganization) throw new Error('Organization service not available');
+    const updateMemberRole = useCallback(
+        async (memberId: string, role: string): Promise<void> => {
+            if (!frankOrganization || !activeOrganization)
+                throw new Error("Organization service not available");
 
-        try {
-            setIsLoading(true);
-            setError(null);
+            try {
+                setIsLoading(true);
+                setError(null);
 
-            await frankOrganization.updateMemberRole(activeOrganization.id, memberId, {
-                roleId:  role,
-            });
+                await frankOrganization.updateMemberRole(
+                    activeOrganization.id,
+                    memberId,
+                    {
+                        roleId: role,
+                    },
+                );
 
-            // Refresh organizations data
-            await loadOrganizations();
-        } catch (err) {
-            handleError(err);
-        } finally {
-            setIsLoading(false);
-        }
-    }, [frankOrganization, activeOrganization, loadOrganizations, handleError]);
+                // Refresh organizations data
+                await loadOrganizations();
+            } catch (err) {
+                handleError(err);
+            } finally {
+                setIsLoading(false);
+            }
+        },
+        [frankOrganization, activeOrganization, loadOrganizations, handleError],
+    );
 
     const getMembers = useCallback(async (): Promise<OrganizationMember[]> => {
-        if (!frankOrganization || !activeOrganization) throw new Error('Organization service not available');
+        if (!frankOrganization || !activeOrganization)
+            throw new Error("Organization service not available");
 
         try {
-            const res =  await frankOrganization.listMembers(activeOrganization.id);
-            return (res.data ?? []).map((item)=>({
-                id: item.userId,
-                userId: item.userId,
-                organizationId: item.organizationId,
-                role: item.role,
-                status: item.status,
-                joinedAt: item.joinedAt,
-                invitedBy: item.invitedBy,
-            }) as OrganizationMember)
+            const res = await frankOrganization.listMembers(activeOrganization.id);
+            return (res.data ?? []).map(
+                (item) =>
+                    ({
+                        id: item.userId,
+                        userId: item.userId,
+                        organizationId: item.organizationId,
+                        role: item.role,
+                        status: item.status,
+                        joinedAt: item.joinedAt,
+                        invitedBy: item.invitedBy,
+                    }) as OrganizationMember,
+            );
         } catch (err) {
             handleError(err);
             return [];
@@ -443,146 +506,207 @@ export function useOrganization(): UseOrganizationReturn {
     }, [frankOrganization, activeOrganization, handleError]);
 
     // Invitation management methods
-    const acceptInvitation = useCallback(async (token: string, opts?: {
-        firstName?: string
-        lastName?: string
-        password?: string
-    }): Promise<void> => {
-        if (!frankOrganization) throw new Error('Organization service not available');
+    const acceptInvitation = useCallback(
+        async (
+            token: string,
+            opts?: {
+                firstName?: string;
+                lastName?: string;
+                password?: string;
+            },
+        ): Promise<void> => {
+            if (!frankOrganization)
+                throw new Error("Organization service not available");
 
-        try {
-            setIsLoading(true);
-            setError(null);
+            try {
+                setIsLoading(true);
+                setError(null);
 
-            const acceptRequest: AcceptInvitationRequest = {
-                ...(opts ?? {}),
-                token,
-                acceptTerms: true,
-            };
-            await frankOrganization.acceptInvitation(acceptRequest);
+                const acceptRequest: AcceptInvitationRequest = {
+                    ...(opts ?? {}),
+                    token,
+                    acceptTerms: true,
+                };
+                await frankOrganization.acceptInvitation(acceptRequest);
 
-            // Refresh organizations and invitations
-            await loadOrganizations();
-            await reload(); // User now belongs to new organization
-        } catch (err) {
-            handleError(err);
-        } finally {
-            setIsLoading(false);
-        }
-    }, [frankOrganization, loadOrganizations, reload, handleError]);
+                // Refresh organizations and invitations
+                await loadOrganizations();
+                await reload(); // User now belongs to new organization
+            } catch (err) {
+                handleError(err);
+            } finally {
+                setIsLoading(false);
+            }
+        },
+        [frankOrganization, loadOrganizations, reload, handleError],
+    );
 
-    const declineInvitation = useCallback(async (token: string): Promise<void> => {
-        if (!frankOrganization) throw new Error('Organization service not available');
+    const declineInvitation = useCallback(
+        async (token: string): Promise<void> => {
+            if (!frankOrganization)
+                throw new Error("Organization service not available");
 
-        try {
-            setIsLoading(true);
-            setError(null);
+            try {
+                setIsLoading(true);
+                setError(null);
 
-            const declineRequest: DeclineInvitationRequest = {
-                token: token,
-            };
-            await frankOrganization.declineInvitation(declineRequest);
+                const declineRequest: DeclineInvitationRequest = {
+                    token: token,
+                };
+                await frankOrganization.declineInvitation(declineRequest);
 
-            // Refresh invitations
-            await loadOrganizations();
-        } catch (err) {
-            handleError(err);
-        } finally {
-            setIsLoading(false);
-        }
-    }, [frankOrganization, loadOrganizations, handleError]);
+                // Refresh invitations
+                await loadOrganizations();
+            } catch (err) {
+                handleError(err);
+            } finally {
+                setIsLoading(false);
+            }
+        },
+        [frankOrganization, loadOrganizations, handleError],
+    );
 
-    const cancelInvitation = useCallback(async (invitationId: string): Promise<void> => {
-        if (!frankOrganization) throw new Error('Organization service not available');
+    const cancelInvitation = useCallback(
+        async (invitationId: string): Promise<void> => {
+            if (!frankOrganization)
+                throw new Error("Organization service not available");
 
-        try {
-            setIsLoading(true);
-            setError(null);
+            try {
+                setIsLoading(true);
+                setError(null);
 
-            await frankOrganization.cancelInvitation(invitationId);
+                await frankOrganization.cancelInvitation(invitationId);
 
-            // Refresh invitations
-            await loadOrganizations();
-        } catch (err) {
-            handleError(err);
-        } finally {
-            setIsLoading(false);
-        }
-    }, [frankOrganization, loadOrganizations, handleError]);
+                // Refresh invitations
+                await loadOrganizations();
+            } catch (err) {
+                handleError(err);
+            } finally {
+                setIsLoading(false);
+            }
+        },
+        [frankOrganization, loadOrganizations, handleError],
+    );
 
-    const resendInvitation = useCallback(async (invitationId: string): Promise<void> => {
-        if (!frankOrganization) throw new Error('Organization service not available');
+    const resendInvitation = useCallback(
+        async (invitationId: string): Promise<void> => {
+            if (!frankOrganization)
+                throw new Error("Organization service not available");
 
-        try {
-            setIsLoading(true);
-            setError(null);
+            try {
+                setIsLoading(true);
+                setError(null);
 
-            await frankOrganization.resendInvitation(invitationId);
-        } catch (err) {
-            handleError(err);
-        } finally {
-            setIsLoading(false);
-        }
-    }, [frankOrganization, handleError]);
+                await frankOrganization.resendInvitation(invitationId);
+            } catch (err) {
+                handleError(err);
+            } finally {
+                setIsLoading(false);
+            }
+        },
+        [frankOrganization, handleError],
+    );
 
     // Settings management
-    const updateSettings = useCallback(async (settings: Partial<OrganizationSettings>): Promise<OrganizationSettings> => {
-        if (!frankOrganization || !activeOrganization) throw new Error('Organization service not available');
+    const updateSettings = useCallback(
+        async (
+            settings: Partial<OrganizationSettings>,
+        ): Promise<OrganizationSettings> => {
+            if (!frankOrganization || !activeOrganization)
+                throw new Error("Organization service not available");
 
-        try {
-            setIsLoading(true);
-            setError(null);
+            try {
+                setIsLoading(true);
+                setError(null);
 
-            const updatedSettings = await frankOrganization.updateOrganizationSettings(activeOrganization.id, settings);
+                const updatedSettings =
+                    await frankOrganization.updateOrganizationSettings(
+                        activeOrganization.id,
+                        settings,
+                    );
 
-            // Refresh organization data
-            await loadOrganizations();
-            await reload();
+                // Refresh organization data
+                await loadOrganizations();
+                await reload();
 
-            return updatedSettings;
-        } catch (err) {
-            return handleError(err);
-        } finally {
-            setIsLoading(false);
-        }
-    }, [frankOrganization, activeOrganization, loadOrganizations, reload, handleError]);
+                return updatedSettings;
+            } catch (err) {
+                return handleError(err);
+            } finally {
+                setIsLoading(false);
+            }
+        },
+        [
+            frankOrganization,
+            activeOrganization,
+            loadOrganizations,
+            reload,
+            handleError,
+        ],
+    );
 
     // Convenience properties
-    const organizationId = useMemo(() => activeOrganization?.id || null, [activeOrganization]);
-    const organizationName = useMemo(() => activeOrganization?.name || null, [activeOrganization]);
-    const organizationSlug = useMemo(() => activeOrganization?.slug || null, [activeOrganization]);
+    const organizationId = useMemo(
+        () => activeOrganization?.id || null,
+        [activeOrganization],
+    );
+    const organizationName = useMemo(
+        () => activeOrganization?.name || null,
+        [activeOrganization],
+    );
+    const organizationSlug = useMemo(
+        () => activeOrganization?.slug || null,
+        [activeOrganization],
+    );
 
     // Role-based properties
     const currentMembership = useMemo(() => {
         if (!activeOrganization) return null;
-        return organizationMemberships.find(m => m.organization.id === activeOrganization.id);
+        return organizationMemberships.find(
+            (m) => m.organization.id === activeOrganization.id,
+        );
     }, [activeOrganization, organizationMemberships]);
 
-    const isOwner = useMemo(() => currentMembership?.role === 'owner', [currentMembership]);
-    const isAdmin = useMemo(() => ['owner', 'admin'].includes(currentMembership?.role || ''), [currentMembership]);
+    const isOwner = useMemo(
+        () => currentMembership?.role === "owner",
+        [currentMembership],
+    );
+    const isAdmin = useMemo(
+        () => ["owner", "admin"].includes(currentMembership?.role || ""),
+        [currentMembership],
+    );
     const isMember = useMemo(() => !!currentMembership, [currentMembership]);
 
     // Organization statistics
-    const memberCount = useMemo(() => activeOrganization?.memberCount || 0, [activeOrganization]);
-    const pendingInvitations = useMemo(() =>
-            invitations.filter(inv => inv.status === 'pending').length,
-        [invitations]
+    const memberCount = useMemo(
+        () => activeOrganization?.memberCount || 0,
+        [activeOrganization],
+    );
+    const pendingInvitations = useMemo(
+        () => invitations.filter((inv) => inv.status === "pending").length,
+        [invitations],
     );
 
     // Multi-tenant helpers
-    const hasOrganizations = useMemo(() => organizations.length > 0, [organizations]);
+    const hasOrganizations = useMemo(
+        () => organizations.length > 0,
+        [organizations],
+    );
     const canCreateOrganization = useMemo(() => {
         // Internal users can always create organizations
-        if (userType === 'internal') return true;
+        if (userType === "internal") return true;
         // External users can create organizations if they're owners of at least one
-        if (userType === 'external') {
-            return organizationMemberships.some(m => m.role === 'owner');
+        if (userType === "external") {
+            return organizationMemberships.some((m) => m.role === "owner");
         }
         // End users cannot create organizations
         return false;
     }, [userType, organizationMemberships]);
 
-    const canSwitchOrganization = useMemo(() => organizations.length > 1, [organizations]);
+    const canSwitchOrganization = useMemo(
+        () => organizations.length > 1,
+        [organizations],
+    );
 
     return {
         // Organization state
@@ -652,7 +776,7 @@ export function useOrganizationMembership() {
 
     const currentMembership = useMemo(() => {
         if (!activeOrganization) return null;
-        return memberships.find(m => m.organization.id === activeOrganization.id);
+        return memberships.find((m) => m.organization.id === activeOrganization.id);
     }, [activeOrganization, memberships]);
 
     return {
@@ -684,14 +808,14 @@ export function useOrganizationInvitations() {
         error,
     } = useOrganization();
 
-    const pendingInvitations = useMemo(() =>
-            invitations.filter(inv => inv.status === 'pending'),
-        [invitations]
+    const pendingInvitations = useMemo(
+        () => invitations.filter((inv) => inv.status === "pending"),
+        [invitations],
     );
 
-    const expiredInvitations = useMemo(() =>
-            invitations.filter(inv => inv.status === 'expired'),
-        [invitations]
+    const expiredInvitations = useMemo(
+        () => invitations.filter((inv) => inv.status === "expired"),
+        [invitations],
     );
 
     return {

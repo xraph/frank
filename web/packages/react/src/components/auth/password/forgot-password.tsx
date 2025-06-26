@@ -312,7 +312,8 @@ export function ForgotPassword({
                                    showBackLink = true,
                                    organizationId,
                                }: ForgotPasswordProps) {
-    const { sendMagicLink, isLoading, isValidEmail } = useMagicLink();
+    const { isValidEmail } = useMagicLink();
+    const { requestPasswordReset, isLoading } = useAuth();
     const { components, linksPath } = useConfig();
 
     const [email, setEmail] = useState(initialEmail);
@@ -339,9 +340,10 @@ export function ForgotPassword({
         try {
             const resetUrl = redirectUrl || `${window.location.origin}/auth/reset-password`;
 
-            const result = await sendMagicLink(email, {
+            const result = await requestPasswordReset({
+                email,
                 redirectUrl: resetUrl,
-                organizationId,
+                // organizationId,
             });
 
             if (result.success) {
@@ -356,7 +358,7 @@ export function ForgotPassword({
             setError(errorMessage);
             onError?.(err instanceof Error ? err : new Error(errorMessage));
         }
-    }, [email, isValidEmail, sendMagicLink, redirectUrl, organizationId, onSuccess, onError]);
+    }, [email, isValidEmail, requestPasswordReset, redirectUrl, organizationId, onSuccess, onError]);
 
     // Handle resend
     const handleResend = useCallback(async () => {
@@ -506,9 +508,10 @@ export function ResetPassword({
                                       requireSymbols: false,
                                   },
                               }: ResetPasswordProps) {
-    const { signIn } = useAuth();
+    const { signIn, validateToken } = useAuth();
     const { components, linksPath } = useConfig();
-    const { verifyMagicLink, extractTokenFromUrl } = useMagicLink();
+    const { extractTokenFromUrl } = useMagicLink();
+    const { resetPassword } = useAuth();
 
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -520,20 +523,20 @@ export function ResetPassword({
     const Button = components.Button ?? HButton;
 
     // Extract token from URL or use provided token
-    const magicLinkToken = useMemo(() => {
+    const recoveryToken = useMemo(() => {
         return token || extractTokenFromUrl();
     }, [token, extractTokenFromUrl]);
 
     // Verify token on mount
     useEffect(() => {
-        if (autoVerify && magicLinkToken && tokenStatus === 'idle') {
+        if (autoVerify && tokenStatus === 'idle') {
             verifyResetToken();
         }
-    }, [autoVerify, magicLinkToken, tokenStatus]);
+    }, [autoVerify, recoveryToken, tokenStatus]);
 
     // Verify reset token
     const verifyResetToken = useCallback(async () => {
-        if (!magicLinkToken) {
+        if (!recoveryToken) {
             setTokenStatus('invalid');
             setError('No reset token found in URL');
             return;
@@ -543,11 +546,14 @@ export function ResetPassword({
             setTokenStatus('verifying');
             setError(null);
 
-            const result = await verifyMagicLink(magicLinkToken);
+            const result = await validateToken({
+                token: recoveryToken,
+                type: 'password',
+            });
 
             if (result.success) {
                 setTokenStatus('valid');
-                setResetToken(magicLinkToken);
+                setResetToken(recoveryToken);
             } else {
                 setTokenStatus('invalid');
                 setError(result.error || 'Invalid or expired reset link');
@@ -558,7 +564,7 @@ export function ResetPassword({
             setError(errorMessage);
             onError?.(err instanceof Error ? err : new Error(errorMessage));
         }
-    }, [magicLinkToken, verifyMagicLink, onError]);
+    }, [recoveryToken, resetPassword, onError]);
 
     // Validate password
     const isPasswordValid = useMemo(() => {
@@ -617,11 +623,10 @@ export function ResetPassword({
 
             // Here you would call your reset password API
             // For now, we'll simulate with the auth hook
-            const result = await signIn({
-                strategy: 'password_reset',
+            const result = await resetPassword({
                 token: resetToken,
-                password,
-            } as any);
+                newPassword: password,
+            });
 
             if (result.status === 'complete' && result.user) {
                 onSuccess?.(result);

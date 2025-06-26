@@ -99,7 +99,7 @@ func registerGenerateSOC2Report(api huma.API, ctrl *complianceController) {
 			{"BearerAuth": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionSystemAdmin, authz.ResourceSystem, "",
+			authz.PermissionSystemAdmin, model.ResourceSystem, "",
 		)},
 	}, ctrl.generateSOC2ReportHandler)
 }
@@ -118,7 +118,7 @@ func registerCheckSOC2Compliance(api huma.API, ctrl *complianceController) {
 			{"BearerAuth": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionSystemAdmin, authz.ResourceSystem, "",
+			authz.PermissionSystemAdmin, model.ResourceSystem, "",
 		)},
 	}, ctrl.checkSOC2ComplianceHandler)
 }
@@ -139,7 +139,7 @@ func registerGenerateHIPAAReport(api huma.API, ctrl *complianceController) {
 			{"BearerAuth": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionSystemAdmin, authz.ResourceSystem, "",
+			authz.PermissionSystemAdmin, model.ResourceSystem, "",
 		)},
 	}, ctrl.generateHIPAAReportHandler)
 }
@@ -158,7 +158,7 @@ func registerCheckHIPAACompliance(api huma.API, ctrl *complianceController) {
 			{"BearerAuth": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionSystemAdmin, authz.ResourceSystem, "",
+			authz.PermissionSystemAdmin, model.ResourceSystem, "",
 		)},
 	}, ctrl.checkHIPAAComplianceHandler)
 }
@@ -179,7 +179,7 @@ func registerGeneratePCIDSSReport(api huma.API, ctrl *complianceController) {
 			{"BearerAuth": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionSystemAdmin, authz.ResourceSystem, "",
+			authz.PermissionSystemAdmin, model.ResourceSystem, "",
 		)},
 	}, ctrl.generatePCIDSSReportHandler)
 }
@@ -198,7 +198,7 @@ func registerCheckPCIDSSCompliance(api huma.API, ctrl *complianceController) {
 			{"BearerAuth": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionSystemAdmin, authz.ResourceSystem, "",
+			authz.PermissionSystemAdmin, model.ResourceSystem, "",
 		)},
 	}, ctrl.checkPCIDSSComplianceHandler)
 }
@@ -219,7 +219,7 @@ func registerGenerateGDPRReport(api huma.API, ctrl *complianceController) {
 			{"BearerAuth": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionSystemAdmin, authz.ResourceSystem, "",
+			authz.PermissionSystemAdmin, model.ResourceSystem, "",
 		)},
 	}, ctrl.generateGDPRReportHandler)
 }
@@ -238,7 +238,7 @@ func registerCheckGDPRCompliance(api huma.API, ctrl *complianceController) {
 			{"BearerAuth": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionSystemAdmin, authz.ResourceSystem, "",
+			authz.PermissionSystemAdmin, model.ResourceSystem, "",
 		)},
 	}, ctrl.checkGDPRComplianceHandler)
 }
@@ -259,7 +259,7 @@ func registerDetectViolations(api huma.API, ctrl *complianceController) {
 			{"BearerAuth": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionSystemAdmin, authz.ResourceSystem, "",
+			authz.PermissionSystemAdmin, model.ResourceSystem, "",
 		)},
 	}, ctrl.detectViolationsHandler)
 }
@@ -278,7 +278,7 @@ func registerGetActiveViolations(api huma.API, ctrl *complianceController) {
 			{"BearerAuth": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionSystemAdmin, authz.ResourceSystem, "",
+			authz.PermissionSystemAdmin, model.ResourceSystem, "",
 		)},
 	}, ctrl.getActiveViolationsHandler)
 }
@@ -297,7 +297,7 @@ func registerResolveViolation(api huma.API, ctrl *complianceController) {
 			{"BearerAuth": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionSystemAdmin, authz.ResourceSystem, "",
+			authz.PermissionSystemAdmin, model.ResourceSystem, "",
 		)},
 	}, ctrl.resolveViolationHandler)
 }
@@ -318,7 +318,7 @@ func registerApplyDataRetentionPolicies(api huma.API, ctrl *complianceController
 			{"BearerAuth": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionSystemAdmin, authz.ResourceSystem, "",
+			authz.PermissionSystemAdmin, model.ResourceSystem, "",
 		)},
 	}, ctrl.applyDataRetentionPoliciesHandler)
 }
@@ -337,7 +337,7 @@ func registerProcessDataDeletionRequest(api huma.API, ctrl *complianceController
 			{"BearerAuth": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionSystemAdmin, authz.ResourceSystem, "",
+			authz.PermissionSystemAdmin, model.ResourceSystem, "",
 		)},
 	}, ctrl.processDataDeletionRequestHandler)
 }
@@ -356,7 +356,7 @@ func registerExportUserData(api huma.API, ctrl *complianceController) {
 			{"BearerAuth": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionSystemAdmin, authz.ResourceSystem, "",
+			authz.PermissionSystemAdmin, model.ResourceSystem, "",
 		)},
 	}, ctrl.exportUserDataHandler)
 }
@@ -377,7 +377,7 @@ func registerLogDataAccess(api huma.API, ctrl *complianceController) {
 			{"BearerAuth": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionSystemAdmin, authz.ResourceSystem, "",
+			authz.PermissionSystemAdmin, model.ResourceSystem, "",
 		)},
 	}, ctrl.logDataAccessHandler)
 }
@@ -396,7 +396,7 @@ func registerGetDataAccessLogs(api huma.API, ctrl *complianceController) {
 			{"BearerAuth": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionSystemAdmin, authz.ResourceSystem, "",
+			authz.PermissionSystemAdmin, model.ResourceSystem, "",
 		)},
 	}, ctrl.getDataAccessLogsHandler)
 }
@@ -417,7 +417,7 @@ func registerCreateAttestation(api huma.API, ctrl *complianceController) {
 			{"BearerAuth": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionSystemAdmin, authz.ResourceSystem, "",
+			authz.PermissionSystemAdmin, model.ResourceSystem, "",
 		)},
 	}, ctrl.createAttestationHandler)
 }
@@ -436,7 +436,7 @@ func registerGetAttestations(api huma.API, ctrl *complianceController) {
 			{"BearerAuth": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionSystemAdmin, authz.ResourceSystem, "",
+			authz.PermissionSystemAdmin, model.ResourceSystem, "",
 		)},
 	}, ctrl.getAttestationsHandler)
 }
@@ -457,7 +457,7 @@ func registerConductRiskAssessment(api huma.API, ctrl *complianceController) {
 			{"BearerAuth": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionSystemAdmin, authz.ResourceSystem, "",
+			authz.PermissionSystemAdmin, model.ResourceSystem, "",
 		)},
 	}, ctrl.conductRiskAssessmentHandler)
 }
@@ -476,7 +476,7 @@ func registerUpdateRiskMitigation(api huma.API, ctrl *complianceController) {
 			{"BearerAuth": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionSystemAdmin, authz.ResourceSystem, "",
+			authz.PermissionSystemAdmin, model.ResourceSystem, "",
 		)},
 	}, ctrl.updateRiskMitigationHandler)
 }
@@ -497,7 +497,7 @@ func registerGetComplianceOverview(api huma.API, ctrl *complianceController) {
 			{"BearerAuth": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionSystemAdmin, authz.ResourceSystem, "",
+			authz.PermissionSystemAdmin, model.ResourceSystem, "",
 		)},
 	}, ctrl.getComplianceOverviewHandler)
 }
@@ -516,7 +516,7 @@ func registerGetComplianceMetrics(api huma.API, ctrl *complianceController) {
 			{"BearerAuth": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionSystemAdmin, authz.ResourceSystem, "",
+			authz.PermissionSystemAdmin, model.ResourceSystem, "",
 		)},
 	}, ctrl.getComplianceMetricsHandler)
 }

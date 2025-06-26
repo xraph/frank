@@ -13,6 +13,19 @@ import (
 	"github.com/rs/xid"
 )
 
+// RegisterPersonalOrganizationAPI registers all organization management endpoints
+func RegisterPersonalOrganizationAPI(api huma.API, di di.Container) {
+	orgCtrl := &organizationController{
+		api: api,
+		di:  di,
+	}
+
+	// Organization CRUD endpoints
+	registerCreateOrganization(api, orgCtrl)
+	registerGetOrganization(api, orgCtrl)
+	registerListOrganizations(api, orgCtrl)
+}
+
 // RegisterOrganizationAPI registers all organization management endpoints
 func RegisterOrganizationAPI(api huma.API, di di.Container) {
 	orgCtrl := &organizationController{
@@ -21,9 +34,6 @@ func RegisterOrganizationAPI(api huma.API, di di.Container) {
 	}
 
 	// Organization CRUD endpoints
-	registerListOrganizations(api, orgCtrl)
-	registerGetOrganization(api, orgCtrl)
-	registerCreateOrganization(api, orgCtrl)
 	registerUpdateOrganization(api, orgCtrl)
 	registerDeleteOrganization(api, orgCtrl)
 
@@ -94,7 +104,7 @@ func registerGetOrganization(api huma.API, orgCtrl *organizationController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, orgCtrl.di.AuthZ().Checker(), orgCtrl.di.Logger())(
-			authz.PermissionViewOrganization, authz.ResourceOrganization, "id",
+			authz.PermissionViewOrganization, model.ResourceOrganization, "id",
 		)},
 	}, orgCtrl.getOrganizationHandler)
 }
@@ -127,7 +137,7 @@ func registerUpdateOrganization(api huma.API, orgCtrl *organizationController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, orgCtrl.di.AuthZ().Checker(), orgCtrl.di.Logger())(
-			authz.PermissionUpdateOrganization, authz.ResourceOrganization, "id",
+			authz.PermissionUpdateOrganization, model.ResourceOrganization, "id",
 		)},
 	}, orgCtrl.updateOrganizationHandler)
 }
@@ -148,7 +158,7 @@ func registerDeleteOrganization(api huma.API, orgCtrl *organizationController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, orgCtrl.di.AuthZ().Checker(), orgCtrl.di.Logger())(
-			authz.PermissionDeleteOrganization, authz.ResourceOrganization, "id",
+			authz.PermissionDeleteOrganization, model.ResourceOrganization, "id",
 		)},
 	}, orgCtrl.deleteOrganizationHandler)
 }
@@ -168,7 +178,7 @@ func registerGetOrganizationSettings(api huma.API, orgCtrl *organizationControll
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, orgCtrl.di.AuthZ().Checker(), orgCtrl.di.Logger())(
-			authz.PermissionViewOrganization, authz.ResourceOrganization, "id",
+			authz.PermissionViewOrganization, model.ResourceOrganization, "id",
 		)},
 	}, orgCtrl.getOrganizationSettingsHandler)
 }
@@ -186,7 +196,7 @@ func registerUpdateOrganizationSettings(api huma.API, orgCtrl *organizationContr
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, orgCtrl.di.AuthZ().Checker(), orgCtrl.di.Logger())(
-			authz.PermissionUpdateOrganization, authz.ResourceOrganization, "id",
+			authz.PermissionUpdateOrganization, model.ResourceOrganization, "id",
 		)},
 	}, orgCtrl.updateOrganizationSettingsHandler)
 }
@@ -206,7 +216,7 @@ func registerListOrganizationDomains(api huma.API, orgCtrl *organizationControll
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, orgCtrl.di.AuthZ().Checker(), orgCtrl.di.Logger())(
-			authz.PermissionViewOrganization, authz.ResourceOrganization, "id",
+			authz.PermissionViewOrganization, model.ResourceOrganization, "id",
 		)},
 	}, orgCtrl.listOrganizationDomainsHandler)
 }
@@ -224,7 +234,7 @@ func registerAddOrganizationDomain(api huma.API, orgCtrl *organizationController
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, orgCtrl.di.AuthZ().Checker(), orgCtrl.di.Logger())(
-			authz.PermissionUpdateOrganization, authz.ResourceOrganization, "id",
+			authz.PermissionUpdateOrganization, model.ResourceOrganization, "id",
 		)},
 	}, orgCtrl.addOrganizationDomainHandler)
 }
@@ -242,7 +252,7 @@ func registerVerifyOrganizationDomain(api huma.API, orgCtrl *organizationControl
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, orgCtrl.di.AuthZ().Checker(), orgCtrl.di.Logger())(
-			authz.PermissionUpdateOrganization, authz.ResourceOrganization, "id",
+			authz.PermissionUpdateOrganization, model.ResourceOrganization, "id",
 		)},
 	}, orgCtrl.verifyOrganizationDomainHandler)
 }
@@ -263,7 +273,7 @@ func registerRemoveOrganizationDomain(api huma.API, orgCtrl *organizationControl
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, orgCtrl.di.AuthZ().Checker(), orgCtrl.di.Logger())(
-			authz.PermissionUpdateOrganization, authz.ResourceOrganization, "id",
+			authz.PermissionUpdateOrganization, model.ResourceOrganization, "id",
 		)},
 	}, orgCtrl.removeOrganizationDomainHandler)
 }
@@ -283,7 +293,7 @@ func registerGetOrganizationBilling(api huma.API, orgCtrl *organizationControlle
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, orgCtrl.di.AuthZ().Checker(), orgCtrl.di.Logger())(
-			authz.PermissionViewBilling, authz.ResourceOrganization, "id",
+			authz.PermissionViewBilling, model.ResourceOrganization, "id",
 		)},
 	}, orgCtrl.getOrganizationBillingHandler)
 }
@@ -301,7 +311,7 @@ func registerUpdateOrganizationBilling(api huma.API, orgCtrl *organizationContro
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, orgCtrl.di.AuthZ().Checker(), orgCtrl.di.Logger())(
-			authz.PermissionManageBilling, authz.ResourceOrganization, "id",
+			authz.PermissionManageBilling, model.ResourceOrganization, "id",
 		)},
 	}, orgCtrl.updateOrganizationBillingHandler)
 }
@@ -319,7 +329,7 @@ func registerGetOrganizationUsage(api huma.API, orgCtrl *organizationController)
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, orgCtrl.di.AuthZ().Checker(), orgCtrl.di.Logger())(
-			authz.PermissionViewOrganization, authz.ResourceOrganization, "id",
+			authz.PermissionViewOrganization, model.ResourceOrganization, "id",
 		)},
 	}, orgCtrl.getOrganizationUsageHandler)
 }
@@ -337,7 +347,7 @@ func registerGetOrganizationInvoices(api huma.API, orgCtrl *organizationControll
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, orgCtrl.di.AuthZ().Checker(), orgCtrl.di.Logger())(
-			authz.PermissionViewBilling, authz.ResourceOrganization, "id",
+			authz.PermissionViewBilling, model.ResourceOrganization, "id",
 		)},
 	}, orgCtrl.getOrganizationInvoicesHandler)
 }
@@ -357,7 +367,7 @@ func registerListOrganizationFeatures(api huma.API, orgCtrl *organizationControl
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, orgCtrl.di.AuthZ().Checker(), orgCtrl.di.Logger())(
-			authz.PermissionViewOrganization, authz.ResourceOrganization, "id",
+			authz.PermissionViewOrganization, model.ResourceOrganization, "id",
 		)},
 	}, orgCtrl.listOrganizationFeaturesHandler)
 }
@@ -375,7 +385,7 @@ func registerEnableOrganizationFeature(api huma.API, orgCtrl *organizationContro
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, orgCtrl.di.AuthZ().Checker(), orgCtrl.di.Logger())(
-			authz.PermissionUpdateOrganization, authz.ResourceOrganization, "id",
+			authz.PermissionUpdateOrganization, model.ResourceOrganization, "id",
 		)},
 	}, orgCtrl.enableOrganizationFeatureHandler)
 }
@@ -396,7 +406,7 @@ func registerDisableOrganizationFeature(api huma.API, orgCtrl *organizationContr
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, orgCtrl.di.AuthZ().Checker(), orgCtrl.di.Logger())(
-			authz.PermissionUpdateOrganization, authz.ResourceOrganization, "id",
+			authz.PermissionUpdateOrganization, model.ResourceOrganization, "id",
 		)},
 	}, orgCtrl.disableOrganizationFeatureHandler)
 }
@@ -416,7 +426,7 @@ func registerGetOrganizationStats(api huma.API, orgCtrl *organizationController)
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, orgCtrl.di.AuthZ().Checker(), orgCtrl.di.Logger())(
-			authz.PermissionViewAnalytics, authz.ResourceOrganization, "id",
+			authz.PermissionViewAnalytics, model.ResourceOrganization, "id",
 		)},
 	}, orgCtrl.getOrganizationStatsHandler)
 }
@@ -434,7 +444,7 @@ func registerGetOrganizationActivity(api huma.API, orgCtrl *organizationControll
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, orgCtrl.di.AuthZ().Checker(), orgCtrl.di.Logger())(
-			authz.PermissionViewAuditLogs, authz.ResourceOrganization, "id",
+			authz.PermissionViewAuditLogs, model.ResourceOrganization, "id",
 		)},
 	}, orgCtrl.getOrganizationActivityHandler)
 }
@@ -452,7 +462,7 @@ func registerExportOrganizationData(api huma.API, orgCtrl *organizationControlle
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, orgCtrl.di.AuthZ().Checker(), orgCtrl.di.Logger())(
-			authz.PermissionExportData, authz.ResourceOrganization, "id",
+			authz.PermissionExportData, model.ResourceOrganization, "id",
 		)},
 	}, orgCtrl.exportOrganizationDataHandler)
 }
@@ -472,7 +482,7 @@ func registerTransferOrganizationOwnership(api huma.API, orgCtrl *organizationCo
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, orgCtrl.di.AuthZ().Checker(), orgCtrl.di.Logger())(
-			authz.PermissionTransferOwnership, authz.ResourceOrganization, "id",
+			authz.PermissionTransferOwnership, model.ResourceOrganization, "id",
 		)},
 	}, orgCtrl.transferOrganizationOwnershipHandler)
 }
@@ -490,7 +500,7 @@ func registerGetOrganizationOwnership(api huma.API, orgCtrl *organizationControl
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, orgCtrl.di.AuthZ().Checker(), orgCtrl.di.Logger())(
-			authz.PermissionViewOrganization, authz.ResourceOrganization, "id",
+			authz.PermissionViewOrganization, model.ResourceOrganization, "id",
 		)},
 	}, orgCtrl.getOrganizationOwnershipHandler)
 }
@@ -504,7 +514,7 @@ type ListOrganizationsInput struct {
 type ListOrganizationsOutput = model.Output[*model.OrganizationListResponse]
 
 type GetOrganizationInput struct {
-	ID xid.ID `path:"id" doc:"Organization ID"`
+	ID string `path:"id" doc:"Organization ID"`
 }
 
 type GetOrganizationOutput = model.Output[*model.Organization]
@@ -592,7 +602,12 @@ type TransferOrganizationOwnershipOutput = model.Output[TransferOwnershipRespons
 func (c *organizationController) listOrganizationsHandler(ctx context.Context, input *ListOrganizationsInput) (*ListOrganizationsOutput, error) {
 	orgService := c.di.OrganizationService()
 
-	response, err := orgService.ListOrganizations(ctx, input.OrganizationListRequest)
+	user, err := middleware.GetUserFromContextSafe(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	response, err := orgService.ListUserOrganizations(ctx, user.ID, input.OrganizationListRequest)
 	if err != nil {
 		return nil, err
 	}
@@ -602,29 +617,46 @@ func (c *organizationController) listOrganizationsHandler(ctx context.Context, i
 	}, nil
 }
 
-func (c *organizationController) getOrganizationHandler(ctx context.Context, input *GetOrganizationInput) (*GetOrganizationOutput, error) {
+func (c *organizationController) getOrganizationByIdOrSlug(ctx context.Context, strId string) (*model.Organization, error) {
 	orgService := c.di.OrganizationService()
 
-	organization, err := orgService.GetOrganization(ctx, input.ID)
+	var org *model.Organization
+	if id, err := xid.FromString(strId); err != nil {
+		org, err = orgService.GetOrganizationBySlug(ctx, strId)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		org, err = orgService.GetOrganization(ctx, id)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return org, nil
+}
+
+func (c *organizationController) getOrganizationHandler(ctx context.Context, input *GetOrganizationInput) (*GetOrganizationOutput, error) {
+	org, err := c.getOrganizationByIdOrSlug(ctx, input.ID)
 	if err != nil {
 		return nil, err
 	}
 
 	return &GetOrganizationOutput{
-		Body: organization,
+		Body: org,
 	}, nil
 }
 
 func (c *organizationController) createOrganizationHandler(ctx context.Context, input *CreateOrganizationInput) (*CreateOrganizationOutput, error) {
 	orgService := c.di.OrganizationService()
 
-	organization, err := orgService.CreateOrganization(ctx, input.Body)
+	org, err := orgService.CreateOrganization(ctx, input.Body)
 	if err != nil {
 		return nil, err
 	}
 
 	return &CreateOrganizationOutput{
-		Body: organization,
+		Body: org,
 	}, nil
 }
 
@@ -655,7 +687,12 @@ func (c *organizationController) deleteOrganizationHandler(ctx context.Context, 
 func (c *organizationController) getOrganizationSettingsHandler(ctx context.Context, input *GetOrganizationInput) (*GetOrganizationSettingsOutput, error) {
 	orgService := c.di.OrganizationService()
 
-	settings, err := orgService.GetOrganizationSettings(ctx, input.ID)
+	org, err := c.getOrganizationByIdOrSlug(ctx, input.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	settings, err := orgService.GetOrganizationSettings(ctx, org.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -687,7 +724,12 @@ type ListOrganizationDomainsOutput = model.Output[*DomainsResponse]
 func (c *organizationController) listOrganizationDomainsHandler(ctx context.Context, input *GetOrganizationInput) (*ListOrganizationDomainsOutput, error) {
 	orgService := c.di.OrganizationService()
 
-	domains, err := orgService.ListDomains(ctx, input.ID)
+	org, err := c.getOrganizationByIdOrSlug(ctx, input.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	domains, err := orgService.ListDomains(ctx, org.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -753,7 +795,12 @@ func (c *organizationController) removeOrganizationDomainHandler(ctx context.Con
 func (c *organizationController) getOrganizationBillingHandler(ctx context.Context, input *GetOrganizationInput) (*GetOrganizationBillingOutput, error) {
 	orgService := c.di.OrganizationService()
 
-	billing, err := orgService.GetOrganizationBilling(ctx, input.ID)
+	org, err := c.getOrganizationByIdOrSlug(ctx, input.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	billing, err := orgService.GetOrganizationBilling(ctx, org.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -778,8 +825,12 @@ func (c *organizationController) updateOrganizationBillingHandler(ctx context.Co
 
 func (c *organizationController) getOrganizationUsageHandler(ctx context.Context, input *GetOrganizationInput) (*GetOrganizationUsageOutput, error) {
 	orgService := c.di.OrganizationService()
+	org, err := c.getOrganizationByIdOrSlug(ctx, input.ID)
+	if err != nil {
+		return nil, err
+	}
 
-	usage, err := orgService.GetOrganizationUsage(ctx, input.ID)
+	usage, err := orgService.GetOrganizationUsage(ctx, org.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -797,8 +848,12 @@ type ListOrganizationInvoicesOutput = model.Output[*model.InvoiceListResponse]
 
 func (c *organizationController) getOrganizationInvoicesHandler(ctx context.Context, input *ListOrganizationInvoicesInput) (*ListOrganizationInvoicesOutput, error) {
 	orgService := c.di.BillingService()
+	org, err := c.getOrganizationByIdOrSlug(ctx, input.ID)
+	if err != nil {
+		return nil, err
+	}
 
-	invoices, err := orgService.GetInvoices(ctx, input.ID, input.ListInvoicesParams)
+	invoices, err := orgService.GetInvoices(ctx, org.ID, input.ListInvoicesParams)
 	if err != nil {
 		return nil, err
 	}
@@ -817,8 +872,12 @@ type OrganizationFeatureOutput = model.Output[[]model.FeatureSummary]
 
 func (c *organizationController) listOrganizationFeaturesHandler(ctx context.Context, input *GetOrganizationInput) (*OrganizationFeatureOutput, error) {
 	orgService := c.di.OrganizationService()
+	org, err := c.getOrganizationByIdOrSlug(ctx, input.ID)
+	if err != nil {
+		return nil, err
+	}
 
-	features, err := orgService.ListEnabledFeatures(ctx, input.ID)
+	features, err := orgService.ListEnabledFeatures(ctx, org.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -864,8 +923,12 @@ func (c *organizationController) disableOrganizationFeatureHandler(ctx context.C
 
 func (c *organizationController) getOrganizationStatsHandler(ctx context.Context, input *GetOrganizationInput) (*GetOrganizationStatsOutput, error) {
 	orgService := c.di.OrganizationService()
+	org, err := c.getOrganizationByIdOrSlug(ctx, input.ID)
+	if err != nil {
+		return nil, err
+	}
 
-	stats, err := orgService.GetOrganizationStats(ctx, input.ID)
+	stats, err := orgService.GetOrganizationStats(ctx, org.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -879,8 +942,12 @@ type GetOrganizationActivityOutput = model.Output[*organization.OrganizationActi
 
 func (c *organizationController) getOrganizationActivityHandler(ctx context.Context, input *GetOrganizationInput) (*GetOrganizationActivityOutput, error) {
 	orgService := c.di.OrganizationService()
+	org, err := c.getOrganizationByIdOrSlug(ctx, input.ID)
+	if err != nil {
+		return nil, err
+	}
 
-	activity, err := orgService.GetOrganizationActivity(ctx, input.ID, 30) // Last 30 days
+	activity, err := orgService.GetOrganizationActivity(ctx, org.ID, 30) // Last 30 days
 	if err != nil {
 		return nil, err
 	}
@@ -930,8 +997,12 @@ type OrganizationOwnershipOutput = model.Output[*model.UserSummary]
 
 func (c *organizationController) getOrganizationOwnershipHandler(ctx context.Context, input *GetOrganizationInput) (*OrganizationOwnershipOutput, error) {
 	orgService := c.di.OrganizationService()
+	org, err := c.getOrganizationByIdOrSlug(ctx, input.ID)
+	if err != nil {
+		return nil, err
+	}
 
-	owner, err := orgService.GetOwner(ctx, input.ID)
+	owner, err := orgService.GetOwner(ctx, org.ID)
 	if err != nil {
 		return nil, err
 	}

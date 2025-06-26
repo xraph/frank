@@ -13,6 +13,14 @@
  */
 
 import { mapValues } from '../runtime';
+import type { UserType } from './UserType';
+import {
+    UserTypeFromJSON,
+    UserTypeFromJSONTyped,
+    UserTypeToJSON,
+    UserTypeToJSONTyped,
+} from './UserType';
+
 /**
  * 
  * @export
@@ -81,10 +89,10 @@ export interface UserSummary {
     profileImageUrl?: string;
     /**
      * User type
-     * @type {string}
+     * @type {UserType}
      * @memberof UserSummary
      */
-    userType: string;
+    userType: UserType;
     /**
      * Username
      * @type {string}
@@ -92,6 +100,8 @@ export interface UserSummary {
      */
     username?: string;
 }
+
+
 
 /**
  * Check if a given object implements the UserSummary interface.
@@ -126,7 +136,7 @@ export function UserSummaryFromJSONTyped(json: any, ignoreDiscriminator: boolean
         'lastName': json['lastName'] == null ? undefined : json['lastName'],
         'phoneNumber': json['phoneNumber'],
         'profileImageUrl': json['profileImageUrl'] == null ? undefined : json['profileImageUrl'],
-        'userType': json['userType'],
+        'userType': UserTypeFromJSON(json['userType']),
         'username': json['username'] == null ? undefined : json['username'],
     };
 }
@@ -151,7 +161,7 @@ export function UserSummaryToJSONTyped(value?: Omit<UserSummary, '$schema'> | nu
         'lastName': value['lastName'],
         'phoneNumber': value['phoneNumber'],
         'profileImageUrl': value['profileImageUrl'],
-        'userType': value['userType'],
+        'userType': UserTypeToJSON(value['userType']),
         'username': value['username'],
     };
 }

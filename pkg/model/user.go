@@ -55,7 +55,7 @@ type UserSummary struct {
 	LastName        string     `json:"lastName,omitempty" example:"Doe" doc:"Last name"`
 	Username        string     `json:"username,omitempty" example:"johndoe" doc:"Username"`
 	ProfileImageURL string     `json:"profileImageUrl,omitempty" example:"https://example.com/avatar.jpg" doc:"Profile image URL"`
-	UserType        string     `json:"userType" example:"external" doc:"User type"`
+	UserType        UserType   `json:"userType" example:"external" doc:"User type"`
 	Active          bool       `json:"active" example:"true" doc:"Whether user is active"`
 	LastLogin       *time.Time `json:"lastLogin,omitempty" example:"2023-01-01T12:00:00Z" doc:"Last login"`
 	CreatedAt       time.Time  `json:"createdAt" example:"2023-01-01T10:00:00Z" doc:"Creation timestamp"`
@@ -73,7 +73,7 @@ type CreateUserRequest struct {
 	UserType               UserType               `json:"userType" example:"external" doc:"User type (internal, external, end_user)"`
 	OrganizationID         *xid.ID                `json:"organizationId,omitempty" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"Organization ID"`
 	Locale                 string                 `json:"locale" example:"en" doc:"User locale"`
-	Timezone               *string                `json:"timezone,omitempty" example:"America/New_York" doc:"User timezone"`
+	Timezone               string                 `json:"timezone,omitempty" example:"America/New_York" doc:"User timezone"`
 	AuthProvider           string                 `json:"authProvider" example:"internal" doc:"Authentication provider"`
 	ExternalID             *string                `json:"externalId,omitempty" example:"google_123456" doc:"External provider ID"`
 	CustomAttributes       map[string]interface{} `json:"customAttributes,omitempty" doc:"Custom user attributes"`
@@ -172,7 +172,7 @@ type AssignPermissionRequest struct {
 type UserListRequest struct {
 	PaginationParams
 	OrganizationID *xid.ID             `json:"organizationId,omitempty" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"Filter by organization"`
-	UserType       string              `json:"userType,omitempty" example:"external" doc:"Filter by user type"`
+	UserType       UserType            `json:"userType,omitempty" example:"external" doc:"Filter by user type"`
 	Active         OptionalParam[bool] `json:"active,omitempty" example:"true" doc:"Filter by active status"`
 	Blocked        OptionalParam[bool] `json:"blocked,omitempty" example:"false" doc:"Filter by blocked status"`
 	Search         string              `json:"search,omitempty" example:"john" doc:"Search in name, email, username"`

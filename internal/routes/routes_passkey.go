@@ -85,7 +85,7 @@ func registerListOrganizationPasskeys(api huma.API, passkeyCtrl *passkeyControll
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, passkeyCtrl.di.AuthZ().Checker(), passkeyCtrl.di.Logger())(
-			authz.PermissionReadPasskey, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadPasskey, model.ResourceOrganization, "orgId",
 		)},
 	}, passkeyCtrl.listPasskeysHandler)
 }
@@ -108,7 +108,7 @@ func registerCreatePasskey(api huma.API, passkeyCtrl *passkeyController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, passkeyCtrl.di.AuthZ().Checker(), passkeyCtrl.di.Logger())(
-			authz.PermissionWritePasskey, authz.ResourceOrganization, "orgId",
+			authz.PermissionWritePasskey, model.ResourceOrganization, "orgId",
 		)},
 	}, passkeyCtrl.createPasskeyHandler)
 }
@@ -127,7 +127,7 @@ func registerGetPasskey(api huma.API, passkeyCtrl *passkeyController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, passkeyCtrl.di.AuthZ().Checker(), passkeyCtrl.di.Logger())(
-			authz.PermissionReadPasskey, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadPasskey, model.ResourceOrganization, "orgId",
 		)},
 	}, passkeyCtrl.getPasskeyHandler)
 }
@@ -146,7 +146,7 @@ func registerUpdatePasskey(api huma.API, passkeyCtrl *passkeyController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, passkeyCtrl.di.AuthZ().Checker(), passkeyCtrl.di.Logger())(
-			authz.PermissionWritePasskey, authz.ResourceOrganization, "orgId",
+			authz.PermissionWritePasskey, model.ResourceOrganization, "orgId",
 		)},
 	}, passkeyCtrl.updatePasskeyHandler)
 }
@@ -169,7 +169,7 @@ func registerDeleteOrganizationPasskey(api huma.API, passkeyCtrl *passkeyControl
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, passkeyCtrl.di.AuthZ().Checker(), passkeyCtrl.di.Logger())(
-			authz.PermissionWritePasskey, authz.ResourceOrganization, "orgId",
+			authz.PermissionWritePasskey, model.ResourceOrganization, "orgId",
 		)},
 	}, passkeyCtrl.deletePasskeyHandler)
 }
@@ -190,7 +190,7 @@ func registerGetUserPasskeys(api huma.API, passkeyCtrl *passkeyController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, passkeyCtrl.di.AuthZ().Checker(), passkeyCtrl.di.Logger())(
-			authz.PermissionReadUser, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadUser, model.ResourceOrganization, "orgId",
 		)},
 	}, passkeyCtrl.getUserPasskeysHandler)
 }
@@ -209,7 +209,7 @@ func registerDeactivateUserPasskeys(api huma.API, passkeyCtrl *passkeyController
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, passkeyCtrl.di.AuthZ().Checker(), passkeyCtrl.di.Logger())(
-			authz.PermissionUpdateUser, authz.ResourceOrganization, "orgId",
+			authz.PermissionUpdateUser, model.ResourceOrganization, "orgId",
 		)},
 	}, passkeyCtrl.deactivateUserPasskeysHandler)
 }
@@ -234,7 +234,7 @@ func registerBulkDeletePasskeys(api huma.API, passkeyCtrl *passkeyController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, passkeyCtrl.di.AuthZ().Checker(), passkeyCtrl.di.Logger())(
-			authz.PermissionWritePasskey, authz.ResourceOrganization, "orgId",
+			authz.PermissionWritePasskey, model.ResourceOrganization, "orgId",
 		)},
 	}, passkeyCtrl.bulkDeletePasskeysHandler)
 }
@@ -257,7 +257,7 @@ func registerUpdateBackupState(api huma.API, passkeyCtrl *passkeyController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, passkeyCtrl.di.AuthZ().Checker(), passkeyCtrl.di.Logger())(
-			authz.PermissionWritePasskey, authz.ResourceOrganization, "orgId",
+			authz.PermissionWritePasskey, model.ResourceOrganization, "orgId",
 		)},
 	}, passkeyCtrl.updateBackupStateHandler)
 }
@@ -282,7 +282,7 @@ func registerGetPasskeyStats(api huma.API, passkeyCtrl *passkeyController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, passkeyCtrl.di.AuthZ().Checker(), passkeyCtrl.di.Logger())(
-			authz.PermissionReadPasskey, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadPasskey, model.ResourceOrganization, "orgId",
 		)},
 	}, passkeyCtrl.getPasskeyStatsHandler)
 }
@@ -305,7 +305,7 @@ func registerGetPasskeyActivity(api huma.API, passkeyCtrl *passkeyController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, passkeyCtrl.di.AuthZ().Checker(), passkeyCtrl.di.Logger())(
-			authz.PermissionReadPasskey, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadPasskey, model.ResourceOrganization, "orgId",
 		)},
 	}, passkeyCtrl.getPasskeyActivityHandler)
 }
@@ -328,7 +328,7 @@ func registerExportPasskeyData(api huma.API, passkeyCtrl *passkeyController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, passkeyCtrl.di.AuthZ().Checker(), passkeyCtrl.di.Logger())(
-			authz.PermissionReadPasskey, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadPasskey, model.ResourceOrganization, "orgId",
 		)},
 	}, passkeyCtrl.exportPasskeyDataHandler)
 }
@@ -353,7 +353,7 @@ func registerVerifyPasskey(api huma.API, passkeyCtrl *passkeyController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, passkeyCtrl.di.AuthZ().Checker(), passkeyCtrl.di.Logger())(
-			authz.PermissionReadPasskey, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadPasskey, model.ResourceOrganization, "orgId",
 		)},
 	}, passkeyCtrl.verifyPasskeyHandler)
 }
@@ -376,7 +376,7 @@ func registerValidateCredentialID(api huma.API, passkeyCtrl *passkeyController) 
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, passkeyCtrl.di.AuthZ().Checker(), passkeyCtrl.di.Logger())(
-			authz.PermissionReadPasskey, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadPasskey, model.ResourceOrganization, "orgId",
 		)},
 	}, passkeyCtrl.validateCredentialIDHandler)
 }
@@ -399,7 +399,7 @@ func registerCleanupUnusedPasskeys(api huma.API, passkeyCtrl *passkeyController)
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, passkeyCtrl.di.AuthZ().Checker(), passkeyCtrl.di.Logger())(
-			authz.PermissionWritePasskey, authz.ResourceOrganization, "orgId",
+			authz.PermissionWritePasskey, model.ResourceOrganization, "orgId",
 		)},
 	}, passkeyCtrl.cleanupUnusedPasskeysHandler)
 }
@@ -422,7 +422,7 @@ func registerGetUnusedPasskeys(api huma.API, passkeyCtrl *passkeyController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, passkeyCtrl.di.AuthZ().Checker(), passkeyCtrl.di.Logger())(
-			authz.PermissionReadUser, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadUser, model.ResourceOrganization, "orgId",
 		)},
 	}, passkeyCtrl.getUnusedPasskeysHandler)
 }

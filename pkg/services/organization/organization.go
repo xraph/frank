@@ -13,9 +13,11 @@ import (
 	"github.com/juicycleff/frank/ent"
 	"github.com/juicycleff/frank/ent/organization"
 	"github.com/juicycleff/frank/internal/repository"
+	"github.com/juicycleff/frank/pkg/contexts"
 	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/juicycleff/frank/pkg/logging"
 	"github.com/juicycleff/frank/pkg/model"
+	"github.com/juicycleff/frank/pkg/services/rbac"
 	"github.com/juicycleff/frank/pkg/services/sso"
 	"github.com/rs/xid"
 )
@@ -24,12 +26,14 @@ import (
 type Service interface {
 	// Organization CRUD operations
 	CreateOrganization(ctx context.Context, req model.CreateOrganizationRequest) (*model.Organization, error)
+	CreatePlatformOrganization(ctx context.Context, req model.CreateOrganizationPlatformRequest) (*model.Organization, error)
 	GetOrganization(ctx context.Context, id xid.ID) (*model.Organization, error)
 	GetOrganizationBySlug(ctx context.Context, slug string) (*model.Organization, error)
 	GetOrganizationByDomain(ctx context.Context, domain string) (*model.Organization, error)
 	UpdateOrganization(ctx context.Context, id xid.ID, req model.UpdateOrganizationRequest) (*model.Organization, error)
 	DeleteOrganization(ctx context.Context, id xid.ID, req model.DeleteOrganizationRequest) error
 	ListOrganizations(ctx context.Context, req model.OrganizationListRequest) (*model.OrganizationListResponse, error)
+	ListAllOrganizations(ctx context.Context, req model.OrganizationListRequest) (*model.PlatformOrganizationListResponse, error)
 	ListUserOrganizations(ctx context.Context, id xid.ID, req model.OrganizationListRequest) (*model.OrganizationListResponse, error)
 
 	// Domain management
@@ -117,11 +121,15 @@ type Service interface {
 	GetBillingInfo(ctx context.Context, orgID xid.ID) (*model.OrganizationBilling, error)
 	SetCustomerID(ctx context.Context, orgID xid.ID, customerID string) error
 	SetSubscriptionID(ctx context.Context, orgID xid.ID, subscriptionID string) error
+
+	GetDefaultLimitsForPlan(plan string) UserLimits
 }
 
 // service implements the organization service
 type service struct {
+	roleSeeder     *rbac.RBACSeeder
 	orgRepo        repository.OrganizationRepository
+	roleRepo       repository.RoleRepository
 	membershipRepo repository.MembershipRepository
 	userRepo       repository.UserRepository
 	auditRepo      repository.AuditRepository
@@ -134,14 +142,17 @@ type service struct {
 func NewService(
 	repo repository.Repository,
 	ssoService sso.Service,
+	roleSeeder *rbac.RBACSeeder,
 	memberService MembershipService,
 	logger logging.Logger,
 ) Service {
 	return &service{
 		orgRepo:        repo.Organization(),
+		roleRepo:       repo.Role(),
 		membershipRepo: repo.Membership(),
 		userRepo:       repo.User(),
 		auditRepo:      repo.Audit(),
+		roleSeeder:     roleSeeder,
 		ssoService:     ssoService,
 		memberService:  memberService,
 		logger:         logger,
@@ -150,6 +161,119 @@ func NewService(
 
 // CreateOrganization creates a new organization
 func (s *service) CreateOrganization(ctx context.Context, req model.CreateOrganizationRequest) (*model.Organization, error) {
+	s.logger.Info("Creating new organization", logging.String("name", req.Name))
+
+	user, err := contexts.GetUserFromContextSafe(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Validate organization name
+	if err := s.ValidateOrganizationName(ctx, req.Name, nil); err != nil {
+		return nil, err
+	}
+
+	// Generate slug if not provided
+	slug := req.Slug
+	if slug == "" {
+		slug = s.generateSlug(req.Name)
+	}
+
+	// Validate slug uniqueness
+	if err := s.ValidateOrganizationSlug(ctx, slug, nil); err != nil {
+		return nil, err
+	}
+
+	// Validate domain if provided
+	if req.Domain != nil {
+		if err := s.ValidateDomain(ctx, *req.Domain, nil); err != nil {
+			return nil, err
+		}
+	}
+
+	// Parse organization type
+	orgType := model.OrgTypeCustomer
+
+	// Set default limits based on plan
+	limits := s.GetDefaultLimitsForPlan(req.Plan)
+
+	// Create organization input
+	input := repository.CreateOrganizationInput{
+		Name:                 req.Name,
+		Slug:                 slug,
+		Domain:               req.Domain,
+		LogoURL:              req.LogoURL,
+		Plan:                 req.Plan,
+		OrgType:              orgType,
+		ExternalUserLimit:    6,
+		EndUserLimit:         100,
+		AuthServiceEnabled:   true,
+		Active:               true,
+		TrialUsed:            false,
+		SubscriptionStatus:   organization.SubscriptionStatusActive,
+		APIRequestLimit:      limits.APIRequestLimit,
+		CurrentExternalUsers: 0,
+		CurrentEndUsers:      0,
+		OwnerID:              &user.ID,
+	}
+
+	// // Set trial period if requested
+	// if req.CreateTrialPeriod {
+	// 	trialEnd := time.Now().Add(14 * 24 * time.Hour) // 14 days trial
+	// 	input.TrialEndsAt = &trialEnd
+	// }
+
+	// Create organization
+	entOrg, err := s.orgRepo.Create(ctx, input)
+	if err != nil {
+		s.logger.Error("Failed to create organization", logging.Error(err))
+		return nil, errors.Wrap(err, errors.CodeInternalServer, "failed to create organization")
+	}
+
+	role, err := s.roleRepo.GetRoleByName(ctx, string(model.RoleOrganizationOwner), xid.NilID())
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = s.membershipRepo.Create(ctx, repository.CreateMembershipInput{
+		OrganizationID:   entOrg.ID,
+		UserID:           entOrg.OwnerID,
+		IsPrimaryContact: true,
+		IsBillingContact: true,
+		Status:           model.MembershipStatusActive,
+		RoleID:           role.ID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert to model
+	modelOrg := ConvertEntOrgToModel(entOrg)
+
+	// Create audit log
+	s.createAuditLog(ctx, &model.CreateAuditLogRequest{
+		Action:         "organization.created",
+		Resource:       "organization",
+		ResourceID:     &modelOrg.ID,
+		Status:         "success",
+		OrganizationID: &modelOrg.ID,
+		Details: map[string]interface{}{
+			"name":     req.Name,
+			"slug":     slug,
+			"org_type": orgType,
+			"plan":     req.Plan,
+		},
+	})
+
+	s.logger.Info("Organization created successfully",
+		logging.String("org_id", modelOrg.ID.String()),
+		logging.String("name", modelOrg.Name))
+
+	return modelOrg, nil
+}
+
+// CreatePlatformOrganization creates a new organization
+func (s *service) CreatePlatformOrganization(ctx context.Context, req model.CreateOrganizationPlatformRequest) (*model.Organization, error) {
 	s.logger.Info("Creating new organization", logging.String("name", req.Name))
 
 	// Validate organization name
@@ -182,7 +306,7 @@ func (s *service) CreateOrganization(ctx context.Context, req model.CreateOrgani
 	}
 
 	// Set default limits based on plan
-	limits := s.getDefaultLimitsForPlan(req.Plan)
+	limits := s.GetDefaultLimitsForPlan(req.Plan)
 
 	// Create organization input
 	input := repository.CreateOrganizationInput{
@@ -223,11 +347,30 @@ func (s *service) CreateOrganization(ctx context.Context, req model.CreateOrgani
 		if err := s.createOrganizationOwner(ctx, entOrg.ID, req.OwnerEmail); err != nil {
 			s.logger.Warn("Failed to create organization owner", logging.Error(err))
 			// Don't fail the organization creation for owner creation failure
+		} else {
+			entOrg, _ = s.orgRepo.GetByID(ctx, entOrg.ID)
+			role, err := s.roleRepo.GetRoleByName(ctx, string(model.RoleOrganizationOwner), xid.NilID())
+			if err != nil {
+				return nil, err
+			}
+
+			_, err = s.membershipRepo.Create(ctx, repository.CreateMembershipInput{
+				OrganizationID:   entOrg.ID,
+				UserID:           entOrg.OwnerID,
+				IsPrimaryContact: true,
+				IsBillingContact: true,
+				Status:           model.MembershipStatusActive,
+				RoleID:           role.ID,
+			})
+			if err != nil {
+				return nil, err
+			}
 		}
+
 	}
 
 	// Convert to model
-	modelOrg := s.convertEntOrgToModel(entOrg)
+	modelOrg := ConvertEntOrgToModel(entOrg)
 
 	// Create audit log
 	s.createAuditLog(ctx, &model.CreateAuditLogRequest{
@@ -261,7 +404,7 @@ func (s *service) GetOrganization(ctx context.Context, id xid.ID) (*model.Organi
 		return nil, errors.Wrap(err, errors.CodeInternalServer, "failed to get organization")
 	}
 
-	return s.convertEntOrgToModel(entOrg), nil
+	return ConvertEntOrgToModel(entOrg), nil
 }
 
 // GetOrganizationBySlug retrieves an organization by slug
@@ -274,7 +417,7 @@ func (s *service) GetOrganizationBySlug(ctx context.Context, slug string) (*mode
 		return nil, errors.Wrap(err, errors.CodeInternalServer, "failed to get organization by slug")
 	}
 
-	return s.convertEntOrgToModel(entOrg), nil
+	return ConvertEntOrgToModel(entOrg), nil
 }
 
 // GetOrganizationByDomain retrieves an organization by domain
@@ -287,7 +430,7 @@ func (s *service) GetOrganizationByDomain(ctx context.Context, domain string) (*
 		return nil, errors.Wrap(err, errors.CodeInternalServer, "failed to get organization by domain")
 	}
 
-	return s.convertEntOrgToModel(entOrg), nil
+	return ConvertEntOrgToModel(entOrg), nil
 }
 
 // UpdateOrganization updates an organization
@@ -360,7 +503,7 @@ func (s *service) UpdateOrganization(ctx context.Context, id xid.ID, req model.U
 		}
 
 		// Update limits based on new plan
-		limits := s.getDefaultLimitsForPlan(*req.Plan)
+		limits := s.GetDefaultLimitsForPlan(*req.Plan)
 		input.ExternalUserLimit = &limits.ExternalUserLimit
 		input.EndUserLimit = &limits.EndUserLimit
 		input.APIRequestLimit = &limits.APIRequestLimit
@@ -448,7 +591,7 @@ func (s *service) UpdateOrganization(ctx context.Context, id xid.ID, req model.U
 
 	// Update organization if there are changes
 	if len(changes) == 0 {
-		return s.convertEntOrgToModel(existingOrg), nil
+		return ConvertEntOrgToModel(existingOrg), nil
 	}
 
 	updatedOrg, err := s.orgRepo.Update(ctx, id, input)
@@ -473,7 +616,7 @@ func (s *service) UpdateOrganization(ctx context.Context, id xid.ID, req model.U
 		logging.String("org_id", id.String()),
 		logging.Int("fields_updated", len(changes)))
 
-	return s.convertEntOrgToModel(updatedOrg), nil
+	return ConvertEntOrgToModel(updatedOrg), nil
 }
 
 // DeleteOrganization deletes an organization
@@ -659,7 +802,7 @@ func (s *service) isReservedSlug(slug string) bool {
 	return false
 }
 
-func (s *service) getDefaultLimitsForPlan(plan string) UserLimits {
+func (s *service) GetDefaultLimitsForPlan(plan string) UserLimits {
 	switch strings.ToLower(plan) {
 	case "free":
 		return UserLimits{
@@ -698,7 +841,7 @@ func (s *service) getDefaultLimitsForPlan(plan string) UserLimits {
 			SMSLimit:          10000,
 		}
 	default:
-		return s.getDefaultLimitsForPlan("free")
+		return s.GetDefaultLimitsForPlan("free")
 	}
 }
 
@@ -748,44 +891,6 @@ func (s *service) createOrganizationOwner(ctx context.Context, orgID xid.ID, own
 	}
 
 	return nil
-}
-
-func (s *service) convertEntOrgToModel(entOrg *ent.Organization) *model.Organization {
-	return &model.Organization{
-		Base: model.Base{
-			ID:        entOrg.ID,
-			CreatedAt: entOrg.CreatedAt,
-			UpdatedAt: entOrg.UpdatedAt,
-		},
-		Name:                   entOrg.Name,
-		Slug:                   entOrg.Slug,
-		Domains:                entOrg.Domains,
-		VerifiedDomains:        entOrg.VerifiedDomains,
-		Domain:                 entOrg.Domain,
-		LogoURL:                entOrg.LogoURL,
-		Plan:                   entOrg.Plan,
-		Active:                 entOrg.Active,
-		Metadata:               entOrg.Metadata,
-		TrialEndsAt:            entOrg.TrialEndsAt,
-		TrialUsed:              entOrg.TrialUsed,
-		OwnerID:                &entOrg.OwnerID,
-		OrgType:                entOrg.OrgType,
-		IsPlatformOrganization: entOrg.IsPlatformOrganization,
-		ExternalUserLimit:      entOrg.ExternalUserLimit,
-		EndUserLimit:           entOrg.EndUserLimit,
-		SSOEnabled:             entOrg.SSOEnabled,
-		SSODomain:              entOrg.SSODomain,
-		SubscriptionID:         entOrg.SubscriptionID,
-		CustomerID:             entOrg.CustomerID,
-		SubscriptionStatus:     entOrg.SubscriptionStatus.String(),
-		AuthServiceEnabled:     entOrg.AuthServiceEnabled,
-		AuthConfig:             entOrg.AuthConfig,
-		AuthDomain:             entOrg.AuthDomain,
-		APIRequestLimit:        entOrg.APIRequestLimit,
-		APIRequestsUsed:        entOrg.APIRequestsUsed,
-		CurrentExternalUsers:   entOrg.CurrentExternalUsers,
-		CurrentEndUsers:        entOrg.CurrentEndUsers,
-	}
 }
 
 func (s *service) createAuditLog(ctx context.Context, input *model.CreateAuditLogRequest) {
@@ -865,12 +970,77 @@ func (s *service) ListOrganizations(ctx context.Context, req model.OrganizationL
 	// Convert to model response
 	summaries := make([]model.OrganizationSummary, len(result.Data))
 	for i, org := range result.Data {
-		summaries[i] = s.convertEntOrgToSummary(org)
+		summaries[i] = ConvertEntOrgToSummary(org)
 	}
 
 	response := &model.OrganizationListResponse{
 		Data:       summaries,
 		Pagination: result.Pagination,
+	}
+
+	return response, nil
+}
+
+// ListAllOrganizations retrieves organizations with pagination and filtering
+func (s *service) ListAllOrganizations(ctx context.Context, req model.OrganizationListRequest) (*model.PlatformOrganizationListResponse, error) {
+	s.logger.Info("Listing all organizations", logging.String("search", req.Search))
+
+	// Convert request to repository parameters
+	params := repository.ListOrganizationsParams{
+		PaginationParams: req.PaginationParams,
+	}
+
+	// Apply filters
+	if req.OrgType != "" {
+		orgType := req.OrgType
+		params.OrgType = &orgType
+	}
+	if req.Plan != "" {
+		params.Plan = &req.Plan
+	}
+	if req.Active.IsSet {
+		active := req.Active.Value
+		params.Active = &active
+	}
+	if req.SSOEnabled.IsSet {
+		ssoEnabled := req.SSOEnabled.Value
+		params.SSOEnabled = &ssoEnabled
+	}
+
+	var result *model.PaginatedOutput[*ent.Organization]
+	var err error
+
+	// Use search if query provided
+	if req.Search != "" {
+		searchParams := repository.SearchOrganizationsParams{
+			PaginationParams: req.PaginationParams,
+			OrgType:          params.OrgType,
+			ExactMatch:       false,
+		}
+		result, err = s.orgRepo.Search(ctx, req.Search, searchParams)
+	} else {
+		result, err = s.orgRepo.List(ctx, params)
+	}
+
+	if err != nil {
+		return nil, errors.Wrap(err, errors.CodeInternalServer, "failed to list organizations")
+	}
+
+	// Convert to model response
+	summaries := make([]model.PlatformOrganizationSummary, len(result.Data))
+	for i, org := range result.Data {
+		summaries[i] = ConvertEntOrgToPlatformSummary(org)
+	}
+
+	response := &model.PlatformOrganizationListResponse{
+		Data:       summaries,
+		Pagination: result.Pagination,
+		Summary: model.OrganizationSummaryStats{
+			Total:     len(summaries),
+			Active:    0, // Would calculate from data
+			Suspended: 0, // Would calculate from data
+			Trial:     0, // Would calculate from data
+		},
 	}
 
 	return response, nil
@@ -917,7 +1087,12 @@ func (s *service) ListUserOrganizations(ctx context.Context, userID xid.ID, req 
 	// Convert to summaries
 	summaries := make([]model.OrganizationSummary, len(organizations))
 	for i, org := range organizations {
-		summaries[i] = s.convertEntOrgToSummary(org)
+		summaries[i] = ConvertEntOrgToSummary(org)
+		membership, err := s.memberService.GetMembership(ctx, org.ID, userID)
+		if err != nil {
+			return nil, err
+		}
+		summaries[i].Role = membership.Role.Name
 	}
 
 	response := &model.OrganizationListResponse{
@@ -1495,21 +1670,6 @@ func (s *service) GetTrialStatus(ctx context.Context, orgID xid.ID) (*TrialStatu
 	return status, nil
 }
 
-// Helper methods
-
-func (s *service) convertEntOrgToSummary(org *ent.Organization) model.OrganizationSummary {
-	return model.OrganizationSummary{
-		ID:          org.ID,
-		Name:        org.Name,
-		Slug:        org.Slug,
-		LogoURL:     org.LogoURL,
-		Plan:        org.Plan,
-		Active:      org.Active,
-		OrgType:     org.OrgType,
-		MemberCount: 0, // Would need to query membership count
-	}
-}
-
 func (s *service) generateVerificationCode() (string, error) {
 	bytes := make([]byte, 16)
 	if _, err := rand.Read(bytes); err != nil {
@@ -1958,7 +2118,7 @@ func (s *service) SuggestSimilarOrganizations(ctx context.Context, name string, 
 	// Convert to summaries
 	summaries := make([]model.OrganizationSummary, len(result.Data))
 	for i, org := range result.Data {
-		summaries[i] = s.convertEntOrgToSummary(org)
+		summaries[i] = ConvertEntOrgToSummary(org)
 	}
 
 	return summaries, nil
@@ -1982,7 +2142,7 @@ func (s *service) UpdatePlan(ctx context.Context, orgID xid.ID, plan string) (*m
 	oldPlan := org.Plan
 
 	// Get new plan limits
-	limits := s.getDefaultLimitsForPlan(plan)
+	limits := s.GetDefaultLimitsForPlan(plan)
 
 	// Update organization with new plan and limits
 	input := repository.UpdateOrganizationInput{
@@ -2015,7 +2175,7 @@ func (s *service) UpdatePlan(ctx context.Context, orgID xid.ID, plan string) (*m
 		},
 	})
 
-	return s.convertEntOrgToModel(updatedOrg), nil
+	return ConvertEntOrgToModel(updatedOrg), nil
 }
 
 // GetPlanLimits gets plan limits for an organization
@@ -2033,7 +2193,7 @@ func (s *service) GetPlanLimits(ctx context.Context, orgID xid.ID) (*PlanLimits,
 		ExternalUserLimit: org.ExternalUserLimit,
 		EndUserLimit:      org.EndUserLimit,
 		APIRequestLimit:   org.APIRequestLimit,
-		StorageLimit:      s.getDefaultLimitsForPlan(org.Plan).StorageLimit,
+		StorageLimit:      s.GetDefaultLimitsForPlan(org.Plan).StorageLimit,
 		// FeatureEnabled:    s.isFeatureAvailableForPlan("advanced_features", org.Plan),
 	}
 
@@ -2335,7 +2495,7 @@ func (s *service) GetUserLimits(ctx context.Context, orgID xid.ID) (*UserLimits,
 		return nil, errors.Wrap(err, errors.CodeInternalServer, "failed to get organization")
 	}
 
-	limits := s.getDefaultLimitsForPlan(org.Plan)
+	limits := s.GetDefaultLimitsForPlan(org.Plan)
 
 	// Override with organization-specific limits
 	if org.ExternalUserLimit > 0 {
@@ -2496,7 +2656,7 @@ func (s *service) GetOwner(ctx context.Context, orgID xid.ID) (*model.UserSummar
 		Email:     owner.Email,
 		FirstName: owner.FirstName,
 		LastName:  owner.LastName,
-		UserType:  owner.UserType.String(),
+		UserType:  owner.UserType,
 		Active:    owner.Active,
 	}, nil
 }
@@ -2637,7 +2797,7 @@ func (s *service) GetPlatformOrganization(ctx context.Context) (*model.Organizat
 		return nil, errors.Wrap(err, errors.CodeInternalServer, "failed to get platform organization")
 	}
 
-	return s.convertEntOrgToModel(entOrg), nil
+	return ConvertEntOrgToModel(entOrg), nil
 }
 
 // GetCustomerOrganizations gets customer organizations
@@ -2654,7 +2814,7 @@ func (s *service) GetCustomerOrganizations(ctx context.Context, req model.Organi
 	// Convert to model response
 	summaries := make([]model.OrganizationSummary, len(result.Data))
 	for i, org := range result.Data {
-		summaries[i] = s.convertEntOrgToSummary(org)
+		summaries[i] = ConvertEntOrgToSummary(org)
 	}
 
 	response := &model.OrganizationListResponse{

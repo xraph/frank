@@ -61,7 +61,7 @@ func (Role) Fields() []ent.Field {
 			Comment("Color for UI display"),
 
 		// Target user types
-		field.JSON("applicable_user_types", []string{}).
+		field.JSON("applicable_user_types", []model.UserType{}).
 			Comment("Which user types this role can be assigned to: ['internal', 'external', 'end_user']"),
 
 		// Creation context

@@ -87,7 +87,7 @@ func registerListMFAMethods(api huma.API, mfaCtrl *mfaController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, mfaCtrl.di.AuthZ().Checker(), mfaCtrl.di.Logger())(
-			authz.PermissionReadMFA, authz.ResourceUser, "userId",
+			authz.PermissionReadMFA, model.ResourceUser, "userId",
 		)},
 	}, mfaCtrl.listMFAMethodsHandler)
 }
@@ -105,7 +105,7 @@ func registerGetMFAMethod(api huma.API, mfaCtrl *mfaController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, mfaCtrl.di.AuthZ().Checker(), mfaCtrl.di.Logger())(
-			authz.PermissionReadMFA, authz.ResourceUser, "userId",
+			authz.PermissionReadMFA, model.ResourceUser, "userId",
 		)},
 	}, mfaCtrl.getMFAMethodHandler)
 }
@@ -123,7 +123,7 @@ func registerUpdateMFAMethod(api huma.API, mfaCtrl *mfaController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, mfaCtrl.di.AuthZ().Checker(), mfaCtrl.di.Logger())(
-			authz.PermissionWriteMFA, authz.ResourceUser, "userId",
+			authz.PermissionWriteMFA, model.ResourceUser, "userId",
 		)},
 	}, mfaCtrl.updateMFAMethodHandler)
 }
@@ -146,7 +146,7 @@ func registerDeleteMFAMethod(api huma.API, mfaCtrl *mfaController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, mfaCtrl.di.AuthZ().Checker(), mfaCtrl.di.Logger())(
-			authz.PermissionWriteMFA, authz.ResourceUser, "userId",
+			authz.PermissionWriteMFA, model.ResourceUser, "userId",
 		)},
 	}, mfaCtrl.deleteMFAMethodHandler)
 }
@@ -168,7 +168,7 @@ func registerSetupTOTP(api huma.API, mfaCtrl *mfaController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, mfaCtrl.di.AuthZ().Checker(), mfaCtrl.di.Logger())(
-			authz.PermissionWriteMFA, authz.ResourceUser, "userId",
+			authz.PermissionWriteMFA, model.ResourceUser, "userId",
 		)},
 	}, mfaCtrl.setupTOTPHandler)
 }
@@ -186,7 +186,7 @@ func registerVerifyTOTP(api huma.API, mfaCtrl *mfaController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, mfaCtrl.di.AuthZ().Checker(), mfaCtrl.di.Logger())(
-			authz.PermissionWriteMFA, authz.ResourceUser, "userId",
+			authz.PermissionWriteMFA, model.ResourceUser, "userId",
 		)},
 	}, mfaCtrl.verifyTOTPHandler)
 }
@@ -209,7 +209,7 @@ func registerDisableTOTP(api huma.API, mfaCtrl *mfaController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, mfaCtrl.di.AuthZ().Checker(), mfaCtrl.di.Logger())(
-			authz.PermissionWriteMFA, authz.ResourceUser, "userId",
+			authz.PermissionWriteMFA, model.ResourceUser, "userId",
 		)},
 	}, mfaCtrl.disableTOTPHandler)
 }
@@ -231,7 +231,7 @@ func registerSetupSMS(api huma.API, mfaCtrl *mfaController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, mfaCtrl.di.AuthZ().Checker(), mfaCtrl.di.Logger())(
-			authz.PermissionWriteMFA, authz.ResourceUser, "userId",
+			authz.PermissionWriteMFA, model.ResourceUser, "userId",
 		)},
 	}, mfaCtrl.setupSMSHandler)
 }
@@ -249,7 +249,7 @@ func registerSendSMSCode(api huma.API, mfaCtrl *mfaController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, mfaCtrl.di.AuthZ().Checker(), mfaCtrl.di.Logger())(
-			authz.PermissionWriteMFA, authz.ResourceUser, "userId",
+			authz.PermissionWriteMFA, model.ResourceUser, "userId",
 		)},
 	}, mfaCtrl.sendSMSCodeHandler)
 }
@@ -267,7 +267,7 @@ func registerVerifySMSCode(api huma.API, mfaCtrl *mfaController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, mfaCtrl.di.AuthZ().Checker(), mfaCtrl.di.Logger())(
-			authz.PermissionWriteMFA, authz.ResourceUser, "userId",
+			authz.PermissionWriteMFA, model.ResourceUser, "userId",
 		)},
 	}, mfaCtrl.verifySMSCodeHandler)
 }
@@ -290,7 +290,7 @@ func registerDisableSMS(api huma.API, mfaCtrl *mfaController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, mfaCtrl.di.AuthZ().Checker(), mfaCtrl.di.Logger())(
-			authz.PermissionWriteMFA, authz.ResourceUser, "userId",
+			authz.PermissionWriteMFA, model.ResourceUser, "userId",
 		)},
 	}, mfaCtrl.disableSMSHandler)
 }
@@ -312,7 +312,7 @@ func registerSetupEmailMFA(api huma.API, mfaCtrl *mfaController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, mfaCtrl.di.AuthZ().Checker(), mfaCtrl.di.Logger())(
-			authz.PermissionWriteMFA, authz.ResourceUser, "userId",
+			authz.PermissionWriteMFA, model.ResourceUser, "userId",
 		)},
 	}, mfaCtrl.setupEmailMFAHandler)
 }
@@ -330,7 +330,7 @@ func registerSendEmailCode(api huma.API, mfaCtrl *mfaController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, mfaCtrl.di.AuthZ().Checker(), mfaCtrl.di.Logger())(
-			authz.PermissionWriteMFA, authz.ResourceUser, "userId",
+			authz.PermissionWriteMFA, model.ResourceUser, "userId",
 		)},
 	}, mfaCtrl.sendEmailCodeHandler)
 }
@@ -348,7 +348,7 @@ func registerVerifyEmailCode(api huma.API, mfaCtrl *mfaController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, mfaCtrl.di.AuthZ().Checker(), mfaCtrl.di.Logger())(
-			authz.PermissionWriteMFA, authz.ResourceUser, "userId",
+			authz.PermissionWriteMFA, model.ResourceUser, "userId",
 		)},
 	}, mfaCtrl.verifyEmailCodeHandler)
 }
@@ -371,7 +371,7 @@ func registerDisableEmailMFA(api huma.API, mfaCtrl *mfaController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, mfaCtrl.di.AuthZ().Checker(), mfaCtrl.di.Logger())(
-			authz.PermissionWriteMFA, authz.ResourceUser, "userId",
+			authz.PermissionWriteMFA, model.ResourceUser, "userId",
 		)},
 	}, mfaCtrl.disableEmailMFAHandler)
 }
@@ -393,7 +393,7 @@ func registerGenerateBackupCodes(api huma.API, mfaCtrl *mfaController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, mfaCtrl.di.AuthZ().Checker(), mfaCtrl.di.Logger())(
-			authz.PermissionWriteMFA, authz.ResourceUser, "userId",
+			authz.PermissionWriteMFA, model.ResourceUser, "userId",
 		)},
 	}, mfaCtrl.generateBackupCodesHandler)
 }
@@ -411,7 +411,7 @@ func registerVerifyBackupCode(api huma.API, mfaCtrl *mfaController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, mfaCtrl.di.AuthZ().Checker(), mfaCtrl.di.Logger())(
-			authz.PermissionWriteMFA, authz.ResourceUser, "userId",
+			authz.PermissionWriteMFA, model.ResourceUser, "userId",
 		)},
 	}, mfaCtrl.verifyBackupCodeHandler)
 }
@@ -429,7 +429,7 @@ func registerRegenerateBackupCodes(api huma.API, mfaCtrl *mfaController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, mfaCtrl.di.AuthZ().Checker(), mfaCtrl.di.Logger())(
-			authz.PermissionWriteMFA, authz.ResourceUser, "userId",
+			authz.PermissionWriteMFA, model.ResourceUser, "userId",
 		)},
 	}, mfaCtrl.regenerateBackupCodesHandler)
 }
@@ -451,7 +451,7 @@ func registerVerifyMFA(api huma.API, mfaCtrl *mfaController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, mfaCtrl.di.AuthZ().Checker(), mfaCtrl.di.Logger())(
-			authz.PermissionWriteMFA, authz.ResourceUser, "userId",
+			authz.PermissionWriteMFA, model.ResourceUser, "userId",
 		)},
 	}, mfaCtrl.verifyMFAHandler)
 }
@@ -469,7 +469,7 @@ func registerCreateMFAChallenge(api huma.API, mfaCtrl *mfaController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, mfaCtrl.di.AuthZ().Checker(), mfaCtrl.di.Logger())(
-			authz.PermissionReadMFA, authz.ResourceUser, "userId",
+			authz.PermissionReadMFA, model.ResourceUser, "userId",
 		)},
 	}, mfaCtrl.createMFAChallengeHandler)
 }
@@ -487,7 +487,7 @@ func registerValidateMFAChallenge(api huma.API, mfaCtrl *mfaController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, mfaCtrl.di.AuthZ().Checker(), mfaCtrl.di.Logger())(
-			authz.PermissionWriteMFA, authz.ResourceUser, "userId",
+			authz.PermissionWriteMFA, model.ResourceUser, "userId",
 		)},
 	}, mfaCtrl.validateMFAChallengeHandler)
 }
@@ -505,7 +505,7 @@ func registerCheckMFARequirement(api huma.API, mfaCtrl *mfaController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, mfaCtrl.di.AuthZ().Checker(), mfaCtrl.di.Logger())(
-			authz.PermissionReadMFA, authz.ResourceUser, "userId",
+			authz.PermissionReadMFA, model.ResourceUser, "userId",
 		)},
 	}, mfaCtrl.checkMFARequirementHandler)
 }
@@ -532,7 +532,7 @@ func registerDisableAllMFA(api huma.API, mfaCtrl *mfaController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, mfaCtrl.di.AuthZ().Checker(), mfaCtrl.di.Logger())(
-			authz.PermissionWriteMFA, authz.ResourceUser, "userId",
+			authz.PermissionWriteMFA, model.ResourceUser, "userId",
 		)},
 	}, mfaCtrl.disableAllMFAHandler)
 }
@@ -550,7 +550,7 @@ func registerGetRecoveryOptions(api huma.API, mfaCtrl *mfaController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, mfaCtrl.di.AuthZ().Checker(), mfaCtrl.di.Logger())(
-			authz.PermissionReadMFA, authz.ResourceUser, "userId",
+			authz.PermissionReadMFA, model.ResourceUser, "userId",
 		)},
 	}, mfaCtrl.getRecoveryOptionsHandler)
 }
@@ -572,7 +572,7 @@ func registerGetMFAActivity(api huma.API, mfaCtrl *mfaController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, mfaCtrl.di.AuthZ().Checker(), mfaCtrl.di.Logger())(
-			authz.PermissionReadMFA, authz.ResourceUser, "userId",
+			authz.PermissionReadMFA, model.ResourceUser, "userId",
 		)},
 	}, mfaCtrl.getMFAActivityHandler)
 }
@@ -590,7 +590,7 @@ func registerResendMFACode(api huma.API, mfaCtrl *mfaController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, mfaCtrl.di.AuthZ().Checker(), mfaCtrl.di.Logger())(
-			authz.PermissionWriteMFA, authz.ResourceUser, "userId",
+			authz.PermissionWriteMFA, model.ResourceUser, "userId",
 		)},
 	}, mfaCtrl.resendMFACodeHandler)
 }

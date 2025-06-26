@@ -1,3 +1,6 @@
+'use client'
+
+
 /**
  * @frank-auth/react - useOAuth Hook
  *
@@ -261,8 +264,8 @@ export type OAuthProviderType = keyof typeof OAUTH_PROVIDERS;
  * ```
  */
 export function useOAuth(): UseOAuthReturn {
-    const { user, activeOrganization, reload } = useAuth();
-    const { apiUrl, publishableKey, features } = useConfig();
+    const {user, activeOrganization, reload, userType} = useAuth();
+    const {apiUrl, publishableKey, features} = useConfig();
 
     const [providers, setProviders] = useState<AuthProvider[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -273,6 +276,7 @@ export function useOAuth(): UseOAuthReturn {
         return new FrankAuth({
             publishableKey,
             apiUrl,
+            userType: userType ?? 'end_user',
         });
     }, [publishableKey, apiUrl]);
 
@@ -607,7 +611,7 @@ export function useOAuthProvider(providerName: OAuthProviderType) {
  * Hook for OAuth callback handling
  */
 export function useOAuthCallback() {
-    const { handleCallback } = useOAuth();
+    const {handleCallback} = useOAuth();
     const [callbackState, setCallbackState] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
     const [callbackResult, setCallbackResult] = useState<OAuthCallbackResult | null>(null);
 

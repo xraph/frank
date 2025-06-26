@@ -33,7 +33,7 @@ type RoleService interface {
 	GetDefaultRoles(ctx context.Context, roleType model.RoleType, organizationID *xid.ID, applicationID *xid.ID) ([]*model.Role, error)
 	SetAsDefault(ctx context.Context, id xid.ID) error
 	UnsetAsDefault(ctx context.Context, id xid.ID) error
-	GetDefaultRoleForUserType(ctx context.Context, userType string, roleType model.RoleType, organizationID *xid.ID) (*model.Role, error)
+	GetDefaultRoleForUserType(ctx context.Context, userType model.UserType, roleType model.RoleType, organizationID *xid.ID) (*model.Role, error)
 
 	// Role hierarchy operations
 	GetRoleHierarchy(ctx context.Context, roleID xid.ID) (*model.RoleHierarchy, error)
@@ -68,7 +68,7 @@ type RoleService interface {
 	CanDeleteRole(ctx context.Context, roleID xid.ID) (bool, string, error)
 	IsRoleInUse(ctx context.Context, roleID xid.ID) (bool, error)
 	ValidateRolePermissions(ctx context.Context, roleID xid.ID, permissionIDs []xid.ID) error
-	ValidateUserTypeCompatibility(ctx context.Context, roleID xid.ID, userType string) error
+	ValidateUserTypeCompatibility(ctx context.Context, roleID xid.ID, userType model.UserType) error
 
 	// Role templates and cloning
 	CreateRoleFromTemplate(ctx context.Context, templateName string, input CreateRoleFromTemplateInput) (*model.Role, error)
@@ -505,7 +505,7 @@ func (s *roleService) UnsetAsDefault(ctx context.Context, id xid.ID) error {
 	return nil
 }
 
-func (s *roleService) GetDefaultRoleForUserType(ctx context.Context, userType string, roleType model.RoleType, organizationID *xid.ID) (*model.Role, error) {
+func (s *roleService) GetDefaultRoleForUserType(ctx context.Context, userType model.UserType, roleType model.RoleType, organizationID *xid.ID) (*model.Role, error) {
 	defaultRoles, err := s.GetDefaultRoles(ctx, roleType, organizationID, nil)
 	if err != nil {
 		return nil, fmt.Errorf("getting default roles: %w", err)
@@ -1035,7 +1035,7 @@ func (s *roleService) ValidateRolePermissions(ctx context.Context, roleID xid.ID
 	return nil
 }
 
-func (s *roleService) ValidateUserTypeCompatibility(ctx context.Context, roleID xid.ID, userType string) error {
+func (s *roleService) ValidateUserTypeCompatibility(ctx context.Context, roleID xid.ID, userType model.UserType) error {
 	role, err := s.GetRole(ctx, roleID)
 	if err != nil {
 		return fmt.Errorf("getting role: %w", err)
@@ -1124,7 +1124,7 @@ func (s *roleService) convertEntPermissionToModel(entPermission *ent.Permission)
 		Description:         entPermission.Description,
 		Resource:            entPermission.Resource,
 		Action:              entPermission.Action,
-		Category:            string(entPermission.Category),
+		Category:            entPermission.Category,
 		ApplicableUserTypes: entPermission.ApplicableUserTypes,
 		ApplicableContexts:  entPermission.ApplicableContexts,
 		Conditions:          entPermission.Conditions,

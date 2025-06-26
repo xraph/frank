@@ -41,11 +41,11 @@ type Permission struct {
 	// The action this permission allows (create, read, update, delete, etc.)
 	Action string `json:"action,omitempty"`
 	// Category helps organize permissions by scope
-	Category model.ContextType `json:"category,omitempty"`
+	Category model.PermissionCategory `json:"category,omitempty"`
 	// Which user types this permission can apply to
-	ApplicableUserTypes []string `json:"applicable_user_types,omitempty"`
+	ApplicableUserTypes []model.UserType `json:"applicable_user_types,omitempty"`
 	// Which contexts this permission can be used in
-	ApplicableContexts []string `json:"applicable_contexts,omitempty"`
+	ApplicableContexts []model.ContextType `json:"applicable_contexts,omitempty"`
 	// JSON expression for conditional access
 	Conditions string `json:"conditions,omitempty"`
 	// System permissions cannot be modified
@@ -59,7 +59,7 @@ type Permission struct {
 	// Active holds the value of the "active" field.
 	Active bool `json:"active,omitempty"`
 	// Group permissions by feature (e.g., 'user_management', 'billing')
-	PermissionGroup string `json:"permission_group,omitempty"`
+	PermissionGroup model.PermissionGroup `json:"permission_group,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the PermissionQuery when eager-loading is set.
 	Edges        PermissionEdges `json:"edges"`
@@ -235,7 +235,7 @@ func (pe *Permission) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field category", values[i])
 			} else if value.Valid {
-				pe.Category = model.ContextType(value.String)
+				pe.Category = model.PermissionCategory(value.String)
 			}
 		case permission.FieldApplicableUserTypes:
 			if value, ok := values[i].(*[]byte); !ok {
@@ -293,7 +293,7 @@ func (pe *Permission) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field permission_group", values[i])
 			} else if value.Valid {
-				pe.PermissionGroup = value.String
+				pe.PermissionGroup = model.PermissionGroup(value.String)
 			}
 		default:
 			pe.selectValues.Set(columns[i], values[i])
@@ -413,7 +413,7 @@ func (pe *Permission) String() string {
 	builder.WriteString(fmt.Sprintf("%v", pe.Active))
 	builder.WriteString(", ")
 	builder.WriteString("permission_group=")
-	builder.WriteString(pe.PermissionGroup)
+	builder.WriteString(fmt.Sprintf("%v", pe.PermissionGroup))
 	builder.WriteByte(')')
 	return builder.String()
 }

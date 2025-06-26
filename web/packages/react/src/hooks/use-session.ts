@@ -141,8 +141,8 @@ export interface DeviceInfo {
  * ```
  */
 export function useSession(): UseSessionReturn {
-    const { session, createSession: authCreateSession, reload } = useAuth();
-    const { apiUrl, publishableKey } = useConfig();
+    const {session, createSession: authCreateSession, reload, userType} = useAuth();
+    const {apiUrl, publishableKey} = useConfig();
 
     const [sessions, setSessions] = useState<SessionInfo[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -154,6 +154,7 @@ export function useSession(): UseSessionReturn {
         return new FrankSession({
             publishableKey,
             apiUrl,
+            userType: userType ?? 'end_user',
         }, session.accessToken);
     }, [publishableKey, apiUrl, session?.accessToken]);
 

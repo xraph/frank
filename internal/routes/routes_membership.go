@@ -80,7 +80,7 @@ func registerListOrganizationMembers(api huma.API, ctrl *membershipController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionViewMembers, authz.ResourceOrganization, "orgId",
+			authz.PermissionViewMembers, model.ResourceOrganization, "orgId",
 		)},
 	}, ctrl.listOrganizationMembersHandler)
 }
@@ -98,7 +98,7 @@ func registerGetMember(api huma.API, ctrl *membershipController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionViewMembers, authz.ResourceOrganization, "orgId",
+			authz.PermissionViewMembers, model.ResourceOrganization, "orgId",
 		)},
 	}, ctrl.getMemberHandler)
 }
@@ -116,7 +116,7 @@ func registerAddMember(api huma.API, ctrl *membershipController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManageMembers, authz.ResourceOrganization, "orgId",
+			authz.PermissionManageMembers, model.ResourceOrganization, "orgId",
 		)},
 	}, ctrl.addMemberHandler)
 }
@@ -134,7 +134,7 @@ func registerUpdateMember(api huma.API, ctrl *membershipController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManageMembers, authz.ResourceOrganization, "orgId",
+			authz.PermissionManageMembers, model.ResourceOrganization, "orgId",
 		)},
 	}, ctrl.updateMemberHandler)
 }
@@ -155,7 +155,7 @@ func registerRemoveMember(api huma.API, ctrl *membershipController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManageMembers, authz.ResourceOrganization, "orgId",
+			authz.PermissionManageMembers, model.ResourceOrganization, "orgId",
 		)},
 	}, ctrl.removeMemberHandler)
 }
@@ -173,7 +173,7 @@ func registerUpdateMemberRole(api huma.API, ctrl *membershipController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManageMembers, authz.ResourceOrganization, "orgId",
+			authz.PermissionManageMembers, model.ResourceOrganization, "orgId",
 		)},
 	}, ctrl.updateMemberRoleHandler)
 }
@@ -191,7 +191,7 @@ func registerUpdateMemberStatus(api huma.API, ctrl *membershipController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManageMembers, authz.ResourceOrganization, "orgId",
+			authz.PermissionManageMembers, model.ResourceOrganization, "orgId",
 		)},
 	}, ctrl.updateMemberStatusHandler)
 }
@@ -211,7 +211,7 @@ func registerCreateInvitation(api huma.API, ctrl *membershipController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManageMembers, authz.ResourceOrganization, "orgId",
+			authz.PermissionManageMembers, model.ResourceOrganization, "orgId",
 		)},
 	}, ctrl.createInvitationHandler)
 }
@@ -229,7 +229,7 @@ func registerListInvitations(api huma.API, ctrl *membershipController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionViewMembers, authz.ResourceOrganization, "orgId",
+			authz.PermissionViewMembers, model.ResourceOrganization, "orgId",
 		)},
 	}, ctrl.listInvitationsHandler)
 }
@@ -247,7 +247,7 @@ func registerGetInvitation(api huma.API, ctrl *membershipController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionViewMembers, authz.ResourceOrganization, "orgId",
+			authz.PermissionViewMembers, model.ResourceOrganization, "orgId",
 		)},
 	}, ctrl.getInvitationHandler)
 }
@@ -292,7 +292,7 @@ func registerResendInvitation(api huma.API, ctrl *membershipController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManageMembers, authz.ResourceOrganization, "orgId",
+			authz.PermissionManageMembers, model.ResourceOrganization, "orgId",
 		)},
 	}, ctrl.resendInvitationHandler)
 }
@@ -313,7 +313,7 @@ func registerCancelInvitation(api huma.API, ctrl *membershipController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManageMembers, authz.ResourceOrganization, "orgId",
+			authz.PermissionManageMembers, model.ResourceOrganization, "orgId",
 		)},
 	}, ctrl.cancelInvitationHandler)
 }
@@ -331,7 +331,7 @@ func registerBulkInvitations(api huma.API, ctrl *membershipController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManageMembers, authz.ResourceOrganization, "orgId",
+			authz.PermissionManageMembers, model.ResourceOrganization, "orgId",
 		)},
 	}, ctrl.bulkInvitationsHandler)
 }
@@ -363,7 +363,7 @@ func registerGetMembershipStats(api huma.API, ctrl *membershipController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionViewAnalytics, authz.ResourceOrganization, "orgId",
+			authz.PermissionViewAnalytics, model.ResourceOrganization, "orgId",
 		)},
 	}, ctrl.getMembershipStatsHandler)
 }
@@ -381,7 +381,7 @@ func registerGetMemberActivity(api huma.API, ctrl *membershipController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionViewAnalytics, authz.ResourceOrganization, "orgId",
+			authz.PermissionViewAnalytics, model.ResourceOrganization, "orgId",
 		)},
 	}, ctrl.getMemberActivityHandler)
 }
@@ -399,7 +399,7 @@ func registerGetMemberMetrics(api huma.API, ctrl *membershipController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionViewAnalytics, authz.ResourceOrganization, "orgId",
+			authz.PermissionViewAnalytics, model.ResourceOrganization, "orgId",
 		)},
 	}, ctrl.getMemberMetricsHandler)
 }
@@ -419,7 +419,7 @@ func registerBulkUpdateMemberRoles(api huma.API, ctrl *membershipController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManageMembers, authz.ResourceOrganization, "orgId",
+			authz.PermissionManageMembers, model.ResourceOrganization, "orgId",
 		)},
 	}, ctrl.bulkUpdateMemberRolesHandler)
 }
@@ -437,7 +437,7 @@ func registerBulkUpdateMemberStatus(api huma.API, ctrl *membershipController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManageMembers, authz.ResourceOrganization, "orgId",
+			authz.PermissionManageMembers, model.ResourceOrganization, "orgId",
 		)},
 	}, ctrl.bulkUpdateMemberStatusHandler)
 }
@@ -455,7 +455,7 @@ func registerBulkRemoveMembers(api huma.API, ctrl *membershipController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManageMembers, authz.ResourceOrganization, "orgId",
+			authz.PermissionManageMembers, model.ResourceOrganization, "orgId",
 		)},
 	}, ctrl.bulkRemoveMembersHandler)
 }
@@ -475,7 +475,7 @@ func registerSetPrimaryContact(api huma.API, ctrl *membershipController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManageMembers, authz.ResourceOrganization, "orgId",
+			authz.PermissionManageMembers, model.ResourceOrganization, "orgId",
 		)},
 	}, ctrl.setPrimaryContactHandler)
 }
@@ -493,7 +493,7 @@ func registerSetBillingContact(api huma.API, ctrl *membershipController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManageBilling, authz.ResourceOrganization, "orgId",
+			authz.PermissionManageBilling, model.ResourceOrganization, "orgId",
 		)},
 	}, ctrl.setBillingContactHandler)
 }
@@ -514,7 +514,7 @@ func registerRemoveBillingContact(api huma.API, ctrl *membershipController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManageBilling, authz.ResourceOrganization, "orgId",
+			authz.PermissionManageBilling, model.ResourceOrganization, "orgId",
 		)},
 	}, ctrl.removeBillingContactHandler)
 }
@@ -534,7 +534,7 @@ func registerGetMemberPermissions(api huma.API, ctrl *membershipController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionViewMembers, authz.ResourceOrganization, "orgId",
+			authz.PermissionViewMembers, model.ResourceOrganization, "orgId",
 		)},
 	}, ctrl.getMemberPermissionsHandler)
 }
@@ -552,7 +552,7 @@ func registerCheckMemberPermission(api huma.API, ctrl *membershipController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionViewMembers, authz.ResourceOrganization, "orgId",
+			authz.PermissionViewMembers, model.ResourceOrganization, "orgId",
 		)},
 	}, ctrl.checkMemberPermissionHandler)
 }
@@ -864,17 +864,7 @@ func (c *membershipController) updateMemberStatusHandler(ctx context.Context, in
 
 func (c *membershipController) createInvitationHandler(ctx context.Context, input *CreateInvitationInput) (*CreateInvitationOutput, error) {
 	// Get invitation service from DI container
-	// Since we don't have InvitationService in the container interface, we'll create it here
-	invitationService := organization2.NewInvitationService(
-		c.di.Repo().Membership(),
-		c.di.Repo().Organization(),
-		c.di.Repo().User(),
-		c.di.Repo().Role(),
-		c.di.Repo().Audit(),
-		nil, // email service - would need to implement
-		c.di.Logger(),
-		c.di.Config().App.BaseURL,
-	)
+	invitationService := c.di.InvitationService()
 
 	// Get inviter from context
 	inviterID := xid.New() // This should come from authenticated user context
@@ -902,16 +892,8 @@ func (c *membershipController) createInvitationHandler(ctx context.Context, inpu
 }
 
 func (c *membershipController) listInvitationsHandler(ctx context.Context, input *ListInvitationsInput) (*ListInvitationsOutput, error) {
-	invitationService := organization2.NewInvitationService(
-		c.di.Repo().Membership(),
-		c.di.Repo().Organization(),
-		c.di.Repo().User(),
-		c.di.Repo().Role(),
-		c.di.Repo().Audit(),
-		nil,
-		c.di.Logger(),
-		c.di.Config().Server.BaseURL,
-	)
+	// Get invitation service from DI container
+	invitationService := c.di.InvitationService()
 
 	response, err := invitationService.ListInvitations(ctx, input.OrgID, input.ListInvitationsParams)
 	if err != nil {
@@ -924,16 +906,8 @@ func (c *membershipController) listInvitationsHandler(ctx context.Context, input
 }
 
 func (c *membershipController) getInvitationHandler(ctx context.Context, input *GetInvitationInput) (*GetInvitationOutput, error) {
-	invitationService := organization2.NewInvitationService(
-		c.di.Repo().Membership(),
-		c.di.Repo().Organization(),
-		c.di.Repo().User(),
-		c.di.Repo().Role(),
-		c.di.Repo().Audit(),
-		nil,
-		c.di.Logger(),
-		c.di.Config().App.BaseURL,
-	)
+	// Get invitation service from DI container
+	invitationService := c.di.InvitationService()
 
 	invitation, err := invitationService.GetInvitation(ctx, input.InvitationID)
 	if err != nil {
@@ -946,16 +920,8 @@ func (c *membershipController) getInvitationHandler(ctx context.Context, input *
 }
 
 func (c *membershipController) acceptInvitationHandler(ctx context.Context, input *AcceptInvitationInput) (*AcceptInvitationOutput, error) {
-	invitationService := organization2.NewInvitationService(
-		c.di.Repo().Membership(),
-		c.di.Repo().Organization(),
-		c.di.Repo().User(),
-		c.di.Repo().Role(),
-		c.di.Repo().Audit(),
-		nil,
-		c.di.Logger(),
-		c.di.Config().App.BaseURL,
-	)
+	// Get invitation service from DI container
+	invitationService := c.di.InvitationService()
 
 	// Get accepting user from context
 	acceptedBy := xid.New() // This should come from authenticated user context
@@ -982,16 +948,8 @@ type SimpleMessage struct {
 type SimpleMessageOutput = model.Output[SimpleMessage]
 
 func (c *membershipController) declineInvitationHandler(ctx context.Context, input *DeclineInvitationInput) (*SimpleMessageOutput, error) {
-	invitationService := organization2.NewInvitationService(
-		c.di.Repo().Membership(),
-		c.di.Repo().Organization(),
-		c.di.Repo().User(),
-		c.di.Repo().Role(),
-		c.di.Repo().Audit(),
-		nil,
-		c.di.Logger(),
-		c.di.Config().App.BaseURL,
-	)
+	// Get invitation service from DI container
+	invitationService := c.di.InvitationService()
 
 	err := invitationService.DeclineInvitation(ctx, input.Body.Token, input.Body.Reason)
 	if err != nil {
@@ -1006,16 +964,8 @@ func (c *membershipController) declineInvitationHandler(ctx context.Context, inp
 }
 
 func (c *membershipController) resendInvitationHandler(ctx context.Context, input *ResendInvitationInput) (*SimpleMessageOutput, error) {
-	invitationService := organization2.NewInvitationService(
-		c.di.Repo().Membership(),
-		c.di.Repo().Organization(),
-		c.di.Repo().User(),
-		c.di.Repo().Role(),
-		c.di.Repo().Audit(),
-		nil,
-		c.di.Logger(),
-		c.di.Config().App.BaseURL,
-	)
+	// Get invitation service from DI container
+	invitationService := c.di.InvitationService()
 
 	err := invitationService.ResendInvitation(ctx, input.InvitationID)
 	if err != nil {
@@ -1030,16 +980,8 @@ func (c *membershipController) resendInvitationHandler(ctx context.Context, inpu
 }
 
 func (c *membershipController) cancelInvitationHandler(ctx context.Context, input *CancelInvitationInput) (*SimpleMessageOutput, error) {
-	invitationService := organization2.NewInvitationService(
-		c.di.Repo().Membership(),
-		c.di.Repo().Organization(),
-		c.di.Repo().User(),
-		c.di.Repo().Role(),
-		c.di.Repo().Audit(),
-		nil,
-		c.di.Logger(),
-		c.di.Config().App.BaseURL,
-	)
+	// Get invitation service from DI container
+	invitationService := c.di.InvitationService()
 
 	err := invitationService.CancelInvitation(ctx, input.InvitationID, input.Body.Reason)
 	if err != nil {
@@ -1054,16 +996,8 @@ func (c *membershipController) cancelInvitationHandler(ctx context.Context, inpu
 }
 
 func (c *membershipController) bulkInvitationsHandler(ctx context.Context, input *BulkInvitationsInput) (*BulkInvitationsOutput, error) {
-	invitationService := organization2.NewInvitationService(
-		c.di.Repo().Membership(),
-		c.di.Repo().Organization(),
-		c.di.Repo().User(),
-		c.di.Repo().Role(),
-		c.di.Repo().Audit(),
-		nil,
-		c.di.Logger(),
-		c.di.Config().App.BaseURL,
-	)
+	// Get invitation service from DI container
+	invitationService := c.di.InvitationService()
 
 	// Convert request to bulk invitation input
 	bulkInput := make([]organization2.BulkInvitationInput, len(input.Body.Invitations))
@@ -1087,16 +1021,8 @@ func (c *membershipController) bulkInvitationsHandler(ctx context.Context, input
 }
 
 func (c *membershipController) validateInvitationHandler(ctx context.Context, input *ValidateInvitationInput) (*ValidateInvitationOutput, error) {
-	invitationService := organization2.NewInvitationService(
-		c.di.Repo().Membership(),
-		c.di.Repo().Organization(),
-		c.di.Repo().User(),
-		c.di.Repo().Role(),
-		c.di.Repo().Audit(),
-		nil,
-		c.di.Logger(),
-		c.di.Config().App.BaseURL,
-	)
+	// Get invitation service from DI container
+	invitationService := c.di.InvitationService()
 
 	invitation, err := invitationService.ValidateInvitationToken(ctx, input.Body.Token)
 	if err != nil {

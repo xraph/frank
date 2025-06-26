@@ -27,6 +27,18 @@ export interface RegisterRequest {
      */
     readonly $schema?: string;
     /**
+     * Accept marketing communications
+     * @type {boolean}
+     * @memberof RegisterRequest
+     */
+    acceptMarketing?: boolean;
+    /**
+     * Accept privacy policy
+     * @type {boolean}
+     * @memberof RegisterRequest
+     */
+    acceptPrivacy?: boolean;
+    /**
      * Whether user accepts terms and conditions
      * @type {boolean}
      * @memberof RegisterRequest
@@ -67,13 +79,19 @@ export interface RegisterRequest {
      * @type {string}
      * @memberof RegisterRequest
      */
-    locale: string;
+    locale?: string;
     /**
      * Whether user consents to marketing communications
      * @type {boolean}
      * @memberof RegisterRequest
      */
-    marketingConsent: boolean;
+    marketingConsent?: boolean;
+    /**
+     * Additional user metadata
+     * @type {object}
+     * @memberof RegisterRequest
+     */
+    metadata?: object;
     /**
      * Organization ID (for end users)
      * @type {string}
@@ -124,8 +142,6 @@ export interface RegisterRequest {
 export function instanceOfRegisterRequest(value: object): value is RegisterRequest {
     if (!('acceptTerms' in value) || value['acceptTerms'] === undefined) return false;
     if (!('email' in value) || value['email'] === undefined) return false;
-    if (!('locale' in value) || value['locale'] === undefined) return false;
-    if (!('marketingConsent' in value) || value['marketingConsent'] === undefined) return false;
     if (!('userType' in value) || value['userType'] === undefined) return false;
     return true;
 }
@@ -142,14 +158,17 @@ export function RegisterRequestFromJSONTyped(json: any, ignoreDiscriminator: boo
         
             ...json,
         '$schema': json['$schema'] == null ? undefined : json['$schema'],
+        'acceptMarketing': json['acceptMarketing'] == null ? undefined : json['acceptMarketing'],
+        'acceptPrivacy': json['acceptPrivacy'] == null ? undefined : json['acceptPrivacy'],
         'acceptTerms': json['acceptTerms'],
         'customAttributes': json['customAttributes'] == null ? undefined : json['customAttributes'],
         'email': json['email'],
         'firstName': json['firstName'] == null ? undefined : json['firstName'],
         'ipAddress': json['ipAddress'] == null ? undefined : json['ipAddress'],
         'lastName': json['lastName'] == null ? undefined : json['lastName'],
-        'locale': json['locale'],
-        'marketingConsent': json['marketingConsent'],
+        'locale': json['locale'] == null ? undefined : json['locale'],
+        'marketingConsent': json['marketingConsent'] == null ? undefined : json['marketingConsent'],
+        'metadata': json['metadata'] == null ? undefined : json['metadata'],
         'organizationId': json['organizationId'] == null ? undefined : json['organizationId'],
         'password': json['password'] == null ? undefined : json['password'],
         'phoneNumber': json['phoneNumber'] == null ? undefined : json['phoneNumber'],
@@ -172,6 +191,8 @@ export function RegisterRequestToJSONTyped(value?: Omit<RegisterRequest, '$schem
     return {
         
             ...value,
+        'acceptMarketing': value['acceptMarketing'],
+        'acceptPrivacy': value['acceptPrivacy'],
         'acceptTerms': value['acceptTerms'],
         'customAttributes': value['customAttributes'],
         'email': value['email'],
@@ -180,6 +201,7 @@ export function RegisterRequestToJSONTyped(value?: Omit<RegisterRequest, '$schem
         'lastName': value['lastName'],
         'locale': value['locale'],
         'marketingConsent': value['marketingConsent'],
+        'metadata': value['metadata'],
         'organizationId': value['organizationId'],
         'password': value['password'],
         'phoneNumber': value['phoneNumber'],

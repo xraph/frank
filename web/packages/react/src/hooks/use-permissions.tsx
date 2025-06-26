@@ -5,23 +5,17 @@
  * permission checking, and authorization utilities for multi-tenant applications.
  */
 
-import { useState, useCallback, useMemo, useEffect } from 'react';
+'use client'
 
-import type {
-    Role,
-    Permission,
-    UserRoleAssignment,
-    UserPermissionAssignment,
-} from '@frank-auth/client';
+import {useCallback, useEffect, useMemo, useState} from 'react';
 
-import { FrankAuth } from '@frank-auth/sdk';
-import { useAuth } from './use-auth';
-import { useConfig } from '../provider/config-provider';
+import type {UserPermissionAssignment, UserRoleAssignment,} from '@frank-auth/client';
 
-import type {
-    AuthError,
-    PermissionContext,
-} from '../provider/types';
+import {FrankAuth} from '@frank-auth/sdk';
+import {useAuth} from './use-auth';
+import {useConfig} from '@/provider';
+
+import type {AuthError, PermissionContext,} from '../provider/types';
 
 // ============================================================================
 // Permission Hook Interface
@@ -264,8 +258,8 @@ export const ORGANIZATION_ROLES = {
  * ```
  */
 export function usePermissions(): UsePermissionsReturn {
-    const { user, activeOrganization, session } = useAuth();
-    const { apiUrl, publishableKey, userType } = useConfig();
+    const {user, activeOrganization, session} = useAuth();
+    const {apiUrl, publishableKey, userType} = useConfig();
 
     const [permissions, setPermissions] = useState<string[]>([]);
     const [roles, setRoles] = useState<string[]>([]);
@@ -286,6 +280,7 @@ export function usePermissions(): UsePermissionsReturn {
         return new FrankAuth({
             publishableKey,
             apiUrl,
+            userType: userType ?? 'end_user',
         });
     }, [publishableKey, apiUrl, session?.accessToken]);
 
@@ -457,7 +452,7 @@ export function usePermissions(): UsePermissionsReturn {
     }, [hasPermission]);
 
     const hasSystemPermission = useCallback((permission: string): boolean => {
-        return hasPermission(permission, { type: 'system' });
+        return hasPermission(permission, {type: 'system'});
     }, [hasPermission]);
 
     // Role checking helpers
@@ -641,9 +636,9 @@ export function useSystemPermissions() {
         canManageBilling: canAccessSystem && hasSystemPermission('system:billing:manage'),
 
         // Role checking for system
-        hasSystemRole: (role: string) => hasRole(role, { type: 'system' }),
-        isSuperAdmin: hasRole(SYSTEM_ROLES.SUPER_ADMIN, { type: 'system' }),
-        isSupport: hasRole(SYSTEM_ROLES.SUPPORT, { type: 'system' }),
+        hasSystemRole: (role: string) => hasRole(role, {type: 'system'}),
+        isSuperAdmin: hasRole(SYSTEM_ROLES.SUPER_ADMIN, {type: 'system'}),
+        isSupport: hasRole(SYSTEM_ROLES.SUPPORT, {type: 'system'}),
     };
 }
 

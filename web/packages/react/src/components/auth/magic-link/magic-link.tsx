@@ -492,12 +492,6 @@ export function MagicLinkVerifyCard(props: Omit<MagicLinkVerifyProps, 'variant'>
     return <MagicLinkVerify {...props} variant="card" />;
 }
 
-/**
- * Email Verification Component
- */
-export function EmailVerification(props: Omit<MagicLinkVerifyProps, 'type'>) {
-    return <MagicLinkVerify {...props} type="email-verification" />;
-}
 
 /**
  * Organization Invitation Verification
@@ -506,12 +500,6 @@ export function OrganizationInviteVerification(props: Omit<MagicLinkVerifyProps,
     return <MagicLinkVerify {...props} type="organization-invite" />;
 }
 
-/**
- * Password Reset Link Verification
- */
-export function PasswordResetLinkVerification(props: Omit<MagicLinkVerifyProps, 'type'>) {
-    return <MagicLinkVerify {...props} type="password-reset" />;
-}
 
 // ============================================================================
 // Export

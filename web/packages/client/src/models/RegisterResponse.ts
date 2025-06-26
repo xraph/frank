@@ -13,6 +13,13 @@
  */
 
 import { mapValues } from '../runtime';
+import type { Organization } from './Organization';
+import {
+    OrganizationFromJSON,
+    OrganizationFromJSONTyped,
+    OrganizationToJSON,
+    OrganizationToJSONTyped,
+} from './Organization';
 import type { User } from './User';
 import {
     UserFromJSON,
@@ -20,6 +27,13 @@ import {
     UserToJSON,
     UserToJSONTyped,
 } from './User';
+import type { Membership } from './Membership';
+import {
+    MembershipFromJSON,
+    MembershipFromJSONTyped,
+    MembershipToJSON,
+    MembershipToJSONTyped,
+} from './Membership';
 
 /**
  * 
@@ -47,11 +61,35 @@ export interface RegisterResponse {
      */
     emailVerificationRequired: boolean;
     /**
+     * Token expiration timestamp
+     * @type {Date}
+     * @memberof RegisterResponse
+     */
+    expiresAt?: Date;
+    /**
      * Token expiration in seconds
      * @type {number}
      * @memberof RegisterResponse
      */
     expiresIn?: number;
+    /**
+     * Created membership information
+     * @type {Membership}
+     * @memberof RegisterResponse
+     */
+    membership?: Membership;
+    /**
+     * Response message
+     * @type {string}
+     * @memberof RegisterResponse
+     */
+    message: string;
+    /**
+     * Created organization information
+     * @type {Organization}
+     * @memberof RegisterResponse
+     */
+    organization?: Organization;
     /**
      * Whether phone verification is required
      * @type {boolean}
@@ -64,6 +102,12 @@ export interface RegisterResponse {
      * @memberof RegisterResponse
      */
     refreshToken?: string;
+    /**
+     * Whether registration was successful
+     * @type {boolean}
+     * @memberof RegisterResponse
+     */
+    success: boolean;
     /**
      * Token type
      * @type {string}
@@ -95,7 +139,9 @@ export interface RegisterResponse {
  */
 export function instanceOfRegisterResponse(value: object): value is RegisterResponse {
     if (!('emailVerificationRequired' in value) || value['emailVerificationRequired'] === undefined) return false;
+    if (!('message' in value) || value['message'] === undefined) return false;
     if (!('phoneVerificationRequired' in value) || value['phoneVerificationRequired'] === undefined) return false;
+    if (!('success' in value) || value['success'] === undefined) return false;
     if (!('user' in value) || value['user'] === undefined) return false;
     return true;
 }
@@ -114,9 +160,14 @@ export function RegisterResponseFromJSONTyped(json: any, ignoreDiscriminator: bo
         '$schema': json['$schema'] == null ? undefined : json['$schema'],
         'accessToken': json['accessToken'] == null ? undefined : json['accessToken'],
         'emailVerificationRequired': json['emailVerificationRequired'],
+        'expiresAt': json['expiresAt'] == null ? undefined : (new Date(json['expiresAt'])),
         'expiresIn': json['expiresIn'] == null ? undefined : json['expiresIn'],
+        'membership': json['membership'] == null ? undefined : MembershipFromJSON(json['membership']),
+        'message': json['message'],
+        'organization': json['organization'] == null ? undefined : OrganizationFromJSON(json['organization']),
         'phoneVerificationRequired': json['phoneVerificationRequired'],
         'refreshToken': json['refreshToken'] == null ? undefined : json['refreshToken'],
+        'success': json['success'],
         'tokenType': json['tokenType'] == null ? undefined : json['tokenType'],
         'user': UserFromJSON(json['user']),
         'verificationRequired': json['verificationRequired'] == null ? undefined : json['verificationRequired'],
@@ -138,9 +189,14 @@ export function RegisterResponseToJSONTyped(value?: Omit<RegisterResponse, '$sch
             ...value,
         'accessToken': value['accessToken'],
         'emailVerificationRequired': value['emailVerificationRequired'],
+        'expiresAt': value['expiresAt'] == null ? undefined : ((value['expiresAt']).toISOString()),
         'expiresIn': value['expiresIn'],
+        'membership': MembershipToJSON(value['membership']),
+        'message': value['message'],
+        'organization': OrganizationToJSON(value['organization']),
         'phoneVerificationRequired': value['phoneVerificationRequired'],
         'refreshToken': value['refreshToken'],
+        'success': value['success'],
         'tokenType': value['tokenType'],
         'user': UserToJSON(value['user']),
         'verificationRequired': value['verificationRequired'],

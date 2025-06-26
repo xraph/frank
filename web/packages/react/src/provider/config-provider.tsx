@@ -50,35 +50,39 @@ type ConfigAction =
 function configReducer(state: ConfigState, action: ConfigAction): ConfigState {
     switch (action.type) {
         case 'SET_LOADED':
-            return { ...state, isLoaded: action.payload };
+            return {...state, isLoaded: action.payload};
 
         case 'SET_CONFIG':
             return {
                 ...state,
                 config: action.payload,
                 publishableKey: action.payload.publishableKey,
+                secretKey: action.payload.secretKey,
+                projectId: action.payload.projectId,
                 userType: action.payload.userType,
                 apiUrl: action.payload.apiUrl || state.apiUrl,
                 theme: action.payload.theme || state.theme,
                 appearance: action.payload.appearance || state.appearance,
                 localization: action.payload.localization || state.localization,
                 components: action.payload.components || state.components,
-                linksPath: { ...(state.linksPath ?? {}), ...action.payload.linksPath},
+                linksPath: {...(state.linksPath ?? {}), ...action.payload.linksPath},
                 features: action.payload.features || state.features,
                 debug: action.payload.debug || state.debug,
                 frontendUrl: action.payload.frontendUrl || state.frontendUrl,
             };
 
         case 'UPDATE_CONFIG':
-            const updatedConfig = { ...state.config, ...action.payload };
+            const updatedConfig = {...state.config, ...action.payload};
             return {
                 ...state,
                 config: updatedConfig,
+//                secretKey: action.payload.secretKey,
+//                projectId: action.payload.projectId,
                 theme: action.payload.theme || state.theme,
                 appearance: action.payload.appearance || state.appearance,
                 localization: action.payload.localization || state.localization,
                 components: action.payload.components || state.components,
-                linksPath: { ...(state.linksPath ?? {}), ...action.payload.linksPath},
+                linksPath: {...(state.linksPath ?? {}), ...action.payload.linksPath},
                 features: action.payload.features || state.features,
                 debug: action.payload.debug !== undefined ? action.payload.debug : state.debug,
                 frontendUrl: action.payload.frontendUrl || state.frontendUrl,
@@ -91,7 +95,7 @@ function configReducer(state: ConfigState, action: ConfigAction): ConfigState {
                 config: {
                     ...state.config,
                     organization: action.payload,
-                    organizationId: action.payload.id,
+                    projectId: action.payload.id,
                 },
             };
 
@@ -165,6 +169,8 @@ function configReducer(state: ConfigState, action: ConfigAction): ConfigState {
             return {
                 ...initialConfigState,
                 publishableKey: state.publishableKey,
+                secretKey: state.secretKey,
+                projectId: state.projectId,
                 userType: state.userType,
                 apiUrl: state.apiUrl,
                 isLoaded: true,
@@ -239,14 +245,14 @@ export function ConfigProvider({
     // Initialize state with provided config
     useEffect(() => {
         const validatedConfig = configManager.getConfig();
-        dispatch({ type: 'SET_CONFIG', payload: validatedConfig });
-        dispatch({ type: 'SET_LOADED', payload: true });
+        dispatch({type: 'SET_CONFIG', payload: validatedConfig});
+        dispatch({type: 'SET_LOADED', payload: true});
     }, [configManager]);
 
     // Subscribe to config manager changes
     useEffect(() => {
         const unsubscribe = configManager.subscribe((updatedConfig) => {
-            dispatch({ type: 'SET_CONFIG', payload: updatedConfig });
+            dispatch({type: 'SET_CONFIG', payload: updatedConfig});
             onConfigChange?.(updatedConfig);
         });
 
@@ -264,14 +270,14 @@ export function ConfigProvider({
     const updateConfig = useCallback((updates: Partial<FrankAuthUIConfig>) => {
         try {
             // Validate updates
-            const validation = validateFrankAuthConfig({ ...state.config, ...updates });
+            const validation = validateFrankAuthConfig({...state.config, ...updates});
             if (!validation.isValid) {
                 const errorMessages = validation.errors.map(e => e.message).join(', ');
                 throw new Error(`Configuration validation failed: ${errorMessages}`);
             }
 
             configManager.updateConfig(updates);
-            dispatch({ type: 'UPDATE_CONFIG', payload: updates });
+            dispatch({type: 'UPDATE_CONFIG', payload: updates});
         } catch (error) {
             console.error('[FrankAuth] Configuration update failed:', error);
             throw error;
@@ -302,11 +308,11 @@ export function ConfigProvider({
             };
 
             configManager.setOrganization(organizationConfig);
-            dispatch({ type: 'SET_ORGANIZATION', payload: organizationConfig });
+            dispatch({type: 'SET_ORGANIZATION', payload: organizationConfig});
 
             // Update features based on organization settings
             const updatedFeatures = determineOrganizationFeatures(organizationConfig);
-            dispatch({ type: 'SET_FEATURES', payload: updatedFeatures });
+            dispatch({type: 'SET_FEATURES', payload: updatedFeatures});
         } catch (error) {
             console.error('[FrankAuth] Failed to set organization:', error);
             throw error;
@@ -317,7 +323,7 @@ export function ConfigProvider({
     const setTheme = useCallback((theme: Partial<Theme>) => {
         try {
             configManager.getThemeManager().setTheme(theme);
-            dispatch({ type: 'SET_THEME', payload: configManager.getThemeManager().getTheme() });
+            dispatch({type: 'SET_THEME', payload: configManager.getThemeManager().getTheme()});
         } catch (error) {
             console.error('[FrankAuth] Failed to set theme:', error);
             throw error;
@@ -328,7 +334,7 @@ export function ConfigProvider({
     const setAppearance = useCallback((appearance: Partial<AppearanceConfig>) => {
         try {
             configManager.getAppearanceManager().updateConfig(appearance);
-            dispatch({ type: 'SET_APPEARANCE', payload: configManager.getAppearanceManager().getConfig() });
+            dispatch({type: 'SET_APPEARANCE', payload: configManager.getAppearanceManager().getConfig()});
         } catch (error) {
             console.error('[FrankAuth] Failed to set appearance:', error);
             throw error;
@@ -339,10 +345,12 @@ export function ConfigProvider({
     const setLocale = useCallback((locale: string) => {
         try {
             configManager.getLocalizationManager().setLocale(locale as any);
-            dispatch({ type: 'SET_LOCALIZATION', payload: {
+            dispatch({
+                type: 'SET_LOCALIZATION', payload: {
                     ...state.localization,
                     defaultLocale: locale as any,
-                }});
+                }
+            });
         } catch (error) {
             console.error('[FrankAuth] Failed to set locale:', error);
             throw error;
@@ -381,7 +389,7 @@ export function ConfigProvider({
     const resetToDefaults = useCallback(() => {
         try {
             configManager.reset();
-            dispatch({ type: 'RESET_CONFIG' });
+            dispatch({type: 'RESET_CONFIG'});
         } catch (error) {
             console.error('[FrankAuth] Failed to reset configuration:', error);
             throw error;
@@ -448,7 +456,7 @@ export function useConfig() {
 // ============================================================================
 
 export function useFeatures() {
-    const { features } = useConfig();
+    const {features} = useConfig();
 
     return {
         ...features,
@@ -466,7 +474,7 @@ export function useFeatures() {
 // ============================================================================
 
 export function useOrganizationConfig() {
-    const { organizationConfig, organizationSettings, setOrganization, applyOrganizationBranding } = useConfig();
+    const {organizationConfig, organizationSettings, setOrganization, applyOrganizationBranding} = useConfig();
 
     return {
         organization: organizationConfig,
@@ -483,7 +491,7 @@ export function useOrganizationConfig() {
 // ============================================================================
 
 export function useComponentOverrides() {
-    const { components } = useConfig();
+    const {components} = useConfig();
 
     const getComponent = useCallback(<T extends keyof ComponentOverrides>(
         componentName: T,
@@ -507,7 +515,7 @@ export function withConfig<T extends object>(Component: React.ComponentType<T>) 
     const WithConfigComponent = (props: T) => {
         const config = useConfig();
 
-        return <Component {...props} config={config} />;
+        return <Component {...props} config={config}/>;
     };
 
     WithConfigComponent.displayName = `withConfig(${Component.displayName || Component.name})`;
@@ -519,5 +527,5 @@ export function withConfig<T extends object>(Component: React.ComponentType<T>) 
 // Export config provider
 // ============================================================================
 
-export { ConfigContext };
-export type { ConfigContextValue };
+export {ConfigContext};
+export type {ConfigContextValue};

@@ -79,7 +79,7 @@ func registerListUsers(api huma.API, userCtrl *userController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
-			authz.PermissionListUsers, authz.ResourceOrganization, "orgId",
+			authz.PermissionListUsers, model.ResourceOrganization, "orgId",
 		)},
 	}, userCtrl.listUsersHandler)
 }
@@ -97,7 +97,7 @@ func registerGetUser(api huma.API, userCtrl *userController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
-			authz.PermissionReadUser, authz.ResourceUser, "id",
+			authz.PermissionReadUser, model.ResourceUser, "id",
 		)},
 	}, userCtrl.getUserHandler)
 }
@@ -115,7 +115,7 @@ func registerCreateUser(api huma.API, userCtrl *userController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
-			authz.PermissionCreateUser, authz.ResourceOrganization, "orgId",
+			authz.PermissionCreateUser, model.ResourceOrganization, "orgId",
 		)},
 	}, userCtrl.createUserHandler)
 }
@@ -133,7 +133,7 @@ func registerUpdateUser(api huma.API, userCtrl *userController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
-			authz.PermissionUpdateUser, authz.ResourceUser, "id",
+			authz.PermissionUpdateUser, model.ResourceUser, "id",
 		)},
 	}, userCtrl.updateUserHandler)
 }
@@ -154,7 +154,7 @@ func registerDeleteUser(api huma.API, userCtrl *userController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
-			authz.PermissionDeleteUser, authz.ResourceUser, "id",
+			authz.PermissionDeleteUser, model.ResourceUser, "id",
 		)},
 	}, userCtrl.deleteUserHandler)
 }
@@ -172,7 +172,7 @@ func registerBulkUserOperations(api huma.API, userCtrl *userController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
-			authz.PermissionManageUsers, authz.ResourceOrganization, "orgId",
+			authz.PermissionManageUsers, model.ResourceOrganization, "orgId",
 		)},
 	}, userCtrl.bulkUserOperationsHandler)
 }
@@ -237,7 +237,7 @@ func registerSetPassword(api huma.API, userCtrl *userController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
-			authz.PermissionManageUsers, authz.ResourceUser, "id",
+			authz.PermissionManageUsers, model.ResourceUser, "id",
 		)},
 	}, userCtrl.setPasswordHandler)
 }
@@ -257,7 +257,7 @@ func registerListUserRoles(api huma.API, userCtrl *userController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
-			authz.PermissionReadRole, authz.ResourceUser, "id",
+			authz.PermissionReadRoles, model.ResourceUser, "id",
 		)},
 	}, userCtrl.listUserRolesHandler)
 }
@@ -275,7 +275,7 @@ func registerAssignUserRole(api huma.API, userCtrl *userController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
-			authz.PermissionManageRole, authz.ResourceUser, "id",
+			authz.PermissionManageRole, model.ResourceUser, "id",
 		)},
 	}, userCtrl.assignUserRoleHandler)
 }
@@ -296,7 +296,7 @@ func registerRemoveUserRole(api huma.API, userCtrl *userController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
-			authz.PermissionManageRole, authz.ResourceUser, "id",
+			authz.PermissionManageRole, model.ResourceUser, "id",
 		)},
 	}, userCtrl.removeUserRoleHandler)
 }
@@ -316,7 +316,7 @@ func registerListUserPermissions(api huma.API, userCtrl *userController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
-			authz.PermissionReadPermission, authz.ResourceUser, "id",
+			authz.PermissionReadPermission, model.ResourceUser, "id",
 		)},
 	}, userCtrl.listUserPermissionsHandler)
 }
@@ -336,7 +336,7 @@ func registerGetUserActivity(api huma.API, userCtrl *userController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
-			authz.PermissionViewAuditLogs, authz.ResourceUser, "id",
+			authz.PermissionViewAuditLogs, model.ResourceUser, "id",
 		)},
 	}, userCtrl.getUserActivityHandler)
 }
@@ -354,7 +354,7 @@ func registerGetUserSessions(api huma.API, userCtrl *userController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
-			authz.PermissionReadUser, authz.ResourceUser, "id",
+			authz.PermissionReadUser, model.ResourceUser, "id",
 		)},
 	}, userCtrl.getUserSessionsHandler)
 }
@@ -375,7 +375,7 @@ func registerRevokeUserSession(api huma.API, userCtrl *userController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
-			authz.PermissionManageUsers, authz.ResourceUser, "id",
+			authz.PermissionManageUsers, model.ResourceUser, "id",
 		)},
 	}, userCtrl.revokeUserSessionHandler)
 }
@@ -396,7 +396,7 @@ func registerRevokeAllUserSessions(api huma.API, userCtrl *userController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
-			authz.PermissionManageUsers, authz.ResourceUser, "id",
+			authz.PermissionManageUsers, model.ResourceUser, "id",
 		)},
 	}, userCtrl.revokeAllUserSessionsHandler)
 }
@@ -416,7 +416,7 @@ func registerGetUserMFA(api huma.API, userCtrl *userController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
-			authz.PermissionReadUser, authz.ResourceUser, "id",
+			authz.PermissionReadUser, model.ResourceUser, "id",
 		)},
 	}, userCtrl.getUserMFAHandler)
 }
@@ -434,7 +434,7 @@ func registerEnableUserMFA(api huma.API, userCtrl *userController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
-			authz.PermissionManageUsers, authz.ResourceUser, "id",
+			authz.PermissionManageUsers, model.ResourceUser, "id",
 		)},
 	}, userCtrl.enableUserMFAHandler)
 }
@@ -455,7 +455,7 @@ func registerDisableUserMFA(api huma.API, userCtrl *userController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
-			authz.PermissionManageUsers, authz.ResourceUser, "id",
+			authz.PermissionManageUsers, model.ResourceUser, "id",
 		)},
 	}, userCtrl.disableUserMFAHandler)
 }
@@ -473,7 +473,7 @@ func registerResetUserMFA(api huma.API, userCtrl *userController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
-			authz.PermissionManageUsers, authz.ResourceUser, "id",
+			authz.PermissionManageUsers, model.ResourceUser, "id",
 		)},
 	}, userCtrl.resetUserMFAHandler)
 }
@@ -493,7 +493,7 @@ func registerGetUserStats(api huma.API, userCtrl *userController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
-			authz.PermissionViewAnalytics, authz.ResourceOrganization, "orgId",
+			authz.PermissionViewAnalytics, model.ResourceOrganization, "orgId",
 		)},
 	}, userCtrl.getUserStatsHandler)
 }
@@ -511,7 +511,7 @@ func registerExportUsers(api huma.API, userCtrl *userController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, userCtrl.di.AuthZ().Checker(), userCtrl.di.Logger())(
-			authz.PermissionExportUsers, authz.ResourceOrganization, "orgId",
+			authz.PermissionExportUsers, model.ResourceOrganization, "orgId",
 		)},
 	}, userCtrl.exportUsersHandler)
 }
@@ -885,7 +885,7 @@ func (c *userController) removeUserRoleHandler(ctx context.Context, input *Remov
 	}
 
 	// Remove role from user
-	err = rbacService.RemoveUserRole(ctx, input.ID, input.RoleID, model.ContextTypeOrganization, &input.PathOrgID)
+	err = rbacService.RemoveUserRole(ctx, input.ID, input.RoleID, model.ContextOrganization, &input.PathOrgID)
 	if err != nil {
 		return nil, err
 	}

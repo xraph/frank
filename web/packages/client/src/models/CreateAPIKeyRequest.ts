@@ -13,6 +13,20 @@
  */
 
 import { mapValues } from '../runtime';
+import type { APIKeyType } from './APIKeyType';
+import {
+    APIKeyTypeFromJSON,
+    APIKeyTypeFromJSONTyped,
+    APIKeyTypeToJSON,
+    APIKeyTypeToJSONTyped,
+} from './APIKeyType';
+import type { Environment } from './Environment';
+import {
+    EnvironmentFromJSON,
+    EnvironmentFromJSONTyped,
+    EnvironmentToJSON,
+    EnvironmentToJSONTyped,
+} from './Environment';
 import type { APIKeyRateLimits } from './APIKeyRateLimits';
 import {
     APIKeyRateLimitsFromJSON,
@@ -34,6 +48,12 @@ export interface CreateAPIKeyRequest {
      * @memberof CreateAPIKeyRequest
      */
     readonly $schema?: string;
+    /**
+     * Environment (test, live)
+     * @type {Environment}
+     * @memberof CreateAPIKeyRequest
+     */
+    environment?: Environment;
     /**
      * Expiration timestamp
      * @type {Date}
@@ -78,11 +98,13 @@ export interface CreateAPIKeyRequest {
     scopes?: Array<string>;
     /**
      * API key type
-     * @type {string}
+     * @type {APIKeyType}
      * @memberof CreateAPIKeyRequest
      */
-    type?: string;
+    type?: APIKeyType;
 }
+
+
 
 /**
  * Check if a given object implements the CreateAPIKeyRequest interface.
@@ -104,6 +126,7 @@ export function CreateAPIKeyRequestFromJSONTyped(json: any, ignoreDiscriminator:
         
             ...json,
         '$schema': json['$schema'] == null ? undefined : json['$schema'],
+        'environment': json['environment'] == null ? undefined : EnvironmentFromJSON(json['environment']),
         'expiresAt': json['expiresAt'] == null ? undefined : (new Date(json['expiresAt'])),
         'ipWhitelist': json['ipWhitelist'] == null ? undefined : json['ipWhitelist'],
         'metadata': json['metadata'] == null ? undefined : json['metadata'],
@@ -111,7 +134,7 @@ export function CreateAPIKeyRequestFromJSONTyped(json: any, ignoreDiscriminator:
         'permissions': json['permissions'] == null ? undefined : json['permissions'],
         'rateLimits': json['rateLimits'] == null ? undefined : APIKeyRateLimitsFromJSON(json['rateLimits']),
         'scopes': json['scopes'] == null ? undefined : json['scopes'],
-        'type': json['type'] == null ? undefined : json['type'],
+        'type': json['type'] == null ? undefined : APIKeyTypeFromJSON(json['type']),
     };
 }
 
@@ -127,6 +150,7 @@ export function CreateAPIKeyRequestToJSONTyped(value?: Omit<CreateAPIKeyRequest,
     return {
         
             ...value,
+        'environment': EnvironmentToJSON(value['environment']),
         'expiresAt': value['expiresAt'] == null ? undefined : ((value['expiresAt']).toISOString()),
         'ipWhitelist': value['ipWhitelist'],
         'metadata': value['metadata'],
@@ -134,7 +158,7 @@ export function CreateAPIKeyRequestToJSONTyped(value?: Omit<CreateAPIKeyRequest,
         'permissions': value['permissions'],
         'rateLimits': APIKeyRateLimitsToJSON(value['rateLimits']),
         'scopes': value['scopes'],
-        'type': value['type'],
+        'type': APIKeyTypeToJSON(value['type']),
     };
 }
 

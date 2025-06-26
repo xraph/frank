@@ -9,8 +9,25 @@
 
 import React, {createContext, useCallback, useContext, useEffect, useMemo, useReducer} from 'react';
 
-import {FrankAuth, FrankAuthError, FrankOrganization, FrankSession, FrankUser} from '@frank-auth/sdk';
-import type {LoginRequest, Organization, RegisterRequest, Session, User} from '@frank-auth/client';
+import {
+    FrankAuth,
+    FrankAuthError,
+    FrankOrganization,
+    FrankSession,
+    FrankUser,
+    PasswordResetRequest
+} from '@frank-auth/sdk';
+import type {
+    LoginRequest,
+    Organization,
+    PasswordResetConfirmRequest,
+    RegisterRequest,
+    ResendVerificationRequest,
+    Session,
+    User,
+    ValidateTokenInputBody,
+    VerificationRequest
+} from '@frank-auth/client';
 
 import type {
     AuthContextValue,
@@ -52,10 +69,10 @@ type AuthAction =
 function authReducer(state: AuthState, action: AuthAction): AuthState {
     switch (action.type) {
         case 'SET_LOADING':
-            return { ...state, isLoading: action.payload };
+            return {...state, isLoading: action.payload};
 
         case 'SET_LOADED':
-            return { ...state, isLoaded: action.payload };
+            return {...state, isLoaded: action.payload};
 
         case 'SET_USER':
             return {
@@ -155,7 +172,8 @@ export function AuthProvider({
                                  publishableKey,
                                  userType = 'external',
                                  apiUrl,
-                                 organizationId,
+                                 secretKey,
+                                 projectId,
                                  initialState,
                                  onError,
                                  onSignIn,
@@ -173,6 +191,9 @@ export function AuthProvider({
             publishableKey,
             apiUrl,
             enableDevMode: debug,
+            userType: userType,
+            projectId,
+            secretKey,
         });
     }, [publishableKey, apiUrl, debug]);
 
@@ -182,6 +203,9 @@ export function AuthProvider({
             publishableKey,
             apiUrl,
             enableDevMode: debug,
+            userType: userType,
+            projectId,
+            secretKey,
         });
     }, [publishableKey, apiUrl, debug]);
 
@@ -191,6 +215,9 @@ export function AuthProvider({
             publishableKey,
             apiUrl,
             enableDevMode: debug,
+            userType: userType,
+            projectId,
+            secretKey,
         });
     }, [publishableKey, apiUrl, debug]);
     const frankUser = useMemo(() => {
@@ -198,6 +225,9 @@ export function AuthProvider({
             publishableKey,
             apiUrl,
             enableDevMode: debug,
+            userType: userType,
+            projectId,
+            secretKey,
         });
     }, [publishableKey, apiUrl, debug]);
 
@@ -210,7 +240,7 @@ export function AuthProvider({
             field: error.field,
         };
 
-        dispatch({ type: 'SET_ERROR', payload: authError });
+        dispatch({type: 'SET_ERROR', payload: authError});
         onError?.(authError);
 
         if (debug) {
@@ -221,26 +251,26 @@ export function AuthProvider({
     // Load initial auth state
     const loadAuthState = useCallback(async () => {
         try {
-            dispatch({ type: 'SET_LOADING', payload: true });
+            dispatch({type: 'SET_LOADING', payload: true});
 
             // Get auth status
             const authStatus = await frankAuth.getAuthStatus();
 
             if (authStatus.isAuthenticated && authStatus.user) {
-                dispatch({ type: 'SET_USER', payload: authStatus.user });
-                dispatch({ type: 'SET_SESSION', payload: authStatus.session });
+                dispatch({type: 'SET_USER', payload: authStatus.user});
+                dispatch({type: 'SET_SESSION', payload: authStatus.session});
 
                 // Load organization context if available
-                if (organizationId || authStatus.user.organizationId) {
+                if (projectId || authStatus.user.organizationId) {
                     try {
-                        const orgId = organizationId || authStatus.user.organizationId || '';
+                        const orgId = projectId || authStatus.user.organizationId || '';
                         const org = await frankOrg.getOrganization(orgId);
-                        dispatch({ type: 'SET_ORGANIZATION', payload: org });
-                        dispatch({ type: 'SET_ACTIVE_ORGANIZATION', payload: org });
+                        dispatch({type: 'SET_ORGANIZATION', payload: org});
+                        dispatch({type: 'SET_ACTIVE_ORGANIZATION', payload: org});
 
                         // Load organization memberships
                         const memberships = await frankOrg.listMembers(orgId);
-                        dispatch({ type: 'SET_MEMBERSHIPS', payload: memberships.data });
+                        dispatch({type: 'SET_MEMBERSHIPS', payload: memberships.data});
                     } catch (orgError) {
                         if (debug) {
                             console.warn('[FrankAuth] Failed to load organization:', orgError);
@@ -250,16 +280,16 @@ export function AuthProvider({
 
                 // Determine available features based on user type and organization
                 const features = await determineFeatures(authStatus.user, state.organization, userType);
-                dispatch({ type: 'SET_FEATURES', payload: features });
+                dispatch({type: 'SET_FEATURES', payload: features});
             }
 
-            dispatch({ type: 'SET_LOADED', payload: true });
+            dispatch({type: 'SET_LOADED', payload: true});
         } catch (error) {
             handleError(error);
         } finally {
-            dispatch({ type: 'SET_LOADING', payload: false });
+            dispatch({type: 'SET_LOADING', payload: false});
         }
-    }, [frankAuth, organizationId, userType, debug, handleError]);
+    }, [frankAuth, projectId, userType, debug, handleError]);
 
     // Determine available features based on context
     const determineFeatures = async (
@@ -322,8 +352,8 @@ export function AuthProvider({
     // Sign in method
     const signIn = useCallback(async (params: SignInParams): Promise<SignInResult> => {
         try {
-            dispatch({ type: 'SET_LOADING', payload: true });
-            dispatch({ type: 'SET_ERROR', payload: null });
+            dispatch({type: 'SET_LOADING', payload: true});
+            dispatch({type: 'SET_ERROR', payload: null});
 
             let result;
             let status = 'complete';
@@ -398,8 +428,8 @@ export function AuthProvider({
 
             // Handle successful authentication
             if (result.user && result.session) {
-                dispatch({ type: 'SET_USER', payload: result.user });
-                dispatch({ type: 'SET_SESSION', payload: result.session });
+                dispatch({type: 'SET_USER', payload: result.user});
+                dispatch({type: 'SET_SESSION', payload: result.session});
                 onSignIn?.(result.user);
             }
 
@@ -422,15 +452,15 @@ export function AuthProvider({
                 },
             };
         } finally {
-            dispatch({ type: 'SET_LOADING', payload: false });
+            dispatch({type: 'SET_LOADING', payload: false});
         }
     }, [frankAuth, onSignIn, handleError]);
 
     // Sign up method
     const signUp = useCallback(async (params: SignUpParams): Promise<SignUpResult> => {
         try {
-            dispatch({ type: 'SET_LOADING', payload: true });
-            dispatch({ type: 'SET_ERROR', payload: null });
+            dispatch({type: 'SET_LOADING', payload: true});
+            dispatch({type: 'SET_ERROR', payload: null});
 
             const registerRequest: RegisterRequest = {
                 email: params.emailAddress,
@@ -452,8 +482,8 @@ export function AuthProvider({
 
             // Handle successful registration
             if (result.user && result.session) {
-                dispatch({ type: 'SET_USER', payload: result.user });
-                dispatch({ type: 'SET_SESSION', payload: result.session });
+                dispatch({type: 'SET_USER', payload: result.user});
+                dispatch({type: 'SET_SESSION', payload: result.session});
                 onSignIn?.(result.user);
             }
 
@@ -480,24 +510,24 @@ export function AuthProvider({
                 },
             };
         } finally {
-            dispatch({ type: 'SET_LOADING', payload: false });
+            dispatch({type: 'SET_LOADING', payload: false});
         }
     }, [frankAuth, onSignIn, handleError]);
 
     // Sign out method
     const signOut = useCallback(async () => {
         try {
-            dispatch({ type: 'SET_LOADING', payload: true });
+            dispatch({type: 'SET_LOADING', payload: true});
 
             await frankAuth.signOut({logoutAll: false});
 
-            dispatch({ type: 'RESET_STATE' });
+            dispatch({type: 'RESET_STATE'});
             onSignOut?.();
 
         } catch (error) {
             handleError(error);
         } finally {
-            dispatch({ type: 'SET_LOADING', payload: false });
+            dispatch({type: 'SET_LOADING', payload: false});
         }
     }, [frankAuth, onSignOut, handleError]);
 
@@ -505,7 +535,7 @@ export function AuthProvider({
     const createSession = useCallback(async (token: string): Promise<Session> => {
         try {
             const session = await frankAuth.createSession(token);
-            dispatch({ type: 'SET_SESSION', payload: session });
+            dispatch({type: 'SET_SESSION', payload: session});
             return session;
         } catch (error) {
             handleError(error);
@@ -520,14 +550,14 @@ export function AuthProvider({
                 const session = typeof params.session === 'string'
                     ? await frankAuth.setActiveSession(params.session)
                     : params.session;
-                dispatch({ type: 'SET_SESSION', payload: session });
+                dispatch({type: 'SET_SESSION', payload: session});
             }
 
             if (params.organization) {
                 const organization = typeof params.organization === 'string'
                     ? await frankOrg.getOrganization(params.organization)
                     : params.organization;
-                dispatch({ type: 'SET_ACTIVE_ORGANIZATION', payload: organization });
+                dispatch({type: 'SET_ACTIVE_ORGANIZATION', payload: organization});
             }
         } catch (error) {
             handleError(error);
@@ -535,10 +565,15 @@ export function AuthProvider({
     }, [frankAuth, handleError]);
 
     // Set active organization
-    const setActiveOrganization = useCallback(async (organizationId: string) => {
+    const setActiveOrganization = useCallback(async (org: string | Organization) => {
         try {
-            const organization = await frankAuth.getOrganization(organizationId);
-            dispatch({ type: 'SET_ACTIVE_ORGANIZATION', payload: organization });
+            let organization
+            if (typeof org === 'string') {
+                organization = await frankOrg.getOrganization(org);
+            } else {
+                organization = org;
+            }
+            dispatch({type: 'SET_ACTIVE_ORGANIZATION', payload: organization});
         } catch (error) {
             handleError(error);
         }
@@ -547,10 +582,10 @@ export function AuthProvider({
     // Switch organization
     const switchOrganization = useCallback(async (organizationId: string) => {
         try {
-            dispatch({ type: 'SET_LOADING', payload: true });
+            dispatch({type: 'SET_LOADING', payload: true});
 
             const organization = await frankAuth.switchOrganization(organizationId);
-            dispatch({ type: 'SET_ACTIVE_ORGANIZATION', payload: organization });
+            dispatch({type: 'SET_ACTIVE_ORGANIZATION', payload: organization});
 
             // Reload user data with new organization context
             await loadAuthState();
@@ -558,7 +593,7 @@ export function AuthProvider({
         } catch (error) {
             handleError(error);
         } finally {
-            dispatch({ type: 'SET_LOADING', payload: false });
+            dispatch({type: 'SET_LOADING', payload: false});
         }
     }, [frankAuth, handleError, loadAuthState]);
 
@@ -566,7 +601,7 @@ export function AuthProvider({
     const updateUser = useCallback(async (params: UpdateUserParams): Promise<User> => {
         try {
             const updatedUser = await frankAuth.updateProfile(params);
-            dispatch({ type: 'SET_USER', payload: updatedUser });
+            dispatch({type: 'SET_USER', payload: updatedUser});
             return updatedUser;
         } catch (error) {
             handleError(error);
@@ -577,13 +612,79 @@ export function AuthProvider({
     // Delete user method
     const deleteUser = useCallback(async () => {
         try {
-            await frankAuth.deleteUser();
-            dispatch({ type: 'RESET_STATE' });
+            await frankUser.deleteUser();
+            dispatch({type: 'RESET_STATE'});
             onSignOut?.();
         } catch (error) {
             handleError(error);
         }
     }, [frankAuth, handleError, onSignOut]);
+
+    // Password request method
+    const requestPasswordReset = useCallback(async (request: PasswordResetRequest) => {
+        try {
+            dispatch({type: 'SET_LOADING', payload: true});
+            return await frankAuth.requestPasswordReset(request);
+        } catch (error) {
+            handleError(error);
+            throw error;
+        } finally {
+            dispatch({type: 'SET_LOADING', payload: false});
+        }
+    }, [frankAuth, handleError]);
+
+    // Password request method
+    const resetPassword = useCallback(async (request: PasswordResetConfirmRequest) => {
+        try {
+            dispatch({type: 'SET_LOADING', payload: true});
+            return await frankAuth.resetPassword(request);
+        } catch (error) {
+            handleError(error);
+            throw error;
+        } finally {
+            dispatch({type: 'SET_LOADING', payload: false});
+        }
+    }, [frankAuth, handleError]);
+
+    // Resend verification method
+    const resendVerification = useCallback(async (request: ResendVerificationRequest) => {
+        try {
+            dispatch({type: 'SET_LOADING', payload: true});
+            return await frankAuth.resendVerification(request);
+        } catch (error) {
+            handleError(error);
+            throw error;
+        } finally {
+            dispatch({type: 'SET_LOADING', payload: false});
+        }
+    }, [frankAuth, handleError]);
+
+    // Resend verification method
+    const verifyIdentity = useCallback(async (type: 'email' | 'phone', request: VerificationRequest) => {
+        try {
+            dispatch({type: 'SET_LOADING', payload: true});
+            if (type === 'phone') return await frankAuth.verifyPhone(request);
+            return await frankAuth.verifyEmail(request);
+        } catch (error) {
+            handleError(error);
+            throw error;
+        } finally {
+            dispatch({type: 'SET_LOADING', payload: false});
+        }
+    }, [frankAuth, handleError]);
+
+    // Resend verification method
+    const validateToken = useCallback(async (request: ValidateTokenInputBody) => {
+        try {
+            dispatch({type: 'SET_LOADING', payload: true});
+            return await frankAuth.validateToken(request);
+        } catch (error) {
+            handleError(error);
+            throw error;
+        } finally {
+            dispatch({type: 'SET_LOADING', payload: false});
+        }
+    }, [frankAuth, handleError]);
 
     // Reload method
     const reload = useCallback(async () => {
@@ -611,6 +712,11 @@ export function AuthProvider({
         updateUser,
         deleteUser,
         reload,
+        requestPasswordReset,
+        resetPassword,
+        validateToken,
+        resendVerification,
+        verifyIdentity,
         frankAuth,
         frankOrg,
         frankSess,
@@ -643,7 +749,7 @@ export function useAuth() {
 // ============================================================================
 
 export function useAuthGuard() {
-    const { isLoaded, isSignedIn, user } = useAuth();
+    const {isLoaded, isSignedIn, user} = useAuth();
 
     return {
         isLoaded,
@@ -665,5 +771,5 @@ export function useAuthGuard() {
 // Export auth provider
 // ============================================================================
 
-export { AuthContext };
-export type { AuthContextValue };
+export {AuthContext};
+export type {AuthContextValue};

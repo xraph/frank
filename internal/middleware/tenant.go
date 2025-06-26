@@ -110,10 +110,10 @@ func NewTenantMiddleware(api huma.API, di di.Container, config *TenantConfig) *T
 // DefaultTenantConfig returns default tenant configuration
 func DefaultTenantConfig() *TenantConfig {
 	return &TenantConfig{
-		Strategy:            ResolutionByPath,
-		PathPrefix:          "/organizations",
-		HeaderName:          "X-Organization-ID",
-		QueryParam:          "org",
+		Strategy:            ResolutionByHeader,
+		PathPrefix:          "api/v1/organizations",
+		HeaderName:          "X-Org-ID",
+		QueryParam:          "orgId",
 		RequireTenant:       false,
 		AllowPlatformAccess: true,
 		EnableTenantCache:   true,
@@ -128,7 +128,7 @@ func DefaultTenantConfig() *TenantConfig {
 			"/api/v1/auth/register",
 			"/api/v1/auth/forgot-password",
 			"/api/v1/auth/reset-password",
-			"/api/v1/organizations", // Organization creation
+			// "/api/v1/organizations", // Organization creation
 		},
 	}
 }
@@ -187,9 +187,8 @@ func (tm *TenantMiddleware) Middleware() func(http.Handler) http.Handler {
 // HumaMiddleware returns the tenant middleware handler
 func (tm *TenantMiddleware) HumaMiddleware() func(huma.Context, func(huma.Context)) {
 	return func(ctx huma.Context, next func(huma.Context)) {
-		info, _ := GetRequestInfoFromContext(ctx.Context())
-		r := info.Req
-		rctx := r.Context()
+		rctx := ctx.Context()
+		r := contexts2.GetRequestFromContext(rctx)
 
 		// Skip tenant resolution for certain paths
 		if tm.shouldSkipPath(ctx.URL().Path) {
@@ -216,7 +215,7 @@ func (tm *TenantMiddleware) HumaMiddleware() func(huma.Context, func(huma.Contex
 
 		// Set tenant context
 		if tenant != nil {
-			rctx = tm.setTenantContext(rctx, tenant)
+			ctx = tm.setTenantContextHuma(ctx, tenant)
 
 			// Validate tenant access
 			if !tm.validateTenantAccess(rctx, r, tenant) {
@@ -232,7 +231,6 @@ func (tm *TenantMiddleware) HumaMiddleware() func(huma.Context, func(huma.Contex
 		}
 
 		// Update context and continue
-		ctx = huma.WithContext(ctx, rctx)
 		next(ctx)
 	}
 }
@@ -335,17 +333,15 @@ func (tm *TenantMiddleware) TenantIsolation() func(http.Handler) http.Handler {
 }
 
 // RequireTenantHuma middleware that requires tenant context
-func (tm *TenantMiddleware) RequireTenantHuma() func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			tenant := GetTenantFromContext(r.Context())
-			if tenant == nil {
-				tm.respondError(w, r, errors.New(errors.CodeBadRequest, "tenant context is required"))
-				return
-			}
+func (tm *TenantMiddleware) RequireTenantHuma() func(huma.Context, func(huma.Context)) {
+	return func(ctx huma.Context, next func(huma.Context)) {
+		tenant := GetTenantFromContext(ctx.Context())
+		if tenant == nil {
+			tm.respondErrorHuma(ctx, errors.New(errors.CodeForbidden, "tenant context is required"))
+			return
+		}
 
-			next.ServeHTTP(w, r)
-		})
+		next(ctx)
 	}
 }
 
@@ -403,8 +399,9 @@ func (tm *TenantMiddleware) RequireFeatureHuma(feature string) func(huma.Context
 // TenantIsolationHuma middleware that enforces data isolation
 func (tm *TenantMiddleware) TenantIsolationHuma() func(huma.Context, func(huma.Context)) {
 	return func(ctx huma.Context, next func(huma.Context)) {
-		tenant := GetTenantFromContext(ctx.Context())
-		currentUser := GetUserFromContext(ctx.Context())
+		rctx := ctx.Context()
+		tenant := GetTenantFromContext(rctx)
+		currentUser := GetUserFromContext(rctx)
 
 		// Ensure user belongs to the tenant organization
 		if tenant != nil && currentUser != nil {
@@ -677,6 +674,20 @@ func (tm *TenantMiddleware) setTenantContext(ctx context.Context, tenant *Tenant
 	// Also set organization context for backward compatibility
 	ctx = context.WithValue(ctx, contexts2.OrganizationContextKey, tenant.Organization)
 	ctx = context.WithValue(ctx, contexts2.OrganizationIDContextKey, tenant.Organization.ID)
+
+	return ctx
+}
+
+func (tm *TenantMiddleware) setTenantContextHuma(ctx huma.Context, tenant *TenantContext) huma.Context {
+	ctx = huma.WithValue(ctx, contexts2.TenantContextKey, tenant)
+	ctx = huma.WithValue(ctx, contexts2.TenantIDContextKey, tenant.Organization.ID)
+	ctx = huma.WithValue(ctx, contexts2.TenantSlugContextKey, tenant.Organization.Slug)
+	ctx = huma.WithValue(ctx, contexts2.TenantPlanContextKey, tenant.Plan)
+	ctx = huma.WithValue(ctx, contexts2.TenantTypeContextKey, tenant.Type)
+
+	// Also set organization context for backward compatibility
+	ctx = huma.WithValue(ctx, contexts2.OrganizationContextKey, tenant.Organization)
+	ctx = huma.WithValue(ctx, contexts2.OrganizationIDContextKey, tenant.Organization.ID)
 
 	return ctx
 }

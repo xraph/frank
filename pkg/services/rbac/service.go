@@ -109,8 +109,8 @@ type Service interface {
 	PermissionIsInUse(ctx context.Context, permissionID xid.ID) (bool, error)
 
 	// Permission categorization
-	GetPermissionByCategory(ctx context.Context, category model.ContextType, params model.ListPermissionsParams) (*model.PaginatedOutput[*model.Permission], error)
-	GetPermissionByGroup(ctx context.Context, group string, params model.ListPermissionsParams) (*model.PaginatedOutput[*model.Permission], error)
+	GetPermissionByCategory(ctx context.Context, category model.PermissionCategory, params model.ListPermissionsParams) (*model.PaginatedOutput[*model.Permission], error)
+	GetPermissionByGroup(ctx context.Context, group model.PermissionGroup, params model.ListPermissionsParams) (*model.PaginatedOutput[*model.Permission], error)
 	GetPermissionByResource(ctx context.Context, resource string, params model.ListPermissionsParams) (*model.PaginatedOutput[*model.Permission], error)
 	GetSystemPermissions(ctx context.Context, params model.ListPermissionsParams) (*model.PaginatedOutput[*model.Permission], error)
 	GetDangerousPermissions(ctx context.Context, params model.ListPermissionsParams) (*model.PaginatedOutput[*model.Permission], error)
@@ -169,6 +169,8 @@ func NewService(
 	templateService *PermissionTemplateService,
 	discoveryService *ResourceDiscoveryService,
 	conditionalEngine *ConditionalPermissionEngine,
+	roleService RoleService,
+	permissionService PermissionService,
 	logger logging.Logger,
 ) Service {
 	return &service{
@@ -180,6 +182,8 @@ func NewService(
 		templateService:   templateService,
 		discoveryService:  discoveryService,
 		conditionalEngine: conditionalEngine,
+		roleService:       roleService,
+		permissionService: permissionService,
 		logger:            logger.Named("rbac-service"),
 	}
 }
@@ -254,11 +258,11 @@ func (s *service) PermissionIsInUse(ctx context.Context, permissionID xid.ID) (b
 	return s.permissionService.IsPermissionInUse(ctx, permissionID)
 }
 
-func (s *service) GetPermissionByCategory(ctx context.Context, category model.ContextType, params model.ListPermissionsParams) (*model.PaginatedOutput[*model.Permission], error) {
+func (s *service) GetPermissionByCategory(ctx context.Context, category model.PermissionCategory, params model.ListPermissionsParams) (*model.PaginatedOutput[*model.Permission], error) {
 	return s.permissionService.GetPermissionsByCategory(ctx, category, params)
 }
 
-func (s *service) GetPermissionByGroup(ctx context.Context, group string, params model.ListPermissionsParams) (*model.PaginatedOutput[*model.Permission], error) {
+func (s *service) GetPermissionByGroup(ctx context.Context, group model.PermissionGroup, params model.ListPermissionsParams) (*model.PaginatedOutput[*model.Permission], error) {
 	return s.permissionService.GetPermissionsByGroup(ctx, group, params)
 }
 
@@ -299,12 +303,29 @@ func (s *service) GetUserPermissions(ctx context.Context, userID xid.ID) ([]*mod
 }
 
 func (s *service) GetUserPermissionsWithContext(ctx context.Context, userID xid.ID, contextType model.ContextType, contextID *xid.ID) ([]*model.Permission, error) {
+	var permissions []*model.Permission
+	var err error
+
+	if contextType == model.ContextOrganization && contextID != nil && !contextID.IsNil() {
+		membership, err := s.repo.Membership().GetByUserAndOrganization(ctx, userID, *contextID)
+		if err != nil {
+			return nil, err
+		}
+
+		permissions, err = s.roleService.GetRolePermissions(ctx, membership.RoleID)
+	}
+
 	userPermissions, err := s.repo.Permission().GetUserPermissions(ctx, userID, contextType, contextID)
 	if err != nil {
 		return nil, err
 	}
 
-	return convertPermissionsToDTO(userPermissions), err
+	morePermissions := convertPermissionsToDTO(userPermissions)
+	for _, permission := range morePermissions {
+		morePermissions = append(morePermissions, permission)
+	}
+
+	return permissions, err
 }
 
 func (s *service) GetEffectiveUserPermissions(ctx context.Context, userID xid.ID, contextType model.ContextType, contextID *xid.ID) ([]*model.Permission, error) {
@@ -343,7 +364,7 @@ func convertEntPermissionToModel(entPermission *ent.Permission) *model.Permissio
 		Description:         entPermission.Description,
 		Resource:            entPermission.Resource,
 		Action:              entPermission.Action,
-		Category:            string(entPermission.Category),
+		Category:            entPermission.Category,
 		ApplicableUserTypes: entPermission.ApplicableUserTypes,
 		ApplicableContexts:  entPermission.ApplicableContexts,
 		Conditions:          entPermission.Conditions,

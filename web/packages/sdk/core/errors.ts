@@ -52,11 +52,10 @@ export class FrankAuthError extends Error {
 
 export class FrankAuthNetworkError extends FrankAuthError {
     constructor(message: string, originalError?: any) {
-        super(message, 'NETWORK_ERROR', { originalError });
+        super(message, 'NETWORK_ERROR', {originalError});
         this.name = 'FrankAuthNetworkError';
     }
 }
-
 
 
 export class FrankAuthValidationError extends FrankAuthError {
@@ -98,7 +97,7 @@ export async function extractErrorBody(response: Response): Promise<any> {
             try {
                 return JSON.parse(text);
             } catch {
-                return { message: text };
+                return {message: text};
             }
         } else {
             // Try to parse as JSON first, fall back to text
@@ -107,14 +106,14 @@ export async function extractErrorBody(response: Response): Promise<any> {
                 try {
                     return JSON.parse(text);
                 } catch {
-                    return { message: text };
+                    return {message: text};
                 }
             }
-            return { message: `HTTP ${response.status} error` };
+            return {message: `HTTP ${response.status} error`};
         }
     } catch (parseError) {
         console.warn("Failed to parse error response:", parseError);
-        return { message: `HTTP ${response.status} error` };
+        return {message: `HTTP ${response.status} error`};
     }
 }
 
@@ -211,7 +210,7 @@ export async function convertError(error: any): Promise<FrankAuthError> {
     return new FrankAuthError(
         error.message || 'Unknown error occurred',
         'UNKNOWN_ERROR',
-        { originalError: error }
+        {originalError: error}
     );
 }
 

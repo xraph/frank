@@ -21,7 +21,7 @@ func (Activity) Fields() []ent.Field {
 	return []ent.Field{
 		field.Enum("resource_type").
 			GoType(model.ResourceType("")).
-			Default(model.ResourceTypeCommon.String()).
+			Default(model.ResourceCommon.String()).
 			Comment("Type of resource (api_key, user, organization, session, etc.)"),
 
 		field.String("resource_id").

@@ -681,7 +681,7 @@ Tenant ID: {{your_tenant_id}}</div>
 		http.Redirect(w, r, "/docs", http.StatusTemporaryRedirect)
 	})
 
-	router.logger.Info("API documentation routes configured",
+	router.logger.Info("Frank API documentation routes configured",
 		logging.String("docsPath", docsPath),
 		logging.String("scalar", docsPath+"/scalar"),
 		logging.String("redoc", docsPath+"/redoc"),

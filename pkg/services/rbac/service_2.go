@@ -47,11 +47,11 @@ func (s *service) SearchPermissions(ctx context.Context, query string, params mo
 }
 
 // Permission categorization
-func (s *service) GetPermissionsByCategory(ctx context.Context, category model.ContextType, params model.ListPermissionsParams) (*model.PaginatedOutput[*model.Permission], error) {
+func (s *service) GetPermissionsByCategory(ctx context.Context, category model.PermissionCategory, params model.ListPermissionsParams) (*model.PaginatedOutput[*model.Permission], error) {
 	return s.permissionService.GetPermissionsByCategory(ctx, category, params)
 }
 
-func (s *service) GetPermissionsByGroup(ctx context.Context, group string, params model.ListPermissionsParams) (*model.PaginatedOutput[*model.Permission], error) {
+func (s *service) GetPermissionsByGroup(ctx context.Context, group model.PermissionGroup, params model.ListPermissionsParams) (*model.PaginatedOutput[*model.Permission], error) {
 	return s.permissionService.GetPermissionsByGroup(ctx, group, params)
 }
 
@@ -118,7 +118,7 @@ func (s *service) ListPermissionGroups(ctx context.Context) ([]model.PermissionG
 	return s.permissionService.ListPermissionGroups(ctx)
 }
 
-func (s *service) GetPermissionGroup(ctx context.Context, groupName string) (*model.PermissionGroupSummary, error) {
+func (s *service) GetPermissionGroup(ctx context.Context, groupName model.PermissionGroup) (*model.PermissionGroupSummary, error) {
 	return s.permissionService.GetPermissionGroup(ctx, groupName)
 }
 
@@ -126,11 +126,11 @@ func (s *service) CreatePermissionGroup(ctx context.Context, input CreatePermiss
 	return s.permissionService.CreatePermissionGroup(ctx, input)
 }
 
-func (s *service) UpdatePermissionGroup(ctx context.Context, groupName string, input UpdatePermissionGroupInput) (*model.PermissionGroupSummary, error) {
+func (s *service) UpdatePermissionGroup(ctx context.Context, groupName model.PermissionGroup, input UpdatePermissionGroupInput) (*model.PermissionGroupSummary, error) {
 	return s.permissionService.UpdatePermissionGroup(ctx, groupName, input)
 }
 
-func (s *service) DeletePermissionGroup(ctx context.Context, groupName string) error {
+func (s *service) DeletePermissionGroup(ctx context.Context, groupName model.PermissionGroup) error {
 	return s.permissionService.DeletePermissionGroup(ctx, groupName)
 }
 
@@ -273,7 +273,7 @@ func (s *service) UnsetAsDefault(ctx context.Context, id xid.ID) error {
 	return s.roleService.UnsetAsDefault(ctx, id)
 }
 
-func (s *service) GetDefaultRoleForUserType(ctx context.Context, userType string, roleType model.RoleType, organizationID *xid.ID) (*model.Role, error) {
+func (s *service) GetDefaultRoleForUserType(ctx context.Context, userType model.UserType, roleType model.RoleType, organizationID *xid.ID) (*model.Role, error) {
 	return s.roleService.GetDefaultRoleForUserType(ctx, userType, roleType, organizationID)
 }
 
@@ -420,7 +420,7 @@ func (s *service) GetUserEffectivePermissions(ctx context.Context, userID xid.ID
 	// Use performance service if available
 	if s.performanceService != nil {
 		var orgID *xid.ID
-		if contextType == model.ContextTypeOrganization && contextID != nil {
+		if contextType == model.ContextOrganization && contextID != nil {
 			orgID = contextID
 		}
 		return s.performanceService.GetUserPermissionsOptimized(ctx, userID, orgID)

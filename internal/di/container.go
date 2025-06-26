@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/go-redis/redis/v8"
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/ent"
 	"github.com/juicycleff/frank/internal/authz"
@@ -15,6 +14,7 @@ import (
 	"github.com/juicycleff/frank/pkg/hooks"
 	"github.com/juicycleff/frank/pkg/logging"
 	"github.com/juicycleff/frank/pkg/services/activity"
+	"github.com/juicycleff/frank/pkg/services/apikey"
 	"github.com/juicycleff/frank/pkg/services/audit"
 	auth2 "github.com/juicycleff/frank/pkg/services/auth"
 	"github.com/juicycleff/frank/pkg/services/mfa"
@@ -28,6 +28,7 @@ import (
 	"github.com/juicycleff/frank/pkg/services/webhook"
 	sms2 "github.com/juicycleff/frank/pkg/sms"
 	"github.com/juicycleff/frank/pkg/validation"
+	"github.com/redis/go-redis/v9"
 )
 
 // Container holds all application dependencies
@@ -53,9 +54,11 @@ type Container interface {
 	OrganizationService() organization2.Service
 	BillingService() organization2.BillingService
 	MembershipService() organization2.MembershipService
+	InvitationService() organization2.InvitationService
 
 	RBACService() rbac2.Service
 	RoleService() rbac2.RoleService
+	APIKeyService() apikey.Service
 	PermissionService() rbac2.PermissionService
 	PermissionTemplateService() *rbac2.PermissionTemplateService
 	ResourceDiscoveryService() *rbac2.ResourceDiscoveryService
@@ -81,6 +84,7 @@ type Container interface {
 	PasswordService() auth2.PasswordService
 	SAMLService() sso2.SAMLService
 	OIDCService() sso2.OIDCService
+	RoleSeeder() *rbac2.RBACSeeder
 
 	Hooks() hooks.Hooks
 
@@ -114,9 +118,11 @@ type container struct {
 	userService     user2.Service
 	userPrefService user2.PreferencesService
 	profileService  user2.ProfileService
+	apikeyService   apikey.Service
 
 	organizationService organization2.Service
 	membershipService   organization2.MembershipService
+	invitationService   organization2.InvitationService
 	billingService      organization2.BillingService
 
 	emailService        email.Service
@@ -152,9 +158,18 @@ type container struct {
 	permissionTemplateService *rbac2.PermissionTemplateService
 	resourceDiscoveryService  *rbac2.ResourceDiscoveryService
 	rbacConditionalEngine     *rbac2.ConditionalPermissionEngine
+	roleSeeder                *rbac2.RBACSeeder
 
 	// Internal state
 	started bool
+}
+
+func (c *container) InvitationService() organization2.InvitationService {
+	return c.invitationService
+}
+
+func (c *container) RoleSeeder() *rbac2.RBACSeeder {
+	return c.roleSeeder
 }
 
 func (c *container) ActivityService() activity.Service {
@@ -199,6 +214,10 @@ func (c *container) RBACServiceV2() *rbac2.PerformanceOptimizedRBACService {
 
 func (c *container) BillingService() organization2.BillingService {
 	return c.billingService
+}
+
+func (c *container) APIKeyService() apikey.Service {
+	return c.apikeyService
 }
 
 func (c *container) Hooks() hooks.Hooks {
@@ -272,7 +291,6 @@ func (c *container) initCore(dataClients *data.Clients) error {
 	// Initialize email / sms templates
 	oldRepo := email.NewTemplateRepository(c.dataClients.DB)
 	c.templatesManager = email.NewTemplateManager(oldRepo, c.repo.SMSTemplate(), &c.config.Email, c.logger)
-	fmt.Println(c.config.Email)
 	c.emailSender = email.SenderFactory(&c.config.Email, c.logger)
 
 	// Initialize sms sender
@@ -280,6 +298,8 @@ func (c *container) initCore(dataClients *data.Clients) error {
 
 	// Initialize activity service
 	c.activityService = activity.NewService(c.repo.Activity(), c.logger)
+
+	c.roleSeeder = rbac2.NewRBACSeeder(c.dataClients, c.logger)
 
 	return err
 }
@@ -374,9 +394,12 @@ func (c *container) initServices() error {
 		c.permissionTemplateService,
 		c.resourceDiscoveryService,
 		c.rbacConditionalEngine,
+		c.roleService,
+		c.permissionService,
 		c.logger,
 	)
 	c.rbacChecker = rbac2.NewRBACChecker(c.rbacService, c.logger)
+	// c.rbacServiceV2 = rbac2.NewPerformanceOptimizedRBACService(c.rbacService, c.roleHierarchyService, )
 
 	// Initialize user service
 	c.profileService = user2.NewProfileService(
@@ -421,6 +444,13 @@ func (c *container) initServices() error {
 	)
 
 	// Initialize organization member service
+	c.invitationService = organization2.NewInvitationService(
+		c.repo,
+		c.notificationService,
+		c.logger,
+		"",
+	)
+
 	c.membershipService = organization2.NewMembershipService(
 		c.repo,
 		c.logger,
@@ -430,6 +460,7 @@ func (c *container) initServices() error {
 	c.organizationService = organization2.NewService(
 		c.repo,
 		c.ssoService,
+		c.roleSeeder,
 		c.membershipService,
 		c.logger,
 	)
@@ -457,6 +488,11 @@ func (c *container) initServices() error {
 		&c.config.Auth,
 	)
 
+	c.apikeyService = apikey.NewService(
+		c.Repo(), c.Crypto(), c.AuditService(),
+		c.ActivityService(), c.RBACService(), c.Logger(),
+	)
+
 	// initialize Auth service
 	c.authService = auth2.NewAuthService(
 		c.config,
@@ -469,6 +505,7 @@ func (c *container) initServices() error {
 		c.mfaService,
 		c.oauthService,
 		c.auditService,
+		c.organizationService,
 		c.hooks,
 		c.crypto,
 		c.logger,
@@ -614,6 +651,8 @@ func (c *container) Start(ctx context.Context) error {
 	if c.started {
 		return fmt.Errorf("container already started")
 	}
+
+	c.roleSeeder.SeedRBACData(ctx)
 
 	c.logger.Info("Starting application container")
 

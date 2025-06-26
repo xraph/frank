@@ -5,7 +5,10 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/danielgtaylor/huma/v2"
+	"github.com/danielgtaylor/huma/v2/adapters/humachi"
 	"github.com/juicycleff/frank/pkg/contexts"
+	"github.com/rs/xid"
 )
 
 // AddHeader is a middleware that attaches request headers to the context using the specified permission.
@@ -13,6 +16,15 @@ func AddHeader() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			r = r.WithContext(context.WithValue(r.Context(), contexts.HeadersContextKKey, r.Header))
+			// Try header first
+			keyValue := r.Header.Get("X-Org-ID")
+			if keyValue != "" {
+				id, err := xid.FromString(keyValue)
+				if err == nil {
+					r = r.WithContext(context.WithValue(r.Context(), contexts.OrganizationIDContextKey, id))
+				}
+			}
+
 			next.ServeHTTP(w, r)
 		})
 	}
@@ -31,6 +43,41 @@ type RequestInfo struct {
 	URL        *url.URL
 	Req        *http.Request
 	Res        http.ResponseWriter
+}
+
+// AddRequestToContextHuma is a middleware that adds request headers to the request context using the RequestInfoKey constant.
+func AddRequestToContextHuma() func(huma.Context, func(huma.Context)) {
+	return func(ctx huma.Context, next func(huma.Context)) {
+		r, w := humachi.Unwrap(ctx)
+
+		info := &RequestInfo{
+			Header:     r.Header,
+			URL:        r.URL,
+			RemoteAddr: r.RemoteAddr,
+			Req:        r,
+			Res:        w,
+		}
+
+		// Add IP address
+		ctx = huma.WithValue(ctx, contexts.IPAddressContextKey, GetClientIP(r))
+
+		// Add HTTP Request
+		ctx = huma.WithValue(ctx, contexts.HTTPRequestContextKey, r)
+
+		// Add HTTP Writer
+		ctx = huma.WithValue(ctx, contexts.HTTPResponseWriterKey, w)
+
+		// Add User Agent
+		ctx = huma.WithValue(ctx, contexts.UserAgentContextKey, r.UserAgent())
+
+		// Add Headers
+		ctx = huma.WithValue(ctx, contexts.HeadersContextKKey, r.Header)
+
+		// Add request info
+		ctx = huma.WithValue(ctx, contexts.RequestInfoContextKey, info)
+
+		next(ctx)
+	}
 }
 
 // AddRequestInfo is a middleware that adds request headers to the request context using the RequestInfoKey constant.

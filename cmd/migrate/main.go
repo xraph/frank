@@ -117,7 +117,7 @@ func newCLI() (*CLI, error) {
 
 	logger := logging.NewLogger(&logging.LoggerConfig{
 		Level:       logLevel,
-		Environment: cfg.Environment,
+		Environment: cfg.App.Environment,
 		// Output:      "stdout",
 		// Format:      "text", // Use text format for CLI
 	})

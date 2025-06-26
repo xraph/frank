@@ -20,6 +20,7 @@ import (
 	"github.com/juicycleff/frank/ent/organization"
 	"github.com/juicycleff/frank/ent/user"
 	"github.com/juicycleff/frank/pkg/common"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -79,15 +80,49 @@ func (akc *ApiKeyCreate) SetName(s string) *ApiKeyCreate {
 	return akc
 }
 
+// SetPublicKey sets the "public_key" field.
+func (akc *ApiKeyCreate) SetPublicKey(s string) *ApiKeyCreate {
+	akc.mutation.SetPublicKey(s)
+	return akc
+}
+
+// SetSecretKey sets the "secret_key" field.
+func (akc *ApiKeyCreate) SetSecretKey(s string) *ApiKeyCreate {
+	akc.mutation.SetSecretKey(s)
+	return akc
+}
+
+// SetHashedSecretKey sets the "hashed_secret_key" field.
+func (akc *ApiKeyCreate) SetHashedSecretKey(s string) *ApiKeyCreate {
+	akc.mutation.SetHashedSecretKey(s)
+	return akc
+}
+
 // SetKey sets the "key" field.
 func (akc *ApiKeyCreate) SetKey(s string) *ApiKeyCreate {
 	akc.mutation.SetKey(s)
 	return akc
 }
 
+// SetNillableKey sets the "key" field if the given value is not nil.
+func (akc *ApiKeyCreate) SetNillableKey(s *string) *ApiKeyCreate {
+	if s != nil {
+		akc.SetKey(*s)
+	}
+	return akc
+}
+
 // SetHashedKey sets the "hashed_key" field.
 func (akc *ApiKeyCreate) SetHashedKey(s string) *ApiKeyCreate {
 	akc.mutation.SetHashedKey(s)
+	return akc
+}
+
+// SetNillableHashedKey sets the "hashed_key" field if the given value is not nil.
+func (akc *ApiKeyCreate) SetNillableHashedKey(s *string) *ApiKeyCreate {
+	if s != nil {
+		akc.SetHashedKey(*s)
+	}
 	return akc
 }
 
@@ -120,15 +155,29 @@ func (akc *ApiKeyCreate) SetNillableOrganizationID(x *xid.ID) *ApiKeyCreate {
 }
 
 // SetType sets the "type" field.
-func (akc *ApiKeyCreate) SetType(s string) *ApiKeyCreate {
-	akc.mutation.SetType(s)
+func (akc *ApiKeyCreate) SetType(mkt model.APIKeyType) *ApiKeyCreate {
+	akc.mutation.SetType(mkt)
 	return akc
 }
 
 // SetNillableType sets the "type" field if the given value is not nil.
-func (akc *ApiKeyCreate) SetNillableType(s *string) *ApiKeyCreate {
-	if s != nil {
-		akc.SetType(*s)
+func (akc *ApiKeyCreate) SetNillableType(mkt *model.APIKeyType) *ApiKeyCreate {
+	if mkt != nil {
+		akc.SetType(*mkt)
+	}
+	return akc
+}
+
+// SetEnvironment sets the "environment" field.
+func (akc *ApiKeyCreate) SetEnvironment(m model.Environment) *ApiKeyCreate {
+	akc.mutation.SetEnvironment(m)
+	return akc
+}
+
+// SetNillableEnvironment sets the "environment" field if the given value is not nil.
+func (akc *ApiKeyCreate) SetNillableEnvironment(m *model.Environment) *ApiKeyCreate {
+	if m != nil {
+		akc.SetEnvironment(*m)
 	}
 	return akc
 }
@@ -299,6 +348,10 @@ func (akc *ApiKeyCreate) defaults() {
 		v := apikey.DefaultType
 		akc.mutation.SetType(v)
 	}
+	if _, ok := akc.mutation.Environment(); !ok {
+		v := apikey.DefaultEnvironment
+		akc.mutation.SetEnvironment(v)
+	}
 	if _, ok := akc.mutation.Active(); !ok {
 		v := apikey.DefaultActive
 		akc.mutation.SetActive(v)
@@ -325,19 +378,40 @@ func (akc *ApiKeyCreate) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "ApiKey.name": %w`, err)}
 		}
 	}
-	if _, ok := akc.mutation.Key(); !ok {
-		return &ValidationError{Name: "key", err: errors.New(`ent: missing required field "ApiKey.key"`)}
+	if _, ok := akc.mutation.PublicKey(); !ok {
+		return &ValidationError{Name: "public_key", err: errors.New(`ent: missing required field "ApiKey.public_key"`)}
 	}
-	if _, ok := akc.mutation.HashedKey(); !ok {
-		return &ValidationError{Name: "hashed_key", err: errors.New(`ent: missing required field "ApiKey.hashed_key"`)}
+	if v, ok := akc.mutation.PublicKey(); ok {
+		if err := apikey.PublicKeyValidator(v); err != nil {
+			return &ValidationError{Name: "public_key", err: fmt.Errorf(`ent: validator failed for field "ApiKey.public_key": %w`, err)}
+		}
 	}
-	if v, ok := akc.mutation.HashedKey(); ok {
-		if err := apikey.HashedKeyValidator(v); err != nil {
-			return &ValidationError{Name: "hashed_key", err: fmt.Errorf(`ent: validator failed for field "ApiKey.hashed_key": %w`, err)}
+	if _, ok := akc.mutation.SecretKey(); !ok {
+		return &ValidationError{Name: "secret_key", err: errors.New(`ent: missing required field "ApiKey.secret_key"`)}
+	}
+	if _, ok := akc.mutation.HashedSecretKey(); !ok {
+		return &ValidationError{Name: "hashed_secret_key", err: errors.New(`ent: missing required field "ApiKey.hashed_secret_key"`)}
+	}
+	if v, ok := akc.mutation.HashedSecretKey(); ok {
+		if err := apikey.HashedSecretKeyValidator(v); err != nil {
+			return &ValidationError{Name: "hashed_secret_key", err: fmt.Errorf(`ent: validator failed for field "ApiKey.hashed_secret_key": %w`, err)}
 		}
 	}
 	if _, ok := akc.mutation.GetType(); !ok {
 		return &ValidationError{Name: "type", err: errors.New(`ent: missing required field "ApiKey.type"`)}
+	}
+	if v, ok := akc.mutation.GetType(); ok {
+		if err := apikey.TypeValidator(v); err != nil {
+			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "ApiKey.type": %w`, err)}
+		}
+	}
+	if _, ok := akc.mutation.Environment(); !ok {
+		return &ValidationError{Name: "environment", err: errors.New(`ent: missing required field "ApiKey.environment"`)}
+	}
+	if v, ok := akc.mutation.Environment(); ok {
+		if err := apikey.EnvironmentValidator(v); err != nil {
+			return &ValidationError{Name: "environment", err: fmt.Errorf(`ent: validator failed for field "ApiKey.environment": %w`, err)}
+		}
 	}
 	if _, ok := akc.mutation.Active(); !ok {
 		return &ValidationError{Name: "active", err: errors.New(`ent: missing required field "ApiKey.active"`)}
@@ -394,6 +468,18 @@ func (akc *ApiKeyCreate) createSpec() (*ApiKey, *sqlgraph.CreateSpec) {
 		_spec.SetField(apikey.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
+	if value, ok := akc.mutation.PublicKey(); ok {
+		_spec.SetField(apikey.FieldPublicKey, field.TypeString, value)
+		_node.PublicKey = value
+	}
+	if value, ok := akc.mutation.SecretKey(); ok {
+		_spec.SetField(apikey.FieldSecretKey, field.TypeString, value)
+		_node.SecretKey = value
+	}
+	if value, ok := akc.mutation.HashedSecretKey(); ok {
+		_spec.SetField(apikey.FieldHashedSecretKey, field.TypeString, value)
+		_node.HashedSecretKey = value
+	}
 	if value, ok := akc.mutation.Key(); ok {
 		_spec.SetField(apikey.FieldKey, field.TypeString, value)
 		_node.Key = value
@@ -403,8 +489,12 @@ func (akc *ApiKeyCreate) createSpec() (*ApiKey, *sqlgraph.CreateSpec) {
 		_node.HashedKey = value
 	}
 	if value, ok := akc.mutation.GetType(); ok {
-		_spec.SetField(apikey.FieldType, field.TypeString, value)
+		_spec.SetField(apikey.FieldType, field.TypeEnum, value)
 		_node.Type = value
+	}
+	if value, ok := akc.mutation.Environment(); ok {
+		_spec.SetField(apikey.FieldEnvironment, field.TypeEnum, value)
+		_node.Environment = value
 	}
 	if value, ok := akc.mutation.Active(); ok {
 		_spec.SetField(apikey.FieldActive, field.TypeBool, value)
@@ -582,6 +672,42 @@ func (u *ApiKeyUpsert) UpdateName() *ApiKeyUpsert {
 	return u
 }
 
+// SetPublicKey sets the "public_key" field.
+func (u *ApiKeyUpsert) SetPublicKey(v string) *ApiKeyUpsert {
+	u.Set(apikey.FieldPublicKey, v)
+	return u
+}
+
+// UpdatePublicKey sets the "public_key" field to the value that was provided on create.
+func (u *ApiKeyUpsert) UpdatePublicKey() *ApiKeyUpsert {
+	u.SetExcluded(apikey.FieldPublicKey)
+	return u
+}
+
+// SetSecretKey sets the "secret_key" field.
+func (u *ApiKeyUpsert) SetSecretKey(v string) *ApiKeyUpsert {
+	u.Set(apikey.FieldSecretKey, v)
+	return u
+}
+
+// UpdateSecretKey sets the "secret_key" field to the value that was provided on create.
+func (u *ApiKeyUpsert) UpdateSecretKey() *ApiKeyUpsert {
+	u.SetExcluded(apikey.FieldSecretKey)
+	return u
+}
+
+// SetHashedSecretKey sets the "hashed_secret_key" field.
+func (u *ApiKeyUpsert) SetHashedSecretKey(v string) *ApiKeyUpsert {
+	u.Set(apikey.FieldHashedSecretKey, v)
+	return u
+}
+
+// UpdateHashedSecretKey sets the "hashed_secret_key" field to the value that was provided on create.
+func (u *ApiKeyUpsert) UpdateHashedSecretKey() *ApiKeyUpsert {
+	u.SetExcluded(apikey.FieldHashedSecretKey)
+	return u
+}
+
 // SetKey sets the "key" field.
 func (u *ApiKeyUpsert) SetKey(v string) *ApiKeyUpsert {
 	u.Set(apikey.FieldKey, v)
@@ -594,6 +720,12 @@ func (u *ApiKeyUpsert) UpdateKey() *ApiKeyUpsert {
 	return u
 }
 
+// ClearKey clears the value of the "key" field.
+func (u *ApiKeyUpsert) ClearKey() *ApiKeyUpsert {
+	u.SetNull(apikey.FieldKey)
+	return u
+}
+
 // SetHashedKey sets the "hashed_key" field.
 func (u *ApiKeyUpsert) SetHashedKey(v string) *ApiKeyUpsert {
 	u.Set(apikey.FieldHashedKey, v)
@@ -603,6 +735,12 @@ func (u *ApiKeyUpsert) SetHashedKey(v string) *ApiKeyUpsert {
 // UpdateHashedKey sets the "hashed_key" field to the value that was provided on create.
 func (u *ApiKeyUpsert) UpdateHashedKey() *ApiKeyUpsert {
 	u.SetExcluded(apikey.FieldHashedKey)
+	return u
+}
+
+// ClearHashedKey clears the value of the "hashed_key" field.
+func (u *ApiKeyUpsert) ClearHashedKey() *ApiKeyUpsert {
+	u.SetNull(apikey.FieldHashedKey)
 	return u
 }
 
@@ -643,7 +781,7 @@ func (u *ApiKeyUpsert) ClearOrganizationID() *ApiKeyUpsert {
 }
 
 // SetType sets the "type" field.
-func (u *ApiKeyUpsert) SetType(v string) *ApiKeyUpsert {
+func (u *ApiKeyUpsert) SetType(v model.APIKeyType) *ApiKeyUpsert {
 	u.Set(apikey.FieldType, v)
 	return u
 }
@@ -651,6 +789,18 @@ func (u *ApiKeyUpsert) SetType(v string) *ApiKeyUpsert {
 // UpdateType sets the "type" field to the value that was provided on create.
 func (u *ApiKeyUpsert) UpdateType() *ApiKeyUpsert {
 	u.SetExcluded(apikey.FieldType)
+	return u
+}
+
+// SetEnvironment sets the "environment" field.
+func (u *ApiKeyUpsert) SetEnvironment(v model.Environment) *ApiKeyUpsert {
+	u.Set(apikey.FieldEnvironment, v)
+	return u
+}
+
+// UpdateEnvironment sets the "environment" field to the value that was provided on create.
+func (u *ApiKeyUpsert) UpdateEnvironment() *ApiKeyUpsert {
+	u.SetExcluded(apikey.FieldEnvironment)
 	return u
 }
 
@@ -892,6 +1042,48 @@ func (u *ApiKeyUpsertOne) UpdateName() *ApiKeyUpsertOne {
 	})
 }
 
+// SetPublicKey sets the "public_key" field.
+func (u *ApiKeyUpsertOne) SetPublicKey(v string) *ApiKeyUpsertOne {
+	return u.Update(func(s *ApiKeyUpsert) {
+		s.SetPublicKey(v)
+	})
+}
+
+// UpdatePublicKey sets the "public_key" field to the value that was provided on create.
+func (u *ApiKeyUpsertOne) UpdatePublicKey() *ApiKeyUpsertOne {
+	return u.Update(func(s *ApiKeyUpsert) {
+		s.UpdatePublicKey()
+	})
+}
+
+// SetSecretKey sets the "secret_key" field.
+func (u *ApiKeyUpsertOne) SetSecretKey(v string) *ApiKeyUpsertOne {
+	return u.Update(func(s *ApiKeyUpsert) {
+		s.SetSecretKey(v)
+	})
+}
+
+// UpdateSecretKey sets the "secret_key" field to the value that was provided on create.
+func (u *ApiKeyUpsertOne) UpdateSecretKey() *ApiKeyUpsertOne {
+	return u.Update(func(s *ApiKeyUpsert) {
+		s.UpdateSecretKey()
+	})
+}
+
+// SetHashedSecretKey sets the "hashed_secret_key" field.
+func (u *ApiKeyUpsertOne) SetHashedSecretKey(v string) *ApiKeyUpsertOne {
+	return u.Update(func(s *ApiKeyUpsert) {
+		s.SetHashedSecretKey(v)
+	})
+}
+
+// UpdateHashedSecretKey sets the "hashed_secret_key" field to the value that was provided on create.
+func (u *ApiKeyUpsertOne) UpdateHashedSecretKey() *ApiKeyUpsertOne {
+	return u.Update(func(s *ApiKeyUpsert) {
+		s.UpdateHashedSecretKey()
+	})
+}
+
 // SetKey sets the "key" field.
 func (u *ApiKeyUpsertOne) SetKey(v string) *ApiKeyUpsertOne {
 	return u.Update(func(s *ApiKeyUpsert) {
@@ -906,6 +1098,13 @@ func (u *ApiKeyUpsertOne) UpdateKey() *ApiKeyUpsertOne {
 	})
 }
 
+// ClearKey clears the value of the "key" field.
+func (u *ApiKeyUpsertOne) ClearKey() *ApiKeyUpsertOne {
+	return u.Update(func(s *ApiKeyUpsert) {
+		s.ClearKey()
+	})
+}
+
 // SetHashedKey sets the "hashed_key" field.
 func (u *ApiKeyUpsertOne) SetHashedKey(v string) *ApiKeyUpsertOne {
 	return u.Update(func(s *ApiKeyUpsert) {
@@ -917,6 +1116,13 @@ func (u *ApiKeyUpsertOne) SetHashedKey(v string) *ApiKeyUpsertOne {
 func (u *ApiKeyUpsertOne) UpdateHashedKey() *ApiKeyUpsertOne {
 	return u.Update(func(s *ApiKeyUpsert) {
 		s.UpdateHashedKey()
+	})
+}
+
+// ClearHashedKey clears the value of the "hashed_key" field.
+func (u *ApiKeyUpsertOne) ClearHashedKey() *ApiKeyUpsertOne {
+	return u.Update(func(s *ApiKeyUpsert) {
+		s.ClearHashedKey()
 	})
 }
 
@@ -963,7 +1169,7 @@ func (u *ApiKeyUpsertOne) ClearOrganizationID() *ApiKeyUpsertOne {
 }
 
 // SetType sets the "type" field.
-func (u *ApiKeyUpsertOne) SetType(v string) *ApiKeyUpsertOne {
+func (u *ApiKeyUpsertOne) SetType(v model.APIKeyType) *ApiKeyUpsertOne {
 	return u.Update(func(s *ApiKeyUpsert) {
 		s.SetType(v)
 	})
@@ -973,6 +1179,20 @@ func (u *ApiKeyUpsertOne) SetType(v string) *ApiKeyUpsertOne {
 func (u *ApiKeyUpsertOne) UpdateType() *ApiKeyUpsertOne {
 	return u.Update(func(s *ApiKeyUpsert) {
 		s.UpdateType()
+	})
+}
+
+// SetEnvironment sets the "environment" field.
+func (u *ApiKeyUpsertOne) SetEnvironment(v model.Environment) *ApiKeyUpsertOne {
+	return u.Update(func(s *ApiKeyUpsert) {
+		s.SetEnvironment(v)
+	})
+}
+
+// UpdateEnvironment sets the "environment" field to the value that was provided on create.
+func (u *ApiKeyUpsertOne) UpdateEnvironment() *ApiKeyUpsertOne {
+	return u.Update(func(s *ApiKeyUpsert) {
+		s.UpdateEnvironment()
 	})
 }
 
@@ -1404,6 +1624,48 @@ func (u *ApiKeyUpsertBulk) UpdateName() *ApiKeyUpsertBulk {
 	})
 }
 
+// SetPublicKey sets the "public_key" field.
+func (u *ApiKeyUpsertBulk) SetPublicKey(v string) *ApiKeyUpsertBulk {
+	return u.Update(func(s *ApiKeyUpsert) {
+		s.SetPublicKey(v)
+	})
+}
+
+// UpdatePublicKey sets the "public_key" field to the value that was provided on create.
+func (u *ApiKeyUpsertBulk) UpdatePublicKey() *ApiKeyUpsertBulk {
+	return u.Update(func(s *ApiKeyUpsert) {
+		s.UpdatePublicKey()
+	})
+}
+
+// SetSecretKey sets the "secret_key" field.
+func (u *ApiKeyUpsertBulk) SetSecretKey(v string) *ApiKeyUpsertBulk {
+	return u.Update(func(s *ApiKeyUpsert) {
+		s.SetSecretKey(v)
+	})
+}
+
+// UpdateSecretKey sets the "secret_key" field to the value that was provided on create.
+func (u *ApiKeyUpsertBulk) UpdateSecretKey() *ApiKeyUpsertBulk {
+	return u.Update(func(s *ApiKeyUpsert) {
+		s.UpdateSecretKey()
+	})
+}
+
+// SetHashedSecretKey sets the "hashed_secret_key" field.
+func (u *ApiKeyUpsertBulk) SetHashedSecretKey(v string) *ApiKeyUpsertBulk {
+	return u.Update(func(s *ApiKeyUpsert) {
+		s.SetHashedSecretKey(v)
+	})
+}
+
+// UpdateHashedSecretKey sets the "hashed_secret_key" field to the value that was provided on create.
+func (u *ApiKeyUpsertBulk) UpdateHashedSecretKey() *ApiKeyUpsertBulk {
+	return u.Update(func(s *ApiKeyUpsert) {
+		s.UpdateHashedSecretKey()
+	})
+}
+
 // SetKey sets the "key" field.
 func (u *ApiKeyUpsertBulk) SetKey(v string) *ApiKeyUpsertBulk {
 	return u.Update(func(s *ApiKeyUpsert) {
@@ -1418,6 +1680,13 @@ func (u *ApiKeyUpsertBulk) UpdateKey() *ApiKeyUpsertBulk {
 	})
 }
 
+// ClearKey clears the value of the "key" field.
+func (u *ApiKeyUpsertBulk) ClearKey() *ApiKeyUpsertBulk {
+	return u.Update(func(s *ApiKeyUpsert) {
+		s.ClearKey()
+	})
+}
+
 // SetHashedKey sets the "hashed_key" field.
 func (u *ApiKeyUpsertBulk) SetHashedKey(v string) *ApiKeyUpsertBulk {
 	return u.Update(func(s *ApiKeyUpsert) {
@@ -1429,6 +1698,13 @@ func (u *ApiKeyUpsertBulk) SetHashedKey(v string) *ApiKeyUpsertBulk {
 func (u *ApiKeyUpsertBulk) UpdateHashedKey() *ApiKeyUpsertBulk {
 	return u.Update(func(s *ApiKeyUpsert) {
 		s.UpdateHashedKey()
+	})
+}
+
+// ClearHashedKey clears the value of the "hashed_key" field.
+func (u *ApiKeyUpsertBulk) ClearHashedKey() *ApiKeyUpsertBulk {
+	return u.Update(func(s *ApiKeyUpsert) {
+		s.ClearHashedKey()
 	})
 }
 
@@ -1475,7 +1751,7 @@ func (u *ApiKeyUpsertBulk) ClearOrganizationID() *ApiKeyUpsertBulk {
 }
 
 // SetType sets the "type" field.
-func (u *ApiKeyUpsertBulk) SetType(v string) *ApiKeyUpsertBulk {
+func (u *ApiKeyUpsertBulk) SetType(v model.APIKeyType) *ApiKeyUpsertBulk {
 	return u.Update(func(s *ApiKeyUpsert) {
 		s.SetType(v)
 	})
@@ -1485,6 +1761,20 @@ func (u *ApiKeyUpsertBulk) SetType(v string) *ApiKeyUpsertBulk {
 func (u *ApiKeyUpsertBulk) UpdateType() *ApiKeyUpsertBulk {
 	return u.Update(func(s *ApiKeyUpsert) {
 		s.UpdateType()
+	})
+}
+
+// SetEnvironment sets the "environment" field.
+func (u *ApiKeyUpsertBulk) SetEnvironment(v model.Environment) *ApiKeyUpsertBulk {
+	return u.Update(func(s *ApiKeyUpsert) {
+		s.SetEnvironment(v)
+	})
+}
+
+// UpdateEnvironment sets the "environment" field to the value that was provided on create.
+func (u *ApiKeyUpsertBulk) UpdateEnvironment() *ApiKeyUpsertBulk {
+	return u.Update(func(s *ApiKeyUpsert) {
+		s.UpdateEnvironment()
 	})
 }
 

@@ -1,3 +1,9 @@
-h1:EXhN80+dVJOidceMg6Z0Z3kS2BtM3Ehk5wPFX7SsMdo=
+h1:zb8ndjP/wSnk5u+aG7wezBuEjmZkBiRHWyws9yZiiiM=
 20250619031627_initial.down.sql h1:VFvU00g3shLzqFCjVu4VjkXZZITFN03n8kM+K/veDTk=
 20250619031627_initial.up.sql h1:htvi1+6jPC3iFIhilDKYLf3hr6Pp40J2VeyHHC9CHL4=
+20250624013441_remove_permission_constraint.down.sql h1:1a/VTF2cMlehHCTZb8VBbS+NuxGb2py1aAdg3cX1Swc=
+20250624013441_remove_permission_constraint.up.sql h1:hrC2VP36TDR/dDw/v9lvrqy6nlr5aBTp3FTkI7fCWIc=
+20250625060449_updated_apikey_env.down.sql h1:DE3z7QCOT7YoiDsVbVC4w8fTgnVt2cIXq3k9aiSmL4c=
+20250625060449_updated_apikey_env.up.sql h1:QoTx7hUTIOxvMdyXnGGdFMXxe7pOX3Rdaxst7nZlmNY=
+20250625061140_remove_permission_constraint.down.sql h1:YSuR4YkJuP92X5oHxREL0/7lMflNzhTz8/tiFVVITxg=
+20250625061140_remove_permission_constraint.up.sql h1:pyF9tMpFhP2hzaN9XOsVgiWNVShiCI5ojH3rRX+qkyU=

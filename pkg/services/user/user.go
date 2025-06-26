@@ -30,6 +30,7 @@ type Service interface {
 	UpdateUser(ctx context.Context, id xid.ID, req model.UpdateUserRequest) (*model.User, error)
 	DeleteUser(ctx context.Context, id xid.ID, req model.DeleteUserRequest) error
 	ListUsers(ctx context.Context, req model.UserListRequest) (*model.UserListResponse, error)
+	ListPlatformUsers(ctx context.Context, req model.UserListRequest) (*model.PlatformUserListResponse, error)
 	ExistsByEmail(ctx context.Context, email string, userType model.UserType, organizationID *xid.ID) (bool, error)
 	IncrementLoginCount(ctx context.Context, id xid.ID) error
 
@@ -897,7 +898,34 @@ func (s *service) convertEntUserToModelSummary(entUser *ent.User) *model.UserSum
 		Active:          entUser.Active,
 		LastLogin:       entUser.LastLogin,
 		ProfileImageURL: entUser.ProfileImageURL,
-		UserType:        entUser.UserType.String(),
+		UserType:        entUser.UserType,
+	}
+
+	return modelUser
+}
+
+func (s *service) convertEntUserToPlatformModelSummary(entUser *ent.User) *model.PlatformUserSummary {
+	// Convert ent.User to model.User
+	modelUser := &model.PlatformUserSummary{
+		UserSummary:           *s.convertEntUserToModelSummary(entUser),
+		EmailVerified:         entUser.EmailVerified,
+		PhoneVerified:         entUser.PhoneVerified,
+		Blocked:               entUser.Blocked,
+		LastPasswordChange:    entUser.LastPasswordChange,
+		Metadata:              entUser.Metadata,
+		Locale:                entUser.Locale,
+		Timezone:              entUser.Timezone,
+		OrganizationID:        &entUser.OrganizationID,
+		PrimaryOrganizationID: &entUser.PrimaryOrganizationID,
+		IsPlatformAdmin:       entUser.IsPlatformAdmin,
+		AuthProvider:          entUser.AuthProvider,
+		ExternalID:            entUser.ExternalID,
+		CustomerID:            entUser.CustomerID,
+		CustomAttributes:      entUser.CustomAttributes,
+		CreatedBy:             entUser.CreatedBy,
+		LoginCount:            entUser.LoginCount,
+		LastLoginIP:           entUser.LastLoginIP,
+		LastLoginAt:           entUser.LastLogin,
 	}
 
 	return modelUser
@@ -935,12 +963,15 @@ func (s *service) createAuditLog(ctx context.Context, input *model.CreateAuditLo
 func (s *service) ListUsers(ctx context.Context, req model.UserListRequest) (*model.UserListResponse, error) {
 	params := repository.ListUsersParams{
 		PaginationParams: req.PaginationParams,
-		UserType:         nil,
-		OrganizationID:   nil,
+		OrganizationID:   req.OrganizationID,
 		Active:           nil,
 		Blocked:          nil,
 		EmailVerified:    nil,
 		AuthProvider:     nil,
+	}
+
+	if req.UserType != "" {
+		params.UserType = &req.UserType
 	}
 	list, err := s.userRepo.List(ctx, params)
 	if err != nil {
@@ -952,7 +983,46 @@ func (s *service) ListUsers(ctx context.Context, req model.UserListRequest) (*mo
 	})
 
 	return &model.UserListResponse{
-		Data: users,
+		Data:       users,
+		Pagination: list.Pagination,
+	}, nil
+}
+
+func (s *service) ListPlatformUsers(ctx context.Context, req model.UserListRequest) (*model.PlatformUserListResponse, error) {
+	params := repository.ListUsersParams{
+		PaginationParams: req.PaginationParams,
+		OrganizationID:   req.OrganizationID,
+		Active:           nil,
+		Blocked:          nil,
+		EmailVerified:    nil,
+		AuthProvider:     nil,
+	}
+
+	if req.UserType != "" {
+		params.UserType = &req.UserType
+	}
+
+	list, err := s.userRepo.List(ctx, params)
+	if err != nil {
+		return nil, err
+	}
+
+	users := lo.Map(list.Data, func(item *ent.User, index int) model.PlatformUserSummary {
+		return *s.convertEntUserToPlatformModelSummary(item)
+	})
+
+	return &model.PlatformUserListResponse{
+		Users:      users,
+		Pagination: list.Pagination,
+		Summary: model.UserSummaryStats{
+			Total:    len(list.Data),
+			Active:   0, // Would calculate from data
+			Blocked:  0, // Would calculate from data
+			Verified: 0, // Would calculate from data
+			Internal: 0, // Would calculate from data
+			External: 0, // Would calculate from data
+			EndUsers: 0, // Would calculate from data
+		},
 	}, nil
 }
 

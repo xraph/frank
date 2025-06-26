@@ -200,8 +200,8 @@ func (rc *RoleCreate) SetNillableColor(s *string) *RoleCreate {
 }
 
 // SetApplicableUserTypes sets the "applicable_user_types" field.
-func (rc *RoleCreate) SetApplicableUserTypes(s []string) *RoleCreate {
-	rc.mutation.SetApplicableUserTypes(s)
+func (rc *RoleCreate) SetApplicableUserTypes(mt []model.UserType) *RoleCreate {
+	rc.mutation.SetApplicableUserTypes(mt)
 	return rc
 }
 
@@ -899,7 +899,7 @@ func (u *RoleUpsert) ClearColor() *RoleUpsert {
 }
 
 // SetApplicableUserTypes sets the "applicable_user_types" field.
-func (u *RoleUpsert) SetApplicableUserTypes(v []string) *RoleUpsert {
+func (u *RoleUpsert) SetApplicableUserTypes(v []model.UserType) *RoleUpsert {
 	u.Set(role.FieldApplicableUserTypes, v)
 	return u
 }
@@ -1227,7 +1227,7 @@ func (u *RoleUpsertOne) ClearColor() *RoleUpsertOne {
 }
 
 // SetApplicableUserTypes sets the "applicable_user_types" field.
-func (u *RoleUpsertOne) SetApplicableUserTypes(v []string) *RoleUpsertOne {
+func (u *RoleUpsertOne) SetApplicableUserTypes(v []model.UserType) *RoleUpsertOne {
 	return u.Update(func(s *RoleUpsert) {
 		s.SetApplicableUserTypes(v)
 	})
@@ -1732,7 +1732,7 @@ func (u *RoleUpsertBulk) ClearColor() *RoleUpsertBulk {
 }
 
 // SetApplicableUserTypes sets the "applicable_user_types" field.
-func (u *RoleUpsertBulk) SetApplicableUserTypes(v []string) *RoleUpsertBulk {
+func (u *RoleUpsertBulk) SetApplicableUserTypes(v []model.UserType) *RoleUpsertBulk {
 	return u.Update(func(s *RoleUpsert) {
 		s.SetApplicableUserTypes(v)
 	})

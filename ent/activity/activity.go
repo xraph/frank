@@ -158,7 +158,7 @@ const DefaultResourceType model.ResourceType = "common"
 // ResourceTypeValidator is a validator for the "resource_type" field enum values. It is called by the builders before save.
 func ResourceTypeValidator(rt model.ResourceType) error {
 	switch rt.String() {
-	case "api_key", "user", "organization", "session", "common", "oauth", "membership", "mfa", "provider", "passkey", "sso", "permission":
+	case "global", "system", "organization", "user", "role", "permission", "api_key", "session", "mfa", "webhook", "audit", "application", "end_user", "integration", "billing", "analytics", "webhook_event", "email_template", "verification", "audit_log", "common", "oauth", "membership", "provider", "passkey", "sso", "self_user", "personal_api_key", "personal_session", "personal_mfa", "internal_user", "end_user_session", "customer_organization", "platform_analytics", "end_user_analytics", "auth_service_analytics", "auth_service", "auth_service_domain":
 		return nil
 	default:
 		return fmt.Errorf("activity: invalid enum value for resource_type field: %q", rt)

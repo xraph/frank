@@ -24,6 +24,7 @@ const (
 	StrategyAPIKey       RateLimitStrategy = "api_key"
 	StrategyOrganization RateLimitStrategy = "organization"
 	StrategyGlobal       RateLimitStrategy = "global"
+	StrategyEnvironment  RateLimitStrategy = "environment" // New strategy for environment-based limiting
 )
 
 // RateLimitConfig represents rate limiting configuration
@@ -48,6 +49,9 @@ type RateLimitConfig struct {
 	// Plan-based limits
 	PlanLimits map[string]*PlanRateLimit
 
+	// Environment-based limits
+	EnvironmentLimits map[model.Environment]*EnvironmentRateLimit
+
 	// Storage backend
 	Store RateLimitStore
 }
@@ -61,6 +65,18 @@ type PlanRateLimit struct {
 	BurstSize         int
 }
 
+// EnvironmentRateLimit defines rate limits for different environments
+type EnvironmentRateLimit struct {
+	RequestsPerSecond float64
+	RequestsPerMinute int
+	RequestsPerHour   int
+	RequestsPerDay    int
+	BurstSize         int
+	// Different limits for public vs secret keys
+	PublicKeyLimits *PlanRateLimit
+	SecretKeyLimits *PlanRateLimit
+}
+
 // RateLimitInfo contains information about current rate limit status
 type RateLimitInfo struct {
 	Limit       int
@@ -72,6 +88,8 @@ type RateLimitInfo struct {
 	Key         string
 	Blocked     bool
 	BlockReason string
+	Environment model.Environment `json:"environment,omitempty"`
+	KeyType     string            `json:"keyType,omitempty"`
 }
 
 // RateLimitStore defines the interface for rate limit storage
@@ -299,6 +317,71 @@ func DefaultRateLimitConfig() *RateLimitConfig {
 				BurstSize:         200,
 			},
 		},
+		EnvironmentLimits: map[model.Environment]*EnvironmentRateLimit{
+			model.EnvironmentTest: {
+				RequestsPerSecond: 50.0,
+				RequestsPerMinute: 3000,
+				RequestsPerHour:   100000,
+				RequestsPerDay:    1000000,
+				BurstSize:         100,
+				PublicKeyLimits: &PlanRateLimit{
+					RequestsPerSecond: 10.0,
+					RequestsPerMinute: 600,
+					RequestsPerHour:   10000,
+					RequestsPerDay:    100000,
+					BurstSize:         20,
+				},
+				SecretKeyLimits: &PlanRateLimit{
+					RequestsPerSecond: 50.0,
+					RequestsPerMinute: 3000,
+					RequestsPerHour:   100000,
+					RequestsPerDay:    1000000,
+					BurstSize:         100,
+				},
+			},
+			model.EnvironmentLive: {
+				RequestsPerSecond: 25.0,
+				RequestsPerMinute: 1500,
+				RequestsPerHour:   50000,
+				RequestsPerDay:    500000,
+				BurstSize:         50,
+				PublicKeyLimits: &PlanRateLimit{
+					RequestsPerSecond: 5.0,
+					RequestsPerMinute: 300,
+					RequestsPerHour:   5000,
+					RequestsPerDay:    50000,
+					BurstSize:         10,
+				},
+				SecretKeyLimits: &PlanRateLimit{
+					RequestsPerSecond: 25.0,
+					RequestsPerMinute: 1500,
+					RequestsPerHour:   50000,
+					RequestsPerDay:    500000,
+					BurstSize:         50,
+				},
+			},
+			model.EnvironmentDevelopment: {
+				RequestsPerSecond: 100.0,
+				RequestsPerMinute: 6000,
+				RequestsPerHour:   200000,
+				RequestsPerDay:    2000000,
+				BurstSize:         200,
+				PublicKeyLimits: &PlanRateLimit{
+					RequestsPerSecond: 20.0,
+					RequestsPerMinute: 1200,
+					RequestsPerHour:   20000,
+					RequestsPerDay:    200000,
+					BurstSize:         40,
+				},
+				SecretKeyLimits: &PlanRateLimit{
+					RequestsPerSecond: 100.0,
+					RequestsPerMinute: 6000,
+					RequestsPerHour:   200000,
+					RequestsPerDay:    2000000,
+					BurstSize:         200,
+				},
+			},
+		},
 	}
 }
 
@@ -395,25 +478,50 @@ func UserRateLimiter(requestsPerSecond float64, burstSize int) func(http.Handler
 	return RateLimiterWithConfig(config)
 }
 
-// APIKeyRateLimiter creates an API key-based rate limiter
+// APIKeyRateLimiter creates an API key-based rate limiter with environment support
 func APIKeyRateLimiter() func(http.Handler) http.Handler {
 	config := DefaultRateLimitConfig()
 	config.Strategy = StrategyAPIKey
 
 	return func(next http.Handler) http.Handler {
 		return RateLimiterWithConfig(config)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// Get API key rate limits from context
-			if apiKey := GetAPIKeyFromContext(r.Context()); apiKey != nil && apiKey.RateLimits != nil {
-				// Use API key specific rate limits
-				key := fmt.Sprintf("api_key:%s", apiKey.ID.String())
+			// Get API key context from middleware
+			apiKey := GetAPIKeyFromContext(r.Context())
+			if apiKey == nil {
+				// No API key context, allow request (will be handled by auth middleware)
+				next.ServeHTTP(w, r)
+				return
+			}
 
-				// Check different time windows
-				if !checkAPIKeyRateLimit(r.Context(), key, apiKey.RateLimits, config) {
+			// Check API key specific rate limits
+			key := fmt.Sprintf("api_key:%s", apiKey.ID.String())
+
+			// Apply environment-specific limits
+			if !checkAPIKeyEnvironmentRateLimit(r.Context(), key, apiKey, config) {
+				limitInfo := &RateLimitInfo{
+					Blocked:     true,
+					BlockReason: fmt.Sprintf("API key rate limit exceeded for %s environment", apiKey.Environment),
+					Strategy:    StrategyAPIKey,
+					Key:         key,
+					Environment: apiKey.Environment,
+					KeyType:     apiKey.KeyType,
+				}
+
+				addRateLimitHeaders(w, limitInfo, config)
+				respondRateLimited(w, r, limitInfo, config)
+				return
+			}
+
+			// Check custom API key rate limits if available
+			if apiKey.RateLimits != nil {
+				if !checkAPIKeyCustomRateLimit(r.Context(), key, apiKey.RateLimits, config) {
 					limitInfo := &RateLimitInfo{
 						Blocked:     true,
-						BlockReason: "API key rate limit exceeded",
+						BlockReason: "API key custom rate limit exceeded",
 						Strategy:    StrategyAPIKey,
 						Key:         key,
+						Environment: apiKey.Environment,
+						KeyType:     apiKey.KeyType,
 					}
 
 					addRateLimitHeaders(w, limitInfo, config)
@@ -424,6 +532,82 @@ func APIKeyRateLimiter() func(http.Handler) http.Handler {
 
 			next.ServeHTTP(w, r)
 		}))
+	}
+}
+
+// EnvironmentBasedRateLimiter creates an environment-based rate limiter
+func EnvironmentBasedRateLimiter() func(http.Handler) http.Handler {
+	config := DefaultRateLimitConfig()
+	config.Strategy = StrategyEnvironment
+
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Get API key context to determine environment
+			apiKey := GetAPIKeyFromContext(r.Context())
+			if apiKey == nil {
+				// No API key context, use default limits
+				next.ServeHTTP(w, r)
+				return
+			}
+
+			// Get environment-specific limits
+			envLimits, exists := config.EnvironmentLimits[apiKey.Environment]
+			if !exists {
+				// No specific limits for this environment, use default
+				next.ServeHTTP(w, r)
+				return
+			}
+
+			// Choose limits based on key type
+			var limits *PlanRateLimit
+			switch apiKey.KeyType {
+			case "public":
+				limits = envLimits.PublicKeyLimits
+			case "secret":
+				limits = envLimits.SecretKeyLimits
+			default:
+				limits = &PlanRateLimit{
+					RequestsPerSecond: envLimits.RequestsPerSecond,
+					RequestsPerMinute: envLimits.RequestsPerMinute,
+					RequestsPerHour:   envLimits.RequestsPerHour,
+					RequestsPerDay:    envLimits.RequestsPerDay,
+					BurstSize:         envLimits.BurstSize,
+				}
+			}
+
+			if limits == nil {
+				next.ServeHTTP(w, r)
+				return
+			}
+
+			// Apply environment-specific rate limiting
+			key := fmt.Sprintf("env:%s:key_type:%s:key:%s",
+				apiKey.Environment, apiKey.KeyType, apiKey.ID.String())
+
+			limiter := NewTokenBucketLimiter(limits.RequestsPerSecond, limits.BurstSize, config.Logger)
+
+			if !limiter.Allow(key) {
+				limitInfo := &RateLimitInfo{
+					Limit:       int(limits.RequestsPerSecond * 60), // Per minute
+					Remaining:   0,
+					Reset:       time.Now().Add(time.Minute).Unix(),
+					ResetTime:   time.Now().Add(time.Minute),
+					RetryAfter:  60,
+					Strategy:    StrategyEnvironment,
+					Key:         key,
+					Blocked:     true,
+					BlockReason: fmt.Sprintf("environment rate limit exceeded: %s (%s key)", apiKey.Environment, apiKey.KeyType),
+					Environment: apiKey.Environment,
+					KeyType:     apiKey.KeyType,
+				}
+
+				addRateLimitHeaders(w, limitInfo, config)
+				respondRateLimited(w, r, limitInfo, config)
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		})
 	}
 }
 
@@ -543,7 +727,14 @@ func generateRateLimitKey(r *http.Request, config *RateLimitConfig) string {
 		return fmt.Sprintf("ip:%s", GetClientIP(r))
 	case StrategyAPIKey:
 		if apiKey := GetAPIKeyFromContext(r.Context()); apiKey != nil {
-			return fmt.Sprintf("api_key:%s", apiKey.ID.String())
+			return fmt.Sprintf("api_key:%s:env:%s:type:%s",
+				apiKey.ID.String(), apiKey.Environment, apiKey.KeyType)
+		}
+		// Fallback to IP if no API key context
+		return fmt.Sprintf("ip:%s", GetClientIP(r))
+	case StrategyEnvironment:
+		if apiKey := GetAPIKeyFromContext(r.Context()); apiKey != nil {
+			return fmt.Sprintf("env:%s:type:%s", apiKey.Environment, apiKey.KeyType)
 		}
 		// Fallback to IP if no API key context
 		return fmt.Sprintf("ip:%s", GetClientIP(r))
@@ -561,9 +752,7 @@ func generateRateLimitKey(r *http.Request, config *RateLimitConfig) string {
 }
 
 func getRateLimitInfo(ctx context.Context, key string, config *RateLimitConfig) *RateLimitInfo {
-	// This is a simplified implementation
-	// In production, you'd get this from your storage backend
-	return &RateLimitInfo{
+	info := &RateLimitInfo{
 		Limit:     int(config.RequestsPerSecond * 60), // Per minute
 		Remaining: int(config.RequestsPerSecond * 60), // Start with full limit
 		Reset:     time.Now().Add(time.Minute).Unix(),
@@ -571,11 +760,71 @@ func getRateLimitInfo(ctx context.Context, key string, config *RateLimitConfig) 
 		Strategy:  config.Strategy,
 		Key:       key,
 	}
+
+	// Add environment and key type info if available
+	if apiKey := GetAPIKeyFromContext(ctx); apiKey != nil {
+		info.Environment = apiKey.Environment
+		info.KeyType = apiKey.KeyType
+	}
+
+	return info
 }
 
-func checkAPIKeyRateLimit(ctx context.Context, key string, limits *model.APIKeyRateLimits, config *RateLimitConfig) bool {
-	// now := time.Now()
+func checkAPIKeyEnvironmentRateLimit(ctx context.Context, key string, apiKey *APIKeyContext, config *RateLimitConfig) bool {
+	envLimits, exists := config.EnvironmentLimits[apiKey.Environment]
+	if !exists {
+		return true // No limits defined for this environment
+	}
 
+	// Choose limits based on key type
+	var limits *PlanRateLimit
+	switch apiKey.KeyType {
+	case "public":
+		limits = envLimits.PublicKeyLimits
+	case "secret":
+		limits = envLimits.SecretKeyLimits
+	default:
+		limits = &PlanRateLimit{
+			RequestsPerSecond: envLimits.RequestsPerSecond,
+			RequestsPerMinute: envLimits.RequestsPerMinute,
+			RequestsPerHour:   envLimits.RequestsPerHour,
+			RequestsPerDay:    envLimits.RequestsPerDay,
+			BurstSize:         envLimits.BurstSize,
+		}
+	}
+
+	if limits == nil {
+		return true
+	}
+
+	// Check per-minute limit
+	if limits.RequestsPerMinute > 0 {
+		count, err := config.Store.Increment(ctx, key+":minute", time.Minute)
+		if err == nil && count > limits.RequestsPerMinute {
+			return false
+		}
+	}
+
+	// Check per-hour limit
+	if limits.RequestsPerHour > 0 {
+		count, err := config.Store.Increment(ctx, key+":hour", time.Hour)
+		if err == nil && count > limits.RequestsPerHour {
+			return false
+		}
+	}
+
+	// Check per-day limit
+	if limits.RequestsPerDay > 0 {
+		count, err := config.Store.Increment(ctx, key+":day", 24*time.Hour)
+		if err == nil && count > limits.RequestsPerDay {
+			return false
+		}
+	}
+
+	return true
+}
+
+func checkAPIKeyCustomRateLimit(ctx context.Context, key string, limits *model.APIKeyRateLimits, config *RateLimitConfig) bool {
 	// Check per-minute limit
 	if limits.RequestsPerMinute > 0 {
 		count, err := config.Store.Increment(ctx, key+":minute", time.Minute)
@@ -610,6 +859,14 @@ func addRateLimitHeaders(w http.ResponseWriter, info *RateLimitInfo, config *Rat
 	w.Header().Set(prefix+"-Remaining", strconv.Itoa(info.Remaining))
 	w.Header().Set(prefix+"-Reset", strconv.FormatInt(info.Reset, 10))
 
+	// Add environment and key type headers for API keys
+	if info.Environment != "" {
+		w.Header().Set(prefix+"-Environment", string(info.Environment))
+	}
+	if info.KeyType != "" {
+		w.Header().Set(prefix+"-KeyType", info.KeyType)
+	}
+
 	if info.Blocked && info.RetryAfter > 0 {
 		w.Header().Set("Retry-After", strconv.Itoa(info.RetryAfter))
 	}
@@ -620,8 +877,10 @@ func respondRateLimited(w http.ResponseWriter, r *http.Request, info *RateLimitI
 	w.WriteHeader(http.StatusTooManyRequests)
 
 	errResp := errors.NewErrorResponse(errors.New(errors.CodeTooManyRequests, info.BlockReason))
-	jsonResp := fmt.Sprintf(`{"code":"%s","message":"%s","retry_after":%d}`,
-		errResp.Code, errResp.Message, info.RetryAfter)
+
+	// Enhanced error response with environment and key type info
+	jsonResp := fmt.Sprintf(`{"code":"%s","message":"%s","retry_after":%d,"environment":"%s","key_type":"%s"}`,
+		errResp.Code, errResp.Message, info.RetryAfter, info.Environment, info.KeyType)
 
 	_, _ = w.Write([]byte(jsonResp))
 
@@ -630,6 +889,8 @@ func respondRateLimited(w http.ResponseWriter, r *http.Request, info *RateLimitI
 			logging.String("key", info.Key),
 			logging.String("strategy", string(info.Strategy)),
 			logging.String("reason", info.BlockReason),
+			logging.String("environment", string(info.Environment)),
+			logging.String("key_type", info.KeyType),
 			logging.String("ip", GetClientIP(r)),
 			logging.String("user_agent", r.UserAgent()),
 		)
@@ -655,7 +916,7 @@ func isTrustedIP(ip string, trustedIPs []string) bool {
 	return false
 }
 
-// Adaptive rate limiter that adjusts based on load
+// AdaptiveRateLimiter Adaptive rate limiter that adjusts based on load
 func AdaptiveRateLimiter(baseRate float64, maxRate float64) func(http.Handler) http.Handler {
 	var (
 		currentRate  = baseRate
@@ -717,5 +978,57 @@ func AdaptiveRateLimiter(baseRate float64, maxRate float64) func(http.Handler) h
 				}
 			}()
 		}))
+	}
+}
+
+// PublicKeyRateLimiter creates a rate limiter specifically for public keys
+func PublicKeyRateLimiter() func(http.Handler) http.Handler {
+	config := DefaultRateLimitConfig()
+	config.Strategy = StrategyAPIKey
+
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			apiKey := GetAPIKeyFromContext(r.Context())
+			if apiKey == nil || apiKey.KeyType != "public" {
+				// Not a public key request, skip this limiter
+				next.ServeHTTP(w, r)
+				return
+			}
+
+			// Apply stricter limits for public keys
+			envLimits, exists := config.EnvironmentLimits[apiKey.Environment]
+			if !exists || envLimits.PublicKeyLimits == nil {
+				// No specific limits, use default
+				next.ServeHTTP(w, r)
+				return
+			}
+
+			key := fmt.Sprintf("public_key:%s:env:%s", apiKey.ID.String(), apiKey.Environment)
+			limits := envLimits.PublicKeyLimits
+
+			limiter := NewTokenBucketLimiter(limits.RequestsPerSecond, limits.BurstSize, config.Logger)
+
+			if !limiter.Allow(key) {
+				limitInfo := &RateLimitInfo{
+					Limit:       int(limits.RequestsPerSecond * 60),
+					Remaining:   0,
+					Reset:       time.Now().Add(time.Minute).Unix(),
+					ResetTime:   time.Now().Add(time.Minute),
+					RetryAfter:  60,
+					Strategy:    StrategyAPIKey,
+					Key:         key,
+					Blocked:     true,
+					BlockReason: "public key rate limit exceeded",
+					Environment: apiKey.Environment,
+					KeyType:     "public",
+				}
+
+				addRateLimitHeaders(w, limitInfo, config)
+				respondRateLimited(w, r, limitInfo, config)
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		})
 	}
 }

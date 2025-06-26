@@ -52,7 +52,7 @@ type Role struct {
 	// Color for UI display
 	Color string `json:"color,omitempty"`
 	// Which user types this role can be assigned to: ['internal', 'external', 'end_user']
-	ApplicableUserTypes []string `json:"applicable_user_types,omitempty"`
+	ApplicableUserTypes []model.UserType `json:"applicable_user_types,omitempty"`
 	// User who created this role
 	CreatedBy string `json:"created_by,omitempty"`
 	// Active holds the value of the "active" field.

@@ -41,10 +41,15 @@ func main() {
 		var err error
 		banner.Title = "Wakflo Identity Server is starting"
 
+		mountOptions := server2.DefaultMountOptions()
+		mountOptions.IncludeRoutes.Internal = true
+		mountOptions.BasePath = ""
+
 		// Setup api router
 		cli.app, err = frank.New(
 			opts,
 			frank.WithServerEnabled(),
+			frank.WithMountOptions(mountOptions),
 		)
 		apiServer = cli.app.Server()
 		// Check for initialization errors

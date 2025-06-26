@@ -250,6 +250,10 @@ migrate-docker-build: ## Build migration Docker image
 	@echo "🐳 Building migration Docker image..."
 	@docker build -f docker/Dockerfile.migrate -t frank-migrate:latest .
 
+db-generate:
+	@echo "💻 Generating ent schema for database."
+	@go generate ./ent
+
 # Database utilities
 db-console: ## Open database console
 	@echo "💻 Opening database console..."

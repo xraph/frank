@@ -17,6 +17,7 @@ import (
 	"github.com/juicycleff/frank/ent/organization"
 	"github.com/juicycleff/frank/ent/user"
 	"github.com/juicycleff/frank/pkg/common"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -34,16 +35,24 @@ type ApiKey struct {
 	DeletedAt time.Time `json:"deleted_at,omitempty"`
 	// Human-readable name for the API key
 	Name string `json:"name,omitempty"`
-	// The actual API key value (write-only)
+	// Public API key (safe to display, used for identification)
+	PublicKey string `json:"public_key,omitempty"`
+	// Secret API key value (write-only, used for authentication)
+	SecretKey string `json:"-"`
+	// Hashed version of the secret key for secure storage
+	HashedSecretKey string `json:"hashed_secret_key,omitempty"`
+	// Legacy API key field (deprecated, use secret_key instead)
 	Key string `json:"-"`
-	// Hashed version of the API key for secure storage
+	// Legacy hashed key field (deprecated, use hashed_secret_key instead)
 	HashedKey string `json:"hashed_key,omitempty"`
 	// User ID if this is a user-scoped key
 	UserID xid.ID `json:"user_id,omitempty"`
 	// Organization ID for multi-tenant isolation
 	OrganizationID xid.ID `json:"organization_id,omitempty"`
 	// Type of API key (server, client, admin)
-	Type string `json:"type,omitempty"`
+	Type model.APIKeyType `json:"type,omitempty"`
+	// Environment type (test, live)
+	Environment model.Environment `json:"environment,omitempty"`
 	// Whether the API key is active
 	Active bool `json:"active,omitempty"`
 	// Granted permissions for this key
@@ -120,7 +129,7 @@ func (*ApiKey) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case apikey.FieldActive:
 			values[i] = new(sql.NullBool)
-		case apikey.FieldName, apikey.FieldKey, apikey.FieldHashedKey, apikey.FieldType:
+		case apikey.FieldName, apikey.FieldPublicKey, apikey.FieldSecretKey, apikey.FieldHashedSecretKey, apikey.FieldKey, apikey.FieldHashedKey, apikey.FieldType, apikey.FieldEnvironment:
 			values[i] = new(sql.NullString)
 		case apikey.FieldCreatedAt, apikey.FieldUpdatedAt, apikey.FieldDeletedAt, apikey.FieldLastUsed, apikey.FieldExpiresAt:
 			values[i] = new(sql.NullTime)
@@ -171,6 +180,24 @@ func (ak *ApiKey) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				ak.Name = value.String
 			}
+		case apikey.FieldPublicKey:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field public_key", values[i])
+			} else if value.Valid {
+				ak.PublicKey = value.String
+			}
+		case apikey.FieldSecretKey:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field secret_key", values[i])
+			} else if value.Valid {
+				ak.SecretKey = value.String
+			}
+		case apikey.FieldHashedSecretKey:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field hashed_secret_key", values[i])
+			} else if value.Valid {
+				ak.HashedSecretKey = value.String
+			}
 		case apikey.FieldKey:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field key", values[i])
@@ -199,7 +226,13 @@ func (ak *ApiKey) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field type", values[i])
 			} else if value.Valid {
-				ak.Type = value.String
+				ak.Type = model.APIKeyType(value.String)
+			}
+		case apikey.FieldEnvironment:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field environment", values[i])
+			} else if value.Valid {
+				ak.Environment = model.Environment(value.String)
 			}
 		case apikey.FieldActive:
 			if value, ok := values[i].(*sql.NullBool); !ok {
@@ -324,6 +357,14 @@ func (ak *ApiKey) String() string {
 	builder.WriteString("name=")
 	builder.WriteString(ak.Name)
 	builder.WriteString(", ")
+	builder.WriteString("public_key=")
+	builder.WriteString(ak.PublicKey)
+	builder.WriteString(", ")
+	builder.WriteString("secret_key=<sensitive>")
+	builder.WriteString(", ")
+	builder.WriteString("hashed_secret_key=")
+	builder.WriteString(ak.HashedSecretKey)
+	builder.WriteString(", ")
 	builder.WriteString("key=<sensitive>")
 	builder.WriteString(", ")
 	builder.WriteString("hashed_key=")
@@ -336,7 +377,10 @@ func (ak *ApiKey) String() string {
 	builder.WriteString(fmt.Sprintf("%v", ak.OrganizationID))
 	builder.WriteString(", ")
 	builder.WriteString("type=")
-	builder.WriteString(ak.Type)
+	builder.WriteString(fmt.Sprintf("%v", ak.Type))
+	builder.WriteString(", ")
+	builder.WriteString("environment=")
+	builder.WriteString(fmt.Sprintf("%v", ak.Environment))
 	builder.WriteString(", ")
 	builder.WriteString("active=")
 	builder.WriteString(fmt.Sprintf("%v", ak.Active))

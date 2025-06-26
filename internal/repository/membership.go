@@ -171,8 +171,17 @@ func NewMembershipRepository(client *ent.Client, logger logging.Logger) Membersh
 
 // Create creates a new membership
 func (r *membershipRepository) Create(ctx context.Context, input CreateMembershipInput) (*ent.Membership, error) {
+	user, err := r.client.User.Get(ctx, input.UserID)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, errors.New(errors.CodeNotFound, "User not found")
+		}
+		return nil, fmt.Errorf("failed to get user: %w", err)
+	}
+
 	create := r.client.Membership.Create().
 		SetUserID(input.UserID).
+		SetEmail(user.Email).
 		SetOrganizationID(input.OrganizationID).
 		SetRoleID(input.RoleID).
 		SetStatus(input.Status).

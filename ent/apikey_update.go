@@ -21,6 +21,7 @@ import (
 	"github.com/juicycleff/frank/ent/predicate"
 	"github.com/juicycleff/frank/ent/user"
 	"github.com/juicycleff/frank/pkg/common"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -78,6 +79,48 @@ func (aku *ApiKeyUpdate) SetNillableName(s *string) *ApiKeyUpdate {
 	return aku
 }
 
+// SetPublicKey sets the "public_key" field.
+func (aku *ApiKeyUpdate) SetPublicKey(s string) *ApiKeyUpdate {
+	aku.mutation.SetPublicKey(s)
+	return aku
+}
+
+// SetNillablePublicKey sets the "public_key" field if the given value is not nil.
+func (aku *ApiKeyUpdate) SetNillablePublicKey(s *string) *ApiKeyUpdate {
+	if s != nil {
+		aku.SetPublicKey(*s)
+	}
+	return aku
+}
+
+// SetSecretKey sets the "secret_key" field.
+func (aku *ApiKeyUpdate) SetSecretKey(s string) *ApiKeyUpdate {
+	aku.mutation.SetSecretKey(s)
+	return aku
+}
+
+// SetNillableSecretKey sets the "secret_key" field if the given value is not nil.
+func (aku *ApiKeyUpdate) SetNillableSecretKey(s *string) *ApiKeyUpdate {
+	if s != nil {
+		aku.SetSecretKey(*s)
+	}
+	return aku
+}
+
+// SetHashedSecretKey sets the "hashed_secret_key" field.
+func (aku *ApiKeyUpdate) SetHashedSecretKey(s string) *ApiKeyUpdate {
+	aku.mutation.SetHashedSecretKey(s)
+	return aku
+}
+
+// SetNillableHashedSecretKey sets the "hashed_secret_key" field if the given value is not nil.
+func (aku *ApiKeyUpdate) SetNillableHashedSecretKey(s *string) *ApiKeyUpdate {
+	if s != nil {
+		aku.SetHashedSecretKey(*s)
+	}
+	return aku
+}
+
 // SetKey sets the "key" field.
 func (aku *ApiKeyUpdate) SetKey(s string) *ApiKeyUpdate {
 	aku.mutation.SetKey(s)
@@ -92,6 +135,12 @@ func (aku *ApiKeyUpdate) SetNillableKey(s *string) *ApiKeyUpdate {
 	return aku
 }
 
+// ClearKey clears the value of the "key" field.
+func (aku *ApiKeyUpdate) ClearKey() *ApiKeyUpdate {
+	aku.mutation.ClearKey()
+	return aku
+}
+
 // SetHashedKey sets the "hashed_key" field.
 func (aku *ApiKeyUpdate) SetHashedKey(s string) *ApiKeyUpdate {
 	aku.mutation.SetHashedKey(s)
@@ -103,6 +152,12 @@ func (aku *ApiKeyUpdate) SetNillableHashedKey(s *string) *ApiKeyUpdate {
 	if s != nil {
 		aku.SetHashedKey(*s)
 	}
+	return aku
+}
+
+// ClearHashedKey clears the value of the "hashed_key" field.
+func (aku *ApiKeyUpdate) ClearHashedKey() *ApiKeyUpdate {
+	aku.mutation.ClearHashedKey()
 	return aku
 }
 
@@ -147,15 +202,29 @@ func (aku *ApiKeyUpdate) ClearOrganizationID() *ApiKeyUpdate {
 }
 
 // SetType sets the "type" field.
-func (aku *ApiKeyUpdate) SetType(s string) *ApiKeyUpdate {
-	aku.mutation.SetType(s)
+func (aku *ApiKeyUpdate) SetType(mkt model.APIKeyType) *ApiKeyUpdate {
+	aku.mutation.SetType(mkt)
 	return aku
 }
 
 // SetNillableType sets the "type" field if the given value is not nil.
-func (aku *ApiKeyUpdate) SetNillableType(s *string) *ApiKeyUpdate {
-	if s != nil {
-		aku.SetType(*s)
+func (aku *ApiKeyUpdate) SetNillableType(mkt *model.APIKeyType) *ApiKeyUpdate {
+	if mkt != nil {
+		aku.SetType(*mkt)
+	}
+	return aku
+}
+
+// SetEnvironment sets the "environment" field.
+func (aku *ApiKeyUpdate) SetEnvironment(m model.Environment) *ApiKeyUpdate {
+	aku.mutation.SetEnvironment(m)
+	return aku
+}
+
+// SetNillableEnvironment sets the "environment" field if the given value is not nil.
+func (aku *ApiKeyUpdate) SetNillableEnvironment(m *model.Environment) *ApiKeyUpdate {
+	if m != nil {
+		aku.SetEnvironment(*m)
 	}
 	return aku
 }
@@ -406,9 +475,24 @@ func (aku *ApiKeyUpdate) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "ApiKey.name": %w`, err)}
 		}
 	}
-	if v, ok := aku.mutation.HashedKey(); ok {
-		if err := apikey.HashedKeyValidator(v); err != nil {
-			return &ValidationError{Name: "hashed_key", err: fmt.Errorf(`ent: validator failed for field "ApiKey.hashed_key": %w`, err)}
+	if v, ok := aku.mutation.PublicKey(); ok {
+		if err := apikey.PublicKeyValidator(v); err != nil {
+			return &ValidationError{Name: "public_key", err: fmt.Errorf(`ent: validator failed for field "ApiKey.public_key": %w`, err)}
+		}
+	}
+	if v, ok := aku.mutation.HashedSecretKey(); ok {
+		if err := apikey.HashedSecretKeyValidator(v); err != nil {
+			return &ValidationError{Name: "hashed_secret_key", err: fmt.Errorf(`ent: validator failed for field "ApiKey.hashed_secret_key": %w`, err)}
+		}
+	}
+	if v, ok := aku.mutation.GetType(); ok {
+		if err := apikey.TypeValidator(v); err != nil {
+			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "ApiKey.type": %w`, err)}
+		}
+	}
+	if v, ok := aku.mutation.Environment(); ok {
+		if err := apikey.EnvironmentValidator(v); err != nil {
+			return &ValidationError{Name: "environment", err: fmt.Errorf(`ent: validator failed for field "ApiKey.environment": %w`, err)}
 		}
 	}
 	return nil
@@ -444,14 +528,32 @@ func (aku *ApiKeyUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := aku.mutation.Name(); ok {
 		_spec.SetField(apikey.FieldName, field.TypeString, value)
 	}
+	if value, ok := aku.mutation.PublicKey(); ok {
+		_spec.SetField(apikey.FieldPublicKey, field.TypeString, value)
+	}
+	if value, ok := aku.mutation.SecretKey(); ok {
+		_spec.SetField(apikey.FieldSecretKey, field.TypeString, value)
+	}
+	if value, ok := aku.mutation.HashedSecretKey(); ok {
+		_spec.SetField(apikey.FieldHashedSecretKey, field.TypeString, value)
+	}
 	if value, ok := aku.mutation.Key(); ok {
 		_spec.SetField(apikey.FieldKey, field.TypeString, value)
+	}
+	if aku.mutation.KeyCleared() {
+		_spec.ClearField(apikey.FieldKey, field.TypeString)
 	}
 	if value, ok := aku.mutation.HashedKey(); ok {
 		_spec.SetField(apikey.FieldHashedKey, field.TypeString, value)
 	}
+	if aku.mutation.HashedKeyCleared() {
+		_spec.ClearField(apikey.FieldHashedKey, field.TypeString)
+	}
 	if value, ok := aku.mutation.GetType(); ok {
-		_spec.SetField(apikey.FieldType, field.TypeString, value)
+		_spec.SetField(apikey.FieldType, field.TypeEnum, value)
+	}
+	if value, ok := aku.mutation.Environment(); ok {
+		_spec.SetField(apikey.FieldEnvironment, field.TypeEnum, value)
 	}
 	if value, ok := aku.mutation.Active(); ok {
 		_spec.SetField(apikey.FieldActive, field.TypeBool, value)
@@ -678,6 +780,48 @@ func (akuo *ApiKeyUpdateOne) SetNillableName(s *string) *ApiKeyUpdateOne {
 	return akuo
 }
 
+// SetPublicKey sets the "public_key" field.
+func (akuo *ApiKeyUpdateOne) SetPublicKey(s string) *ApiKeyUpdateOne {
+	akuo.mutation.SetPublicKey(s)
+	return akuo
+}
+
+// SetNillablePublicKey sets the "public_key" field if the given value is not nil.
+func (akuo *ApiKeyUpdateOne) SetNillablePublicKey(s *string) *ApiKeyUpdateOne {
+	if s != nil {
+		akuo.SetPublicKey(*s)
+	}
+	return akuo
+}
+
+// SetSecretKey sets the "secret_key" field.
+func (akuo *ApiKeyUpdateOne) SetSecretKey(s string) *ApiKeyUpdateOne {
+	akuo.mutation.SetSecretKey(s)
+	return akuo
+}
+
+// SetNillableSecretKey sets the "secret_key" field if the given value is not nil.
+func (akuo *ApiKeyUpdateOne) SetNillableSecretKey(s *string) *ApiKeyUpdateOne {
+	if s != nil {
+		akuo.SetSecretKey(*s)
+	}
+	return akuo
+}
+
+// SetHashedSecretKey sets the "hashed_secret_key" field.
+func (akuo *ApiKeyUpdateOne) SetHashedSecretKey(s string) *ApiKeyUpdateOne {
+	akuo.mutation.SetHashedSecretKey(s)
+	return akuo
+}
+
+// SetNillableHashedSecretKey sets the "hashed_secret_key" field if the given value is not nil.
+func (akuo *ApiKeyUpdateOne) SetNillableHashedSecretKey(s *string) *ApiKeyUpdateOne {
+	if s != nil {
+		akuo.SetHashedSecretKey(*s)
+	}
+	return akuo
+}
+
 // SetKey sets the "key" field.
 func (akuo *ApiKeyUpdateOne) SetKey(s string) *ApiKeyUpdateOne {
 	akuo.mutation.SetKey(s)
@@ -692,6 +836,12 @@ func (akuo *ApiKeyUpdateOne) SetNillableKey(s *string) *ApiKeyUpdateOne {
 	return akuo
 }
 
+// ClearKey clears the value of the "key" field.
+func (akuo *ApiKeyUpdateOne) ClearKey() *ApiKeyUpdateOne {
+	akuo.mutation.ClearKey()
+	return akuo
+}
+
 // SetHashedKey sets the "hashed_key" field.
 func (akuo *ApiKeyUpdateOne) SetHashedKey(s string) *ApiKeyUpdateOne {
 	akuo.mutation.SetHashedKey(s)
@@ -703,6 +853,12 @@ func (akuo *ApiKeyUpdateOne) SetNillableHashedKey(s *string) *ApiKeyUpdateOne {
 	if s != nil {
 		akuo.SetHashedKey(*s)
 	}
+	return akuo
+}
+
+// ClearHashedKey clears the value of the "hashed_key" field.
+func (akuo *ApiKeyUpdateOne) ClearHashedKey() *ApiKeyUpdateOne {
+	akuo.mutation.ClearHashedKey()
 	return akuo
 }
 
@@ -747,15 +903,29 @@ func (akuo *ApiKeyUpdateOne) ClearOrganizationID() *ApiKeyUpdateOne {
 }
 
 // SetType sets the "type" field.
-func (akuo *ApiKeyUpdateOne) SetType(s string) *ApiKeyUpdateOne {
-	akuo.mutation.SetType(s)
+func (akuo *ApiKeyUpdateOne) SetType(mkt model.APIKeyType) *ApiKeyUpdateOne {
+	akuo.mutation.SetType(mkt)
 	return akuo
 }
 
 // SetNillableType sets the "type" field if the given value is not nil.
-func (akuo *ApiKeyUpdateOne) SetNillableType(s *string) *ApiKeyUpdateOne {
-	if s != nil {
-		akuo.SetType(*s)
+func (akuo *ApiKeyUpdateOne) SetNillableType(mkt *model.APIKeyType) *ApiKeyUpdateOne {
+	if mkt != nil {
+		akuo.SetType(*mkt)
+	}
+	return akuo
+}
+
+// SetEnvironment sets the "environment" field.
+func (akuo *ApiKeyUpdateOne) SetEnvironment(m model.Environment) *ApiKeyUpdateOne {
+	akuo.mutation.SetEnvironment(m)
+	return akuo
+}
+
+// SetNillableEnvironment sets the "environment" field if the given value is not nil.
+func (akuo *ApiKeyUpdateOne) SetNillableEnvironment(m *model.Environment) *ApiKeyUpdateOne {
+	if m != nil {
+		akuo.SetEnvironment(*m)
 	}
 	return akuo
 }
@@ -1019,9 +1189,24 @@ func (akuo *ApiKeyUpdateOne) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "ApiKey.name": %w`, err)}
 		}
 	}
-	if v, ok := akuo.mutation.HashedKey(); ok {
-		if err := apikey.HashedKeyValidator(v); err != nil {
-			return &ValidationError{Name: "hashed_key", err: fmt.Errorf(`ent: validator failed for field "ApiKey.hashed_key": %w`, err)}
+	if v, ok := akuo.mutation.PublicKey(); ok {
+		if err := apikey.PublicKeyValidator(v); err != nil {
+			return &ValidationError{Name: "public_key", err: fmt.Errorf(`ent: validator failed for field "ApiKey.public_key": %w`, err)}
+		}
+	}
+	if v, ok := akuo.mutation.HashedSecretKey(); ok {
+		if err := apikey.HashedSecretKeyValidator(v); err != nil {
+			return &ValidationError{Name: "hashed_secret_key", err: fmt.Errorf(`ent: validator failed for field "ApiKey.hashed_secret_key": %w`, err)}
+		}
+	}
+	if v, ok := akuo.mutation.GetType(); ok {
+		if err := apikey.TypeValidator(v); err != nil {
+			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "ApiKey.type": %w`, err)}
+		}
+	}
+	if v, ok := akuo.mutation.Environment(); ok {
+		if err := apikey.EnvironmentValidator(v); err != nil {
+			return &ValidationError{Name: "environment", err: fmt.Errorf(`ent: validator failed for field "ApiKey.environment": %w`, err)}
 		}
 	}
 	return nil
@@ -1074,14 +1259,32 @@ func (akuo *ApiKeyUpdateOne) sqlSave(ctx context.Context) (_node *ApiKey, err er
 	if value, ok := akuo.mutation.Name(); ok {
 		_spec.SetField(apikey.FieldName, field.TypeString, value)
 	}
+	if value, ok := akuo.mutation.PublicKey(); ok {
+		_spec.SetField(apikey.FieldPublicKey, field.TypeString, value)
+	}
+	if value, ok := akuo.mutation.SecretKey(); ok {
+		_spec.SetField(apikey.FieldSecretKey, field.TypeString, value)
+	}
+	if value, ok := akuo.mutation.HashedSecretKey(); ok {
+		_spec.SetField(apikey.FieldHashedSecretKey, field.TypeString, value)
+	}
 	if value, ok := akuo.mutation.Key(); ok {
 		_spec.SetField(apikey.FieldKey, field.TypeString, value)
+	}
+	if akuo.mutation.KeyCleared() {
+		_spec.ClearField(apikey.FieldKey, field.TypeString)
 	}
 	if value, ok := akuo.mutation.HashedKey(); ok {
 		_spec.SetField(apikey.FieldHashedKey, field.TypeString, value)
 	}
+	if akuo.mutation.HashedKeyCleared() {
+		_spec.ClearField(apikey.FieldHashedKey, field.TypeString)
+	}
 	if value, ok := akuo.mutation.GetType(); ok {
-		_spec.SetField(apikey.FieldType, field.TypeString, value)
+		_spec.SetField(apikey.FieldType, field.TypeEnum, value)
+	}
+	if value, ok := akuo.mutation.Environment(); ok {
+		_spec.SetField(apikey.FieldEnvironment, field.TypeEnum, value)
 	}
 	if value, ok := akuo.mutation.Active(); ok {
 		_spec.SetField(apikey.FieldActive, field.TypeBool, value)

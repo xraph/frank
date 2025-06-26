@@ -92,16 +92,16 @@ func init() {
 	apikeyDescName := apikeyFields[0].Descriptor()
 	// apikey.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	apikey.NameValidator = apikeyDescName.Validators[0].(func(string) error)
-	// apikeyDescHashedKey is the schema descriptor for hashed_key field.
-	apikeyDescHashedKey := apikeyFields[2].Descriptor()
-	// apikey.HashedKeyValidator is a validator for the "hashed_key" field. It is called by the builders before save.
-	apikey.HashedKeyValidator = apikeyDescHashedKey.Validators[0].(func(string) error)
-	// apikeyDescType is the schema descriptor for type field.
-	apikeyDescType := apikeyFields[5].Descriptor()
-	// apikey.DefaultType holds the default value on creation for the type field.
-	apikey.DefaultType = apikeyDescType.Default.(string)
+	// apikeyDescPublicKey is the schema descriptor for public_key field.
+	apikeyDescPublicKey := apikeyFields[1].Descriptor()
+	// apikey.PublicKeyValidator is a validator for the "public_key" field. It is called by the builders before save.
+	apikey.PublicKeyValidator = apikeyDescPublicKey.Validators[0].(func(string) error)
+	// apikeyDescHashedSecretKey is the schema descriptor for hashed_secret_key field.
+	apikeyDescHashedSecretKey := apikeyFields[3].Descriptor()
+	// apikey.HashedSecretKeyValidator is a validator for the "hashed_secret_key" field. It is called by the builders before save.
+	apikey.HashedSecretKeyValidator = apikeyDescHashedSecretKey.Validators[0].(func(string) error)
 	// apikeyDescActive is the schema descriptor for active field.
-	apikeyDescActive := apikeyFields[6].Descriptor()
+	apikeyDescActive := apikeyFields[10].Descriptor()
 	// apikey.DefaultActive holds the default value on creation for the active field.
 	apikey.DefaultActive = apikeyDescActive.Default.(bool)
 	// apikeyDescID is the schema descriptor for id field.

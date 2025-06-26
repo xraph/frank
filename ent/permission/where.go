@@ -131,8 +131,9 @@ func Active(v bool) predicate.Permission {
 }
 
 // PermissionGroup applies equality check predicate on the "permission_group" field. It's identical to PermissionGroupEQ.
-func PermissionGroup(v string) predicate.Permission {
-	return predicate.Permission(sql.FieldEQ(FieldPermissionGroup, v))
+func PermissionGroup(v model.PermissionGroup) predicate.Permission {
+	vc := string(v)
+	return predicate.Permission(sql.FieldEQ(FieldPermissionGroup, vc))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
@@ -601,19 +602,19 @@ func ActionContainsFold(v string) predicate.Permission {
 }
 
 // CategoryEQ applies the EQ predicate on the "category" field.
-func CategoryEQ(v model.ContextType) predicate.Permission {
+func CategoryEQ(v model.PermissionCategory) predicate.Permission {
 	vc := v
 	return predicate.Permission(sql.FieldEQ(FieldCategory, vc))
 }
 
 // CategoryNEQ applies the NEQ predicate on the "category" field.
-func CategoryNEQ(v model.ContextType) predicate.Permission {
+func CategoryNEQ(v model.PermissionCategory) predicate.Permission {
 	vc := v
 	return predicate.Permission(sql.FieldNEQ(FieldCategory, vc))
 }
 
 // CategoryIn applies the In predicate on the "category" field.
-func CategoryIn(vs ...model.ContextType) predicate.Permission {
+func CategoryIn(vs ...model.PermissionCategory) predicate.Permission {
 	v := make([]any, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -622,7 +623,7 @@ func CategoryIn(vs ...model.ContextType) predicate.Permission {
 }
 
 // CategoryNotIn applies the NotIn predicate on the "category" field.
-func CategoryNotIn(vs ...model.ContextType) predicate.Permission {
+func CategoryNotIn(vs ...model.PermissionCategory) predicate.Permission {
 	v := make([]any, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -851,58 +852,75 @@ func ActiveNEQ(v bool) predicate.Permission {
 }
 
 // PermissionGroupEQ applies the EQ predicate on the "permission_group" field.
-func PermissionGroupEQ(v string) predicate.Permission {
-	return predicate.Permission(sql.FieldEQ(FieldPermissionGroup, v))
+func PermissionGroupEQ(v model.PermissionGroup) predicate.Permission {
+	vc := string(v)
+	return predicate.Permission(sql.FieldEQ(FieldPermissionGroup, vc))
 }
 
 // PermissionGroupNEQ applies the NEQ predicate on the "permission_group" field.
-func PermissionGroupNEQ(v string) predicate.Permission {
-	return predicate.Permission(sql.FieldNEQ(FieldPermissionGroup, v))
+func PermissionGroupNEQ(v model.PermissionGroup) predicate.Permission {
+	vc := string(v)
+	return predicate.Permission(sql.FieldNEQ(FieldPermissionGroup, vc))
 }
 
 // PermissionGroupIn applies the In predicate on the "permission_group" field.
-func PermissionGroupIn(vs ...string) predicate.Permission {
-	return predicate.Permission(sql.FieldIn(FieldPermissionGroup, vs...))
+func PermissionGroupIn(vs ...model.PermissionGroup) predicate.Permission {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = string(vs[i])
+	}
+	return predicate.Permission(sql.FieldIn(FieldPermissionGroup, v...))
 }
 
 // PermissionGroupNotIn applies the NotIn predicate on the "permission_group" field.
-func PermissionGroupNotIn(vs ...string) predicate.Permission {
-	return predicate.Permission(sql.FieldNotIn(FieldPermissionGroup, vs...))
+func PermissionGroupNotIn(vs ...model.PermissionGroup) predicate.Permission {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = string(vs[i])
+	}
+	return predicate.Permission(sql.FieldNotIn(FieldPermissionGroup, v...))
 }
 
 // PermissionGroupGT applies the GT predicate on the "permission_group" field.
-func PermissionGroupGT(v string) predicate.Permission {
-	return predicate.Permission(sql.FieldGT(FieldPermissionGroup, v))
+func PermissionGroupGT(v model.PermissionGroup) predicate.Permission {
+	vc := string(v)
+	return predicate.Permission(sql.FieldGT(FieldPermissionGroup, vc))
 }
 
 // PermissionGroupGTE applies the GTE predicate on the "permission_group" field.
-func PermissionGroupGTE(v string) predicate.Permission {
-	return predicate.Permission(sql.FieldGTE(FieldPermissionGroup, v))
+func PermissionGroupGTE(v model.PermissionGroup) predicate.Permission {
+	vc := string(v)
+	return predicate.Permission(sql.FieldGTE(FieldPermissionGroup, vc))
 }
 
 // PermissionGroupLT applies the LT predicate on the "permission_group" field.
-func PermissionGroupLT(v string) predicate.Permission {
-	return predicate.Permission(sql.FieldLT(FieldPermissionGroup, v))
+func PermissionGroupLT(v model.PermissionGroup) predicate.Permission {
+	vc := string(v)
+	return predicate.Permission(sql.FieldLT(FieldPermissionGroup, vc))
 }
 
 // PermissionGroupLTE applies the LTE predicate on the "permission_group" field.
-func PermissionGroupLTE(v string) predicate.Permission {
-	return predicate.Permission(sql.FieldLTE(FieldPermissionGroup, v))
+func PermissionGroupLTE(v model.PermissionGroup) predicate.Permission {
+	vc := string(v)
+	return predicate.Permission(sql.FieldLTE(FieldPermissionGroup, vc))
 }
 
 // PermissionGroupContains applies the Contains predicate on the "permission_group" field.
-func PermissionGroupContains(v string) predicate.Permission {
-	return predicate.Permission(sql.FieldContains(FieldPermissionGroup, v))
+func PermissionGroupContains(v model.PermissionGroup) predicate.Permission {
+	vc := string(v)
+	return predicate.Permission(sql.FieldContains(FieldPermissionGroup, vc))
 }
 
 // PermissionGroupHasPrefix applies the HasPrefix predicate on the "permission_group" field.
-func PermissionGroupHasPrefix(v string) predicate.Permission {
-	return predicate.Permission(sql.FieldHasPrefix(FieldPermissionGroup, v))
+func PermissionGroupHasPrefix(v model.PermissionGroup) predicate.Permission {
+	vc := string(v)
+	return predicate.Permission(sql.FieldHasPrefix(FieldPermissionGroup, vc))
 }
 
 // PermissionGroupHasSuffix applies the HasSuffix predicate on the "permission_group" field.
-func PermissionGroupHasSuffix(v string) predicate.Permission {
-	return predicate.Permission(sql.FieldHasSuffix(FieldPermissionGroup, v))
+func PermissionGroupHasSuffix(v model.PermissionGroup) predicate.Permission {
+	vc := string(v)
+	return predicate.Permission(sql.FieldHasSuffix(FieldPermissionGroup, vc))
 }
 
 // PermissionGroupIsNil applies the IsNil predicate on the "permission_group" field.
@@ -916,13 +934,15 @@ func PermissionGroupNotNil() predicate.Permission {
 }
 
 // PermissionGroupEqualFold applies the EqualFold predicate on the "permission_group" field.
-func PermissionGroupEqualFold(v string) predicate.Permission {
-	return predicate.Permission(sql.FieldEqualFold(FieldPermissionGroup, v))
+func PermissionGroupEqualFold(v model.PermissionGroup) predicate.Permission {
+	vc := string(v)
+	return predicate.Permission(sql.FieldEqualFold(FieldPermissionGroup, vc))
 }
 
 // PermissionGroupContainsFold applies the ContainsFold predicate on the "permission_group" field.
-func PermissionGroupContainsFold(v string) predicate.Permission {
-	return predicate.Permission(sql.FieldContainsFold(FieldPermissionGroup, v))
+func PermissionGroupContainsFold(v model.PermissionGroup) predicate.Permission {
+	vc := string(v)
+	return predicate.Permission(sql.FieldContainsFold(FieldPermissionGroup, vc))
 }
 
 // HasRoles applies the HasEdge predicate on the "roles" edge.

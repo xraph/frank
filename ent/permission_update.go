@@ -141,40 +141,40 @@ func (pu *PermissionUpdate) SetNillableAction(s *string) *PermissionUpdate {
 }
 
 // SetCategory sets the "category" field.
-func (pu *PermissionUpdate) SetCategory(mt model.ContextType) *PermissionUpdate {
-	pu.mutation.SetCategory(mt)
+func (pu *PermissionUpdate) SetCategory(mc model.PermissionCategory) *PermissionUpdate {
+	pu.mutation.SetCategory(mc)
 	return pu
 }
 
 // SetNillableCategory sets the "category" field if the given value is not nil.
-func (pu *PermissionUpdate) SetNillableCategory(mt *model.ContextType) *PermissionUpdate {
-	if mt != nil {
-		pu.SetCategory(*mt)
+func (pu *PermissionUpdate) SetNillableCategory(mc *model.PermissionCategory) *PermissionUpdate {
+	if mc != nil {
+		pu.SetCategory(*mc)
 	}
 	return pu
 }
 
 // SetApplicableUserTypes sets the "applicable_user_types" field.
-func (pu *PermissionUpdate) SetApplicableUserTypes(s []string) *PermissionUpdate {
-	pu.mutation.SetApplicableUserTypes(s)
+func (pu *PermissionUpdate) SetApplicableUserTypes(mt []model.UserType) *PermissionUpdate {
+	pu.mutation.SetApplicableUserTypes(mt)
 	return pu
 }
 
-// AppendApplicableUserTypes appends s to the "applicable_user_types" field.
-func (pu *PermissionUpdate) AppendApplicableUserTypes(s []string) *PermissionUpdate {
-	pu.mutation.AppendApplicableUserTypes(s)
+// AppendApplicableUserTypes appends mt to the "applicable_user_types" field.
+func (pu *PermissionUpdate) AppendApplicableUserTypes(mt []model.UserType) *PermissionUpdate {
+	pu.mutation.AppendApplicableUserTypes(mt)
 	return pu
 }
 
 // SetApplicableContexts sets the "applicable_contexts" field.
-func (pu *PermissionUpdate) SetApplicableContexts(s []string) *PermissionUpdate {
-	pu.mutation.SetApplicableContexts(s)
+func (pu *PermissionUpdate) SetApplicableContexts(mt []model.ContextType) *PermissionUpdate {
+	pu.mutation.SetApplicableContexts(mt)
 	return pu
 }
 
-// AppendApplicableContexts appends s to the "applicable_contexts" field.
-func (pu *PermissionUpdate) AppendApplicableContexts(s []string) *PermissionUpdate {
-	pu.mutation.AppendApplicableContexts(s)
+// AppendApplicableContexts appends mt to the "applicable_contexts" field.
+func (pu *PermissionUpdate) AppendApplicableContexts(mt []model.ContextType) *PermissionUpdate {
+	pu.mutation.AppendApplicableContexts(mt)
 	return pu
 }
 
@@ -282,15 +282,15 @@ func (pu *PermissionUpdate) SetNillableActive(b *bool) *PermissionUpdate {
 }
 
 // SetPermissionGroup sets the "permission_group" field.
-func (pu *PermissionUpdate) SetPermissionGroup(s string) *PermissionUpdate {
-	pu.mutation.SetPermissionGroup(s)
+func (pu *PermissionUpdate) SetPermissionGroup(mg model.PermissionGroup) *PermissionUpdate {
+	pu.mutation.SetPermissionGroup(mg)
 	return pu
 }
 
 // SetNillablePermissionGroup sets the "permission_group" field if the given value is not nil.
-func (pu *PermissionUpdate) SetNillablePermissionGroup(s *string) *PermissionUpdate {
-	if s != nil {
-		pu.SetPermissionGroup(*s)
+func (pu *PermissionUpdate) SetNillablePermissionGroup(mg *model.PermissionGroup) *PermissionUpdate {
+	if mg != nil {
+		pu.SetPermissionGroup(*mg)
 	}
 	return pu
 }
@@ -1080,40 +1080,40 @@ func (puo *PermissionUpdateOne) SetNillableAction(s *string) *PermissionUpdateOn
 }
 
 // SetCategory sets the "category" field.
-func (puo *PermissionUpdateOne) SetCategory(mt model.ContextType) *PermissionUpdateOne {
-	puo.mutation.SetCategory(mt)
+func (puo *PermissionUpdateOne) SetCategory(mc model.PermissionCategory) *PermissionUpdateOne {
+	puo.mutation.SetCategory(mc)
 	return puo
 }
 
 // SetNillableCategory sets the "category" field if the given value is not nil.
-func (puo *PermissionUpdateOne) SetNillableCategory(mt *model.ContextType) *PermissionUpdateOne {
-	if mt != nil {
-		puo.SetCategory(*mt)
+func (puo *PermissionUpdateOne) SetNillableCategory(mc *model.PermissionCategory) *PermissionUpdateOne {
+	if mc != nil {
+		puo.SetCategory(*mc)
 	}
 	return puo
 }
 
 // SetApplicableUserTypes sets the "applicable_user_types" field.
-func (puo *PermissionUpdateOne) SetApplicableUserTypes(s []string) *PermissionUpdateOne {
-	puo.mutation.SetApplicableUserTypes(s)
+func (puo *PermissionUpdateOne) SetApplicableUserTypes(mt []model.UserType) *PermissionUpdateOne {
+	puo.mutation.SetApplicableUserTypes(mt)
 	return puo
 }
 
-// AppendApplicableUserTypes appends s to the "applicable_user_types" field.
-func (puo *PermissionUpdateOne) AppendApplicableUserTypes(s []string) *PermissionUpdateOne {
-	puo.mutation.AppendApplicableUserTypes(s)
+// AppendApplicableUserTypes appends mt to the "applicable_user_types" field.
+func (puo *PermissionUpdateOne) AppendApplicableUserTypes(mt []model.UserType) *PermissionUpdateOne {
+	puo.mutation.AppendApplicableUserTypes(mt)
 	return puo
 }
 
 // SetApplicableContexts sets the "applicable_contexts" field.
-func (puo *PermissionUpdateOne) SetApplicableContexts(s []string) *PermissionUpdateOne {
-	puo.mutation.SetApplicableContexts(s)
+func (puo *PermissionUpdateOne) SetApplicableContexts(mt []model.ContextType) *PermissionUpdateOne {
+	puo.mutation.SetApplicableContexts(mt)
 	return puo
 }
 
-// AppendApplicableContexts appends s to the "applicable_contexts" field.
-func (puo *PermissionUpdateOne) AppendApplicableContexts(s []string) *PermissionUpdateOne {
-	puo.mutation.AppendApplicableContexts(s)
+// AppendApplicableContexts appends mt to the "applicable_contexts" field.
+func (puo *PermissionUpdateOne) AppendApplicableContexts(mt []model.ContextType) *PermissionUpdateOne {
+	puo.mutation.AppendApplicableContexts(mt)
 	return puo
 }
 
@@ -1221,15 +1221,15 @@ func (puo *PermissionUpdateOne) SetNillableActive(b *bool) *PermissionUpdateOne 
 }
 
 // SetPermissionGroup sets the "permission_group" field.
-func (puo *PermissionUpdateOne) SetPermissionGroup(s string) *PermissionUpdateOne {
-	puo.mutation.SetPermissionGroup(s)
+func (puo *PermissionUpdateOne) SetPermissionGroup(mg model.PermissionGroup) *PermissionUpdateOne {
+	puo.mutation.SetPermissionGroup(mg)
 	return puo
 }
 
 // SetNillablePermissionGroup sets the "permission_group" field if the given value is not nil.
-func (puo *PermissionUpdateOne) SetNillablePermissionGroup(s *string) *PermissionUpdateOne {
-	if s != nil {
-		puo.SetPermissionGroup(*s)
+func (puo *PermissionUpdateOne) SetNillablePermissionGroup(mg *model.PermissionGroup) *PermissionUpdateOne {
+	if mg != nil {
+		puo.SetPermissionGroup(*mg)
 	}
 	return puo
 }

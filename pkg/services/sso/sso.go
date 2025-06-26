@@ -11,6 +11,7 @@ import (
 
 	"github.com/juicycleff/frank/ent"
 	"github.com/juicycleff/frank/internal/repository"
+	"github.com/juicycleff/frank/pkg/contexts"
 	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/juicycleff/frank/pkg/logging"
 	"github.com/juicycleff/frank/pkg/model"
@@ -268,7 +269,7 @@ func (s *ssoService) DeleteProvider(ctx context.Context, id xid.ID) error {
 	return nil
 }
 
-// ListIdentityProviders lists identity providers
+// ListProviders lists identity providers
 func (s *ssoService) ListProviders(ctx context.Context, req model.SSOProviderListRequest) (*model.SSOProviderListResponse, error) {
 	// Get organization ID from context or request
 	orgID := getOrganizationIDFromContext(ctx)
@@ -276,8 +277,8 @@ func (s *ssoService) ListProviders(ctx context.Context, req model.SSOProviderLis
 		orgID = req.OrganizationID.Value
 	}
 
-	if orgID == (xid.ID{}) {
-		return nil, errors.New(errors.CodeUnauthorized, "organization context required")
+	if orgID.IsNil() {
+		return nil, errors.New(errors.CodeUnauthorized, "organization context required 2")
 	}
 
 	result, err := s.providerRepo.ListByOrganizationID(ctx, orgID, req)
@@ -787,17 +788,17 @@ func (s *ssoService) convertProviderToSummary(provider *ent.IdentityProvider) mo
 
 // Context helpers (these would be implemented in middleware)
 func getOrganizationIDFromContext(ctx context.Context) xid.ID {
-	if orgID, ok := ctx.Value("organization_id").(xid.ID); ok {
-		return orgID
+	if orgID := contexts.GetOrganizationIDFromContext(ctx); orgID != nil {
+		return *orgID
 	}
-	return xid.ID{}
+	return xid.NilID()
 }
 
 func getUserIDFromContext(ctx context.Context) xid.ID {
-	if userID, ok := ctx.Value("user_id").(xid.ID); ok {
-		return userID
+	if orgID := contexts.GetUserIDFromContext(ctx); orgID != nil {
+		return *orgID
 	}
-	return xid.ID{}
+	return xid.NilID()
 }
 
 // Additional methods for auto-provisioning, stats, health checks, etc. would go here

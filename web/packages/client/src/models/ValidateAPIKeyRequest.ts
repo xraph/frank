@@ -38,17 +38,17 @@ export interface ValidateAPIKeyRequest {
      */
     ipAddress?: string;
     /**
-     * API key to validate
-     * @type {string}
-     * @memberof ValidateAPIKeyRequest
-     */
-    key: string;
-    /**
      * HTTP method
      * @type {string}
      * @memberof ValidateAPIKeyRequest
      */
     method?: string;
+    /**
+     * Secret API key to validate
+     * @type {string}
+     * @memberof ValidateAPIKeyRequest
+     */
+    secretKey: string;
     /**
      * User agent
      * @type {string}
@@ -61,7 +61,7 @@ export interface ValidateAPIKeyRequest {
  * Check if a given object implements the ValidateAPIKeyRequest interface.
  */
 export function instanceOfValidateAPIKeyRequest(value: object): value is ValidateAPIKeyRequest {
-    if (!('key' in value) || value['key'] === undefined) return false;
+    if (!('secretKey' in value) || value['secretKey'] === undefined) return false;
     return true;
 }
 
@@ -78,8 +78,8 @@ export function ValidateAPIKeyRequestFromJSONTyped(json: any, ignoreDiscriminato
         '$schema': json['$schema'] == null ? undefined : json['$schema'],
         'endpoint': json['endpoint'] == null ? undefined : json['endpoint'],
         'ipAddress': json['ipAddress'] == null ? undefined : json['ipAddress'],
-        'key': json['key'],
         'method': json['method'] == null ? undefined : json['method'],
+        'secretKey': json['secretKey'],
         'userAgent': json['userAgent'] == null ? undefined : json['userAgent'],
     };
 }
@@ -97,8 +97,8 @@ export function ValidateAPIKeyRequestToJSONTyped(value?: Omit<ValidateAPIKeyRequ
         
         'endpoint': value['endpoint'],
         'ipAddress': value['ipAddress'],
-        'key': value['key'],
         'method': value['method'],
+        'secretKey': value['secretKey'],
         'userAgent': value['userAgent'],
     };
 }

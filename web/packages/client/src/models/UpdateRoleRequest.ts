@@ -13,6 +13,21 @@
  */
 
 import { mapValues } from '../runtime';
+import type { ContextType } from './ContextType';
+import {
+    ContextTypeFromJSON,
+    ContextTypeFromJSONTyped,
+    ContextTypeToJSON,
+    ContextTypeToJSONTyped,
+} from './ContextType';
+import type { UserType } from './UserType';
+import {
+    UserTypeFromJSON,
+    UserTypeFromJSONTyped,
+    UserTypeToJSON,
+    UserTypeToJSONTyped,
+} from './UserType';
+
 /**
  * 
  * @export
@@ -33,16 +48,16 @@ export interface UpdateRoleRequest {
     active?: boolean;
     /**
      * 
-     * @type {Array<string>}
+     * @type {Array<ContextType>}
      * @memberof UpdateRoleRequest
      */
-    applicableContexts?: Array<string> | null;
+    applicableContexts?: Array<ContextType> | null;
     /**
      * Updated applicable user types
-     * @type {Array<string>}
+     * @type {Array<UserType>}
      * @memberof UpdateRoleRequest
      */
-    applicableUserTypes?: Array<string> | null;
+    applicableUserTypes?: Array<UserType> | null;
     /**
      * Updated color
      * @type {string}
@@ -130,8 +145,8 @@ export function UpdateRoleRequestFromJSONTyped(json: any, ignoreDiscriminator: b
         
         '$schema': json['$schema'] == null ? undefined : json['$schema'],
         'active': json['active'] == null ? undefined : json['active'],
-        'applicableContexts': json['applicableContexts'] == null ? undefined : json['applicableContexts'],
-        'applicableUserTypes': json['applicableUserTypes'] == null ? undefined : json['applicableUserTypes'],
+        'applicableContexts': json['applicableContexts'] == null ? undefined : ((json['applicableContexts'] as Array<any>).map(ContextTypeFromJSON)),
+        'applicableUserTypes': json['applicableUserTypes'] == null ? undefined : ((json['applicableUserTypes'] as Array<any>).map(UserTypeFromJSON)),
         'color': json['color'] == null ? undefined : json['color'],
         'conditions': json['conditions'] == null ? undefined : json['conditions'],
         'dangerous': json['dangerous'] == null ? undefined : json['dangerous'],
@@ -158,8 +173,8 @@ export function UpdateRoleRequestToJSONTyped(value?: Omit<UpdateRoleRequest, '$s
     return {
         
         'active': value['active'],
-        'applicableContexts': value['applicableContexts'],
-        'applicableUserTypes': value['applicableUserTypes'],
+        'applicableContexts': value['applicableContexts'] == null ? undefined : ((value['applicableContexts'] as Array<any>).map(ContextTypeToJSON)),
+        'applicableUserTypes': value['applicableUserTypes'] == null ? undefined : ((value['applicableUserTypes'] as Array<any>).map(UserTypeToJSON)),
         'color': value['color'],
         'conditions': value['conditions'],
         'dangerous': value['dangerous'],

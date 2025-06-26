@@ -41,6 +41,13 @@ import {
     PermissionToJSON,
     PermissionToJSONTyped,
 } from './Permission';
+import type { UserType } from './UserType';
+import {
+    UserTypeFromJSON,
+    UserTypeFromJSONTyped,
+    UserTypeToJSON,
+    UserTypeToJSONTyped,
+} from './UserType';
 import type { RoleSummary } from './RoleSummary';
 import {
     RoleSummaryFromJSON,
@@ -70,10 +77,10 @@ export interface Role {
     active: boolean;
     /**
      * User types this role applies to
-     * @type {Array<string>}
+     * @type {Array<UserType>}
      * @memberof Role
      */
-    applicableUserTypes: Array<string>;
+    applicableUserTypes: Array<UserType>;
     /**
      * Application ID (if app-scoped)
      * @type {string}
@@ -242,7 +249,7 @@ export function RoleFromJSONTyped(json: any, ignoreDiscriminator: boolean): Role
             ...json,
         '$schema': json['$schema'] == null ? undefined : json['$schema'],
         'active': json['active'],
-        'applicableUserTypes': json['applicableUserTypes'],
+        'applicableUserTypes': ((json['applicableUserTypes'] as Array<any>).map(UserTypeFromJSON)),
         'applicationId': json['applicationId'] == null ? undefined : json['applicationId'],
         'children': json['children'] == null ? undefined : ((json['children'] as Array<any>).map(RoleSummaryFromJSON)),
         'color': json['color'] == null ? undefined : json['color'],
@@ -281,7 +288,7 @@ export function RoleToJSONTyped(value?: Omit<Role, '$schema'> | null, ignoreDisc
         
             ...value,
         'active': value['active'],
-        'applicableUserTypes': value['applicableUserTypes'],
+        'applicableUserTypes': ((value['applicableUserTypes'] as Array<any>).map(UserTypeToJSON)),
         'applicationId': value['applicationId'],
         'children': value['children'] == null ? undefined : ((value['children'] as Array<any>).map(RoleSummaryToJSON)),
         'color': value['color'],

@@ -1,7 +1,9 @@
 import {
     AuthenticationApi,
     ChangePasswordRequest,
-    Configuration,
+    InitOverrideFunction,
+    ListMFAMethodsRequest,
+    ListPasskeysRequest,
     MFAApi,
     MFABackCodes,
     MFASetupResponse,
@@ -23,45 +25,28 @@ import {
     VerifyMFASetupRequest,
 } from '@frank-auth/client';
 
-import {FrankAuthConfig, FrankAuthError} from './index';
+import {FrankAuthConfig, FrankAuthError, BaseFrankAPI} from './index';
 import {handleError} from "./errors";
 
-export class FrankUser {
-    private config: FrankAuthConfig;
+export class FrankUser extends BaseFrankAPI {
     private usersApi: UsersApi;
     private authApi: AuthenticationApi;
     private mfaApi: MFAApi;
     private passkeyApi: PasskeysApi;
-    private accessToken: string | null = null;
 
     constructor(config: FrankAuthConfig, accessToken?: string) {
-        this.config = config;
-        this.accessToken = accessToken || null;
+        super(config, accessToken);
 
-        const configuration = new Configuration({
-            basePath: config.apiUrl,
-            accessToken: () => this.accessToken || '',
-            credentials: 'include',
-            headers: {
-                'X-Publishable-Key': config.publishableKey,
-            },
-        });
-
-        this.usersApi = new UsersApi(configuration);
-        this.authApi = new AuthenticationApi(configuration);
-        this.mfaApi = new MFAApi(configuration);
-        this.passkeyApi = new PasskeysApi(configuration);
-    }
-
-    // Update access token (called by FrankAuth when token changes)
-    setAccessToken(token: string | null): void {
-        this.accessToken = token;
+        this.usersApi = new UsersApi(super.config);
+        this.authApi = new AuthenticationApi(super.config);
+        this.mfaApi = new MFAApi(super.config);
+        this.passkeyApi = new PasskeysApi(super.config);
     }
 
     // Profile management
     async getProfile(): Promise<User> {
         try {
-            return await this.usersApi.getUserProfile();
+            return await this.usersApi.getUserProfile(this.mergeHeaders());
         } catch (error) {
             throw await handleError(error)
         }
@@ -69,7 +54,10 @@ export class FrankUser {
 
     async updateProfile(request: UserProfileUpdateRequest): Promise<User> {
         try {
-            return await this.usersApi.updateUserProfile({ userProfileUpdateRequest: request });
+            return await this.usersApi.updateUserProfile(
+                {userProfileUpdateRequest: request},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -77,7 +65,10 @@ export class FrankUser {
 
     async changePassword(request: ChangePasswordRequest): Promise<void> {
         try {
-            await this.usersApi.changePassword({ changePasswordRequest: request });
+            await this.usersApi.changePassword(
+                {changePasswordRequest: request},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -86,9 +77,10 @@ export class FrankUser {
     // Email verification
     async resendEmailVerification(email?: string): Promise<ResendVerificationResponse> {
         try {
-            return await this.authApi.resendVerification({
-                resendVerificationRequest: { email, type: 'email' }
-            });
+            return await this.authApi.resendVerification(
+                {resendVerificationRequest: {email, type: 'email'}},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -96,24 +88,22 @@ export class FrankUser {
 
     async resendPhoneVerification(phone?: string): Promise<ResendVerificationResponse> {
         try {
-            return await this.authApi.resendVerification({
-                resendVerificationRequest: { phoneNumber: phone, type: 'sms' }
-            });
+            return await this.authApi.resendVerification(
+                {resendVerificationRequest: {phoneNumber: phone, type: 'sms'}},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
     }
 
     // MFA management
-    async getMFAMethods(options?: {
-        limit?: number;
-        offset?: number;
-    }): Promise<PaginatedOutputMFAMethod> {
+    async getMFAMethods(requestParameters: ListMFAMethodsRequest, initOverrides?: RequestInit | InitOverrideFunction): Promise<PaginatedOutputMFAMethod> {
         try {
-            return await this.mfaApi.listMFAMethods({
-                orgId: '',
-                userId: '',
-            });
+            return await this.mfaApi.listMFAMethods(
+                requestParameters,
+                this.mergeHeaders(initOverrides)
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -121,7 +111,10 @@ export class FrankUser {
 
     async setupMFA(request: SetupMFARequest): Promise<MFASetupResponse> {
         try {
-            return await this.authApi.setupMFA({ setupMFARequest: request });
+            return await this.authApi.setupMFA(
+                {setupMFARequest: request},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -129,7 +122,10 @@ export class FrankUser {
 
     async verifyMFASetup(request: VerifyMFASetupRequest): Promise<MFASetupVerifyResponse> {
         try {
-            return await this.authApi.verifyMFASetup({ verifyMFASetupRequest: request });
+            return await this.authApi.verifyMFASetup(
+                {verifyMFASetupRequest: request},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -137,7 +133,7 @@ export class FrankUser {
 
     async disableMFA(): Promise<void> {
         try {
-            await this.authApi.disableMFA();
+            await this.authApi.disableMFA(this.mergeHeaders());
         } catch (error) {
             throw await handleError(error)
         }
@@ -145,26 +141,22 @@ export class FrankUser {
 
     async getBackupCodes(regenerate = false): Promise<MFABackCodes> {
         try {
-            return await this.authApi.getMFABackupCodes({
-                generateBackupCodesRequest: { count: regenerate ? 1 : undefined }
-            });
+            return await this.authApi.getMFABackupCodes(
+                {generateBackupCodesRequest: {count: regenerate ? 1 : undefined}},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
     }
 
     // Passkey management
-    async getPasskeys(options?: {
-        limit?: number;
-        offset?: number;
-        search?: string;
-    }): Promise<PaginatedOutputPasskeySummary> {
+    async getPasskeys(requestParameters: ListPasskeysRequest, initOverrides?: RequestInit | InitOverrideFunction): Promise<PaginatedOutputPasskeySummary> {
         try {
-            return await this.authApi.listPasskeys({
-                limit: options?.limit,
-                offset: options?.offset,
-                search: options?.search,
-            });
+            return await this.authApi.listPasskeys(
+                requestParameters,
+                this.mergeHeaders(initOverrides)
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -175,16 +167,18 @@ export class FrankUser {
         finishRegistration: (finishRequest: PasskeyRegistrationFinishRequest) => Promise<PasskeyRegistrationFinishResponse>;
     }> {
         try {
-            const beginResponse = await this.passkeyApi.beginPasskeyRegistration({
-                passkeyRegistrationBeginRequest: request
-            });
+            const beginResponse = await this.passkeyApi.beginPasskeyRegistration(
+                {passkeyRegistrationBeginRequest: request},
+                this.mergeHeaders()
+            );
 
             return {
                 beginResponse,
                 finishRegistration: async (finishRequest: PasskeyRegistrationFinishRequest) => {
-                    return await this.passkeyApi.finishPasskeyRegistration({
-                        passkeyRegistrationFinishRequest: finishRequest
-                    });
+                    return await this.passkeyApi.finishPasskeyRegistration(
+                        {passkeyRegistrationFinishRequest: finishRequest},
+                        this.mergeHeaders()
+                    );
                 }
             };
         } catch (error) {
@@ -194,7 +188,10 @@ export class FrankUser {
 
     async deletePasskey(passkeyId: string): Promise<void> {
         try {
-            await this.authApi.deletePasskey({ id: passkeyId });
+            await this.authApi.deletePasskey(
+                {id: passkeyId},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -224,8 +221,10 @@ export class FrankUser {
             const [profile, sessions, passkeys] = await Promise.all([
                 this.getProfile(),
                 // Note: We'd need to import FrankSession or use the sessions API directly
-                Promise.resolve({ data: [] }), // Placeholder
-                this.getPasskeys(),
+                Promise.resolve({data: []}), // Placeholder
+                this.getPasskeys({
+                    fields: null
+                }),
             ]);
 
             return {
@@ -254,7 +253,9 @@ export class FrankUser {
         try {
             const [profile, passkeys] = await Promise.all([
                 this.getProfile(),
-                this.getPasskeys(),
+                this.getPasskeys({
+                    fields: null,
+                }),
             ]);
 
             const recommendations: string[] = [];
@@ -269,7 +270,7 @@ export class FrankUser {
             }
 
             // Check passkeys
-            const passkeyCount = passkeys.pagination?.total || 0;
+            const passkeyCount = passkeys.pagination?.totalCount || 0;
             if (passkeyCount === 0) {
                 recommendations.push('Set up passkeys for passwordless authentication');
                 securityScore -= 20;

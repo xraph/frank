@@ -30,14 +30,14 @@ import type {
  * Creates a validation error
  */
 function createError(path: string, message: string, value?: any): ConfigValidationError {
-    return { path, message, value };
+    return {path, message, value};
 }
 
 /**
  * Creates a validation warning
  */
 function createWarning(path: string, message: string, value?: any): ConfigValidationError {
-    return { path, message, value };
+    return {path, message, value};
 }
 
 /**
@@ -420,7 +420,7 @@ export function validateAppearanceConfig(appearance: Partial<AppearanceConfig>):
 
     // Validate component appearance
     if (appearance.components) {
-        const { components } = appearance;
+        const {components} = appearance;
 
         if (components.input?.size) {
             errors.push(...validateComponentSize(components.input.size));
@@ -523,7 +523,7 @@ export function validateOrganizationConfig(organization: Partial<OrganizationCon
 
     // Validate settings
     if (organization.settings) {
-        const { settings } = organization;
+        const {settings} = organization;
 
         // Validate password policy
         if (settings.passwordPolicy) {

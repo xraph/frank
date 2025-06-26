@@ -1,7 +1,6 @@
 package email
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/juicycleff/frank/config"
@@ -19,8 +18,6 @@ func SenderFactory(cfg *config.EmailConfig, logger logging.Logger) Sender {
 		)
 		return NewMockEmailSender("./tmp/emails")
 	}
-
-	fmt.Println("provider", provider)
 
 	switch provider {
 	case "smtp":

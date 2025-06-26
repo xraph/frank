@@ -112,20 +112,20 @@ func (pc *PermissionCreate) SetAction(s string) *PermissionCreate {
 }
 
 // SetCategory sets the "category" field.
-func (pc *PermissionCreate) SetCategory(mt model.ContextType) *PermissionCreate {
-	pc.mutation.SetCategory(mt)
+func (pc *PermissionCreate) SetCategory(mc model.PermissionCategory) *PermissionCreate {
+	pc.mutation.SetCategory(mc)
 	return pc
 }
 
 // SetApplicableUserTypes sets the "applicable_user_types" field.
-func (pc *PermissionCreate) SetApplicableUserTypes(s []string) *PermissionCreate {
-	pc.mutation.SetApplicableUserTypes(s)
+func (pc *PermissionCreate) SetApplicableUserTypes(mt []model.UserType) *PermissionCreate {
+	pc.mutation.SetApplicableUserTypes(mt)
 	return pc
 }
 
 // SetApplicableContexts sets the "applicable_contexts" field.
-func (pc *PermissionCreate) SetApplicableContexts(s []string) *PermissionCreate {
-	pc.mutation.SetApplicableContexts(s)
+func (pc *PermissionCreate) SetApplicableContexts(mt []model.ContextType) *PermissionCreate {
+	pc.mutation.SetApplicableContexts(mt)
 	return pc
 }
 
@@ -214,15 +214,15 @@ func (pc *PermissionCreate) SetNillableActive(b *bool) *PermissionCreate {
 }
 
 // SetPermissionGroup sets the "permission_group" field.
-func (pc *PermissionCreate) SetPermissionGroup(s string) *PermissionCreate {
-	pc.mutation.SetPermissionGroup(s)
+func (pc *PermissionCreate) SetPermissionGroup(mg model.PermissionGroup) *PermissionCreate {
+	pc.mutation.SetPermissionGroup(mg)
 	return pc
 }
 
 // SetNillablePermissionGroup sets the "permission_group" field if the given value is not nil.
-func (pc *PermissionCreate) SetNillablePermissionGroup(s *string) *PermissionCreate {
-	if s != nil {
-		pc.SetPermissionGroup(*s)
+func (pc *PermissionCreate) SetNillablePermissionGroup(mg *model.PermissionGroup) *PermissionCreate {
+	if mg != nil {
+		pc.SetPermissionGroup(*mg)
 	}
 	return pc
 }
@@ -815,7 +815,7 @@ func (u *PermissionUpsert) UpdateAction() *PermissionUpsert {
 }
 
 // SetCategory sets the "category" field.
-func (u *PermissionUpsert) SetCategory(v model.ContextType) *PermissionUpsert {
+func (u *PermissionUpsert) SetCategory(v model.PermissionCategory) *PermissionUpsert {
 	u.Set(permission.FieldCategory, v)
 	return u
 }
@@ -827,7 +827,7 @@ func (u *PermissionUpsert) UpdateCategory() *PermissionUpsert {
 }
 
 // SetApplicableUserTypes sets the "applicable_user_types" field.
-func (u *PermissionUpsert) SetApplicableUserTypes(v []string) *PermissionUpsert {
+func (u *PermissionUpsert) SetApplicableUserTypes(v []model.UserType) *PermissionUpsert {
 	u.Set(permission.FieldApplicableUserTypes, v)
 	return u
 }
@@ -839,7 +839,7 @@ func (u *PermissionUpsert) UpdateApplicableUserTypes() *PermissionUpsert {
 }
 
 // SetApplicableContexts sets the "applicable_contexts" field.
-func (u *PermissionUpsert) SetApplicableContexts(v []string) *PermissionUpsert {
+func (u *PermissionUpsert) SetApplicableContexts(v []model.ContextType) *PermissionUpsert {
 	u.Set(permission.FieldApplicableContexts, v)
 	return u
 }
@@ -941,7 +941,7 @@ func (u *PermissionUpsert) UpdateActive() *PermissionUpsert {
 }
 
 // SetPermissionGroup sets the "permission_group" field.
-func (u *PermissionUpsert) SetPermissionGroup(v string) *PermissionUpsert {
+func (u *PermissionUpsert) SetPermissionGroup(v model.PermissionGroup) *PermissionUpsert {
 	u.Set(permission.FieldPermissionGroup, v)
 	return u
 }
@@ -1122,7 +1122,7 @@ func (u *PermissionUpsertOne) UpdateAction() *PermissionUpsertOne {
 }
 
 // SetCategory sets the "category" field.
-func (u *PermissionUpsertOne) SetCategory(v model.ContextType) *PermissionUpsertOne {
+func (u *PermissionUpsertOne) SetCategory(v model.PermissionCategory) *PermissionUpsertOne {
 	return u.Update(func(s *PermissionUpsert) {
 		s.SetCategory(v)
 	})
@@ -1136,7 +1136,7 @@ func (u *PermissionUpsertOne) UpdateCategory() *PermissionUpsertOne {
 }
 
 // SetApplicableUserTypes sets the "applicable_user_types" field.
-func (u *PermissionUpsertOne) SetApplicableUserTypes(v []string) *PermissionUpsertOne {
+func (u *PermissionUpsertOne) SetApplicableUserTypes(v []model.UserType) *PermissionUpsertOne {
 	return u.Update(func(s *PermissionUpsert) {
 		s.SetApplicableUserTypes(v)
 	})
@@ -1150,7 +1150,7 @@ func (u *PermissionUpsertOne) UpdateApplicableUserTypes() *PermissionUpsertOne {
 }
 
 // SetApplicableContexts sets the "applicable_contexts" field.
-func (u *PermissionUpsertOne) SetApplicableContexts(v []string) *PermissionUpsertOne {
+func (u *PermissionUpsertOne) SetApplicableContexts(v []model.ContextType) *PermissionUpsertOne {
 	return u.Update(func(s *PermissionUpsert) {
 		s.SetApplicableContexts(v)
 	})
@@ -1269,7 +1269,7 @@ func (u *PermissionUpsertOne) UpdateActive() *PermissionUpsertOne {
 }
 
 // SetPermissionGroup sets the "permission_group" field.
-func (u *PermissionUpsertOne) SetPermissionGroup(v string) *PermissionUpsertOne {
+func (u *PermissionUpsertOne) SetPermissionGroup(v model.PermissionGroup) *PermissionUpsertOne {
 	return u.Update(func(s *PermissionUpsert) {
 		s.SetPermissionGroup(v)
 	})
@@ -1620,7 +1620,7 @@ func (u *PermissionUpsertBulk) UpdateAction() *PermissionUpsertBulk {
 }
 
 // SetCategory sets the "category" field.
-func (u *PermissionUpsertBulk) SetCategory(v model.ContextType) *PermissionUpsertBulk {
+func (u *PermissionUpsertBulk) SetCategory(v model.PermissionCategory) *PermissionUpsertBulk {
 	return u.Update(func(s *PermissionUpsert) {
 		s.SetCategory(v)
 	})
@@ -1634,7 +1634,7 @@ func (u *PermissionUpsertBulk) UpdateCategory() *PermissionUpsertBulk {
 }
 
 // SetApplicableUserTypes sets the "applicable_user_types" field.
-func (u *PermissionUpsertBulk) SetApplicableUserTypes(v []string) *PermissionUpsertBulk {
+func (u *PermissionUpsertBulk) SetApplicableUserTypes(v []model.UserType) *PermissionUpsertBulk {
 	return u.Update(func(s *PermissionUpsert) {
 		s.SetApplicableUserTypes(v)
 	})
@@ -1648,7 +1648,7 @@ func (u *PermissionUpsertBulk) UpdateApplicableUserTypes() *PermissionUpsertBulk
 }
 
 // SetApplicableContexts sets the "applicable_contexts" field.
-func (u *PermissionUpsertBulk) SetApplicableContexts(v []string) *PermissionUpsertBulk {
+func (u *PermissionUpsertBulk) SetApplicableContexts(v []model.ContextType) *PermissionUpsertBulk {
 	return u.Update(func(s *PermissionUpsert) {
 		s.SetApplicableContexts(v)
 	})
@@ -1767,7 +1767,7 @@ func (u *PermissionUpsertBulk) UpdateActive() *PermissionUpsertBulk {
 }
 
 // SetPermissionGroup sets the "permission_group" field.
-func (u *PermissionUpsertBulk) SetPermissionGroup(v string) *PermissionUpsertBulk {
+func (u *PermissionUpsertBulk) SetPermissionGroup(v model.PermissionGroup) *PermissionUpsertBulk {
 	return u.Update(func(s *PermissionUpsert) {
 		s.SetPermissionGroup(v)
 	})

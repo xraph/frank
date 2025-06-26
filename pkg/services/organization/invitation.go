@@ -12,6 +12,7 @@ import (
 	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/juicycleff/frank/pkg/logging"
 	"github.com/juicycleff/frank/pkg/model"
+	"github.com/juicycleff/frank/pkg/services/notification"
 	"github.com/rs/xid"
 )
 
@@ -71,41 +72,32 @@ type BulkInvitationInput struct {
 
 // invitationService implements InvitationService
 type invitationService struct {
-	membershipRepo   repository.MembershipRepository
-	organizationRepo repository.OrganizationRepository
-	userRepo         repository.UserRepository
-	roleRepo         repository.RoleRepository
-	auditRepo        repository.AuditRepository
-	emailService     EmailService // Interface for sending emails
-	logger           logging.Logger
-	baseURL          string
-}
-
-// EmailService defines the interface for sending emails
-type EmailService interface {
-	SendInvitationEmail(ctx context.Context, to string, invitation *model.Invitation, invitationLink string) error
+	membershipRepo      repository.MembershipRepository
+	organizationRepo    repository.OrganizationRepository
+	userRepo            repository.UserRepository
+	roleRepo            repository.RoleRepository
+	auditRepo           repository.AuditRepository
+	notificationService notification.Service // Interface for sending emails
+	logger              logging.Logger
+	baseURL             string
 }
 
 // NewInvitationService creates a new invitation service
 func NewInvitationService(
-	membershipRepo repository.MembershipRepository,
-	organizationRepo repository.OrganizationRepository,
-	userRepo repository.UserRepository,
-	roleRepo repository.RoleRepository,
-	auditRepo repository.AuditRepository,
-	emailService EmailService,
+	repo repository.Repository,
+	emailService notification.Service,
 	logger logging.Logger,
 	baseURL string,
 ) InvitationService {
 	return &invitationService{
-		membershipRepo:   membershipRepo,
-		organizationRepo: organizationRepo,
-		userRepo:         userRepo,
-		roleRepo:         roleRepo,
-		auditRepo:        auditRepo,
-		emailService:     emailService,
-		logger:           logger,
-		baseURL:          baseURL,
+		membershipRepo:      repo.Membership(),
+		organizationRepo:    repo.Organization(),
+		userRepo:            repo.User(),
+		roleRepo:            repo.Role(),
+		auditRepo:           repo.Audit(),
+		notificationService: emailService,
+		logger:              logger,
+		baseURL:             baseURL,
 	}
 }
 
@@ -271,7 +263,14 @@ func (s *invitationService) SendInvitation(ctx context.Context, invitationID xid
 	}
 
 	// Send email
-	err = s.emailService.SendInvitationEmail(ctx, entMembership.Email, invitation, invitationLink)
+	err = s.notificationService.Email().SendInvitationEmail(ctx, notification.EmailInvitation{
+		InviteeEmail:     entMembership.Email,
+		InvitationURL:    invitationLink,
+		InviterName:      fmt.Sprintf("%s %s", invitation.Inviter.FirstName, invitation.Inviter.LastName),
+		InviterEmail:     invitation.Inviter.Email,
+		OrganizationName: invitation.Organization.Name,
+		RoleName:         invitation.Role.DisplayName,
+	})
 	if err != nil {
 		return errors.Wrap(err, errors.CodeInternalServer, "Failed to send invitation email")
 	}
@@ -585,10 +584,13 @@ func (s *invitationService) ListInvitations(ctx context.Context, organizationID 
 		}
 	}
 
-	return &model.InvitationListResponse{
+	o := &model.InvitationListResponse{
 		Data:       invitations,
 		Pagination: result.Pagination,
-	}, nil
+	}
+	o.Pagination.TotalCount = len(invitations)
+
+	return o, nil
 }
 
 // ListPendingInvitations lists pending invitations for an organization
@@ -831,7 +833,7 @@ func (s *invitationService) entToInvitationModel(entMembership *ent.Membership, 
 		Email:          entMembership.Email,
 		OrganizationID: entMembership.OrganizationID,
 		RoleID:         entMembership.RoleID,
-		Status:         string(entMembership.Status),
+		Status:         model.InvitationStatus(entMembership.Status),
 		ExpiresAt:      entMembership.ExpiresAt,
 		Token:          entMembership.InvitationToken,
 		CustomFields:   entMembership.CustomFields,
@@ -873,7 +875,7 @@ func (s *invitationService) entToInvitationSummary(entMembership *ent.Membership
 		Email:          entMembership.Email,
 		OrganizationID: entMembership.OrganizationID,
 		RoleID:         entMembership.RoleID,
-		Status:         string(entMembership.Status),
+		Status:         model.InvitationStatus(entMembership.Status),
 		CreatedAt:      entMembership.CreatedAt,
 		ExpiresAt:      entMembership.ExpiresAt,
 		InvitedBy:      &entMembership.InvitedBy,

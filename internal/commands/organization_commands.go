@@ -220,7 +220,7 @@ func (oc *OrganizationCommands) createOrganization(cmd *cobra.Command, args []st
 
 	orgService := oc.base.Container.OrganizationService()
 
-	createReq := &model.CreateOrganizationRequest{
+	createReq := &model.CreateOrganizationPlatformRequest{
 		Name:       name,
 		Slug:       slug,
 		Domain:     &domain,
@@ -229,7 +229,7 @@ func (oc *OrganizationCommands) createOrganization(cmd *cobra.Command, args []st
 		OwnerEmail: ownerEmail,
 	}
 
-	newOrg, err := orgService.CreateOrganization(oc.base.Ctx, *createReq)
+	newOrg, err := orgService.CreatePlatformOrganization(oc.base.Ctx, *createReq)
 	if err != nil {
 		oc.base.LogError("Failed to create organization", err,
 			zap.String("name", name),

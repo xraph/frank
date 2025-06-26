@@ -10,39 +10,6 @@ import (
 	"github.com/rs/xid"
 )
 
-// Additional permissions for user type management
-const (
-	// End user management (customer organizations managing their auth service users)
-	PermissionViewEndUsers          Permission = "view:end:users"
-	PermissionListEndUsers          Permission = "list:end:users"
-	PermissionCreateEndUser         Permission = "create:end:user"
-	PermissionUpdateEndUser         Permission = "update:end:user"
-	PermissionDeleteEndUser         Permission = "delete:end:user"
-	PermissionBlockEndUser          Permission = "block:end:user"
-	PermissionManageEndUserSessions Permission = "manage:end:user:sessions"
-	PermissionViewEndUserAnalytics  Permission = "view:end:user:analytics"
-
-	// Auth service configuration (customer organizations)
-	PermissionConfigureAuthService Permission = "configure:auth:service"
-	// PermissionManageAuthProvider      Permission = "manage:auth:providers"
-	PermissionViewAuthServiceAnalytics Permission = "view:auth:service:analytics"
-	PermissionManageAuthServiceDomain  Permission = "manage:auth:service:domain"
-
-	// Internal user management
-	PermissionManageInternalUsers Permission = "manage:internal:users"
-	PermissionViewInternalUsers   Permission = "view:internal:users"
-	PermissionCreateInternalUser  Permission = "create:internal:user"
-	PermissionUpdateInternalUser  Permission = "update:internal:user"
-	PermissionDeleteInternalUser  Permission = "delete:internal:user"
-
-	// Customer organization management
-	PermissionManageCustomerOrganizations Permission = "manage:customer:organizations"
-	PermissionViewCustomerOrganizations   Permission = "view:customer:organizations"
-	PermissionCreateCustomerOrganization  Permission = "create:customer:organization"
-	PermissionUpdateCustomerOrganization  Permission = "update:customer:organization"
-	PermissionDeleteCustomerOrganization  Permission = "delete:customer:organization"
-)
-
 // UserTypeChecker defines interface for checking user types
 type UserTypeChecker interface {
 	// IsInternalUser checks if user is internal platform staff
@@ -126,7 +93,7 @@ func (epc *EnhancedPermissionChecker) CanAccessCustomerData(ctx context.Context,
 		return false, err
 	}
 	if isInternal {
-		return epc.HasPermission(ctx, PermissionViewAllCustomers, ResourceOrganization, customerOrgID)
+		return epc.HasPermission(ctx, PermissionViewAllCustomers, model.ResourceOrganization, customerOrgID)
 	}
 
 	// External users can only access their own organization's data
@@ -134,7 +101,7 @@ func (epc *EnhancedPermissionChecker) CanAccessCustomerData(ctx context.Context,
 }
 
 // HasPermissionForUserType checks permissions with user type context
-func (epc *EnhancedPermissionChecker) HasPermissionForUserType(ctx context.Context, permission Permission, resourceType ResourceType, resourceID xid.ID, userID xid.ID) (bool, error) {
+func (epc *EnhancedPermissionChecker) HasPermissionForUserType(ctx context.Context, permission Permission, resourceType model.ResourceType, resourceID xid.ID, userID xid.ID) (bool, error) {
 	userType, err := epc.GetUserType(ctx, userID)
 	if err != nil {
 		return false, err
@@ -179,7 +146,7 @@ func (epc *EnhancedPermissionChecker) HasPermissionForUserType(ctx context.Conte
 }
 
 // CheckContextualPermission Context-aware permission checking
-func (epc *EnhancedPermissionChecker) CheckContextualPermission(ctx context.Context, permission Permission, resourceType ResourceType, resourceID xid.ID) (bool, error) {
+func (epc *EnhancedPermissionChecker) CheckContextualPermission(ctx context.Context, permission Permission, resourceType model.ResourceType, resourceID xid.ID) (bool, error) {
 	// Get current user
 	userId := contexts.GetUserIDFromContext(ctx)
 	if userId == nil {

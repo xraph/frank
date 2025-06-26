@@ -315,12 +315,13 @@ export interface AuthFeatures {
 export interface FrankAuthUIConfig {
     // Core settings
     publishableKey: string;
+    secretKey?: string;
     apiUrl?: string;
     frontendUrl?: string;
     userType: UserType;
 
     // Organization context
-    organizationId?: string;
+    projectId?: string;
     organization?: OrganizationConfig;
 
     // UI configuration
@@ -333,7 +334,7 @@ export interface FrankAuthUIConfig {
     components?: ComponentOverrides;
 
     // Feature flags
-    features: AuthFeatures ;
+    features: AuthFeatures;
 
     // Development settings
     debug?: boolean;

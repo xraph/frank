@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/juicycleff/frank/config"
+	"github.com/juicycleff/frank/ent"
 	"github.com/juicycleff/frank/ent/migrate"
 
 	"ariga.io/atlas/sql/sqltool"
@@ -59,32 +60,85 @@ func main() {
 		log.Fatalf("unsupported database driver: %s", cfg.Database.Driver)
 	}
 
-	// Migrate diff options.
-	opts := []schema.MigrateOption{
-		schema.WithDir(dir),                                  // provide migration directory
-		schema.WithMigrationMode(schema.ModeReplay),          // provide migration mode
-		schema.WithDialect(dialectType),                      // Ent dialect to use
-		schema.WithFormatter(sqltool.GolangMigrateFormatter), // Use golang-migrate format
-	}
-
 	// Check if we have a migration name
-	if len(os.Args) != 2 {
-		log.Fatalln("migration name is required. Use: 'go run -mod=mod ent/migrate/main.go <name>'")
+	if len(os.Args) < 2 {
+		log.Fatalln("migration name is required. Use: 'go run -mod=mod ent/migrate/main.go <name> [--force]'")
 	}
 
 	migrationName := os.Args[1]
+	// forceMode := len(os.Args) > 2 && os.Args[2] == "--force"
+	forceMode := true
 
-	log.Printf("Generating migration '%s' for %s database", migrationName, cfg.Database.Driver)
-	log.Printf("Database URL: %s", maskPassword(databaseURL))
+	if forceMode {
+		log.Println("WARNING: Force mode enabled. This will generate migration against existing database state.")
 
-	// Generate migrations using Atlas support
-	err = migrate.NamedDiff(ctx, databaseURL, migrationName, opts...)
-	if err != nil {
-		log.Fatalf("failed generating migration file: %v", err)
+		// Option 1: Use schema inspection approach
+		opts := []schema.MigrateOption{
+			schema.WithDir(dir),
+			schema.WithMigrationMode(schema.ModeInspect), // Use inspect mode instead of replay
+			schema.WithDialect(dialectType),
+			schema.WithFormatter(sqltool.GolangMigrateFormatter),
+		}
+
+		log.Printf("Generating migration '%s' for %s database (force mode)", migrationName, cfg.Database.Driver)
+
+		err = migrate.NamedDiff(ctx, databaseURL, migrationName, opts...)
+		if err != nil {
+			log.Fatalf("failed generating migration file: %v", err)
+		}
+	} else {
+		// Option 2: Create client and apply schema directly first
+		client, err := ent.Open(cfg.Database.Driver, databaseURL)
+		if err != nil {
+			log.Fatalf("failed opening database: %v", err)
+		}
+		defer client.Close()
+
+		// Check if this is the first migration
+		if isFirstMigration(dir) {
+			log.Println("No existing migrations found. Creating baseline migration...")
+
+			// Apply current schema to get to known state
+			err = client.Schema.Create(ctx,
+				schema.WithDropIndex(true),
+				schema.WithDropColumn(true),
+				schema.WithGlobalUniqueID(true),
+			)
+			if err != nil {
+				log.Fatalf("failed creating baseline schema: %v", err)
+			}
+
+			log.Println("Baseline schema applied. Now generating migration...")
+		}
+
+		// Now generate the migration
+		opts := []schema.MigrateOption{
+			schema.WithDir(dir),
+			schema.WithMigrationMode(schema.ModeReplay),
+			schema.WithDialect(dialectType),
+			schema.WithFormatter(sqltool.GolangMigrateFormatter),
+		}
+
+		log.Printf("Generating migration '%s' for %s database", migrationName, cfg.Database.Driver)
+		log.Printf("Database URL: %s", maskPassword(databaseURL))
+
+		err = migrate.NamedDiff(ctx, databaseURL, migrationName, opts...)
+		if err != nil {
+			log.Fatalf("failed generating migration file: %v", err)
+		}
 	}
 
 	log.Printf("Migration '%s' generated successfully in migrations/", migrationName)
 	log.Println("Review the generated files before applying them to your database.")
+}
+
+// isFirstMigration checks if there are any existing migration files
+func isFirstMigration(dir *sqltool.GolangMigrateDir) bool {
+	files, err := dir.Files()
+	if err != nil {
+		return true
+	}
+	return len(files) == 0
 }
 
 // maskPassword masks the password in database URL for logging

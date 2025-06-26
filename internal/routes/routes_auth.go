@@ -11,6 +11,7 @@ import (
 	"github.com/juicycleff/frank/internal/di"
 	"github.com/juicycleff/frank/internal/middleware"
 	"github.com/juicycleff/frank/internal/repository"
+	"github.com/juicycleff/frank/pkg/contexts"
 	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/juicycleff/frank/pkg/logging"
 	"github.com/juicycleff/frank/pkg/model"
@@ -32,12 +33,13 @@ func RegisterPublicAuthAPI(group huma.API, di di.Container) {
 	registerRefreshToken(group, authCtrl)
 	registerForgotPassword(group, authCtrl)
 	registerResetPassword(group, authCtrl)
+	registerValidateToken(group, authCtrl)
 	registerVerifyEmail(group, authCtrl)
 	registerVerifyPhone(group, authCtrl)
 	registerResendVerification(group, authCtrl)
 	registerMagicLink(group, authCtrl)
 	registerVerifyMagicLink(group, authCtrl)
-	registerAuthStatus(group, authCtrl)
+	// registerAuthStatus(group, authCtrl)
 
 	// MFA endpoints
 	registerMFARecovery(group, authCtrl)
@@ -110,7 +112,7 @@ func registerRegister(group huma.API, authCtrl *authController) {
 		Description: "Register a new user account",
 		Tags:        []string{"Authentication"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, false),
-	}, authCtrl.registerHandler)
+	}, authCtrl.unifiedRegistrationHandler)
 }
 
 func registerLogout(group huma.API, authCtrl *authController) {
@@ -162,6 +164,18 @@ func registerResetPassword(group huma.API, authCtrl *authController) {
 		Tags:        []string{"Authentication"},
 		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, false),
 	}, authCtrl.resetPasswordHandler)
+}
+
+func registerValidateToken(group huma.API, authCtrl *authController) {
+	huma.Register(group, huma.Operation{
+		OperationID: "validateToken",
+		Method:      http.MethodPost,
+		Path:        "/auth/validate-token",
+		Summary:     "Validate token",
+		Description: "Validate token token from email",
+		Tags:        []string{"Authentication"},
+		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, false),
+	}, authCtrl.verifyTokenHandler)
 }
 
 func registerVerifyEmail(group huma.API, authCtrl *authController) {
@@ -662,7 +676,7 @@ type ListPasskeysInput struct {
 
 type ListPasskeysOutput = model.Output[model.PasskeyListResponse]
 
-// Input/Output type definitions for OAuth and session handlers
+// ListOAuthProvidersOutput Input/Output type definitions for OAuth and session handlers
 type ListOAuthProvidersOutput = model.Output[[]model.AuthProvider]
 
 type ListSessionsInput struct {
@@ -678,6 +692,27 @@ type RevokeAllSessionsInput struct {
 // Handler implementations
 
 func (c *authController) loginHandler(ctx context.Context, input *LoginInput) (*LoginOutput, error) {
+	// Check if user is already authenticated (but allow client API keys through)
+	currentUser := middleware.GetUserFromContext(ctx)
+	if currentUser != nil && !middleware.IsClientAPIKey(ctx) {
+		return nil, errors.New(errors.CodeBadRequest, "user is already authenticated")
+	}
+
+	// Get organization context from API key or header
+	var orgID *xid.ID
+	if apiOrgID := c.getOrganizationFromAPIKey(ctx); apiOrgID != nil {
+		orgID = apiOrgID
+	} else {
+		userType := c.getDetectedUserType(ctx)
+		if err := c.validateOrganizationContext(ctx, userType, true); err != nil {
+			return nil, err
+		}
+		orgContext := c.getOrganizationContext(ctx)
+		if orgContext != nil {
+			orgID = &orgContext.ID
+		}
+	}
+
 	authSvc := c.di.Auth()
 	if authSvc == nil {
 		return nil, errors.New(errors.CodeInternalServer, "auth service not available")
@@ -690,7 +725,7 @@ func (c *authController) loginHandler(ctx context.Context, input *LoginInput) (*
 
 	auditEvent := audit.AuditEvent{
 		Action: audit.ActionUserLogin,
-		Status: audit.StatusFailure, // Will be updated if login fails
+		Status: audit.StatusFailure,
 		Details: map[string]interface{}{
 			"email":    input.Body.Email,
 			"provider": input.Body.Provider,
@@ -699,10 +734,9 @@ func (c *authController) loginHandler(ctx context.Context, input *LoginInput) (*
 		Source: audit.SourceWeb,
 	}
 
-	// Log authentication attempt
 	defer c.logAuditEvent(ctx, auditEvent)
 
-	response, err := authSvc.Login(ctx, input.Body)
+	response, err := authSvc.Login(ctx, input.Body, orgID)
 	if err != nil {
 		return nil, err
 	}
@@ -723,6 +757,28 @@ func (c *authController) loginHandler(ctx context.Context, input *LoginInput) (*
 }
 
 func (c *authController) registerHandler(ctx context.Context, input *RegisterInput) (*RegisterOutput, error) {
+	// Check if user is already authenticated (but allow client API keys through)
+	currentUser := middleware.GetUserFromContext(ctx)
+	if currentUser != nil && !middleware.IsClientAPIKey(ctx) {
+		return nil, errors.New(errors.CodeBadRequest, "user is already authenticated")
+	}
+
+	// Get organization context from API key or header
+	var orgID *xid.ID
+	if apiOrgID := c.getOrganizationFromAPIKey(ctx); apiOrgID != nil {
+		orgID = apiOrgID
+		input.Body.OrganizationID = orgID
+	} else {
+		userType := c.getDetectedUserType(ctx)
+		if err := c.validateOrganizationContext(ctx, userType, true); err != nil {
+			return nil, err
+		}
+		orgContext := c.getOrganizationContext(ctx)
+		if orgContext != nil {
+			input.Body.OrganizationID = &orgContext.ID
+		}
+	}
+
 	authSvc := c.di.Auth()
 	if authSvc == nil {
 		return nil, errors.New(errors.CodeInternalServer, "auth service not available")
@@ -739,7 +795,7 @@ func (c *authController) registerHandler(ctx context.Context, input *RegisterInp
 
 	auditEvent := audit.AuditEvent{
 		Action: audit.ActionUserRegister,
-		Status: audit.StatusFailure, // Will be updated if login fails
+		Status: audit.StatusFailure,
 		Details: map[string]interface{}{
 			"email":     input.Body.Email,
 			"user_type": input.Body.UserType,
@@ -759,6 +815,324 @@ func (c *authController) registerHandler(ctx context.Context, input *RegisterInp
 	return &RegisterOutput{
 		Body: *response,
 	}, nil
+}
+
+func (c *authController) unifiedRegistrationHandler(ctx context.Context, input *RegisterInput) (*RegisterOutput, error) {
+	// Check if user is already authenticated (but allow client API keys through)
+	currentUser := middleware.GetUserFromContext(ctx)
+	if currentUser != nil && !middleware.IsClientAPIKey(ctx) {
+		return nil, errors.New(errors.CodeBadRequest, "user is already authenticated")
+	}
+
+	// Get detected flow from middleware
+	flow := contexts.GetRegistrationFlowFromContext(ctx)
+	flowData := contexts.GetRegistrationFlowDataFromContext(ctx)
+
+	// Get organization context from API key first, then fallback to other sources
+	var orgID *xid.ID
+	if apiOrgID := c.getOrganizationFromAPIKey(ctx); apiOrgID != nil {
+		orgID = apiOrgID
+		// Set organization context in flow data for consistency
+		if flowData == nil {
+			flowData = make(map[string]interface{})
+		}
+		flowData["organization_id"] = apiOrgID.String()
+	}
+
+	c.di.Logger().Info("Processing unified registration",
+		logging.String("email", input.Body.Email),
+		logging.String("userType", input.Body.UserType),
+		logging.String("flow", string(flow)),
+		logging.Bool("hasClientAPIKey", middleware.IsClientAPIKey(ctx)),
+		logging.String("orgFromAPIKey", func() string {
+			if orgID != nil {
+				return orgID.String()
+			}
+			return ""
+		}()))
+
+	authSvc := c.di.Auth()
+	if authSvc == nil {
+		return nil, errors.New(errors.CodeInternalServer, "auth service not available")
+	}
+
+	// Validate required fields
+	if input.Body.Email == "" {
+		return nil, errors.New(errors.CodeBadRequest, "email is required")
+	}
+
+	// Set default user type if not provided
+	if input.Body.UserType == "" {
+		if detectedType, ok := flowData["user_type"].(string); ok && detectedType != "" {
+			input.Body.UserType = detectedType
+		} else {
+			// Default based on API key context or fallback
+			if middleware.IsClientAPIKey(ctx) {
+				input.Body.UserType = string(model.UserTypeEndUser) // Client API keys typically for end users
+			} else {
+				input.Body.UserType = string(model.UserTypeExternal) // Default
+			}
+		}
+	}
+
+	// Set organization ID from API key if available
+	if orgID != nil {
+		input.Body.OrganizationID = orgID
+	}
+
+	// Process registration based on detected flow
+	switch flow {
+	case contexts.RegistrationFlowOrganization:
+		return c.handleOrganizationCreationRegistration(ctx, input, flowData)
+	case contexts.RegistrationFlowInvitation:
+		return c.handleInvitationBasedRegistration(ctx, input, flowData)
+	case contexts.RegistrationFlowInternalUser:
+		return c.handleInternalUserRegistration(ctx, input, flowData)
+	case contexts.RegistrationFlowExternalUser:
+		return c.handleExternalUserRegistration(ctx, input, flowData)
+	case contexts.RegistrationFlowEndUser:
+		return c.handleEndUserRegistration(ctx, input, flowData)
+	default:
+		// Default flow based on API key context
+		if middleware.IsClientAPIKey(ctx) && orgID != nil {
+			// Client API key with organization context - likely end user registration
+			return c.handleEndUserRegistration(ctx, input, flowData)
+		} else {
+			// Default to external user registration
+			return c.handleExternalUserRegistration(ctx, input, flowData)
+		}
+	}
+}
+
+func (c *authController) handleOrganizationCreationRegistration(ctx context.Context, input *RegisterInput, flowData map[string]interface{}) (*RegisterOutput, error) {
+	// Organization creation flow - typically not used with client API keys
+	// but we'll handle it gracefully
+	auditEvent := audit.AuditEvent{
+		Action: audit.ActionOrganizationRegister,
+		Status: audit.StatusFailure,
+		Details: map[string]interface{}{
+			"email":          input.Body.Email,
+			"user_type":      input.Body.UserType,
+			"flow":           "organization_creation",
+			"via_client_api": middleware.IsClientAPIKey(ctx),
+		},
+		Source: audit.SourceWeb,
+	}
+	defer c.logAuditEvent(ctx, auditEvent)
+
+	// Convert to organization registration request
+	orgRegRequest := model.OrganizationRegistrationRequest{
+		OrganizationName:     c.getOrganizationNameFromRequest(input.Body),
+		OrganizationSlug:     c.getOrganizationSlugFromRequest(input.Body),
+		Domain:               c.getDomainFromRequest(input.Body),
+		Plan:                 c.getPlanFromRequest(input.Body),
+		UserEmail:            input.Body.Email,
+		UserPassword:         input.Body.Password,
+		UserFirstName:        *input.Body.FirstName,
+		UserLastName:         *input.Body.LastName,
+		UserPhone:            *input.Body.PhoneNumber,
+		UserCustomAttributes: input.Body.CustomAttributes,
+		Metadata:             input.Body.Metadata,
+	}
+
+	authSvc := c.di.Auth()
+	orgResponse, err := authSvc.RegisterOrganization(ctx, orgRegRequest)
+	if err != nil {
+		return nil, err
+	}
+
+	auditEvent.Status = audit.StatusSuccess
+	auditEvent.Details["organization_id"] = orgResponse.Organization.ID.String()
+
+	// Convert to standard register response
+	response := &model.RegisterResponse{
+		Success:      true,
+		User:         orgResponse.User,
+		AccessToken:  orgResponse.AccessToken,
+		RefreshToken: orgResponse.RefreshToken,
+		ExpiresIn:    orgResponse.ExpiresIn,
+		Message:      "Organization and user created successfully",
+	}
+
+	return &RegisterOutput{Body: *response}, nil
+}
+
+func (c *authController) handleInvitationBasedRegistration(ctx context.Context, input *RegisterInput, flowData map[string]interface{}) (*RegisterOutput, error) {
+	// Invitation-based registration
+	invitationToken := flowData["invitation_token"].(string)
+
+	auditEvent := audit.AuditEvent{
+		Action: audit.ActionUserRegisterInvitation,
+		Status: audit.StatusFailure,
+		Details: map[string]interface{}{
+			"email":            input.Body.Email,
+			"invitation_token": invitationToken[:8] + "...",
+			"flow":             "invitation_based",
+			"via_client_api":   middleware.IsClientAPIKey(ctx),
+		},
+		Source: audit.SourceWeb,
+	}
+	defer c.logAuditEvent(ctx, auditEvent)
+
+	// Convert to invitation registration request
+	inviteRegRequest := model.InvitationRegistrationRequest{
+		InvitationToken: invitationToken,
+		Email:           input.Body.Email,
+		Password:        input.Body.Password,
+		FirstName:       *input.Body.FirstName,
+		LastName:        *input.Body.LastName,
+		Phone:           *input.Body.PhoneNumber,
+		AcceptTerms:     input.Body.AcceptTerms,
+		AcceptPrivacy:   input.Body.AcceptPrivacy,
+	}
+
+	authSvc := c.di.Auth()
+	inviteResponse, err := authSvc.RegisterViaInvitation(ctx, inviteRegRequest)
+	if err != nil {
+		return nil, err
+	}
+
+	auditEvent.Status = audit.StatusSuccess
+	auditEvent.Details["organization_id"] = inviteResponse.Organization.ID.String()
+
+	// Convert to standard register response
+	response := &model.RegisterResponse{
+		Success:      true,
+		User:         inviteResponse.User,
+		AccessToken:  inviteResponse.AccessToken,
+		RefreshToken: inviteResponse.RefreshToken,
+		ExpiresIn:    inviteResponse.ExpiresIn,
+		Message:      "User registered via invitation successfully",
+	}
+
+	return &RegisterOutput{Body: *response}, nil
+}
+
+func (c *authController) handleInternalUserRegistration(ctx context.Context, input *RegisterInput, flowData map[string]interface{}) (*RegisterOutput, error) {
+	// Internal user registration (no org context needed)
+	auditEvent := audit.AuditEvent{
+		Action: audit.ActionUserRegister,
+		Status: audit.StatusFailure,
+		Details: map[string]interface{}{
+			"email":     input.Body.Email,
+			"user_type": model.UserTypeInternal,
+			"flow":      "internal_user",
+		},
+		Source: audit.SourceWeb,
+	}
+	defer c.logAuditEvent(ctx, auditEvent)
+
+	// Set user type to internal
+	input.Body.UserType = string(model.UserTypeInternal)
+	input.Body.OrganizationID = nil // Internal users don't belong to specific org
+
+	authSvc := c.di.Auth()
+	response, err := authSvc.Register(ctx, input.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	auditEvent.Status = audit.StatusSuccess
+
+	return &RegisterOutput{Body: *response}, nil
+}
+
+func (c *authController) handleExternalUserRegistration(ctx context.Context, input *RegisterInput, flowData map[string]interface{}) (*RegisterOutput, error) {
+	// External user registration (may have org context from API key)
+	auditEvent := audit.AuditEvent{
+		Action: audit.ActionUserRegister,
+		Status: audit.StatusFailure,
+		Details: map[string]interface{}{
+			"email":          input.Body.Email,
+			"user_type":      model.UserTypeExternal,
+			"flow":           "external_user",
+			"via_client_api": middleware.IsClientAPIKey(ctx),
+		},
+		Source: audit.SourceWeb,
+	}
+	defer c.logAuditEvent(ctx, auditEvent)
+
+	// Set user type to external
+	input.Body.UserType = string(model.UserTypeExternal)
+
+	// Get organization context from API key if available
+	if apiOrgID := c.getOrganizationFromAPIKey(ctx); apiOrgID != nil {
+		input.Body.OrganizationID = apiOrgID
+		auditEvent.Details["organization_id"] = apiOrgID.String()
+	} else {
+		// External users can register without organization context
+		// They'll join organizations later via invitations
+		input.Body.OrganizationID = nil
+	}
+
+	authSvc := c.di.Auth()
+	response, err := authSvc.Register(ctx, input.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	// Add helpful message about joining organizations
+	if input.Body.OrganizationID == nil {
+		response.Message = "Registration successful. You can join organizations via invitations."
+	} else {
+		response.Message = "Registration successful."
+	}
+
+	auditEvent.Status = audit.StatusSuccess
+
+	return &RegisterOutput{Body: *response}, nil
+}
+
+func (c *authController) handleEndUserRegistration(ctx context.Context, input *RegisterInput, flowData map[string]interface{}) (*RegisterOutput, error) {
+	// Get organization context from API key or other sources
+	var orgContext *contexts.OrganizationContext
+	var orgID *xid.ID
+
+	if apiOrgID := c.getOrganizationFromAPIKey(ctx); apiOrgID != nil {
+		orgID = apiOrgID
+		// Create organization context from API key
+		orgContext = &contexts.OrganizationContext{
+			ID: *orgID,
+			// Other fields would be populated by looking up the organization
+		}
+	} else {
+		orgContext = c.getOrganizationContext(ctx)
+		if orgContext != nil {
+			orgID = &orgContext.ID
+		}
+	}
+
+	if orgID == nil {
+		return nil, errors.New(errors.CodeBadRequest, "organization context is required for end user registration")
+	}
+
+	auditEvent := audit.AuditEvent{
+		Action: audit.ActionUserRegister,
+		Status: audit.StatusFailure,
+		Details: map[string]interface{}{
+			"email":           input.Body.Email,
+			"user_type":       model.UserTypeEndUser,
+			"organization_id": orgID.String(),
+			"flow":            "end_user",
+			"via_client_api":  middleware.IsClientAPIKey(ctx),
+		},
+		Source: audit.SourceWeb,
+	}
+	defer c.logAuditEvent(ctx, auditEvent)
+
+	// Set user type and organization
+	input.Body.UserType = string(model.UserTypeEndUser)
+	input.Body.OrganizationID = orgID
+
+	authSvc := c.di.Auth()
+	response, err := authSvc.Register(ctx, input.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	auditEvent.Status = audit.StatusSuccess
+
+	return &RegisterOutput{Body: *response}, nil
 }
 
 func (c *authController) logoutHandler(ctx context.Context, input *LogoutInput) (*LogoutOutput, error) {
@@ -887,6 +1261,60 @@ func (c *authController) resetPasswordHandler(ctx context.Context, input *ResetP
 	}, err
 }
 
+type VerifyTokenInput struct {
+	Body model.ValidateTokenInputBody
+}
+
+type VerifyTokenOutput = model.Output[model.ValidateTokenResponse]
+
+func (c *authController) verifyTokenHandler(ctx context.Context, input *VerifyTokenInput) (*VerifyTokenOutput, error) {
+	pwdSvc := c.di.PasswordService()
+	if pwdSvc == nil {
+		return nil, errors.New(errors.CodeInternalServer, "password service not available")
+	}
+
+	if input.Body.Token == "" {
+		return nil, errors.New(errors.CodeBadRequest, "reset token is required")
+	}
+
+	if input.Body.Token == "" {
+		return nil, errors.New(errors.CodeBadRequest, "token type is required")
+	}
+
+	auditEvent := audit.AuditEvent{
+		Action: audit.ActionPasswordChange,
+		Status: audit.StatusFailure, // Will be updated if login fails
+		Details: map[string]interface{}{
+			"token": input.Body.Token,
+			"type":  input.Body.Type,
+		},
+		Source: audit.SourceWeb,
+	}
+
+	defer c.logAuditEvent(ctx, auditEvent)
+
+	var rsp *model.ValidateTokenResponse
+	var err error
+
+	switch input.Body.Type {
+	case "password_reset":
+		// Confirm password reset token
+		rsp, err = pwdSvc.ValidatePasswordResetToken(ctx, input.Body.Token)
+		if err != nil {
+			return nil, err
+		}
+		break
+	default:
+		return nil, errors.New(errors.CodeBadRequest, "invalid token type")
+	}
+
+	auditEvent.Status = audit.StatusSuccess
+
+	return &VerifyTokenOutput{
+		Body: *rsp,
+	}, err
+}
+
 func (c *authController) verifyEmailHandler(ctx context.Context, input *VerifyEmailInput) (*VerifyEmailOutput, error) {
 	authSvc := c.di.Auth()
 	if authSvc == nil {
@@ -993,6 +1421,27 @@ func (c *authController) resendVerificationHandler(ctx context.Context, input *R
 }
 
 func (c *authController) magicLinkHandler(ctx context.Context, input *MagicLinkInput) (*MagicLinkOutput, error) {
+	// Check if user is already authenticated (but allow client API keys through)
+	currentUser := middleware.GetUserFromContext(ctx)
+	if currentUser != nil && !middleware.IsClientAPIKey(ctx) {
+		return nil, errors.New(errors.CodeBadRequest, "user is already authenticated")
+	}
+
+	// Get organization context from API key or header
+	var orgID *xid.ID
+	if apiOrgID := c.getOrganizationFromAPIKey(ctx); apiOrgID != nil {
+		orgID = apiOrgID
+	} else {
+		userType := c.getDetectedUserType(ctx)
+		if err := c.validateOrganizationContext(ctx, userType, true); err != nil {
+			return nil, err
+		}
+		orgContext := c.getOrganizationContext(ctx)
+		if orgContext != nil {
+			orgID = &orgContext.ID
+		}
+	}
+
 	authSvc := c.di.Auth()
 	if authSvc == nil {
 		return nil, errors.New(errors.CodeInternalServer, "auth service not available")
@@ -1004,7 +1453,7 @@ func (c *authController) magicLinkHandler(ctx context.Context, input *MagicLinkI
 
 	auditEvent := audit.AuditEvent{
 		Action: audit.ActionGenerateMagicLink,
-		Status: audit.StatusFailure, // Will be updated if login fails
+		Status: audit.StatusFailure,
 		Details: map[string]interface{}{
 			"email":        input.Body.Email,
 			"redirect_url": input.Body.RedirectURL,
@@ -1014,10 +1463,12 @@ func (c *authController) magicLinkHandler(ctx context.Context, input *MagicLinkI
 
 	defer c.logAuditEvent(ctx, auditEvent)
 
-	response, err := authSvc.SendMagicLink(ctx, input.Body)
+	response, err := authSvc.SendMagicLink(ctx, input.Body, orgID)
 	if err != nil {
 		return nil, err
 	}
+
+	auditEvent.Status = audit.StatusSuccess
 
 	return &MagicLinkOutput{
 		Body: *response,
@@ -1072,30 +1523,59 @@ func (c *authController) verifyMagicLinkHandler(ctx context.Context, input *Veri
 }
 
 func (c *authController) authStatusHandler(ctx context.Context, input *struct{}) (*AuthStatusOutput, error) { // Get current user from context
+	// Get current user from context
 	currentUser := middleware.GetUserFromContext(ctx)
 	currentSession := middleware.GetSessionFromContext(ctx)
+	apiKey := middleware.GetAPIKeyFromContext(ctx)
 
-	if currentUser == nil {
-		// Return unauthenticated status instead of error
+	// For client API keys, always return unauthenticated status
+	// This allows frontend SDKs to check auth status without appearing logged in
+	if middleware.IsClientAPIKey(ctx) {
 		response := &model.AuthStatus{
 			IsAuthenticated: false,
+			HasAPIAccess:    true, // Indicate API access is available
+			APIKeyType:      string(model.APIKeyTypeClient),
+			OrganizationID:  apiKey.OrganizationID,
+			Permissions:     apiKey.Permissions,
+			Scopes:          apiKey.Scopes,
 		}
 		return &AuthStatusOutput{
 			Body: *response,
 		}, nil
 	}
 
+	// For unauthenticated requests (no user, no API key, or client API key)
+	if currentUser == nil {
+		response := &model.AuthStatus{
+			IsAuthenticated: false,
+			HasAPIAccess:    apiKey != nil, // True if any API key is present
+		}
+
+		// Include API key info if present
+		if apiKey != nil {
+			response.APIKeyType = string(apiKey.Type)
+			response.OrganizationID = apiKey.OrganizationID
+			response.Permissions = apiKey.Permissions
+			response.Scopes = apiKey.Scopes
+		}
+
+		return &AuthStatusOutput{
+			Body: *response,
+		}, nil
+	}
+
+	// For authenticated users (JWT, session, or server/admin API keys)
 	var sessId *xid.ID
 	if currentSession != nil {
 		sessId = &currentSession.ID
 	}
 
-	ctxType := model.ContextTypeApplication
+	ctxType := model.ContextApplication
 
 	if currentUser.UserType == model.UserTypeInternal {
-		ctxType = model.ContextTypePlatform
+		ctxType = model.ContextPlatform
 	} else if currentUser.UserType == model.UserTypeEndUser {
-		ctxType = model.ContextTypeOrganization
+		ctxType = model.ContextOrganization
 	}
 
 	response, err := c.di.Auth().GetAuthStatus(
@@ -1106,10 +1586,19 @@ func (c *authController) authStatusHandler(ctx context.Context, input *struct{})
 		nil,
 	)
 	if err != nil {
+		// Return unauthenticated status on error instead of failing
 		response := &model.AuthStatus{
 			IsAuthenticated: false,
+			HasAPIAccess:    apiKey != nil,
 		}
 		return &AuthStatusOutput{Body: *response}, nil
+	}
+
+	// Add API key information to the response if present
+	if apiKey != nil {
+		response.HasAPIAccess = true
+		response.APIKeyType = string(apiKey.Type)
+		response.APIKeyID = &apiKey.ID
 	}
 
 	return &AuthStatusOutput{
@@ -1982,6 +2471,12 @@ type OAuthAuthorize2Output struct {
 }
 
 func (c *authController) oauthAuthorizeHandler(ctx context.Context, input *OAuthProviderPathInput) (*OAuthAuthorize2Output, error) {
+	// OAuth authorization for external and end users requires organization context
+	userType := c.getDetectedUserType(ctx)
+	if err := c.validateOrganizationContext(ctx, userType, true); err != nil {
+		return nil, err
+	}
+
 	authSvc := c.di.Auth()
 	if authSvc == nil {
 		return nil, errors.New(errors.CodeInternalServer, "auth service not available")
@@ -1989,6 +2484,13 @@ func (c *authController) oauthAuthorizeHandler(ctx context.Context, input *OAuth
 
 	// Get OAuth URL for the provider
 	redirectURL := "http://localhost:8080/auth/oauth/" + input.Provider + "/callback" // This should come from config
+
+	// Include organization context in OAuth state if present
+	orgContext := c.getOrganizationContext(ctx)
+	var stateData string
+	if orgContext != nil {
+		stateData = "org_id=" + orgContext.ID.String()
+	}
 
 	auditEvent := audit.AuditEvent{
 		Action: audit.ActionOAUTHAuthorize,
@@ -2002,7 +2504,7 @@ func (c *authController) oauthAuthorizeHandler(ctx context.Context, input *OAuth
 
 	defer c.logAuditEvent(ctx, auditEvent)
 
-	oauthURL, err := authSvc.GetOAuthURL(ctx, input.Provider, redirectURL)
+	oauthURL, err := authSvc.GetOAuthURLWithState(ctx, input.Provider, redirectURL, stateData)
 	if err != nil {
 		return nil, err
 	}
@@ -2025,7 +2527,7 @@ func (c *authController) oauthCallbackHandler(ctx context.Context, input *OAuthP
 
 	auditEvent := audit.AuditEvent{
 		Action: audit.ActionUserLogin,
-		Status: audit.StatusFailure, // Will be updated if login fails
+		Status: audit.StatusFailure, // Will be updated if login succeeds
 		Details: map[string]interface{}{
 			"code":     input.Code,
 			"provider": input.Provider,
@@ -2037,7 +2539,18 @@ func (c *authController) oauthCallbackHandler(ctx context.Context, input *OAuthP
 	// Log authentication attempt
 	defer c.logAuditEvent(ctx, auditEvent)
 
-	response, err := authSvc.HandleOAuthCallback(ctx, input.Provider, input.Code, input.State)
+	// Extract organization context from OAuth state if present
+	var orgID *xid.ID
+	if strings.Contains(input.State, "org_id=") {
+		parts := strings.Split(input.State, "org_id=")
+		if len(parts) > 1 {
+			if id, err := xid.FromString(parts[1]); err == nil {
+				orgID = &id
+			}
+		}
+	}
+
+	response, err := authSvc.HandleOAuthCallbackWithOrg(ctx, input.Provider, input.Code, input.State, orgID)
 	if err != nil {
 		return nil, err
 	}
@@ -2599,4 +3112,200 @@ func getTokenPrefix(token string) string {
 		return token[:8] + "..."
 	}
 	return token
+}
+
+// validateOrganizationContext validates that organization context is provided for external and end users
+func (c *authController) validateOrganizationContext(ctx context.Context, userType string, skipExternal bool) error {
+	switch userType {
+	case string(model.UserTypeInternal):
+		// Internal users don't require organization context
+		return nil
+
+	case string(model.UserTypeExternal), string(model.UserTypeEndUser):
+		// External and end users require organization context
+		orgContext := c.getOrganizationContext(ctx)
+		if skipExternal && userType == model.UserTypeExternal.String() {
+			return nil
+		}
+
+		if orgContext == nil {
+			return errors.New(errors.CodeBadRequest, "organization context is required for this user type. Provide organization context via API key (X-API-Key/X-Publishable-Key) or headers (X-Org-ID).")
+		}
+
+		// Validate organization is active
+		if !orgContext.Active {
+			return errors.New(errors.CodeForbidden, "organization is inactive")
+		}
+
+	default:
+		// Unknown user type, default to requiring organization context
+		orgContext := c.getOrganizationContext(ctx)
+		if orgContext == nil {
+			return errors.New(errors.CodeBadRequest, "organization context is required")
+		}
+	}
+
+	return nil
+}
+
+// getOrganizationContext retrieves organization context from request
+func (c *authController) getOrganizationContext(ctx context.Context) *contexts.OrganizationContext {
+	// Try to get from tenant context
+	if tenant := middleware.GetTenantFromContext(ctx); tenant != nil {
+		return &contexts.OrganizationContext{
+			ID:                     tenant.Organization.ID,
+			Active:                 tenant.Organization.Active,
+			Name:                   tenant.Organization.Name,
+			Slug:                   tenant.Organization.Slug,
+			Plan:                   tenant.Organization.Plan,
+			Domain:                 tenant.Organization.Domain,
+			IsPlatformOrganization: tenant.Organization.IsPlatformOrganization,
+			OrgType:                tenant.Organization.OrgType,
+			Metadata:               tenant.Organization.Metadata,
+		}
+	}
+
+	// Try to get from organization context
+	if org := contexts.GetOrganizationFromContext(ctx); org != nil {
+		return org
+	}
+
+	return nil
+}
+
+// getDetectedUserType retrieves detected user type from context
+func (c *authController) getDetectedUserType(ctx context.Context) string {
+	return middleware.GetDetectedUserTypeFromContext(ctx)
+}
+
+// getDetectedOrganizationID retrieves detected organization ID from context
+func (c *authController) getDetectedOrganizationID(ctx context.Context) *xid.ID {
+	return middleware.GetDetectedOrganizationIDFromContext(ctx)
+}
+
+// validateUserBelongsToOrganization validates that a user belongs to the organization
+func (c *authController) validateUserBelongsToOrganization(ctx context.Context, userID xid.ID, orgID xid.ID) error {
+	user, err := c.di.Repo().User().GetByID(ctx, userID)
+	if err != nil {
+		return errors.New(errors.CodeNotFound, "user not found")
+	}
+
+	if user.OrganizationID.IsNil() || user.OrganizationID != orgID {
+		return errors.New(errors.CodeForbidden, "user does not belong to this organization")
+	}
+
+	return nil
+}
+
+// createOrganizationScopedLoginRequest modifies login request to include organization context
+func (c *authController) createOrganizationScopedLoginRequest(ctx context.Context, req model.LoginRequest) model.LoginRequest {
+	orgContext := c.getOrganizationContext(ctx)
+	if orgContext != nil {
+		// req.OrganizationID = &orgContext.ID
+	}
+	return req
+}
+
+// createOrganizationScopedRegisterRequest modifies register request to include organization context
+func (c *authController) createOrganizationScopedRegisterRequest(ctx context.Context, req model.RegisterRequest) model.RegisterRequest {
+	orgContext := c.getOrganizationContext(ctx)
+	if orgContext != nil {
+		req.OrganizationID = &orgContext.ID
+	}
+	return req
+}
+
+// validateOrganizationAPIAccess validates API access based on organization context and user type
+func (c *authController) validateOrganizationAPIAccess(ctx context.Context) error {
+	user := middleware.GetUserFromContext(ctx)
+	tenant := middleware.GetTenantFromContext(ctx)
+
+	// Internal users can access any organization
+	if user != nil && user.UserType == model.UserTypeInternal {
+		return nil
+	}
+
+	// External and end users must belong to the tenant organization
+	if user != nil && tenant != nil {
+		if user.UserType == model.UserTypeExternal || user.UserType == model.UserTypeEndUser {
+			if user.OrganizationID == nil || *user.OrganizationID != tenant.Organization.ID {
+				return errors.New(errors.CodeForbidden, "user does not belong to this organization")
+			}
+		}
+	}
+
+	// For unauthenticated requests, check organization context requirements
+	if user == nil {
+		userType := c.getDetectedUserType(ctx)
+		if userType == string(model.UserTypeExternal) || userType == string(model.UserTypeEndUser) {
+			orgContext := c.getOrganizationContext(ctx)
+			if orgContext == nil {
+				return errors.New(errors.CodeBadRequest, "organization context is required")
+			}
+		}
+	}
+
+	return nil
+}
+
+// Helper methods for organization creation flow
+
+func (c *authController) getOrganizationNameFromRequest(req model.RegisterRequest) string {
+	if name, ok := req.Metadata["organization_name"].(string); ok && name != "" {
+		return name
+	}
+	// Default organization name based on email domain
+	parts := strings.Split(req.Email, "@")
+	if len(parts) == 2 {
+		domain := parts[1]
+		// Remove .com, .org etc and capitalize
+		domainParts := strings.Split(domain, ".")
+		if len(domainParts) > 0 {
+			return strings.Title(domainParts[0])
+		}
+	}
+	return "My Organization"
+}
+
+func (c *authController) getOrganizationSlugFromRequest(req model.RegisterRequest) string {
+	if slug, ok := req.Metadata["organization_slug"].(string); ok && slug != "" {
+		return slug
+	}
+	// Default slug based on organization name
+	name := c.getOrganizationNameFromRequest(req)
+	return strings.ToLower(strings.ReplaceAll(name, " ", "-"))
+}
+
+func (c *authController) getDomainFromRequest(req model.RegisterRequest) string {
+	if domain, ok := req.Metadata["domain"].(string); ok && domain != "" {
+		return domain
+	}
+	// Extract domain from email
+	parts := strings.Split(req.Email, "@")
+	if len(parts) == 2 {
+		return parts[1]
+	}
+	return ""
+}
+
+func (c *authController) getPlanFromRequest(req model.RegisterRequest) string {
+	if plan, ok := req.Metadata["plan"].(string); ok && plan != "" {
+		return plan
+	}
+	return "free" // Default plan
+}
+
+// Helper function to check if the request has proper API access for auth operations
+func (c *authController) hasAPIAccess(ctx context.Context) bool {
+	// Check if request has API key access (including client keys)
+	return middleware.HasAPIKeyAccess(ctx) || middleware.IsAuthenticated(ctx)
+}
+
+// Helper function to get organization context from API key or user
+func (c *authController) getOrganizationFromAPIKey(ctx context.Context) *xid.ID {
+	apiKey := middleware.GetAPIKeyFromContext(ctx)
+	if apiKey != nil && apiKey.OrganizationID != nil {
+		return apiKey.OrganizationID
+	}
+	return nil
 }

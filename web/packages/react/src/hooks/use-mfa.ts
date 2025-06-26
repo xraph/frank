@@ -297,8 +297,8 @@ export const MFA_METHOD_CONFIGS = {
  * ```
  */
 export function useMFA(): UseMFAReturn {
-    const { user, session, reload } = useAuth();
-    const { apiUrl, publishableKey, features } = useConfig();
+    const {user, session, reload, userType} = useAuth();
+    const {apiUrl, publishableKey, features} = useConfig();
 
     const [mfaMethods, setMFAMethods] = useState<MFAMethod[]>([]);
     const [backupCodes, setBackupCodes] = useState<string[]>([]);
@@ -311,6 +311,7 @@ export function useMFA(): UseMFAReturn {
         return new FrankUser({
             publishableKey,
             apiUrl,
+            userType: userType ?? 'end_user',
         }, session.accessToken);
     }, [publishableKey, apiUrl, session?.accessToken]);
 

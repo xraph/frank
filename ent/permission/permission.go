@@ -175,9 +175,9 @@ var (
 )
 
 // CategoryValidator is a validator for the "category" field enum values. It is called by the builders before save.
-func CategoryValidator(c model.ContextType) error {
+func CategoryValidator(c model.PermissionCategory) error {
 	switch c.String() {
-	case "platform", "organization", "application", "resource":
+	case "platform", "organization", "application", "resource", "membership", "user_management", "self_access", "api_management", "rbac", "security", "integration", "system", "platform_management", "billing", "analytics", "compliance", "support":
 		return nil
 	default:
 		return fmt.Errorf("permission: invalid enum value for category field: %q", c)

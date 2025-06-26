@@ -151,7 +151,7 @@ func registerListActivities(api huma.API, activityCtrl *activityController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, activityCtrl.di.AuthZ().Checker(), activityCtrl.di.Logger())(
-			authz.PermissionReadActivity, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadActivity, model.ResourceOrganization, "orgId",
 		)},
 	}, activityCtrl.listActivitiesHandler)
 }
@@ -170,7 +170,7 @@ func registerGetActivity(api huma.API, activityCtrl *activityController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, activityCtrl.di.AuthZ().Checker(), activityCtrl.di.Logger())(
-			authz.PermissionReadActivity, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadActivity, model.ResourceOrganization, "orgId",
 		)},
 	}, activityCtrl.getActivityHandler)
 }
@@ -189,7 +189,7 @@ func registerGetResourceActivities(api huma.API, activityCtrl *activityControlle
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, activityCtrl.di.AuthZ().Checker(), activityCtrl.di.Logger())(
-			authz.PermissionReadActivity, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadActivity, model.ResourceOrganization, "orgId",
 		)},
 	}, activityCtrl.getResourceActivitiesHandler)
 }
@@ -208,7 +208,7 @@ func registerGetUserActivities(api huma.API, activityCtrl *activityController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, activityCtrl.di.AuthZ().Checker(), activityCtrl.di.Logger())(
-			authz.PermissionReadActivity, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadActivity, model.ResourceOrganization, "orgId",
 		)},
 	}, activityCtrl.getUserActivitiesHandler)
 }
@@ -227,7 +227,7 @@ func registerGetOrganizationActivities(api huma.API, activityCtrl *activityContr
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, activityCtrl.di.AuthZ().Checker(), activityCtrl.di.Logger())(
-			authz.PermissionReadActivity, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadActivity, model.ResourceOrganization, "orgId",
 		)},
 	}, activityCtrl.getOrganizationActivitiesHandler)
 }
@@ -246,7 +246,7 @@ func registerGetActivityStats(api huma.API, activityCtrl *activityController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, activityCtrl.di.AuthZ().Checker(), activityCtrl.di.Logger())(
-			authz.PermissionReadActivity, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadActivity, model.ResourceOrganization, "orgId",
 		)},
 	}, activityCtrl.getActivityStatsHandler)
 }
@@ -265,7 +265,7 @@ func registerGetUsageMetrics(api huma.API, activityCtrl *activityController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, activityCtrl.di.AuthZ().Checker(), activityCtrl.di.Logger())(
-			authz.PermissionReadActivity, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadActivity, model.ResourceOrganization, "orgId",
 		)},
 	}, activityCtrl.getUsageMetricsHandler)
 }
@@ -284,7 +284,7 @@ func registerGetTrendAnalysis(api huma.API, activityCtrl *activityController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, activityCtrl.di.AuthZ().Checker(), activityCtrl.di.Logger())(
-			authz.PermissionReadActivity, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadActivity, model.ResourceOrganization, "orgId",
 		)},
 	}, activityCtrl.getTrendAnalysisHandler)
 }
@@ -303,7 +303,7 @@ func registerCleanupExpiredActivities(api huma.API, activityCtrl *activityContro
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, activityCtrl.di.AuthZ().Checker(), activityCtrl.di.Logger())(
-			authz.PermissionDeleteActivity, authz.ResourceOrganization, "orgId",
+			authz.PermissionDeleteActivity, model.ResourceOrganization, "orgId",
 		)},
 	}, activityCtrl.cleanupExpiredActivitiesHandler)
 }
@@ -322,7 +322,7 @@ func registerGetGlobalActivityStats(api huma.API, activityCtrl *activityControll
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, activityCtrl.di.AuthZ().Checker(), activityCtrl.di.Logger())(
-			authz.PermissionReadActivityGlobal, authz.ResourceSystem, "",
+			authz.PermissionReadActivityGlobal, model.ResourceSystem, "",
 		)},
 	}, activityCtrl.getGlobalActivityStatsHandler)
 }
@@ -341,7 +341,7 @@ func registerGetSystemUsageMetrics(api huma.API, activityCtrl *activityControlle
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, activityCtrl.di.AuthZ().Checker(), activityCtrl.di.Logger())(
-			authz.PermissionReadActivityGlobal, authz.ResourceSystem, "",
+			authz.PermissionReadActivityGlobal, model.ResourceSystem, "",
 		)},
 	}, activityCtrl.getSystemUsageMetricsHandler)
 }

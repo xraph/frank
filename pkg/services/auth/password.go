@@ -32,6 +32,7 @@ type PasswordService interface {
 	// Password reset
 	InitiatePasswordReset(ctx context.Context, req model.PasswordResetRequest) (*model.PasswordResetResponse, error)
 	ConfirmPasswordReset(ctx context.Context, req model.PasswordResetConfirmRequest) (*model.PasswordResetConfirmResponse, error)
+	ValidatePasswordResetToken(ctx context.Context, token string) (*model.ValidateTokenResponse, error)
 
 	// Password change
 	ChangePassword(ctx context.Context, userID xid.ID, req model.ChangePasswordRequest) error
@@ -375,6 +376,49 @@ func (s *passwordService) ConfirmPasswordReset(ctx context.Context, req model.Pa
 	return &model.PasswordResetConfirmResponse{
 		Success: true,
 		Message: "Password reset successfully",
+	}, nil
+}
+
+// ValidatePasswordResetToken validates a password reset token and ensures it is valid, not expired, and associated with a user.
+func (s *passwordService) ValidatePasswordResetToken(ctx context.Context, token string) (*model.ValidateTokenResponse, error) {
+	if token == "" {
+		return nil, errors.New(errors.CodeBadRequest, "reset token is required")
+	}
+
+	// Get and validate reset token
+	verification, err := s.verificationRepo.GetValidToken(ctx, token)
+	if err != nil {
+		return nil, errors.Wrap(err, errors.CodeUnauthorized, "invalid or expired reset token")
+	}
+
+	if verification.Type != "password_reset" {
+		return nil, errors.New(errors.CodeBadRequest, "invalid token type")
+	}
+
+	if verification.UserID.IsNil() {
+		return nil, errors.New(errors.CodeInternalServer, "invalid verification record")
+	}
+
+	// Get user
+	_, err = s.userRepo.GetByID(ctx, verification.UserID)
+	if err != nil {
+		return nil, errors.Wrap(err, errors.CodeInternalServer, "user not found")
+	}
+
+	if verification.Used {
+		return nil, errors.New(errors.CodeUnauthorized, "reset token has already been used")
+	}
+
+	if verification.ExpiresAt.Before(time.Now()) {
+		return nil, errors.New(errors.CodeUnauthorized, "reset token has expired")
+	}
+
+	// Audit log
+	// s.auditPasswordReset(ctx, user.ID)
+
+	return &model.ValidateTokenResponse{
+		Valid:   true,
+		Message: "Token is valid",
 	}, nil
 }
 

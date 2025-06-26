@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/juicycleff/frank/ent"
 	"github.com/juicycleff/frank/internal/repository"
 	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/juicycleff/frank/pkg/logging"
@@ -166,7 +165,7 @@ func (s *membershipService) AddMember(ctx context.Context, input AddMemberInput)
 	}
 
 	// Convert to model
-	membership := s.entToModel(entMembership)
+	membership := ConvertEntMembershipToModel(entMembership)
 	return membership, nil
 }
 
@@ -278,7 +277,7 @@ func (s *membershipService) UpdateMemberRole(ctx context.Context, organizationID
 		s.logger.Error("Failed to create audit log for role update", logging.Error(err))
 	}
 
-	return s.entToModel(updatedMembership), nil
+	return ConvertEntMembershipToModel(updatedMembership), nil
 }
 
 // UpdateMemberStatus updates a member's status
@@ -325,7 +324,7 @@ func (s *membershipService) UpdateMemberStatus(ctx context.Context, organization
 		s.logger.Error("Failed to create audit log for status update", logging.Error(err))
 	}
 
-	return s.entToModel(updatedMembership), nil
+	return ConvertEntMembershipToModel(updatedMembership), nil
 }
 
 // GetMembership retrieves a specific membership
@@ -335,7 +334,7 @@ func (s *membershipService) GetMembership(ctx context.Context, organizationID, u
 		return nil, errors.Wrap(err, errors.CodeNotFound, "Membership not found")
 	}
 
-	return s.entToModel(entMembership), nil
+	return ConvertEntMembershipToModel(entMembership), nil
 }
 
 // GetMembershipByID retrieves a membership by ID
@@ -345,7 +344,7 @@ func (s *membershipService) GetMembershipByID(ctx context.Context, membershipID 
 		return nil, errors.Wrap(err, errors.CodeNotFound, "Membership not found")
 	}
 
-	return s.entToModel(entMembership), nil
+	return ConvertEntMembershipToModel(entMembership), nil
 }
 
 // ListOrganizationMembers lists members of an organization
@@ -380,7 +379,7 @@ func (s *membershipService) ListOrganizationMembers(ctx context.Context, organiz
 	// Convert to model response
 	members := make([]model.MemberSummary, len(result.Data))
 	for i, entMembership := range result.Data {
-		members[i] = s.entToMemberSummary(entMembership)
+		members[i] = ConvertEntToMemberSummary(entMembership)
 	}
 
 	return &model.MemberListResponse{
@@ -421,7 +420,7 @@ func (s *membershipService) ListUserMemberships(ctx context.Context, userID xid.
 	// Convert to model response
 	memberships := make([]model.MembershipSummary, len(result.Data))
 	for i, entMembership := range result.Data {
-		memberships[i] = s.entToMembershipSummary(entMembership)
+		memberships[i] = ConvertEntToMembershipSummary(entMembership)
 	}
 
 	return &model.MembershipListResponse{
@@ -442,7 +441,7 @@ func (s *membershipService) GetMemberRole(ctx context.Context, organizationID, u
 		return nil, errors.Wrap(err, errors.CodeInternalServer, "Failed to get role")
 	}
 
-	return s.entRoleToModel(role), nil
+	return ConvertEntRoleToModel(role), nil
 }
 
 // IsMember gets a member's role in an organization
@@ -742,75 +741,6 @@ func (s *membershipService) ValidateMembershipChange(ctx context.Context, organi
 	}
 
 	return nil
-}
-
-// Helper methods
-
-// entToModel converts ent.Membership to model.Membership
-func (s *membershipService) entToModel(entMembership *ent.Membership) *model.Membership {
-	return &model.Membership{
-		Base: model.Base{
-			ID:        entMembership.ID,
-			CreatedAt: entMembership.CreatedAt,
-			UpdatedAt: entMembership.UpdatedAt,
-		},
-		UserID:           entMembership.UserID,
-		OrganizationID:   entMembership.OrganizationID,
-		RoleID:           entMembership.RoleID,
-		Status:           entMembership.Status,
-		JoinedAt:         entMembership.JoinedAt,
-		LeftAt:           entMembership.LeftAt,
-		InvitedBy:        &entMembership.InvitedBy,
-		IsBillingContact: entMembership.IsBillingContact,
-		IsPrimaryContact: entMembership.IsPrimaryContact,
-		CustomFields:     entMembership.CustomFields,
-	}
-}
-
-// entToMemberSummary converts ent.Membership to model.MemberSummary
-func (s *membershipService) entToMemberSummary(entMembership *ent.Membership) model.MemberSummary {
-	return model.MemberSummary{
-		UserID:    entMembership.UserID,
-		RoleName:  "", // Would need to join with role table
-		Status:    string(entMembership.Status),
-		JoinedAt:  entMembership.JoinedAt,
-		IsBilling: entMembership.IsBillingContact,
-		IsPrimary: entMembership.IsPrimaryContact,
-	}
-}
-
-// entToMembershipSummary converts ent.Membership to model.MembershipSummary
-func (s *membershipService) entToMembershipSummary(entMembership *ent.Membership) model.MembershipSummary {
-	roleName := entMembership.RoleID.String()
-	if entMembership.Edges.Role != nil {
-		roleName = entMembership.Edges.Role.Name
-	}
-	return model.MembershipSummary{
-		ID:               entMembership.ID,
-		OrganizationID:   entMembership.OrganizationID,
-		RoleName:         roleName,
-		Status:           entMembership.Status,
-		JoinedAt:         entMembership.JoinedAt,
-		IsBillingContact: entMembership.IsBillingContact,
-		IsPrimaryContact: entMembership.IsPrimaryContact,
-	}
-}
-
-// entRoleToModel converts ent.Role to model.Role
-func (s *membershipService) entRoleToModel(entRole *ent.Role) *model.Role {
-	return &model.Role{
-		Base: model.Base{
-			ID:        entRole.ID,
-			CreatedAt: entRole.CreatedAt,
-			UpdatedAt: entRole.UpdatedAt,
-		},
-		Name:        entRole.Name,
-		DisplayName: entRole.DisplayName,
-		Description: entRole.Description,
-		RoleType:    entRole.RoleType,
-		IsDefault:   entRole.IsDefault,
-		// Metadata:    entRole.Metadata,
-	}
 }
 
 // Audit helper methods

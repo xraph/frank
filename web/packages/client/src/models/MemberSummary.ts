@@ -13,6 +13,14 @@
  */
 
 import { mapValues } from '../runtime';
+import type { MembershipStatus } from './MembershipStatus';
+import {
+    MembershipStatusFromJSON,
+    MembershipStatusFromJSONTyped,
+    MembershipStatusToJSON,
+    MembershipStatusToJSONTyped,
+} from './MembershipStatus';
+
 /**
  * 
  * @export
@@ -136,10 +144,10 @@ export interface MemberSummary {
     roleName: string;
     /**
      * Membership status
-     * @type {string}
+     * @type {MembershipStatus}
      * @memberof MemberSummary
      */
-    status: string;
+    status: MembershipStatus;
     /**
      * Member tags
      * @type {Array<string>}
@@ -159,6 +167,8 @@ export interface MemberSummary {
      */
     userId: string;
 }
+
+
 
 /**
  * Check if a given object implements the MemberSummary interface.
@@ -207,7 +217,7 @@ export function MemberSummaryFromJSONTyped(json: any, ignoreDiscriminator: boole
         'roleDisplay': json['roleDisplay'],
         'roleId': json['roleId'],
         'roleName': json['roleName'],
-        'status': json['status'],
+        'status': MembershipStatusFromJSON(json['status']),
         'tags': json['tags'] == null ? undefined : json['tags'],
         'timezone': json['timezone'] == null ? undefined : json['timezone'],
         'userId': json['userId'],
@@ -245,7 +255,7 @@ export function MemberSummaryToJSONTyped(value?: MemberSummary | null, ignoreDis
         'roleDisplay': value['roleDisplay'],
         'roleId': value['roleId'],
         'roleName': value['roleName'],
-        'status': value['status'],
+        'status': MembershipStatusToJSON(value['status']),
         'tags': value['tags'],
         'timezone': value['timezone'],
         'userId': value['userId'],

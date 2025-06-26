@@ -13,21 +13,12 @@
  */
 
 import { mapValues } from '../runtime';
-import type { OrgType } from './OrgType';
-import {
-    OrgTypeFromJSON,
-    OrgTypeFromJSONTyped,
-    OrgTypeToJSON,
-    OrgTypeToJSONTyped,
-} from './OrgType';
-
 /**
  * 
  * @export
  * @interface CreateOrganizationRequest
  */
 export interface CreateOrganizationRequest {
-    [key: string]: any | any;
     /**
      * A URL to the JSON Schema for this object.
      * @type {string}
@@ -35,41 +26,11 @@ export interface CreateOrganizationRequest {
      */
     readonly $schema?: string;
     /**
-     * Auth service configuration
-     * @type {object}
-     * @memberof CreateOrganizationRequest
-     */
-    authConfig?: object;
-    /**
-     * Whether to create trial period
-     * @type {boolean}
-     * @memberof CreateOrganizationRequest
-     */
-    createTrialPeriod: boolean;
-    /**
      * Primary domain
      * @type {string}
      * @memberof CreateOrganizationRequest
      */
     domain?: string;
-    /**
-     * Enable auth service
-     * @type {boolean}
-     * @memberof CreateOrganizationRequest
-     */
-    enableAuthService: boolean;
-    /**
-     * End user limit
-     * @type {number}
-     * @memberof CreateOrganizationRequest
-     */
-    endUserLimit: number;
-    /**
-     * External user limit
-     * @type {number}
-     * @memberof CreateOrganizationRequest
-     */
-    externalUserLimit: number;
     /**
      * Logo URL
      * @type {string}
@@ -77,29 +38,11 @@ export interface CreateOrganizationRequest {
      */
     logoUrl?: string;
     /**
-     * Additional metadata
-     * @type {object}
-     * @memberof CreateOrganizationRequest
-     */
-    metadata?: object;
-    /**
      * Organization name
      * @type {string}
      * @memberof CreateOrganizationRequest
      */
     name: string;
-    /**
-     * Organization type
-     * @type {OrgType}
-     * @memberof CreateOrganizationRequest
-     */
-    orgType: OrgType;
-    /**
-     * Owner email (will create user if not exists)
-     * @type {string}
-     * @memberof CreateOrganizationRequest
-     */
-    ownerEmail?: string;
     /**
      * Initial subscription plan
      * @type {string}
@@ -114,18 +57,11 @@ export interface CreateOrganizationRequest {
     slug?: string;
 }
 
-
-
 /**
  * Check if a given object implements the CreateOrganizationRequest interface.
  */
 export function instanceOfCreateOrganizationRequest(value: object): value is CreateOrganizationRequest {
-    if (!('createTrialPeriod' in value) || value['createTrialPeriod'] === undefined) return false;
-    if (!('enableAuthService' in value) || value['enableAuthService'] === undefined) return false;
-    if (!('endUserLimit' in value) || value['endUserLimit'] === undefined) return false;
-    if (!('externalUserLimit' in value) || value['externalUserLimit'] === undefined) return false;
     if (!('name' in value) || value['name'] === undefined) return false;
-    if (!('orgType' in value) || value['orgType'] === undefined) return false;
     if (!('plan' in value) || value['plan'] === undefined) return false;
     return true;
 }
@@ -140,19 +76,10 @@ export function CreateOrganizationRequestFromJSONTyped(json: any, ignoreDiscrimi
     }
     return {
         
-            ...json,
         '$schema': json['$schema'] == null ? undefined : json['$schema'],
-        'authConfig': json['authConfig'] == null ? undefined : json['authConfig'],
-        'createTrialPeriod': json['createTrialPeriod'],
         'domain': json['domain'] == null ? undefined : json['domain'],
-        'enableAuthService': json['enableAuthService'],
-        'endUserLimit': json['endUserLimit'],
-        'externalUserLimit': json['externalUserLimit'],
         'logoUrl': json['logoUrl'] == null ? undefined : json['logoUrl'],
-        'metadata': json['metadata'] == null ? undefined : json['metadata'],
         'name': json['name'],
-        'orgType': OrgTypeFromJSON(json['orgType']),
-        'ownerEmail': json['ownerEmail'] == null ? undefined : json['ownerEmail'],
         'plan': json['plan'],
         'slug': json['slug'] == null ? undefined : json['slug'],
     };
@@ -169,18 +96,9 @@ export function CreateOrganizationRequestToJSONTyped(value?: Omit<CreateOrganiza
 
     return {
         
-            ...value,
-        'authConfig': value['authConfig'],
-        'createTrialPeriod': value['createTrialPeriod'],
         'domain': value['domain'],
-        'enableAuthService': value['enableAuthService'],
-        'endUserLimit': value['endUserLimit'],
-        'externalUserLimit': value['externalUserLimit'],
         'logoUrl': value['logoUrl'],
-        'metadata': value['metadata'],
         'name': value['name'],
-        'orgType': OrgTypeToJSON(value['orgType']),
-        'ownerEmail': value['ownerEmail'],
         'plan': value['plan'],
         'slug': value['slug'],
     };

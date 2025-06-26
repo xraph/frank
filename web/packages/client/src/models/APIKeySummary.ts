@@ -13,6 +13,21 @@
  */
 
 import { mapValues } from '../runtime';
+import type { APIKeyType } from './APIKeyType';
+import {
+    APIKeyTypeFromJSON,
+    APIKeyTypeFromJSONTyped,
+    APIKeyTypeToJSON,
+    APIKeyTypeToJSONTyped,
+} from './APIKeyType';
+import type { Environment } from './Environment';
+import {
+    EnvironmentFromJSON,
+    EnvironmentFromJSONTyped,
+    EnvironmentToJSON,
+    EnvironmentToJSONTyped,
+} from './Environment';
+
 /**
  * 
  * @export
@@ -33,6 +48,12 @@ export interface APIKeySummary {
      */
     createdAt: Date;
     /**
+     * Environment
+     * @type {Environment}
+     * @memberof APIKeySummary
+     */
+    environment: Environment;
+    /**
      * Expiration
      * @type {Date}
      * @memberof APIKeySummary
@@ -44,12 +65,6 @@ export interface APIKeySummary {
      * @memberof APIKeySummary
      */
     id: string;
-    /**
-     * Key prefix for identification
-     * @type {string}
-     * @memberof APIKeySummary
-     */
-    keyPrefix: string;
     /**
      * Last usage
      * @type {Date}
@@ -69,11 +84,23 @@ export interface APIKeySummary {
      */
     permissionCount: number;
     /**
-     * API key type
+     * Public key (safe to display)
      * @type {string}
      * @memberof APIKeySummary
      */
-    type: string;
+    publicKey: string;
+    /**
+     * Secret key prefix for identification
+     * @type {string}
+     * @memberof APIKeySummary
+     */
+    secretKeyPrefix: string;
+    /**
+     * API key type
+     * @type {APIKeyType}
+     * @memberof APIKeySummary
+     */
+    type: APIKeyType;
     /**
      * Total usage count
      * @type {number}
@@ -82,16 +109,20 @@ export interface APIKeySummary {
     usageCount: number;
 }
 
+
+
 /**
  * Check if a given object implements the APIKeySummary interface.
  */
 export function instanceOfAPIKeySummary(value: object): value is APIKeySummary {
     if (!('active' in value) || value['active'] === undefined) return false;
     if (!('createdAt' in value) || value['createdAt'] === undefined) return false;
+    if (!('environment' in value) || value['environment'] === undefined) return false;
     if (!('id' in value) || value['id'] === undefined) return false;
-    if (!('keyPrefix' in value) || value['keyPrefix'] === undefined) return false;
     if (!('name' in value) || value['name'] === undefined) return false;
     if (!('permissionCount' in value) || value['permissionCount'] === undefined) return false;
+    if (!('publicKey' in value) || value['publicKey'] === undefined) return false;
+    if (!('secretKeyPrefix' in value) || value['secretKeyPrefix'] === undefined) return false;
     if (!('type' in value) || value['type'] === undefined) return false;
     if (!('usageCount' in value) || value['usageCount'] === undefined) return false;
     return true;
@@ -110,13 +141,15 @@ export function APIKeySummaryFromJSONTyped(json: any, ignoreDiscriminator: boole
             ...json,
         'active': json['active'],
         'createdAt': (new Date(json['createdAt'])),
+        'environment': EnvironmentFromJSON(json['environment']),
         'expiresAt': json['expiresAt'] == null ? undefined : (new Date(json['expiresAt'])),
         'id': json['id'],
-        'keyPrefix': json['keyPrefix'],
         'lastUsed': json['lastUsed'] == null ? undefined : (new Date(json['lastUsed'])),
         'name': json['name'],
         'permissionCount': json['permissionCount'],
-        'type': json['type'],
+        'publicKey': json['publicKey'],
+        'secretKeyPrefix': json['secretKeyPrefix'],
+        'type': APIKeyTypeFromJSON(json['type']),
         'usageCount': json['usageCount'],
     };
 }
@@ -135,13 +168,15 @@ export function APIKeySummaryToJSONTyped(value?: APIKeySummary | null, ignoreDis
             ...value,
         'active': value['active'],
         'createdAt': ((value['createdAt']).toISOString()),
+        'environment': EnvironmentToJSON(value['environment']),
         'expiresAt': value['expiresAt'] == null ? undefined : ((value['expiresAt']).toISOString()),
         'id': value['id'],
-        'keyPrefix': value['keyPrefix'],
         'lastUsed': value['lastUsed'] == null ? undefined : ((value['lastUsed']).toISOString()),
         'name': value['name'],
         'permissionCount': value['permissionCount'],
-        'type': value['type'],
+        'publicKey': value['publicKey'],
+        'secretKeyPrefix': value['secretKeyPrefix'],
+        'type': APIKeyTypeToJSON(value['type']),
         'usageCount': value['usageCount'],
     };
 }

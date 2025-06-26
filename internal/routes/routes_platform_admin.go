@@ -25,6 +25,8 @@ func RegisterPlatformAdminAPI(group huma.API, di di.Container) {
 	registerListAllOrganizations(group, platformCtrl)
 	registerGetOrganizationDetails(group, platformCtrl)
 	registerSuspendOrganization(group, platformCtrl)
+	registerCreatePlatformUserHandler(group, platformCtrl)
+	registerCreateOrganizationHandlerPlatform(group, platformCtrl)
 	registerActivateOrganization(group, platformCtrl)
 	registerDeleteOrganizationPlatform(group, platformCtrl)
 	registerGetOrganizationStatsPlatform(group, platformCtrl)
@@ -111,7 +113,7 @@ func registerListAllOrganizations(api huma.API, ctrl *platformAdminController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManagePlatform, authz.ResourceSystem, "",
+			authz.PermissionManagePlatform, model.ResourceSystem, "",
 		)},
 	}, ctrl.listAllOrganizationsHandler)
 }
@@ -130,7 +132,7 @@ func registerGetOrganizationDetails(api huma.API, ctrl *platformAdminController)
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManagePlatform, authz.ResourceSystem, "",
+			authz.PermissionManagePlatform, model.ResourceSystem, "",
 		)},
 	}, ctrl.getOrganizationDetailsHandler)
 }
@@ -149,7 +151,7 @@ func registerSuspendOrganization(api huma.API, ctrl *platformAdminController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManagePlatform, authz.ResourceSystem, "",
+			authz.PermissionManagePlatform, model.ResourceSystem, "",
 		)},
 	}, ctrl.suspendOrganizationHandler)
 }
@@ -168,7 +170,7 @@ func registerActivateOrganization(api huma.API, ctrl *platformAdminController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManagePlatform, authz.ResourceSystem, "",
+			authz.PermissionManagePlatform, model.ResourceSystem, "",
 		)},
 	}, ctrl.activateOrganizationHandler)
 }
@@ -187,9 +189,28 @@ func registerDeleteOrganizationPlatform(api huma.API, ctrl *platformAdminControl
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManagePlatform, authz.ResourceSystem, "",
+			authz.PermissionManagePlatform, model.ResourceSystem, "",
 		)},
 	}, ctrl.deleteOrganizationHandler)
+}
+
+func registerCreateOrganizationHandlerPlatform(api huma.API, ctrl *platformAdminController) {
+	huma.Register(api, huma.Operation{
+		OperationID:   "createPlatformOrganization",
+		Method:        http.MethodPost,
+		Path:          "/platform/organizations",
+		Summary:       "Create organization",
+		Description:   "Create an organization",
+		Tags:          []string{"Platform Admin"},
+		DefaultStatus: 200,
+		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("Organization not found")),
+		Security: []map[string][]string{
+			{"jwt": {}},
+		},
+		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
+			authz.PermissionManagePlatform, model.ResourceSystem, "",
+		)},
+	}, ctrl.createOrganizationHandler)
 }
 
 func registerGetOrganizationStatsPlatform(api huma.API, ctrl *platformAdminController) {
@@ -206,7 +227,7 @@ func registerGetOrganizationStatsPlatform(api huma.API, ctrl *platformAdminContr
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManagePlatform, authz.ResourceSystem, "",
+			authz.PermissionManagePlatform, model.ResourceSystem, "",
 		)},
 	}, ctrl.getOrganizationStatsHandler)
 }
@@ -226,7 +247,7 @@ func registerGetOrganizationUsagePlatform(api huma.API, ctrl *platformAdminContr
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManagePlatform, authz.ResourceSystem, "",
+			authz.PermissionManagePlatform, model.ResourceSystem, "",
 		)},
 	}, ctrl.getOrganizationUsageHandler)
 }
@@ -247,7 +268,7 @@ func registerListAllUsers(api huma.API, ctrl *platformAdminController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManagePlatform, authz.ResourceSystem, "",
+			authz.PermissionManagePlatform, model.ResourceSystem, "",
 		)},
 	}, ctrl.listAllUsersHandler)
 }
@@ -266,9 +287,28 @@ func registerGetUserDetails(api huma.API, ctrl *platformAdminController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManagePlatform, authz.ResourceSystem, "",
+			authz.PermissionManagePlatform, model.ResourceSystem, "",
 		)},
 	}, ctrl.getUserDetailsHandler)
+}
+
+func registerCreatePlatformUserHandler(api huma.API, ctrl *platformAdminController) {
+	huma.Register(api, huma.Operation{
+		OperationID:   "createUserPlatform",
+		Method:        http.MethodGet,
+		Path:          "/platform/users",
+		Summary:       "Create user",
+		Description:   "Create user information about a specific user",
+		Tags:          []string{"Platform Admin"},
+		DefaultStatus: 200,
+		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("User not found")),
+		Security: []map[string][]string{
+			{"jwt": {}},
+		},
+		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
+			authz.PermissionManagePlatform, model.ResourceSystem, "",
+		)},
+	}, ctrl.createPlatformUserHandler)
 }
 
 func registerImpersonateUser(api huma.API, ctrl *platformAdminController) {
@@ -285,7 +325,7 @@ func registerImpersonateUser(api huma.API, ctrl *platformAdminController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManagePlatform, authz.ResourceSystem, "",
+			authz.PermissionManagePlatform, model.ResourceSystem, "",
 		)},
 	}, ctrl.impersonateUserHandler)
 }
@@ -304,7 +344,7 @@ func registerBlockUser(api huma.API, ctrl *platformAdminController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManagePlatform, authz.ResourceSystem, "",
+			authz.PermissionManagePlatform, model.ResourceSystem, "",
 		)},
 	}, ctrl.blockUserHandler)
 }
@@ -323,7 +363,7 @@ func registerUnblockUser(api huma.API, ctrl *platformAdminController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManagePlatform, authz.ResourceSystem, "",
+			authz.PermissionManagePlatform, model.ResourceSystem, "",
 		)},
 	}, ctrl.unblockUserHandler)
 }
@@ -342,7 +382,7 @@ func registerResetUserPassword(api huma.API, ctrl *platformAdminController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManagePlatform, authz.ResourceSystem, "",
+			authz.PermissionManagePlatform, model.ResourceSystem, "",
 		)},
 	}, ctrl.resetUserPasswordHandler)
 }
@@ -361,7 +401,7 @@ func registerGetUserSessionsPlatform(api huma.API, ctrl *platformAdminController
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManagePlatform, authz.ResourceSystem, "",
+			authz.PermissionManagePlatform, model.ResourceSystem, "",
 		)},
 	}, ctrl.getUserSessionsHandler)
 }
@@ -380,7 +420,7 @@ func registerRevokeUserSessions(api huma.API, ctrl *platformAdminController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManagePlatform, authz.ResourceSystem, "",
+			authz.PermissionManagePlatform, model.ResourceSystem, "",
 		)},
 	}, ctrl.revokeUserSessionsHandler)
 }
@@ -401,7 +441,7 @@ func registerGetPlatformStats(api huma.API, ctrl *platformAdminController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManagePlatform, authz.ResourceSystem, "",
+			authz.PermissionManagePlatform, model.ResourceSystem, "",
 		)},
 	}, ctrl.getPlatformStatsHandler)
 }
@@ -420,7 +460,7 @@ func registerGetPlatformMetrics(api huma.API, ctrl *platformAdminController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManagePlatform, authz.ResourceSystem, "",
+			authz.PermissionManagePlatform, model.ResourceSystem, "",
 		)},
 	}, ctrl.getPlatformMetricsHandler)
 }
@@ -439,7 +479,7 @@ func registerGetGrowthMetrics(api huma.API, ctrl *platformAdminController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManagePlatform, authz.ResourceSystem, "",
+			authz.PermissionManagePlatform, model.ResourceSystem, "",
 		)},
 	}, ctrl.getGrowthMetricsHandler)
 }
@@ -458,7 +498,7 @@ func registerGetRevenueMetrics(api huma.API, ctrl *platformAdminController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManagePlatform, authz.ResourceSystem, "",
+			authz.PermissionManagePlatform, model.ResourceSystem, "",
 		)},
 	}, ctrl.getRevenueMetricsHandler)
 }
@@ -477,7 +517,7 @@ func registerGetUsageAnalytics(api huma.API, ctrl *platformAdminController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManagePlatform, authz.ResourceSystem, "",
+			authz.PermissionManagePlatform, model.ResourceSystem, "",
 		)},
 	}, ctrl.getUsageAnalyticsHandler)
 }
@@ -498,7 +538,7 @@ func registerGetSystemHealth(api huma.API, ctrl *platformAdminController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManagePlatform, authz.ResourceSystem, "",
+			authz.PermissionManagePlatform, model.ResourceSystem, "",
 		)},
 	}, ctrl.getSystemHealthHandler)
 }
@@ -517,7 +557,7 @@ func registerGetSystemMetrics(api huma.API, ctrl *platformAdminController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManagePlatform, authz.ResourceSystem, "",
+			authz.PermissionManagePlatform, model.ResourceSystem, "",
 		)},
 	}, ctrl.getSystemMetricsHandler)
 }
@@ -536,7 +576,7 @@ func registerGetPerformanceMetrics(api huma.API, ctrl *platformAdminController) 
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManagePlatform, authz.ResourceSystem, "",
+			authz.PermissionManagePlatform, model.ResourceSystem, "",
 		)},
 	}, ctrl.getPerformanceMetricsHandler)
 }
@@ -555,7 +595,7 @@ func registerGetErrorRates(api huma.API, ctrl *platformAdminController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManagePlatform, authz.ResourceSystem, "",
+			authz.PermissionManagePlatform, model.ResourceSystem, "",
 		)},
 	}, ctrl.getErrorRatesHandler)
 }
@@ -574,7 +614,7 @@ func registerGetAuditSummary(api huma.API, ctrl *platformAdminController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManagePlatform, authz.ResourceSystem, "",
+			authz.PermissionManagePlatform, model.ResourceSystem, "",
 		)},
 	}, ctrl.getAuditSummaryHandler)
 }
@@ -595,7 +635,7 @@ func registerListFeatureFlags(api huma.API, ctrl *platformAdminController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManagePlatform, authz.ResourceSystem, "",
+			authz.PermissionManagePlatform, model.ResourceSystem, "",
 		)},
 	}, ctrl.listFeatureFlagsHandler)
 }
@@ -614,7 +654,7 @@ func registerCreateFeatureFlag(api huma.API, ctrl *platformAdminController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManagePlatform, authz.ResourceSystem, "",
+			authz.PermissionManagePlatform, model.ResourceSystem, "",
 		)},
 	}, ctrl.createFeatureFlagHandler)
 }
@@ -633,7 +673,7 @@ func registerUpdateFeatureFlag(api huma.API, ctrl *platformAdminController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManagePlatform, authz.ResourceSystem, "",
+			authz.PermissionManagePlatform, model.ResourceSystem, "",
 		)},
 	}, ctrl.updateFeatureFlagHandler)
 }
@@ -652,7 +692,7 @@ func registerDeleteFeatureFlag(api huma.API, ctrl *platformAdminController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManagePlatform, authz.ResourceSystem, "",
+			authz.PermissionManagePlatform, model.ResourceSystem, "",
 		)},
 	}, ctrl.deleteFeatureFlagHandler)
 }
@@ -671,7 +711,7 @@ func registerGetFeatureUsage(api huma.API, ctrl *platformAdminController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManagePlatform, authz.ResourceSystem, "",
+			authz.PermissionManagePlatform, model.ResourceSystem, "",
 		)},
 	}, ctrl.getFeatureUsageHandler)
 }
@@ -692,7 +732,7 @@ func registerGetBillingOverview(api huma.API, ctrl *platformAdminController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManagePlatform, authz.ResourceSystem, "",
+			authz.PermissionManagePlatform, model.ResourceSystem, "",
 		)},
 	}, ctrl.getBillingOverviewHandler)
 }
@@ -711,7 +751,7 @@ func registerListSubscriptions(api huma.API, ctrl *platformAdminController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManagePlatform, authz.ResourceSystem, "",
+			authz.PermissionManagePlatform, model.ResourceSystem, "",
 		)},
 	}, ctrl.listSubscriptionsHandler)
 }
@@ -730,7 +770,7 @@ func registerGetSubscriptionDetails(api huma.API, ctrl *platformAdminController)
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManagePlatform, authz.ResourceSystem, "",
+			authz.PermissionManagePlatform, model.ResourceSystem, "",
 		)},
 	}, ctrl.getSubscriptionDetailsHandler)
 }
@@ -749,7 +789,7 @@ func registerUpdateSubscription(api huma.API, ctrl *platformAdminController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManagePlatform, authz.ResourceSystem, "",
+			authz.PermissionManagePlatform, model.ResourceSystem, "",
 		)},
 	}, ctrl.updateSubscriptionHandler)
 }
@@ -768,7 +808,7 @@ func registerCancelSubscription(api huma.API, ctrl *platformAdminController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManagePlatform, authz.ResourceSystem, "",
+			authz.PermissionManagePlatform, model.ResourceSystem, "",
 		)},
 	}, ctrl.cancelSubscriptionHandler)
 }
@@ -787,7 +827,7 @@ func registerGetRevenueReport(api huma.API, ctrl *platformAdminController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManagePlatform, authz.ResourceSystem, "",
+			authz.PermissionManagePlatform, model.ResourceSystem, "",
 		)},
 	}, ctrl.getRevenueReportHandler)
 }
@@ -808,7 +848,7 @@ func registerGetSecurityDashboard(api huma.API, ctrl *platformAdminController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManagePlatform, authz.ResourceSystem, "",
+			authz.PermissionManagePlatform, model.ResourceSystem, "",
 		)},
 	}, ctrl.getSecurityDashboardHandler)
 }
@@ -827,7 +867,7 @@ func registerListSecurityIncidents(api huma.API, ctrl *platformAdminController) 
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManagePlatform, authz.ResourceSystem, "",
+			authz.PermissionManagePlatform, model.ResourceSystem, "",
 		)},
 	}, ctrl.listSecurityIncidentsHandler)
 }
@@ -846,7 +886,7 @@ func registerGetComplianceReport(api huma.API, ctrl *platformAdminController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManagePlatform, authz.ResourceSystem, "",
+			authz.PermissionManagePlatform, model.ResourceSystem, "",
 		)},
 	}, ctrl.getComplianceReportHandler)
 }
@@ -865,7 +905,7 @@ func registerRunSecurityScan(api huma.API, ctrl *platformAdminController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManagePlatform, authz.ResourceSystem, "",
+			authz.PermissionManagePlatform, model.ResourceSystem, "",
 		)},
 	}, ctrl.runSecurityScanHandler)
 }
@@ -884,7 +924,7 @@ func registerGetAuditTrail(api huma.API, ctrl *platformAdminController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManagePlatform, authz.ResourceSystem, "",
+			authz.PermissionManagePlatform, model.ResourceSystem, "",
 		)},
 	}, ctrl.getAuditTrailHandler)
 }
@@ -905,7 +945,7 @@ func registerGetAPIUsage(api huma.API, ctrl *platformAdminController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManagePlatform, authz.ResourceSystem, "",
+			authz.PermissionManagePlatform, model.ResourceSystem, "",
 		)},
 	}, ctrl.getAPIUsageHandler)
 }
@@ -924,7 +964,7 @@ func registerListAPIKeysPlatform(api huma.API, ctrl *platformAdminController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManagePlatform, authz.ResourceSystem, "",
+			authz.PermissionManagePlatform, model.ResourceSystem, "",
 		)},
 	}, ctrl.listAPIKeysHandler)
 }
@@ -943,7 +983,7 @@ func registerRevokeAPIKey(api huma.API, ctrl *platformAdminController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManagePlatform, authz.ResourceSystem, "",
+			authz.PermissionManagePlatform, model.ResourceSystem, "",
 		)},
 	}, ctrl.revokeAPIKeyHandler)
 }
@@ -962,7 +1002,7 @@ func registerGetRateLimitStats(api huma.API, ctrl *platformAdminController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManagePlatform, authz.ResourceSystem, "",
+			authz.PermissionManagePlatform, model.ResourceSystem, "",
 		)},
 	}, ctrl.getRateLimitStatsHandler)
 }
@@ -983,7 +1023,7 @@ func registerListSupportTickets(api huma.API, ctrl *platformAdminController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManagePlatform, authz.ResourceSystem, "",
+			authz.PermissionManagePlatform, model.ResourceSystem, "",
 		)},
 	}, ctrl.listSupportTicketsHandler)
 }
@@ -1002,7 +1042,7 @@ func registerGetMaintenanceWindows(api huma.API, ctrl *platformAdminController) 
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManagePlatform, authz.ResourceSystem, "",
+			authz.PermissionManagePlatform, model.ResourceSystem, "",
 		)},
 	}, ctrl.getMaintenanceWindowsHandler)
 }
@@ -1021,7 +1061,7 @@ func registerScheduleMaintenance(api huma.API, ctrl *platformAdminController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManagePlatform, authz.ResourceSystem, "",
+			authz.PermissionManagePlatform, model.ResourceSystem, "",
 		)},
 	}, ctrl.scheduleMaintenanceHandler)
 }
@@ -1040,7 +1080,7 @@ func registerSendPlatformNotification(api huma.API, ctrl *platformAdminControlle
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ctrl.di.AuthZ().Checker(), ctrl.di.Logger())(
-			authz.PermissionManagePlatform, authz.ResourceSystem, "",
+			authz.PermissionManagePlatform, model.ResourceSystem, "",
 		)},
 	}, ctrl.sendPlatformNotificationHandler)
 }
@@ -1101,10 +1141,10 @@ type GetOrganizationUsagePlatformOutput = model.Output[*model.OrganizationUsage]
 // User Management
 type ListAllUsersInput struct {
 	model.PaginationParams
-	OrganizationID model.OptionalParam[xid.ID] `query:"organizationId" doc:"Filter by organization"`
-	UserType       model.OptionalParam[string] `query:"user_type" doc:"Filter by user type"`
-	Status         model.OptionalParam[string] `query:"status" doc:"Filter by user status"`
-	Search         model.OptionalParam[string] `query:"search" doc:"Search users by email or name"`
+	OrganizationID model.OptionalParam[xid.ID]         `query:"organizationId" doc:"Filter by organization"`
+	UserType       model.OptionalParam[model.UserType] `query:"user_type" doc:"Filter by user type"`
+	Status         model.OptionalParam[string]         `query:"status" doc:"Filter by user status"`
+	Search         model.OptionalParam[string]         `query:"search" doc:"Search users by email or name"`
 }
 
 type ListAllUsersOutput = model.Output[*model.PlatformUserListResponse]
@@ -1426,25 +1466,13 @@ func (c *platformAdminController) listAllOrganizationsHandler(ctx context.Contex
 		req.Search = input.Search.Value
 	}
 
-	organizations, err := c.di.OrganizationService().GetCustomerOrganizations(ctx, req)
+	organizations, err := c.di.OrganizationService().ListAllOrganizations(ctx, req)
 	if err != nil {
 		return nil, err
 	}
 
-	// Convert to platform response format
-	platformResponse := &model.PlatformOrganizationListResponse{
-		Organizations: organizations.Data,
-		Pagination:    organizations.Pagination,
-		Summary: model.OrganizationSummaryStats{
-			Total:     len(organizations.Data),
-			Active:    0, // Would calculate from data
-			Suspended: 0, // Would calculate from data
-			Trial:     0, // Would calculate from data
-		},
-	}
-
 	return &ListAllOrganizationsOutput{
-		Body: platformResponse,
+		Body: organizations,
 	}, nil
 }
 
@@ -1528,6 +1556,23 @@ func (c *platformAdminController) deleteOrganizationHandler(ctx context.Context,
 	}, nil
 }
 
+type CreateOrganizationPlatformInput struct {
+	Body model.CreateOrganizationPlatformRequest
+}
+
+func (c *platformAdminController) createOrganizationHandler(ctx context.Context, input *CreateOrganizationPlatformInput) (*CreateOrganizationOutput, error) {
+	orgService := c.di.OrganizationService()
+
+	org, err := orgService.CreatePlatformOrganization(ctx, input.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return &CreateOrganizationOutput{
+		Body: org,
+	}, nil
+}
+
 func (c *platformAdminController) getOrganizationStatsHandler(ctx context.Context, input *GetOrganizationStatsInput) (*GetOrganizationStatsPlatformOutput, error) {
 	stats, err := c.di.OrganizationService().GetOrganizationStats(ctx, input.ID)
 	if err != nil {
@@ -1565,24 +1610,25 @@ func (c *platformAdminController) listAllUsersHandler(ctx context.Context, input
 		PaginationParams: input.PaginationParams,
 	}
 
-	users, err := c.di.UserService().ListUsers(ctx, req)
-	if err != nil {
-		return nil, err
+	if input.Status.IsSet {
+		// req.Stats = &input.Status.Value
 	}
 
-	// Convert to platform response format
-	platformResponse := &model.PlatformUserListResponse{
-		Users:      users.Data,
-		Pagination: users.Pagination,
-		Summary: model.UserSummaryStats{
-			Total:    len(users.Data),
-			Active:   0, // Would calculate from data
-			Blocked:  0, // Would calculate from data
-			Verified: 0, // Would calculate from data
-			Internal: 0, // Would calculate from data
-			External: 0, // Would calculate from data
-			EndUsers: 0, // Would calculate from data
-		},
+	if input.Search.IsSet {
+		req.Search = input.Search.Value
+	}
+
+	if input.OrganizationID.IsSet {
+		req.OrganizationID = &input.OrganizationID.Value
+	}
+
+	if input.UserType.IsSet {
+		req.UserType = input.UserType.Value
+	}
+
+	platformResponse, err := c.di.UserService().ListPlatformUsers(ctx, req)
+	if err != nil {
+		return nil, err
 	}
 
 	return &ListAllUsersOutput{
@@ -1672,6 +1718,24 @@ func (c *platformAdminController) resetUserPasswordHandler(ctx context.Context, 
 
 	return &ResetUserPasswordOutput{
 		Body: response,
+	}, nil
+}
+
+type CreatePlatformUserInput struct {
+	Body model.CreateUserRequest
+}
+
+func (c *platformAdminController) createPlatformUserHandler(ctx context.Context, input *CreatePlatformUserInput) (*CreateUserOutput, error) {
+	userService := c.di.UserService()
+
+	// Create user
+	user, err := userService.CreateUser(ctx, input.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return &CreateUserOutput{
+		Body: user,
 	}, nil
 }
 

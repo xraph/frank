@@ -32,46 +32,13 @@ const (
 )
 
 // UserContext represents the authenticated user context
-type UserContext struct {
-	ID             xid.ID           `json:"id"`
-	Email          string           `json:"email"`
-	Username       string           `json:"username,omitempty"`
-	FirstName      string           `json:"firstName,omitempty"`
-	LastName       string           `json:"lastName,omitempty"`
-	UserType       model.UserType   `json:"userType"`
-	OrganizationID *xid.ID          `json:"organizationId,omitempty"`
-	Active         bool             `json:"active"`
-	EmailVerified  bool             `json:"emailVerified"`
-	Permissions    []string         `json:"permissions,omitempty"`
-	Roles          []model.RoleInfo `json:"roles,omitempty"`
-	Metadata       map[string]any   `json:"metadata,omitempty"`
-	SessionID      xid.ID           `json:"sessionId,omitempty"`
-}
+type UserContext = contexts.UserContext
 
 // SessionContext represents the session context
-type SessionContext struct {
-	ID           xid.ID    `json:"id"`
-	Token        string    `json:"token"`
-	UserID       xid.ID    `json:"userId"`
-	ExpiresAt    time.Time `json:"expiresAt"`
-	LastActiveAt time.Time `json:"lastActiveAt"`
-	IPAddress    string    `json:"ipAddress,omitempty"`
-	UserAgent    string    `json:"userAgent,omitempty"`
-	DeviceID     string    `json:"deviceId,omitempty"`
-}
+type SessionContext = contexts.SessionContext
 
 // APIKeyContext represents the API key context
-type APIKeyContext struct {
-	ID             xid.ID                  `json:"id"`
-	Name           string                  `json:"name"`
-	Type           string                  `json:"type"`
-	UserID         *xid.ID                 `json:"userId,omitempty"`
-	OrganizationID *xid.ID                 `json:"organizationId,omitempty"`
-	Permissions    []string                `json:"permissions,omitempty"`
-	Scopes         []string                `json:"scopes,omitempty"`
-	LastUsed       *time.Time              `json:"lastUsed,omitempty"`
-	RateLimits     *model.APIKeyRateLimits `json:"rateLimits,omitempty"`
-}
+type APIKeyContext = contexts.APIKeyContext
 
 // JWTClaims represents JWT token claims
 type JWTClaims struct {
@@ -83,6 +50,15 @@ type JWTClaims struct {
 	jwt.RegisteredClaims
 }
 
+// APIKeyValidationRequest represents the API key validation request
+type APIKeyValidationRequest struct {
+	Key       string
+	IPAddress string
+	UserAgent string
+	Endpoint  string
+	Method    string
+}
+
 // AuthMiddleware provides authentication middleware functions
 type AuthMiddleware struct {
 	config           *config.Config
@@ -90,6 +66,7 @@ type AuthMiddleware struct {
 	sessionRepo      repository.SessionRepository
 	apiKeyRepo       repository.ApiKeyRepository
 	organizationRepo repository.OrganizationRepository
+	di               di.Container
 	crypto           crypto.Util
 	api              huma.API
 	logger           logging.Logger
@@ -99,6 +76,7 @@ type AuthMiddleware struct {
 func NewAuthMiddleware(di di.Container, api huma.API) *AuthMiddleware {
 	return &AuthMiddleware{
 		api:              api,
+		di:               di,
 		config:           di.Config(),
 		userRepo:         di.Repo().User(),
 		sessionRepo:      di.Repo().Session(),
@@ -129,10 +107,19 @@ func (m *AuthMiddleware) RequireAuth() func(http.Handler) http.Handler {
 
 			// 2. Try API Key authentication
 			if !authenticated && m.config.Auth.AllowAPIKey {
-				if apiKey, user, err := m.authenticateAPIKey(ctx, r); err == nil && apiKey != nil && user != nil {
-					ctx = m.setUserContext(ctx, user, AuthMethodAPIKey)
+				if apiKey, user, err := m.authenticateAPIKey(ctx, r); err == nil && apiKey != nil {
 					ctx = m.setAPIKeyContext(ctx, apiKey)
-					authenticated = true
+					// For client-type API keys, we have apiKey but user is nil
+					// This provides API access without appearing as an authenticated user
+					if user != nil {
+						ctx = m.setUserContext(ctx, user, AuthMethodAPIKey)
+						authenticated = true
+					} else {
+						// Client-type API key - provide API access but don't mark as authenticated
+						// This allows access to auth endpoints while appearing unauthenticated
+						ctx = m.setAPIKeyOnlyContext(ctx, apiKey)
+						authenticated = true // API is authorized but not user-authenticated
+					}
 				}
 			}
 
@@ -161,36 +148,49 @@ func (m *AuthMiddleware) RequireAuth() func(http.Handler) http.Handler {
 // RequireAuthHuma middleware that requires authentication via JWT, API key, or session
 func (m *AuthMiddleware) RequireAuthHuma() func(huma.Context, func(huma.Context)) {
 	return func(ctx huma.Context, next func(huma.Context)) {
-		info, _ := GetRequestInfoFromContext(ctx.Context())
-		r := info.Req
+		r := contexts.GetRequestFromContext(ctx.Context())
 		rctx := ctx.Context()
 
 		// Try different authentication methods in order of preference
 		authenticated := false
+		var authMethod AuthMethod
+		var userCtx *UserContext
+		var sessionCtx *SessionContext
+		var apiKeyCtx *APIKeyContext
 
 		// 1. Try JWT authentication
 		if m.config.Auth.AllowBearerToken {
 			if session, user, err := m.authenticateJWT(rctx, r); err == nil && user != nil {
-				ctx = m.setUserContextHuma(ctx, user, AuthMethodJWT)
-				ctx = m.setSessionContextHuma(ctx, session)
+				authMethod = AuthMethodJWT
+				userCtx = user
+				sessionCtx = session
 				authenticated = true
 			}
 		}
 
 		// 2. Try API Key authentication
 		if !authenticated && m.config.Auth.AllowAPIKey {
-			if apiKey, user, err := m.authenticateAPIKey(rctx, r); err == nil && apiKey != nil && user != nil {
-				ctx = m.setUserContextHuma(ctx, user, AuthMethodAPIKey)
-				ctx = m.setAPIKeyContextHuma(ctx, apiKey)
-				authenticated = true
+			if apiKey, user, err := m.authenticateAPIKey(rctx, r); err == nil && apiKey != nil {
+				apiKeyCtx = apiKey
+				if user != nil {
+					// Server/Admin API key - act as authenticated user
+					authMethod = AuthMethodAPIKey
+					userCtx = user
+					authenticated = true
+				} else {
+					// Client API key - provide API access but don't act as authenticated user
+					authMethod = AuthMethodAPIKey
+					authenticated = true
+				}
 			}
 		}
 
 		// 3. Try Session authentication
 		if !authenticated && m.config.Auth.AllowSession {
 			if session, user, err := m.authenticateSession(rctx, r); err == nil && session != nil && user != nil {
-				ctx = m.setUserContextHuma(ctx, user, AuthMethodSession)
-				ctx = m.setSessionContextHuma(ctx, session)
+				authMethod = AuthMethodSession
+				userCtx = user
+				sessionCtx = session
 				authenticated = true
 			}
 		}
@@ -200,11 +200,35 @@ func (m *AuthMiddleware) RequireAuthHuma() func(huma.Context, func(huma.Context)
 			return
 		}
 
+		// Set contexts with proper auth method
+		if userCtx != nil {
+			ctx = m.setUserContextHuma(ctx, userCtx, authMethod)
+		}
+		if sessionCtx != nil {
+			ctx = m.setSessionContextHuma(ctx, sessionCtx)
+		}
+		if apiKeyCtx != nil {
+			ctx = m.setAPIKeyContextHuma(ctx, apiKeyCtx)
+		}
+
 		// Add request metadata
 		ctx = m.addRequestMetadataHuma(ctx, r)
-
 		next(ctx)
 	}
+}
+
+// setAPIKeyOnlyContext sets only the API key context without user context
+func (m *AuthMiddleware) setAPIKeyOnlyContext(ctx context.Context, apiKey *APIKeyContext) context.Context {
+	ctx = context.WithValue(ctx, contexts.APIKeyContextKey, apiKey)
+	ctx = context.WithValue(ctx, contexts.APIKeyIDContextKey, apiKey.ID)
+	ctx = context.WithValue(ctx, contexts.AuthMethodContextKey, AuthMethodAPIKey)
+
+	// Set organization context if available from API key
+	if apiKey.OrganizationID != nil {
+		ctx = context.WithValue(ctx, contexts.OrganizationIDContextKey, *apiKey.OrganizationID)
+	}
+
+	return ctx
 }
 
 // OptionalAuth middleware that allows both authenticated and unauthenticated requests
@@ -246,26 +270,26 @@ func (m *AuthMiddleware) OptionalAuth() func(http.Handler) http.Handler {
 // OptionalAuthHuma middleware that allows both authenticated and unauthenticated requests
 func (m *AuthMiddleware) OptionalAuthHuma() func(huma.Context, func(huma.Context)) {
 	return func(ctx huma.Context, next func(huma.Context)) {
-		info, _ := GetRequestInfoFromContext(ctx.Context())
-		r := info.Req
+		rctx := ctx.Context()
+		r := contexts.GetRequestFromContext(rctx)
 
 		// Try authentication but don't fail if none found
 		if m.config.Auth.AllowBearerToken {
-			if session, user, err := m.authenticateJWT(ctx.Context(), r); err == nil && user != nil {
+			if session, user, err := m.authenticateJWT(rctx, r); err == nil && user != nil {
 				ctx = m.setUserContextHuma(ctx, user, AuthMethodJWT)
 				ctx = m.setSessionContextHuma(ctx, session)
 			}
 		}
 
-		if GetUserFromContext(ctx.Context()) == nil && m.config.Auth.AllowAPIKey {
-			if apiKey, user, err := m.authenticateAPIKey(ctx.Context(), r); err == nil && apiKey != nil && user != nil {
+		if GetUserFromContext(rctx) == nil && m.config.Auth.AllowAPIKey {
+			if apiKey, user, err := m.authenticateAPIKey(rctx, r); err == nil && apiKey != nil && user != nil {
 				ctx = m.setUserContextHuma(ctx, user, AuthMethodAPIKey)
 				ctx = m.setAPIKeyContextHuma(ctx, apiKey)
 			}
 		}
 
-		if GetUserFromContext(ctx.Context()) == nil && m.config.Auth.AllowSession {
-			if session, user, err := m.authenticateSession(ctx.Context(), r); err == nil && session != nil && user != nil {
+		if GetUserFromContext(rctx) == nil && m.config.Auth.AllowSession {
+			if session, user, err := m.authenticateSession(rctx, r); err == nil && session != nil && user != nil {
 				ctx = m.setUserContextHuma(ctx, user, AuthMethodSession)
 				ctx = m.setSessionContextHuma(ctx, session)
 			}
@@ -351,15 +375,14 @@ func (m *AuthMiddleware) RequireOrganizationHuma() func(huma.Context, func(huma.
 // HumaAuth Huma Authentication Middleware for API handlers
 func (m *AuthMiddleware) HumaAuth() func(huma.Context, func(huma.Context)) {
 	return func(ctx huma.Context, next func(huma.Context)) {
-		r := ctx.Context().Value(contexts.HTTPRequestContextKey).(*http.Request)
-		// w := ctx.Context().Value("http_writer").(http.ResponseWriter)
+		r := contexts.GetRequestFromContext(ctx.Context())
 
 		// Try authentication
 		authenticated := false
-		reqCtx := r.Context()
+		rctx := ctx.Context()
 
 		if m.config.Auth.AllowBearerToken {
-			if session, currentUser, err := m.authenticateJWT(reqCtx, r); err == nil && currentUser != nil {
+			if session, currentUser, err := m.authenticateJWT(rctx, r); err == nil && currentUser != nil {
 				ctx = m.setUserContextHuma(ctx, currentUser, AuthMethodJWT)
 				ctx = m.setSessionContextHuma(ctx, session)
 				authenticated = true
@@ -367,7 +390,7 @@ func (m *AuthMiddleware) HumaAuth() func(huma.Context, func(huma.Context)) {
 		}
 
 		if !authenticated && m.config.Auth.AllowAPIKey {
-			if apiKey, currentUser, err := m.authenticateAPIKey(reqCtx, r); err == nil && apiKey != nil && currentUser != nil {
+			if apiKey, currentUser, err := m.authenticateAPIKey(rctx, r); err == nil && apiKey != nil && currentUser != nil {
 				ctx = m.setUserContextHuma(ctx, currentUser, AuthMethodAPIKey)
 				ctx = m.setAPIKeyContextHuma(ctx, apiKey)
 				authenticated = true
@@ -375,7 +398,7 @@ func (m *AuthMiddleware) HumaAuth() func(huma.Context, func(huma.Context)) {
 		}
 
 		if !authenticated && m.config.Auth.AllowSession {
-			if session, currentUser, err := m.authenticateSession(reqCtx, r); err == nil && session != nil && currentUser != nil {
+			if session, currentUser, err := m.authenticateSession(rctx, r); err == nil && session != nil && currentUser != nil {
 				ctx = m.setUserContextHuma(ctx, currentUser, AuthMethodSession)
 				ctx = m.setSessionContextHuma(ctx, session)
 				authenticated = true
@@ -424,13 +447,9 @@ func (m *AuthMiddleware) authenticateJWT(ctx context.Context, r *http.Request) (
 	}
 
 	// Get user from database
-	user, err := m.userRepo.GetByID(ctx, claims.UserID)
+	userCtx, err := m.buildUserContext(ctx, claims.UserID, r, claims.Permissions)
 	if err != nil {
-		return nil, nil, errors.New(errors.CodeUnauthorized, "user not found")
-	}
-
-	if !user.Active || user.Blocked {
-		return nil, nil, errors.New(errors.CodeUnauthorized, "user account is disabled")
+		return nil, nil, err
 	}
 
 	// Validate session
@@ -449,36 +468,37 @@ func (m *AuthMiddleware) authenticateJWT(ctx context.Context, r *http.Request) (
 		UserAgent:    session.UserAgent,
 		DeviceID:     session.DeviceID,
 	}
-	userCtx := m.convertToUserContext(user, nil)
 	userCtx.SessionID = session.ID
 
 	return sessionCtx, userCtx, nil
 }
 
+// authenticateAPIKey handles both public and secret API key authentication
 func (m *AuthMiddleware) authenticateAPIKey(ctx context.Context, r *http.Request) (*APIKeyContext, *UserContext, error) {
-	// Try header first
-	keyValue := r.Header.Get("X-API-Key")
-	if keyValue == "" {
-		// Try query parameter
-		keyValue = r.URL.Query().Get("api_key")
+	keyValue, keyType, err := m.extractAPIKey(r)
+	if err != nil {
+		return nil, nil, err
 	}
 
-	if keyValue == "" {
-		return nil, nil, errors.New(errors.CodeUnauthorized, "no api key provided")
+	// Validate key format and determine environment
+	if !m.isValidAPIKeyFormat(keyValue) {
+		return nil, nil, errors.New(errors.CodeUnauthorized, "invalid API key format")
 	}
 
-	// Hash the key for lookup
-	hashedKey := m.crypto.Hasher().HashAPIKey(keyValue)
+	// For public keys, only allow read operations
+	if keyType == "public" && !m.isReadOnlyOperation(r.Method) {
+		return nil, nil, errors.New(errors.CodeForbidden, "public keys can only be used for read operations")
+	}
 
 	// Get API key from database
-	apiKey, err := m.apiKeyRepo.GetActiveByHashedKey(ctx, hashedKey)
+	apiKey, err := m.getAPIKeyFromDatabase(ctx, keyValue, keyType)
 	if err != nil {
-		return nil, nil, errors.New(errors.CodeUnauthorized, "invalid api key")
+		return nil, nil, err
 	}
 
-	// Check expiration
-	if apiKey.ExpiresAt != nil && apiKey.ExpiresAt.Before(time.Now()) {
-		return nil, nil, errors.New(errors.CodeUnauthorized, "api key expired")
+	// Validate API key
+	if err := m.validateAPIKey(apiKey, keyValue, r); err != nil {
+		return nil, nil, err
 	}
 
 	// Update last used (async)
@@ -486,19 +506,7 @@ func (m *AuthMiddleware) authenticateAPIKey(ctx context.Context, r *http.Request
 		_ = m.apiKeyRepo.UpdateLastUsed(context.Background(), apiKey.ID)
 	}()
 
-	// Get associated user if user-scoped key
-	var currentUser *ent.User
-	if !apiKey.UserID.IsNil() {
-		currentUser, err = m.userRepo.GetByID(ctx, apiKey.UserID)
-		if err != nil {
-			return nil, nil, errors.New(errors.CodeUnauthorized, "associated user not found")
-		}
-
-		if !currentUser.Active || currentUser.Blocked {
-			return nil, nil, errors.New(errors.CodeUnauthorized, "associated user account is disabled")
-		}
-	}
-
+	// Create API key context
 	apiKeyCtx := &APIKeyContext{
 		ID:             apiKey.ID,
 		Name:           apiKey.Name,
@@ -508,24 +516,228 @@ func (m *AuthMiddleware) authenticateAPIKey(ctx context.Context, r *http.Request
 		Permissions:    apiKey.Permissions,
 		Scopes:         apiKey.Scopes,
 		LastUsed:       apiKey.LastUsed,
+		Environment:    apiKey.Environment,
+		PublicKey:      apiKey.PublicKey,
+		KeyType:        keyType,
 	}
 
-	var userCtx *UserContext
-	if currentUser != nil {
-		userCtx = m.convertToUserContext(currentUser, apiKey.Permissions)
-	} else {
-		// Organization-level API key without specific user
-		userCtx = &UserContext{
-			ID:             xid.New(), // Synthetic ID for organization key
-			UserType:       model.UserTypeExternal,
-			OrganizationID: &apiKey.OrganizationID,
-			Active:         true,
-			EmailVerified:  true,
-			Permissions:    apiKey.Permissions,
+	// Handle different API key types with different authentication behaviors
+	switch apiKey.Type {
+	case model.APIKeyTypeClient:
+		// Client keys provide organization context but DO NOT act as logged-in users
+		// This allows frontend SDKs to access auth endpoints without appearing authenticated
+		return apiKeyCtx, nil, nil
+
+	case model.APIKeyTypeServer, model.APIKeyTypeAdmin:
+		// Server and admin keys act as logged-in users
+		var userCtx *UserContext
+		if !apiKey.UserID.IsNil() {
+			// Get user-scoped key user context
+			userCtx, err = m.buildUserContext(ctx, apiKey.UserID, r, apiKey.Permissions)
+			if err != nil {
+				return nil, nil, err
+			}
+		} else {
+			// Organization-level API key without specific user - create synthetic user context
+			userCtx = &UserContext{
+				ID:             xid.New(), // Synthetic ID for organization key
+				UserType:       model.UserTypeExternal,
+				OrganizationID: &apiKey.OrganizationID,
+				Active:         true,
+				EmailVerified:  true,
+				Permissions:    apiKey.Permissions,
+			}
+		}
+		return apiKeyCtx, userCtx, nil
+
+	default:
+		// Unknown key type - treat as server key for backward compatibility
+		var userCtx *UserContext
+		if !apiKey.UserID.IsNil() {
+			userCtx, err = m.buildUserContext(ctx, apiKey.UserID, r, apiKey.Permissions)
+			if err != nil {
+				return nil, nil, err
+			}
+		} else {
+			userCtx = &UserContext{
+				ID:             xid.New(),
+				UserType:       model.UserTypeExternal,
+				OrganizationID: &apiKey.OrganizationID,
+				Active:         true,
+				EmailVerified:  true,
+				Permissions:    apiKey.Permissions,
+			}
+		}
+		return apiKeyCtx, userCtx, nil
+	}
+}
+
+// extractAPIKey extracts the API key from request headers/query parameters
+func (m *AuthMiddleware) extractAPIKey(r *http.Request) (string, string, error) {
+	// Try secret key from X-API-Key header
+	if secretKey := r.Header.Get("X-API-Key"); secretKey != "" {
+		if m.isSecretKey(secretKey) {
+			return secretKey, "secret", nil
+		}
+		return "", "", errors.New(errors.CodeUnauthorized, "invalid secret key format")
+	}
+
+	// Try secret key from query parameter
+	if secretKey := r.URL.Query().Get("api_key"); secretKey != "" {
+		if m.isSecretKey(secretKey) {
+			return secretKey, "secret", nil
+		}
+		return "", "", errors.New(errors.CodeUnauthorized, "invalid secret key format")
+	}
+
+	// Try public key from X-Publishable-Key header
+	if publicKey := r.Header.Get("X-Publishable-Key"); publicKey != "" {
+		if m.isPublicKey(publicKey) {
+			return publicKey, "public", nil
+		}
+		return "", "", errors.New(errors.CodeUnauthorized, "invalid public key format")
+	}
+
+	// Try public key from query parameter
+	if publicKey := r.URL.Query().Get("publishable_key"); publicKey != "" {
+		if m.isPublicKey(publicKey) {
+			return publicKey, "public", nil
+		}
+		return "", "", errors.New(errors.CodeUnauthorized, "invalid public key format")
+	}
+
+	return "", "", errors.New(errors.CodeUnauthorized, "no API key provided")
+}
+
+// getAPIKeyFromDatabase retrieves the API key from database based on key type
+func (m *AuthMiddleware) getAPIKeyFromDatabase(ctx context.Context, keyValue, keyType string) (*ent.ApiKey, error) {
+	switch keyType {
+	case "public":
+		// For public keys, lookup by public key directly
+		apiKey, err := m.apiKeyRepo.GetByPublicKey(ctx, keyValue)
+		if err != nil {
+			return nil, errors.New(errors.CodeUnauthorized, "invalid public key")
+		}
+		return apiKey, nil
+
+	case "secret":
+		// For secret keys, hash and lookup by hashed secret key
+		hashedKey := m.crypto.Hasher().HashAPIKey(keyValue)
+		apiKey, err := m.apiKeyRepo.GetActiveByHashedKey(ctx, hashedKey)
+		if err != nil {
+			return nil, errors.New(errors.CodeUnauthorized, "invalid secret key")
+		}
+		return apiKey, nil
+
+	default:
+		return nil, errors.New(errors.CodeUnauthorized, "unknown key type")
+	}
+}
+
+// validateAPIKey validates the API key
+func (m *AuthMiddleware) validateAPIKey(apiKey *ent.ApiKey, keyValue string, r *http.Request) error {
+	// Check if key is active
+	if !apiKey.Active {
+		return errors.New(errors.CodeUnauthorized, "API key is inactive")
+	}
+
+	// Check expiration
+	if apiKey.ExpiresAt != nil && apiKey.ExpiresAt.Before(time.Now()) {
+		return errors.New(errors.CodeUnauthorized, "API key expired")
+	}
+
+	// Check IP whitelist
+	if len(apiKey.IPWhitelist) > 0 {
+		clientIP := GetClientIP(r)
+		if !m.isIPAllowed(clientIP, apiKey.IPWhitelist) {
+			return errors.New(errors.CodeForbidden, "IP address not allowed")
 		}
 	}
 
-	return apiKeyCtx, userCtx, nil
+	// Validate environment consistency
+	keyEnvironment := m.getKeyEnvironment(keyValue)
+	if keyEnvironment != "" && apiKey.Environment != keyEnvironment {
+		return errors.New(errors.CodeUnauthorized, "key environment mismatch")
+	}
+
+	return nil
+}
+
+// Key validation helper methods
+
+func (m *AuthMiddleware) isValidAPIKeyFormat(key string) bool {
+	return m.isPublicKey(key) || m.isSecretKey(key) || m.isLegacyKey(key)
+}
+
+func (m *AuthMiddleware) isPublicKey(key string) bool {
+	return strings.HasPrefix(key, "pk_test_") || strings.HasPrefix(key, "pk_live_")
+}
+
+func (m *AuthMiddleware) isSecretKey(key string) bool {
+	return strings.HasPrefix(key, "sk_test_") || strings.HasPrefix(key, "sk_live_")
+}
+
+func (m *AuthMiddleware) isLegacyKey(key string) bool {
+	return strings.HasPrefix(key, "frank_sk_")
+}
+
+func (m *AuthMiddleware) getKeyEnvironment(key string) model.Environment {
+	switch {
+	case strings.HasPrefix(key, "pk_test_") || strings.HasPrefix(key, "sk_test_"):
+		return model.EnvironmentTest
+	case strings.HasPrefix(key, "pk_live_") || strings.HasPrefix(key, "sk_live_"):
+		return model.EnvironmentLive
+	case strings.HasPrefix(key, "frank_sk_"):
+		return model.EnvironmentTest // Default for legacy keys
+	default:
+		return ""
+	}
+}
+
+func (m *AuthMiddleware) isReadOnlyOperation(method string) bool {
+	return method == http.MethodGet || method == http.MethodHead || method == http.MethodOptions
+}
+
+func (m *AuthMiddleware) isIPAllowed(clientIP string, whitelist []string) bool {
+	// Implementation would check IP against whitelist
+	// This is a simplified version - in production you'd want proper CIDR support
+	for _, allowedIP := range whitelist {
+		if clientIP == allowedIP {
+			return true
+		}
+		// TODO: Add CIDR range checking
+	}
+	return false
+}
+
+func (m *AuthMiddleware) buildUserContext(ctx context.Context, userId xid.ID, r *http.Request, permission []string) (*UserContext, error) {
+	// Get user
+	user, err := m.userRepo.GetByID(ctx, userId)
+	if err != nil {
+		return nil, errors.New(errors.CodeUnauthorized, "user not found")
+	}
+
+	if !user.Active || user.Blocked {
+		return nil, errors.New(errors.CodeUnauthorized, "user account is disabled")
+	}
+
+	orgID := user.OrganizationID
+	if r.Header.Get("X-Org-ID") != "" {
+		if id, err := xid.FromString(r.Header.Get("X-Org-ID")); err == nil {
+			orgID = id
+		}
+	}
+
+	userCtx := m.convertToUserContext(user, permission)
+
+	if !orgID.IsNil() {
+		if membership, err := m.di.MembershipService().GetMembership(ctx, orgID, userId); err == nil {
+			userCtx.OrganizationID = &orgID
+			userCtx.Membership = membership
+		}
+	}
+
+	return userCtx, nil
 }
 
 func (m *AuthMiddleware) authenticateSession(ctx context.Context, r *http.Request) (*SessionContext, *UserContext, error) {
@@ -552,13 +764,9 @@ func (m *AuthMiddleware) authenticateSession(ctx context.Context, r *http.Reques
 	}
 
 	// Get user
-	user, err := m.userRepo.GetByID(ctx, session.UserID)
+	user, err := m.buildUserContext(ctx, session.UserID, r, nil)
 	if err != nil {
-		return nil, nil, errors.New(errors.CodeUnauthorized, "user not found")
-	}
-
-	if !user.Active || user.Blocked {
-		return nil, nil, errors.New(errors.CodeUnauthorized, "user account is disabled")
+		return nil, nil, err
 	}
 
 	// Update session activity (async)
@@ -577,9 +785,7 @@ func (m *AuthMiddleware) authenticateSession(ctx context.Context, r *http.Reques
 		DeviceID:     session.DeviceID,
 	}
 
-	userCtx := m.convertToUserContext(user, nil)
-
-	return sessionCtx, userCtx, nil
+	return sessionCtx, user, nil
 }
 
 // Context helper methods
@@ -629,6 +835,22 @@ func (m *AuthMiddleware) addRequestMetadata(ctx context.Context, r *http.Request
 	// Add User Agent
 	ctx = context.WithValue(ctx, contexts.UserAgentContextKey, r.UserAgent())
 
+	ctx = m.setOrgIDContext(ctx, r)
+
+	return ctx
+}
+
+func (m *AuthMiddleware) setOrgIDContext(ctx context.Context, r *http.Request) context.Context {
+	// Try header first
+	keyValue := r.Header.Get("X-Org-ID")
+	if keyValue != "" {
+		id, err := xid.FromString(keyValue)
+		if err != nil {
+			return ctx
+		}
+		ctx = context.WithValue(ctx, contexts.OrganizationIDContextKey, id)
+	}
+
 	return ctx
 }
 
@@ -676,6 +898,22 @@ func (m *AuthMiddleware) addRequestMetadataHuma(ctx huma.Context, r *http.Reques
 
 	// Add User Agent
 	ctx = huma.WithValue(ctx, contexts.UserAgentContextKey, r.UserAgent())
+
+	ctx = m.setOrgIDContextHuma(ctx, r)
+
+	return ctx
+}
+
+func (m *AuthMiddleware) setOrgIDContextHuma(ctx huma.Context, r *http.Request) huma.Context {
+	// Try header first
+	keyValue := r.Header.Get("X-Org-ID")
+	if keyValue != "" {
+		id, err := xid.FromString(keyValue)
+		if err != nil {
+			return ctx
+		}
+		ctx = huma.WithValue(ctx, contexts.OrganizationIDContextKey, id)
+	}
 
 	return ctx
 }
@@ -897,4 +1135,23 @@ func IsExternalUser(ctx context.Context) bool {
 // IsEndUser checks if the user is an end user
 func IsEndUser(ctx context.Context) bool {
 	return IsUserType(ctx, model.UserTypeEndUser)
+}
+
+// HasAPIKeyAccess Helper function to check if request has API key access (regardless of user authentication)
+func HasAPIKeyAccess(ctx context.Context) bool {
+	return GetAPIKeyFromContext(ctx) != nil
+}
+
+// IsClientAPIKey Helper function to check if request is using client-type API key
+func IsClientAPIKey(ctx context.Context) bool {
+	apiKey := GetAPIKeyFromContext(ctx)
+	return apiKey != nil && apiKey.Type == model.APIKeyTypeClient
+}
+
+// IsUnauthenticatedUser (useful for auth endpoints that need to distinguish between no auth and client API key)
+func IsUnauthenticatedUser(ctx context.Context) bool {
+	user := GetUserFromContext(ctx)
+	apiKey := GetAPIKeyFromContext(ctx)
+	// User is unauthenticated if no user context but may have client API key access
+	return user == nil && (apiKey == nil || apiKey.Type == model.APIKeyTypeClient)
 }

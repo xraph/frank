@@ -32,17 +32,23 @@ export interface RotateAPIKeyResponse {
      */
     expiresAt?: Date;
     /**
-     * New API key value
-     * @type {string}
-     * @memberof RotateAPIKeyResponse
-     */
-    newKey: string;
-    /**
      * New key ID
      * @type {string}
      * @memberof RotateAPIKeyResponse
      */
     newKeyId: string;
+    /**
+     * New public key
+     * @type {string}
+     * @memberof RotateAPIKeyResponse
+     */
+    newPublicKey: string;
+    /**
+     * New secret key value
+     * @type {string}
+     * @memberof RotateAPIKeyResponse
+     */
+    newSecretKey: string;
     /**
      * Old key ID
      * @type {string}
@@ -61,8 +67,9 @@ export interface RotateAPIKeyResponse {
  * Check if a given object implements the RotateAPIKeyResponse interface.
  */
 export function instanceOfRotateAPIKeyResponse(value: object): value is RotateAPIKeyResponse {
-    if (!('newKey' in value) || value['newKey'] === undefined) return false;
     if (!('newKeyId' in value) || value['newKeyId'] === undefined) return false;
+    if (!('newPublicKey' in value) || value['newPublicKey'] === undefined) return false;
+    if (!('newSecretKey' in value) || value['newSecretKey'] === undefined) return false;
     if (!('oldKeyId' in value) || value['oldKeyId'] === undefined) return false;
     if (!('warning' in value) || value['warning'] === undefined) return false;
     return true;
@@ -80,8 +87,9 @@ export function RotateAPIKeyResponseFromJSONTyped(json: any, ignoreDiscriminator
         
         '$schema': json['$schema'] == null ? undefined : json['$schema'],
         'expiresAt': json['expiresAt'] == null ? undefined : (new Date(json['expiresAt'])),
-        'newKey': json['newKey'],
         'newKeyId': json['newKeyId'],
+        'newPublicKey': json['newPublicKey'],
+        'newSecretKey': json['newSecretKey'],
         'oldKeyId': json['oldKeyId'],
         'warning': json['warning'],
     };
@@ -99,8 +107,9 @@ export function RotateAPIKeyResponseToJSONTyped(value?: Omit<RotateAPIKeyRespons
     return {
         
         'expiresAt': value['expiresAt'] == null ? undefined : ((value['expiresAt']).toISOString()),
-        'newKey': value['newKey'],
         'newKeyId': value['newKeyId'],
+        'newPublicKey': value['newPublicKey'],
+        'newSecretKey': value['newSecretKey'],
         'oldKeyId': value['oldKeyId'],
         'warning': value['warning'],
     };

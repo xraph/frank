@@ -19,6 +19,8 @@ export * from './sign-in';
 export * from './account-linking';
 export * from './password';
 export * from './magic-link';
+export * from './invitations';
+export * from './verification';
 
 
 /**

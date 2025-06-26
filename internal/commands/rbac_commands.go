@@ -170,13 +170,13 @@ func (rc *RBACCommands) assignRole(cmd *cobra.Command, args []string) error {
 
 	rbacService := rc.base.Container.RoleService()
 	switch model.ContextType(contextType) {
-	case model.ContextTypeApplication:
+	case model.ContextApplication:
 		err = rbacService.AssignApplicationRole(rc.base.Ctx, user.ID, cid, roleName)
 		break
-	case model.ContextTypePlatform:
+	case model.ContextPlatform:
 		err = rbacService.AssignSystemRole(rc.base.Ctx, user.ID, roleName)
 		break
-	case model.ContextTypeOrganization:
+	case model.ContextOrganization:
 		err = rbacService.AssignOrganizationRole(rc.base.Ctx, user.ID, cid, roleName)
 	default:
 		err = fmt.Errorf("invalid context type: %s", contextType)
@@ -222,7 +222,7 @@ func (rc *RBACCommands) removeRole(cmd *cobra.Command, args []string) error {
 	}
 
 	rbacService := rc.base.Container.RoleService()
-	err = rbacService.RemoveUserRole(rc.base.Ctx, user.ID, rid, model.ContextTypeApplication, nil)
+	err = rbacService.RemoveUserRole(rc.base.Ctx, user.ID, rid, model.ContextApplication, nil)
 	if err != nil {
 		rc.base.LogError("Failed to remove role", err,
 			zap.String("userEmail", userEmail),

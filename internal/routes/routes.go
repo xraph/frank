@@ -29,14 +29,17 @@ import (
 // - Real-time features (WebSockets, SSE) compatibility
 // - Production-ready middleware stack
 type Router struct {
-	di         di.Container
-	router     chi.Router
-	api        huma.API
-	authMw     *customMiddleware.AuthMiddleware
-	tenantMw   *customMiddleware.TenantMiddleware
-	logger     logging.Logger
-	mountOpts  *server.MountOptions
-	isEmbedded bool
+	di           di.Container
+	router       chi.Router
+	api          huma.API
+	authMw       *customMiddleware.AuthMiddleware
+	tenantMw     *customMiddleware.TenantMiddleware
+	orgContextMw *customMiddleware.OrganizationContextMiddleware
+	smartOrgMw   *customMiddleware.SmartOrganizationMiddleware
+	unifiedOrgMw *customMiddleware.UnifiedRegistrationMiddleware
+	logger       logging.Logger
+	mountOpts    *server.MountOptions
+	isEmbedded   bool
 }
 
 // NewRouter creates a new router instance with all middleware and route configurations
@@ -70,15 +73,24 @@ func NewRouterWithOptions(di di.Container, existingRouter chi.Router, opts *serv
 	tenantConfig.EnableTenantCache = true
 	tenantConfig.Logger = di.Logger()
 
+	orgContextConfig := customMiddleware.DefaultOrganizationContextConfig()
+
+	orgContextConfig.Logger = di.Logger()
+
+	authMw := customMiddleware.NewAuthMiddleware(di, api)
+
 	router := &Router{
-		di:         di,
-		router:     r,
-		api:        api,
-		authMw:     customMiddleware.NewAuthMiddleware(di, api),
-		tenantMw:   customMiddleware.NewTenantMiddleware(api, di, tenantConfig),
-		logger:     logger,
-		mountOpts:  opts,
-		isEmbedded: existingRouter != nil,
+		di:           di,
+		router:       r,
+		api:          api,
+		authMw:       authMw,
+		tenantMw:     customMiddleware.NewTenantMiddleware(api, di, tenantConfig),
+		orgContextMw: customMiddleware.NewOrganizationContextMiddleware(api, di, authMw, orgContextConfig),
+		smartOrgMw:   customMiddleware.NewSmartOrganizationMiddleware(api, di, orgContextConfig),
+		unifiedOrgMw: customMiddleware.NewUnifiedRegistrationMiddleware(api, di, orgContextConfig),
+		logger:       logger,
+		mountOpts:    opts,
+		isEmbedded:   existingRouter != nil,
 	}
 
 	if opts.EnableDocs {
@@ -314,6 +326,7 @@ func createHumaAPI(r chi.Router, di di.Container, logger logging.Logger, opts *s
 	// Create Huma API with Chi adapter
 	adapter := humachi.NewAdapter(r)
 	api := huma.NewAPI(config, adapter)
+	api.UseMiddleware(customMiddleware.AddRequestToContextHuma())
 
 	return api
 }
@@ -419,6 +432,11 @@ func (router *Router) RegisterRoutes() {
 func (router *Router) setupPublicRoutes(v1Group huma.API) {
 	publicGroup := huma.NewGroup(v1Group, "/public")
 
+	// Apply user type detection and organization context middleware
+	// This ensures that even public routes understand the user type and organization context
+	publicGroup.UseMiddleware(router.orgContextMw.UserTypeDetectionHumaMiddleware(true))
+	publicGroup.UseMiddleware(router.orgContextMw.RequireOrganizationForUserTypeHuma(true))
+	publicGroup.UseMiddleware(router.unifiedOrgMw.UnifiedRegistrationMiddleware())
 	publicGroup.UseMiddleware(router.authMw.OptionalAuthHuma())
 
 	// Authentication routes (login, register, etc.)
@@ -441,13 +459,22 @@ func (router *Router) setupPublicRoutes(v1Group huma.API) {
 func (router *Router) setupProtectedRoutes(v1Group huma.API) {
 	protectedGroup := huma.NewGroup(v1Group)
 
-	// Note: Authentication, tenant, and audit middleware should be applied here
+	// Create a separate group for user-scoped endpoints (not organization-scoped)
+	// These endpoints are for personal user management regardless of organization
+	userGroup := huma.NewGroup(v1Group)
+
+	// Apply user type detection, authentication, and organization context middleware
 	protectedGroup.UseMiddleware(router.authMw.RequireAuthHuma())
+	protectedGroup.UseMiddleware(router.orgContextMw.UserTypeDetectionHumaMiddleware(false))
+	protectedGroup.UseMiddleware(router.orgContextMw.RequireOrganizationForUserTypeHuma(false))
 
 	tenantGroup := huma.NewGroup(protectedGroup)
+	// tenantGroup.UseMiddleware(customMiddleware.AddRequestToContextHuma())
 	tenantGroup.UseMiddleware(router.tenantMw.HumaMiddleware())
+	tenantGroup.UseMiddleware(router.tenantMw.RequireTenantHuma())
+	tenantGroup.UseMiddleware(router.tenantMw.TenantIsolationHuma())
 
-	// Auth management endpoints
+	// Auth management endpoints (accessible to all authenticated users)
 	RegisterAuthAPI(protectedGroup, router.di)
 
 	// User management endpoints
@@ -482,6 +509,17 @@ func (router *Router) setupProtectedRoutes(v1Group huma.API) {
 
 	// Activity management endpoints
 	RegisterAPIKeyAPI(tenantGroup, router.di)
+	userGroup.UseMiddleware(router.orgContextMw.UserTypeDetectionHumaMiddleware(false))
+	userGroup.UseMiddleware(router.authMw.RequireAuthHuma())
+	userGroup.UseMiddleware(router.authMw.RequireUserTypeHuma(
+		model.UserTypeInternal,
+		model.UserTypeExternal,
+		model.UserTypeEndUser,
+	))
+
+	// Personal user management endpoints
+	RegisterPersonalUserAPI(userGroup, router.di)
+	RegisterPersonalOrganizationAPI(userGroup, router.di)
 }
 
 // setupInternalRoutes configures routes for internal platform users only
@@ -489,7 +527,10 @@ func (router *Router) setupInternalRoutes(v1Group huma.API) {
 	internalGroup := huma.NewGroup(v1Group, "/internal")
 
 	// Note: Authentication and authorization middleware for internal users
-	internalGroup.UseMiddleware(router.authMw.RequireAuthHuma(), router.authMw.RequireUserTypeHuma(model.UserTypeInternal))
+	internalGroup.UseMiddleware(
+		router.authMw.RequireAuthHuma(),
+		router.authMw.RequireUserTypeHuma(model.UserTypeInternal),
+	)
 
 	// Platform administration endpoints
 	RegisterPlatformAdminAPI(internalGroup, router.di)
@@ -651,4 +692,98 @@ func (router *Router) GetMountOptions() *server.MountOptions {
 // IsEmbedded returns whether this router is running in embedded mode
 func (router *Router) IsEmbedded() bool {
 	return router.isEmbedded
+}
+
+// CreateExternalUserGroup creates a group specifically for external users with organization context
+func (router *Router) CreateExternalUserGroup(parent huma.API, path string) huma.API {
+	group := huma.NewGroup(parent, path)
+	group.UseMiddleware(router.orgContextMw.UserTypeDetectionHumaMiddleware(false))
+	group.UseMiddleware(router.authMw.RequireAuthHuma())
+	group.UseMiddleware(router.authMw.RequireUserTypeHuma(model.UserTypeExternal))
+	group.UseMiddleware(router.orgContextMw.RequireOrganizationForUserTypeHuma(false))
+	group.UseMiddleware(router.tenantMw.HumaMiddleware())
+	group.UseMiddleware(router.tenantMw.RequireActiveTenantHuma())
+	group.UseMiddleware(router.tenantMw.TenantIsolationHuma())
+	return group
+}
+
+// CreateEndUserGroup creates a group specifically for end users with organization context
+func (router *Router) CreateEndUserGroup(parent huma.API, path string) huma.API {
+	group := huma.NewGroup(parent, path)
+	group.UseMiddleware(router.orgContextMw.UserTypeDetectionHumaMiddleware(false))
+	group.UseMiddleware(router.authMw.RequireAuthHuma())
+	group.UseMiddleware(router.authMw.RequireUserTypeHuma(model.UserTypeEndUser))
+	group.UseMiddleware(router.orgContextMw.RequireOrganizationForUserTypeHuma(false))
+	group.UseMiddleware(router.tenantMw.HumaMiddleware())
+	group.UseMiddleware(router.tenantMw.RequireActiveTenantHuma())
+	group.UseMiddleware(router.tenantMw.TenantIsolationHuma())
+	return group
+}
+
+// CreateInternalUserGroup creates a group specifically for internal users (no organization context required)
+func (router *Router) CreateInternalUserGroup(parent huma.API, path string) huma.API {
+	group := huma.NewGroup(parent, path)
+	group.UseMiddleware(router.authMw.RequireAuthHuma())
+	group.UseMiddleware(router.authMw.RequireUserTypeHuma(model.UserTypeInternal))
+	return group
+}
+
+// CreateMultiTenantGroup creates a group that handles all user types with proper organization context enforcement
+func (router *Router) CreateMultiTenantGroup(parent huma.API, path string) huma.API {
+	group := huma.NewGroup(parent, path)
+	group.UseMiddleware(router.orgContextMw.UserTypeDetectionHumaMiddleware(false))
+	group.UseMiddleware(router.authMw.RequireAuthHuma())
+	group.UseMiddleware(router.orgContextMw.RequireOrganizationForUserTypeHuma(false))
+	group.UseMiddleware(router.tenantMw.HumaMiddleware())
+	group.UseMiddleware(router.tenantMw.RequireActiveTenantHuma())
+	group.UseMiddleware(router.tenantMw.TenantIsolationHuma())
+	return group
+}
+
+// Helper function to create appropriate middleware chain for different route types
+func (router *Router) createMiddlewareChain(routeType string) []func(huma.Context, func(huma.Context)) {
+	switch routeType {
+	case "public":
+		return []func(huma.Context, func(huma.Context)){
+			router.orgContextMw.UserTypeDetectionHumaMiddleware(false),
+			router.orgContextMw.RequireOrganizationForUserTypeHuma(true),
+			router.authMw.OptionalAuthHuma(),
+		}
+	case "protected":
+		return []func(huma.Context, func(huma.Context)){
+			router.orgContextMw.UserTypeDetectionHumaMiddleware(false),
+			router.authMw.RequireAuthHuma(),
+			router.orgContextMw.RequireOrganizationForUserTypeHuma(false),
+			router.tenantMw.HumaMiddleware(),
+			router.tenantMw.RequireActiveTenantHuma(),
+			router.tenantMw.TenantIsolationHuma(),
+		}
+	case "internal":
+		return []func(huma.Context, func(huma.Context)){
+			router.authMw.RequireAuthHuma(),
+			router.authMw.RequireUserTypeHuma(model.UserTypeInternal),
+		}
+	case "external":
+		return []func(huma.Context, func(huma.Context)){
+			router.orgContextMw.UserTypeDetectionHumaMiddleware(false),
+			router.authMw.RequireAuthHuma(),
+			router.authMw.RequireUserTypeHuma(model.UserTypeExternal),
+			router.orgContextMw.RequireOrganizationForUserTypeHuma(false),
+			router.tenantMw.HumaMiddleware(),
+			router.tenantMw.RequireActiveTenantHuma(),
+			router.tenantMw.TenantIsolationHuma(),
+		}
+	case "enduser":
+		return []func(huma.Context, func(huma.Context)){
+			router.orgContextMw.UserTypeDetectionHumaMiddleware(false),
+			router.authMw.RequireAuthHuma(),
+			router.authMw.RequireUserTypeHuma(model.UserTypeEndUser),
+			router.orgContextMw.RequireOrganizationForUserTypeHuma(false),
+			router.tenantMw.HumaMiddleware(),
+			router.tenantMw.RequireActiveTenantHuma(),
+			router.tenantMw.TenantIsolationHuma(),
+		}
+	default:
+		return nil
+	}
 }

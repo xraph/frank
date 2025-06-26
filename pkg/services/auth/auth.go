@@ -6,6 +6,7 @@ import (
 
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/ent"
+	"github.com/juicycleff/frank/ent/organization"
 	"github.com/juicycleff/frank/internal/repository"
 	"github.com/juicycleff/frank/pkg/contexts"
 	"github.com/juicycleff/frank/pkg/crypto"
@@ -17,6 +18,7 @@ import (
 	"github.com/juicycleff/frank/pkg/services/mfa"
 	"github.com/juicycleff/frank/pkg/services/notification"
 	"github.com/juicycleff/frank/pkg/services/oauth"
+	organizationService "github.com/juicycleff/frank/pkg/services/organization"
 	userService "github.com/juicycleff/frank/pkg/services/user"
 	"github.com/rs/xid"
 	"github.com/samber/lo"
@@ -25,13 +27,15 @@ import (
 // AuthService defines the interface for authentication operations
 type AuthService interface {
 	// Authentication
-	Login(ctx context.Context, req model.LoginRequest) (*model.LoginResponse, error)
+	Login(ctx context.Context, req model.LoginRequest, orgId *xid.ID) (*model.LoginResponse, error)
 	Register(ctx context.Context, req model.RegisterRequest) (*model.RegisterResponse, error)
 	Logout(ctx context.Context, req model.LogoutRequest) (*model.LogoutResponse, error)
 	RefreshToken(ctx context.Context, req model.RefreshTokenRequest) (*model.RefreshTokenResponse, error)
+	RegisterOrganization(ctx context.Context, req model.OrganizationRegistrationRequest) (*model.RegisterResponse, error)
+	RegisterViaInvitation(ctx context.Context, req model.InvitationRegistrationRequest) (*model.RegisterResponse, error)
 
 	// Passwordless Authentication
-	SendMagicLink(ctx context.Context, req model.MagicLinkRequest) (*model.MagicLinkResponse, error)
+	SendMagicLink(ctx context.Context, req model.MagicLinkRequest, orgId *xid.ID) (*model.MagicLinkResponse, error)
 	VerifyMagicLink(ctx context.Context, token string) (*model.LoginResponse, error)
 
 	// Email/Phone Verification
@@ -55,6 +59,8 @@ type AuthService interface {
 	// OAuth Integration
 	HandleOAuthCallback(ctx context.Context, provider, code, state string) (*model.LoginResponse, error)
 	GetOAuthURL(ctx context.Context, provider, redirectURL string) (string, error)
+	HandleOAuthCallbackWithOrg(ctx context.Context, provider, code, state string, orgId *xid.ID) (*model.LoginResponse, error)
+	GetOAuthURLWithState(ctx context.Context, provider, redirectURL string, state string) (string, error)
 }
 
 // authService implements the AuthService interface
@@ -67,6 +73,7 @@ type authService struct {
 	passwordService     PasswordService
 	sessionService      SessionService
 	userService         userService.Service
+	orgService          organizationService.Service
 	mfaService          mfa.Service
 	oauthService        oauth.Service
 	auditService        audit.Service
@@ -88,6 +95,7 @@ func NewAuthService(
 	mfaService mfa.Service,
 	oauthService oauth.Service,
 	auditService audit.Service,
+	orgService organizationService.Service,
 	hooks hooks.Hooks,
 	crypto crypto.Util,
 	logger logging.Logger,
@@ -112,12 +120,16 @@ func NewAuthService(
 }
 
 // Login authenticates a user and returns tokens and session
-func (s *authService) Login(ctx context.Context, req model.LoginRequest) (*model.LoginResponse, error) {
+func (s *authService) Login(ctx context.Context, req model.LoginRequest, orgId *xid.ID) (*model.LoginResponse, error) {
 	// Execute before login hooks
 	hookCtx := s.buildHookContext(ctx, nil, nil)
 	hookCtx.Data = req
-	hookCtx.IPAddress = req.IPAddress
-	hookCtx.UserAgent = req.UserAgent
+
+	ipAddress := s.getIpAddress(ctx, req.IPAddress)
+	userAgent := s.getUserAgent(ctx, req.UserAgent)
+
+	hookCtx.IPAddress = ipAddress
+	hookCtx.IPAddress = userAgent
 
 	if err := s.hooks.Execute(ctx, hooks.HookBeforeLogin, req); err != nil {
 		s.logger.Error("Before login hooks failed", logging.Error(err))
@@ -308,8 +320,12 @@ func (s *authService) Register(ctx context.Context, req model.RegisterRequest) (
 	// Execute before register hooks
 	hookCtx := s.buildHookContext(ctx, nil, nil)
 	hookCtx.Data = req
-	hookCtx.IPAddress = req.IPAddress
-	hookCtx.UserAgent = req.UserAgent
+
+	ipAddress := s.getIpAddress(ctx, req.IPAddress)
+	userAgent := s.getUserAgent(ctx, req.UserAgent)
+
+	hookCtx.IPAddress = ipAddress
+	hookCtx.IPAddress = userAgent
 
 	if err := s.hooks.Execute(ctx, hooks.HookBeforeRegister, req); err != nil {
 		s.logger.Error("Before register hooks failed", logging.Error(err))
@@ -440,6 +456,440 @@ func (s *authService) Register(ctx context.Context, req model.RegisterRequest) (
 	return response, nil
 }
 
+// RegisterOrganization creates a new organization and owner user in a single transaction
+func (s *authService) RegisterOrganization(ctx context.Context, req model.OrganizationRegistrationRequest) (*model.RegisterResponse, error) {
+	s.logger.Info("Starting organization registration",
+		logging.String("organization_name", req.OrganizationName),
+		logging.String("user_email", req.UserEmail))
+
+	// Execute before organization registration hooks
+	hookCtx := s.buildHookContext(ctx, nil, nil)
+	hookCtx.Data = req
+
+	ipAddress := s.getIpAddress(ctx, req.IPAddress)
+	userAgent := s.getUserAgent(ctx, req.UserAgent)
+
+	hookCtx.IPAddress = ipAddress
+	hookCtx.IPAddress = userAgent
+
+	if err := s.hooks.Execute(ctx, hooks.HookBeforeRegister, req); err != nil {
+		s.logger.Error("Before organization registration hooks failed", logging.Error(err))
+	}
+
+	// Validate organization name
+	if req.OrganizationName == "" {
+		return nil, errors.New(errors.CodeBadRequest, "organization name is required")
+	}
+
+	// Validate user email
+	if req.UserEmail == "" {
+		return nil, errors.New(errors.CodeBadRequest, "user email is required")
+	}
+
+	// Check if organization name/slug already exists
+	slug := req.OrganizationSlug
+	if slug == "" {
+		slug = s.generateSlug(req.OrganizationName)
+	}
+
+	orgExists, err := s.repo.Organization().ExistsBySlug(ctx, slug)
+	if err != nil {
+		return nil, errors.Wrap(err, errors.CodeInternalServer, "failed to check organization existence")
+	}
+	if orgExists {
+		return nil, errors.New(errors.CodeConflict, "organization with this name already exists")
+	}
+
+	// Check if user already exists
+	userExists, err := s.userService.ExistsByEmail(ctx, req.UserEmail, model.UserTypeExternal, nil)
+	if err != nil {
+		return nil, errors.Wrap(err, errors.CodeInternalServer, "failed to check user existence")
+	}
+	if userExists {
+		return nil, errors.New(errors.CodeConflict, "user with this email already exists")
+	}
+
+	// Hash password if provided
+	var passwordHash string
+	if req.UserPassword != "" {
+		if err := s.passwordService.ValidatePasswordStrength(req.UserPassword); err != nil {
+			return nil, errors.Wrap(err, errors.CodeBadRequest, "password validation failed")
+		}
+
+		passwordHash, err = s.passwordService.HashPassword(req.UserPassword)
+		if err != nil {
+			return nil, errors.Wrap(err, errors.CodeInternalServer, "failed to hash password")
+		}
+	}
+
+	// Set default plan if not provided
+	plan := req.Plan
+	if plan == "" {
+		plan = "free"
+	}
+
+	// Create organization
+	orgInput := repository.CreateOrganizationInput{
+		Name:                 req.OrganizationName,
+		Slug:                 slug,
+		Domain:               &req.Domain,
+		Plan:                 plan,
+		OrgType:              model.OrgTypeCustomer,
+		ExternalUserLimit:    s.orgService.GetDefaultLimitsForPlan(plan).ExternalUserLimit,
+		EndUserLimit:         s.orgService.GetDefaultLimitsForPlan(plan).EndUserLimit,
+		APIRequestLimit:      s.orgService.GetDefaultLimitsForPlan(plan).APIRequestLimit,
+		AuthServiceEnabled:   true,
+		Active:               true,
+		TrialUsed:            false,
+		SubscriptionStatus:   organization.SubscriptionStatusActive,
+		CurrentExternalUsers: 0,
+		CurrentEndUsers:      0,
+		Metadata:             req.Metadata,
+	}
+
+	organization, err := s.repo.Organization().Create(ctx, orgInput)
+	if err != nil {
+		return nil, errors.Wrap(err, errors.CodeInternalServer, "failed to create organization")
+	}
+
+	// Create owner user
+	userInput := model.CreateUserRequest{
+		Email:              req.UserEmail,
+		FirstName:          &req.UserFirstName,
+		LastName:           &req.UserLastName,
+		PhoneNumber:        &req.UserPhone,
+		PasswordHash:       passwordHash,
+		UserType:           model.UserTypeExternal,
+		OrganizationID:     &organization.ID,
+		Locale:             "en",
+		Active:             true,
+		EmailVerified:      false,
+		PhoneVerified:      false,
+		CreatedByIP:        ipAddress,
+		CreatedByUserAgent: userAgent,
+	}
+
+	user, err := s.userService.CreateUser(ctx, userInput)
+	if err != nil {
+		// Clean up organization if user creation fails
+		s.repo.Organization().SoftDelete(ctx, organization.ID)
+		return nil, errors.Wrap(err, errors.CodeInternalServer, "failed to create user")
+	}
+
+	// Update organization with owner ID
+	_, err = s.repo.Organization().Update(ctx, organization.ID, repository.UpdateOrganizationInput{
+		OwnerID: &user.ID,
+	})
+	if err != nil {
+		s.logger.Error("Failed to set organization owner", logging.Error(err))
+	}
+
+	// Create owner membership
+	ownerRole, err := s.repo.Role().GetRoleByName(ctx, string(model.RoleOrganizationOwner), xid.NilID())
+	if err != nil {
+		s.logger.Error("Failed to get owner role", logging.Error(err))
+		// Use a default role or create one
+		ownerRole = &ent.Role{
+			ID:   xid.New(),
+			Name: string(model.RoleOrganizationOwner),
+		}
+	}
+
+	membershipInput := repository.CreateMembershipInput{
+		OrganizationID:   organization.ID,
+		UserID:           user.ID,
+		RoleID:           ownerRole.ID,
+		Status:           model.MembershipStatusActive,
+		IsPrimaryContact: true,
+		IsBillingContact: true,
+	}
+
+	_, err = s.repo.Membership().Create(ctx, membershipInput)
+	if err != nil {
+		s.logger.Error("Failed to create owner membership", logging.Error(err))
+	}
+
+	// Send email verification if required
+	if s.cfg.Auth.RequireEmailVerification {
+		err = s.SendVerification(ctx, user.ID, "email")
+		if err != nil {
+			s.logger.Error("Failed to send email verification", logging.Error(err))
+		}
+	}
+
+	// Create session and tokens
+	sessionInput := repository.CreateSessionInput{
+		UserID:         user.ID,
+		OrganizationID: &organization.ID,
+		IPAddress:      &ipAddress,
+		UserAgent:      &userAgent,
+		ExpiresAt:      time.Now().Add(24 * time.Hour),
+		Metadata: map[string]interface{}{
+			"login_method":         "organization_registration",
+			"organization_created": true,
+			"organization_id":      organization.ID.String(),
+			"organization_name":    organization.Name,
+		},
+	}
+
+	session, err := s.sessionService.CreateSession(ctx, sessionInput)
+	if err != nil {
+		s.logger.Error("Failed to create session", logging.Error(err))
+	}
+
+	var accessToken *AccessToken
+	var refreshToken *RefreshToken
+	if session != nil {
+		accessToken, err = s.tokenService.CreateAccessToken(ctx, user.ID, &organization.ID, session.ID)
+		if err != nil {
+			s.logger.Error("Failed to create access token", logging.Error(err))
+		}
+
+		refreshToken, err = s.tokenService.CreateRefreshToken(ctx, user.ID, session.ID)
+		if err != nil {
+			s.logger.Error("Failed to create refresh token", logging.Error(err))
+		}
+	}
+
+	// Convert organization to model
+	modelOrg := organizationService.ConvertEntOrgToModel(organization)
+
+	// Build response
+	response := &model.RegisterResponse{
+		Success:      true,
+		Organization: modelOrg,
+		User:         *user,
+		Message:      "Organization and user created successfully",
+	}
+
+	if accessToken != nil {
+		response.AccessToken = accessToken.Token
+		response.ExpiresIn = int(time.Until(accessToken.ExpiresAt).Seconds())
+		response.TokenType = "Bearer"
+		response.ExpiresAt = &accessToken.ExpiresAt
+	}
+
+	if refreshToken != nil {
+		response.RefreshToken = refreshToken.Token
+	}
+
+	// Audit log
+	s.auditOrganizationRegistration(ctx, organization.ID, user.ID, ipAddress, userAgent)
+
+	// Execute after organization registration hooks
+	hookCtx.UserID = &user.ID
+	hookCtx.OrganizationID = &organization.ID
+	hookCtx.Data = response
+	if err := s.hooks.Execute(ctx, hooks.HookAfterRegister, response); err != nil {
+		s.logger.Error("After organization registration hooks failed", logging.Error(err))
+	}
+
+	s.logger.Info("Organization registration completed successfully",
+		logging.String("organization_id", organization.ID.String()),
+		logging.String("user_id", user.ID.String()),
+		logging.String("organization_name", organization.Name))
+
+	return response, nil
+}
+
+// RegisterViaInvitation registers a user via an organization invitation
+func (s *authService) RegisterViaInvitation(ctx context.Context, req model.InvitationRegistrationRequest) (*model.RegisterResponse, error) {
+	s.logger.Info("Starting invitation-based registration",
+		logging.String("invitation_token", req.InvitationToken[:8]+"..."),
+		logging.String("email", req.Email))
+
+	// Execute before invitation registration hooks
+	hookCtx := s.buildHookContext(ctx, nil, nil)
+	hookCtx.Data = req
+
+	ipAddress := s.getIpAddress(ctx, req.IPAddress)
+	userAgent := s.getUserAgent(ctx, req.UserAgent)
+
+	hookCtx.IPAddress = ipAddress
+	hookCtx.UserAgent = userAgent
+
+	if err := s.hooks.Execute(ctx, hooks.HookBeforeRegister, req); err != nil {
+		s.logger.Error("Before invitation registration hooks failed", logging.Error(err))
+	}
+
+	// Validate invitation token
+	if req.InvitationToken == "" {
+		return nil, errors.New(errors.CodeBadRequest, "invitation token is required")
+	}
+
+	// Get invitation details
+	membership, err := s.repo.Membership().GetByInvitationToken(ctx, req.InvitationToken)
+	if err != nil {
+		return nil, errors.Wrap(err, errors.CodeNotFound, "invitation not found or expired")
+	}
+
+	// Validate invitation
+	if membership.Status != model.MembershipStatusPending {
+		return nil, errors.New(errors.CodeBadRequest, "invitation is not pending")
+	}
+
+	if membership.ExpiresAt != nil && time.Now().After(*membership.ExpiresAt) {
+		return nil, errors.New(errors.CodeBadRequest, "invitation has expired")
+	}
+
+	// Validate email matches invitation
+	if req.Email != membership.Email {
+		return nil, errors.New(errors.CodeBadRequest, "email does not match invitation")
+	}
+
+	// Get organization
+	organization, err := s.repo.Organization().GetByID(ctx, membership.OrganizationID)
+	if err != nil {
+		return nil, errors.Wrap(err, errors.CodeInternalServer, "failed to get organization")
+	}
+
+	// Check if user already exists
+	existingUser, err := s.userService.GetUserByEmail(ctx, req.Email, model.UserTypeExternal, &organization.ID)
+	if err != nil && !errors.IsNotFound(err) {
+		return nil, errors.Wrap(err, errors.CodeInternalServer, "failed to check existing user")
+	}
+
+	var user *model.User
+
+	if existingUser != nil {
+		// User exists, just accept the invitation
+		user = existingUser
+	} else {
+		// Create new user
+		var passwordHash string
+		if req.Password != "" {
+			if err := s.passwordService.ValidatePasswordStrength(req.Password); err != nil {
+				return nil, errors.Wrap(err, errors.CodeBadRequest, "password validation failed")
+			}
+
+			passwordHash, err = s.passwordService.HashPassword(req.Password)
+			if err != nil {
+				return nil, errors.Wrap(err, errors.CodeInternalServer, "failed to hash password")
+			}
+		}
+
+		userInput := model.CreateUserRequest{
+			Email:              req.Email,
+			FirstName:          &req.FirstName,
+			LastName:           &req.LastName,
+			PhoneNumber:        &req.Phone,
+			PasswordHash:       passwordHash,
+			UserType:           model.UserTypeExternal,
+			OrganizationID:     &organization.ID,
+			Locale:             "en",
+			Active:             true,
+			EmailVerified:      false,
+			PhoneVerified:      false,
+			CreatedByIP:        ipAddress,
+			CreatedByUserAgent: req.UserAgent,
+		}
+
+		user, err = s.userService.CreateUser(ctx, userInput)
+		if err != nil {
+			return nil, errors.Wrap(err, errors.CodeInternalServer, "failed to create user")
+		}
+	}
+
+	// Accept the invitation
+	acceptedMembership, err := s.repo.Membership().AcceptInvitation(ctx, req.InvitationToken, user.ID)
+	if err != nil {
+		return nil, errors.Wrap(err, errors.CodeInternalServer, "failed to accept invitation")
+	}
+
+	// Update organization user count
+	err = s.repo.Organization().UpdateUserCounts(ctx, organization.ID, repository.UpdateUserCountsInput{
+		ExternalUsersDelta: 1,
+	})
+	if err != nil {
+		s.logger.Error("Failed to update organization user count", logging.Error(err))
+	}
+
+	// Send email verification if required
+	if s.cfg.Auth.RequireEmailVerification && !user.EmailVerified {
+		err = s.SendVerification(ctx, user.ID, "email")
+		if err != nil {
+			s.logger.Error("Failed to send email verification", logging.Error(err))
+		}
+	}
+
+	// Create session and tokens
+	sessionInput := repository.CreateSessionInput{
+		UserID:         user.ID,
+		OrganizationID: &organization.ID,
+		IPAddress:      &req.IPAddress,
+		UserAgent:      &req.UserAgent,
+		ExpiresAt:      time.Now().Add(24 * time.Hour),
+		Metadata: map[string]interface{}{
+			"login_method":        "invitation_registration",
+			"invitation_accepted": true,
+			"organization_id":     organization.ID.String(),
+			"organization_name":   organization.Name,
+			"membership_id":       acceptedMembership.ID.String(),
+		},
+	}
+
+	session, err := s.sessionService.CreateSession(ctx, sessionInput)
+	if err != nil {
+		s.logger.Error("Failed to create session", logging.Error(err))
+	}
+
+	var accessToken *AccessToken
+	var refreshToken *RefreshToken
+	if session != nil {
+		accessToken, err = s.tokenService.CreateAccessToken(ctx, user.ID, &organization.ID, session.ID)
+		if err != nil {
+			s.logger.Error("Failed to create access token", logging.Error(err))
+		}
+
+		refreshToken, err = s.tokenService.CreateRefreshToken(ctx, user.ID, session.ID)
+		if err != nil {
+			s.logger.Error("Failed to create refresh token", logging.Error(err))
+		}
+	}
+
+	// Convert models
+	modelOrg := organizationService.ConvertEntOrgToModel(organization)
+	modelMembership := organizationService.ConvertEntMembershipToModel(acceptedMembership)
+
+	// Build response
+	response := &model.RegisterResponse{
+		Success:      true,
+		User:         *user,
+		Organization: modelOrg,
+		Membership:   modelMembership,
+		Message:      "Successfully registered and joined organization",
+	}
+
+	if accessToken != nil {
+		response.AccessToken = accessToken.Token
+		response.ExpiresIn = int(time.Until(accessToken.ExpiresAt).Seconds())
+		response.TokenType = "Bearer"
+		response.ExpiresAt = &accessToken.ExpiresAt
+	}
+
+	if refreshToken != nil {
+		response.RefreshToken = refreshToken.Token
+	}
+
+	// Audit log
+	s.auditInvitationRegistration(ctx, organization.ID, user.ID, req.InvitationToken, req.IPAddress, req.UserAgent)
+
+	// Execute after invitation registration hooks
+	hookCtx.UserID = &user.ID
+	hookCtx.OrganizationID = &organization.ID
+	hookCtx.Data = response
+	if err := s.hooks.Execute(ctx, hooks.HookAfterRegister, response); err != nil {
+		s.logger.Error("After invitation registration hooks failed", logging.Error(err))
+	}
+
+	s.logger.Info("Invitation registration completed successfully",
+		logging.String("organization_id", organization.ID.String()),
+		logging.String("user_id", user.ID.String()),
+		logging.String("email", user.Email))
+
+	return response, nil
+}
+
 // Logout invalidates user session and tokens
 func (s *authService) Logout(ctx context.Context, req model.LogoutRequest) (*model.LogoutResponse, error) {
 	// Get session to determine user for hooks
@@ -564,7 +1014,7 @@ func (s *authService) RefreshToken(ctx context.Context, req model.RefreshTokenRe
 }
 
 // SendMagicLink sends a magic link for passwordless authentication
-func (s *authService) SendMagicLink(ctx context.Context, req model.MagicLinkRequest) (*model.MagicLinkResponse, error) {
+func (s *authService) SendMagicLink(ctx context.Context, req model.MagicLinkRequest, orgId *xid.ID) (*model.MagicLinkResponse, error) {
 	if req.Email == "" {
 		return nil, errors.New(errors.CodeBadRequest, "email is required")
 	}
@@ -1377,4 +1827,14 @@ func (s *authService) GetOAuthURL(ctx context.Context, provider, redirectURL str
 	// 3. Redirect to OAuth provider
 
 	return "", errors.New(errors.CodeNotImplemented, "not implemented")
+}
+
+func (s *authService) HandleOAuthCallbackWithOrg(ctx context.Context, provider, code, state string, orgId *xid.ID) (*model.LoginResponse, error) {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (s *authService) GetOAuthURLWithState(ctx context.Context, provider, redirectURL string, state string) (string, error) {
+	// TODO implement me
+	panic("implement me")
 }

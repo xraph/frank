@@ -15,91 +15,142 @@
 
 import * as runtime from '../runtime';
 import type {
-    AuthProvider,
-    AuthStatus,
-    EmptyOutputBody,
-    GenerateBackupCodesRequest,
-    LoginRequest,
-    LoginResponse,
-    LogoutRequest,
-    LogoutResponse,
-    MagicLinkRequest,
-    MagicLinkResponse,
-    MFABackCodes,
-    MFASetupResponse,
-    MFASetupVerifyResponse,
-    MFAVerifyRequest,
-    MFAVerifyResponse,
-    PaginatedOutputPasskeySummary,
-    PaginatedOutputSessionInfo,
-    PasskeyAuthenticationBeginRequest,
-    PasskeyAuthenticationBeginResponse,
-    PasskeyAuthenticationFinishRequest,
-    PasskeyAuthenticationFinishResponse,
-    PasskeyRegistrationBeginRequest,
-    PasskeyRegistrationBeginResponse,
-    PasskeyRegistrationFinishRequest,
-    PasskeyRegistrationFinishResponse,
-    PasswordResetConfirmRequest,
-    PasswordResetConfirmResponse,
-    PasswordResetRequest,
-    PasswordResetResponse,
-    RefreshTokenRequest,
-    RefreshTokenResponse,
-    RegisterRequest,
-    RegisterResponse,
-    ResendVerificationRequest,
-    ResendVerificationResponse,
-    Session,
-    SetupMFARequest,
-    TokenRequest,
-    TokenResponse,
-    VerificationRequest,
-    VerificationResponse,
-    VerifyMFASetupRequest,
+  AuthProvider,
+  AuthStatus,
+  EmptyOutputBody,
+  GenerateBackupCodesRequest,
+  GetGlobalActivityStats400Response,
+  LoginRequest,
+  LoginResponse,
+  LogoutRequest,
+  LogoutResponse,
+  MFABackCodes,
+  MFASetupResponse,
+  MFASetupVerifyResponse,
+  MFAVerifyRequest,
+  MFAVerifyResponse,
+  MagicLinkRequest,
+  MagicLinkResponse,
+  PaginatedOutputPasskeySummary,
+  PaginatedOutputSessionInfo,
+  PasskeyAuthenticationBeginRequest,
+  PasskeyAuthenticationBeginResponse,
+  PasskeyAuthenticationFinishRequest,
+  PasskeyAuthenticationFinishResponse,
+  PasskeyRegistrationBeginRequest,
+  PasskeyRegistrationBeginResponse,
+  PasskeyRegistrationFinishRequest,
+  PasskeyRegistrationFinishResponse,
+  PasswordResetConfirmRequest,
+  PasswordResetConfirmResponse,
+  PasswordResetRequest,
+  PasswordResetResponse,
+  RefreshTokenRequest,
+  RefreshTokenResponse,
+  RegisterRequest,
+  RegisterResponse,
+  ResendVerificationRequest,
+  ResendVerificationResponse,
+  Session,
+  SetupMFARequest,
+  TokenRequest,
+  TokenResponse,
+  ValidateTokenInputBody,
+  ValidateTokenResponse,
+  VerificationRequest,
+  VerificationResponse,
+  VerifyMFASetupRequest,
 } from '../models/index';
 import {
     AuthProviderFromJSON,
+    AuthProviderToJSON,
     AuthStatusFromJSON,
+    AuthStatusToJSON,
     EmptyOutputBodyFromJSON,
+    EmptyOutputBodyToJSON,
+    GenerateBackupCodesRequestFromJSON,
     GenerateBackupCodesRequestToJSON,
+    GetGlobalActivityStats400ResponseFromJSON,
+    GetGlobalActivityStats400ResponseToJSON,
+    LoginRequestFromJSON,
     LoginRequestToJSON,
     LoginResponseFromJSON,
+    LoginResponseToJSON,
+    LogoutRequestFromJSON,
     LogoutRequestToJSON,
     LogoutResponseFromJSON,
-    MagicLinkRequestToJSON,
-    MagicLinkResponseFromJSON,
+    LogoutResponseToJSON,
     MFABackCodesFromJSON,
+    MFABackCodesToJSON,
     MFASetupResponseFromJSON,
+    MFASetupResponseToJSON,
     MFASetupVerifyResponseFromJSON,
+    MFASetupVerifyResponseToJSON,
+    MFAVerifyRequestFromJSON,
     MFAVerifyRequestToJSON,
     MFAVerifyResponseFromJSON,
+    MFAVerifyResponseToJSON,
+    MagicLinkRequestFromJSON,
+    MagicLinkRequestToJSON,
+    MagicLinkResponseFromJSON,
+    MagicLinkResponseToJSON,
     PaginatedOutputPasskeySummaryFromJSON,
+    PaginatedOutputPasskeySummaryToJSON,
     PaginatedOutputSessionInfoFromJSON,
+    PaginatedOutputSessionInfoToJSON,
+    PasskeyAuthenticationBeginRequestFromJSON,
     PasskeyAuthenticationBeginRequestToJSON,
     PasskeyAuthenticationBeginResponseFromJSON,
+    PasskeyAuthenticationBeginResponseToJSON,
+    PasskeyAuthenticationFinishRequestFromJSON,
     PasskeyAuthenticationFinishRequestToJSON,
     PasskeyAuthenticationFinishResponseFromJSON,
+    PasskeyAuthenticationFinishResponseToJSON,
+    PasskeyRegistrationBeginRequestFromJSON,
     PasskeyRegistrationBeginRequestToJSON,
     PasskeyRegistrationBeginResponseFromJSON,
+    PasskeyRegistrationBeginResponseToJSON,
+    PasskeyRegistrationFinishRequestFromJSON,
     PasskeyRegistrationFinishRequestToJSON,
     PasskeyRegistrationFinishResponseFromJSON,
+    PasskeyRegistrationFinishResponseToJSON,
+    PasswordResetConfirmRequestFromJSON,
     PasswordResetConfirmRequestToJSON,
     PasswordResetConfirmResponseFromJSON,
+    PasswordResetConfirmResponseToJSON,
+    PasswordResetRequestFromJSON,
     PasswordResetRequestToJSON,
     PasswordResetResponseFromJSON,
+    PasswordResetResponseToJSON,
+    RefreshTokenRequestFromJSON,
     RefreshTokenRequestToJSON,
     RefreshTokenResponseFromJSON,
+    RefreshTokenResponseToJSON,
+    RegisterRequestFromJSON,
     RegisterRequestToJSON,
     RegisterResponseFromJSON,
+    RegisterResponseToJSON,
+    ResendVerificationRequestFromJSON,
     ResendVerificationRequestToJSON,
     ResendVerificationResponseFromJSON,
+    ResendVerificationResponseToJSON,
     SessionFromJSON,
+    SessionToJSON,
+    SetupMFARequestFromJSON,
     SetupMFARequestToJSON,
+    TokenRequestFromJSON,
     TokenRequestToJSON,
     TokenResponseFromJSON,
+    TokenResponseToJSON,
+    ValidateTokenInputBodyFromJSON,
+    ValidateTokenInputBodyToJSON,
+    ValidateTokenResponseFromJSON,
+    ValidateTokenResponseToJSON,
+    VerificationRequestFromJSON,
     VerificationRequestToJSON,
     VerificationResponseFromJSON,
+    VerificationResponseToJSON,
+    VerifyMFASetupRequestFromJSON,
     VerifyMFASetupRequestToJSON,
 } from '../models/index';
 
@@ -220,6 +271,10 @@ export interface SetupMFAOperationRequest {
     setupMFARequest: Omit<SetupMFARequest, '$schema'>;
 }
 
+export interface ValidateTokenRequest {
+    validateTokenInputBody: Omit<ValidateTokenInputBody, '$schema'>;
+}
+
 export interface VerifyEmailRequest {
     verificationRequest: Omit<VerificationRequest, '$schema'>;
 }
@@ -255,7 +310,7 @@ export class AuthenticationApi extends runtime.BaseAPI {
         const headerParameters: runtime.HTTPHeaders = {};
 
         const response = await this.request({
-            path: `/api/v1/public/auth/status`,
+            path: `/api/v1/auth/status`,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
@@ -1319,6 +1374,44 @@ export class AuthenticationApi extends runtime.BaseAPI {
      */
     async setupMFA(requestParameters: SetupMFAOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<MFASetupResponse> {
         const response = await this.setupMFARaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Validate token token from email
+     * Validate token
+     */
+    async validateTokenRaw(requestParameters: ValidateTokenRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ValidateTokenResponse>> {
+        if (requestParameters['validateTokenInputBody'] == null) {
+            throw new runtime.RequiredError(
+                'validateTokenInputBody',
+                'Required parameter "validateTokenInputBody" was null or undefined when calling validateToken().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        const response = await this.request({
+            path: `/api/v1/public/auth/validate-token`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: ValidateTokenInputBodyToJSON(requestParameters['validateTokenInputBody']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => ValidateTokenResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Validate token token from email
+     * Validate token
+     */
+    async validateToken(requestParameters: ValidateTokenRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ValidateTokenResponse> {
+        const response = await this.validateTokenRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

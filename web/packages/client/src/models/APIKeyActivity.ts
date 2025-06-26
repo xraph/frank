@@ -69,6 +69,12 @@ export interface APIKeyActivity {
      */
     method?: string;
     /**
+     * Public key used
+     * @type {string}
+     * @memberof APIKeyActivity
+     */
+    publicKey?: string;
+    /**
      * Response time in milliseconds
      * @type {number}
      * @memberof APIKeyActivity
@@ -131,6 +137,7 @@ export function APIKeyActivityFromJSONTyped(json: any, ignoreDiscriminator: bool
         'keyId': json['keyId'],
         'metadata': json['metadata'] == null ? undefined : json['metadata'],
         'method': json['method'] == null ? undefined : json['method'],
+        'publicKey': json['publicKey'] == null ? undefined : json['publicKey'],
         'responseTime': json['responseTime'] == null ? undefined : json['responseTime'],
         'statusCode': json['statusCode'] == null ? undefined : json['statusCode'],
         'success': json['success'],
@@ -159,6 +166,7 @@ export function APIKeyActivityToJSONTyped(value?: APIKeyActivity | null, ignoreD
         'keyId': value['keyId'],
         'metadata': value['metadata'],
         'method': value['method'],
+        'publicKey': value['publicKey'],
         'responseTime': value['responseTime'],
         'statusCode': value['statusCode'],
         'success': value['success'],

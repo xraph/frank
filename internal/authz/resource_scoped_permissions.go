@@ -4,18 +4,19 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
 // ResourcePermissionChecker provides permission checking for specific resources
 type ResourcePermissionChecker struct {
 	checker      PermissionChecker
-	resourceType ResourceType
+	resourceType model.ResourceType
 	resourceID   string
 }
 
 // NewResourcePermissionChecker creates a new resource-scoped permission checker
-func NewResourcePermissionChecker(checker PermissionChecker, resourceType ResourceType, resourceID string) *ResourcePermissionChecker {
+func NewResourcePermissionChecker(checker PermissionChecker, resourceType model.ResourceType, resourceID string) *ResourcePermissionChecker {
 	return &ResourcePermissionChecker{
 		checker:      checker,
 		resourceType: resourceType,
@@ -126,27 +127,27 @@ func (rpc *ResourcePermissionChecker) CanView(ctx context.Context) (bool, error)
 
 	// Add resource-specific view permissions
 	switch rpc.resourceType {
-	case ResourceOrganization:
+	case model.ResourceOrganization:
 		viewPermissions = append(viewPermissions, PermissionViewOrganization)
-	case ResourceUser:
+	case model.ResourceUser:
 		viewPermissions = append(viewPermissions, PermissionReadUser)
-	case ResourceAPIKey:
-		viewPermissions = append(viewPermissions, PermissionReadAPIKey, PermissionViewPersonalAPIKey)
-	case ResourceSession:
-		viewPermissions = append(viewPermissions, PermissionReadSessions, PermissionViewPersonalSession)
-	case ResourceMFA:
+	case model.ResourceAPIKey:
+		viewPermissions = append(viewPermissions, PermissionReadAPIKeys, PermissionReadPersonalAPIKeys)
+	case model.ResourceSession:
+		viewPermissions = append(viewPermissions, PermissionReadSessions, PermissionReadPersonalSessions)
+	case model.ResourceMFA:
 		viewPermissions = append(viewPermissions, PermissionReadMFA, PermissionViewPersonalMFA)
-	case ResourceVerification:
+	case model.ResourceVerification:
 		viewPermissions = append(viewPermissions, PermissionReadVerification, PermissionViewPersonalVerifications)
-	case ResourceWebhook:
-		viewPermissions = append(viewPermissions, PermissionReadWebhook)
-	case ResourceWebhookEvent:
+	case model.ResourceWebhook:
+		viewPermissions = append(viewPermissions, PermissionReadWebhooks)
+	case model.ResourceWebhookEvent:
 		viewPermissions = append(viewPermissions, PermissionReadWebhookEvents)
-	case ResourceEmailTemplate:
+	case model.ResourceEmailTemplate:
 		viewPermissions = append(viewPermissions, PermissionReadEmailTemplate)
-	case ResourceRole:
-		viewPermissions = append(viewPermissions, PermissionReadRole)
-	case ResourcePermission:
+	case model.ResourceRole:
+		viewPermissions = append(viewPermissions, PermissionReadRoles)
+	case model.ResourcePermission:
 		viewPermissions = append(viewPermissions, PermissionReadPermission)
 	}
 
@@ -161,23 +162,23 @@ func (rpc *ResourcePermissionChecker) CanEdit(ctx context.Context) (bool, error)
 
 	// Add resource-specific edit permissions
 	switch rpc.resourceType {
-	case ResourceOrganization:
+	case model.ResourceOrganization:
 		editPermissions = append(editPermissions, PermissionUpdateOrganization)
-	case ResourceUser:
+	case model.ResourceUser:
 		editPermissions = append(editPermissions, PermissionUpdateUser)
-	case ResourceAPIKey:
-		editPermissions = append(editPermissions, PermissionWriteAPIKey, PermissionManagePersonalAPIKey)
-	case ResourceMFA:
+	case model.ResourceAPIKey:
+		editPermissions = append(editPermissions, PermissionWriteAPIKey, PermissionManagePersonalAPIKeys)
+	case model.ResourceMFA:
 		editPermissions = append(editPermissions, PermissionWriteMFA, PermissionManagePersonalMFA)
-	case ResourceVerification:
+	case model.ResourceVerification:
 		editPermissions = append(editPermissions, PermissionWriteVerification, PermissionManagePersonalVerifications)
-	case ResourceWebhook:
+	case model.ResourceWebhook:
 		editPermissions = append(editPermissions, PermissionWriteWebhook)
-	case ResourceEmailTemplate:
+	case model.ResourceEmailTemplate:
 		editPermissions = append(editPermissions, PermissionWriteEmailTemplate)
-	case ResourceRole:
+	case model.ResourceRole:
 		editPermissions = append(editPermissions, PermissionWriteRole)
-	case ResourcePermission:
+	case model.ResourcePermission:
 		editPermissions = append(editPermissions, PermissionWritePermission)
 	}
 
@@ -192,27 +193,27 @@ func (rpc *ResourcePermissionChecker) CanDelete(ctx context.Context) (bool, erro
 
 	// Add resource-specific delete permissions
 	switch rpc.resourceType {
-	case ResourceOrganization:
+	case model.ResourceOrganization:
 		deletePermissions = append(deletePermissions, PermissionDeleteOrganization)
-	case ResourceUser:
+	case model.ResourceUser:
 		deletePermissions = append(deletePermissions, PermissionDeleteUser)
-	case ResourceAPIKey:
-		deletePermissions = append(deletePermissions, PermissionDeleteAPIKey, PermissionManagePersonalAPIKey)
-	case ResourceSession:
-		deletePermissions = append(deletePermissions, PermissionDeleteSession, PermissionManagePersonalSession)
-	case ResourceMFA:
+	case model.ResourceAPIKey:
+		deletePermissions = append(deletePermissions, PermissionDeleteAPIKey, PermissionManagePersonalAPIKeys)
+	case model.ResourceSession:
+		deletePermissions = append(deletePermissions, PermissionDeleteSession, PermissionManagePersonalSessions)
+	case model.ResourceMFA:
 		deletePermissions = append(deletePermissions, PermissionDeleteMFA, PermissionManagePersonalMFA)
-	case ResourceVerification:
+	case model.ResourceVerification:
 		deletePermissions = append(deletePermissions, PermissionDeleteVerification, PermissionManagePersonalVerifications)
-	case ResourceWebhook:
+	case model.ResourceWebhook:
 		deletePermissions = append(deletePermissions, PermissionDeleteWebhook)
-	case ResourceWebhookEvent:
+	case model.ResourceWebhookEvent:
 		deletePermissions = append(deletePermissions, PermissionDeleteWebhookEvent)
-	case ResourceEmailTemplate:
+	case model.ResourceEmailTemplate:
 		deletePermissions = append(deletePermissions, PermissionDeleteEmailTemplate)
-	case ResourceRole:
+	case model.ResourceRole:
 		deletePermissions = append(deletePermissions, PermissionDeleteRole)
-	case ResourcePermission:
+	case model.ResourcePermission:
 		deletePermissions = append(deletePermissions, PermissionDeletePermission)
 	}
 

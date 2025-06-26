@@ -27,13 +27,23 @@ ADDITIONAL TERMS FOR COMMERCIAL USE:
 While this software is provided under the MIT License, the following additional
 terms apply to commercial use:
 
-1. COMMERCIAL USE DEFINITION:
-   Commercial use means using this software for any purpose that results in
-   commercial gain, including but not limited to:
-   - Operating a paid authentication service
-   - Integrating into commercial products or services
-   - Using in production environments for revenue-generating applications
-   - Offering as a managed service to third parties
+1. COMMERCIAL USE RESTRICTIONS:
+
+   PROHIBITED USES:
+   The following commercial uses are explicitly prohibited without a separate
+   commercial license:
+
+   - Operating a managed authentication service for third parties
+   - Offering authentication-as-a-service (AaaS) solutions
+   - Providing hosted authentication services for commercial gain
+   - White-labeling this software as a commercial authentication platform
+   - Reselling authentication services built on this software
+
+   PERMITTED USES:
+   - Integrating into your own commercial products or applications
+   - Using for internal authentication within your organization
+   - Using in production environments for your own revenue-generating applications
+   - Educational and research purposes
 
 2. ATTRIBUTION REQUIREMENTS:
    All commercial deployments must include proper attribution to Frank Auth SaaS

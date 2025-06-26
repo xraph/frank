@@ -1,4 +1,4 @@
-import {Session, SessionInfo, User} from '@frank-auth/client';
+import {Session, SessionInfo, User, UserType} from '@frank-auth/client';
 import {FrankAuthError} from "./errors";
 
 // Re-export types from the generated client
@@ -38,6 +38,9 @@ export type {
 export interface FrankAuthConfig {
     apiUrl?: string;
     publishableKey: string;
+    secretKey?: string;
+    projectId?: string;
+    userType: UserType;
     enableDevMode?: boolean;
     sessionCookieName?: string;
     storageKeyPrefix?: string;

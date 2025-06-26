@@ -20,6 +20,20 @@ import {
     ContextTypeToJSON,
     ContextTypeToJSONTyped,
 } from './ContextType';
+import type { PermissionCategory } from './PermissionCategory';
+import {
+    PermissionCategoryFromJSON,
+    PermissionCategoryFromJSONTyped,
+    PermissionCategoryToJSON,
+    PermissionCategoryToJSONTyped,
+} from './PermissionCategory';
+import type { UserType } from './UserType';
+import {
+    UserTypeFromJSON,
+    UserTypeFromJSONTyped,
+    UserTypeToJSON,
+    UserTypeToJSONTyped,
+} from './UserType';
 
 /**
  * 
@@ -41,22 +55,22 @@ export interface CreatePermissionRequest {
     action: string;
     /**
      * Applicable contexts
-     * @type {Array<string>}
+     * @type {Array<ContextType>}
      * @memberof CreatePermissionRequest
      */
-    applicableContexts: Array<string> | null;
+    applicableContexts: Array<ContextType> | null;
     /**
      * Applicable user types
-     * @type {Array<string>}
+     * @type {Array<UserType>}
      * @memberof CreatePermissionRequest
      */
-    applicableUserTypes: Array<string> | null;
+    applicableUserTypes: Array<UserType> | null;
     /**
      * Permission category
-     * @type {ContextType}
+     * @type {PermissionCategory}
      * @memberof CreatePermissionRequest
      */
-    category: ContextType;
+    category: PermissionCategory;
     /**
      * Conditional rules
      * @type {string}
@@ -150,9 +164,9 @@ export function CreatePermissionRequestFromJSONTyped(json: any, ignoreDiscrimina
         
         '$schema': json['$schema'] == null ? undefined : json['$schema'],
         'action': json['action'],
-        'applicableContexts': json['applicableContexts'] == null ? null : json['applicableContexts'],
-        'applicableUserTypes': json['applicableUserTypes'] == null ? null : json['applicableUserTypes'],
-        'category': ContextTypeFromJSON(json['category']),
+        'applicableContexts': (json['applicableContexts'] == null ? null : (json['applicableContexts'] as Array<any>).map(ContextTypeFromJSON)),
+        'applicableUserTypes': (json['applicableUserTypes'] == null ? null : (json['applicableUserTypes'] as Array<any>).map(UserTypeFromJSON)),
+        'category': PermissionCategoryFromJSON(json['category']),
         'conditions': json['conditions'] == null ? undefined : json['conditions'],
         'createdBy': json['createdBy'] == null ? undefined : json['createdBy'],
         'dangerous': json['dangerous'],
@@ -178,9 +192,9 @@ export function CreatePermissionRequestToJSONTyped(value?: Omit<CreatePermission
     return {
         
         'action': value['action'],
-        'applicableContexts': value['applicableContexts'],
-        'applicableUserTypes': value['applicableUserTypes'],
-        'category': ContextTypeToJSON(value['category']),
+        'applicableContexts': (value['applicableContexts'] == null ? null : (value['applicableContexts'] as Array<any>).map(ContextTypeToJSON)),
+        'applicableUserTypes': (value['applicableUserTypes'] == null ? null : (value['applicableUserTypes'] as Array<any>).map(UserTypeToJSON)),
+        'category': PermissionCategoryToJSON(value['category']),
         'conditions': value['conditions'],
         'createdBy': value['createdBy'],
         'dangerous': value['dangerous'],

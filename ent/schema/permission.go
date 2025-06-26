@@ -38,13 +38,13 @@ func (Permission) Fields() []ent.Field {
 
 		// Permission categorization
 		field.Enum("category").
-			GoType(model.ContextType("")).
+			GoType(model.PermissionCategory("")).
 			Comment("Category helps organize permissions by scope"),
 
-		field.JSON("applicable_user_types", []string{}).
+		field.JSON("applicable_user_types", []model.UserType{}).
 			Comment("Which user types this permission can apply to"),
 
-		field.JSON("applicable_contexts", []string{}).
+		field.JSON("applicable_contexts", []model.ContextType{}).
 			Comment("Which contexts this permission can be used in"),
 
 		// Permission properties
@@ -74,6 +74,7 @@ func (Permission) Fields() []ent.Field {
 
 		// Grouping and organization
 		field.String("permission_group").
+			GoType(model.PermissionGroup("")).
 			Optional().
 			Comment("Group permissions by feature (e.g., 'user_management', 'billing')"),
 	}
@@ -109,8 +110,7 @@ func (Permission) Edges() []ent.Edge {
 func (Permission) Indexes() []ent.Index {
 	return []ent.Index{
 		index.Fields("name"),
-		index.Fields("resource", "action").
-			Unique(),
+		index.Fields("resource", "action"),
 		index.Fields("category"),
 		index.Fields("system"),
 		index.Fields("dangerous"),

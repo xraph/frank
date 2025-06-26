@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/go-redis/redis/v8"
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/internal/di"
 	"github.com/juicycleff/frank/internal/routes"
@@ -16,6 +15,7 @@ import (
 	"github.com/juicycleff/frank/pkg/logging"
 	"github.com/juicycleff/frank/pkg/model"
 	server2 "github.com/juicycleff/frank/pkg/server"
+	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 )
 
@@ -195,12 +195,6 @@ func WithMountOptions(mountOpts *server2.MountOptions) Option {
 		return nil
 	}
 }
-func WithBasePath(baseEndpoint string) Option {
-	return func(f *Frank) error {
-		f.basePath = baseEndpoint
-		return nil
-	}
-}
 
 // Defaults returns a slice of default options for Frank
 func Defaults() []Option {
@@ -265,7 +259,6 @@ type Frank struct {
 	di            di.Container
 	server        *server2.Server
 	mountOpts     *server2.MountOptions
-	basePath      string
 	withServer    bool
 	disableRoutes bool
 
@@ -364,9 +357,11 @@ func New(flagsOpts *server2.ConfigFlags, opts ...Option) (*Frank, error) {
 	// Initialize router if not set via options
 	if f.router == nil {
 		f.log.Info("Using Huma framework (default)")
-		if f.basePath != "" && f.mountOpts == nil {
-			f.router = routes.NewEmbeddedRouter(f.chiMux, f.di, f.basePath)
+		if f.mountOpts == nil {
+			f.log.Info("Using default router setup")
+			f.router = routes.NewRouter(f.di, f.chiMux)
 		} else {
+			f.log.Info("Using router with embedded options", zap.String("base_path", f.mountOpts.BasePath))
 			f.router = routes.NewRouterWithOptions(f.di, f.chiMux, f.mountOpts)
 		}
 	}

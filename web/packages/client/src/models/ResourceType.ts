@@ -18,18 +18,44 @@
  * @export
  */
 export const ResourceType = {
-    ApiKey: 'api_key',
-    User: 'user',
+    Global: 'global',
+    System: 'system',
     Organization: 'organization',
+    User: 'user',
+    Role: 'role',
+    Permission: 'permission',
+    ApiKey: 'api_key',
     Session: 'session',
+    Mfa: 'mfa',
+    Webhook: 'webhook',
+    Audit: 'audit',
+    Application: 'application',
+    EndUser: 'end_user',
+    Integration: 'integration',
+    Billing: 'billing',
+    Analytics: 'analytics',
+    WebhookEvent: 'webhook_event',
+    EmailTemplate: 'email_template',
+    Verification: 'verification',
+    AuditLog: 'audit_log',
     Common: 'common',
     Oauth: 'oauth',
     Membership: 'membership',
-    Mfa: 'mfa',
     Provider: 'provider',
     Passkey: 'passkey',
     Sso: 'sso',
-    Permission: 'permission'
+    SelfUser: 'self_user',
+    PersonalApiKey: 'personal_api_key',
+    PersonalSession: 'personal_session',
+    PersonalMfa: 'personal_mfa',
+    InternalUser: 'internal_user',
+    EndUserSession: 'end_user_session',
+    CustomerOrganization: 'customer_organization',
+    PlatformAnalytics: 'platform_analytics',
+    EndUserAnalytics: 'end_user_analytics',
+    AuthServiceAnalytics: 'auth_service_analytics',
+    AuthService: 'auth_service',
+    AuthServiceDomain: 'auth_service_domain'
 } as const;
 export type ResourceType = typeof ResourceType[keyof typeof ResourceType];
 

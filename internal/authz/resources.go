@@ -7,47 +7,18 @@ import (
 
 	"github.com/juicycleff/frank/ent"
 	"github.com/juicycleff/frank/pkg/data"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
-)
-
-// ResourceType represents the type of resource that permissions apply to
-type ResourceType string
-
-// Resource Types for context-aware permissions
-const (
-	// Core organizational resources
-	ResourceOrganization ResourceType = "organization"
-	ResourceUser         ResourceType = "user"
-	ResourceRole         ResourceType = "role"
-	ResourcePermission   ResourceType = "permission"
-	ResourceAuditLog     ResourceType = "audit_log"
-	ResourceBilling      ResourceType = "billing"
-
-	// Authentication and security resources
-	ResourceSession      ResourceType = "session"
-	ResourceMFA          ResourceType = "mfa"
-	ResourceAPIKey       ResourceType = "api_key"
-	ResourceVerification ResourceType = "verification"
-
-	// Communication resources
-	ResourceWebhook       ResourceType = "webhook"
-	ResourceWebhookEvent  ResourceType = "webhook_event"
-	ResourceEmailTemplate ResourceType = "email_template"
-
-	// System resources
-	ResourceGlobal      ResourceType = "global"
-	ResourceSystem      ResourceType = "system"
-	ResourceApplication ResourceType = "application"
 )
 
 // Resource represents a specific resource instance
 type Resource struct {
-	Type ResourceType
+	Type model.ResourceType
 	ID   string
 }
 
 // NewResource creates a new resource instance
-func NewResource(resourceType ResourceType, id string) Resource {
+func NewResource(resourceType model.ResourceType, id string) Resource {
 	return Resource{
 		Type: resourceType,
 		ID:   id,
@@ -62,13 +33,13 @@ func (r Resource) String() string {
 // ResourceOwnershipChecker defines the interface for checking resource ownership
 type ResourceOwnershipChecker interface {
 	// IsResourceOwner checks if the user is the owner of the resource
-	IsResourceOwner(ctx context.Context, userID xid.ID, resourceType ResourceType, resourceID xid.ID) (bool, error)
+	IsResourceOwner(ctx context.Context, userID xid.ID, resourceType model.ResourceType, resourceID xid.ID) (bool, error)
 
 	// IsResourceCreator checks if the user is the creator of the resource
-	IsResourceCreator(ctx context.Context, userID xid.ID, resourceType ResourceType, resourceID xid.ID) (bool, error)
+	IsResourceCreator(ctx context.Context, userID xid.ID, resourceType model.ResourceType, resourceID xid.ID) (bool, error)
 
 	// GetResourceOrganization gets the organization ID associated with a resource
-	GetResourceOrganization(ctx context.Context, resourceType ResourceType, resourceID xid.ID) (xid.ID, error)
+	GetResourceOrganization(ctx context.Context, resourceType model.ResourceType, resourceID xid.ID) (xid.ID, error)
 }
 
 // DefaultResourceOwnershipChecker Default implementation of ResourceOwnershipChecker
@@ -84,9 +55,9 @@ func NewResourceOwnershipChecker(client *data.Clients) *DefaultResourceOwnership
 }
 
 // IsResourceOwner checks if the user is the owner of the resource
-func (c *DefaultResourceOwnershipChecker) IsResourceOwner(ctx context.Context, userID xid.ID, resourceType ResourceType, resourceID xid.ID) (bool, error) {
+func (c *DefaultResourceOwnershipChecker) IsResourceOwner(ctx context.Context, userID xid.ID, resourceType model.ResourceType, resourceID xid.ID) (bool, error) {
 	switch resourceType {
-	case ResourceOrganization:
+	case model.ResourceOrganization:
 		// For organizations, check ownership from relationship or if owner field exists
 		_, err := c.client.DB.Organization.Get(ctx, resourceID)
 		if err != nil {
@@ -99,11 +70,11 @@ func (c *DefaultResourceOwnershipChecker) IsResourceOwner(ctx context.Context, u
 		// This depends on your exact schema - assuming there's an ownership relationship
 		return true, nil // You'll need to implement based on your org ownership logic
 
-	case ResourceUser:
+	case model.ResourceUser:
 		// Users own themselves
 		return resourceID == userID, nil
 
-	case ResourceAPIKey:
+	case model.ResourceAPIKey:
 		apiKey, err := c.client.DB.ApiKey.Get(ctx, resourceID)
 		if err != nil {
 			if ent.IsNotFound(err) {
@@ -116,11 +87,11 @@ func (c *DefaultResourceOwnershipChecker) IsResourceOwner(ctx context.Context, u
 			return true, nil
 		}
 		if !apiKey.OrganizationID.IsNil() {
-			return c.IsResourceOwner(ctx, userID, ResourceOrganization, apiKey.OrganizationID)
+			return c.IsResourceOwner(ctx, userID, model.ResourceOrganization, apiKey.OrganizationID)
 		}
 		return false, nil
 
-	case ResourceSession:
+	case model.ResourceSession:
 		session, err := c.client.DB.Session.Get(ctx, resourceID)
 		if err != nil {
 			if ent.IsNotFound(err) {
@@ -130,7 +101,7 @@ func (c *DefaultResourceOwnershipChecker) IsResourceOwner(ctx context.Context, u
 		}
 		return session.UserID == userID, nil
 
-	case ResourceMFA:
+	case model.ResourceMFA:
 		mfa, err := c.client.DB.MFA.Get(ctx, resourceID)
 		if err != nil {
 			if ent.IsNotFound(err) {
@@ -140,7 +111,7 @@ func (c *DefaultResourceOwnershipChecker) IsResourceOwner(ctx context.Context, u
 		}
 		return mfa.UserID == userID, nil
 
-	case ResourceVerification:
+	case model.ResourceVerification:
 		verification, err := c.client.DB.Verification.Get(ctx, resourceID)
 		if err != nil {
 			if ent.IsNotFound(err) {
@@ -150,7 +121,7 @@ func (c *DefaultResourceOwnershipChecker) IsResourceOwner(ctx context.Context, u
 		}
 		return verification.UserID == userID, nil
 
-	case ResourceWebhook:
+	case model.ResourceWebhook:
 		webhook, err := c.client.DB.Webhook.Get(ctx, resourceID)
 		if err != nil {
 			if ent.IsNotFound(err) {
@@ -158,17 +129,17 @@ func (c *DefaultResourceOwnershipChecker) IsResourceOwner(ctx context.Context, u
 			}
 			return false, err
 		}
-		return c.IsResourceOwner(ctx, userID, ResourceOrganization, webhook.OrganizationID)
+		return c.IsResourceOwner(ctx, userID, model.ResourceOrganization, webhook.OrganizationID)
 
-	case ResourceWebhookEvent:
+	case model.ResourceWebhookEvent:
 		// Webhook events belong to webhooks, which belong to organizations
 		orgID, err := c.GetResourceOrganization(ctx, resourceType, resourceID)
 		if err != nil {
 			return false, err
 		}
-		return c.IsResourceOwner(ctx, userID, ResourceOrganization, orgID)
+		return c.IsResourceOwner(ctx, userID, model.ResourceOrganization, orgID)
 
-	case ResourceEmailTemplate:
+	case model.ResourceEmailTemplate:
 		template, err := c.client.DB.EmailTemplate.Get(ctx, resourceID)
 		if err != nil {
 			if ent.IsNotFound(err) {
@@ -177,12 +148,12 @@ func (c *DefaultResourceOwnershipChecker) IsResourceOwner(ctx context.Context, u
 			return false, err
 		}
 		if !template.OrganizationID.IsNil() {
-			return c.IsResourceOwner(ctx, userID, ResourceOrganization, template.OrganizationID)
+			return c.IsResourceOwner(ctx, userID, model.ResourceOrganization, template.OrganizationID)
 		}
 		// Global templates - check if system admin or creator
 		return c.IsResourceCreator(ctx, userID, resourceType, resourceID)
 
-	case ResourceRole:
+	case model.ResourceRole:
 		role, err := c.client.DB.Role.Get(ctx, resourceID)
 		if err != nil {
 			if ent.IsNotFound(err) {
@@ -191,12 +162,12 @@ func (c *DefaultResourceOwnershipChecker) IsResourceOwner(ctx context.Context, u
 			return false, err
 		}
 		if !role.OrganizationID.IsNil() {
-			return c.IsResourceOwner(ctx, userID, ResourceOrganization, role.OrganizationID)
+			return c.IsResourceOwner(ctx, userID, model.ResourceOrganization, role.OrganizationID)
 		}
 		// System roles - only system admins
 		return false, nil
 
-	case ResourcePermission:
+	case model.ResourcePermission:
 		// Permissions are typically system-level, only admins can manage
 		return false, nil
 
@@ -207,7 +178,7 @@ func (c *DefaultResourceOwnershipChecker) IsResourceOwner(ctx context.Context, u
 }
 
 // IsResourceCreator checks if the user is the creator of the resource
-func (c *DefaultResourceOwnershipChecker) IsResourceCreator(ctx context.Context, userID xid.ID, resourceType ResourceType, resourceID xid.ID) (bool, error) {
+func (c *DefaultResourceOwnershipChecker) IsResourceCreator(ctx context.Context, userID xid.ID, resourceType model.ResourceType, resourceID xid.ID) (bool, error) {
 	// Helper function to check created_by field using reflection
 	checkCreator := func(entity interface{}) (bool, error) {
 		val := reflect.ValueOf(entity)
@@ -224,15 +195,15 @@ func (c *DefaultResourceOwnershipChecker) IsResourceCreator(ctx context.Context,
 	}
 
 	switch resourceType {
-	case ResourceOrganization:
+	case model.ResourceOrganization:
 		// Organizations might not have CreatedBy, use ownership instead
 		return c.IsResourceOwner(ctx, userID, resourceType, resourceID)
 
-	case ResourceUser:
+	case model.ResourceUser:
 		// Users create themselves
 		return resourceID == userID, nil
 
-	case ResourceAPIKey:
+	case model.ResourceAPIKey:
 		apiKey, err := c.client.DB.ApiKey.Get(ctx, resourceID)
 		if err != nil {
 			if ent.IsNotFound(err) {
@@ -242,7 +213,7 @@ func (c *DefaultResourceOwnershipChecker) IsResourceCreator(ctx context.Context,
 		}
 		return checkCreator(apiKey)
 
-	case ResourceWebhook:
+	case model.ResourceWebhook:
 		webhook, err := c.client.DB.Webhook.Get(ctx, resourceID)
 		if err != nil {
 			if ent.IsNotFound(err) {
@@ -252,7 +223,7 @@ func (c *DefaultResourceOwnershipChecker) IsResourceCreator(ctx context.Context,
 		}
 		return checkCreator(webhook)
 
-	case ResourceEmailTemplate:
+	case model.ResourceEmailTemplate:
 		template, err := c.client.DB.EmailTemplate.Get(ctx, resourceID)
 		if err != nil {
 			if ent.IsNotFound(err) {
@@ -262,7 +233,7 @@ func (c *DefaultResourceOwnershipChecker) IsResourceCreator(ctx context.Context,
 		}
 		return checkCreator(template)
 
-	case ResourceRole:
+	case model.ResourceRole:
 		role, err := c.client.DB.Role.Get(ctx, resourceID)
 		if err != nil {
 			if ent.IsNotFound(err) {
@@ -272,7 +243,7 @@ func (c *DefaultResourceOwnershipChecker) IsResourceCreator(ctx context.Context,
 		}
 		return checkCreator(role)
 
-	case ResourceSession, ResourceMFA, ResourceVerification:
+	case model.ResourceSession, model.ResourceMFA, model.ResourceVerification:
 		// These are typically created by the system, not users
 		return false, nil
 
@@ -283,13 +254,13 @@ func (c *DefaultResourceOwnershipChecker) IsResourceCreator(ctx context.Context,
 }
 
 // GetResourceOrganization gets the organization ID associated with a resource
-func (c *DefaultResourceOwnershipChecker) GetResourceOrganization(ctx context.Context, resourceType ResourceType, resourceID xid.ID) (xid.ID, error) {
+func (c *DefaultResourceOwnershipChecker) GetResourceOrganization(ctx context.Context, resourceType model.ResourceType, resourceID xid.ID) (xid.ID, error) {
 	switch resourceType {
-	case ResourceOrganization:
+	case model.ResourceOrganization:
 		// The resource is an organization itself
 		return resourceID, nil
 
-	case ResourceAPIKey:
+	case model.ResourceAPIKey:
 		apiKey, err := c.client.DB.ApiKey.Get(ctx, resourceID)
 		if err != nil {
 			return xid.NilID(), err
@@ -309,22 +280,22 @@ func (c *DefaultResourceOwnershipChecker) GetResourceOrganization(ctx context.Co
 		}
 		return xid.NilID(), fmt.Errorf("API key not associated with an organization")
 
-	case ResourceWebhook:
+	case model.ResourceWebhook:
 		webhook, err := c.client.DB.Webhook.Get(ctx, resourceID)
 		if err != nil {
 			return xid.NilID(), err
 		}
 		return webhook.OrganizationID, nil
 
-	case ResourceWebhookEvent:
+	case model.ResourceWebhookEvent:
 		// Get webhook first, then organization
 		webhookEvent, err := c.client.DB.WebhookEvent.Get(ctx, resourceID)
 		if err != nil {
 			return xid.NilID(), err
 		}
-		return c.GetResourceOrganization(ctx, ResourceWebhook, webhookEvent.WebhookID)
+		return c.GetResourceOrganization(ctx, model.ResourceWebhook, webhookEvent.WebhookID)
 
-	case ResourceEmailTemplate:
+	case model.ResourceEmailTemplate:
 		template, err := c.client.DB.EmailTemplate.Get(ctx, resourceID)
 		if err != nil {
 			return xid.NilID(), err
@@ -334,7 +305,7 @@ func (c *DefaultResourceOwnershipChecker) GetResourceOrganization(ctx context.Co
 		}
 		return xid.NilID(), fmt.Errorf("email template is global and not associated with an organization")
 
-	case ResourceRole:
+	case model.ResourceRole:
 		role, err := c.client.DB.Role.Get(ctx, resourceID)
 		if err != nil {
 			return xid.NilID(), err
@@ -344,7 +315,7 @@ func (c *DefaultResourceOwnershipChecker) GetResourceOrganization(ctx context.Co
 		}
 		return xid.NilID(), fmt.Errorf("role is system-level and not associated with an organization")
 
-	case ResourceUser:
+	case model.ResourceUser:
 		user, err := c.client.DB.User.Get(ctx, resourceID)
 		if err != nil {
 			return xid.NilID(), err
@@ -354,18 +325,18 @@ func (c *DefaultResourceOwnershipChecker) GetResourceOrganization(ctx context.Co
 		}
 		return xid.NilID(), fmt.Errorf("user not associated with an organization")
 
-	case ResourceSession:
+	case model.ResourceSession:
 		session, err := c.client.DB.Session.Get(ctx, resourceID)
 		if err != nil {
 			return xid.NilID(), err
 		}
 		// Get user's organization
-		return c.GetResourceOrganization(ctx, ResourceUser, session.UserID)
+		return c.GetResourceOrganization(ctx, model.ResourceUser, session.UserID)
 
-	case ResourceMFA, ResourceVerification:
+	case model.ResourceMFA, model.ResourceVerification:
 		// Get user's organization through user
 		var userID xid.ID
-		if resourceType == ResourceMFA {
+		if resourceType == model.ResourceMFA {
 			mfa, err := c.client.DB.MFA.Get(ctx, resourceID)
 			if err != nil {
 				return xid.NilID(), err
@@ -378,7 +349,7 @@ func (c *DefaultResourceOwnershipChecker) GetResourceOrganization(ctx context.Co
 			}
 			userID = verification.UserID
 		}
-		return c.GetResourceOrganization(ctx, ResourceUser, userID)
+		return c.GetResourceOrganization(ctx, model.ResourceUser, userID)
 
 	default:
 		// For unknown resource types, return an error

@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/juicycleff/frank/ent/predicate"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -79,6 +80,21 @@ func Name(v string) predicate.ApiKey {
 	return predicate.ApiKey(sql.FieldEQ(FieldName, v))
 }
 
+// PublicKey applies equality check predicate on the "public_key" field. It's identical to PublicKeyEQ.
+func PublicKey(v string) predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldEQ(FieldPublicKey, v))
+}
+
+// SecretKey applies equality check predicate on the "secret_key" field. It's identical to SecretKeyEQ.
+func SecretKey(v string) predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldEQ(FieldSecretKey, v))
+}
+
+// HashedSecretKey applies equality check predicate on the "hashed_secret_key" field. It's identical to HashedSecretKeyEQ.
+func HashedSecretKey(v string) predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldEQ(FieldHashedSecretKey, v))
+}
+
 // Key applies equality check predicate on the "key" field. It's identical to KeyEQ.
 func Key(v string) predicate.ApiKey {
 	return predicate.ApiKey(sql.FieldEQ(FieldKey, v))
@@ -97,11 +113,6 @@ func UserID(v xid.ID) predicate.ApiKey {
 // OrganizationID applies equality check predicate on the "organization_id" field. It's identical to OrganizationIDEQ.
 func OrganizationID(v xid.ID) predicate.ApiKey {
 	return predicate.ApiKey(sql.FieldEQ(FieldOrganizationID, v))
-}
-
-// Type applies equality check predicate on the "type" field. It's identical to TypeEQ.
-func Type(v string) predicate.ApiKey {
-	return predicate.ApiKey(sql.FieldEQ(FieldType, v))
 }
 
 // Active applies equality check predicate on the "active" field. It's identical to ActiveEQ.
@@ -314,6 +325,201 @@ func NameContainsFold(v string) predicate.ApiKey {
 	return predicate.ApiKey(sql.FieldContainsFold(FieldName, v))
 }
 
+// PublicKeyEQ applies the EQ predicate on the "public_key" field.
+func PublicKeyEQ(v string) predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldEQ(FieldPublicKey, v))
+}
+
+// PublicKeyNEQ applies the NEQ predicate on the "public_key" field.
+func PublicKeyNEQ(v string) predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldNEQ(FieldPublicKey, v))
+}
+
+// PublicKeyIn applies the In predicate on the "public_key" field.
+func PublicKeyIn(vs ...string) predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldIn(FieldPublicKey, vs...))
+}
+
+// PublicKeyNotIn applies the NotIn predicate on the "public_key" field.
+func PublicKeyNotIn(vs ...string) predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldNotIn(FieldPublicKey, vs...))
+}
+
+// PublicKeyGT applies the GT predicate on the "public_key" field.
+func PublicKeyGT(v string) predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldGT(FieldPublicKey, v))
+}
+
+// PublicKeyGTE applies the GTE predicate on the "public_key" field.
+func PublicKeyGTE(v string) predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldGTE(FieldPublicKey, v))
+}
+
+// PublicKeyLT applies the LT predicate on the "public_key" field.
+func PublicKeyLT(v string) predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldLT(FieldPublicKey, v))
+}
+
+// PublicKeyLTE applies the LTE predicate on the "public_key" field.
+func PublicKeyLTE(v string) predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldLTE(FieldPublicKey, v))
+}
+
+// PublicKeyContains applies the Contains predicate on the "public_key" field.
+func PublicKeyContains(v string) predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldContains(FieldPublicKey, v))
+}
+
+// PublicKeyHasPrefix applies the HasPrefix predicate on the "public_key" field.
+func PublicKeyHasPrefix(v string) predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldHasPrefix(FieldPublicKey, v))
+}
+
+// PublicKeyHasSuffix applies the HasSuffix predicate on the "public_key" field.
+func PublicKeyHasSuffix(v string) predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldHasSuffix(FieldPublicKey, v))
+}
+
+// PublicKeyEqualFold applies the EqualFold predicate on the "public_key" field.
+func PublicKeyEqualFold(v string) predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldEqualFold(FieldPublicKey, v))
+}
+
+// PublicKeyContainsFold applies the ContainsFold predicate on the "public_key" field.
+func PublicKeyContainsFold(v string) predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldContainsFold(FieldPublicKey, v))
+}
+
+// SecretKeyEQ applies the EQ predicate on the "secret_key" field.
+func SecretKeyEQ(v string) predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldEQ(FieldSecretKey, v))
+}
+
+// SecretKeyNEQ applies the NEQ predicate on the "secret_key" field.
+func SecretKeyNEQ(v string) predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldNEQ(FieldSecretKey, v))
+}
+
+// SecretKeyIn applies the In predicate on the "secret_key" field.
+func SecretKeyIn(vs ...string) predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldIn(FieldSecretKey, vs...))
+}
+
+// SecretKeyNotIn applies the NotIn predicate on the "secret_key" field.
+func SecretKeyNotIn(vs ...string) predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldNotIn(FieldSecretKey, vs...))
+}
+
+// SecretKeyGT applies the GT predicate on the "secret_key" field.
+func SecretKeyGT(v string) predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldGT(FieldSecretKey, v))
+}
+
+// SecretKeyGTE applies the GTE predicate on the "secret_key" field.
+func SecretKeyGTE(v string) predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldGTE(FieldSecretKey, v))
+}
+
+// SecretKeyLT applies the LT predicate on the "secret_key" field.
+func SecretKeyLT(v string) predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldLT(FieldSecretKey, v))
+}
+
+// SecretKeyLTE applies the LTE predicate on the "secret_key" field.
+func SecretKeyLTE(v string) predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldLTE(FieldSecretKey, v))
+}
+
+// SecretKeyContains applies the Contains predicate on the "secret_key" field.
+func SecretKeyContains(v string) predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldContains(FieldSecretKey, v))
+}
+
+// SecretKeyHasPrefix applies the HasPrefix predicate on the "secret_key" field.
+func SecretKeyHasPrefix(v string) predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldHasPrefix(FieldSecretKey, v))
+}
+
+// SecretKeyHasSuffix applies the HasSuffix predicate on the "secret_key" field.
+func SecretKeyHasSuffix(v string) predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldHasSuffix(FieldSecretKey, v))
+}
+
+// SecretKeyEqualFold applies the EqualFold predicate on the "secret_key" field.
+func SecretKeyEqualFold(v string) predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldEqualFold(FieldSecretKey, v))
+}
+
+// SecretKeyContainsFold applies the ContainsFold predicate on the "secret_key" field.
+func SecretKeyContainsFold(v string) predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldContainsFold(FieldSecretKey, v))
+}
+
+// HashedSecretKeyEQ applies the EQ predicate on the "hashed_secret_key" field.
+func HashedSecretKeyEQ(v string) predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldEQ(FieldHashedSecretKey, v))
+}
+
+// HashedSecretKeyNEQ applies the NEQ predicate on the "hashed_secret_key" field.
+func HashedSecretKeyNEQ(v string) predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldNEQ(FieldHashedSecretKey, v))
+}
+
+// HashedSecretKeyIn applies the In predicate on the "hashed_secret_key" field.
+func HashedSecretKeyIn(vs ...string) predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldIn(FieldHashedSecretKey, vs...))
+}
+
+// HashedSecretKeyNotIn applies the NotIn predicate on the "hashed_secret_key" field.
+func HashedSecretKeyNotIn(vs ...string) predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldNotIn(FieldHashedSecretKey, vs...))
+}
+
+// HashedSecretKeyGT applies the GT predicate on the "hashed_secret_key" field.
+func HashedSecretKeyGT(v string) predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldGT(FieldHashedSecretKey, v))
+}
+
+// HashedSecretKeyGTE applies the GTE predicate on the "hashed_secret_key" field.
+func HashedSecretKeyGTE(v string) predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldGTE(FieldHashedSecretKey, v))
+}
+
+// HashedSecretKeyLT applies the LT predicate on the "hashed_secret_key" field.
+func HashedSecretKeyLT(v string) predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldLT(FieldHashedSecretKey, v))
+}
+
+// HashedSecretKeyLTE applies the LTE predicate on the "hashed_secret_key" field.
+func HashedSecretKeyLTE(v string) predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldLTE(FieldHashedSecretKey, v))
+}
+
+// HashedSecretKeyContains applies the Contains predicate on the "hashed_secret_key" field.
+func HashedSecretKeyContains(v string) predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldContains(FieldHashedSecretKey, v))
+}
+
+// HashedSecretKeyHasPrefix applies the HasPrefix predicate on the "hashed_secret_key" field.
+func HashedSecretKeyHasPrefix(v string) predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldHasPrefix(FieldHashedSecretKey, v))
+}
+
+// HashedSecretKeyHasSuffix applies the HasSuffix predicate on the "hashed_secret_key" field.
+func HashedSecretKeyHasSuffix(v string) predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldHasSuffix(FieldHashedSecretKey, v))
+}
+
+// HashedSecretKeyEqualFold applies the EqualFold predicate on the "hashed_secret_key" field.
+func HashedSecretKeyEqualFold(v string) predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldEqualFold(FieldHashedSecretKey, v))
+}
+
+// HashedSecretKeyContainsFold applies the ContainsFold predicate on the "hashed_secret_key" field.
+func HashedSecretKeyContainsFold(v string) predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldContainsFold(FieldHashedSecretKey, v))
+}
+
 // KeyEQ applies the EQ predicate on the "key" field.
 func KeyEQ(v string) predicate.ApiKey {
 	return predicate.ApiKey(sql.FieldEQ(FieldKey, v))
@@ -367,6 +573,16 @@ func KeyHasPrefix(v string) predicate.ApiKey {
 // KeyHasSuffix applies the HasSuffix predicate on the "key" field.
 func KeyHasSuffix(v string) predicate.ApiKey {
 	return predicate.ApiKey(sql.FieldHasSuffix(FieldKey, v))
+}
+
+// KeyIsNil applies the IsNil predicate on the "key" field.
+func KeyIsNil() predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldIsNull(FieldKey))
+}
+
+// KeyNotNil applies the NotNil predicate on the "key" field.
+func KeyNotNil() predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldNotNull(FieldKey))
 }
 
 // KeyEqualFold applies the EqualFold predicate on the "key" field.
@@ -432,6 +648,16 @@ func HashedKeyHasPrefix(v string) predicate.ApiKey {
 // HashedKeyHasSuffix applies the HasSuffix predicate on the "hashed_key" field.
 func HashedKeyHasSuffix(v string) predicate.ApiKey {
 	return predicate.ApiKey(sql.FieldHasSuffix(FieldHashedKey, v))
+}
+
+// HashedKeyIsNil applies the IsNil predicate on the "hashed_key" field.
+func HashedKeyIsNil() predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldIsNull(FieldHashedKey))
+}
+
+// HashedKeyNotNil applies the NotNil predicate on the "hashed_key" field.
+func HashedKeyNotNil() predicate.ApiKey {
+	return predicate.ApiKey(sql.FieldNotNull(FieldHashedKey))
 }
 
 // HashedKeyEqualFold applies the EqualFold predicate on the "hashed_key" field.
@@ -605,68 +831,63 @@ func OrganizationIDContainsFold(v xid.ID) predicate.ApiKey {
 }
 
 // TypeEQ applies the EQ predicate on the "type" field.
-func TypeEQ(v string) predicate.ApiKey {
-	return predicate.ApiKey(sql.FieldEQ(FieldType, v))
+func TypeEQ(v model.APIKeyType) predicate.ApiKey {
+	vc := v
+	return predicate.ApiKey(sql.FieldEQ(FieldType, vc))
 }
 
 // TypeNEQ applies the NEQ predicate on the "type" field.
-func TypeNEQ(v string) predicate.ApiKey {
-	return predicate.ApiKey(sql.FieldNEQ(FieldType, v))
+func TypeNEQ(v model.APIKeyType) predicate.ApiKey {
+	vc := v
+	return predicate.ApiKey(sql.FieldNEQ(FieldType, vc))
 }
 
 // TypeIn applies the In predicate on the "type" field.
-func TypeIn(vs ...string) predicate.ApiKey {
-	return predicate.ApiKey(sql.FieldIn(FieldType, vs...))
+func TypeIn(vs ...model.APIKeyType) predicate.ApiKey {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.ApiKey(sql.FieldIn(FieldType, v...))
 }
 
 // TypeNotIn applies the NotIn predicate on the "type" field.
-func TypeNotIn(vs ...string) predicate.ApiKey {
-	return predicate.ApiKey(sql.FieldNotIn(FieldType, vs...))
+func TypeNotIn(vs ...model.APIKeyType) predicate.ApiKey {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.ApiKey(sql.FieldNotIn(FieldType, v...))
 }
 
-// TypeGT applies the GT predicate on the "type" field.
-func TypeGT(v string) predicate.ApiKey {
-	return predicate.ApiKey(sql.FieldGT(FieldType, v))
+// EnvironmentEQ applies the EQ predicate on the "environment" field.
+func EnvironmentEQ(v model.Environment) predicate.ApiKey {
+	vc := v
+	return predicate.ApiKey(sql.FieldEQ(FieldEnvironment, vc))
 }
 
-// TypeGTE applies the GTE predicate on the "type" field.
-func TypeGTE(v string) predicate.ApiKey {
-	return predicate.ApiKey(sql.FieldGTE(FieldType, v))
+// EnvironmentNEQ applies the NEQ predicate on the "environment" field.
+func EnvironmentNEQ(v model.Environment) predicate.ApiKey {
+	vc := v
+	return predicate.ApiKey(sql.FieldNEQ(FieldEnvironment, vc))
 }
 
-// TypeLT applies the LT predicate on the "type" field.
-func TypeLT(v string) predicate.ApiKey {
-	return predicate.ApiKey(sql.FieldLT(FieldType, v))
+// EnvironmentIn applies the In predicate on the "environment" field.
+func EnvironmentIn(vs ...model.Environment) predicate.ApiKey {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.ApiKey(sql.FieldIn(FieldEnvironment, v...))
 }
 
-// TypeLTE applies the LTE predicate on the "type" field.
-func TypeLTE(v string) predicate.ApiKey {
-	return predicate.ApiKey(sql.FieldLTE(FieldType, v))
-}
-
-// TypeContains applies the Contains predicate on the "type" field.
-func TypeContains(v string) predicate.ApiKey {
-	return predicate.ApiKey(sql.FieldContains(FieldType, v))
-}
-
-// TypeHasPrefix applies the HasPrefix predicate on the "type" field.
-func TypeHasPrefix(v string) predicate.ApiKey {
-	return predicate.ApiKey(sql.FieldHasPrefix(FieldType, v))
-}
-
-// TypeHasSuffix applies the HasSuffix predicate on the "type" field.
-func TypeHasSuffix(v string) predicate.ApiKey {
-	return predicate.ApiKey(sql.FieldHasSuffix(FieldType, v))
-}
-
-// TypeEqualFold applies the EqualFold predicate on the "type" field.
-func TypeEqualFold(v string) predicate.ApiKey {
-	return predicate.ApiKey(sql.FieldEqualFold(FieldType, v))
-}
-
-// TypeContainsFold applies the ContainsFold predicate on the "type" field.
-func TypeContainsFold(v string) predicate.ApiKey {
-	return predicate.ApiKey(sql.FieldContainsFold(FieldType, v))
+// EnvironmentNotIn applies the NotIn predicate on the "environment" field.
+func EnvironmentNotIn(vs ...model.Environment) predicate.ApiKey {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.ApiKey(sql.FieldNotIn(FieldEnvironment, v...))
 }
 
 // ActiveEQ applies the EQ predicate on the "active" field.

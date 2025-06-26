@@ -23,7 +23,7 @@ type Invitation struct {
 	Email          string                 `json:"email" example:"user@example.com" doc:"Invited user email address"`
 	OrganizationID xid.ID                 `json:"organizationId" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"Organization ID"`
 	RoleID         xid.ID                 `json:"roleId" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"Role ID to assign"`
-	Status         string                 `json:"status" example:"pending" doc:"Invitation status" enum:"pending,accepted,declined,expired,cancelled"`
+	Status         InvitationStatus       `json:"status" example:"pending" doc:"Invitation status" enum:"pending,accepted,declined,expired,cancelled"`
 	Token          string                 `json:"token,omitempty" example:"abc123def456" doc:"Invitation token"`
 	ExpiresAt      *time.Time             `json:"expiresAt" example:"2023-01-08T12:00:00Z" doc:"Invitation expiration time"`
 	InvitedBy      *xid.ID                `json:"invitedBy,omitempty" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"User who sent the invitation"`
@@ -44,20 +44,20 @@ type Invitation struct {
 
 // InvitationSummary represents a simplified invitation for listings
 type InvitationSummary struct {
-	ID              xid.ID     `json:"id" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"Invitation ID"`
-	Email           string     `json:"email" example:"user@example.com" doc:"Invited email"`
-	OrganizationID  xid.ID     `json:"organizationId" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"Organization ID"`
-	RoleID          xid.ID     `json:"roleId" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"Role ID"`
-	RoleName        string     `json:"roleName" example:"admin" doc:"Role name"`
-	Status          string     `json:"status" example:"pending" doc:"Invitation status" enum:"pending,accepted,declined,expired,cancelled"`
-	CreatedAt       time.Time  `json:"createdAt" example:"2023-01-01T12:00:00Z" doc:"Creation timestamp"`
-	ExpiresAt       *time.Time `json:"expiresAt" example:"2023-01-08T12:00:00Z" doc:"Expiration timestamp"`
-	InvitedBy       *xid.ID    `json:"invitedBy,omitempty" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"Inviter user ID"`
-	InviterName     string     `json:"inviterName,omitempty" example:"John Doe" doc:"Inviter full name"`
-	InviterEmail    string     `json:"inviterEmail,omitempty" example:"inviter@example.com" doc:"Inviter email"`
-	AcceptedAt      *time.Time `json:"acceptedAt,omitempty" example:"2023-01-02T12:00:00Z" doc:"Acceptance timestamp"`
-	IsExpired       bool       `json:"isExpired" example:"false" doc:"Whether invitation has expired"`
-	DaysUntilExpiry int        `json:"daysUntilExpiry" example:"7" doc:"Days until expiration"`
+	ID              xid.ID           `json:"id" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"Invitation ID"`
+	Email           string           `json:"email" example:"user@example.com" doc:"Invited email"`
+	OrganizationID  xid.ID           `json:"organizationId" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"Organization ID"`
+	RoleID          xid.ID           `json:"roleId" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"Role ID"`
+	RoleName        string           `json:"roleName" example:"admin" doc:"Role name"`
+	Status          InvitationStatus `json:"status" example:"pending" doc:"Invitation status" enum:"pending,accepted,declined,expired,cancelled"`
+	CreatedAt       time.Time        `json:"createdAt" example:"2023-01-01T12:00:00Z" doc:"Creation timestamp"`
+	ExpiresAt       *time.Time       `json:"expiresAt" example:"2023-01-08T12:00:00Z" doc:"Expiration timestamp"`
+	InvitedBy       *xid.ID          `json:"invitedBy,omitempty" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"Inviter user ID"`
+	InviterName     string           `json:"inviterName,omitempty" example:"John Doe" doc:"Inviter full name"`
+	InviterEmail    string           `json:"inviterEmail,omitempty" example:"inviter@example.com" doc:"Inviter email"`
+	AcceptedAt      *time.Time       `json:"acceptedAt,omitempty" example:"2023-01-02T12:00:00Z" doc:"Acceptance timestamp"`
+	IsExpired       bool             `json:"isExpired" example:"false" doc:"Whether invitation has expired"`
+	DaysUntilExpiry int              `json:"daysUntilExpiry" example:"7" doc:"Days until expiration"`
 }
 
 // CreateInvitationRequest represents a request to create an invitation
@@ -199,7 +199,7 @@ type InvitationStats struct {
 	SlowestResponse float64 `json:"slowestResponse" example:"6.8" doc:"Slowest response time in days"`
 
 	// Breakdown by status
-	StatusBreakdown map[string]int `json:"statusBreakdown" example:"{\"pending\":10,\"accepted\":120}" doc:"Breakdown by status"`
+	StatusBreakdown map[InvitationStatus]int `json:"statusBreakdown" example:"{\"pending\":10,\"accepted\":120}" doc:"Breakdown by status"`
 
 	// Breakdown by role
 	RoleBreakdown map[string]InvitationRoleStats `json:"roleBreakdown,omitempty" doc:"Breakdown by role"`

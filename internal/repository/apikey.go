@@ -17,9 +17,16 @@ type ApiKeyRepository interface {
 	// Basic CRUD operations
 	Create(ctx context.Context, input CreateApiKeyInput) (*ent.ApiKey, error)
 	GetByID(ctx context.Context, id xid.ID) (*ent.ApiKey, error)
-	GetByHashedKey(ctx context.Context, hashedKey string) (*ent.ApiKey, error)
+	GetByPublicKey(ctx context.Context, publicKey string) (*ent.ApiKey, error)
+	GetBySecretKey(ctx context.Context, secretKey string) (*ent.ApiKey, error)
+	GetByHashedSecretKey(ctx context.Context, hashedSecretKey string) (*ent.ApiKey, error)
+	GetActiveByHashedSecretKey(ctx context.Context, hashedSecretKey string) (*ent.ApiKey, error)
 	Update(ctx context.Context, id xid.ID, input UpdateApiKeyInput) (*ent.ApiKey, error)
 	Delete(ctx context.Context, id xid.ID) error
+
+	// Legacy support methods
+	GetByHashedKey(ctx context.Context, hashedKey string) (*ent.ApiKey, error)
+	GetActiveByHashedKey(ctx context.Context, hashedKey string) (*ent.ApiKey, error)
 
 	// Query operations
 	List(ctx context.Context, opts ListAPIKeyParams) (*model.PaginatedOutput[*ent.ApiKey], error)
@@ -37,8 +44,8 @@ type ApiKeyRepository interface {
 
 	// Advanced queries
 	ListExpired(ctx context.Context, before time.Time) ([]*ent.ApiKey, error)
-	ListByType(ctx context.Context, keyType string, opts model.PaginationParams) (*model.PaginatedOutput[*ent.ApiKey], error)
-	GetActiveByHashedKey(ctx context.Context, hashedKey string) (*ent.ApiKey, error)
+	ListByType(ctx context.Context, keyType model.APIKeyType, opts model.PaginationParams) (*model.PaginatedOutput[*ent.ApiKey], error)
+	ListByEnvironment(ctx context.Context, environment model.Environment, opts model.PaginationParams) (*model.PaginatedOutput[*ent.ApiKey], error)
 
 	SetActive(ctx context.Context, id xid.ID, active bool) error
 	RotateKey(ctx context.Context, oldKeyID xid.ID, newKey *model.APIKey) error
@@ -58,19 +65,26 @@ func NewApiKeyRepository(client *ent.Client) ApiKeyRepository {
 
 // CreateApiKeyInput defines the input for creating an API key
 type CreateApiKeyInput struct {
-	Name           string                  `json:"name"`
-	Key            string                  `json:"key"`
-	HashedKey      string                  `json:"hashed_key"`
-	UserID         xid.ID                  `json:"user_id,omitempty"`
-	OrganizationID xid.ID                  `json:"organization_id,omitempty"`
-	Type           string                  `json:"type"`
+	Name            string `json:"name"`
+	PublicKey       string `json:"publicKey"`
+	SecretKey       string `json:"secretKey"`
+	HashedSecretKey string `json:"hashedSecretKey"`
+
+	// Legacy support
+	Key       string `json:"key,omitempty"`
+	HashedKey string `json:"hashedKey,omitempty"`
+
+	UserID         xid.ID                  `json:"userId,omitempty"`
+	OrganizationID xid.ID                  `json:"organizationId,omitempty"`
+	Type           model.APIKeyType        `json:"type"`
+	Environment    model.Environment       `json:"environment"`
 	Active         bool                    `json:"active"`
 	Permissions    []string                `json:"permissions,omitempty"`
 	Scopes         []string                `json:"scopes,omitempty"`
 	Metadata       map[string]any          `json:"metadata,omitempty"`
-	ExpiresAt      *time.Time              `json:"expires_at,omitempty"`
+	ExpiresAt      *time.Time              `json:"expiresAt,omitempty"`
 	IPWhitelist    []string                `json:"ipWhitelist,omitempty"`
-	RateLimits     *model.APIKeyRateLimits `json:"rateLimits,omitempty" doc:"Rate limits"`
+	RateLimits     *model.APIKeyRateLimits `json:"rateLimits,omitempty"`
 }
 
 // UpdateApiKeyInput defines the input for updating an API key
@@ -80,10 +94,10 @@ type UpdateApiKeyInput struct {
 	Permissions []string                `json:"permissions,omitempty"`
 	Scopes      []string                `json:"scopes,omitempty"`
 	Metadata    map[string]any          `json:"metadata,omitempty"`
-	LastUsed    *time.Time              `json:"last_used,omitempty"`
-	ExpiresAt   *time.Time              `json:"expires_at,omitempty"`
+	LastUsed    *time.Time              `json:"lastUsed,omitempty"`
+	ExpiresAt   *time.Time              `json:"expiresAt,omitempty"`
 	IPWhitelist *[]string               `json:"ipWhitelist,omitempty"`
-	RateLimits  *model.APIKeyRateLimits `json:"rateLimits,omitempty" doc:"Rate limits"`
+	RateLimits  *model.APIKeyRateLimits `json:"rateLimits,omitempty"`
 }
 
 type ListAPIKeyParams struct {
@@ -91,7 +105,8 @@ type ListAPIKeyParams struct {
 	UserID         *xid.ID
 	OrganizationID *xid.ID
 	IncludeUsage   bool
-	Type           string
+	Type           model.APIKeyType
+	Environment    model.Environment
 	Active         *bool
 	Name           string
 	Search         string
@@ -104,41 +119,51 @@ type ListAPIKeyParams struct {
 func (r *apiKeyRepository) Create(ctx context.Context, input CreateApiKeyInput) (*ent.ApiKey, error) {
 	builder := r.client.ApiKey.Create().
 		SetName(input.Name).
-		SetKey(input.Key).
-		SetHashedKey(input.HashedKey).
+		SetPublicKey(input.PublicKey).
+		SetSecretKey(input.SecretKey).
+		SetHashedSecretKey(input.HashedSecretKey).
 		SetType(input.Type).
+		SetEnvironment(input.Environment).
 		SetActive(input.Active).
 		SetIPWhitelist(input.IPWhitelist).
 		SetNillableRateLimits(input.RateLimits)
 
+	// Legacy support
+	if input.Key != "" {
+		builder = builder.SetKey(input.Key)
+	}
+	if input.HashedKey != "" {
+		builder = builder.SetHashedKey(input.HashedKey)
+	}
+
 	if !input.UserID.IsNil() {
-		builder.SetUserID(input.UserID)
+		builder = builder.SetUserID(input.UserID)
 	}
 
 	if !input.OrganizationID.IsNil() {
-		builder.SetOrganizationID(input.OrganizationID)
+		builder = builder.SetOrganizationID(input.OrganizationID)
 	}
 
 	if input.Permissions != nil {
-		builder.SetPermissions(input.Permissions)
+		builder = builder.SetPermissions(input.Permissions)
 	}
 
 	if input.Scopes != nil {
-		builder.SetScopes(input.Scopes)
+		builder = builder.SetScopes(input.Scopes)
 	}
 
 	if input.Metadata != nil {
-		builder.SetMetadata(input.Metadata)
+		builder = builder.SetMetadata(input.Metadata)
 	}
 
 	if input.ExpiresAt != nil {
-		builder.SetExpiresAt(*input.ExpiresAt)
+		builder = builder.SetExpiresAt(*input.ExpiresAt)
 	}
 
 	apiKey, err := builder.Save(ctx)
 	if err != nil {
 		if ent.IsConstraintError(err) {
-			return nil, errors.New(errors.CodeConflict, "API key with this hashed key already exists")
+			return nil, errors.New(errors.CodeConflict, "API key with this public key or secret key already exists")
 		}
 		return nil, errors.Wrap(err, errors.CodeInternalServer, "Failed to create API key")
 	}
@@ -165,7 +190,78 @@ func (r *apiKeyRepository) GetByID(ctx context.Context, id xid.ID) (*ent.ApiKey,
 	return apiKey, nil
 }
 
-// GetByHashedKey retrieves an API key by its hashed key
+// GetByPublicKey retrieves an API key by its public key
+func (r *apiKeyRepository) GetByPublicKey(ctx context.Context, publicKey string) (*ent.ApiKey, error) {
+	apiKey, err := r.client.ApiKey.
+		Query().
+		Where(apikey.PublicKey(publicKey)).
+		WithUser().
+		WithOrganization().
+		Only(ctx)
+
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, errors.New(errors.CodeNotFound, "API key not found")
+		}
+		return nil, errors.Wrap(err, errors.CodeInternalServer, "Failed to get API key by public key")
+	}
+
+	return apiKey, nil
+}
+
+// GetBySecretKey retrieves an API key by its secret key (hashed lookup)
+func (r *apiKeyRepository) GetBySecretKey(ctx context.Context, secretKey string) (*ent.ApiKey, error) {
+	// Note: This method assumes the secretKey is already hashed
+	// In practice, you would hash the input secretKey before lookup
+	return r.GetByHashedSecretKey(ctx, secretKey)
+}
+
+// GetByHashedSecretKey retrieves an API key by its hashed secret key
+func (r *apiKeyRepository) GetByHashedSecretKey(ctx context.Context, hashedSecretKey string) (*ent.ApiKey, error) {
+	apiKey, err := r.client.ApiKey.
+		Query().
+		Where(apikey.HashedSecretKey(hashedSecretKey)).
+		WithUser().
+		WithOrganization().
+		Only(ctx)
+
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, errors.New(errors.CodeNotFound, "API key not found")
+		}
+		return nil, errors.Wrap(err, errors.CodeInternalServer, "Failed to get API key by hashed secret key")
+	}
+
+	return apiKey, nil
+}
+
+// GetActiveByHashedSecretKey retrieves an active API key by its hashed secret key
+func (r *apiKeyRepository) GetActiveByHashedSecretKey(ctx context.Context, hashedSecretKey string) (*ent.ApiKey, error) {
+	apiKey, err := r.client.ApiKey.
+		Query().
+		Where(
+			apikey.HashedSecretKey(hashedSecretKey),
+			apikey.Active(true),
+			apikey.Or(
+				apikey.ExpiresAtIsNil(),
+				apikey.ExpiresAtGT(time.Now()),
+			),
+		).
+		WithUser().
+		WithOrganization().
+		Only(ctx)
+
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, errors.New(errors.CodeNotFound, "Active API key not found")
+		}
+		return nil, errors.Wrap(err, errors.CodeInternalServer, "Failed to get active API key by hashed secret key")
+	}
+
+	return apiKey, nil
+}
+
+// Legacy support methods
 func (r *apiKeyRepository) GetByHashedKey(ctx context.Context, hashedKey string) (*ent.ApiKey, error) {
 	apiKey, err := r.client.ApiKey.
 		Query().
@@ -179,6 +275,31 @@ func (r *apiKeyRepository) GetByHashedKey(ctx context.Context, hashedKey string)
 			return nil, errors.New(errors.CodeNotFound, "API key not found")
 		}
 		return nil, errors.Wrap(err, errors.CodeInternalServer, "Failed to get API key by hashed key")
+	}
+
+	return apiKey, nil
+}
+
+func (r *apiKeyRepository) GetActiveByHashedKey(ctx context.Context, hashedKey string) (*ent.ApiKey, error) {
+	apiKey, err := r.client.ApiKey.
+		Query().
+		Where(
+			apikey.HashedKey(hashedKey),
+			apikey.Active(true),
+			apikey.Or(
+				apikey.ExpiresAtIsNil(),
+				apikey.ExpiresAtGT(time.Now()),
+			),
+		).
+		WithUser().
+		WithOrganization().
+		Only(ctx)
+
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, errors.New(errors.CodeNotFound, "Active API key not found")
+		}
+		return nil, errors.Wrap(err, errors.CodeInternalServer, "Failed to get active API key by hashed key")
 	}
 
 	return apiKey, nil
@@ -224,10 +345,6 @@ func (r *apiKeyRepository) Update(ctx context.Context, id xid.ID, input UpdateAp
 		builder.SetRateLimits(*input.RateLimits)
 	}
 
-	if input.ExpiresAt != nil {
-		builder.SetExpiresAt(*input.ExpiresAt)
-	}
-
 	apiKey, err := builder.Save(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
@@ -260,7 +377,6 @@ func (r *apiKeyRepository) List(ctx context.Context, opts ListAPIKeyParams) (*mo
 
 	if opts.OrderBy == nil || len(opts.OrderBy) == 0 {
 		query = query.Order(ent.Desc(apikey.FieldCreatedAt))
-
 	}
 
 	if opts.UserID != nil {
@@ -272,7 +388,11 @@ func (r *apiKeyRepository) List(ctx context.Context, opts ListAPIKeyParams) (*mo
 	}
 
 	if opts.Type != "" {
-		query = query.Where(apikey.Type(opts.Type))
+		query = query.Where(apikey.TypeEQ(opts.Type))
+	}
+
+	if opts.Environment != "" {
+		query = query.Where(apikey.EnvironmentEQ(opts.Environment))
 	}
 
 	if opts.Active != nil {
@@ -288,12 +408,16 @@ func (r *apiKeyRepository) List(ctx context.Context, opts ListAPIKeyParams) (*mo
 	}
 
 	if opts.Used != nil {
-		query = query.Where(apikey.LastUsedIsNil())
+		if *opts.Used {
+			query = query.Where(apikey.LastUsedNotNil())
+		} else {
+			query = query.Where(apikey.LastUsedIsNil())
+		}
 	}
 
 	result, err := model.WithPaginationAndOptions[*ent.ApiKey, *ent.ApiKeyQuery](ctx, query, opts.PaginationParams)
 	if err != nil {
-		return nil, errors.Wrap(err, errors.CodeInternalServer, "Failed to list API keys by user ID")
+		return nil, errors.Wrap(err, errors.CodeInternalServer, "Failed to list API keys")
 	}
 
 	return result, nil
@@ -305,10 +429,8 @@ func (r *apiKeyRepository) ListByUserID(ctx context.Context, userID xid.ID, opts
 		Query().
 		Where(apikey.UserID(userID)).
 		WithUser().
-		WithOrganization()
-
-	// Apply ordering
-	query.Order(ent.Desc(apikey.FieldCreatedAt))
+		WithOrganization().
+		Order(ent.Desc(apikey.FieldCreatedAt))
 
 	result, err := model.WithPaginationAndOptions[*ent.ApiKey, *ent.ApiKeyQuery](ctx, query, opts)
 	if err != nil {
@@ -324,10 +446,8 @@ func (r *apiKeyRepository) ListByOrganizationID(ctx context.Context, orgID xid.I
 		Query().
 		Where(apikey.OrganizationID(orgID)).
 		WithUser().
-		WithOrganization()
-
-	// Apply ordering
-	query.Order(ent.Desc(apikey.FieldCreatedAt))
+		WithOrganization().
+		Order(ent.Desc(apikey.FieldCreatedAt))
 
 	result, err := model.WithPaginationAndOptions[*ent.ApiKey, *ent.ApiKeyQuery](ctx, query, opts)
 	if err != nil {
@@ -482,15 +602,13 @@ func (r *apiKeyRepository) ListExpired(ctx context.Context, before time.Time) ([
 }
 
 // ListByType retrieves paginated API keys by type
-func (r *apiKeyRepository) ListByType(ctx context.Context, keyType string, opts model.PaginationParams) (*model.PaginatedOutput[*ent.ApiKey], error) {
+func (r *apiKeyRepository) ListByType(ctx context.Context, keyType model.APIKeyType, opts model.PaginationParams) (*model.PaginatedOutput[*ent.ApiKey], error) {
 	query := r.client.ApiKey.
 		Query().
-		Where(apikey.Type(keyType)).
+		Where(apikey.TypeEQ(keyType)).
 		WithUser().
-		WithOrganization()
-
-	// Apply ordering
-	query.Order(ent.Desc(apikey.FieldCreatedAt))
+		WithOrganization().
+		Order(ent.Desc(apikey.FieldCreatedAt))
 
 	result, err := model.WithPaginationAndOptions[*ent.ApiKey, *ent.ApiKeyQuery](ctx, query, opts)
 	if err != nil {
@@ -500,33 +618,24 @@ func (r *apiKeyRepository) ListByType(ctx context.Context, keyType string, opts 
 	return result, nil
 }
 
-// GetActiveByHashedKey retrieves an active API key by its hashed key
-func (r *apiKeyRepository) GetActiveByHashedKey(ctx context.Context, hashedKey string) (*ent.ApiKey, error) {
-	apiKey, err := r.client.ApiKey.
+// ListByEnvironment retrieves paginated API keys by environment
+func (r *apiKeyRepository) ListByEnvironment(ctx context.Context, environment model.Environment, opts model.PaginationParams) (*model.PaginatedOutput[*ent.ApiKey], error) {
+	query := r.client.ApiKey.
 		Query().
-		Where(
-			apikey.HashedKey(hashedKey),
-			apikey.Active(true),
-			apikey.Or(
-				apikey.ExpiresAtIsNil(),
-				apikey.ExpiresAtGT(time.Now()),
-			),
-		).
+		Where(apikey.EnvironmentEQ(environment)).
 		WithUser().
 		WithOrganization().
-		Only(ctx)
+		Order(ent.Desc(apikey.FieldCreatedAt))
 
+	result, err := model.WithPaginationAndOptions[*ent.ApiKey, *ent.ApiKeyQuery](ctx, query, opts)
 	if err != nil {
-		if ent.IsNotFound(err) {
-			return nil, errors.New(errors.CodeNotFound, "Active API key not found")
-		}
-		return nil, errors.Wrap(err, errors.CodeInternalServer, "Failed to get active API key by hashed key")
+		return nil, errors.Wrap(err, errors.CodeInternalServer, fmt.Sprintf("Failed to list API keys by environment %s", environment))
 	}
 
-	return apiKey, nil
+	return result, nil
 }
 
-// Extended implementation with missing methods
+// SetActive updates the active status of an API key
 func (r *apiKeyRepository) SetActive(ctx context.Context, id xid.ID, active bool) error {
 	err := r.client.ApiKey.
 		UpdateOneID(id).
@@ -551,37 +660,23 @@ func (r *apiKeyRepository) RotateKey(ctx context.Context, oldKeyID xid.ID, newKe
 	}
 
 	// Create new API key
-	createInput := CreateApiKeyInput{
-		Name:           newKey.Name,
-		Key:            newKey.Key,
-		HashedKey:      newKey.HashedKey,
-		UserID:         newKey.UserID,
-		OrganizationID: newKey.OrganizationID,
-		Type:           newKey.Type,
-		Active:         newKey.Active,
-		Permissions:    newKey.Permissions,
-		Scopes:         newKey.Scopes,
-		Metadata:       newKey.Metadata,
-		ExpiresAt:      newKey.ExpiresAt,
-		IPWhitelist:    newKey.IPWhitelist,
-		RateLimits:     newKey.RateLimits,
-	}
-
 	_, err = tx.ApiKey.Create().
 		SetID(newKey.ID).
-		SetName(createInput.Name).
-		SetKey(createInput.Key).
-		SetHashedKey(createInput.HashedKey).
-		SetType(createInput.Type).
-		SetActive(createInput.Active).
-		SetIPWhitelist(createInput.IPWhitelist).
-		SetNillableRateLimits(createInput.RateLimits).
-		SetUserID(createInput.UserID).
-		SetOrganizationID(createInput.OrganizationID).
-		SetPermissions(createInput.Permissions).
-		SetScopes(createInput.Scopes).
-		SetMetadata(createInput.Metadata).
-		SetNillableExpiresAt(createInput.ExpiresAt).
+		SetName(newKey.Name).
+		SetPublicKey(newKey.PublicKey).
+		SetSecretKey(newKey.SecretKey).
+		SetHashedSecretKey(newKey.HashedSecretKey).
+		SetType(newKey.Type).
+		SetEnvironment(newKey.Environment).
+		SetActive(newKey.Active).
+		SetIPWhitelist(newKey.IPWhitelist).
+		SetNillableRateLimits(newKey.RateLimits).
+		SetUserID(newKey.UserID).
+		SetOrganizationID(newKey.OrganizationID).
+		SetPermissions(newKey.Permissions).
+		SetScopes(newKey.Scopes).
+		SetMetadata(newKey.Metadata).
+		SetNillableExpiresAt(newKey.ExpiresAt).
 		Save(ctx)
 
 	if err != nil {

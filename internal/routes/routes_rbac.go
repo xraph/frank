@@ -366,7 +366,7 @@ func registerListRoles(api huma.API, rbacCtrl *rbacController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, rbacCtrl.di.AuthZ().Checker(), rbacCtrl.di.Logger())(
-			authz.PermissionReadRole, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadRoles, model.ResourceOrganization, "orgId",
 		)},
 	}, rbacCtrl.listRolesHandler)
 }
@@ -384,7 +384,7 @@ func registerGetRole(api huma.API, rbacCtrl *rbacController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, rbacCtrl.di.AuthZ().Checker(), rbacCtrl.di.Logger())(
-			authz.PermissionReadRole, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadRoles, model.ResourceOrganization, "orgId",
 		)},
 	}, rbacCtrl.getRoleHandler)
 }
@@ -402,7 +402,7 @@ func registerCreateRole(api huma.API, rbacCtrl *rbacController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, rbacCtrl.di.AuthZ().Checker(), rbacCtrl.di.Logger())(
-			authz.PermissionWriteRole, authz.ResourceOrganization, "orgId",
+			authz.PermissionWriteRole, model.ResourceOrganization, "orgId",
 		)},
 	}, rbacCtrl.createRoleHandler)
 }
@@ -420,7 +420,7 @@ func registerUpdateRole(api huma.API, rbacCtrl *rbacController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, rbacCtrl.di.AuthZ().Checker(), rbacCtrl.di.Logger())(
-			authz.PermissionWriteRole, authz.ResourceOrganization, "orgId",
+			authz.PermissionWriteRole, model.ResourceOrganization, "orgId",
 		)},
 	}, rbacCtrl.updateRoleHandler)
 }
@@ -441,7 +441,7 @@ func registerDeleteRole(api huma.API, rbacCtrl *rbacController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, rbacCtrl.di.AuthZ().Checker(), rbacCtrl.di.Logger())(
-			authz.PermissionDeleteRole, authz.ResourceOrganization, "orgId",
+			authz.PermissionDeleteRole, model.ResourceOrganization, "orgId",
 		)},
 	}, rbacCtrl.deleteRoleHandler)
 }
@@ -459,7 +459,7 @@ func registerGetRoleHierarchy(api huma.API, rbacCtrl *rbacController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, rbacCtrl.di.AuthZ().Checker(), rbacCtrl.di.Logger())(
-			authz.PermissionReadRole, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadRoles, model.ResourceOrganization, "orgId",
 		)},
 	}, rbacCtrl.getRoleHierarchyHandler)
 }
@@ -477,7 +477,7 @@ func registerSetRoleParent(api huma.API, rbacCtrl *rbacController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, rbacCtrl.di.AuthZ().Checker(), rbacCtrl.di.Logger())(
-			authz.PermissionManageRole, authz.ResourceOrganization, "orgId",
+			authz.PermissionManageRole, model.ResourceOrganization, "orgId",
 		)},
 	}, rbacCtrl.setRoleParentHandler)
 }
@@ -498,7 +498,7 @@ func registerRemoveRoleParent(api huma.API, rbacCtrl *rbacController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, rbacCtrl.di.AuthZ().Checker(), rbacCtrl.di.Logger())(
-			authz.PermissionManageRole, authz.ResourceOrganization, "orgId",
+			authz.PermissionManageRole, model.ResourceOrganization, "orgId",
 		)},
 	}, rbacCtrl.removeRoleParentHandler)
 }
@@ -520,7 +520,7 @@ func registerAddRolePermission(api huma.API, rbacCtrl *rbacController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, rbacCtrl.di.AuthZ().Checker(), rbacCtrl.di.Logger())(
-			authz.PermissionManageRole, authz.ResourceOrganization, "orgId",
+			authz.PermissionManageRole, model.ResourceOrganization, "orgId",
 		)},
 	}, rbacCtrl.addRolePermissionHandler)
 }
@@ -541,7 +541,7 @@ func registerRemoveRolePermission(api huma.API, rbacCtrl *rbacController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, rbacCtrl.di.AuthZ().Checker(), rbacCtrl.di.Logger())(
-			authz.PermissionManageRole, authz.ResourceOrganization, "orgId",
+			authz.PermissionManageRole, model.ResourceOrganization, "orgId",
 		)},
 	}, rbacCtrl.removeRolePermissionHandler)
 }
@@ -559,7 +559,7 @@ func registerListRolePermissions(api huma.API, rbacCtrl *rbacController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, rbacCtrl.di.AuthZ().Checker(), rbacCtrl.di.Logger())(
-			authz.PermissionReadRole, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadRoles, model.ResourceOrganization, "orgId",
 		)},
 	}, rbacCtrl.listRolePermissionsHandler)
 }
@@ -577,7 +577,7 @@ func registerSyncRolePermissions(api huma.API, rbacCtrl *rbacController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, rbacCtrl.di.AuthZ().Checker(), rbacCtrl.di.Logger())(
-			authz.PermissionManageRole, authz.ResourceOrganization, "orgId",
+			authz.PermissionManageRole, model.ResourceOrganization, "orgId",
 		)},
 	}, rbacCtrl.syncRolePermissionsHandler)
 }
@@ -599,7 +599,7 @@ func registerListPermissions(api huma.API, rbacCtrl *rbacController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, rbacCtrl.di.AuthZ().Checker(), rbacCtrl.di.Logger())(
-			authz.PermissionReadPermission, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadPermission, model.ResourceOrganization, "orgId",
 		)},
 	}, rbacCtrl.listPermissionsHandler)
 }
@@ -617,7 +617,7 @@ func registerGetPermission(api huma.API, rbacCtrl *rbacController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, rbacCtrl.di.AuthZ().Checker(), rbacCtrl.di.Logger())(
-			authz.PermissionReadPermission, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadPermission, model.ResourceOrganization, "orgId",
 		)},
 	}, rbacCtrl.getPermissionHandler)
 }
@@ -635,7 +635,7 @@ func registerCreatePermission(api huma.API, rbacCtrl *rbacController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, rbacCtrl.di.AuthZ().Checker(), rbacCtrl.di.Logger())(
-			authz.PermissionWritePermission, authz.ResourceOrganization, "orgId",
+			authz.PermissionWritePermission, model.ResourceOrganization, "orgId",
 		)},
 	}, rbacCtrl.createPermissionHandler)
 }
@@ -653,7 +653,7 @@ func registerUpdatePermission(api huma.API, rbacCtrl *rbacController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, rbacCtrl.di.AuthZ().Checker(), rbacCtrl.di.Logger())(
-			authz.PermissionWritePermission, authz.ResourceOrganization, "orgId",
+			authz.PermissionWritePermission, model.ResourceOrganization, "orgId",
 		)},
 	}, rbacCtrl.updatePermissionHandler)
 }
@@ -674,7 +674,7 @@ func registerDeletePermission(api huma.API, rbacCtrl *rbacController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, rbacCtrl.di.AuthZ().Checker(), rbacCtrl.di.Logger())(
-			authz.PermissionDeletePermission, authz.ResourceOrganization, "orgId",
+			authz.PermissionDeletePermission, model.ResourceOrganization, "orgId",
 		)},
 	}, rbacCtrl.deletePermissionHandler)
 }
@@ -692,7 +692,7 @@ func registerGetPermissionByResource(api huma.API, rbacCtrl *rbacController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, rbacCtrl.di.AuthZ().Checker(), rbacCtrl.di.Logger())(
-			authz.PermissionReadPermission, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadPermission, model.ResourceOrganization, "orgId",
 		)},
 	}, rbacCtrl.getPermissionByResourceHandler)
 }
@@ -710,7 +710,7 @@ func registerSearchPermissions(api huma.API, rbacCtrl *rbacController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, rbacCtrl.di.AuthZ().Checker(), rbacCtrl.di.Logger())(
-			authz.PermissionReadPermission, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadPermission, model.ResourceOrganization, "orgId",
 		)},
 	}, rbacCtrl.searchPermissionsHandler)
 }
@@ -732,7 +732,7 @@ func registerAssignUserRoleAdvance(api huma.API, rbacCtrl *rbacController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, rbacCtrl.di.AuthZ().Checker(), rbacCtrl.di.Logger())(
-			authz.PermissionAssignRole, authz.ResourceOrganization, "orgId",
+			authz.PermissionAssignRoles, model.ResourceOrganization, "orgId",
 		)},
 	}, rbacCtrl.assignUserRoleHandler)
 }
@@ -751,7 +751,7 @@ func registerRemoveUserRoleAdvance(api huma.API, rbacCtrl *rbacController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, rbacCtrl.di.AuthZ().Checker(), rbacCtrl.di.Logger())(
-			authz.PermissionRevokeRole, authz.ResourceOrganization, "orgId",
+			authz.PermissionRevokeRole, model.ResourceOrganization, "orgId",
 		)},
 	}, rbacCtrl.removeUserRoleHandler)
 }
@@ -769,7 +769,7 @@ func registerGetUserRoles(api huma.API, rbacCtrl *rbacController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, rbacCtrl.di.AuthZ().Checker(), rbacCtrl.di.Logger())(
-			authz.PermissionReadRole, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadRoles, model.ResourceOrganization, "orgId",
 		)},
 	}, rbacCtrl.getUserRolesHandler)
 }
@@ -787,7 +787,7 @@ func registerGetUserPermissions(api huma.API, rbacCtrl *rbacController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, rbacCtrl.di.AuthZ().Checker(), rbacCtrl.di.Logger())(
-			authz.PermissionReadPermission, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadPermission, model.ResourceOrganization, "orgId",
 		)},
 	}, rbacCtrl.getUserPermissionsHandler)
 }
@@ -805,7 +805,7 @@ func registerCheckUserPermission(api huma.API, rbacCtrl *rbacController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, rbacCtrl.di.AuthZ().Checker(), rbacCtrl.di.Logger())(
-			authz.PermissionCheckPermission, authz.ResourceOrganization, "orgId",
+			authz.PermissionCheckPermission, model.ResourceOrganization, "orgId",
 		)},
 	}, rbacCtrl.checkUserPermissionHandler)
 }
@@ -823,7 +823,7 @@ func registerBulkAssignRoles(api huma.API, rbacCtrl *rbacController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, rbacCtrl.di.AuthZ().Checker(), rbacCtrl.di.Logger())(
-			authz.PermissionWriteRole, authz.ResourceOrganization, "orgId",
+			authz.PermissionWriteRole, model.ResourceOrganization, "orgId",
 		)},
 	}, rbacCtrl.bulkAssignRolesHandler)
 }
@@ -845,7 +845,7 @@ func registerGetRBACStats(api huma.API, rbacCtrl *rbacController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, rbacCtrl.di.AuthZ().Checker(), rbacCtrl.di.Logger())(
-			authz.PermissionViewAnalytics, authz.ResourceOrganization, "orgId",
+			authz.PermissionViewAnalytics, model.ResourceOrganization, "orgId",
 		)},
 	}, rbacCtrl.getRBACStatsHandler)
 }
@@ -863,7 +863,7 @@ func registerGetRoleStats(api huma.API, rbacCtrl *rbacController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, rbacCtrl.di.AuthZ().Checker(), rbacCtrl.di.Logger())(
-			authz.PermissionViewAnalytics, authz.ResourceOrganization, "orgId",
+			authz.PermissionViewAnalytics, model.ResourceOrganization, "orgId",
 		)},
 	}, rbacCtrl.getRoleStatsHandler)
 }
@@ -881,7 +881,7 @@ func registerGetPermissionStats(api huma.API, rbacCtrl *rbacController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, rbacCtrl.di.AuthZ().Checker(), rbacCtrl.di.Logger())(
-			authz.PermissionViewAnalytics, authz.ResourceOrganization, "orgId",
+			authz.PermissionViewAnalytics, model.ResourceOrganization, "orgId",
 		)},
 	}, rbacCtrl.getPermissionStatsHandler)
 }
@@ -903,7 +903,7 @@ func registerGetDefaultRoles(api huma.API, rbacCtrl *rbacController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, rbacCtrl.di.AuthZ().Checker(), rbacCtrl.di.Logger())(
-			authz.PermissionReadRole, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadRoles, model.ResourceOrganization, "orgId",
 		)},
 	}, rbacCtrl.getDefaultRolesHandler)
 }
@@ -921,7 +921,7 @@ func registerSetDefaultRole(api huma.API, rbacCtrl *rbacController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, rbacCtrl.di.AuthZ().Checker(), rbacCtrl.di.Logger())(
-			authz.PermissionManageRole, authz.ResourceOrganization, "orgId",
+			authz.PermissionManageRole, model.ResourceOrganization, "orgId",
 		)},
 	}, rbacCtrl.setDefaultRoleHandler)
 }
@@ -942,7 +942,7 @@ func registerUnsetDefaultRole(api huma.API, rbacCtrl *rbacController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, rbacCtrl.di.AuthZ().Checker(), rbacCtrl.di.Logger())(
-			authz.PermissionManageRole, authz.ResourceOrganization, "orgId",
+			authz.PermissionManageRole, model.ResourceOrganization, "orgId",
 		)},
 	}, rbacCtrl.unsetDefaultRoleHandler)
 }
@@ -955,7 +955,7 @@ func registerUnsetDefaultRole(api huma.API, rbacCtrl *rbacController) {
 func (c *rbacController) listRolesHandler(ctx context.Context, input *ListRolesInput) (*ListRolesOutput, error) {
 	rbacService := c.di.RBACService()
 
-	result, err := rbacService.ListRoles(ctx, input.ListRolesParams)
+	result, err := rbacService.GetOrganizationRoles(ctx, input.PathOrgID, input.ListRolesParams)
 	if err != nil {
 		return nil, err
 	}

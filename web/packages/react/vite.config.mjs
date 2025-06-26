@@ -23,6 +23,45 @@ const makeExternalPredicate = (externalArr) => {
 	return (id) => pattern.test(id);
 };
 
+// Files that need 'use client' directive
+const clientFiles = [
+	'use-permissions',
+	'use-auth',
+	'provider',
+	'components'
+];
+
+// Check if file needs 'use client' directive
+const needsUseClient = (filename) => {
+	return clientFiles.some(clientFile => filename.includes(clientFile));
+};
+
+// Custom plugin to preserve 'use client' directives
+function preserveUseClient() {
+	return {
+		name: 'preserve-use-client',
+		generateBundle(options, bundle) {
+			Object.keys(bundle).forEach(fileName => {
+				const chunk = bundle[fileName];
+				if (chunk.type === 'chunk') {
+					// Check if this chunk needs 'use client'
+					const needsClient = needsUseClient(fileName) || needsUseClient(chunk.name || '');
+
+					// Also check if any of the modules in this chunk had 'use client'
+					const hasUseClientInModules = chunk.modules && Object.keys(chunk.modules).some(moduleId => {
+						// Check if the module path suggests it's a client component
+						return needsUseClient(moduleId);
+					});
+
+					if (needsClient || hasUseClientInModules) {
+						chunk.code = `'use client';\n${chunk.code}`;
+					}
+				}
+			});
+		}
+	};
+}
+
 export default defineConfig(({ command, mode }) => {
 	const isProduction = mode === 'production';
 	const isBuild = command === 'build';
@@ -40,6 +79,9 @@ export default defineConfig(({ command, mode }) => {
 				},
 			}),
 
+			// Custom plugin to preserve 'use client' directives
+			preserveUseClient(),
+
 			// Generate TypeScript declaration files
 			dts({
 				insertTypesEntry: true,
@@ -56,7 +98,10 @@ export default defineConfig(({ command, mode }) => {
 					'stories/**/*',
 				],
 				beforeWriteFile: (filePath, content) => {
-					// Clean up generated types if needed
+					// Add 'use client' directive to client component types
+					if (needsUseClient(filePath)) {
+						content = `'use client';\n\n${content}`;
+					}
 					return {
 						filePath,
 						content,
@@ -80,7 +125,7 @@ export default defineConfig(({ command, mode }) => {
 			},
 		},
 
-		// CSS configuration
+		// // CSS configuration
 		css: {
 			postcss: './postcss.config.js',
 			devSourcemap: true,
@@ -129,9 +174,10 @@ export default defineConfig(({ command, mode }) => {
 						entryFileNames: 'esm/[name].js',
 						chunkFileNames: 'esm/chunks/[name]-[hash].js',
 						assetFileNames: 'assets/[name][extname]',
-						// assetFileNames: 'assets/[name]-[hash][extname]',
 						sourcemap: true,
-						preserveModules: false,
+						preserveModules: true,
+						preserveModulesRoot: 'src',
+						mangleProps: false,
 						exports: 'named',
 					},
 					// CJS build
@@ -141,9 +187,9 @@ export default defineConfig(({ command, mode }) => {
 						entryFileNames: 'cjs/[name].cjs',
 						chunkFileNames: 'cjs/chunks/[name]-[hash].cjs',
 						assetFileNames: 'assets/[name][extname]',
-						// assetFileNames: 'assets/[name]-[hash][extname]',
 						sourcemap: true,
-						preserveModules: false,
+						preserveModules: true,
+						preserveModulesRoot: 'src',
 						exports: 'named',
 						interop: 'auto',
 					},

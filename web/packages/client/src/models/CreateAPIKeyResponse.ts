@@ -40,11 +40,17 @@ export interface CreateAPIKeyResponse {
      */
     apiKey: APIKey;
     /**
-     * Generated API key value
+     * Generated public key (safe to display)
      * @type {string}
      * @memberof CreateAPIKeyResponse
      */
-    key: string;
+    publicKey: string;
+    /**
+     * Generated secret key (store securely)
+     * @type {string}
+     * @memberof CreateAPIKeyResponse
+     */
+    secretKey: string;
     /**
      * Security warning
      * @type {string}
@@ -58,7 +64,8 @@ export interface CreateAPIKeyResponse {
  */
 export function instanceOfCreateAPIKeyResponse(value: object): value is CreateAPIKeyResponse {
     if (!('apiKey' in value) || value['apiKey'] === undefined) return false;
-    if (!('key' in value) || value['key'] === undefined) return false;
+    if (!('publicKey' in value) || value['publicKey'] === undefined) return false;
+    if (!('secretKey' in value) || value['secretKey'] === undefined) return false;
     return true;
 }
 
@@ -74,7 +81,8 @@ export function CreateAPIKeyResponseFromJSONTyped(json: any, ignoreDiscriminator
         
         '$schema': json['$schema'] == null ? undefined : json['$schema'],
         'apiKey': APIKeyFromJSON(json['apiKey']),
-        'key': json['key'],
+        'publicKey': json['publicKey'],
+        'secretKey': json['secretKey'],
         'warning': json['warning'] == null ? undefined : json['warning'],
     };
 }
@@ -91,7 +99,8 @@ export function CreateAPIKeyResponseToJSONTyped(value?: Omit<CreateAPIKeyRespons
     return {
         
         'apiKey': APIKeyToJSON(value['apiKey']),
-        'key': value['key'],
+        'publicKey': value['publicKey'],
+        'secretKey': value['secretKey'],
         'warning': value['warning'],
     };
 }

@@ -13,7 +13,6 @@
  * export default createFrankAuthMiddleware({
  *   publishableKey: process.env.NEXT_PUBLIC_FRANK_AUTH_PUBLISHABLE_KEY!,
  *   publicPaths: ['/'],
- *   privatePaths: ['/dashboard'],
  *   signInPath: '/sign-in',
  *   signUpPath: '/sign-up',
  * });
@@ -25,8 +24,9 @@
  */
 
 import {NextRequest, NextResponse} from 'next/server';
-import {AuthStatus, Session, User} from '@frank-auth/client';
+import {Session, User} from '@frank-auth/client';
 import {FrankAuthConfig} from '../types';
+import {FrankAuth} from "@frank-auth/sdk";
 
 // ============================================================================
 // Types and Interfaces
@@ -38,15 +38,21 @@ export interface MiddlewareConfig extends Omit<FrankAuthConfig, 'enableDevMode'>
 
     /**
      * Paths that are publicly accessible without authentication
-     * @default ['/']
+     * @default ['/sign-in', '/sign-up', '/forgot-password']
      */
     publicPaths?: string[];
 
     /**
-     * Paths that require authentication
+     * Paths that require authentication (when allPathsPrivate is false)
      * @default []
      */
     privatePaths?: string[];
+
+    /**
+     * Whether all paths are private by default (recommended)
+     * @default true
+     */
+    allPathsPrivate?: boolean;
 
     /**
      * Path to redirect to for sign in
@@ -138,7 +144,7 @@ export interface MiddlewareHooks {
     /**
      * Called after authentication check
      */
-    afterAuth?: (req: NextRequest, auth: AuthResult) => Promise<NextRequest | NextResponse | void>;
+    afterAuth?: (req: NextRequest, res: NextResponse, auth: AuthResult) => Promise<NextRequest | NextResponse | void>;
 
     /**
      * Called when user is authenticated
@@ -184,11 +190,12 @@ export interface MiddlewareContext {
 // ============================================================================
 
 const DEFAULT_MIDDLEWARE_CONFIG: Partial<MiddlewareConfig> = {
-    apiUrl: 'http://localhost:8080',
-    sessionCookieName: 'frank_session',
+    apiUrl: 'http://localhost:8990',
+    sessionCookieName: 'frank_sid',
     storageKeyPrefix: 'frank_auth_',
-    publicPaths: ['/'],
+    publicPaths: ['/sign-in', '/sign-up', '/forgot-password', '/verify-email', '/reset-password'],
     privatePaths: [],
+    allPathsPrivate: true, // Default to all paths being private
     signInPath: '/sign-in',
     signUpPath: '/sign-up',
     afterSignInPath: '/dashboard',
@@ -197,7 +204,7 @@ const DEFAULT_MIDDLEWARE_CONFIG: Partial<MiddlewareConfig> = {
     orgSelectionPath: '/select-organization',
     debug: false,
     enableOrgRouting: false,
-    ignorePaths: ['/api', '/_next', '/favicon.ico', '/images', '/static'],
+    ignorePaths: ['/api', '/_next', '/favicon.ico', '/images', '/static', '/_vercel'],
     cookieOptions: {
         secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
@@ -256,32 +263,57 @@ function getSessionToken(req: NextRequest, config: Required<MiddlewareConfig>): 
  */
 async function validateSession(
     token: string,
-    config: Required<MiddlewareConfig>
+    config: Required<MiddlewareConfig>,
+    req: NextRequest
 ): Promise<AuthResult> {
-    try {
-        const response = await fetch(`${config.apiUrl}/api/v1/auth/status`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'X-Publishable-Key': config.publishableKey,
-                'Content-Type': 'application/json',
-            },
-        });
+    const authApi = new FrankAuth({
+        apiUrl: config.apiUrl,
+        publishableKey: config.publishableKey,
+        sessionCookieName: config.sessionCookieName,
+        storageKeyPrefix: config.storageKeyPrefix,
+        enableDevMode: config.debug,
+//        userType: userType ?? 'end_user',
+    })
 
-        if (!response.ok) {
-            return {
-                isAuthenticated: false,
-                user: null,
-                session: null,
-                organizationId: null,
-                error: new Error(`Auth status check failed: ${response.status}`),
-            };
+    try {
+        // Forward important headers from the original request
+        const headers: Record<string, string> = {
+            'Authorization': `Bearer ${token}`,
+            'X-Publishable-Key': config.publishableKey,
+            'Content-Type': 'application/json',
+        };
+
+        // Forward cookies if they exist
+        const cookieHeader = req.headers.get('cookie');
+        if (cookieHeader) {
+            headers['Cookie'] = cookieHeader;
         }
 
-        const authStatus: AuthStatus = await response.json();
+        // Forward user agent
+        const userAgent = req.headers.get('user-agent');
+        if (userAgent) {
+            headers['User-Agent'] = userAgent;
+        }
+
+        // Forward real IP for security
+        const forwardedFor = req.headers.get('x-forwarded-for');
+        const realIp = req.headers.get('x-real-ip');
+        if (forwardedFor) {
+            headers['X-Forwarded-For'] = forwardedFor;
+        }
+        if (realIp) {
+            headers['X-Real-IP'] = realIp;
+        }
+
+        debugLog(config, 'Validating session token:', {token, headers});
+
+        const authStatus = await authApi.getAuthStatus({
+            credentials: 'include',
+            headers,
+        });
 
         return {
-            isAuthenticated: !!authStatus.user,
+            isAuthenticated: authStatus.isAuthenticated,
             user: authStatus.user || null,
             session: authStatus.session || null,
             organizationId: authStatus.organizationId || null,
@@ -303,16 +335,26 @@ async function validateSession(
  */
 async function refreshSession(
     refreshToken: string,
-    config: Required<MiddlewareConfig>
+    config: Required<MiddlewareConfig>,
+    req: NextRequest
 ): Promise<{ accessToken: string; refreshToken: string } | null> {
     try {
+        const headers: Record<string, string> = {
+            'X-Publishable-Key': config.publishableKey,
+            'Content-Type': 'application/json',
+        };
+
+        // Forward cookies for refresh
+        const cookieHeader = req.headers.get('cookie');
+        if (cookieHeader) {
+            headers['Cookie'] = cookieHeader;
+        }
+
         const response = await fetch(`${config.apiUrl}/api/v1/public/auth/refresh`, {
             method: 'POST',
-            headers: {
-                'X-Publishable-Key': config.publishableKey,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ refreshToken }),
+            credentials: 'include',
+            headers,
+            body: JSON.stringify({refreshToken}),
         });
 
         if (!response.ok) return null;
@@ -388,10 +430,24 @@ async function processRequest(
 
     // Determine path types
     const isPublicPath = matchesPath(path, config.publicPaths);
-    const isPrivatePath = matchesPath(path, config.privatePaths);
     const isAuthPath = path === config.signInPath || path === config.signUpPath;
 
-    debugLog(config, `Path analysis:`, { isPublicPath, isPrivatePath, isAuthPath });
+    // Determine if path is private based on configuration
+    let isPrivatePath: boolean;
+    if (config.allPathsPrivate) {
+        // All paths are private except public paths
+        isPrivatePath = !isPublicPath && !isAuthPath;
+    } else {
+        // Only specified paths are private
+        isPrivatePath = matchesPath(path, config.privatePaths);
+    }
+
+    debugLog(config, `Path analysis:`, {
+        isPublicPath,
+        isPrivatePath,
+        isAuthPath,
+        allPathsPrivate: config.allPathsPrivate
+    });
 
     // Get session token
     const sessionToken = getSessionToken(req, config);
@@ -403,17 +459,20 @@ async function processRequest(
         error: null,
     };
 
+    debugLog(config, `Session Cookie:`, {sessionToken});
+
     // Validate session if token exists
     if (sessionToken) {
-        auth = await validateSession(sessionToken, config);
+
+        auth = await validateSession(sessionToken, config, req);
 
         // Try to refresh if validation failed
         if (!auth.isAuthenticated && auth.error) {
             const refreshToken = req.cookies.get(`${config.storageKeyPrefix}refresh_token`)?.value;
             if (refreshToken) {
-                const refreshResult = await refreshSession(refreshToken, config);
+                const refreshResult = await refreshSession(refreshToken, config, req);
                 if (refreshResult) {
-                    auth = await validateSession(refreshResult.accessToken, config);
+                    auth = await validateSession(refreshResult.accessToken, config, req);
 
                     // Set new tokens in response
                     if (auth.isAuthenticated) {
@@ -449,7 +508,7 @@ async function processRequest(
 
     // Execute afterAuth hook
     if (config.hooks?.afterAuth) {
-        const hookResult = await config.hooks.afterAuth(req, auth);
+        const hookResult = await config.hooks.afterAuth(req, response, auth);
         if (hookResult instanceof NextResponse) return hookResult;
     }
 
@@ -460,7 +519,7 @@ async function processRequest(
  * Handle authentication logic based on context
  */
 async function handleAuthentication(context: MiddlewareContext): Promise<NextResponse> {
-    const { req, config, auth, path, isPublicPath, isPrivatePath, isAuthPath } = context;
+    const {req, config, auth, path, isPublicPath, isPrivatePath, isAuthPath} = context;
 
     try {
         // Handle authenticated users
@@ -512,7 +571,7 @@ async function handleAuthentication(context: MiddlewareContext): Promise<NextRes
         }
 
         // Redirect to sign in for private paths
-        if (isPrivatePath || (!isPublicPath && !isAuthPath)) {
+        if (isPrivatePath) {
             const signInUrl = new URL(config.signInPath, req.url);
             signInUrl.searchParams.set('redirect_url', req.nextUrl.pathname + req.nextUrl.search);
 
@@ -546,7 +605,7 @@ async function handleAuthentication(context: MiddlewareContext): Promise<NextRes
  * Create Frank Auth middleware for Next.js
  */
 export function createFrankAuthMiddleware(userConfig: MiddlewareConfig) {
-    const config = { ...DEFAULT_MIDDLEWARE_CONFIG, ...userConfig } as Required<MiddlewareConfig>;
+    const config = {...DEFAULT_MIDDLEWARE_CONFIG, ...userConfig} as Required<MiddlewareConfig>;
 
     // Validate required configuration
     if (!config.publishableKey) {
@@ -556,6 +615,7 @@ export function createFrankAuthMiddleware(userConfig: MiddlewareConfig) {
     debugLog(config, 'Frank Auth middleware initialized with config:', {
         publicPaths: config.publicPaths,
         privatePaths: config.privatePaths,
+        allPathsPrivate: config.allPathsPrivate,
         signInPath: config.signInPath,
         enableOrgRouting: config.enableOrgRouting,
     });
@@ -611,12 +671,14 @@ export async function checkPermission(
     try {
         const response = await fetch(`${config.apiUrl}/api/v1/auth/permissions/check`, {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'X-Publishable-Key': config.publishableKey,
                 'Content-Type': 'application/json',
+                'Cookie': req.headers.get('cookie') || '',
             },
-            body: JSON.stringify({ permission }),
+            body: JSON.stringify({permission}),
         });
 
         if (!response.ok) return false;

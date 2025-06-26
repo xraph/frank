@@ -424,7 +424,7 @@ export class OrganizationConfigManager {
      */
     generateUIConfig(): Partial<FrankAuthUIConfig> {
         const baseConfig: Partial<FrankAuthUIConfig> = {
-            organizationId: this.config.id,
+            projectId: this.config.id,
             organization: this.config,
             features: {
                 signUp: this.isFeatureEnabled('authentication.signUp'),

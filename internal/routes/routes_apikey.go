@@ -19,7 +19,7 @@ func RegisterAPIKeyAPI(group huma.API, di di.Container) {
 	apikeyCtrl := &apikeyController{
 		api:     group,
 		di:      di,
-		service: apikey.NewService(di.Repo(), di.Crypto(), di.AuditService(), di.ActivityService(), di.Logger()),
+		service: di.APIKeyService(),
 	}
 
 	// API Key CRUD operations
@@ -227,20 +227,19 @@ func registerListAPIKeys(api huma.API, apikeyCtrl *apikeyController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, apikeyCtrl.di.AuthZ().Checker(), apikeyCtrl.di.Logger())(
-			authz.PermissionReadAPIKey, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadAPIKeys, model.ResourceOrganization, "orgId",
 		)},
 	}, apikeyCtrl.listAPIKeysHandler)
 }
 
 func registerCreateAPIKey(api huma.API, apikeyCtrl *apikeyController) {
 	huma.Register(api, huma.Operation{
-		OperationID:   "createAPIKey",
-		Method:        http.MethodPost,
-		Path:          "/organizations/{orgId}/api-keys",
-		Summary:       "Create API key",
-		Description:   "Create a new API key for an organization",
-		Tags:          []string{"API Keys"},
-		DefaultStatus: 201,
+		OperationID: "createAPIKey",
+		Method:      http.MethodPost,
+		Path:        "/organizations/{orgId}/api-keys",
+		Summary:     "Create API key",
+		Description: "Create a new API key for an organization",
+		Tags:        []string{"API Keys"},
 		Responses: model.MergeErrorResponses(map[string]*huma.Response{
 			"201": {
 				Description: "API key successfully created",
@@ -250,7 +249,7 @@ func registerCreateAPIKey(api huma.API, apikeyCtrl *apikeyController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, apikeyCtrl.di.AuthZ().Checker(), apikeyCtrl.di.Logger())(
-			authz.PermissionWriteAPIKey, authz.ResourceOrganization, "orgId",
+			authz.PermissionWriteAPIKey, model.ResourceOrganization, "orgId",
 		)},
 	}, apikeyCtrl.createAPIKeyHandler)
 }
@@ -273,7 +272,7 @@ func registerGetAPIKey(api huma.API, apikeyCtrl *apikeyController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, apikeyCtrl.di.AuthZ().Checker(), apikeyCtrl.di.Logger())(
-			authz.PermissionReadAPIKey, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadAPIKeys, model.ResourceOrganization, "orgId",
 		)},
 	}, apikeyCtrl.getAPIKeyHandler)
 }
@@ -296,7 +295,7 @@ func registerUpdateAPIKey(api huma.API, apikeyCtrl *apikeyController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, apikeyCtrl.di.AuthZ().Checker(), apikeyCtrl.di.Logger())(
-			authz.PermissionWriteAPIKey, authz.ResourceOrganization, "orgId",
+			authz.PermissionWriteAPIKey, model.ResourceOrganization, "orgId",
 		)},
 	}, apikeyCtrl.updateAPIKeyHandler)
 }
@@ -319,7 +318,7 @@ func registerDeleteAPIKey(api huma.API, apikeyCtrl *apikeyController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, apikeyCtrl.di.AuthZ().Checker(), apikeyCtrl.di.Logger())(
-			authz.PermissionDeleteAPIKey, authz.ResourceOrganization, "orgId",
+			authz.PermissionDeleteAPIKey, model.ResourceOrganization, "orgId",
 		)},
 	}, apikeyCtrl.deleteAPIKeyHandler)
 }
@@ -342,7 +341,7 @@ func registerRotateAPIKey(api huma.API, apikeyCtrl *apikeyController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, apikeyCtrl.di.AuthZ().Checker(), apikeyCtrl.di.Logger())(
-			authz.PermissionWriteAPIKey, authz.ResourceOrganization, "orgId",
+			authz.PermissionWriteAPIKey, model.ResourceOrganization, "orgId",
 		)},
 	}, apikeyCtrl.rotateAPIKeyHandler)
 }
@@ -382,7 +381,7 @@ func registerActivateAPIKey(api huma.API, apikeyCtrl *apikeyController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, apikeyCtrl.di.AuthZ().Checker(), apikeyCtrl.di.Logger())(
-			authz.PermissionWriteAPIKey, authz.ResourceOrganization, "orgId",
+			authz.PermissionWriteAPIKey, model.ResourceOrganization, "orgId",
 		)},
 	}, apikeyCtrl.activateAPIKeyHandler)
 }
@@ -405,7 +404,7 @@ func registerDeactivateAPIKey(api huma.API, apikeyCtrl *apikeyController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, apikeyCtrl.di.AuthZ().Checker(), apikeyCtrl.di.Logger())(
-			authz.PermissionWriteAPIKey, authz.ResourceOrganization, "orgId",
+			authz.PermissionWriteAPIKey, model.ResourceOrganization, "orgId",
 		)},
 	}, apikeyCtrl.deactivateAPIKeyHandler)
 }
@@ -428,7 +427,7 @@ func registerBulkAPIKeyOperation(api huma.API, apikeyCtrl *apikeyController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, apikeyCtrl.di.AuthZ().Checker(), apikeyCtrl.di.Logger())(
-			authz.PermissionWriteAPIKey, authz.ResourceOrganization, "orgId",
+			authz.PermissionWriteAPIKey, model.ResourceOrganization, "orgId",
 		)},
 	}, apikeyCtrl.bulkAPIKeyOperationHandler)
 }
@@ -451,7 +450,7 @@ func registerGetAPIKeyStats(api huma.API, apikeyCtrl *apikeyController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, apikeyCtrl.di.AuthZ().Checker(), apikeyCtrl.di.Logger())(
-			authz.PermissionReadAPIKey, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadAPIKeys, model.ResourceOrganization, "orgId",
 		)},
 	}, apikeyCtrl.getAPIKeyStatsHandler)
 }
@@ -474,7 +473,7 @@ func registerGetAPIKeyUsage(api huma.API, apikeyCtrl *apikeyController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, apikeyCtrl.di.AuthZ().Checker(), apikeyCtrl.di.Logger())(
-			authz.PermissionReadAPIKey, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadAPIKeys, model.ResourceOrganization, "orgId",
 		)},
 	}, apikeyCtrl.getAPIKeyUsageHandler)
 }
@@ -497,7 +496,7 @@ func registerGetAPIKeyActivity(api huma.API, apikeyCtrl *apikeyController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, apikeyCtrl.di.AuthZ().Checker(), apikeyCtrl.di.Logger())(
-			authz.PermissionReadAPIKey, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadAPIKeys, model.ResourceOrganization, "orgId",
 		)},
 	}, apikeyCtrl.getAPIKeyActivityHandler)
 }
@@ -520,7 +519,7 @@ func registerExportAPIKeyData(api huma.API, apikeyCtrl *apikeyController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, apikeyCtrl.di.AuthZ().Checker(), apikeyCtrl.di.Logger())(
-			authz.PermissionReadAPIKey, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadAPIKeys, model.ResourceOrganization, "orgId",
 		)},
 	}, apikeyCtrl.exportAPIKeyDataHandler)
 }
@@ -543,7 +542,7 @@ func registerCheckAPIKeyPermissions(api huma.API, apikeyCtrl *apikeyController) 
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, apikeyCtrl.di.AuthZ().Checker(), apikeyCtrl.di.Logger())(
-			authz.PermissionReadAPIKey, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadAPIKeys, model.ResourceOrganization, "orgId",
 		)},
 	}, apikeyCtrl.checkAPIKeyPermissionsHandler)
 }

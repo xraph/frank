@@ -2429,9 +2429,13 @@ type ApiKeyMutation struct {
 	updated_at          *time.Time
 	deleted_at          *time.Time
 	name                *string
+	public_key          *string
+	secret_key          *string
+	hashed_secret_key   *string
 	key                 *string
 	hashed_key          *string
-	_type               *string
+	_type               *model.APIKeyType
+	environment         *model.Environment
 	active              *bool
 	permissions         *[]string
 	appendpermissions   []string
@@ -2717,6 +2721,114 @@ func (m *ApiKeyMutation) ResetName() {
 	m.name = nil
 }
 
+// SetPublicKey sets the "public_key" field.
+func (m *ApiKeyMutation) SetPublicKey(s string) {
+	m.public_key = &s
+}
+
+// PublicKey returns the value of the "public_key" field in the mutation.
+func (m *ApiKeyMutation) PublicKey() (r string, exists bool) {
+	v := m.public_key
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPublicKey returns the old "public_key" field's value of the ApiKey entity.
+// If the ApiKey object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ApiKeyMutation) OldPublicKey(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPublicKey is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPublicKey requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPublicKey: %w", err)
+	}
+	return oldValue.PublicKey, nil
+}
+
+// ResetPublicKey resets all changes to the "public_key" field.
+func (m *ApiKeyMutation) ResetPublicKey() {
+	m.public_key = nil
+}
+
+// SetSecretKey sets the "secret_key" field.
+func (m *ApiKeyMutation) SetSecretKey(s string) {
+	m.secret_key = &s
+}
+
+// SecretKey returns the value of the "secret_key" field in the mutation.
+func (m *ApiKeyMutation) SecretKey() (r string, exists bool) {
+	v := m.secret_key
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSecretKey returns the old "secret_key" field's value of the ApiKey entity.
+// If the ApiKey object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ApiKeyMutation) OldSecretKey(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSecretKey is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSecretKey requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSecretKey: %w", err)
+	}
+	return oldValue.SecretKey, nil
+}
+
+// ResetSecretKey resets all changes to the "secret_key" field.
+func (m *ApiKeyMutation) ResetSecretKey() {
+	m.secret_key = nil
+}
+
+// SetHashedSecretKey sets the "hashed_secret_key" field.
+func (m *ApiKeyMutation) SetHashedSecretKey(s string) {
+	m.hashed_secret_key = &s
+}
+
+// HashedSecretKey returns the value of the "hashed_secret_key" field in the mutation.
+func (m *ApiKeyMutation) HashedSecretKey() (r string, exists bool) {
+	v := m.hashed_secret_key
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldHashedSecretKey returns the old "hashed_secret_key" field's value of the ApiKey entity.
+// If the ApiKey object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ApiKeyMutation) OldHashedSecretKey(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldHashedSecretKey is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldHashedSecretKey requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldHashedSecretKey: %w", err)
+	}
+	return oldValue.HashedSecretKey, nil
+}
+
+// ResetHashedSecretKey resets all changes to the "hashed_secret_key" field.
+func (m *ApiKeyMutation) ResetHashedSecretKey() {
+	m.hashed_secret_key = nil
+}
+
 // SetKey sets the "key" field.
 func (m *ApiKeyMutation) SetKey(s string) {
 	m.key = &s
@@ -2748,9 +2860,22 @@ func (m *ApiKeyMutation) OldKey(ctx context.Context) (v string, err error) {
 	return oldValue.Key, nil
 }
 
+// ClearKey clears the value of the "key" field.
+func (m *ApiKeyMutation) ClearKey() {
+	m.key = nil
+	m.clearedFields[apikey.FieldKey] = struct{}{}
+}
+
+// KeyCleared returns if the "key" field was cleared in this mutation.
+func (m *ApiKeyMutation) KeyCleared() bool {
+	_, ok := m.clearedFields[apikey.FieldKey]
+	return ok
+}
+
 // ResetKey resets all changes to the "key" field.
 func (m *ApiKeyMutation) ResetKey() {
 	m.key = nil
+	delete(m.clearedFields, apikey.FieldKey)
 }
 
 // SetHashedKey sets the "hashed_key" field.
@@ -2784,9 +2909,22 @@ func (m *ApiKeyMutation) OldHashedKey(ctx context.Context) (v string, err error)
 	return oldValue.HashedKey, nil
 }
 
+// ClearHashedKey clears the value of the "hashed_key" field.
+func (m *ApiKeyMutation) ClearHashedKey() {
+	m.hashed_key = nil
+	m.clearedFields[apikey.FieldHashedKey] = struct{}{}
+}
+
+// HashedKeyCleared returns if the "hashed_key" field was cleared in this mutation.
+func (m *ApiKeyMutation) HashedKeyCleared() bool {
+	_, ok := m.clearedFields[apikey.FieldHashedKey]
+	return ok
+}
+
 // ResetHashedKey resets all changes to the "hashed_key" field.
 func (m *ApiKeyMutation) ResetHashedKey() {
 	m.hashed_key = nil
+	delete(m.clearedFields, apikey.FieldHashedKey)
 }
 
 // SetUserID sets the "user_id" field.
@@ -2888,12 +3026,12 @@ func (m *ApiKeyMutation) ResetOrganizationID() {
 }
 
 // SetType sets the "type" field.
-func (m *ApiKeyMutation) SetType(s string) {
-	m._type = &s
+func (m *ApiKeyMutation) SetType(mkt model.APIKeyType) {
+	m._type = &mkt
 }
 
 // GetType returns the value of the "type" field in the mutation.
-func (m *ApiKeyMutation) GetType() (r string, exists bool) {
+func (m *ApiKeyMutation) GetType() (r model.APIKeyType, exists bool) {
 	v := m._type
 	if v == nil {
 		return
@@ -2904,7 +3042,7 @@ func (m *ApiKeyMutation) GetType() (r string, exists bool) {
 // OldType returns the old "type" field's value of the ApiKey entity.
 // If the ApiKey object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ApiKeyMutation) OldType(ctx context.Context) (v string, err error) {
+func (m *ApiKeyMutation) OldType(ctx context.Context) (v model.APIKeyType, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldType is only allowed on UpdateOne operations")
 	}
@@ -2921,6 +3059,42 @@ func (m *ApiKeyMutation) OldType(ctx context.Context) (v string, err error) {
 // ResetType resets all changes to the "type" field.
 func (m *ApiKeyMutation) ResetType() {
 	m._type = nil
+}
+
+// SetEnvironment sets the "environment" field.
+func (m *ApiKeyMutation) SetEnvironment(value model.Environment) {
+	m.environment = &value
+}
+
+// Environment returns the value of the "environment" field in the mutation.
+func (m *ApiKeyMutation) Environment() (r model.Environment, exists bool) {
+	v := m.environment
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEnvironment returns the old "environment" field's value of the ApiKey entity.
+// If the ApiKey object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ApiKeyMutation) OldEnvironment(ctx context.Context) (v model.Environment, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEnvironment is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEnvironment requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEnvironment: %w", err)
+	}
+	return oldValue.Environment, nil
+}
+
+// ResetEnvironment resets all changes to the "environment" field.
+func (m *ApiKeyMutation) ResetEnvironment() {
+	m.environment = nil
 }
 
 // SetActive sets the "active" field.
@@ -3492,7 +3666,7 @@ func (m *ApiKeyMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ApiKeyMutation) Fields() []string {
-	fields := make([]string, 0, 17)
+	fields := make([]string, 0, 21)
 	if m.created_at != nil {
 		fields = append(fields, apikey.FieldCreatedAt)
 	}
@@ -3504,6 +3678,15 @@ func (m *ApiKeyMutation) Fields() []string {
 	}
 	if m.name != nil {
 		fields = append(fields, apikey.FieldName)
+	}
+	if m.public_key != nil {
+		fields = append(fields, apikey.FieldPublicKey)
+	}
+	if m.secret_key != nil {
+		fields = append(fields, apikey.FieldSecretKey)
+	}
+	if m.hashed_secret_key != nil {
+		fields = append(fields, apikey.FieldHashedSecretKey)
 	}
 	if m.key != nil {
 		fields = append(fields, apikey.FieldKey)
@@ -3519,6 +3702,9 @@ func (m *ApiKeyMutation) Fields() []string {
 	}
 	if m._type != nil {
 		fields = append(fields, apikey.FieldType)
+	}
+	if m.environment != nil {
+		fields = append(fields, apikey.FieldEnvironment)
 	}
 	if m.active != nil {
 		fields = append(fields, apikey.FieldActive)
@@ -3560,6 +3746,12 @@ func (m *ApiKeyMutation) Field(name string) (ent.Value, bool) {
 		return m.DeletedAt()
 	case apikey.FieldName:
 		return m.Name()
+	case apikey.FieldPublicKey:
+		return m.PublicKey()
+	case apikey.FieldSecretKey:
+		return m.SecretKey()
+	case apikey.FieldHashedSecretKey:
+		return m.HashedSecretKey()
 	case apikey.FieldKey:
 		return m.Key()
 	case apikey.FieldHashedKey:
@@ -3570,6 +3762,8 @@ func (m *ApiKeyMutation) Field(name string) (ent.Value, bool) {
 		return m.OrganizationID()
 	case apikey.FieldType:
 		return m.GetType()
+	case apikey.FieldEnvironment:
+		return m.Environment()
 	case apikey.FieldActive:
 		return m.Active()
 	case apikey.FieldPermissions:
@@ -3603,6 +3797,12 @@ func (m *ApiKeyMutation) OldField(ctx context.Context, name string) (ent.Value, 
 		return m.OldDeletedAt(ctx)
 	case apikey.FieldName:
 		return m.OldName(ctx)
+	case apikey.FieldPublicKey:
+		return m.OldPublicKey(ctx)
+	case apikey.FieldSecretKey:
+		return m.OldSecretKey(ctx)
+	case apikey.FieldHashedSecretKey:
+		return m.OldHashedSecretKey(ctx)
 	case apikey.FieldKey:
 		return m.OldKey(ctx)
 	case apikey.FieldHashedKey:
@@ -3613,6 +3813,8 @@ func (m *ApiKeyMutation) OldField(ctx context.Context, name string) (ent.Value, 
 		return m.OldOrganizationID(ctx)
 	case apikey.FieldType:
 		return m.OldType(ctx)
+	case apikey.FieldEnvironment:
+		return m.OldEnvironment(ctx)
 	case apikey.FieldActive:
 		return m.OldActive(ctx)
 	case apikey.FieldPermissions:
@@ -3666,6 +3868,27 @@ func (m *ApiKeyMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetName(v)
 		return nil
+	case apikey.FieldPublicKey:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPublicKey(v)
+		return nil
+	case apikey.FieldSecretKey:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSecretKey(v)
+		return nil
+	case apikey.FieldHashedSecretKey:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetHashedSecretKey(v)
+		return nil
 	case apikey.FieldKey:
 		v, ok := value.(string)
 		if !ok {
@@ -3695,11 +3918,18 @@ func (m *ApiKeyMutation) SetField(name string, value ent.Value) error {
 		m.SetOrganizationID(v)
 		return nil
 	case apikey.FieldType:
-		v, ok := value.(string)
+		v, ok := value.(model.APIKeyType)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetType(v)
+		return nil
+	case apikey.FieldEnvironment:
+		v, ok := value.(model.Environment)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEnvironment(v)
 		return nil
 	case apikey.FieldActive:
 		v, ok := value.(bool)
@@ -3790,6 +4020,12 @@ func (m *ApiKeyMutation) ClearedFields() []string {
 	if m.FieldCleared(apikey.FieldDeletedAt) {
 		fields = append(fields, apikey.FieldDeletedAt)
 	}
+	if m.FieldCleared(apikey.FieldKey) {
+		fields = append(fields, apikey.FieldKey)
+	}
+	if m.FieldCleared(apikey.FieldHashedKey) {
+		fields = append(fields, apikey.FieldHashedKey)
+	}
 	if m.FieldCleared(apikey.FieldUserID) {
 		fields = append(fields, apikey.FieldUserID)
 	}
@@ -3833,6 +4069,12 @@ func (m *ApiKeyMutation) ClearField(name string) error {
 	switch name {
 	case apikey.FieldDeletedAt:
 		m.ClearDeletedAt()
+		return nil
+	case apikey.FieldKey:
+		m.ClearKey()
+		return nil
+	case apikey.FieldHashedKey:
+		m.ClearHashedKey()
 		return nil
 	case apikey.FieldUserID:
 		m.ClearUserID()
@@ -3881,6 +4123,15 @@ func (m *ApiKeyMutation) ResetField(name string) error {
 	case apikey.FieldName:
 		m.ResetName()
 		return nil
+	case apikey.FieldPublicKey:
+		m.ResetPublicKey()
+		return nil
+	case apikey.FieldSecretKey:
+		m.ResetSecretKey()
+		return nil
+	case apikey.FieldHashedSecretKey:
+		m.ResetHashedSecretKey()
+		return nil
 	case apikey.FieldKey:
 		m.ResetKey()
 		return nil
@@ -3895,6 +4146,9 @@ func (m *ApiKeyMutation) ResetField(name string) error {
 		return nil
 	case apikey.FieldType:
 		m.ResetType()
+		return nil
+	case apikey.FieldEnvironment:
+		m.ResetEnvironment()
 		return nil
 	case apikey.FieldActive:
 		m.ResetActive()
@@ -28568,11 +28822,11 @@ type PermissionMutation struct {
 	description                  *string
 	resource                     *string
 	action                       *string
-	category                     *model.ContextType
-	applicable_user_types        *[]string
-	appendapplicable_user_types  []string
-	applicable_contexts          *[]string
-	appendapplicable_contexts    []string
+	category                     *model.PermissionCategory
+	applicable_user_types        *[]model.UserType
+	appendapplicable_user_types  []model.UserType
+	applicable_contexts          *[]model.ContextType
+	appendapplicable_contexts    []model.ContextType
 	conditions                   *string
 	system                       *bool
 	dangerous                    *bool
@@ -28580,7 +28834,7 @@ type PermissionMutation struct {
 	addrisk_level                *int
 	created_by                   *string
 	active                       *bool
-	permission_group             *string
+	permission_group             *model.PermissionGroup
 	clearedFields                map[string]struct{}
 	roles                        map[xid.ID]struct{}
 	removedroles                 map[xid.ID]struct{}
@@ -29024,12 +29278,12 @@ func (m *PermissionMutation) ResetAction() {
 }
 
 // SetCategory sets the "category" field.
-func (m *PermissionMutation) SetCategory(mt model.ContextType) {
-	m.category = &mt
+func (m *PermissionMutation) SetCategory(mc model.PermissionCategory) {
+	m.category = &mc
 }
 
 // Category returns the value of the "category" field in the mutation.
-func (m *PermissionMutation) Category() (r model.ContextType, exists bool) {
+func (m *PermissionMutation) Category() (r model.PermissionCategory, exists bool) {
 	v := m.category
 	if v == nil {
 		return
@@ -29040,7 +29294,7 @@ func (m *PermissionMutation) Category() (r model.ContextType, exists bool) {
 // OldCategory returns the old "category" field's value of the Permission entity.
 // If the Permission object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *PermissionMutation) OldCategory(ctx context.Context) (v model.ContextType, err error) {
+func (m *PermissionMutation) OldCategory(ctx context.Context) (v model.PermissionCategory, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldCategory is only allowed on UpdateOne operations")
 	}
@@ -29060,13 +29314,13 @@ func (m *PermissionMutation) ResetCategory() {
 }
 
 // SetApplicableUserTypes sets the "applicable_user_types" field.
-func (m *PermissionMutation) SetApplicableUserTypes(s []string) {
-	m.applicable_user_types = &s
+func (m *PermissionMutation) SetApplicableUserTypes(mt []model.UserType) {
+	m.applicable_user_types = &mt
 	m.appendapplicable_user_types = nil
 }
 
 // ApplicableUserTypes returns the value of the "applicable_user_types" field in the mutation.
-func (m *PermissionMutation) ApplicableUserTypes() (r []string, exists bool) {
+func (m *PermissionMutation) ApplicableUserTypes() (r []model.UserType, exists bool) {
 	v := m.applicable_user_types
 	if v == nil {
 		return
@@ -29077,7 +29331,7 @@ func (m *PermissionMutation) ApplicableUserTypes() (r []string, exists bool) {
 // OldApplicableUserTypes returns the old "applicable_user_types" field's value of the Permission entity.
 // If the Permission object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *PermissionMutation) OldApplicableUserTypes(ctx context.Context) (v []string, err error) {
+func (m *PermissionMutation) OldApplicableUserTypes(ctx context.Context) (v []model.UserType, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldApplicableUserTypes is only allowed on UpdateOne operations")
 	}
@@ -29091,13 +29345,13 @@ func (m *PermissionMutation) OldApplicableUserTypes(ctx context.Context) (v []st
 	return oldValue.ApplicableUserTypes, nil
 }
 
-// AppendApplicableUserTypes adds s to the "applicable_user_types" field.
-func (m *PermissionMutation) AppendApplicableUserTypes(s []string) {
-	m.appendapplicable_user_types = append(m.appendapplicable_user_types, s...)
+// AppendApplicableUserTypes adds mt to the "applicable_user_types" field.
+func (m *PermissionMutation) AppendApplicableUserTypes(mt []model.UserType) {
+	m.appendapplicable_user_types = append(m.appendapplicable_user_types, mt...)
 }
 
 // AppendedApplicableUserTypes returns the list of values that were appended to the "applicable_user_types" field in this mutation.
-func (m *PermissionMutation) AppendedApplicableUserTypes() ([]string, bool) {
+func (m *PermissionMutation) AppendedApplicableUserTypes() ([]model.UserType, bool) {
 	if len(m.appendapplicable_user_types) == 0 {
 		return nil, false
 	}
@@ -29111,13 +29365,13 @@ func (m *PermissionMutation) ResetApplicableUserTypes() {
 }
 
 // SetApplicableContexts sets the "applicable_contexts" field.
-func (m *PermissionMutation) SetApplicableContexts(s []string) {
-	m.applicable_contexts = &s
+func (m *PermissionMutation) SetApplicableContexts(mt []model.ContextType) {
+	m.applicable_contexts = &mt
 	m.appendapplicable_contexts = nil
 }
 
 // ApplicableContexts returns the value of the "applicable_contexts" field in the mutation.
-func (m *PermissionMutation) ApplicableContexts() (r []string, exists bool) {
+func (m *PermissionMutation) ApplicableContexts() (r []model.ContextType, exists bool) {
 	v := m.applicable_contexts
 	if v == nil {
 		return
@@ -29128,7 +29382,7 @@ func (m *PermissionMutation) ApplicableContexts() (r []string, exists bool) {
 // OldApplicableContexts returns the old "applicable_contexts" field's value of the Permission entity.
 // If the Permission object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *PermissionMutation) OldApplicableContexts(ctx context.Context) (v []string, err error) {
+func (m *PermissionMutation) OldApplicableContexts(ctx context.Context) (v []model.ContextType, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldApplicableContexts is only allowed on UpdateOne operations")
 	}
@@ -29142,13 +29396,13 @@ func (m *PermissionMutation) OldApplicableContexts(ctx context.Context) (v []str
 	return oldValue.ApplicableContexts, nil
 }
 
-// AppendApplicableContexts adds s to the "applicable_contexts" field.
-func (m *PermissionMutation) AppendApplicableContexts(s []string) {
-	m.appendapplicable_contexts = append(m.appendapplicable_contexts, s...)
+// AppendApplicableContexts adds mt to the "applicable_contexts" field.
+func (m *PermissionMutation) AppendApplicableContexts(mt []model.ContextType) {
+	m.appendapplicable_contexts = append(m.appendapplicable_contexts, mt...)
 }
 
 // AppendedApplicableContexts returns the list of values that were appended to the "applicable_contexts" field in this mutation.
-func (m *PermissionMutation) AppendedApplicableContexts() ([]string, bool) {
+func (m *PermissionMutation) AppendedApplicableContexts() ([]model.ContextType, bool) {
 	if len(m.appendapplicable_contexts) == 0 {
 		return nil, false
 	}
@@ -29424,12 +29678,12 @@ func (m *PermissionMutation) ResetActive() {
 }
 
 // SetPermissionGroup sets the "permission_group" field.
-func (m *PermissionMutation) SetPermissionGroup(s string) {
-	m.permission_group = &s
+func (m *PermissionMutation) SetPermissionGroup(mg model.PermissionGroup) {
+	m.permission_group = &mg
 }
 
 // PermissionGroup returns the value of the "permission_group" field in the mutation.
-func (m *PermissionMutation) PermissionGroup() (r string, exists bool) {
+func (m *PermissionMutation) PermissionGroup() (r model.PermissionGroup, exists bool) {
 	v := m.permission_group
 	if v == nil {
 		return
@@ -29440,7 +29694,7 @@ func (m *PermissionMutation) PermissionGroup() (r string, exists bool) {
 // OldPermissionGroup returns the old "permission_group" field's value of the Permission entity.
 // If the Permission object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *PermissionMutation) OldPermissionGroup(ctx context.Context) (v string, err error) {
+func (m *PermissionMutation) OldPermissionGroup(ctx context.Context) (v model.PermissionGroup, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldPermissionGroup is only allowed on UpdateOne operations")
 	}
@@ -30040,21 +30294,21 @@ func (m *PermissionMutation) SetField(name string, value ent.Value) error {
 		m.SetAction(v)
 		return nil
 	case permission.FieldCategory:
-		v, ok := value.(model.ContextType)
+		v, ok := value.(model.PermissionCategory)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetCategory(v)
 		return nil
 	case permission.FieldApplicableUserTypes:
-		v, ok := value.([]string)
+		v, ok := value.([]model.UserType)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetApplicableUserTypes(v)
 		return nil
 	case permission.FieldApplicableContexts:
-		v, ok := value.([]string)
+		v, ok := value.([]model.ContextType)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -30103,7 +30357,7 @@ func (m *PermissionMutation) SetField(name string, value ent.Value) error {
 		m.SetActive(v)
 		return nil
 	case permission.FieldPermissionGroup:
-		v, ok := value.(string)
+		v, ok := value.(model.PermissionGroup)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -33378,8 +33632,8 @@ type RoleMutation struct {
 	priority                    *int
 	addpriority                 *int
 	color                       *string
-	applicable_user_types       *[]string
-	appendapplicable_user_types []string
+	applicable_user_types       *[]model.UserType
+	appendapplicable_user_types []model.UserType
 	created_by                  *string
 	active                      *bool
 	clearedFields               map[string]struct{}
@@ -34078,13 +34332,13 @@ func (m *RoleMutation) ResetColor() {
 }
 
 // SetApplicableUserTypes sets the "applicable_user_types" field.
-func (m *RoleMutation) SetApplicableUserTypes(s []string) {
-	m.applicable_user_types = &s
+func (m *RoleMutation) SetApplicableUserTypes(mt []model.UserType) {
+	m.applicable_user_types = &mt
 	m.appendapplicable_user_types = nil
 }
 
 // ApplicableUserTypes returns the value of the "applicable_user_types" field in the mutation.
-func (m *RoleMutation) ApplicableUserTypes() (r []string, exists bool) {
+func (m *RoleMutation) ApplicableUserTypes() (r []model.UserType, exists bool) {
 	v := m.applicable_user_types
 	if v == nil {
 		return
@@ -34095,7 +34349,7 @@ func (m *RoleMutation) ApplicableUserTypes() (r []string, exists bool) {
 // OldApplicableUserTypes returns the old "applicable_user_types" field's value of the Role entity.
 // If the Role object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *RoleMutation) OldApplicableUserTypes(ctx context.Context) (v []string, err error) {
+func (m *RoleMutation) OldApplicableUserTypes(ctx context.Context) (v []model.UserType, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldApplicableUserTypes is only allowed on UpdateOne operations")
 	}
@@ -34109,13 +34363,13 @@ func (m *RoleMutation) OldApplicableUserTypes(ctx context.Context) (v []string, 
 	return oldValue.ApplicableUserTypes, nil
 }
 
-// AppendApplicableUserTypes adds s to the "applicable_user_types" field.
-func (m *RoleMutation) AppendApplicableUserTypes(s []string) {
-	m.appendapplicable_user_types = append(m.appendapplicable_user_types, s...)
+// AppendApplicableUserTypes adds mt to the "applicable_user_types" field.
+func (m *RoleMutation) AppendApplicableUserTypes(mt []model.UserType) {
+	m.appendapplicable_user_types = append(m.appendapplicable_user_types, mt...)
 }
 
 // AppendedApplicableUserTypes returns the list of values that were appended to the "applicable_user_types" field in this mutation.
-func (m *RoleMutation) AppendedApplicableUserTypes() ([]string, bool) {
+func (m *RoleMutation) AppendedApplicableUserTypes() ([]model.UserType, bool) {
 	if len(m.appendapplicable_user_types) == 0 {
 		return nil, false
 	}
@@ -34858,7 +35112,7 @@ func (m *RoleMutation) SetField(name string, value ent.Value) error {
 		m.SetColor(v)
 		return nil
 	case role.FieldApplicableUserTypes:
-		v, ok := value.([]string)
+		v, ok := value.([]model.UserType)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}

@@ -6,10 +6,12 @@
 package apikey
 
 import (
+	"fmt"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
 
@@ -26,6 +28,12 @@ const (
 	FieldDeletedAt = "deleted_at"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
+	// FieldPublicKey holds the string denoting the public_key field in the database.
+	FieldPublicKey = "public_key"
+	// FieldSecretKey holds the string denoting the secret_key field in the database.
+	FieldSecretKey = "secret_key"
+	// FieldHashedSecretKey holds the string denoting the hashed_secret_key field in the database.
+	FieldHashedSecretKey = "hashed_secret_key"
 	// FieldKey holds the string denoting the key field in the database.
 	FieldKey = "key"
 	// FieldHashedKey holds the string denoting the hashed_key field in the database.
@@ -36,6 +44,8 @@ const (
 	FieldOrganizationID = "organization_id"
 	// FieldType holds the string denoting the type field in the database.
 	FieldType = "type"
+	// FieldEnvironment holds the string denoting the environment field in the database.
+	FieldEnvironment = "environment"
 	// FieldActive holds the string denoting the active field in the database.
 	FieldActive = "active"
 	// FieldPermissions holds the string denoting the permissions field in the database.
@@ -90,11 +100,15 @@ var Columns = []string{
 	FieldUpdatedAt,
 	FieldDeletedAt,
 	FieldName,
+	FieldPublicKey,
+	FieldSecretKey,
+	FieldHashedSecretKey,
 	FieldKey,
 	FieldHashedKey,
 	FieldUserID,
 	FieldOrganizationID,
 	FieldType,
+	FieldEnvironment,
 	FieldActive,
 	FieldPermissions,
 	FieldScopes,
@@ -124,15 +138,39 @@ var (
 	UpdateDefaultUpdatedAt func() time.Time
 	// NameValidator is a validator for the "name" field. It is called by the builders before save.
 	NameValidator func(string) error
-	// HashedKeyValidator is a validator for the "hashed_key" field. It is called by the builders before save.
-	HashedKeyValidator func(string) error
-	// DefaultType holds the default value on creation for the "type" field.
-	DefaultType string
+	// PublicKeyValidator is a validator for the "public_key" field. It is called by the builders before save.
+	PublicKeyValidator func(string) error
+	// HashedSecretKeyValidator is a validator for the "hashed_secret_key" field. It is called by the builders before save.
+	HashedSecretKeyValidator func(string) error
 	// DefaultActive holds the default value on creation for the "active" field.
 	DefaultActive bool
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() xid.ID
 )
+
+const DefaultType model.APIKeyType = "server"
+
+// TypeValidator is a validator for the "type" field enum values. It is called by the builders before save.
+func TypeValidator(_type model.APIKeyType) error {
+	switch _type.String() {
+	case "server", "client", "admin":
+		return nil
+	default:
+		return fmt.Errorf("apikey: invalid enum value for type field: %q", _type)
+	}
+}
+
+const DefaultEnvironment model.Environment = "test"
+
+// EnvironmentValidator is a validator for the "environment" field enum values. It is called by the builders before save.
+func EnvironmentValidator(e model.Environment) error {
+	switch e.String() {
+	case "test", "live", "development", "staging", "production":
+		return nil
+	default:
+		return fmt.Errorf("apikey: invalid enum value for environment field: %q", e)
+	}
+}
 
 // OrderOption defines the ordering options for the ApiKey queries.
 type OrderOption func(*sql.Selector)
@@ -162,6 +200,21 @@ func ByName(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldName, opts...).ToFunc()
 }
 
+// ByPublicKey orders the results by the public_key field.
+func ByPublicKey(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPublicKey, opts...).ToFunc()
+}
+
+// BySecretKey orders the results by the secret_key field.
+func BySecretKey(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSecretKey, opts...).ToFunc()
+}
+
+// ByHashedSecretKey orders the results by the hashed_secret_key field.
+func ByHashedSecretKey(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldHashedSecretKey, opts...).ToFunc()
+}
+
 // ByKey orders the results by the key field.
 func ByKey(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldKey, opts...).ToFunc()
@@ -185,6 +238,11 @@ func ByOrganizationID(opts ...sql.OrderTermOption) OrderOption {
 // ByType orders the results by the type field.
 func ByType(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldType, opts...).ToFunc()
+}
+
+// ByEnvironment orders the results by the environment field.
+func ByEnvironment(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldEnvironment, opts...).ToFunc()
 }
 
 // ByActive orders the results by the active field.

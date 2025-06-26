@@ -284,7 +284,7 @@ type GetProviderTemplateOutput = model.Output[*model.ProviderTemplate]
 
 type EnableProviderFromTemplateInput struct {
 	model.OrganisationPathParams
-	Body model.EnableProviderBody `json:"body"`
+	Body model.EnableProviderBody
 }
 
 type EnableProviderFromTemplateOutput = model.Output[*model.IdentityProvider]
@@ -319,7 +319,7 @@ func registerListProviders(api huma.API, ssoCtrl *ssoController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ssoCtrl.di.AuthZ().Checker(), ssoCtrl.di.Logger())(
-			authz.PermissionReadSSO, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadSSO, model.ResourceOrganization, "orgId",
 		)},
 	}, ssoCtrl.listProvidersHandler)
 }
@@ -338,7 +338,7 @@ func registerCreateProvider(api huma.API, ssoCtrl *ssoController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ssoCtrl.di.AuthZ().Checker(), ssoCtrl.di.Logger())(
-			authz.PermissionWriteSSO, authz.ResourceOrganization, "orgId",
+			authz.PermissionWriteSSO, model.ResourceOrganization, "orgId",
 		)},
 	}, ssoCtrl.createProviderHandler)
 }
@@ -357,7 +357,7 @@ func registerGetProvider(api huma.API, ssoCtrl *ssoController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ssoCtrl.di.AuthZ().Checker(), ssoCtrl.di.Logger())(
-			authz.PermissionReadSSO, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadSSO, model.ResourceOrganization, "orgId",
 		)},
 	}, ssoCtrl.getProviderHandler)
 }
@@ -376,7 +376,7 @@ func registerUpdateProvider(api huma.API, ssoCtrl *ssoController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ssoCtrl.di.AuthZ().Checker(), ssoCtrl.di.Logger())(
-			authz.PermissionWriteSSO, authz.ResourceOrganization, "orgId",
+			authz.PermissionWriteSSO, model.ResourceOrganization, "orgId",
 		)},
 	}, ssoCtrl.updateProviderHandler)
 }
@@ -399,7 +399,7 @@ func registerDeleteProvider(api huma.API, ssoCtrl *ssoController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ssoCtrl.di.AuthZ().Checker(), ssoCtrl.di.Logger())(
-			authz.PermissionWriteSSO, authz.ResourceOrganization, "orgId",
+			authz.PermissionWriteSSO, model.ResourceOrganization, "orgId",
 		)},
 	}, ssoCtrl.deleteProviderHandler)
 }
@@ -418,7 +418,7 @@ func registerEnableProvider(api huma.API, ssoCtrl *ssoController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ssoCtrl.di.AuthZ().Checker(), ssoCtrl.di.Logger())(
-			authz.PermissionWriteSSO, authz.ResourceOrganization, "orgId",
+			authz.PermissionWriteSSO, model.ResourceOrganization, "orgId",
 		)},
 	}, ssoCtrl.enableProviderHandler)
 }
@@ -437,7 +437,7 @@ func registerDisableProvider(api huma.API, ssoCtrl *ssoController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ssoCtrl.di.AuthZ().Checker(), ssoCtrl.di.Logger())(
-			authz.PermissionWriteSSO, authz.ResourceOrganization, "orgId",
+			authz.PermissionWriteSSO, model.ResourceOrganization, "orgId",
 		)},
 	}, ssoCtrl.disableProviderHandler)
 }
@@ -495,7 +495,7 @@ func registerTestProviderConnection(api huma.API, ssoCtrl *ssoController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ssoCtrl.di.AuthZ().Checker(), ssoCtrl.di.Logger())(
-			authz.PermissionReadSSO, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadSSO, model.ResourceOrganization, "orgId",
 		)},
 	}, ssoCtrl.testProviderConnectionHandler)
 }
@@ -514,7 +514,7 @@ func registerBulkProvisionUsers(api huma.API, ssoCtrl *ssoController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ssoCtrl.di.AuthZ().Checker(), ssoCtrl.di.Logger())(
-			authz.PermissionCreateUser, authz.ResourceOrganization, "orgId",
+			authz.PermissionCreateUser, model.ResourceOrganization, "orgId",
 		)},
 	}, ssoCtrl.bulkProvisionUsersHandler)
 }
@@ -533,7 +533,7 @@ func registerVerifyDomain(api huma.API, ssoCtrl *ssoController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ssoCtrl.di.AuthZ().Checker(), ssoCtrl.di.Logger())(
-			authz.PermissionWriteSSO, authz.ResourceOrganization, "orgId",
+			authz.PermissionWriteSSO, model.ResourceOrganization, "orgId",
 		)},
 	}, ssoCtrl.verifyDomainHandler)
 }
@@ -565,7 +565,7 @@ func registerGetProviderMetadata(api huma.API, ssoCtrl *ssoController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ssoCtrl.di.AuthZ().Checker(), ssoCtrl.di.Logger())(
-			authz.PermissionReadSSO, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadSSO, model.ResourceOrganization, "orgId",
 		)},
 	}, ssoCtrl.getProviderMetadataHandler)
 }
@@ -597,7 +597,7 @@ func registerExportSSOData(api huma.API, ssoCtrl *ssoController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ssoCtrl.di.AuthZ().Checker(), ssoCtrl.di.Logger())(
-			authz.PermissionReadSSO, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadSSO, model.ResourceOrganization, "orgId",
 		)},
 	}, ssoCtrl.exportSSODataHandler)
 }
@@ -616,7 +616,7 @@ func registerGetSSOStats(api huma.API, ssoCtrl *ssoController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ssoCtrl.di.AuthZ().Checker(), ssoCtrl.di.Logger())(
-			authz.PermissionReadSSO, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadSSO, model.ResourceOrganization, "orgId",
 		)},
 	}, ssoCtrl.getSSOStatsHandler)
 }
@@ -635,7 +635,7 @@ func registerGetProviderStats(api huma.API, ssoCtrl *ssoController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ssoCtrl.di.AuthZ().Checker(), ssoCtrl.di.Logger())(
-			authz.PermissionReadSSO, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadSSO, model.ResourceOrganization, "orgId",
 		)},
 	}, ssoCtrl.getProviderStatsHandler)
 }
@@ -654,7 +654,7 @@ func registerGetSSOActivity(api huma.API, ssoCtrl *ssoController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ssoCtrl.di.AuthZ().Checker(), ssoCtrl.di.Logger())(
-			authz.PermissionReadSSO, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadSSO, model.ResourceOrganization, "orgId",
 		)},
 	}, ssoCtrl.getSSOActivityHandler)
 }
@@ -673,7 +673,7 @@ func registerGetProviderMetrics(api huma.API, ssoCtrl *ssoController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ssoCtrl.di.AuthZ().Checker(), ssoCtrl.di.Logger())(
-			authz.PermissionReadSSO, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadSSO, model.ResourceOrganization, "orgId",
 		)},
 	}, ssoCtrl.getProviderMetricsHandler)
 }
@@ -692,7 +692,7 @@ func registerCheckProviderHealth(api huma.API, ssoCtrl *ssoController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ssoCtrl.di.AuthZ().Checker(), ssoCtrl.di.Logger())(
-			authz.PermissionReadSSO, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadSSO, model.ResourceOrganization, "orgId",
 		)},
 	}, ssoCtrl.checkProviderHealthHandler)
 }
@@ -711,7 +711,7 @@ func registerGetProviderHealthStatus(api huma.API, ssoCtrl *ssoController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ssoCtrl.di.AuthZ().Checker(), ssoCtrl.di.Logger())(
-			authz.PermissionReadSSO, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadSSO, model.ResourceOrganization, "orgId",
 		)},
 	}, ssoCtrl.getProviderHealthStatusHandler)
 }
@@ -751,19 +751,18 @@ func registerGetProviderTemplate(api huma.API, ssoCtrl *ssoController) {
 
 func registerEnableProviderFromTemplate(api huma.API, ssoCtrl *ssoController) {
 	huma.Register(api, huma.Operation{
-		OperationID:   "enableProviderFromTemplate",
-		Method:        http.MethodPost,
-		Path:          "/organizations/{orgId}/sso/catalog/enable",
-		Summary:       "Enable provider from template",
-		Description:   "Enable an SSO provider for the organization using a catalog template",
-		Tags:          []string{"SSO"},
-		DefaultStatus: 201,
-		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("Provider template not found")),
+		OperationID: "enableProviderFromTemplate",
+		Method:      http.MethodPost,
+		Path:        "/organizations/{orgId}/sso/catalog/enable",
+		Summary:     "Enable provider from template",
+		Description: "Enable an SSO provider for the organization using a catalog template",
+		Tags:        []string{"SSO"},
+		Responses:   model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("Provider template not found")),
 		Security: []map[string][]string{
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ssoCtrl.di.AuthZ().Checker(), ssoCtrl.di.Logger())(
-			authz.PermissionWriteSSO, authz.ResourceOrganization, "orgId",
+			authz.PermissionWriteSSO, model.ResourceOrganization, "orgId",
 		)},
 	}, ssoCtrl.enableProviderFromTemplateHandler)
 }
@@ -782,7 +781,7 @@ func registerGetOrganizationProviders(api huma.API, ssoCtrl *ssoController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ssoCtrl.di.AuthZ().Checker(), ssoCtrl.di.Logger())(
-			authz.PermissionReadSSO, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadSSO, model.ResourceOrganization, "orgId",
 		)},
 	}, ssoCtrl.getOrganizationProvidersHandler)
 }
@@ -801,7 +800,7 @@ func registerConfigureProvider(api huma.API, ssoCtrl *ssoController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, ssoCtrl.di.AuthZ().Checker(), ssoCtrl.di.Logger())(
-			authz.PermissionWriteSSO, authz.ResourceOrganization, "orgId",
+			authz.PermissionWriteSSO, model.ResourceOrganization, "orgId",
 		)},
 	}, ssoCtrl.configureProviderHandler)
 }

@@ -5,11 +5,13 @@
  * components, hooks, and types for easy importing.
  */
 
+'use client';
+
 // ============================================================================
 // Provider Components
 // ============================================================================
 
-export { AuthProvider, useAuth, useAuthGuard } from './auth-provider';
+export {AuthProvider, useAuth, useAuthGuard} from './auth-provider';
 import {HeroUIProvider} from '@heroui/react'
 import React from 'react';
 import type {FrankAuthUIConfig} from '../config';
@@ -18,8 +20,12 @@ import {ConfigProvider, useConfig} from './config-provider';
 import {ThemeProvider, useTheme} from './theme-provider';
 import {AuthProvider, useAuth} from './auth-provider';
 
-export { ConfigProvider, useConfig, useFeatures, useOrganizationConfig, useComponentOverrides, withConfig } from './config-provider';
-export { ThemeProvider, useTheme, useThemeMode, useOrganizationBranding, useThemeVariables, withTheme, ThemeSwitcher } from './theme-provider';
+export {
+    ConfigProvider, useConfig, useFeatures, useOrganizationConfig, useComponentOverrides, withConfig
+} from './config-provider';
+export {
+    ThemeProvider, useTheme, useThemeMode, useOrganizationBranding, useThemeVariables, withTheme, ThemeSwitcher
+} from './theme-provider';
 
 // ============================================================================
 // Provider Types
@@ -151,9 +157,10 @@ export function FrankAuthProvider({
                 >
                     <AuthProvider
                         publishableKey={config.publishableKey}
+                        secretKey={config.secretKey}
                         userType={config.userType}
                         apiUrl={config.apiUrl}
-                        organizationId={config.organizationId}
+                        projectId={config.projectId}
                         onError={onError}
                         onSignIn={onSignIn}
                         onSignOut={onSignOut}

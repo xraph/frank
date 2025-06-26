@@ -77,7 +77,7 @@ type CreateUserInput struct {
 	CreatedBy             *string                `json:"created_by,omitempty"`
 	ProfileImageURL       *string                `json:"profile_image_url,omitempty"`
 	Locale                string                 `json:"locale"`
-	Timezone              *string                `json:"timezone,omitempty"`
+	Timezone              string                 `json:"timezone,omitempty"`
 	Metadata              map[string]interface{} `json:"metadata,omitempty"`
 	EmailVerified         bool                   `json:"email_verified,omitempty"`
 	PhoneVerified         bool                   `json:"phone_verified,omitempty"`
@@ -178,8 +178,8 @@ func (r *userRepository) Create(ctx context.Context, input CreateUserInput) (*en
 	if input.ProfileImageURL != nil {
 		create.SetProfileImageURL(*input.ProfileImageURL)
 	}
-	if input.Timezone != nil {
-		create.SetTimezone(*input.Timezone)
+	if input.Timezone != "" {
+		create.SetTimezone(input.Timezone)
 	}
 	if input.Metadata != nil {
 		create.SetMetadata(input.Metadata)
@@ -383,6 +383,7 @@ func (r *userRepository) List(ctx context.Context, params ListUsersParams) (*mod
 	if params.UserType != nil {
 		query = query.Where(user.UserTypeEQ(*params.UserType))
 	}
+
 	if params.OrganizationID != nil {
 		query = query.Where(user.OrganizationID(*params.OrganizationID))
 	}
@@ -489,6 +490,7 @@ func (r *userRepository) UpdatePassword(ctx context.Context, id xid.ID, password
 
 func (r *userRepository) UpdateLastLogin(ctx context.Context, id xid.ID, ip string) error {
 	update := r.client.User.UpdateOneID(id).
+		SetLastLogin(time.Now()).
 		SetLastLoginIP(ip)
 
 	err := update.Exec(ctx)
@@ -510,6 +512,7 @@ func (r *userRepository) IncrementLoginCount(ctx context.Context, id xid.ID) err
 
 	err = r.client.User.UpdateOneID(id).
 		SetLoginCount(u.LoginCount + 1).
+		SetLastLogin(time.Now()).
 		Exec(ctx)
 	if err != nil {
 		return errors.Wrap(err, errors.CodeDatabaseError, "failed to increment login count")

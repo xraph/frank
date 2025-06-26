@@ -4,10 +4,127 @@ import (
 	"context"
 	"net/http"
 	"strings"
+	"time"
 
+	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 )
+
+// UserContext represents the authenticated user context
+type UserContext struct {
+	ID             xid.ID            `json:"id"`
+	Email          string            `json:"email"`
+	Username       string            `json:"username,omitempty"`
+	FirstName      string            `json:"firstName,omitempty"`
+	LastName       string            `json:"lastName,omitempty"`
+	UserType       model.UserType    `json:"userType"`
+	OrganizationID *xid.ID           `json:"organizationId,omitempty"`
+	Active         bool              `json:"active"`
+	EmailVerified  bool              `json:"emailVerified"`
+	Permissions    []string          `json:"permissions,omitempty"`
+	Roles          []model.RoleInfo  `json:"roles,omitempty"`
+	Metadata       map[string]any    `json:"metadata,omitempty"`
+	SessionID      xid.ID            `json:"sessionId,omitempty"`
+	Membership     *model.Membership `json:"membership,omitempty"`
+}
+
+// SessionContext represents the session context
+type SessionContext struct {
+	ID           xid.ID    `json:"id"`
+	Token        string    `json:"token"`
+	UserID       xid.ID    `json:"userId"`
+	ExpiresAt    time.Time `json:"expiresAt"`
+	LastActiveAt time.Time `json:"lastActiveAt"`
+	IPAddress    string    `json:"ipAddress,omitempty"`
+	UserAgent    string    `json:"userAgent,omitempty"`
+	DeviceID     string    `json:"deviceId,omitempty"`
+}
+
+// APIKeyContext represents the API key context
+type APIKeyContext struct {
+	ID             xid.ID                  `json:"id"`
+	Name           string                  `json:"name"`
+	Type           model.APIKeyType        `json:"type"`
+	UserID         *xid.ID                 `json:"userId,omitempty"`
+	OrganizationID *xid.ID                 `json:"organizationId,omitempty"`
+	Permissions    []string                `json:"permissions,omitempty"`
+	Scopes         []string                `json:"scopes,omitempty"`
+	LastUsed       *time.Time              `json:"lastUsed,omitempty"`
+	RateLimits     *model.APIKeyRateLimits `json:"rateLimits,omitempty"`
+	Environment    model.Environment       `json:"environment"`
+
+	// New fields for public/secret key support
+	PublicKey string `json:"publicKey,omitempty"`
+	KeyType   string `json:"keyType"` // "public", "secret", or "legacy"
+
+	// Legacy support
+	LegacyKey string `json:"legacyKey,omitempty"`
+
+	// Additional metadata
+	IPWhitelist []string               `json:"ipWhitelist,omitempty"`
+	ExpiresAt   *time.Time             `json:"expiresAt,omitempty"`
+	Active      bool                   `json:"active"`
+	Metadata    map[string]interface{} `json:"metadata,omitempty"`
+}
+
+// OrganizationContext represents the organization context
+type OrganizationContext struct {
+	ID                     xid.ID         `json:"id"`
+	Name                   string         `json:"name"`
+	Slug                   string         `json:"slug"`
+	Domain                 string         `json:"domain,omitempty"`
+	Plan                   string         `json:"plan"`
+	Active                 bool           `json:"active"`
+	IsPlatformOrganization bool           `json:"isPlatformOrganization"`
+	OrgType                model.OrgType  `json:"orgType"`
+	Metadata               map[string]any `json:"metadata,omitempty"`
+}
+
+// RequestContext represents request-specific context information
+type RequestContext struct {
+	ID        string            `json:"id"`
+	Timestamp time.Time         `json:"timestamp"`
+	IPAddress string            `json:"ipAddress"`
+	UserAgent string            `json:"userAgent"`
+	Method    string            `json:"method"`
+	Path      string            `json:"path"`
+	Headers   map[string]string `json:"headers,omitempty"`
+}
+
+// TenantContext represents the tenant context for multi-tenancy
+type TenantContext struct {
+	Organization *model.Organization `json:"organization"`
+	Plan         string              `json:"plan"`
+	Type         model.OrgType       `json:"type"`
+	Features     []string            `json:"features,omitempty"`
+	Active       bool                `json:"active"`
+	Settings     map[string]any      `json:"settings,omitempty"`
+}
+
+// GetUserFromContextSafe retrieves the user from request context
+func GetUserFromContextSafe(ctx context.Context) (*UserContext, error) {
+	if user, ok := ctx.Value(UserContextKey).(*UserContext); ok {
+		return user, nil
+	}
+	return nil, errors.New(errors.CodeUnauthorized, "user not authorized")
+}
+
+// GetUserFromContext retrieves the user from request context
+func GetUserFromContext(ctx context.Context) *UserContext {
+	if user, ok := ctx.Value(UserContextKey).(*UserContext); ok {
+		return user
+	}
+	return nil
+}
+
+// GetSessionFromContext retrieves the session from request context
+func GetSessionFromContext(ctx context.Context) *SessionContext {
+	if session, ok := ctx.Value(SessionContextKey).(*SessionContext); ok {
+		return session
+	}
+	return nil
+}
 
 // GetUserIDFromContext retrieves the user ID from request context
 func GetUserIDFromContext(ctx context.Context) *xid.ID {

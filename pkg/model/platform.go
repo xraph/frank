@@ -9,9 +9,9 @@ import (
 // Platform Organization Models
 
 type PlatformOrganizationListResponse struct {
-	Organizations []OrganizationSummary    `json:"organizations"`
-	Pagination    *Pagination              `json:"pagination"`
-	Summary       OrganizationSummaryStats `json:"summary"`
+	Data       []PlatformOrganizationSummary `json:"data"`
+	Pagination *Pagination                   `json:"pagination"`
+	Summary    OrganizationSummaryStats      `json:"summary"`
 }
 
 type OrganizationSummaryStats struct {
@@ -58,10 +58,37 @@ type OrgComparisons struct {
 
 // Platform User Models
 
+type PlatformUserSummary struct {
+	UserSummary
+
+	EmailVerified         bool                   `json:"emailVerified" example:"true" doc:"Whether email is verified"`
+	PhoneVerified         bool                   `json:"phoneVerified" example:"false" doc:"Whether phone is verified"`
+	Blocked               bool                   `json:"blocked" example:"false" doc:"Whether user is blocked"`
+	LastPasswordChange    *time.Time             `json:"lastPasswordChange,omitempty" example:"2023-01-01T10:00:00Z" doc:"Last password change timestamp"`
+	Metadata              map[string]interface{} `json:"metadata,omitempty" doc:"Additional user metadata"`
+	Locale                string                 `json:"locale" example:"en" doc:"User locale"`
+	Timezone              string                 `json:"timezone,omitempty" example:"America/New_York" doc:"User timezone"`
+	OrganizationID        *xid.ID                `json:"organizationId,omitempty" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"Primary organization ID"`
+	PrimaryOrganizationID *xid.ID                `json:"primaryOrganizationId,omitempty" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"Primary organization for multi-org users"`
+	IsPlatformAdmin       bool                   `json:"isPlatformAdmin" example:"false" doc:"Whether user is a platform administrator"`
+	AuthProvider          string                 `json:"authProvider" example:"internal" doc:"Authentication provider"`
+	ExternalID            string                 `json:"externalId,omitempty" example:"google_123456" doc:"External provider user ID"`
+	CustomerID            string                 `json:"customerId,omitempty" example:"cus_123456" doc:"Customer management system ID"`
+	CustomAttributes      map[string]interface{} `json:"customAttributes,omitempty" doc:"Custom user attributes"`
+	CreatedBy             string                 `json:"createdBy,omitempty" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"User who created this user"`
+	LoginCount            int                    `json:"loginCount" example:"42" doc:"Number of logins"`
+	LastLoginIP           string                 `json:"lastLoginIp,omitempty" example:"192.168.1.1" doc:"Last login IP address"`
+	LastLoginAt           *time.Time             `json:"lastLoginAt,omitempty" example:"2023-01-01T10:00:00Z" doc:"Last login timestamp"`
+}
+
+type PlatformOrganizationSummary struct {
+	Organization
+}
+
 type PlatformUserListResponse struct {
-	Users      []UserSummary    `json:"users"`
-	Pagination *Pagination      `json:"pagination"`
-	Summary    UserSummaryStats `json:"summary"`
+	Users      []PlatformUserSummary `json:"users"`
+	Pagination *Pagination           `json:"pagination"`
+	Summary    UserSummaryStats      `json:"summary"`
 }
 
 type UserSummaryStats struct {

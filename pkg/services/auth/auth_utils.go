@@ -3,9 +3,12 @@ package auth
 import (
 	"context"
 	"fmt"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/juicycleff/frank/ent"
+	"github.com/juicycleff/frank/pkg/contexts"
 	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/juicycleff/frank/pkg/hooks"
 	"github.com/juicycleff/frank/pkg/logging"
@@ -178,6 +181,19 @@ func (s *authService) auditPhoneVerified(ctx context.Context, userID xid.ID) {
 	)
 }
 
+func (s *authService) auditOrganizationRegistration(ctx context.Context, orgID xid.ID, userID xid.ID, ip, userAgent string) {
+	// TODO: Implement audit logging
+	s.logger.Info("phone verified",
+		logging.String("user_id", userID.String()),
+	)
+}
+func (s *authService) auditInvitationRegistration(ctx context.Context, ivID, userID xid.ID, token, ip, userAgent string) {
+	// TODO: Implement audit logging
+	s.logger.Info("phone verified",
+		logging.String("user_id", userID.String()),
+	)
+}
+
 // Helper method to build hook context
 func (s *authService) buildHookContext(ctx context.Context, userID *xid.ID, orgID *xid.ID) *hooks.HookContext {
 	hookCtx := &hooks.HookContext{
@@ -206,4 +222,88 @@ func (s *authService) buildHookContext(ctx context.Context, userID *xid.ID, orgI
 // Token generation utility
 func generateMFAToken() string {
 	return "mfa_" + xid.New().String()
+}
+
+// logSecurely logs sensitive operations without exposing credentials
+func (s *authService) logSecurely(level string, message string, fields ...logging.Field) {
+	switch level {
+	case "info":
+		s.logger.Info(message, fields...)
+	case "warn":
+		s.logger.Warn(message, fields...)
+	case "error":
+		s.logger.Error(message, fields...)
+	default:
+		s.logger.Debug(message, fields...)
+	}
+}
+
+// getOrganizationNameFromRequest extracts organization name from register request
+func (s *authService) getOrganizationNameFromRequest(req model.RegisterRequest) string {
+	if metadata, ok := req.CustomAttributes["organization_name"].(string); ok {
+		return metadata
+	}
+	return ""
+}
+
+// getOrganizationSlugFromRequest extracts organization slug from register request
+func (s *authService) getOrganizationSlugFromRequest(req model.RegisterRequest) string {
+	if metadata, ok := req.CustomAttributes["organization_slug"].(string); ok {
+		return metadata
+	}
+	return ""
+}
+
+// getDomainFromRequest extracts domain from register request
+func (s *authService) getDomainFromRequest(req model.RegisterRequest) *string {
+	if metadata, ok := req.CustomAttributes["domain"].(string); ok {
+		return &metadata
+	}
+	return nil
+}
+
+// getPlanFromRequest extracts plan from register request
+func (s *authService) getPlanFromRequest(req model.RegisterRequest) string {
+	if metadata, ok := req.CustomAttributes["plan"].(string); ok {
+		return metadata
+	}
+	return "free"
+}
+
+// getPlanFromRequest extracts plan from register request
+func (s *authService) getIpAddress(ctx context.Context, fallbackIP string) string {
+	ip, ok := contexts.GetIPAddressFromContext(ctx)
+	if !ok {
+		return fallbackIP
+	}
+	return ip
+}
+
+// getPlanFromRequest extracts plan from register request
+func (s *authService) getUserAgent(ctx context.Context, fallbackAgent string) string {
+	ip, ok := contexts.GetUserAgentFromContext(ctx)
+	if !ok {
+		return fallbackAgent
+	}
+	return ip
+}
+
+func (s *authService) generateSlug(name string) string {
+	// Convert to lowercase and replace spaces/special chars with hyphens
+	slug := strings.ToLower(name)
+	slug = regexp.MustCompile(`[^a-z0-9\-_]`).ReplaceAllString(slug, "-")
+	slug = regexp.MustCompile(`-+`).ReplaceAllString(slug, "-")
+	slug = strings.Trim(slug, "-")
+
+	// Ensure minimum length
+	if len(slug) < 2 {
+		slug = "org-" + slug
+	}
+
+	// Truncate if too long
+	if len(slug) > 50 {
+		slug = slug[:50]
+	}
+
+	return slug
 }

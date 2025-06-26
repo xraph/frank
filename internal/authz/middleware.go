@@ -5,23 +5,31 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/juicycleff/frank/pkg/contexts"
 	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/juicycleff/frank/pkg/logging"
+	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 	"go.uber.org/zap"
 )
 
 // PermissionMiddleware creates middleware for checking permissions
-func PermissionMiddleware(permChecker PermissionChecker, logger logging.Logger) func(permission Permission, resourceType ResourceType, resourceIDParam string) func(http.Handler) http.Handler {
-	return func(permission Permission, resourceType ResourceType, resourceIDParam string) func(http.Handler) http.Handler {
+func PermissionMiddleware(permChecker PermissionChecker, logger logging.Logger) func(permission Permission, resourceType model.ResourceType, resourceIDParam string) func(http.Handler) http.Handler {
+	return func(permission Permission, resourceType model.ResourceType, resourceIDParam string) func(http.Handler) http.Handler {
 		return func(next http.Handler) http.Handler {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				ctx := r.Context()
+				userType := contexts.GetUserTypeFromContext(ctx)
 
 				// Extract resource ID from URL parameters
 				resourceID := chi.URLParam(r, resourceIDParam)
-				if resourceID == "" && resourceType != ResourceGlobal {
+				if resourceID == "" && resourceType != model.ResourceGlobal && resourceType != model.ResourceSystem {
 					http.Error(w, "Resource ID is required", http.StatusBadRequest)
+					return
+				}
+
+				if resourceType == model.ResourceSystem && userType != nil && *userType == model.UserTypeInternal {
+					next.ServeHTTP(w, r)
 					return
 				}
 
@@ -46,20 +54,20 @@ func PermissionMiddleware(permChecker PermissionChecker, logger logging.Logger) 
 }
 
 // RequirePermission is a shorthand function for requiring a specific permission
-func RequirePermission(permChecker PermissionChecker, logger logging.Logger, permission Permission, resourceType ResourceType, resourceIDParam string) func(http.Handler) http.Handler {
+func RequirePermission(permChecker PermissionChecker, logger logging.Logger, permission Permission, resourceType model.ResourceType, resourceIDParam string) func(http.Handler) http.Handler {
 	return PermissionMiddleware(permChecker, logger)(permission, resourceType, resourceIDParam)
 }
 
 // RequireAnyPermission ensures the user has at least one of the specified permissions
-func RequireAnyPermission(permChecker PermissionChecker, logger logging.Logger) func(permissions []Permission, resourceType ResourceType, resourceIDParam string) func(http.Handler) http.Handler {
-	return func(permissions []Permission, resourceType ResourceType, resourceIDParam string) func(http.Handler) http.Handler {
+func RequireAnyPermission(permChecker PermissionChecker, logger logging.Logger) func(permissions []Permission, resourceType model.ResourceType, resourceIDParam string) func(http.Handler) http.Handler {
+	return func(permissions []Permission, resourceType model.ResourceType, resourceIDParam string) func(http.Handler) http.Handler {
 		return func(next http.Handler) http.Handler {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				ctx := r.Context()
 
 				// Extract resource ID from URL parameters
 				resourceID := chi.URLParam(r, resourceIDParam)
-				if resourceID == "" && resourceType != ResourceGlobal {
+				if resourceID == "" && resourceType != model.ResourceGlobal && resourceType != model.ResourceSystem {
 					http.Error(w, "Resource ID is required", http.StatusBadRequest)
 					return
 				}
@@ -113,26 +121,26 @@ func RequireAnyPermission(permChecker PermissionChecker, logger logging.Logger) 
 
 // RequireOrganizationMember creates middleware that ensures the user is a member of the organization
 func RequireOrganizationMember(permChecker PermissionChecker, logger logging.Logger) func(http.Handler) http.Handler {
-	return RequirePermission(permChecker, logger, PermissionViewOrganization, ResourceOrganization, "orgID")
+	return RequirePermission(permChecker, logger, PermissionViewOrganization, model.ResourceOrganization, "orgID")
 }
 
 // RequireOrganizationAdmin creates middleware that ensures the user is an admin of the organization
 func RequireOrganizationAdmin(permChecker PermissionChecker, logger logging.Logger) func(http.Handler) http.Handler {
-	return RequirePermission(permChecker, logger, PermissionUpdateOrganization, ResourceOrganization, "orgID")
+	return RequirePermission(permChecker, logger, PermissionUpdateOrganization, model.ResourceOrganization, "orgID")
 }
 
 // RequireOrganizationOwner creates middleware that ensures the user is the owner of the organization
 func RequireOrganizationOwner(permChecker PermissionChecker, logger logging.Logger) func(http.Handler) http.Handler {
-	return RequirePermission(permChecker, logger, PermissionDeleteOrganization, ResourceOrganization, "orgID")
+	return RequirePermission(permChecker, logger, PermissionDeleteOrganization, model.ResourceOrganization, "orgID")
 }
 
 // RequireSystemAdmin creates middleware that ensures the user is a system administrator
 func RequireSystemAdmin(permChecker PermissionChecker, logger logging.Logger) func(http.Handler) http.Handler {
-	return RequirePermission(permChecker, logger, PermissionSystemAdmin, ResourceGlobal, "")
+	return RequirePermission(permChecker, logger, PermissionSystemAdmin, model.ResourceGlobal, "")
 }
 
 // RequireSelfOrAdmin creates middleware that allows access if user is accessing their own resource or is an admin
-func RequireSelfOrAdmin(permChecker PermissionChecker, logger logging.Logger, resourceType ResourceType, adminPermission Permission) func(http.Handler) http.Handler {
+func RequireSelfOrAdmin(permChecker PermissionChecker, logger logging.Logger, resourceType model.ResourceType, adminPermission Permission) func(http.Handler) http.Handler {
 	return RequireAnyPermission(permChecker, logger)(
 		[]Permission{PermissionViewSelf, adminPermission},
 		resourceType,
@@ -347,9 +355,9 @@ func GetUserTypeFromContext(ctx context.Context) (*UserType, error) {
 }
 
 func GetUserIDFromContext(ctx context.Context) (xid.ID, error) {
-	userID, ok := ctx.Value("user_id").(xid.ID)
-	if !ok {
-		return xid.NilID(), errors.New(errors.CodeBadRequest, "User ID required")
+	userId := contexts.GetUserIDFromContext(ctx)
+	if userId == nil {
+		return xid.ID{}, errors.New(errors.CodeResourceNotFound, "user not found in context")
 	}
-	return userID, nil
+	return *userId, nil
 }

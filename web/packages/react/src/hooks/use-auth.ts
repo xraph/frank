@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * @frank-auth/react - useAuth Hook
  *
@@ -8,7 +10,18 @@
 
 import {useCallback, useMemo} from 'react';
 
-import type {Organization, Session, User,} from '@frank-auth/client';
+import type {
+    Organization,
+    PasswordResetConfirmRequest,
+    PasswordResetConfirmResponse,
+    PasswordResetResponse,
+    ResendVerificationRequest,
+    ResendVerificationResponse,
+    Session,
+    User,
+    ValidateTokenInputBody,
+    ValidateTokenResponse, VerificationRequest, VerificationResponse,
+} from '@frank-auth/client';
 
 import {useAuth as useAuthProvider} from '../provider/auth-provider';
 import {useConfig} from '../provider/config-provider';
@@ -23,6 +36,7 @@ import type {
     SignUpResult,
     UpdateUserParams,
 } from '../provider/types';
+import {PasswordResetRequest} from "@frank-auth/sdk";
 
 // ============================================================================
 // Auth Hook Interface
@@ -48,6 +62,8 @@ export interface UseAuthReturn {
     signIn: (params: SignInParams) => Promise<SignInResult>;
     signUp: (params: SignUpParams) => Promise<SignUpResult>;
     signOut: () => Promise<void>;
+    resendVerification: (request: ResendVerificationRequest) => Promise<ResendVerificationResponse>
+    verifyIdentity: (type: "email" | "phone", request: VerificationRequest) => Promise<VerificationResponse>
 
     // Session management
     createSession: (token: string) => Promise<Session>;
@@ -63,6 +79,14 @@ export interface UseAuthReturn {
 
     // Utility methods
     reload: () => Promise<void>;
+
+    // Recovery
+    resetPassword: (params: PasswordResetConfirmRequest) => Promise<PasswordResetConfirmResponse>
+    requestPasswordReset: (request: PasswordResetRequest) => Promise<PasswordResetResponse>
+
+    extractEmailFromUrl: (url?: string) => (string | null)
+    extractTokenFromUrl: (url?: string) => (string | null)
+    validateToken: (request: ValidateTokenInputBody) => Promise<ValidateTokenResponse>
 
     // Convenience properties
     userId: string | null;
@@ -229,6 +253,31 @@ export function useAuth(): UseAuthReturn {
         return authContext.signUp(params);
     }, [authContext.signUp, features]);
 
+
+    // Extract token from URL
+    const extractEmailFromUrl = useCallback((url?: string): string | null => {
+        const urlToCheck = url || window.location.href;
+
+        try {
+            const urlObj = new URL(urlToCheck);
+            return urlObj.searchParams.get('email');
+        } catch {
+            return null;
+        }
+    }, []);
+
+    // Extract token from URL
+    const extractTokenFromUrl = useCallback((url?: string): string | null => {
+        const urlToCheck = url || window.location.href;
+
+        try {
+            const urlObj = new URL(urlToCheck);
+            return urlObj.searchParams.get('token');
+        } catch {
+            return null;
+        }
+    }, []);
+
     return {
         // Core authentication state
         isLoaded: authContext.isLoaded,
@@ -249,6 +298,15 @@ export function useAuth(): UseAuthReturn {
         signIn,
         signUp,
         signOut: authContext.signOut,
+        resendVerification: authContext.resendVerification,
+        verifyIdentity: authContext.verifyIdentity,
+
+        // Recovery methods
+        requestPasswordReset: authContext.requestPasswordReset,
+        resetPassword: authContext.resetPassword,
+        validateToken: authContext.validateToken,
+        extractEmailFromUrl,
+        extractTokenFromUrl,
 
         // Session management
         createSession: authContext.createSession,

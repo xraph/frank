@@ -58,6 +58,12 @@ export interface APIKeyStats {
      */
     expiredKeys: number;
     /**
+     * Keys by environment
+     * @type {{ [key: string]: number; }}
+     * @memberof APIKeyStats
+     */
+    keysByEnvironment: { [key: string]: number; };
+    /**
      * Keys by type
      * @type {{ [key: string]: number; }}
      * @memberof APIKeyStats
@@ -127,6 +133,7 @@ export function instanceOfAPIKeyStats(value: object): value is APIKeyStats {
     if (!('averageSuccessRate' in value) || value['averageSuccessRate'] === undefined) return false;
     if (!('errorRate' in value) || value['errorRate'] === undefined) return false;
     if (!('expiredKeys' in value) || value['expiredKeys'] === undefined) return false;
+    if (!('keysByEnvironment' in value) || value['keysByEnvironment'] === undefined) return false;
     if (!('keysByType' in value) || value['keysByType'] === undefined) return false;
     if (!('keysCreatedMonth' in value) || value['keysCreatedMonth'] === undefined) return false;
     if (!('keysCreatedWeek' in value) || value['keysCreatedWeek'] === undefined) return false;
@@ -155,6 +162,7 @@ export function APIKeyStatsFromJSONTyped(json: any, ignoreDiscriminator: boolean
         'averageSuccessRate': json['averageSuccessRate'],
         'errorRate': json['errorRate'],
         'expiredKeys': json['expiredKeys'],
+        'keysByEnvironment': json['keysByEnvironment'],
         'keysByType': json['keysByType'],
         'keysCreatedMonth': json['keysCreatedMonth'],
         'keysCreatedWeek': json['keysCreatedWeek'],
@@ -183,6 +191,7 @@ export function APIKeyStatsToJSONTyped(value?: Omit<APIKeyStats, '$schema'> | nu
         'averageSuccessRate': value['averageSuccessRate'],
         'errorRate': value['errorRate'],
         'expiredKeys': value['expiredKeys'],
+        'keysByEnvironment': value['keysByEnvironment'],
         'keysByType': value['keysByType'],
         'keysCreatedMonth': value['keysCreatedMonth'],
         'keysCreatedWeek': value['keysCreatedWeek'],

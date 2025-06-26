@@ -15,7 +15,7 @@ import (
 
 // PerformanceOptimizedRBACService wraps the standard RBAC service with caching and optimization
 type PerformanceOptimizedRBACService struct {
-	baseService      Service
+	Service
 	permissionCache  PermissionCache
 	userRoleCache    UserRoleCache
 	hierarchyService *RoleHierarchyService
@@ -127,7 +127,7 @@ func NewPerformanceOptimizedRBACService(
 	}
 
 	return &PerformanceOptimizedRBACService{
-		baseService:      baseService,
+		Service:          baseService,
 		permissionCache:  permissionCache,
 		userRoleCache:    userRoleCache,
 		hierarchyService: hierarchyService,
@@ -136,6 +136,7 @@ func NewPerformanceOptimizedRBACService(
 		metrics: &PerformanceMetrics{
 			HotPermissions: make(map[string]int64),
 			HotUsers:       make(map[string]int64),
+			mu:             sync.RWMutex{},
 		},
 	}
 }
@@ -402,12 +403,12 @@ func (pos *PerformanceOptimizedRBACService) OptimizeCache(ctx context.Context) e
 
 func (pos *PerformanceOptimizedRBACService) computePermission(ctx context.Context, userID xid.ID, resource, action string, orgID *xid.ID) (bool, error) {
 	// Use the base service to compute permission
-	return pos.baseService.HasPermission(ctx, userID.String(), resource, action)
+	return pos.Service.HasPermission(ctx, userID.String(), resource, action)
 }
 
 func (pos *PerformanceOptimizedRBACService) computeUserPermissions(ctx context.Context, userID xid.ID, orgID *xid.ID) ([]*Permission, error) {
 	// Get user roles
-	systemRoles, err := pos.baseService.GetUserSystemRoles(ctx, userID)
+	systemRoles, err := pos.Service.GetUserSystemRoles(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -417,7 +418,7 @@ func (pos *PerformanceOptimizedRBACService) computeUserPermissions(ctx context.C
 
 	// Get permissions from system roles
 	for _, role := range systemRoles {
-		rolePermissions, err := pos.baseService.ListRolePermissions(ctx, role.ID)
+		rolePermissions, err := pos.Service.ListRolePermissions(ctx, role.ID)
 		if err != nil {
 			continue
 		}
@@ -433,10 +434,10 @@ func (pos *PerformanceOptimizedRBACService) computeUserPermissions(ctx context.C
 
 	// Get organization-specific roles if orgID is provided
 	if orgID != nil {
-		orgRoles, err := pos.baseService.GetUserOrganizationRoles(ctx, userID, *orgID)
+		orgRoles, err := pos.Service.GetUserOrganizationRoles(ctx, userID, *orgID)
 		if err == nil {
 			for _, role := range orgRoles {
-				rolePermissions, err := pos.baseService.ListRolePermissions(ctx, role.ID)
+				rolePermissions, err := pos.Service.ListRolePermissions(ctx, role.ID)
 				if err != nil {
 					continue
 				}

@@ -173,6 +173,7 @@ security:
     - "X-Organization-Id"
     - "X-User-Type"
     - "X-Publishable-Key"
+    - "X-Org-ID"
   cors_exposed_headers: ["X-Total-Count", "X-Page-Count"]
   cors_allow_credentials: true
   cors_max_age: 86400

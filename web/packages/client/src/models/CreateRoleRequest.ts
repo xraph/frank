@@ -20,6 +20,13 @@ import {
     RoleTypeToJSON,
     RoleTypeToJSONTyped,
 } from './RoleType';
+import type { UserType } from './UserType';
+import {
+    UserTypeFromJSON,
+    UserTypeFromJSONTyped,
+    UserTypeToJSON,
+    UserTypeToJSONTyped,
+} from './UserType';
 
 /**
  * 
@@ -36,10 +43,10 @@ export interface CreateRoleRequest {
     readonly $schema?: string;
     /**
      * Applicable user types
-     * @type {Array<string>}
+     * @type {Array<UserType>}
      * @memberof CreateRoleRequest
      */
-    applicableUserTypes: Array<string>;
+    applicableUserTypes: Array<UserType>;
     /**
      * Application ID
      * @type {string}
@@ -146,7 +153,7 @@ export function CreateRoleRequestFromJSONTyped(json: any, ignoreDiscriminator: b
         
             ...json,
         '$schema': json['$schema'] == null ? undefined : json['$schema'],
-        'applicableUserTypes': json['applicableUserTypes'],
+        'applicableUserTypes': ((json['applicableUserTypes'] as Array<any>).map(UserTypeFromJSON)),
         'applicationId': json['applicationId'] == null ? undefined : json['applicationId'],
         'color': json['color'] == null ? undefined : json['color'],
         'createdBy': json['createdBy'] == null ? undefined : json['createdBy'],
@@ -175,7 +182,7 @@ export function CreateRoleRequestToJSONTyped(value?: Omit<CreateRoleRequest, '$s
     return {
         
             ...value,
-        'applicableUserTypes': value['applicableUserTypes'],
+        'applicableUserTypes': ((value['applicableUserTypes'] as Array<any>).map(UserTypeToJSON)),
         'applicationId': value['applicationId'],
         'color': value['color'],
         'createdBy': value['createdBy'],

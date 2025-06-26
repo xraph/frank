@@ -1,0 +1,7 @@
+templateName: Frank UI Template
+
+props:
+  - "moduleName"
+
+directories:
+  - "${moduleName}/"

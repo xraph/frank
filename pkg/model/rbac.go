@@ -20,7 +20,7 @@ type Role struct {
 	IsDefault           bool           `json:"isDefault" example:"false" doc:"Whether role is default for new users"`
 	Priority            int            `json:"priority" example:"10" doc:"Role priority for hierarchy"`
 	Color               string         `json:"color,omitempty" example:"#007bff" doc:"Color for UI display"`
-	ApplicableUserTypes []string       `json:"applicableUserTypes" example:"[\"external\", \"end_user\"]" doc:"User types this role applies to"`
+	ApplicableUserTypes []UserType     `json:"applicableUserTypes" example:"[\"external\", \"end_user\"]" doc:"User types this role applies to"`
 	Active              bool           `json:"active" example:"true" doc:"Whether role is active"`
 	ParentID            *xid.ID        `json:"parentId,omitempty" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"Parent role ID for hierarchy"`
 	Metadata            map[string]any `json:"metadata,omitempty" example:"{\"key\":\"value\"}" doc:"Metadata for role display"`
@@ -37,20 +37,20 @@ type Role struct {
 type Permission struct {
 	Base
 	AuditBase
-	Name                string   `json:"name" example:"read:users" doc:"Permission identifier"`
-	DisplayName         string   `json:"displayName,omitempty" example:"Read Users" doc:"Human-readable permission name"`
-	Description         string   `json:"description" example:"Allow reading user information" doc:"Permission description"`
-	Resource            string   `json:"resource" example:"user" doc:"Resource this permission applies to"`
-	Action              string   `json:"action" example:"read" doc:"Action this permission allows"`
-	Category            string   `json:"category" example:"organization" doc:"Permission category"`
-	ApplicableUserTypes []string `json:"applicableUserTypes" example:"[\"internal\", \"external\"]" doc:"User types this permission applies to"`
-	ApplicableContexts  []string `json:"applicableContexts" example:"[\"organization\", \"system\"]" doc:"Contexts where permission is valid"`
-	Conditions          string   `json:"conditions,omitempty" example:"{\"resource.owner\": \"$user.id\"}" doc:"Conditional access rules"`
-	System              bool     `json:"system" example:"false" doc:"Whether permission is system-managed"`
-	Dangerous           bool     `json:"dangerous" example:"false" doc:"Whether permission is dangerous"`
-	RiskLevel           int      `json:"riskLevel" example:"1" doc:"Risk level (1-5)"`
-	Active              bool     `json:"active" example:"true" doc:"Whether permission is active"`
-	PermissionGroup     string   `json:"permissionGroup,omitempty" example:"user_management" doc:"Permission group"`
+	Name                string             `json:"name" example:"read:users" doc:"Permission identifier"`
+	DisplayName         string             `json:"displayName,omitempty" example:"Read Users" doc:"Human-readable permission name"`
+	Description         string             `json:"description" example:"Allow reading user information" doc:"Permission description"`
+	Resource            string             `json:"resource" example:"user" doc:"Resource this permission applies to"`
+	Action              string             `json:"action" example:"read" doc:"Action this permission allows"`
+	Category            PermissionCategory `json:"category" example:"organization" doc:"Permission category"`
+	ApplicableUserTypes []UserType         `json:"applicableUserTypes" example:"[\"internal\", \"external\"]" doc:"User types this permission applies to"`
+	ApplicableContexts  []ContextType      `json:"applicableContexts" example:"[\"organization\", \"system\"]" doc:"Contexts where permission is valid"`
+	Conditions          string             `json:"conditions,omitempty" example:"{\"resource.owner\": \"$user.id\"}" doc:"Conditional access rules"`
+	System              bool               `json:"system" example:"false" doc:"Whether permission is system-managed"`
+	Dangerous           bool               `json:"dangerous" example:"false" doc:"Whether permission is dangerous"`
+	RiskLevel           int                `json:"riskLevel" example:"1" doc:"Risk level (1-5)"`
+	Active              bool               `json:"active" example:"true" doc:"Whether permission is active"`
+	PermissionGroup     PermissionGroup    `json:"permissionGroup,omitempty" example:"user_management" doc:"Permission group"`
 
 	// Relationships
 	Roles        []RoleSummary          `json:"roles,omitempty" doc:"Roles that have this permission"`
@@ -115,70 +115,70 @@ type PermissionAssignment struct {
 
 // CreateRoleRequest represents a request to create a role
 type CreateRoleRequest struct {
-	Name                string   `json:"name" example:"editor" doc:"Role name"`
-	DisplayName         string   `json:"displayName,omitempty" example:"Editor" doc:"Display name"`
-	Description         string   `json:"description,omitempty" example:"Can edit content" doc:"Role description"`
-	RoleType            RoleType `json:"roleType" example:"organization" doc:"Role type"`
-	OrganizationID      *xid.ID  `json:"organizationId,omitempty" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"Organization ID"`
-	ApplicationID       *xid.ID  `json:"applicationId,omitempty" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"Application ID"`
-	IsDefault           bool     `json:"isDefault" example:"false" doc:"Set as default role"`
-	Priority            int      `json:"priority" example:"5" doc:"Role priority"`
-	Color               string   `json:"color,omitempty" example:"#28a745" doc:"Role color"`
-	ApplicableUserTypes []string `json:"applicableUserTypes" example:"[\"external\"]" doc:"Applicable user types"`
-	ParentID            *xid.ID  `json:"parentId,omitempty" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"Parent role ID"`
-	PermissionIDs       []xid.ID `json:"permissionIds,omitempty" example:"[\"01FZS6TV7KP869DR7RXNEHXQKX\"]" doc:"Initial permissions"`
-	Permissions         []string `json:"permissions,omitempty"`
-	CreatedBy           string   `json:"createdBy,omitempty"`
+	Name                string     `json:"name" example:"editor" doc:"Role name"`
+	DisplayName         string     `json:"displayName,omitempty" example:"Editor" doc:"Display name"`
+	Description         string     `json:"description,omitempty" example:"Can edit content" doc:"Role description"`
+	RoleType            RoleType   `json:"roleType" example:"organization" doc:"Role type"`
+	OrganizationID      *xid.ID    `json:"organizationId,omitempty" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"Organization ID"`
+	ApplicationID       *xid.ID    `json:"applicationId,omitempty" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"Application ID"`
+	IsDefault           bool       `json:"isDefault" example:"false" doc:"Set as default role"`
+	Priority            int        `json:"priority" example:"5" doc:"Role priority"`
+	Color               string     `json:"color,omitempty" example:"#28a745" doc:"Role color"`
+	ApplicableUserTypes []UserType `json:"applicableUserTypes" example:"[\"external\"]" doc:"Applicable user types"`
+	ParentID            *xid.ID    `json:"parentId,omitempty" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"Parent role ID"`
+	PermissionIDs       []xid.ID   `json:"permissionIds,omitempty" example:"[\"01FZS6TV7KP869DR7RXNEHXQKX\"]" doc:"Initial permissions"`
+	Permissions         []string   `json:"permissions,omitempty"`
+	CreatedBy           string     `json:"createdBy,omitempty"`
 }
 
 // UpdateRoleRequest represents a request to update a role
 type UpdateRoleRequest struct {
-	Name                string   `json:"name,omitempty" example:"updated-editor" doc:"Updated name"`
-	DisplayName         string   `json:"displayName,omitempty" example:"Updated Editor" doc:"Updated display name"`
-	Description         *string  `json:"description,omitempty" example:"Updated description" doc:"Updated description"`
-	IsDefault           *bool    `json:"isDefault,omitempty" example:"true" doc:"Updated default status"`
-	Priority            *int     `json:"priority,omitempty" example:"10" doc:"Updated priority"`
-	Color               *string  `json:"color,omitempty" example:"#007bff" doc:"Updated color"`
-	ApplicableUserTypes []string `json:"applicableUserTypes,omitempty" doc:"Updated applicable user types"`
-	Active              *bool    `json:"active,omitempty" example:"true" doc:"Updated active status"`
-	ParentID            *xid.ID  `json:"parentId,omitempty" doc:"Updated parent role ID"`
-	ApplicableContexts  []string `json:"applicableContexts,omitempty"`
-	Conditions          *string  `json:"conditions,omitempty"`
-	Dangerous           *bool    `json:"dangerous,omitempty"`
-	RiskLevel           *int     `json:"riskLevel,omitempty"`
-	PermissionGroup     *string  `json:"permissionGroup,omitempty"`
+	Name                string           `json:"name,omitempty" example:"updated-editor" doc:"Updated name"`
+	DisplayName         string           `json:"displayName,omitempty" example:"Updated Editor" doc:"Updated display name"`
+	Description         *string          `json:"description,omitempty" example:"Updated description" doc:"Updated description"`
+	IsDefault           *bool            `json:"isDefault,omitempty" example:"true" doc:"Updated default status"`
+	Priority            *int             `json:"priority,omitempty" example:"10" doc:"Updated priority"`
+	Color               *string          `json:"color,omitempty" example:"#007bff" doc:"Updated color"`
+	ApplicableUserTypes []UserType       `json:"applicableUserTypes,omitempty" doc:"Updated applicable user types"`
+	Active              *bool            `json:"active,omitempty" example:"true" doc:"Updated active status"`
+	ParentID            *xid.ID          `json:"parentId,omitempty" doc:"Updated parent role ID"`
+	ApplicableContexts  []ContextType    `json:"applicableContexts,omitempty"`
+	Conditions          *string          `json:"conditions,omitempty"`
+	Dangerous           *bool            `json:"dangerous,omitempty"`
+	RiskLevel           *int             `json:"riskLevel,omitempty"`
+	PermissionGroup     *PermissionGroup `json:"permissionGroup,omitempty"`
 }
 
 // CreatePermissionRequest represents a request to create a permission
 type CreatePermissionRequest struct {
-	Name                string      `json:"name" example:"create:posts" doc:"Permission identifier"`
-	DisplayName         string      `json:"displayName,omitempty" example:"Create Posts" doc:"Display name"`
-	Description         string      `json:"description" example:"Allow creating blog posts" doc:"Permission description"`
-	Resource            string      `json:"resource" example:"post" doc:"Resource name"`
-	Action              string      `json:"action" example:"create" doc:"Action name"`
-	Category            ContextType `json:"category" example:"content" doc:"Permission category"`
-	ApplicableUserTypes []string    `json:"applicableUserTypes" example:"[\"external\", \"end_user\"]" doc:"Applicable user types"`
-	ApplicableContexts  []string    `json:"applicableContexts" example:"[\"organization\"]" doc:"Applicable contexts"`
-	Conditions          string      `json:"conditions,omitempty" example:"{\"resource.owner\": \"$user.id\"}" doc:"Conditional rules"`
-	Dangerous           bool        `json:"dangerous" example:"false" doc:"Whether permission is dangerous"`
-	RiskLevel           int         `json:"riskLevel" example:"2" doc:"Risk level (1-5)"`
-	PermissionGroup     string      `json:"permissionGroup,omitempty" example:"content_management" doc:"Permission group"`
-	System              bool        `json:"system"`
-	CreatedBy           *string     `json:"createdBy,omitempty"`
+	Name                string             `json:"name" example:"create:posts" doc:"Permission identifier"`
+	DisplayName         string             `json:"displayName,omitempty" example:"Create Posts" doc:"Display name"`
+	Description         string             `json:"description" example:"Allow creating blog posts" doc:"Permission description"`
+	Resource            string             `json:"resource" example:"post" doc:"Resource name"`
+	Action              string             `json:"action" example:"create" doc:"Action name"`
+	Category            PermissionCategory `json:"category" example:"content" doc:"Permission category"`
+	ApplicableUserTypes []UserType         `json:"applicableUserTypes" example:"[\"external\", \"end_user\"]" doc:"Applicable user types"`
+	ApplicableContexts  []ContextType      `json:"applicableContexts" example:"[\"organization\"]" doc:"Applicable contexts"`
+	Conditions          string             `json:"conditions,omitempty" example:"{\"resource.owner\": \"$user.id\"}" doc:"Conditional rules"`
+	Dangerous           bool               `json:"dangerous" example:"false" doc:"Whether permission is dangerous"`
+	RiskLevel           int                `json:"riskLevel" example:"2" doc:"Risk level (1-5)"`
+	PermissionGroup     PermissionGroup    `json:"permissionGroup,omitempty" example:"content_management" doc:"Permission group"`
+	System              bool               `json:"system"`
+	CreatedBy           *string            `json:"createdBy,omitempty"`
 }
 
 // UpdatePermissionRequest represents a request to update a permission
 type UpdatePermissionRequest struct {
-	Name                string   `json:"name,omitempty"`
-	DisplayName         *string  `json:"displayName,omitempty" example:"Updated Create Posts" doc:"Updated display name"`
-	Description         *string  `json:"description,omitempty" example:"Updated description" doc:"Updated description"`
-	ApplicableUserTypes []string `json:"applicableUserTypes,omitempty" doc:"Updated applicable user types"`
-	ApplicableContexts  []string `json:"applicableContexts,omitempty" doc:"Updated applicable contexts"`
-	Conditions          *string  `json:"conditions,omitempty" doc:"Updated conditions"`
-	Dangerous           *bool    `json:"dangerous,omitempty" example:"true" doc:"Updated dangerous status"`
-	RiskLevel           *int     `json:"riskLevel,omitempty" example:"3" doc:"Updated risk level"`
-	Active              *bool    `json:"active,omitempty" example:"true" doc:"Updated active status"`
-	PermissionGroup     *string  `json:"permissionGroup,omitempty" doc:"Updated permission group"`
+	Name                string           `json:"name,omitempty"`
+	DisplayName         *string          `json:"displayName,omitempty" example:"Updated Create Posts" doc:"Updated display name"`
+	Description         *string          `json:"description,omitempty" example:"Updated description" doc:"Updated description"`
+	ApplicableUserTypes []UserType       `json:"applicableUserTypes,omitempty" doc:"Updated applicable user types"`
+	ApplicableContexts  []ContextType    `json:"applicableContexts,omitempty" doc:"Updated applicable contexts"`
+	Conditions          *string          `json:"conditions,omitempty" doc:"Updated conditions"`
+	Dangerous           *bool            `json:"dangerous,omitempty" example:"true" doc:"Updated dangerous status"`
+	RiskLevel           *int             `json:"riskLevel,omitempty" example:"3" doc:"Updated risk level"`
+	Active              *bool            `json:"active,omitempty" example:"true" doc:"Updated active status"`
+	PermissionGroup     *PermissionGroup `json:"permissionGroup,omitempty" doc:"Updated permission group"`
 }
 
 // AssignRoleToUserRequest represents a request to assign a role to a user
@@ -232,13 +232,13 @@ type PermissionListRequest struct {
 	PaginationParams
 	Resource           string              `json:"resource,omitempty" example:"user" doc:"Filter by resource" query:"resource"`
 	Action             string              `json:"action,omitempty" example:"read" doc:"Filter by action" query:"action"`
-	Category           string              `json:"category,omitempty" example:"organization" doc:"Filter by category" query:"category"`
+	Category           PermissionCategory  `json:"category,omitempty" example:"organization" doc:"Filter by category" query:"category"`
 	System             OptionalParam[bool] `json:"system,omitempty" example:"false" doc:"Filter by system status" query:"system"`
 	Dangerous          OptionalParam[bool] `json:"dangerous,omitempty" example:"true" doc:"Filter by dangerous status" query:"dangerous"`
 	RiskLevel          OptionalParam[int]  `json:"riskLevel,omitempty" example:"3" doc:"Filter by risk level" query:"riskLevel"`
 	Active             OptionalParam[bool] `json:"active,omitempty" example:"true" doc:"Filter by active status" query:"active"`
-	PermissionGroup    string              `json:"permissionGroup,omitempty" example:"user_management" doc:"Filter by permission group" query:"permissionGroup"`
-	ApplicableUserType string              `json:"applicableUserType,omitempty" example:"external" doc:"Filter by applicable user type" query:"applicableUserType"`
+	PermissionGroup    PermissionGroup     `json:"permissionGroup,omitempty" example:"user_management" doc:"Filter by permission group" query:"permissionGroup"`
+	ApplicableUserType UserType            `json:"applicableUserType,omitempty" example:"external" doc:"Filter by applicable user type" query:"applicableUserType"`
 	Search             string              `json:"search,omitempty" example:"user" doc:"Search in name/description" query:"search"`
 	IncludeRoles       bool                `json:"includeRoles,omitempty" example:"true" doc:"Include associated roles" query:"includeRoles"`
 }
@@ -363,14 +363,14 @@ type PermissionDependencyNode struct {
 }
 
 type PermissionStats struct {
-	TotalPermissions     int                 `json:"totalPermissions" doc:"Total permissions"`
-	SystemPermissions    int                 `json:"systemPermissions" doc:"System permissions"`
-	CustomPermissions    int                 `json:"customPermissions" doc:"Custom permissions"`
-	DangerousPermissions int                 `json:"dangerousPermissions" doc:"Dangerous permissions"`
-	CategoryBreakdown    map[ContextType]int `json:"categoryBreakdown" doc:"Category breakdown"`
-	ResourceBreakdown    map[string]int      `json:"resourceBreakdown" doc:"Resource breakdown"`
-	RiskLevelBreakdown   map[int]int         `json:"riskLevelBreakdown" doc:"Risk level breakdown"`
-	UnusedPermissions    int                 `json:"unusedPermissions" doc:"Unused permissions"`
+	TotalPermissions     int                        `json:"totalPermissions" doc:"Total permissions"`
+	SystemPermissions    int                        `json:"systemPermissions" doc:"System permissions"`
+	CustomPermissions    int                        `json:"customPermissions" doc:"Custom permissions"`
+	DangerousPermissions int                        `json:"dangerousPermissions" doc:"Dangerous permissions"`
+	CategoryBreakdown    map[PermissionCategory]int `json:"categoryBreakdown" doc:"Category breakdown"`
+	ResourceBreakdown    map[string]int             `json:"resourceBreakdown" doc:"Resource breakdown"`
+	RiskLevelBreakdown   map[int]int                `json:"riskLevelBreakdown" doc:"Risk level breakdown"`
+	UnusedPermissions    int                        `json:"unusedPermissions" doc:"Unused permissions"`
 }
 
 // PermissionUsage represents permission usage statistics
@@ -397,17 +397,17 @@ type ListRolesParams struct {
 // ListPermissionsParams represents parameters for listing permissions
 type ListPermissionsParams struct {
 	PaginationParams
-	Category           ContextType         `json:"category,omitempty"`
+	Category           PermissionCategory  `json:"category,omitempty"`
 	Resource           string              `json:"resource,omitempty"`
 	Action             string              `json:"action,omitempty"`
 	System             OptionalParam[bool] `json:"system,omitempty"`
 	Dangerous          OptionalParam[bool] `json:"dangerous,omitempty"`
 	RiskLevel          OptionalParam[int]  `json:"riskLevel,omitempty"`
-	PermissionGroup    string              `json:"permissionGroup,omitempty"`
+	PermissionGroup    PermissionGroup     `json:"permissionGroup,omitempty"`
 	Active             OptionalParam[bool] `json:"active,omitempty"`
 	CreatedBy          string              `json:"createdBy,omitempty"`
-	ApplicableUserType string              `json:"applicableUserType,omitempty"`
-	ApplicableContext  string              `json:"applicableContext,omitempty"`
+	ApplicableUserType UserType            `json:"applicableUserType,omitempty"`
+	ApplicableContext  ContextType         `json:"applicableContext,omitempty"`
 	IncludeRoles       OptionalParam[bool] `json:"include_roles,omitempty"`
 	Search             string              `json:"search,omitempty"`
 }
@@ -415,15 +415,15 @@ type ListPermissionsParams struct {
 // SearchPermissionsParams represents parameters for searching permissions
 type SearchPermissionsParams struct {
 	PaginationParams
-	Resource         string              `json:"resource,omitempty"`
-	ExactMatch       bool                `json:"exact_match"`
-	Categories       []ContextType       `json:"categories"`
-	Resources        []string            `json:"resources"`
-	Actions          []string            `json:"actions"`
-	RiskLevels       []int               `json:"riskLevels"`
-	UserTypes        []string            `json:"userTypes"`
-	Contexts         []string            `json:"contexts"`
-	IncludeSystem    OptionalParam[bool] `json:"includeSystem,omitempty"`
-	IncludeDangerous OptionalParam[bool] `json:"includeDangerous,omitempty"`
-	ExcludeInactive  OptionalParam[bool] `json:"excludeInactive,omitempty"`
+	Resource         string               `json:"resource,omitempty"`
+	ExactMatch       bool                 `json:"exact_match"`
+	Categories       []PermissionCategory `json:"categories"`
+	Resources        []string             `json:"resources"`
+	Actions          []string             `json:"actions"`
+	RiskLevels       []int                `json:"riskLevels"`
+	UserTypes        []UserType           `json:"userTypes"`
+	Contexts         []ContextType        `json:"contexts"`
+	IncludeSystem    OptionalParam[bool]  `json:"includeSystem,omitempty"`
+	IncludeDangerous OptionalParam[bool]  `json:"includeDangerous,omitempty"`
+	ExcludeInactive  OptionalParam[bool]  `json:"excludeInactive,omitempty"`
 }

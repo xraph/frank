@@ -63,6 +63,7 @@ func (s *providerCatalogService) SeedProviderCatalog(ctx context.Context) error 
 			IconURL:     "https://developers.google.com/identity/images/g-logo.png",
 			Category:    "social",
 			Popular:     true,
+			Active:      true,
 			Description: "Sign in with your Google account",
 			ConfigTemplate: map[string]any{
 				"issuer":      "https://accounts.google.com",
@@ -84,6 +85,7 @@ func (s *providerCatalogService) SeedProviderCatalog(ctx context.Context) error 
 			IconURL:     "https://learn.microsoft.com/en-us/azure/active-directory/develop/media/howto-add-branding-in-azure-ad-apps/ms-symbollockup_mssymbol_19.png",
 			Category:    "enterprise",
 			Popular:     true,
+			Active:      true,
 			Description: "Sign in with your Microsoft account or Azure AD",
 			ConfigTemplate: map[string]any{
 				"issuer":      "https://login.microsoftonline.com/common/v2.0",
@@ -105,6 +107,7 @@ func (s *providerCatalogService) SeedProviderCatalog(ctx context.Context) error 
 			IconURL:     "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png",
 			Category:    "developer",
 			Popular:     true,
+			Active:      true,
 			Description: "Sign in with your GitHub account",
 			ConfigTemplate: map[string]any{
 				"authUrl":     "https://github.com/login/oauth/authorize",
@@ -124,6 +127,7 @@ func (s *providerCatalogService) SeedProviderCatalog(ctx context.Context) error 
 			IconURL:     "https://about.gitlab.com/images/press/logo/png/gitlab-icon-rgb.png",
 			Category:    "developer",
 			Popular:     true,
+			Active:      true,
 			Description: "Sign in with your GitLab account",
 			ConfigTemplate: map[string]any{
 				"issuer":      "https://gitlab.com",
@@ -144,6 +148,7 @@ func (s *providerCatalogService) SeedProviderCatalog(ctx context.Context) error 
 			IconURL:     "https://assets-global.website-files.com/6257adef93867e50d84d30e2/636e0a6ca814282eca7172c6_icon_clyde_white_RGB.svg",
 			Category:    "social",
 			Popular:     false,
+			Active:      true,
 			Description: "Sign in with your Discord account",
 			ConfigTemplate: map[string]any{
 				"authUrl":     "https://discord.com/api/oauth2/authorize",
@@ -163,6 +168,7 @@ func (s *providerCatalogService) SeedProviderCatalog(ctx context.Context) error 
 			IconURL:     "https://developer.apple.com/assets/elements/icons/sign-in-with-apple/sign-in-with-apple.svg",
 			Category:    "social",
 			Popular:     true,
+			Active:      true,
 			Description: "Sign in with your Apple ID",
 			ConfigTemplate: map[string]any{
 				"issuer":   "https://appleid.apple.com",
@@ -183,6 +189,7 @@ func (s *providerCatalogService) SeedProviderCatalog(ctx context.Context) error 
 			IconURL:     "https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/SAML_Logo.svg/256px-SAML_Logo.svg.png",
 			Category:    "enterprise",
 			Popular:     true,
+			Active:      true,
 			Description: "Configure any SAML 2.0 compliant identity provider",
 			ConfigTemplate: map[string]any{
 				"nameIdFormat":        "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress",

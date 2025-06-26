@@ -70,6 +70,12 @@ export interface OrganizationSummary {
      */
     plan: string;
     /**
+     * Organization role
+     * @type {string}
+     * @memberof OrganizationSummary
+     */
+    role: string;
+    /**
      * Organization slug
      * @type {string}
      * @memberof OrganizationSummary
@@ -89,6 +95,7 @@ export function instanceOfOrganizationSummary(value: object): value is Organizat
     if (!('name' in value) || value['name'] === undefined) return false;
     if (!('orgType' in value) || value['orgType'] === undefined) return false;
     if (!('plan' in value) || value['plan'] === undefined) return false;
+    if (!('role' in value) || value['role'] === undefined) return false;
     if (!('slug' in value) || value['slug'] === undefined) return false;
     return true;
 }
@@ -110,6 +117,7 @@ export function OrganizationSummaryFromJSONTyped(json: any, ignoreDiscriminator:
         'name': json['name'],
         'orgType': OrgTypeFromJSON(json['orgType']),
         'plan': json['plan'],
+        'role': json['role'],
         'slug': json['slug'],
     };
 }
@@ -132,6 +140,7 @@ export function OrganizationSummaryToJSONTyped(value?: OrganizationSummary | nul
         'name': value['name'],
         'orgType': OrgTypeToJSON(value['orgType']),
         'plan': value['plan'],
+        'role': value['role'],
         'slug': value['slug'],
     };
 }

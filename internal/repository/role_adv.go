@@ -27,17 +27,17 @@ var (
 
 // CreateRoleRequest represents the request structure for RoleService
 type CreateRoleRequest struct {
-	Name                string         `json:"name"`
-	DisplayName         string         `json:"display_name"`
-	Description         string         `json:"description"`
-	RoleType            model.RoleType `json:"role_type"` // system, organization, application
-	OrganizationID      *xid.ID        `json:"organization_id,omitempty"`
-	ApplicationID       *xid.ID        `json:"application_id,omitempty"`
-	ApplicableUserTypes []string       `json:"applicable_user_types"`
-	Permissions         []string       `json:"permissions"`
-	Priority            int            `json:"priority"`
-	Color               string         `json:"color,omitempty"`
-	CreatedBy           string         `json:"created_by,omitempty"`
+	Name                string           `json:"name"`
+	DisplayName         string           `json:"display_name"`
+	Description         string           `json:"description"`
+	RoleType            model.RoleType   `json:"role_type"` // system, organization, application
+	OrganizationID      *xid.ID          `json:"organization_id,omitempty"`
+	ApplicationID       *xid.ID          `json:"application_id,omitempty"`
+	ApplicableUserTypes []model.UserType `json:"applicable_user_types"`
+	Permissions         []string         `json:"permissions"`
+	Priority            int              `json:"priority"`
+	Color               string           `json:"color,omitempty"`
+	CreatedBy           string           `json:"created_by,omitempty"`
 }
 
 // ================================
@@ -431,7 +431,7 @@ func (r *roleRepository) AssignSystemRole(ctx context.Context, userID xid.ID, ro
 		Where(
 			entUserRole.UserID(userID),
 			entUserRole.RoleID(role.ID),
-			entUserRole.ContextTypeEQ(model.ContextTypePlatform),
+			entUserRole.ContextTypeEQ(model.ContextPlatform),
 			entUserRole.Active(true),
 		).
 		Exist(ctx)
@@ -446,7 +446,7 @@ func (r *roleRepository) AssignSystemRole(ctx context.Context, userID xid.ID, ro
 	_, err = r.client.UserRole.Create().
 		SetUserID(userID).
 		SetRoleID(role.ID).
-		SetContextType(model.ContextTypePlatform).
+		SetContextType(model.ContextPlatform).
 		SetActive(true).
 		SetAssignedAt(time.Now()).
 		Save(ctx)
@@ -476,7 +476,7 @@ func (r *roleRepository) AssignOrganizationRole(ctx context.Context, userID xid.
 		Where(
 			entUserRole.UserID(userID),
 			entUserRole.RoleID(role.ID),
-			entUserRole.ContextTypeEQ(model.ContextTypeOrganization),
+			entUserRole.ContextTypeEQ(model.ContextOrganization),
 			entUserRole.ContextID(orgID),
 			entUserRole.Active(true),
 		).
@@ -492,7 +492,7 @@ func (r *roleRepository) AssignOrganizationRole(ctx context.Context, userID xid.
 	_, err = r.client.UserRole.Create().
 		SetUserID(userID).
 		SetRoleID(role.ID).
-		SetContextType(model.ContextTypeOrganization).
+		SetContextType(model.ContextOrganization).
 		SetContextID(orgID).
 		SetActive(true).
 		SetAssignedAt(time.Now()).
@@ -523,7 +523,7 @@ func (r *roleRepository) AssignApplicationRole(ctx context.Context, userID xid.I
 		Where(
 			entUserRole.UserID(userID),
 			entUserRole.RoleID(role.ID),
-			entUserRole.ContextTypeEQ(model.ContextTypeApplication),
+			entUserRole.ContextTypeEQ(model.ContextApplication),
 			entUserRole.ContextID(orgID),
 			entUserRole.Active(true),
 		).
@@ -539,7 +539,7 @@ func (r *roleRepository) AssignApplicationRole(ctx context.Context, userID xid.I
 	_, err = r.client.UserRole.Create().
 		SetUserID(userID).
 		SetRoleID(role.ID).
-		SetContextType(model.ContextTypeApplication).
+		SetContextType(model.ContextApplication).
 		SetContextID(orgID).
 		SetActive(true).
 		SetAssignedAt(time.Now()).
@@ -576,7 +576,7 @@ func (r *roleRepository) GetUserSystemRoles(ctx context.Context, userID xid.ID) 
 	userRoles, err := r.client.UserRole.Query().
 		Where(
 			entUserRole.UserID(userID),
-			entUserRole.ContextTypeEQ(model.ContextTypePlatform),
+			entUserRole.ContextTypeEQ(model.ContextPlatform),
 			entUserRole.Active(true),
 		).
 		WithRole().
@@ -600,7 +600,7 @@ func (r *roleRepository) GetUserOrganizationRoles(ctx context.Context, userID xi
 	userRoles, err := r.client.UserRole.Query().
 		Where(
 			entUserRole.UserID(userID),
-			entUserRole.ContextTypeEQ(model.ContextTypeOrganization),
+			entUserRole.ContextTypeEQ(model.ContextOrganization),
 			entUserRole.ContextID(orgID),
 			entUserRole.Active(true),
 		).
@@ -625,7 +625,7 @@ func (r *roleRepository) GetUserApplicationRoles(ctx context.Context, userID xid
 	userRoles, err := r.client.UserRole.Query().
 		Where(
 			entUserRole.UserID(userID),
-			entUserRole.ContextTypeEQ(model.ContextTypeApplication),
+			entUserRole.ContextTypeEQ(model.ContextApplication),
 			entUserRole.ContextID(orgID),
 			entUserRole.Active(true),
 		).

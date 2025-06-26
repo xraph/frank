@@ -6,10 +6,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/go-redis/redis/v8"
 	"github.com/juicycleff/frank/pkg/data"
 	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/juicycleff/frank/pkg/model"
+	"github.com/redis/go-redis/v9"
 )
 
 // SessionStore MFA session storage interface

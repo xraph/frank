@@ -288,7 +288,7 @@ export class ConfigManager {
      */
     setOrganization(organization: OrganizationConfig): void {
         this.config.organization = organization;
-        this.config.organizationId = organization.id;
+        this.config.projectId = organization.id;
 
         // Create or update organization manager
         if (!this.organizationManager) {

@@ -14,9 +14,16 @@ import type {
     Organization,
     OrganizationSettings,
     PasskeySummary,
+    PasswordResetConfirmRequest,
+    PasswordResetConfirmResponse,
+    PasswordResetResponse,
+    ResendVerificationRequest,
+    ResendVerificationResponse,
     Session,
     User,
     UserType,
+    ValidateTokenInputBody,
+    ValidateTokenResponse, VerificationRequest, VerificationResponse,
 } from '@frank-auth/client';
 
 import type {
@@ -27,7 +34,7 @@ import type {
     OrganizationConfig,
     Theme,
 } from '../config';
-import {FrankAuth, FrankOrganization, FrankSession, FrankUser} from "@frank-auth/sdk";
+import {FrankAuth, FrankOrganization, FrankSession, FrankUser, PasswordResetRequest} from "@frank-auth/sdk";
 
 // ============================================================================
 // Auth State Types
@@ -56,6 +63,12 @@ export interface AuthState {
 
     // Feature availability
     features: AuthFeatures;
+
+
+    frankAuth?: FrankAuth
+    frankSess?: FrankSession
+    frankOrg?: FrankOrganization
+    frankUser?: FrankUser
 }
 
 /**
@@ -108,6 +121,8 @@ export interface AuthContextMethods {
     signIn: (params: SignInParams) => Promise<SignInResult>;
     signUp: (params: SignUpParams) => Promise<SignUpResult>;
     signOut: () => Promise<void>;
+    resendVerification: (request: ResendVerificationRequest) => Promise<ResendVerificationResponse>
+    verifyIdentity: (type: 'email' | 'phone', request: VerificationRequest) => Promise<VerificationResponse>
 
     // Session management
     createSession: (token: string) => Promise<Session>;
@@ -124,16 +139,17 @@ export interface AuthContextMethods {
     // Reload data
     reload: () => Promise<void>;
 
-    frankAuth?: FrankAuth
-    frankSess?: FrankSession
-    frankOrg?: FrankOrganization
-    frankUser?: FrankUser
+    // Recovery
+    resetPassword: (params: PasswordResetConfirmRequest) => Promise<PasswordResetConfirmResponse>
+    requestPasswordReset: (request: PasswordResetRequest) => Promise<PasswordResetResponse>
+    validateToken: (request: ValidateTokenInputBody) => Promise<ValidateTokenResponse>
 }
 
 /**
  * Authentication context value
  */
-export interface AuthContextValue extends AuthState, AuthContextMethods {}
+export interface AuthContextValue extends AuthState, AuthContextMethods {
+}
 
 // ============================================================================
 // Authentication Method Parameters
@@ -237,6 +253,8 @@ export interface ConfigState {
     isLoaded: boolean;
     config: FrankAuthUIConfig;
     publishableKey: string;
+    secretKey?: string;
+    projectId?: string;
     userType: UserType;
     apiUrl: string;
     frontendUrl: string;
@@ -276,7 +294,8 @@ export interface ConfigContextMethods {
 /**
  * Configuration context value
  */
-export interface ConfigContextValue extends ConfigState, ConfigContextMethods {}
+export interface ConfigContextValue extends ConfigState, ConfigContextMethods {
+}
 
 // ============================================================================
 // Theme Context Types
@@ -318,7 +337,8 @@ export interface ThemeContextMethods {
 /**
  * Theme context value
  */
-export interface ThemeContextValue extends ThemeState, ThemeContextMethods {}
+export interface ThemeContextValue extends ThemeState, ThemeContextMethods {
+}
 
 /**
  * Organization branding configuration
@@ -345,9 +365,10 @@ export interface OrganizationBranding {
 export interface AuthProviderProps {
     children: ReactNode;
     publishableKey: string;
+    secretKey?: string;
     userType?: UserType;
     apiUrl?: string;
-    organizationId?: string;
+    projectId?: string;
     initialState?: Partial<AuthState>;
     onError?: (error: AuthError) => void;
     onSignIn?: (user: User) => void;
@@ -404,7 +425,8 @@ export interface SessionContextMethods {
 /**
  * Session context value
  */
-export interface SessionContextValue extends SessionState, SessionContextMethods {}
+export interface SessionContextValue extends SessionState, SessionContextMethods {
+}
 
 // ============================================================================
 // Organization Types
@@ -459,7 +481,8 @@ export interface OrganizationContextMethods {
 /**
  * Organization context value
  */
-export interface OrganizationContextValue extends OrganizationState, OrganizationContextMethods {}
+export interface OrganizationContextValue extends OrganizationState, OrganizationContextMethods {
+}
 
 /**
  * Create organization parameters
@@ -470,6 +493,7 @@ export interface CreateOrganizationParams {
     description?: string;
     logoUrl?: string;
     websiteUrl?: string;
+    planId?: string;
     settings?: Partial<OrganizationSettings>;
 }
 
@@ -536,7 +560,8 @@ export interface PermissionContextMethods {
 /**
  * Permission context value
  */
-export interface PermissionContextValue extends PermissionState, PermissionContextMethods {}
+export interface PermissionContextValue extends PermissionState, PermissionContextMethods {
+}
 
 // ============================================================================
 // Export all types

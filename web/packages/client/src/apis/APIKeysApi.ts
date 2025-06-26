@@ -19,6 +19,7 @@ import type {
   APIKeyExportRequest,
   APIKeyExportResponse,
   APIKeyStats,
+  APIKeyType,
   APIKeyUsage,
   BulkAPIKeyOperationRequest,
   BulkAPIKeyOperationResponse,
@@ -27,6 +28,7 @@ import type {
   CreateAPIKeyRequest,
   CreateAPIKeyResponse,
   EmptyOutputBody,
+  Environment,
   GetGlobalActivityStats400Response,
   PaginatedOutputAPIKeyActivity,
   PaginatedOutputAPIKeySummary,
@@ -45,6 +47,8 @@ import {
     APIKeyExportResponseToJSON,
     APIKeyStatsFromJSON,
     APIKeyStatsToJSON,
+    APIKeyTypeFromJSON,
+    APIKeyTypeToJSON,
     APIKeyUsageFromJSON,
     APIKeyUsageToJSON,
     BulkAPIKeyOperationRequestFromJSON,
@@ -61,6 +65,8 @@ import {
     CreateAPIKeyResponseToJSON,
     EmptyOutputBodyFromJSON,
     EmptyOutputBodyToJSON,
+    EnvironmentFromJSON,
+    EnvironmentToJSON,
     GetGlobalActivityStats400ResponseFromJSON,
     GetGlobalActivityStats400ResponseToJSON,
     PaginatedOutputAPIKeyActivityFromJSON,
@@ -137,6 +143,7 @@ export interface GetAPIKeyActivityRequest {
     orderBy?: Array<string> | null;
     page?: number;
     keyId?: string;
+    publicKey?: string;
     action?: string;
     endpoint?: string;
     method?: string;
@@ -169,7 +176,8 @@ export interface ListAPIKeysRequest {
     page?: number;
     organizationId?: string;
     userId?: string;
-    type?: string;
+    type?: APIKeyType;
+    environment?: Environment;
     active?: boolean;
     expired?: boolean;
     used?: boolean;
@@ -378,9 +386,16 @@ export class APIKeysApi extends runtime.BaseAPI {
      * Create a new API key for an organization
      * Create API key
      */
-    async createAPIKey(requestParameters: CreateAPIKeyOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<CreateAPIKeyResponse> {
+    async createAPIKey(requestParameters: CreateAPIKeyOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<CreateAPIKeyResponse | null | undefined > {
         const response = await this.createAPIKeyRaw(requestParameters, initOverrides);
-        return await response.value();
+        switch (response.raw.status) {
+            case 200:
+                return await response.value();
+            case 201:
+                return null;
+            default:
+                return await response.value();
+        }
     }
 
     /**
@@ -632,6 +647,10 @@ export class APIKeysApi extends runtime.BaseAPI {
             queryParameters['keyId'] = requestParameters['keyId'];
         }
 
+        if (requestParameters['publicKey'] != null) {
+            queryParameters['publicKey'] = requestParameters['publicKey'];
+        }
+
         if (requestParameters['action'] != null) {
             queryParameters['action'] = requestParameters['action'];
         }
@@ -822,6 +841,10 @@ export class APIKeysApi extends runtime.BaseAPI {
 
         if (requestParameters['type'] != null) {
             queryParameters['type'] = requestParameters['type'];
+        }
+
+        if (requestParameters['environment'] != null) {
+            queryParameters['environment'] = requestParameters['environment'];
         }
 
         if (requestParameters['active'] != null) {

@@ -96,23 +96,27 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		Type: "ApiKey",
 		Fields: map[string]*sqlgraph.FieldSpec{
-			apikey.FieldCreatedAt:      {Type: field.TypeTime, Column: apikey.FieldCreatedAt},
-			apikey.FieldUpdatedAt:      {Type: field.TypeTime, Column: apikey.FieldUpdatedAt},
-			apikey.FieldDeletedAt:      {Type: field.TypeTime, Column: apikey.FieldDeletedAt},
-			apikey.FieldName:           {Type: field.TypeString, Column: apikey.FieldName},
-			apikey.FieldKey:            {Type: field.TypeString, Column: apikey.FieldKey},
-			apikey.FieldHashedKey:      {Type: field.TypeString, Column: apikey.FieldHashedKey},
-			apikey.FieldUserID:         {Type: field.TypeString, Column: apikey.FieldUserID},
-			apikey.FieldOrganizationID: {Type: field.TypeString, Column: apikey.FieldOrganizationID},
-			apikey.FieldType:           {Type: field.TypeString, Column: apikey.FieldType},
-			apikey.FieldActive:         {Type: field.TypeBool, Column: apikey.FieldActive},
-			apikey.FieldPermissions:    {Type: field.TypeJSON, Column: apikey.FieldPermissions},
-			apikey.FieldScopes:         {Type: field.TypeJSON, Column: apikey.FieldScopes},
-			apikey.FieldIPWhitelist:    {Type: field.TypeJSON, Column: apikey.FieldIPWhitelist},
-			apikey.FieldRateLimits:     {Type: field.TypeJSON, Column: apikey.FieldRateLimits},
-			apikey.FieldMetadata:       {Type: field.TypeJSON, Column: apikey.FieldMetadata},
-			apikey.FieldLastUsed:       {Type: field.TypeTime, Column: apikey.FieldLastUsed},
-			apikey.FieldExpiresAt:      {Type: field.TypeTime, Column: apikey.FieldExpiresAt},
+			apikey.FieldCreatedAt:       {Type: field.TypeTime, Column: apikey.FieldCreatedAt},
+			apikey.FieldUpdatedAt:       {Type: field.TypeTime, Column: apikey.FieldUpdatedAt},
+			apikey.FieldDeletedAt:       {Type: field.TypeTime, Column: apikey.FieldDeletedAt},
+			apikey.FieldName:            {Type: field.TypeString, Column: apikey.FieldName},
+			apikey.FieldPublicKey:       {Type: field.TypeString, Column: apikey.FieldPublicKey},
+			apikey.FieldSecretKey:       {Type: field.TypeString, Column: apikey.FieldSecretKey},
+			apikey.FieldHashedSecretKey: {Type: field.TypeString, Column: apikey.FieldHashedSecretKey},
+			apikey.FieldKey:             {Type: field.TypeString, Column: apikey.FieldKey},
+			apikey.FieldHashedKey:       {Type: field.TypeString, Column: apikey.FieldHashedKey},
+			apikey.FieldUserID:          {Type: field.TypeString, Column: apikey.FieldUserID},
+			apikey.FieldOrganizationID:  {Type: field.TypeString, Column: apikey.FieldOrganizationID},
+			apikey.FieldType:            {Type: field.TypeEnum, Column: apikey.FieldType},
+			apikey.FieldEnvironment:     {Type: field.TypeEnum, Column: apikey.FieldEnvironment},
+			apikey.FieldActive:          {Type: field.TypeBool, Column: apikey.FieldActive},
+			apikey.FieldPermissions:     {Type: field.TypeJSON, Column: apikey.FieldPermissions},
+			apikey.FieldScopes:          {Type: field.TypeJSON, Column: apikey.FieldScopes},
+			apikey.FieldIPWhitelist:     {Type: field.TypeJSON, Column: apikey.FieldIPWhitelist},
+			apikey.FieldRateLimits:      {Type: field.TypeJSON, Column: apikey.FieldRateLimits},
+			apikey.FieldMetadata:        {Type: field.TypeJSON, Column: apikey.FieldMetadata},
+			apikey.FieldLastUsed:        {Type: field.TypeTime, Column: apikey.FieldLastUsed},
+			apikey.FieldExpiresAt:       {Type: field.TypeTime, Column: apikey.FieldExpiresAt},
 		},
 	}
 	graph.Nodes[2] = &sqlgraph.Node{
@@ -2447,6 +2451,21 @@ func (f *ApiKeyFilter) WhereName(p entql.StringP) {
 	f.Where(p.Field(apikey.FieldName))
 }
 
+// WherePublicKey applies the entql string predicate on the public_key field.
+func (f *ApiKeyFilter) WherePublicKey(p entql.StringP) {
+	f.Where(p.Field(apikey.FieldPublicKey))
+}
+
+// WhereSecretKey applies the entql string predicate on the secret_key field.
+func (f *ApiKeyFilter) WhereSecretKey(p entql.StringP) {
+	f.Where(p.Field(apikey.FieldSecretKey))
+}
+
+// WhereHashedSecretKey applies the entql string predicate on the hashed_secret_key field.
+func (f *ApiKeyFilter) WhereHashedSecretKey(p entql.StringP) {
+	f.Where(p.Field(apikey.FieldHashedSecretKey))
+}
+
 // WhereKey applies the entql string predicate on the key field.
 func (f *ApiKeyFilter) WhereKey(p entql.StringP) {
 	f.Where(p.Field(apikey.FieldKey))
@@ -2470,6 +2489,11 @@ func (f *ApiKeyFilter) WhereOrganizationID(p entql.StringP) {
 // WhereType applies the entql string predicate on the type field.
 func (f *ApiKeyFilter) WhereType(p entql.StringP) {
 	f.Where(p.Field(apikey.FieldType))
+}
+
+// WhereEnvironment applies the entql string predicate on the environment field.
+func (f *ApiKeyFilter) WhereEnvironment(p entql.StringP) {
+	f.Where(p.Field(apikey.FieldEnvironment))
 }
 
 // WhereActive applies the entql bool predicate on the active field.

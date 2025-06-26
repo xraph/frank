@@ -33,6 +33,12 @@ export interface LoginRequest {
      */
     deviceId?: string;
     /**
+     * Device name
+     * @type {string}
+     * @memberof LoginRequest
+     */
+    deviceName?: string;
+    /**
      * User email address
      * @type {string}
      * @memberof LoginRequest
@@ -51,6 +57,12 @@ export interface LoginRequest {
      */
     location?: string;
     /**
+     * MFA verification code
+     * @type {string}
+     * @memberof LoginRequest
+     */
+    mfaCode?: string;
+    /**
      * MFA method used (totp, sms, email)
      * @type {string}
      * @memberof LoginRequest
@@ -62,6 +74,18 @@ export interface LoginRequest {
      * @memberof LoginRequest
      */
     mfaToken?: string;
+    /**
+     * Organization ID
+     * @type {string}
+     * @memberof LoginRequest
+     */
+    organizationId?: string;
+    /**
+     * Organization slug
+     * @type {string}
+     * @memberof LoginRequest
+     */
+    organizationSlug?: string;
     /**
      * User password (optional for passwordless)
      * @type {string}
@@ -128,11 +152,15 @@ export function LoginRequestFromJSONTyped(json: any, ignoreDiscriminator: boolea
             ...json,
         '$schema': json['$schema'] == null ? undefined : json['$schema'],
         'deviceId': json['deviceId'] == null ? undefined : json['deviceId'],
+        'deviceName': json['deviceName'] == null ? undefined : json['deviceName'],
         'email': json['email'],
         'ipAddress': json['ipAddress'] == null ? undefined : json['ipAddress'],
         'location': json['location'] == null ? undefined : json['location'],
+        'mfaCode': json['mfaCode'] == null ? undefined : json['mfaCode'],
         'mfaMethod': json['mfaMethod'] == null ? undefined : json['mfaMethod'],
         'mfaToken': json['mfaToken'] == null ? undefined : json['mfaToken'],
+        'organizationId': json['organizationId'] == null ? undefined : json['organizationId'],
+        'organizationSlug': json['organizationSlug'] == null ? undefined : json['organizationSlug'],
         'password': json['password'] == null ? undefined : json['password'],
         'phoneNumber': json['phoneNumber'] == null ? undefined : json['phoneNumber'],
         'provider': json['provider'] == null ? undefined : json['provider'],
@@ -156,11 +184,15 @@ export function LoginRequestToJSONTyped(value?: Omit<LoginRequest, '$schema'> | 
         
             ...value,
         'deviceId': value['deviceId'],
+        'deviceName': value['deviceName'],
         'email': value['email'],
         'ipAddress': value['ipAddress'],
         'location': value['location'],
+        'mfaCode': value['mfaCode'],
         'mfaMethod': value['mfaMethod'],
         'mfaToken': value['mfaToken'],
+        'organizationId': value['organizationId'],
+        'organizationSlug': value['organizationSlug'],
         'password': value['password'],
         'phoneNumber': value['phoneNumber'],
         'provider': value['provider'],

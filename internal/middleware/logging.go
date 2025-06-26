@@ -298,7 +298,7 @@ func APILogging(logger logging.Logger) func(http.Handler) http.Handler {
 	config.RequestHeaders = append(config.RequestHeaders,
 		"Accept-Encoding",
 		"Content-Length",
-		"X-Organization-ID",
+		"X-Org-ID",
 		"X-Client-Version",
 	)
 	config.ResponseHeaders = append(config.ResponseHeaders,

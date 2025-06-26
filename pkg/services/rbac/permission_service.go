@@ -28,8 +28,8 @@ type PermissionService interface {
 	SearchPermissions(ctx context.Context, query string, params model.SearchPermissionsParams) (*model.PaginatedOutput[*model.Permission], error)
 
 	// Permission categorization
-	GetPermissionsByCategory(ctx context.Context, category model.ContextType, params model.ListPermissionsParams) (*model.PaginatedOutput[*model.Permission], error)
-	GetPermissionsByGroup(ctx context.Context, group string, params model.ListPermissionsParams) (*model.PaginatedOutput[*model.Permission], error)
+	GetPermissionsByCategory(ctx context.Context, category model.PermissionCategory, params model.ListPermissionsParams) (*model.PaginatedOutput[*model.Permission], error)
+	GetPermissionsByGroup(ctx context.Context, group model.PermissionGroup, params model.ListPermissionsParams) (*model.PaginatedOutput[*model.Permission], error)
 	GetPermissionsByResource(ctx context.Context, resource string, params model.ListPermissionsParams) (*model.PaginatedOutput[*model.Permission], error)
 	GetSystemPermissions(ctx context.Context, params model.ListPermissionsParams) (*model.PaginatedOutput[*model.Permission], error)
 	GetDangerousPermissions(ctx context.Context, params model.ListPermissionsParams) (*model.PaginatedOutput[*model.Permission], error)
@@ -52,10 +52,10 @@ type PermissionService interface {
 
 	// Permission groups
 	ListPermissionGroups(ctx context.Context) ([]model.PermissionGroupSummary, error)
-	GetPermissionGroup(ctx context.Context, groupName string) (*model.PermissionGroupSummary, error)
+	GetPermissionGroup(ctx context.Context, groupName model.PermissionGroup) (*model.PermissionGroupSummary, error)
 	CreatePermissionGroup(ctx context.Context, input CreatePermissionGroupInput) (*model.PermissionGroupSummary, error)
-	UpdatePermissionGroup(ctx context.Context, groupName string, input UpdatePermissionGroupInput) (*model.PermissionGroupSummary, error)
-	DeletePermissionGroup(ctx context.Context, groupName string) error
+	UpdatePermissionGroup(ctx context.Context, groupName model.PermissionGroup, input UpdatePermissionGroupInput) (*model.PermissionGroupSummary, error)
+	DeletePermissionGroup(ctx context.Context, groupName model.PermissionGroup) error
 
 	// Permission analysis
 	GetPermissionStats(ctx context.Context) (*model.PermissionStats, error)
@@ -347,7 +347,7 @@ func (s *permissionService) SearchPermissions(ctx context.Context, query string,
 
 // Permission categorization
 
-func (s *permissionService) GetPermissionsByCategory(ctx context.Context, category model.ContextType, params model.ListPermissionsParams) (*model.PaginatedOutput[*model.Permission], error) {
+func (s *permissionService) GetPermissionsByCategory(ctx context.Context, category model.PermissionCategory, params model.ListPermissionsParams) (*model.PaginatedOutput[*model.Permission], error) {
 	result, err := s.permissionRepo.GetByCategory(ctx, category, convertListPermissionDTOToRepo(params))
 	if err != nil {
 		return nil, fmt.Errorf("getting permissions by category: %w", err)
@@ -365,7 +365,7 @@ func (s *permissionService) GetPermissionsByCategory(ctx context.Context, catego
 	}, nil
 }
 
-func (s *permissionService) GetPermissionsByGroup(ctx context.Context, group string, params model.ListPermissionsParams) (*model.PaginatedOutput[*model.Permission], error) {
+func (s *permissionService) GetPermissionsByGroup(ctx context.Context, group model.PermissionGroup, params model.ListPermissionsParams) (*model.PaginatedOutput[*model.Permission], error) {
 	result, err := s.permissionRepo.GetByGroup(ctx, group, convertListPermissionDTOToRepo(params))
 	if err != nil {
 		return nil, fmt.Errorf("getting permissions by group: %w", err)
@@ -865,7 +865,7 @@ func (s *permissionService) convertEntPermissionToModel(entPermission *ent.Permi
 		Description:         entPermission.Description,
 		Resource:            entPermission.Resource,
 		Action:              entPermission.Action,
-		Category:            string(entPermission.Category),
+		Category:            entPermission.Category,
 		ApplicableUserTypes: entPermission.ApplicableUserTypes,
 		ApplicableContexts:  entPermission.ApplicableContexts,
 		Conditions:          entPermission.Conditions,
@@ -884,7 +884,7 @@ func (s *permissionService) ListPermissionGroups(ctx context.Context) ([]model.P
 	return []model.PermissionGroupSummary{}, nil
 }
 
-func (s *permissionService) GetPermissionGroup(ctx context.Context, groupName string) (*model.PermissionGroupSummary, error) {
+func (s *permissionService) GetPermissionGroup(ctx context.Context, groupName model.PermissionGroup) (*model.PermissionGroupSummary, error) {
 	return nil, errors.New(errors.CodeNotImplemented, "permission groups not implemented")
 }
 
@@ -892,11 +892,11 @@ func (s *permissionService) CreatePermissionGroup(ctx context.Context, input Cre
 	return nil, errors.New(errors.CodeNotImplemented, "permission groups not implemented")
 }
 
-func (s *permissionService) UpdatePermissionGroup(ctx context.Context, groupName string, input UpdatePermissionGroupInput) (*model.PermissionGroupSummary, error) {
+func (s *permissionService) UpdatePermissionGroup(ctx context.Context, groupName model.PermissionGroup, input UpdatePermissionGroupInput) (*model.PermissionGroupSummary, error) {
 	return nil, errors.New(errors.CodeNotImplemented, "permission groups not implemented")
 }
 
-func (s *permissionService) DeletePermissionGroup(ctx context.Context, groupName string) error {
+func (s *permissionService) DeletePermissionGroup(ctx context.Context, groupName model.PermissionGroup) error {
 	return errors.New(errors.CodeNotImplemented, "permission groups not implemented")
 }
 

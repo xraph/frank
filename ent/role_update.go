@@ -244,14 +244,14 @@ func (ru *RoleUpdate) ClearColor() *RoleUpdate {
 }
 
 // SetApplicableUserTypes sets the "applicable_user_types" field.
-func (ru *RoleUpdate) SetApplicableUserTypes(s []string) *RoleUpdate {
-	ru.mutation.SetApplicableUserTypes(s)
+func (ru *RoleUpdate) SetApplicableUserTypes(mt []model.UserType) *RoleUpdate {
+	ru.mutation.SetApplicableUserTypes(mt)
 	return ru
 }
 
-// AppendApplicableUserTypes appends s to the "applicable_user_types" field.
-func (ru *RoleUpdate) AppendApplicableUserTypes(s []string) *RoleUpdate {
-	ru.mutation.AppendApplicableUserTypes(s)
+// AppendApplicableUserTypes appends mt to the "applicable_user_types" field.
+func (ru *RoleUpdate) AppendApplicableUserTypes(mt []model.UserType) *RoleUpdate {
+	ru.mutation.AppendApplicableUserTypes(mt)
 	return ru
 }
 
@@ -1162,14 +1162,14 @@ func (ruo *RoleUpdateOne) ClearColor() *RoleUpdateOne {
 }
 
 // SetApplicableUserTypes sets the "applicable_user_types" field.
-func (ruo *RoleUpdateOne) SetApplicableUserTypes(s []string) *RoleUpdateOne {
-	ruo.mutation.SetApplicableUserTypes(s)
+func (ruo *RoleUpdateOne) SetApplicableUserTypes(mt []model.UserType) *RoleUpdateOne {
+	ruo.mutation.SetApplicableUserTypes(mt)
 	return ruo
 }
 
-// AppendApplicableUserTypes appends s to the "applicable_user_types" field.
-func (ruo *RoleUpdateOne) AppendApplicableUserTypes(s []string) *RoleUpdateOne {
-	ruo.mutation.AppendApplicableUserTypes(s)
+// AppendApplicableUserTypes appends mt to the "applicable_user_types" field.
+func (ruo *RoleUpdateOne) AppendApplicableUserTypes(mt []model.UserType) *RoleUpdateOne {
+	ruo.mutation.AppendApplicableUserTypes(mt)
 	return ruo
 }
 

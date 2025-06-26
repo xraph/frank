@@ -21,7 +21,9 @@ export const ContextType = {
     Platform: 'platform',
     Organization: 'organization',
     Application: 'application',
-    Resource: 'resource'
+    Resource: 'resource',
+    Self: 'self',
+    Global: 'global'
 } as const;
 export type ContextType = typeof ContextType[keyof typeof ContextType];
 

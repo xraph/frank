@@ -289,7 +289,7 @@ func registerListWebhooks(api huma.API, webhookCtrl *webhookController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, webhookCtrl.di.AuthZ().Checker(), webhookCtrl.di.Logger())(
-			authz.PermissionReadWebhook, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadWebhooks, model.ResourceOrganization, "orgId",
 		)},
 	}, webhookCtrl.listWebhooksHandler)
 }
@@ -308,7 +308,7 @@ func registerCreateWebhook(api huma.API, webhookCtrl *webhookController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, webhookCtrl.di.AuthZ().Checker(), webhookCtrl.di.Logger())(
-			authz.PermissionWriteWebhook, authz.ResourceOrganization, "orgId",
+			authz.PermissionWriteWebhook, model.ResourceOrganization, "orgId",
 		)},
 	}, webhookCtrl.createWebhookHandler)
 }
@@ -327,7 +327,7 @@ func registerGetWebhook(api huma.API, webhookCtrl *webhookController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, webhookCtrl.di.AuthZ().Checker(), webhookCtrl.di.Logger())(
-			authz.PermissionReadWebhook, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadWebhooks, model.ResourceOrganization, "orgId",
 		)},
 	}, webhookCtrl.getWebhookHandler)
 }
@@ -346,7 +346,7 @@ func registerUpdateWebhook(api huma.API, webhookCtrl *webhookController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, webhookCtrl.di.AuthZ().Checker(), webhookCtrl.di.Logger())(
-			authz.PermissionWriteWebhook, authz.ResourceOrganization, "orgId",
+			authz.PermissionWriteWebhook, model.ResourceOrganization, "orgId",
 		)},
 	}, webhookCtrl.updateWebhookHandler)
 }
@@ -369,7 +369,7 @@ func registerDeleteWebhook(api huma.API, webhookCtrl *webhookController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, webhookCtrl.di.AuthZ().Checker(), webhookCtrl.di.Logger())(
-			authz.PermissionDeleteWebhook, authz.ResourceOrganization, "orgId",
+			authz.PermissionDeleteWebhook, model.ResourceOrganization, "orgId",
 		)},
 	}, webhookCtrl.deleteWebhookHandler)
 }
@@ -392,7 +392,7 @@ func registerActivateWebhook(api huma.API, webhookCtrl *webhookController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, webhookCtrl.di.AuthZ().Checker(), webhookCtrl.di.Logger())(
-			authz.PermissionWriteWebhook, authz.ResourceOrganization, "orgId",
+			authz.PermissionWriteWebhook, model.ResourceOrganization, "orgId",
 		)},
 	}, webhookCtrl.activateWebhookHandler)
 }
@@ -415,7 +415,7 @@ func registerDeactivateWebhook(api huma.API, webhookCtrl *webhookController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, webhookCtrl.di.AuthZ().Checker(), webhookCtrl.di.Logger())(
-			authz.PermissionWriteWebhook, authz.ResourceOrganization, "orgId",
+			authz.PermissionWriteWebhook, model.ResourceOrganization, "orgId",
 		)},
 	}, webhookCtrl.deactivateWebhookHandler)
 }
@@ -434,7 +434,7 @@ func registerRegenerateWebhookSecret(api huma.API, webhookCtrl *webhookControlle
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, webhookCtrl.di.AuthZ().Checker(), webhookCtrl.di.Logger())(
-			authz.PermissionWriteWebhook, authz.ResourceOrganization, "orgId",
+			authz.PermissionWriteWebhook, model.ResourceOrganization, "orgId",
 		)},
 	}, webhookCtrl.regenerateWebhookSecretHandler)
 }
@@ -453,7 +453,7 @@ func registerTestWebhook(api huma.API, webhookCtrl *webhookController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, webhookCtrl.di.AuthZ().Checker(), webhookCtrl.di.Logger())(
-			authz.PermissionReadWebhook, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadWebhooks, model.ResourceOrganization, "orgId",
 		)},
 	}, webhookCtrl.testWebhookHandler)
 }
@@ -488,7 +488,7 @@ func registerListWebhookEvents(api huma.API, webhookCtrl *webhookController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, webhookCtrl.di.AuthZ().Checker(), webhookCtrl.di.Logger())(
-			authz.PermissionReadWebhook, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadWebhooks, model.ResourceOrganization, "orgId",
 		)},
 	}, webhookCtrl.listWebhookEventsHandler)
 }
@@ -507,7 +507,7 @@ func registerGetWebhookEvent(api huma.API, webhookCtrl *webhookController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, webhookCtrl.di.AuthZ().Checker(), webhookCtrl.di.Logger())(
-			authz.PermissionReadWebhook, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadWebhooks, model.ResourceOrganization, "orgId",
 		)},
 	}, webhookCtrl.getWebhookEventHandler)
 }
@@ -526,7 +526,7 @@ func registerRetryWebhookEvent(api huma.API, webhookCtrl *webhookController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, webhookCtrl.di.AuthZ().Checker(), webhookCtrl.di.Logger())(
-			authz.PermissionWriteWebhook, authz.ResourceOrganization, "orgId",
+			authz.PermissionWriteWebhook, model.ResourceOrganization, "orgId",
 		)},
 	}, webhookCtrl.retryWebhookEventHandler)
 }
@@ -545,7 +545,7 @@ func registerGetWebhookSecurity(api huma.API, webhookCtrl *webhookController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, webhookCtrl.di.AuthZ().Checker(), webhookCtrl.di.Logger())(
-			authz.PermissionReadWebhook, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadWebhooks, model.ResourceOrganization, "orgId",
 		)},
 	}, webhookCtrl.getWebhookSecurityHandler)
 }
@@ -564,7 +564,7 @@ func registerUpdateWebhookSecurity(api huma.API, webhookCtrl *webhookController)
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, webhookCtrl.di.AuthZ().Checker(), webhookCtrl.di.Logger())(
-			authz.PermissionWriteWebhook, authz.ResourceOrganization, "orgId",
+			authz.PermissionWriteWebhook, model.ResourceOrganization, "orgId",
 		)},
 	}, webhookCtrl.updateWebhookSecurityHandler)
 }
@@ -583,7 +583,7 @@ func registerGetWebhookStats(api huma.API, webhookCtrl *webhookController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, webhookCtrl.di.AuthZ().Checker(), webhookCtrl.di.Logger())(
-			authz.PermissionReadWebhook, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadWebhooks, model.ResourceOrganization, "orgId",
 		)},
 	}, webhookCtrl.getWebhookStatsHandler)
 }
@@ -602,7 +602,7 @@ func registerGetGlobalWebhookStats(api huma.API, webhookCtrl *webhookController)
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, webhookCtrl.di.AuthZ().Checker(), webhookCtrl.di.Logger())(
-			authz.PermissionReadWebhook, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadWebhooks, model.ResourceOrganization, "orgId",
 		)},
 	}, webhookCtrl.getGlobalWebhookStatsHandler)
 }
@@ -621,7 +621,7 @@ func registerBulkWebhookOperation(api huma.API, webhookCtrl *webhookController) 
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, webhookCtrl.di.AuthZ().Checker(), webhookCtrl.di.Logger())(
-			authz.PermissionWriteWebhook, authz.ResourceOrganization, "orgId",
+			authz.PermissionWriteWebhook, model.ResourceOrganization, "orgId",
 		)},
 	}, webhookCtrl.bulkWebhookOperationHandler)
 }
@@ -640,7 +640,7 @@ func registerBulkRetryEvents(api huma.API, webhookCtrl *webhookController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, webhookCtrl.di.AuthZ().Checker(), webhookCtrl.di.Logger())(
-			authz.PermissionWriteWebhook, authz.ResourceOrganization, "orgId",
+			authz.PermissionWriteWebhook, model.ResourceOrganization, "orgId",
 		)},
 	}, webhookCtrl.bulkRetryEventsHandler)
 }
@@ -659,7 +659,7 @@ func registerExportWebhookData(api huma.API, webhookCtrl *webhookController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, webhookCtrl.di.AuthZ().Checker(), webhookCtrl.di.Logger())(
-			authz.PermissionReadWebhook, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadWebhooks, model.ResourceOrganization, "orgId",
 		)},
 	}, webhookCtrl.exportWebhookDataHandler)
 }
@@ -678,7 +678,7 @@ func registerGetWebhookHealth(api huma.API, webhookCtrl *webhookController) {
 			{"jwt": {}},
 		},
 		Middlewares: huma.Middlewares{authz.HumaPermissionMiddleware(api, webhookCtrl.di.AuthZ().Checker(), webhookCtrl.di.Logger())(
-			authz.PermissionReadWebhook, authz.ResourceOrganization, "orgId",
+			authz.PermissionReadWebhooks, model.ResourceOrganization, "orgId",
 		)},
 	}, webhookCtrl.getWebhookHealthHandler)
 }

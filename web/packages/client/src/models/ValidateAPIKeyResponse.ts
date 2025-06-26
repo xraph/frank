@@ -20,6 +20,20 @@ import {
     RateLimitInfoToJSON,
     RateLimitInfoToJSONTyped,
 } from './RateLimitInfo';
+import type { APIKeyType } from './APIKeyType';
+import {
+    APIKeyTypeFromJSON,
+    APIKeyTypeFromJSONTyped,
+    APIKeyTypeToJSON,
+    APIKeyTypeToJSONTyped,
+} from './APIKeyType';
+import type { Environment } from './Environment';
+import {
+    EnvironmentFromJSON,
+    EnvironmentFromJSONTyped,
+    EnvironmentToJSON,
+    EnvironmentToJSONTyped,
+} from './Environment';
 
 /**
  * 
@@ -34,6 +48,12 @@ export interface ValidateAPIKeyResponse {
      * @memberof ValidateAPIKeyResponse
      */
     readonly $schema?: string;
+    /**
+     * Environment
+     * @type {Environment}
+     * @memberof ValidateAPIKeyResponse
+     */
+    environment?: Environment;
     /**
      * Validation error
      * @type {string}
@@ -65,6 +85,12 @@ export interface ValidateAPIKeyResponse {
      */
     permissions?: Array<string>;
     /**
+     * Public key
+     * @type {string}
+     * @memberof ValidateAPIKeyResponse
+     */
+    publicKey?: string;
+    /**
      * Rate limit information
      * @type {RateLimitInfo}
      * @memberof ValidateAPIKeyResponse
@@ -76,6 +102,12 @@ export interface ValidateAPIKeyResponse {
      * @memberof ValidateAPIKeyResponse
      */
     scopes?: Array<string>;
+    /**
+     * API key type
+     * @type {APIKeyType}
+     * @memberof ValidateAPIKeyResponse
+     */
+    type?: APIKeyType;
     /**
      * User ID
      * @type {string}
@@ -89,6 +121,8 @@ export interface ValidateAPIKeyResponse {
      */
     valid: boolean;
 }
+
+
 
 /**
  * Check if a given object implements the ValidateAPIKeyResponse interface.
@@ -110,13 +144,16 @@ export function ValidateAPIKeyResponseFromJSONTyped(json: any, ignoreDiscriminat
         
             ...json,
         '$schema': json['$schema'] == null ? undefined : json['$schema'],
+        'environment': json['environment'] == null ? undefined : EnvironmentFromJSON(json['environment']),
         'error': json['error'] == null ? undefined : json['error'],
         'expiresAt': json['expiresAt'] == null ? undefined : (new Date(json['expiresAt'])),
         'keyId': json['keyId'] == null ? undefined : json['keyId'],
         'organizationId': json['organizationId'] == null ? undefined : json['organizationId'],
         'permissions': json['permissions'] == null ? undefined : json['permissions'],
+        'publicKey': json['publicKey'] == null ? undefined : json['publicKey'],
         'rateLimitInfo': json['rateLimitInfo'] == null ? undefined : RateLimitInfoFromJSON(json['rateLimitInfo']),
         'scopes': json['scopes'] == null ? undefined : json['scopes'],
+        'type': json['type'] == null ? undefined : APIKeyTypeFromJSON(json['type']),
         'userId': json['userId'] == null ? undefined : json['userId'],
         'valid': json['valid'],
     };
@@ -134,13 +171,16 @@ export function ValidateAPIKeyResponseToJSONTyped(value?: Omit<ValidateAPIKeyRes
     return {
         
             ...value,
+        'environment': EnvironmentToJSON(value['environment']),
         'error': value['error'],
         'expiresAt': value['expiresAt'] == null ? undefined : ((value['expiresAt']).toISOString()),
         'keyId': value['keyId'],
         'organizationId': value['organizationId'],
         'permissions': value['permissions'],
+        'publicKey': value['publicKey'],
         'rateLimitInfo': RateLimitInfoToJSON(value['rateLimitInfo']),
         'scopes': value['scopes'],
+        'type': APIKeyTypeToJSON(value['type']),
         'userId': value['userId'],
         'valid': value['valid'],
     };

@@ -124,32 +124,32 @@ type RoleRepository interface {
 
 // CreateRoleInput represents input for creating a role
 type CreateRoleInput struct {
-	Name                string         `json:"name"`
-	DisplayName         *string        `json:"display_name,omitempty"`
-	Description         *string        `json:"description,omitempty"`
-	RoleType            model.RoleType `json:"role_type"`
-	OrganizationID      *xid.ID        `json:"organization_id,omitempty"`
-	ApplicationID       *xid.ID        `json:"application_id,omitempty"`
-	System              bool           `json:"system"`
-	IsDefault           bool           `json:"is_default"`
-	Priority            int            `json:"priority"`
-	Color               *string        `json:"color,omitempty"`
-	ApplicableUserTypes []string       `json:"applicable_user_types,omitempty"`
-	CreatedBy           *string        `json:"created_by,omitempty"`
-	ParentID            *xid.ID        `json:"parent_id,omitempty"`
+	Name                string           `json:"name"`
+	DisplayName         *string          `json:"display_name,omitempty"`
+	Description         *string          `json:"description,omitempty"`
+	RoleType            model.RoleType   `json:"role_type"`
+	OrganizationID      *xid.ID          `json:"organization_id,omitempty"`
+	ApplicationID       *xid.ID          `json:"application_id,omitempty"`
+	System              bool             `json:"system"`
+	IsDefault           bool             `json:"is_default"`
+	Priority            int              `json:"priority"`
+	Color               *string          `json:"color,omitempty"`
+	ApplicableUserTypes []model.UserType `json:"applicable_user_types,omitempty"`
+	CreatedBy           *string          `json:"created_by,omitempty"`
+	ParentID            *xid.ID          `json:"parent_id,omitempty"`
 }
 
 // UpdateRoleInput represents input for updating a role
 type UpdateRoleInput struct {
-	Name                string   `json:"name,omitempty"`
-	DisplayName         string   `json:"display_name,omitempty"`
-	Description         *string  `json:"description,omitempty"`
-	IsDefault           *bool    `json:"is_default,omitempty"`
-	Priority            *int     `json:"priority,omitempty"`
-	Color               *string  `json:"color,omitempty"`
-	ApplicableUserTypes []string `json:"applicable_user_types,omitempty"`
-	Active              *bool    `json:"active,omitempty"`
-	ParentID            *xid.ID  `json:"parent_id,omitempty"`
+	Name                string           `json:"name,omitempty"`
+	DisplayName         string           `json:"display_name,omitempty"`
+	Description         *string          `json:"description,omitempty"`
+	IsDefault           *bool            `json:"is_default,omitempty"`
+	Priority            *int             `json:"priority,omitempty"`
+	Color               *string          `json:"color,omitempty"`
+	ApplicableUserTypes []model.UserType `json:"applicable_user_types,omitempty"`
+	Active              *bool            `json:"active,omitempty"`
+	ParentID            *xid.ID          `json:"parent_id,omitempty"`
 }
 
 // ListRolesParams represents parameters for listing roles
@@ -163,7 +163,7 @@ type ListRolesParams struct {
 	Active             *bool           `json:"active,omitempty"`
 	CreatedBy          string          `json:"created_by,omitempty"`
 	ParentID           *xid.ID         `json:"parent_id,omitempty"`
-	ApplicableUserType string          `json:"applicable_user_type,omitempty"`
+	ApplicableUserType model.UserType  `json:"applicable_user_type,omitempty"`
 	Search             string          `json:"search,omitempty"`
 	IncludeChildren    bool            `json:"include_children,omitempty"`
 }
@@ -367,7 +367,8 @@ func (r *roleRepository) List(ctx context.Context, params ListRolesParams) (*mod
 		query = query.Where(role.RoleTypeEQ(*params.RoleType))
 	}
 	if params.OrganizationID != nil {
-		query = query.Where(role.OrganizationID(*params.OrganizationID))
+		query = query.Where(role.Or(role.OrganizationID(*params.OrganizationID),
+			role.And(role.OrganizationIDIsNil(), role.RoleTypeEQ(model.RoleTypeOrganization))))
 	}
 	if params.ApplicationID != nil {
 		query = query.Where(role.ApplicationID(*params.ApplicationID))

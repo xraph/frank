@@ -8,7 +8,6 @@ import {
     BulkMemberStatusUpdate,
     BulkRemoveMembersInputBody,
     CancelInvitationRequest,
-    Configuration,
     CreateInvitationRequest,
     CreateMembershipRequest,
     CreateMembershipResponse,
@@ -22,11 +21,15 @@ import {
     EnableOrganizationFeatureResponse,
     ExportOrganizationDataResponse,
     FeatureSummary,
+    GetOrganizationInvoicesRequest,
     Invitation,
     InvitationsApi,
     InvitationSummary,
     InvitationValidationRequest,
     InvitationValidationResponse,
+    ListInvitationsRequest,
+    ListOrganizationMembersRequest,
+    ListOrganizationsRequest,
     MemberMetrics,
     Membership,
     MembershipApi,
@@ -60,6 +63,7 @@ import {
 
 import {FrankAuthConfig, FrankAuthError} from './index';
 import {handleError} from './errors';
+import {BaseFrankAPI} from './base';
 
 /**
  * FrankOrganization - Organization Management SDK
@@ -74,29 +78,17 @@ import {handleError} from './errors';
  *
  * Supports multi-tenant architecture with organization-scoped operations
  */
-export class FrankOrganization {
-    private config: FrankAuthConfig;
+export class FrankOrganization extends BaseFrankAPI {
     private organizationsApi: OrganizationsApi;
     private membershipApi: MembershipApi;
     private invitationsApi: InvitationsApi;
-    private accessToken: string | null = null;
 
     constructor(config: FrankAuthConfig, accessToken?: string) {
-        this.config = config;
-        this.accessToken = accessToken || null;
+        super(config, accessToken)
 
-        const configuration = new Configuration({
-            basePath: config.apiUrl,
-            accessToken: () => this.accessToken || '',
-            credentials: 'include',
-            headers: {
-                'X-Publishable-Key': config.publishableKey,
-            },
-        });
-
-        this.organizationsApi = new OrganizationsApi(configuration);
-        this.membershipApi = new MembershipApi(configuration);
-        this.invitationsApi = new InvitationsApi(configuration);
+        this.organizationsApi = new OrganizationsApi(super.config);
+        this.membershipApi = new MembershipApi(super.config);
+        this.invitationsApi = new InvitationsApi(super.config);
     }
 
     /**
@@ -115,9 +107,10 @@ export class FrankOrganization {
      */
     async createOrganization(request: CreateOrganizationRequest): Promise<Organization> {
         try {
-            return await this.organizationsApi.createOrganization({
-                createOrganizationRequest: request
-            });
+            return await this.organizationsApi.createOrganization(
+                {createOrganizationRequest: request},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -128,7 +121,10 @@ export class FrankOrganization {
      */
     async getOrganization(id: string): Promise<Organization> {
         try {
-            return await this.organizationsApi.getOrganization({ id });
+            return await this.organizationsApi.getOrganization(
+                {id},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -139,10 +135,10 @@ export class FrankOrganization {
      */
     async updateOrganization(id: string, request: UpdateOrganizationRequest): Promise<Organization> {
         try {
-            return await this.organizationsApi.updateOrganization({
-                id,
-                updateOrganizationRequest: request
-            });
+            return await this.organizationsApi.updateOrganization(
+                {id, updateOrganizationRequest: request},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -153,10 +149,10 @@ export class FrankOrganization {
      */
     async deleteOrganization(id: string, request: DeleteOrganizationRequest): Promise<void> {
         try {
-            await this.organizationsApi.deleteOrganization({
-                id,
-                deleteOrganizationRequest: request
-            });
+            await this.organizationsApi.deleteOrganization(
+                {id, deleteOrganizationRequest: request},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -165,43 +161,12 @@ export class FrankOrganization {
     /**
      * List organizations with filtering and pagination
      */
-    async listOrganizations(options?: {
-        after?: string;
-        before?: string;
-        first?: number;
-        last?: number;
-        limit?: number;
-        offset?: number;
-        fields?: string[];
-        orderBy?: string[];
-        page?: number;
-        orgType?: OrgType;
-        plan?: string;
-        active?: boolean;
-        search?: string;
-        ownerId?: string;
-        hasTrial?: boolean;
-        ssoEnabled?: boolean;
-    }): Promise<PaginatedOutputOrganizationSummary> {
+    async listOrganizations(options?: ListOrganizationsRequest): Promise<PaginatedOutputOrganizationSummary> {
         try {
-            return await this.organizationsApi.listOrganizations({
-                after: options?.after,
-                before: options?.before,
-                first: options?.first,
-                last: options?.last,
-                limit: options?.limit,
-                offset: options?.offset,
-                fields: options?.fields,
-                orderBy: options?.orderBy,
-                page: options?.page,
-                orgType: options?.orgType,
-                plan: options?.plan,
-                active: options?.active,
-                search: options?.search,
-                ownerId: options?.ownerId,
-                hasTrial: options?.hasTrial,
-                ssoEnabled: options?.ssoEnabled,
-            });
+            return await this.organizationsApi.listOrganizations(
+                {...(options ?? {fields: null})},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -216,7 +181,10 @@ export class FrankOrganization {
      */
     async getOrganizationSettings(id: string): Promise<OrganizationSettings> {
         try {
-            return await this.organizationsApi.getOrganizationSettings({ id });
+            return await this.organizationsApi.getOrganizationSettings(
+                {id},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -230,10 +198,10 @@ export class FrankOrganization {
         request: UpdateOrganizationSettingsRequest
     ): Promise<OrganizationSettings> {
         try {
-            return await this.organizationsApi.updateOrganizationSettings({
-                id,
-                updateOrganizationSettingsRequest: request
-            });
+            return await this.organizationsApi.updateOrganizationSettings(
+                {id, updateOrganizationSettingsRequest: request},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -248,7 +216,10 @@ export class FrankOrganization {
      */
     async listOrganizationDomains(id: string): Promise<DomainsResponse> {
         try {
-            return await this.organizationsApi.listOrganizationDomains({ id });
+            return await this.organizationsApi.listOrganizationDomains(
+                {id},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -262,10 +233,10 @@ export class FrankOrganization {
         request: DomainVerificationRequest
     ): Promise<DomainResponse> {
         try {
-            return await this.organizationsApi.addOrganizationDomain({
-                id,
-                domainVerificationRequest: request
-            });
+            return await this.organizationsApi.addOrganizationDomain(
+                {id, domainVerificationRequest: request},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -276,7 +247,10 @@ export class FrankOrganization {
      */
     async verifyOrganizationDomain(id: string, domain: string): Promise<DomainVerificationResponse> {
         try {
-            return await this.organizationsApi.verifyOrganizationDomain({ id, domain });
+            return await this.organizationsApi.verifyOrganizationDomain(
+                {id, domain},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -287,7 +261,10 @@ export class FrankOrganization {
      */
     async removeOrganizationDomain(id: string, domain: string): Promise<void> {
         try {
-            await this.organizationsApi.removeOrganizationDomain({ id, domain });
+            await this.organizationsApi.removeOrganizationDomain(
+                {id, domain},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -302,7 +279,10 @@ export class FrankOrganization {
      */
     async listOrganizationFeatures(id: string): Promise<FeatureSummary[]> {
         try {
-            return await this.organizationsApi.listOrganizationFeatures({ id });
+            return await this.organizationsApi.listOrganizationFeatures(
+                {id},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -313,7 +293,10 @@ export class FrankOrganization {
      */
     async enableOrganizationFeature(id: string, feature: string): Promise<EnableOrganizationFeatureResponse> {
         try {
-            return await this.organizationsApi.enableOrganizationFeature({ id, feature });
+            return await this.organizationsApi.enableOrganizationFeature(
+                {id, feature},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -324,7 +307,10 @@ export class FrankOrganization {
      */
     async disableOrganizationFeature(id: string, feature: string): Promise<void> {
         try {
-            await this.organizationsApi.disableOrganizationFeature({ id, feature });
+            await this.organizationsApi.disableOrganizationFeature(
+                {id, feature},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -339,7 +325,10 @@ export class FrankOrganization {
      */
     async getOrganizationStats(id: string): Promise<OrgStats> {
         try {
-            return await this.organizationsApi.getOrganizationStats({ id });
+            return await this.organizationsApi.getOrganizationStats(
+                {id},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -350,7 +339,10 @@ export class FrankOrganization {
      */
     async getOrganizationUsage(id: string): Promise<OrganizationUsage> {
         try {
-            return await this.organizationsApi.getOrganizationUsage({ id });
+            return await this.organizationsApi.getOrganizationUsage(
+                {id},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -365,7 +357,10 @@ export class FrankOrganization {
      */
     async getOrganizationBilling(id: string): Promise<OrganizationBilling> {
         try {
-            return await this.organizationsApi.getOrganizationBilling({ id });
+            return await this.organizationsApi.getOrganizationBilling(
+                {id},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -374,42 +369,12 @@ export class FrankOrganization {
     /**
      * Get organization invoices with filtering
      */
-    async getOrganizationInvoices(id: string, options?: {
-        after?: string;
-        before?: string;
-        first?: number;
-        last?: number;
-        limit?: number;
-        offset?: number;
-        fields?: string[];
-        orderBy?: string[];
-        page?: number;
-        status?: 'paid' | 'unpaid' | 'draft' | 'void';
-        startDate?: Date;
-        endDate?: Date;
-        dueBefore?: Date;
-        minAmount?: number;
-        maxAmount?: number;
-    }): Promise<PaginatedOutputInvoice> {
+    async getOrganizationInvoices(id: string, options?: Omit<GetOrganizationInvoicesRequest, 'id'>): Promise<PaginatedOutputInvoice> {
         try {
-            return await this.organizationsApi.getOrganizationInvoices({
-                id,
-                after: options?.after,
-                before: options?.before,
-                first: options?.first,
-                last: options?.last,
-                limit: options?.limit,
-                offset: options?.offset,
-                fields: options?.fields,
-                orderBy: options?.orderBy,
-                page: options?.page,
-                status: options?.status as any,
-                startDate: options?.startDate,
-                endDate: options?.endDate,
-                dueBefore: options?.dueBefore,
-                minAmount: options?.minAmount,
-                maxAmount: options?.maxAmount,
-            });
+            return await this.organizationsApi.getOrganizationInvoices(
+                {id, ...(options ?? {fields: null})},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -424,7 +389,10 @@ export class FrankOrganization {
      */
     async getOrganizationOwnership(id: string): Promise<UserSummary> {
         try {
-            return await this.organizationsApi.getOrganizationOwnership({ id });
+            return await this.organizationsApi.getOrganizationOwnership(
+                {id},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -438,10 +406,10 @@ export class FrankOrganization {
         request: TransferUserOwnershipRequest
     ): Promise<TransferOwnershipResponse> {
         try {
-            return await this.organizationsApi.transferOrganizationOwnership({
-                id,
-                transferUserOwnershipRequest: request
-            });
+            return await this.organizationsApi.transferOrganizationOwnership(
+                {id, transferUserOwnershipRequest: request},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -456,7 +424,10 @@ export class FrankOrganization {
      */
     async exportOrganizationData(id: string): Promise<ExportOrganizationDataResponse> {
         try {
-            return await this.organizationsApi.exportOrganizationData({ id });
+            return await this.organizationsApi.exportOrganizationData(
+                {id},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -469,30 +440,12 @@ export class FrankOrganization {
     /**
      * List organization members with filtering and pagination
      */
-    async listMembers(organizationId: string, options?: {
-        after?: string;
-        before?: string;
-        first?: number;
-        last?: number;
-        limit?: number;
-        offset?: number;
-        fields?: string[];
-        orderBy?: string[];
-        page?: number;
-    }): Promise<PaginatedOutputMemberSummary> {
+    async listMembers(orgId: string, options?: Omit<ListOrganizationMembersRequest, 'orgId'>): Promise<PaginatedOutputMemberSummary> {
         try {
-            return await this.membershipApi.listOrganizationMembers({
-                orgId: organizationId,
-                after: options?.after,
-                before: options?.before,
-                first: options?.first,
-                last: options?.last,
-                limit: options?.limit,
-                offset: options?.offset,
-                fields: options?.fields,
-                orderBy: options?.orderBy,
-                page: options?.page,
-            });
+            return await this.membershipApi.listOrganizationMembers(
+                {orgId, ...(options ?? {fields: null})},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -503,10 +456,10 @@ export class FrankOrganization {
      */
     async getMember(organizationId: string, userId: string): Promise<Membership> {
         try {
-            return await this.membershipApi.getMember({
-                orgId: organizationId,
-                userId,
-            });
+            return await this.membershipApi.getMember(
+                {orgId: organizationId, userId},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -517,10 +470,10 @@ export class FrankOrganization {
      */
     async addMember(organizationId: string, request: CreateMembershipRequest): Promise<CreateMembershipResponse> {
         try {
-            return await this.membershipApi.addMember({
-                orgId: organizationId,
-                createMembershipRequest: request,
-            });
+            return await this.membershipApi.addMember(
+                {orgId: organizationId, createMembershipRequest: request},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -531,11 +484,10 @@ export class FrankOrganization {
      */
     async updateMember(organizationId: string, userId: string, request: UpdateMembershipRequest): Promise<Membership> {
         try {
-            return await this.membershipApi.updateMember({
-                orgId: organizationId,
-                userId,
-                updateMembershipRequest: request,
-            });
+            return await this.membershipApi.updateMember(
+                {orgId: organizationId, userId, updateMembershipRequest: request},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -546,11 +498,10 @@ export class FrankOrganization {
      */
     async updateMemberRole(organizationId: string, userId: string, request: UpdateMemberRoleInputBody): Promise<Membership> {
         try {
-            return await this.membershipApi.updateMemberRole({
-                orgId: organizationId,
-                userId,
-                updateMemberRoleInputBody: request,
-            });
+            return await this.membershipApi.updateMemberRole(
+                {orgId: organizationId, userId, updateMemberRoleInputBody: request},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -561,11 +512,10 @@ export class FrankOrganization {
      */
     async updateMemberStatus(organizationId: string, userId: string, request: UpdateMemberStatusInputBody): Promise<Membership> {
         try {
-            return await this.membershipApi.updateMemberStatus({
-                orgId: organizationId,
-                userId,
-                updateMemberStatusInputBody: request,
-            });
+            return await this.membershipApi.updateMemberStatus(
+                {orgId: organizationId, userId, updateMemberStatusInputBody: request},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -576,11 +526,10 @@ export class FrankOrganization {
      */
     async removeMember(organizationId: string, userId: string, request: RemoveMemberRequest): Promise<void> {
         try {
-            await this.membershipApi.removeMember({
-                orgId: organizationId,
-                userId,
-                removeMemberRequest: request,
-            });
+            await this.membershipApi.removeMember(
+                {orgId: organizationId, userId, removeMemberRequest: request},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -591,10 +540,10 @@ export class FrankOrganization {
      */
     async bulkRemoveMembers(organizationId: string, request: BulkRemoveMembersInputBody): Promise<BulkMembershipOperationResponse> {
         try {
-            return await this.membershipApi.bulkRemoveMembers({
-                orgId: organizationId,
-                bulkRemoveMembersInputBody: request,
-            });
+            return await this.membershipApi.bulkRemoveMembers(
+                {orgId: organizationId, bulkRemoveMembersInputBody: request},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -605,10 +554,10 @@ export class FrankOrganization {
      */
     async bulkUpdateMemberRoles(organizationId: string, updates: BulkMemberRoleUpdate[]): Promise<BulkMembershipOperationResponse> {
         try {
-            return await this.membershipApi.bulkUpdateMemberRoles({
-                orgId: organizationId,
-                bulkMemberRoleUpdate: updates,
-            });
+            return await this.membershipApi.bulkUpdateMemberRoles(
+                {orgId: organizationId, bulkMemberRoleUpdate: updates},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -619,10 +568,10 @@ export class FrankOrganization {
      */
     async bulkUpdateMemberStatus(organizationId: string, updates: BulkMemberStatusUpdate[]): Promise<BulkMembershipOperationResponse> {
         try {
-            return await this.membershipApi.bulkUpdateMemberStatus({
-                orgId: organizationId,
-                bulkMemberStatusUpdate: updates,
-            });
+            return await this.membershipApi.bulkUpdateMemberStatus(
+                {orgId: organizationId, bulkMemberStatusUpdate: updates},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -635,13 +584,14 @@ export class FrankOrganization {
     /**
      * Check if member has specific permission
      */
-    async checkMemberPermission(organizationId: string, userId: string, permission: string): Promise<{ [key: string]: any }> {
+    async checkMemberPermission(organizationId: string, userId: string, permission: string): Promise<{
+        [key: string]: any
+    }> {
         try {
-            return await this.membershipApi.checkMemberPermission({
-                orgId: organizationId,
-                userId,
-                permission,
-            });
+            return await this.membershipApi.checkMemberPermission(
+                {orgId: organizationId, userId, permission},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -652,10 +602,10 @@ export class FrankOrganization {
      */
     async getMemberPermissions(organizationId: string, userId: string): Promise<{ [key: string]: any }> {
         try {
-            return await this.membershipApi.getMemberPermissions({
-                orgId: organizationId,
-                userId,
-            });
+            return await this.membershipApi.getMemberPermissions(
+                {orgId: organizationId, userId},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -670,10 +620,10 @@ export class FrankOrganization {
      */
     async setBillingContact(organizationId: string, userId: string): Promise<SimpleMessage> {
         try {
-            return await this.membershipApi.setBillingContact({
-                orgId: organizationId,
-                userId,
-            });
+            return await this.membershipApi.setBillingContact(
+                {orgId: organizationId, userId},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -684,10 +634,10 @@ export class FrankOrganization {
      */
     async removeBillingContact(organizationId: string, userId: string): Promise<void> {
         try {
-            await this.membershipApi.removeBillingContact({
-                orgId: organizationId,
-                userId,
-            });
+            await this.membershipApi.removeBillingContact(
+                {orgId: organizationId, userId},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -698,10 +648,10 @@ export class FrankOrganization {
      */
     async setPrimaryContact(organizationId: string, userId: string): Promise<SimpleMessage> {
         try {
-            return await this.membershipApi.setPrimaryContact({
-                orgId: organizationId,
-                userId,
-            });
+            return await this.membershipApi.setPrimaryContact(
+                {orgId: organizationId, userId},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -716,9 +666,10 @@ export class FrankOrganization {
      */
     async getMembershipStats(organizationId: string): Promise<MembershipStats> {
         try {
-            return await this.membershipApi.getMembershipStats({
-                orgId: organizationId,
-            });
+            return await this.membershipApi.getMembershipStats(
+                {orgId: organizationId},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -729,10 +680,10 @@ export class FrankOrganization {
      */
     async getMemberMetrics(organizationId: string, period?: string): Promise<MemberMetrics> {
         try {
-            return await this.membershipApi.getMemberMetrics({
-                orgId: organizationId,
-                period,
-            });
+            return await this.membershipApi.getMemberMetrics(
+                {orgId: organizationId, period},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -743,10 +694,10 @@ export class FrankOrganization {
      */
     async getMemberActivity(organizationId: string, days?: number): Promise<PaginatedOutputMembershipActivity> {
         try {
-            return await this.membershipApi.getMemberActivity({
-                orgId: organizationId,
-                days,
-            });
+            return await this.membershipApi.getMemberActivity(
+                {orgId: organizationId, days},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -761,10 +712,10 @@ export class FrankOrganization {
      */
     async createInvitation(organizationId: string, request: CreateInvitationRequest): Promise<Invitation> {
         try {
-            return await this.invitationsApi.createInvitation({
-                orgId: organizationId,
-                createInvitationRequest: request,
-            });
+            return await this.invitationsApi.createInvitation(
+                {orgId: organizationId, createInvitationRequest: request},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -775,10 +726,10 @@ export class FrankOrganization {
      */
     async bulkCreateInvitations(organizationId: string, request: BulkCreateInvitationsRequest): Promise<BulkInvitationResponse> {
         try {
-            return await this.invitationsApi.bulkInvitations({
-                orgId: organizationId,
-                bulkCreateInvitationsRequest: request,
-            });
+            return await this.invitationsApi.bulkInvitations(
+                {orgId: organizationId, bulkCreateInvitationsRequest: request},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -787,46 +738,12 @@ export class FrankOrganization {
     /**
      * List organization invitations with filtering
      */
-    async listInvitations(organizationId: string, options?: {
-        after?: string;
-        before?: string;
-        first?: number;
-        last?: number;
-        limit?: number;
-        offset?: number;
-        fields?: string[];
-        orderBy?: string[];
-        page?: number;
-        status?: 'pending' | 'accepted' | 'declined' | 'expired' | 'cancelled';
-        email?: string;
-        roleId?: string;
-        invitedBy?: string;
-        search?: string;
-        includeExpired?: boolean;
-        startDate?: Date;
-        endDate?: Date;
-    }): Promise<PaginatedOutputInvitationSummary> {
+    async listInvitations(orgId: string, options?: Omit<ListInvitationsRequest, 'orgId'>): Promise<PaginatedOutputInvitationSummary> {
         try {
-            return await this.invitationsApi.listInvitations({
-                orgId: organizationId,
-                after: options?.after,
-                before: options?.before,
-                first: options?.first,
-                last: options?.last,
-                limit: options?.limit,
-                offset: options?.offset,
-                fields: options?.fields,
-                orderBy: options?.orderBy,
-                page: options?.page,
-                status: options?.status as any,
-                email: options?.email,
-                roleId: options?.roleId,
-                invitedBy: options?.invitedBy,
-                search: options?.search,
-                includeExpired: options?.includeExpired,
-                startDate: options?.startDate,
-                endDate: options?.endDate,
-            });
+            return await this.invitationsApi.listInvitations(
+                {orgId, ...(options ?? {fields: null})},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -837,10 +754,10 @@ export class FrankOrganization {
      */
     async getInvitation(organizationId: string, invitationId: string): Promise<Invitation> {
         try {
-            return await this.invitationsApi.getInvitation({
-                orgId: organizationId,
-                invitationId,
-            });
+            return await this.invitationsApi.getInvitation(
+                {orgId: organizationId, invitationId},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -851,11 +768,10 @@ export class FrankOrganization {
      */
     async cancelInvitation(organizationId: string, invitationId: string, request: CancelInvitationRequest): Promise<SimpleMessage> {
         try {
-            return await this.invitationsApi.cancelInvitation({
-                orgId: organizationId,
-                invitationId,
-                cancelInvitationRequest: request,
-            });
+            return await this.invitationsApi.cancelInvitation(
+                {orgId: organizationId, invitationId, cancelInvitationRequest: request},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -866,11 +782,10 @@ export class FrankOrganization {
      */
     async resendInvitation(organizationId: string, invitationId: string, request: ResendInvitationRequest): Promise<SimpleMessage> {
         try {
-            return await this.invitationsApi.resendInvitation({
-                orgId: organizationId,
-                invitationId,
-                resendInvitationRequest: request,
-            });
+            return await this.invitationsApi.resendInvitation(
+                {orgId: organizationId, invitationId, resendInvitationRequest: request},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -881,9 +796,10 @@ export class FrankOrganization {
      */
     async acceptInvitation(request: AcceptInvitationRequest): Promise<AcceptInvitationResponse> {
         try {
-            return await this.invitationsApi.acceptInvitation({
-                acceptInvitationRequest: request,
-            });
+            return await this.invitationsApi.acceptInvitation(
+                {acceptInvitationRequest: request},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -894,9 +810,10 @@ export class FrankOrganization {
      */
     async declineInvitation(request: DeclineInvitationRequest): Promise<SimpleMessage> {
         try {
-            return await this.invitationsApi.declineInvitation({
-                declineInvitationRequest: request,
-            });
+            return await this.invitationsApi.declineInvitation(
+                {declineInvitationRequest: request},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -907,9 +824,10 @@ export class FrankOrganization {
      */
     async validateInvitation(request: InvitationValidationRequest): Promise<InvitationValidationResponse> {
         try {
-            return await this.invitationsApi.validateInvitation({
-                invitationValidationRequest: request,
-            });
+            return await this.invitationsApi.validateInvitation(
+                {invitationValidationRequest: request},
+                this.mergeHeaders()
+            );
         } catch (error) {
             throw await handleError(error)
         }
@@ -934,11 +852,11 @@ export class FrankOrganization {
     /**
      * Get organization by slug
      */
-    async getOrganizationBySlug(slug: string): Promise<Organization | null> {
+    async getOrganizationBySlug(slug: string, options?: ListOrganizationsRequest): Promise<Organization | null> {
         try {
             const response = await this.listOrganizations({
                 search: slug,
-                limit: 1
+                ...(options ?? {fields: null}),
             });
 
             const organizations = response.data || [];
@@ -980,6 +898,7 @@ export class FrankOrganization {
                 active: organization.active,
                 orgType: organization.orgType,
                 memberCount: organization.stats?.totalMembers || 0,
+                role: ''
             };
         } catch (error) {
             throw await handleError(error)
@@ -1008,6 +927,7 @@ export class FrankOrganization {
     async getPendingInvitationsCount(organizationId: string): Promise<number> {
         try {
             const invitations = await this.listInvitations(organizationId, {
+                fields: null,
                 status: 'pending',
                 limit: 1,
             });
@@ -1046,7 +966,7 @@ export class FrankOrganization {
      */
     async getMembersByRole(organizationId: string, roleName: string): Promise<MemberSummary[]> {
         try {
-            const members = await this.listMembers(organizationId, { limit: 1000 });
+            const members = await this.listMembers(organizationId, {fields: null, limit: 1000});
             return (members.data || []).filter(member => member.roleName === roleName);
         } catch (error) {
             return [];
@@ -1058,7 +978,7 @@ export class FrankOrganization {
      */
     async getOwners(organizationId: string): Promise<MemberSummary[]> {
         try {
-            const members = await this.listMembers(organizationId, { limit: 1000 });
+            const members = await this.listMembers(organizationId, {fields: null, limit: 1000});
             return (members.data || []).filter(member => member.isOwner);
         } catch (error) {
             return [];
@@ -1068,9 +988,9 @@ export class FrankOrganization {
     /**
      * Get billing contacts
      */
-    async getBillingContacts(organizationId: string): Promise<MemberSummary[]> {
+    async getBillingContacts(organizationId: string, options?: Omit<ListOrganizationMembersRequest, "orgId">): Promise<MemberSummary[]> {
         try {
-            const members = await this.listMembers(organizationId, { limit: 1000 });
+            const members = await this.listMembers(organizationId, options);
             return (members.data || []).filter(member => member.isBilling);
         } catch (error) {
             return [];
@@ -1140,7 +1060,7 @@ export class FrankOrganization {
         try {
             const [stats, invitations] = await Promise.all([
                 this.getMembershipStats(organizationId),
-                this.listInvitations(organizationId, { status: 'pending', limit: 1 }),
+                this.listInvitations(organizationId, {fields: null, status: 'pending', limit: 1}),
             ]);
 
             const inviteAcceptanceRate = stats.recentInvites > 0
@@ -1158,42 +1078,6 @@ export class FrankOrganization {
         } catch (error) {
             throw await handleError(error)
         }
-    }
-
-    // ================================
-    // Error Handling
-    // ================================
-
-    private handleError(error: any): FrankAuthError {
-        if (error instanceof FrankAuthError) {
-            return error;
-        }
-
-        // Handle HTTP errors
-        if (error?.response) {
-            const status = error.response.status;
-            const message = error.response.data?.message || error.message || 'Organization operation failed';
-
-            return new FrankAuthError(message, status, {
-                originalError: error,
-                response: error.response.data,
-            });
-        }
-
-        // Handle network errors
-        if (error?.request) {
-            return new FrankAuthError('Network error during organization operation', "INTERNAL_ERROR", {
-                originalError: error,
-                statusCode: 0
-            });
-        }
-
-        // Handle other errors
-        return new FrankAuthError(
-            error?.message || 'Unknown error during organization operation',
-            "INTERNAL_ERROR",
-            { originalError: error, statusCode: 500 }
-        );
     }
 }
 

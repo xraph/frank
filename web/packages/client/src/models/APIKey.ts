@@ -13,6 +13,13 @@
  */
 
 import { mapValues } from '../runtime';
+import type { APIKeyType } from './APIKeyType';
+import {
+    APIKeyTypeFromJSON,
+    APIKeyTypeFromJSONTyped,
+    APIKeyTypeToJSON,
+    APIKeyTypeToJSONTyped,
+} from './APIKeyType';
 import type { OrganizationSummary } from './OrganizationSummary';
 import {
     OrganizationSummaryFromJSON,
@@ -20,6 +27,13 @@ import {
     OrganizationSummaryToJSON,
     OrganizationSummaryToJSONTyped,
 } from './OrganizationSummary';
+import type { Environment } from './Environment';
+import {
+    EnvironmentFromJSON,
+    EnvironmentFromJSONTyped,
+    EnvironmentToJSON,
+    EnvironmentToJSONTyped,
+} from './Environment';
 import type { UserSummary } from './UserSummary';
 import {
     UserSummaryFromJSON,
@@ -68,17 +82,29 @@ export interface APIKey {
      */
     createdAt: Date;
     /**
+     * Environment (test, live)
+     * @type {Environment}
+     * @memberof APIKey
+     */
+    environment: Environment;
+    /**
      * Expiration timestamp
      * @type {Date}
      * @memberof APIKey
      */
     expiresAt?: Date;
     /**
-     * Hashed API key (internal use)
+     * Legacy hashed API key (deprecated)
      * @type {string}
      * @memberof APIKey
      */
     hashedKey?: string;
+    /**
+     * Hashed secret key (internal use)
+     * @type {string}
+     * @memberof APIKey
+     */
+    hashedSecretKey?: string;
     /**
      * 
      * @type {string}
@@ -92,7 +118,7 @@ export interface APIKey {
      */
     ipWhitelist?: Array<string>;
     /**
-     * API key value (write-only)
+     * Legacy API key value (deprecated)
      * @type {string}
      * @memberof APIKey
      */
@@ -134,6 +160,12 @@ export interface APIKey {
      */
     permissions?: Array<string>;
     /**
+     * Public API key (safe to display)
+     * @type {string}
+     * @memberof APIKey
+     */
+    publicKey?: string;
+    /**
      * Rate limiting configuration
      * @type {APIKeyRateLimits}
      * @memberof APIKey
@@ -146,11 +178,17 @@ export interface APIKey {
      */
     scopes?: Array<string>;
     /**
-     * API key type (server, client, admin)
+     * Secret API key value (write-only)
      * @type {string}
      * @memberof APIKey
      */
-    type: string;
+    secretKey?: string;
+    /**
+     * API key type (server, client, admin)
+     * @type {APIKeyType}
+     * @memberof APIKey
+     */
+    type: APIKeyType;
     /**
      * 
      * @type {Date}
@@ -177,12 +215,15 @@ export interface APIKey {
     userId?: string;
 }
 
+
+
 /**
  * Check if a given object implements the APIKey interface.
  */
 export function instanceOfAPIKey(value: object): value is APIKey {
     if (!('active' in value) || value['active'] === undefined) return false;
     if (!('createdAt' in value) || value['createdAt'] === undefined) return false;
+    if (!('environment' in value) || value['environment'] === undefined) return false;
     if (!('id' in value) || value['id'] === undefined) return false;
     if (!('name' in value) || value['name'] === undefined) return false;
     if (!('type' in value) || value['type'] === undefined) return false;
@@ -204,8 +245,10 @@ export function APIKeyFromJSONTyped(json: any, ignoreDiscriminator: boolean): AP
         '$schema': json['$schema'] == null ? undefined : json['$schema'],
         'active': json['active'],
         'createdAt': (new Date(json['createdAt'])),
+        'environment': EnvironmentFromJSON(json['environment']),
         'expiresAt': json['expiresAt'] == null ? undefined : (new Date(json['expiresAt'])),
         'hashedKey': json['hashedKey'] == null ? undefined : json['hashedKey'],
+        'hashedSecretKey': json['hashedSecretKey'] == null ? undefined : json['hashedSecretKey'],
         'id': json['id'],
         'ipWhitelist': json['ipWhitelist'] == null ? undefined : json['ipWhitelist'],
         'key': json['key'] == null ? undefined : json['key'],
@@ -215,9 +258,11 @@ export function APIKeyFromJSONTyped(json: any, ignoreDiscriminator: boolean): AP
         'organization': json['organization'] == null ? undefined : OrganizationSummaryFromJSON(json['organization']),
         'organizationId': json['organizationId'] == null ? undefined : json['organizationId'],
         'permissions': json['permissions'] == null ? undefined : json['permissions'],
+        'publicKey': json['publicKey'] == null ? undefined : json['publicKey'],
         'rateLimits': json['rateLimits'] == null ? undefined : APIKeyRateLimitsFromJSON(json['rateLimits']),
         'scopes': json['scopes'] == null ? undefined : json['scopes'],
-        'type': json['type'],
+        'secretKey': json['secretKey'] == null ? undefined : json['secretKey'],
+        'type': APIKeyTypeFromJSON(json['type']),
         'updatedAt': (new Date(json['updatedAt'])),
         'usage': json['usage'] == null ? undefined : APIKeyUsageFromJSON(json['usage']),
         'user': json['user'] == null ? undefined : UserSummaryFromJSON(json['user']),
@@ -239,8 +284,10 @@ export function APIKeyToJSONTyped(value?: Omit<APIKey, '$schema'> | null, ignore
             ...value,
         'active': value['active'],
         'createdAt': ((value['createdAt']).toISOString()),
+        'environment': EnvironmentToJSON(value['environment']),
         'expiresAt': value['expiresAt'] == null ? undefined : ((value['expiresAt']).toISOString()),
         'hashedKey': value['hashedKey'],
+        'hashedSecretKey': value['hashedSecretKey'],
         'id': value['id'],
         'ipWhitelist': value['ipWhitelist'],
         'key': value['key'],
@@ -250,9 +297,11 @@ export function APIKeyToJSONTyped(value?: Omit<APIKey, '$schema'> | null, ignore
         'organization': OrganizationSummaryToJSON(value['organization']),
         'organizationId': value['organizationId'],
         'permissions': value['permissions'],
+        'publicKey': value['publicKey'],
         'rateLimits': APIKeyRateLimitsToJSON(value['rateLimits']),
         'scopes': value['scopes'],
-        'type': value['type'],
+        'secretKey': value['secretKey'],
+        'type': APIKeyTypeToJSON(value['type']),
         'updatedAt': ((value['updatedAt']).toISOString()),
         'usage': APIKeyUsageToJSON(value['usage']),
         'user': UserSummaryToJSON(value['user']),

@@ -19,7 +19,6 @@ import { mapValues } from '../runtime';
  * @interface Pagination
  */
 export interface Pagination {
-    [key: string]: any | any;
     /**
      * 
      * @type {number}
@@ -31,7 +30,7 @@ export interface Pagination {
      * @type {string}
      * @memberof Pagination
      */
-    endCursor: string;
+    endCursor: string | null;
     /**
      * Whether there are more results
      * @type {boolean}
@@ -55,7 +54,7 @@ export interface Pagination {
      * @type {string}
      * @memberof Pagination
      */
-    startCursor: string;
+    startCursor: string | null;
     /**
      * Total number of documents
      * @type {number}
@@ -95,7 +94,6 @@ export function PaginationFromJSONTyped(json: any, ignoreDiscriminator: boolean)
     }
     return {
         
-            ...json,
         'currentPage': json['currentPage'],
         'endCursor': json['endCursor'],
         'hasNextPage': json['hasNextPage'],
@@ -118,7 +116,6 @@ export function PaginationToJSONTyped(value?: Pagination | null, ignoreDiscrimin
 
     return {
         
-            ...value,
         'currentPage': value['currentPage'],
         'endCursor': value['endCursor'],
         'hasNextPage': value['hasNextPage'],

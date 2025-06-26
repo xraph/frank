@@ -55,10 +55,20 @@ type OrganizationSummary struct {
 	Active      bool    `json:"active" example:"true" doc:"Whether organization is active"`
 	OrgType     OrgType `json:"orgType" example:"customer" doc:"Organization type"`
 	MemberCount int     `json:"memberCount" example:"25" doc:"Number of members"`
+	Role        string  `json:"role" example:"admin" doc:"Organization role"`
 }
 
 // CreateOrganizationRequest represents a request to create an organization
 type CreateOrganizationRequest struct {
+	Name    string  `json:"name" example:"Acme Corp" doc:"Organization name" required:"true"`
+	Slug    string  `json:"slug,omitempty" example:"acme-corp" doc:"Unique slug (auto-generated if not provided)"`
+	Domain  *string `json:"domain,omitempty" example:"acme.com" doc:"Primary domain"`
+	LogoURL *string `json:"logoUrl,omitempty" example:"https://example.com/logo.png" doc:"Logo URL"`
+	Plan    string  `json:"plan" example:"free" doc:"Initial subscription plan"`
+}
+
+// CreateOrganizationPlatformRequest represents a request to create an organization
+type CreateOrganizationPlatformRequest struct {
 	Name              string                 `json:"name" example:"Acme Corp" doc:"Organization name" required:"true"`
 	Slug              string                 `json:"slug,omitempty" example:"acme-corp" doc:"Unique slug (auto-generated if not provided)"`
 	Domain            *string                `json:"domain,omitempty" example:"acme.com" doc:"Primary domain"`
@@ -95,17 +105,17 @@ type UpdateOrganizationRequest struct {
 
 // MemberSummary represents a member summary for organization listings
 type MemberSummary struct {
-	UserID     xid.ID     `json:"userId" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"User ID"`
-	Email      string     `json:"email" example:"member@acme.com" doc:"Member email"`
-	FirstName  string     `json:"firstName,omitempty" example:"John" doc:"First name"`
-	LastName   string     `json:"lastName,omitempty" example:"Doe" doc:"Last name"`
-	RoleName   string     `json:"roleName" example:"admin" doc:"Role name"`
-	Status     string     `json:"status" example:"active" doc:"Membership status"`
-	JoinedAt   *time.Time `json:"joinedAt,omitempty" example:"2023-01-01T12:00:00Z" doc:"When member joined"`
-	LastActive *time.Time `json:"lastActive,omitempty" example:"2023-01-01T12:00:00Z" doc:"Last activity"`
-	IsOwner    bool       `json:"isOwner" example:"false" doc:"Whether member is the owner"`
-	IsBilling  bool       `json:"isBilling" example:"false" doc:"Whether member handles billing"`
-	IsPrimary  bool       `json:"isPrimary" example:"false" doc:"Whether member is primary contact"`
+	UserID     xid.ID           `json:"userId" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"User ID"`
+	Email      string           `json:"email" example:"member@acme.com" doc:"Member email"`
+	FirstName  string           `json:"firstName,omitempty" example:"John" doc:"First name"`
+	LastName   string           `json:"lastName,omitempty" example:"Doe" doc:"Last name"`
+	RoleName   string           `json:"roleName" example:"admin" doc:"Role name"`
+	Status     MembershipStatus `json:"status" example:"active" doc:"Membership status"`
+	JoinedAt   *time.Time       `json:"joinedAt,omitempty" example:"2023-01-01T12:00:00Z" doc:"When member joined"`
+	LastActive *time.Time       `json:"lastActive,omitempty" example:"2023-01-01T12:00:00Z" doc:"Last activity"`
+	IsOwner    bool             `json:"isOwner" example:"false" doc:"Whether member is the owner"`
+	IsBilling  bool             `json:"isBilling" example:"false" doc:"Whether member handles billing"`
+	IsPrimary  bool             `json:"isPrimary" example:"false" doc:"Whether member is primary contact"`
 
 	FullName    string     `json:"fullName" example:"John Doe" doc:"User full name"`
 	Avatar      string     `json:"avatar,omitempty" example:"https://example.com/avatar.jpg" doc:"User avatar URL"`

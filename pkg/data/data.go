@@ -5,7 +5,8 @@ import (
 
 	entsql "entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/schema"
-	"github.com/go-redis/redis/v8"
+	"github.com/redis/go-redis/v9"
+
 	// _ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/juicycleff/frank/config"
 	"github.com/juicycleff/frank/ent"
