@@ -59,3 +59,4 @@ gomock_*
 *.crt
 
 .claude/
+ARCH.md
