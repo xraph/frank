@@ -1,3 +1,12 @@
+## [0.8.2](https://github.com/juicycleff/frank/compare/v0.8.1...v0.8.2) (2025-06-28)
+
+
+### Bug Fixes
+
+* fixed user type detection middlewares ([abea098](https://github.com/juicycleff/frank/commit/abea098ec3a481fcde02545ab2a6153a9e71a515))
+
+
+
 ## [0.8.1](https://github.com/juicycleff/frank/compare/v0.8.0...v0.8.1) (2025-06-28)
 
 
@@ -38,15 +47,6 @@
 
 * **react:** fixed nextjs edge runtime bug ([f92b39b](https://github.com/juicycleff/frank/commit/f92b39b5c8b3372648dc48e5b18fd467c5944794))
 * **react:** fixed nextjs edge runtime bug ([e3a86df](https://github.com/juicycleff/frank/commit/e3a86df23822d14001430a21c50187622c9ef4aa))
-
-
-
-# [0.5.0](https://github.com/juicycleff/frank/compare/v0.4.0...v0.5.0) (2025-06-02)
-
-
-### Features
-
-* **react:** add "use client" directive for React components and hooks, update default storage type to memory, and bump package version to 0.1.8 ([1b7699e](https://github.com/juicycleff/frank/commit/1b7699e7f1493d6da8e4dc9a11b48fd8f66cf9ed))
 
 
 
