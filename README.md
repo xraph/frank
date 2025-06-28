@@ -1,6 +1,6 @@
 # 🔐 Frank Auth SaaS
 
-**Production-ready, multi-tenant authentication platform with Clerk.js compatibility**
+**Production-ready, multi-tenant authentication platform with Clerk.js compatibility (WIP)**
 
 [![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?style=for-the-badge&logo=go)](https://golang.org/)
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](https://choosealicense.com/licenses/mit/)
