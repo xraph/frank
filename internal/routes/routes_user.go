@@ -30,9 +30,6 @@ func RegisterUserAPI(api huma.API, di di.Container) {
 	registerBulkUserOperations(api, userCtrl)
 
 	// User profile management
-	registerGetUserProfile(api, userCtrl)
-	registerUpdateUserProfile(api, userCtrl)
-	registerChangePassword(api, userCtrl)
 	registerSetPassword(api, userCtrl)
 
 	// User role and permission management
@@ -56,6 +53,19 @@ func RegisterUserAPI(api huma.API, di di.Container) {
 	// User statistics and analytics
 	registerGetUserStats(api, userCtrl)
 	registerExportUsers(api, userCtrl)
+}
+
+// RegisterPersonalUserAPI registers all user management endpoints
+func RegisterPersonalUserAPI(api huma.API, di di.Container) {
+	userCtrl := &userController{
+		api: api,
+		di:  di,
+	}
+
+	// User profile management
+	registerGetUserProfile(api, userCtrl)
+	registerUpdateUserProfile(api, userCtrl)
+	registerChangePassword(api, userCtrl)
 }
 
 // userController handles user management API requests
@@ -183,7 +193,7 @@ func registerGetUserProfile(api huma.API, userCtrl *userController) {
 	huma.Register(api, huma.Operation{
 		OperationID: "getUserProfile",
 		Method:      http.MethodGet,
-		Path:        "/user/profile",
+		Path:        "/profile",
 		Summary:     "Get current user profile",
 		Description: "Get the current authenticated user's profile",
 		Tags:        []string{"Users"},
@@ -198,7 +208,7 @@ func registerUpdateUserProfile(api huma.API, userCtrl *userController) {
 	huma.Register(api, huma.Operation{
 		OperationID: "updateUserProfile",
 		Method:      http.MethodPut,
-		Path:        "/user/profile",
+		Path:        "/profile",
 		Summary:     "Update current user profile",
 		Description: "Update the current authenticated user's profile",
 		Tags:        []string{"Users"},
@@ -213,7 +223,7 @@ func registerChangePassword(api huma.API, userCtrl *userController) {
 	huma.Register(api, huma.Operation{
 		OperationID: "changePassword",
 		Method:      http.MethodPost,
-		Path:        "/user/change-password",
+		Path:        "/change-password",
 		Summary:     "Change password",
 		Description: "Change the current user's password",
 		Tags:        []string{"Users"},

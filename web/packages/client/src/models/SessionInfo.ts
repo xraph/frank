@@ -39,6 +39,12 @@ export interface SessionInfo {
      */
     deviceId?: string;
     /**
+     * Device type
+     * @type {string}
+     * @memberof SessionInfo
+     */
+    deviceType?: string;
+    /**
      * Session expiration time
      * @type {Date}
      * @memberof SessionInfo
@@ -69,6 +75,12 @@ export interface SessionInfo {
      */
     location?: string;
     /**
+     * Whether session is suspicious
+     * @type {boolean}
+     * @memberof SessionInfo
+     */
+    suspicious: boolean;
+    /**
      * User agent
      * @type {string}
      * @memberof SessionInfo
@@ -91,6 +103,7 @@ export function instanceOfSessionInfo(value: object): value is SessionInfo {
     if (!('expiresAt' in value) || value['expiresAt'] === undefined) return false;
     if (!('id' in value) || value['id'] === undefined) return false;
     if (!('lastActiveAt' in value) || value['lastActiveAt'] === undefined) return false;
+    if (!('suspicious' in value) || value['suspicious'] === undefined) return false;
     if (!('userId' in value) || value['userId'] === undefined) return false;
     return true;
 }
@@ -109,11 +122,13 @@ export function SessionInfoFromJSONTyped(json: any, ignoreDiscriminator: boolean
         'active': json['active'],
         'createdAt': (new Date(json['createdAt'])),
         'deviceId': json['deviceId'] == null ? undefined : json['deviceId'],
+        'deviceType': json['deviceType'] == null ? undefined : json['deviceType'],
         'expiresAt': (new Date(json['expiresAt'])),
         'id': json['id'],
         'ipAddress': json['ipAddress'] == null ? undefined : json['ipAddress'],
         'lastActiveAt': (new Date(json['lastActiveAt'])),
         'location': json['location'] == null ? undefined : json['location'],
+        'suspicious': json['suspicious'],
         'userAgent': json['userAgent'] == null ? undefined : json['userAgent'],
         'userId': json['userId'],
     };
@@ -134,11 +149,13 @@ export function SessionInfoToJSONTyped(value?: SessionInfo | null, ignoreDiscrim
         'active': value['active'],
         'createdAt': ((value['createdAt']).toISOString()),
         'deviceId': value['deviceId'],
+        'deviceType': value['deviceType'],
         'expiresAt': ((value['expiresAt']).toISOString()),
         'id': value['id'],
         'ipAddress': value['ipAddress'],
         'lastActiveAt': ((value['lastActiveAt']).toISOString()),
         'location': value['location'],
+        'suspicious': value['suspicious'],
         'userAgent': value['userAgent'],
         'userId': value['userId'],
     };

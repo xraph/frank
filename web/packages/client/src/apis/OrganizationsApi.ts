@@ -283,7 +283,7 @@ export class OrganizationsApi extends runtime.BaseAPI {
         headerParameters['Content-Type'] = 'application/json';
 
         const response = await this.request({
-            path: `/api/v1/organizations`,
+            path: `/api/v1/me/organizations`,
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
@@ -483,7 +483,7 @@ export class OrganizationsApi extends runtime.BaseAPI {
         const headerParameters: runtime.HTTPHeaders = {};
 
         const response = await this.request({
-            path: `/api/v1/organizations/{id}`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
+            path: `/api/v1/me/organizations/{id}`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
@@ -915,7 +915,7 @@ export class OrganizationsApi extends runtime.BaseAPI {
         const headerParameters: runtime.HTTPHeaders = {};
 
         const response = await this.request({
-            path: `/api/v1/organizations`,
+            path: `/api/v1/me/organizations`,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,

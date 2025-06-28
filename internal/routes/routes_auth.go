@@ -2,6 +2,7 @@ package routes
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -29,8 +30,6 @@ func RegisterPublicAuthAPI(group huma.API, di di.Container) {
 	// Register authentication endpoints
 	registerLogin(group, authCtrl)
 	registerRegister(group, authCtrl)
-	registerLogout(group, authCtrl)
-	registerRefreshToken(group, authCtrl)
 	registerForgotPassword(group, authCtrl)
 	registerResetPassword(group, authCtrl)
 	registerValidateToken(group, authCtrl)
@@ -59,24 +58,43 @@ func RegisterPublicAuthAPI(group huma.API, di di.Container) {
 
 // RegisterAuthAPI registers all authentication-related endpoints
 func RegisterAuthAPI(group huma.API, di di.Container) {
+	// authCtrl := &authController{
+	// 	group: group,
+	// 	di:    di,
+	// }
+	//
+	// // MFA endpoints
+	// registerMFASetup(group, authCtrl)
+	// registerMFASetupVerify(group, authCtrl)
+	// registerMFADisable(group, authCtrl)
+	// registerMFABackupCodes(group, authCtrl)
+}
+
+// RegisterPersonalAuthAPI New function to register personal auth endpoints
+func RegisterPersonalAuthAPI(group huma.API, di di.Container) {
 	authCtrl := &authController{
 		group: group,
 		di:    di,
 	}
 
-	// MFA endpoints
+	// Personal auth operations that don't need organization context
+	registerLogout(group, authCtrl)
+	registerRefreshToken(group, authCtrl)
+	registerAuthStatus(group, authCtrl)
+
+	// Personal MFA endpoints
 	registerMFASetup(group, authCtrl)
 	registerMFASetupVerify(group, authCtrl)
 	registerMFADisable(group, authCtrl)
 	registerMFABackupCodes(group, authCtrl)
 
-	// Passkey endpoints
+	// Personal passkey endpoints
 	registerPasskeyRegistrationBegin(group, authCtrl)
 	registerPasskeyRegistrationFinish(group, authCtrl)
 	registerListPasskeys(group, authCtrl)
 	registerDeletePasskey(group, authCtrl)
 
-	// Session management
+	// Personal session management
 	registerRefreshSession(group, authCtrl)
 	registerListSessions(group, authCtrl)
 	registerRevokeSession(group, authCtrl)
@@ -694,22 +712,37 @@ type RevokeAllSessionsInput struct {
 func (c *authController) loginHandler(ctx context.Context, input *LoginInput) (*LoginOutput, error) {
 	// Check if user is already authenticated (but allow client API keys through)
 	currentUser := middleware.GetUserFromContext(ctx)
+	requestedOrgID := c.getRequestedOrganizationID(ctx)
+
+	// Check if we need to handle organization context switching
 	if currentUser != nil && !middleware.IsClientAPIKey(ctx) {
-		return nil, errors.New(errors.CodeBadRequest, "user is already authenticated")
+		needsOrgSwitch, err := c.needsOrganizationSwitch(ctx, currentUser, requestedOrgID)
+		if err != nil {
+			return nil, err
+		}
+
+		if !needsOrgSwitch {
+			return nil, errors.New(errors.CodeBadRequest, "user is already authenticated in the same organization context")
+		}
+
+		// Handle organization switching by invalidating current session
+		if err := c.handleOrganizationSwitch(ctx, currentUser, requestedOrgID); err != nil {
+			c.di.Logger().Warn("Failed to handle organization switch", logging.Error(err))
+			// Continue with login instead of failing
+		}
 	}
 
-	// Get organization context from API key or header
+	// Get organization context from API key or header with enhanced detection
 	var orgID *xid.ID
 	if apiOrgID := c.getOrganizationFromAPIKey(ctx); apiOrgID != nil {
 		orgID = apiOrgID
 	} else {
-		userType := c.getDetectedUserType(ctx)
-		if err := c.validateOrganizationContext(ctx, userType, true); err != nil {
-			return nil, err
-		}
-		orgContext := c.getOrganizationContext(ctx)
-		if orgContext != nil {
-			orgID = &orgContext.ID
+		// Enhanced organization context detection
+		orgID = c.detectOrganizationContext(ctx, input.Body)
+		if orgID != nil {
+			c.di.Logger().Debug("Detected organization context for login",
+				logging.String("orgId", orgID.String()),
+				logging.String("email", input.Body.Email))
 		}
 	}
 
@@ -727,9 +760,11 @@ func (c *authController) loginHandler(ctx context.Context, input *LoginInput) (*
 		Action: audit.ActionUserLogin,
 		Status: audit.StatusFailure,
 		Details: map[string]interface{}{
-			"email":    input.Body.Email,
-			"provider": input.Body.Provider,
-			"method":   c.getLoginMethod(input.Body),
+			"email":               input.Body.Email,
+			"provider":            input.Body.Provider,
+			"method":              c.getLoginMethod(input.Body),
+			"organization_id":     orgIDToString(orgID),
+			"organization_switch": currentUser != nil,
 		},
 		Source: audit.SourceWeb,
 	}
@@ -820,36 +855,68 @@ func (c *authController) registerHandler(ctx context.Context, input *RegisterInp
 func (c *authController) unifiedRegistrationHandler(ctx context.Context, input *RegisterInput) (*RegisterOutput, error) {
 	// Check if user is already authenticated (but allow client API keys through)
 	currentUser := middleware.GetUserFromContext(ctx)
-	if currentUser != nil && !middleware.IsClientAPIKey(ctx) {
-		return nil, errors.New(errors.CodeBadRequest, "user is already authenticated")
-	}
+	requestedOrgID := c.getRequestedOrganizationID(ctx)
 
-	// Get detected flow from middleware
-	flow := contexts.GetRegistrationFlowFromContext(ctx)
-	flowData := contexts.GetRegistrationFlowDataFromContext(ctx)
+	// Allow registration even if authenticated, but handle organization context switching
+	if currentUser != nil && !middleware.IsClientAPIKey(ctx) {
+		needsOrgSwitch, err := c.needsOrganizationSwitch(ctx, currentUser, requestedOrgID)
+		if err != nil {
+			return nil, err
+		}
+
+		if !needsOrgSwitch {
+			// User is authenticated in the same organization context
+			// This might be valid for certain scenarios (e.g., creating additional accounts)
+			c.di.Logger().Debug("User attempting registration while authenticated in same org context",
+				logging.String("userId", currentUser.ID.String()),
+				logging.String("email", input.Body.Email))
+		} else {
+			// Handle organization switching
+			if err := c.handleOrganizationSwitch(ctx, currentUser, requestedOrgID); err != nil {
+				c.di.Logger().Warn("Failed to handle organization switch during registration", logging.Error(err))
+			}
+		}
+	}
 
 	// Get organization context from API key first, then fallback to other sources
 	var orgID *xid.ID
 	if apiOrgID := c.getOrganizationFromAPIKey(ctx); apiOrgID != nil {
 		orgID = apiOrgID
 		// Set organization context in flow data for consistency
+		flowData := contexts.GetRegistrationFlowDataFromContext(ctx)
 		if flowData == nil {
 			flowData = make(map[string]interface{})
 		}
 		flowData["organization_id"] = apiOrgID.String()
+		ctx = context.WithValue(ctx, contexts.RegistrationFlowDataKey, flowData)
+	} else {
+		phoneNumber := ""
+		if input.Body.PhoneNumber != nil {
+			phoneNumber = *input.Body.PhoneNumber
+		}
+		// Enhanced organization context detection for registration
+		orgID = c.detectOrganizationContext(ctx, model.LoginRequest{
+			Email:       input.Body.Email,
+			PhoneNumber: phoneNumber,
+		})
+		if orgID != nil {
+			c.di.Logger().Debug("Detected organization context for registration",
+				logging.String("orgId", orgID.String()),
+				logging.String("email", input.Body.Email))
+		}
 	}
+
+	// Get detected flow from middleware
+	flow := contexts.GetRegistrationFlowFromContext(ctx)
+	flowData := contexts.GetRegistrationFlowDataFromContext(ctx)
 
 	c.di.Logger().Info("Processing unified registration",
 		logging.String("email", input.Body.Email),
 		logging.String("userType", input.Body.UserType),
 		logging.String("flow", string(flow)),
 		logging.Bool("hasClientAPIKey", middleware.IsClientAPIKey(ctx)),
-		logging.String("orgFromAPIKey", func() string {
-			if orgID != nil {
-				return orgID.String()
-			}
-			return ""
-		}()))
+		logging.String("orgFromAPIKey", orgIDToString(orgID)),
+		logging.Bool("organizationSwitch", currentUser != nil))
 
 	authSvc := c.di.Auth()
 	if authSvc == nil {
@@ -875,7 +942,7 @@ func (c *authController) unifiedRegistrationHandler(ctx context.Context, input *
 		}
 	}
 
-	// Set organization ID from API key if available
+	// Set organization ID from enhanced detection if available
 	if orgID != nil {
 		input.Body.OrganizationID = orgID
 	}
@@ -902,6 +969,157 @@ func (c *authController) unifiedRegistrationHandler(ctx context.Context, input *
 			return c.handleExternalUserRegistration(ctx, input, flowData)
 		}
 	}
+}
+
+// needsOrganizationSwitch determines if the current user needs to switch organization context
+func (c *authController) needsOrganizationSwitch(ctx context.Context, currentUser *middleware.UserContext, requestedOrgID *xid.ID) (bool, error) {
+	// Internal users don't need organization switching
+	if currentUser.UserType == model.UserTypeInternal {
+		return false, nil
+	}
+
+	// If no organization is requested, no switch needed
+	if requestedOrgID == nil {
+		return false, nil
+	}
+
+	// If user has no organization context, switch is needed
+	if currentUser.OrganizationID == nil {
+		return true, nil
+	}
+
+	// If user is in a different organization, switch is needed
+	if *currentUser.OrganizationID != *requestedOrgID {
+		return true, nil
+	}
+
+	// No switch needed - same organization context
+	return false, nil
+}
+
+// handleOrganizationSwitch handles switching between organization contexts
+func (c *authController) handleOrganizationSwitch(ctx context.Context, currentUser *middleware.UserContext, newOrgID *xid.ID) error {
+	c.di.Logger().Info("Handling organization context switch",
+		logging.String("userId", currentUser.ID.String()),
+		logging.String("currentOrgId", orgIDToString(currentUser.OrganizationID)),
+		logging.String("newOrgId", orgIDToString(newOrgID)))
+
+	// Invalidate current session if it exists
+	if currentSession := middleware.GetSessionFromContext(ctx); currentSession != nil {
+		sessionService := c.di.SessionService()
+		if sessionService != nil {
+			err := sessionService.InvalidateSession(ctx, currentSession.ID)
+			if err != nil {
+				c.di.Logger().Error("Failed to invalidate session during organization switch",
+					logging.Error(err),
+					logging.String("sessionId", currentSession.ID.String()))
+				return errors.Wrap(err, errors.CodeInternalServer, "failed to invalidate current session")
+			}
+
+			c.di.Logger().Debug("Invalidated session for organization switch",
+				logging.String("sessionId", currentSession.ID.String()))
+		}
+	}
+
+	// Log audit event for organization switch
+	auditEvent := audit.AuditEvent{
+		Action: audit.ActionOrganizationSwitch,
+		Status: audit.StatusSuccess,
+		Details: map[string]interface{}{
+			"previous_organization_id": orgIDToString(currentUser.OrganizationID),
+			"new_organization_id":      orgIDToString(newOrgID),
+			"user_type":                currentUser.UserType,
+		},
+		Source: audit.SourceWeb,
+	}
+	c.logAuditEvent(ctx, auditEvent)
+
+	return nil
+}
+
+// detectOrganizationContext attempts to detect organization context from various sources
+func (c *authController) detectOrganizationContext(ctx context.Context, req model.LoginRequest) *xid.ID {
+	// 1. Check API key organization context
+	if apiOrgID := c.getOrganizationFromAPIKey(ctx); apiOrgID != nil {
+		return apiOrgID
+	}
+
+	// 2. Check detected organization ID from middleware
+	if detectedOrgID := c.getDetectedOrganizationID(ctx); detectedOrgID != nil {
+		return detectedOrgID
+	}
+
+	// 3. Check organization context from headers/request
+	if orgContext := c.getOrganizationContext(ctx); orgContext != nil {
+		return &orgContext.ID
+	}
+
+	// 4. For end users, try to find organization from user's email domain (if configured)
+	userType := c.getDetectedUserType(ctx)
+	if userType == string(model.UserTypeEndUser) && req.Email != "" {
+		if orgID := c.findOrganizationByEmailDomain(ctx, req.Email); orgID != nil {
+			c.di.Logger().Debug("Found organization by email domain",
+				logging.String("email", req.Email),
+				logging.String("orgId", orgID.String()))
+			return orgID
+		}
+	}
+
+	return nil
+}
+
+// findOrganizationByEmailDomain attempts to find an organization by email domain
+func (c *authController) findOrganizationByEmailDomain(ctx context.Context, email string) *xid.ID {
+	if email == "" {
+		return nil
+	}
+
+	parts := strings.Split(email, "@")
+	if len(parts) != 2 {
+		return nil
+	}
+
+	domain := parts[1]
+
+	// Try to find organization by domain
+	org, err := c.di.Repo().Organization().GetByDomain(ctx, domain)
+	if err != nil {
+		// Domain not found or error - this is normal
+		return nil
+	}
+
+	if !org.Active {
+		return nil
+	}
+
+	return &org.ID
+}
+
+// getRequestedOrganizationID gets the organization ID being requested in the current context
+func (c *authController) getRequestedOrganizationID(ctx context.Context) *xid.ID {
+	// Try various sources in priority order
+
+	// 1. From API key context
+	if apiOrgID := c.getOrganizationFromAPIKey(ctx); apiOrgID != nil {
+		return apiOrgID
+	}
+
+	// 2. From detected organization context
+	if detectedOrgID := c.getDetectedOrganizationID(ctx); detectedOrgID != nil {
+		return detectedOrgID
+	}
+
+	// 3. From organization context
+	if orgContext := c.getOrganizationContext(ctx); orgContext != nil {
+		return &orgContext.ID
+	}
+
+	// 4. From middleware context
+	if orgID := middleware.GetOrganizationIDFromContext(ctx); orgID != nil {
+		return orgID
+	}
+
+	return nil
 }
 
 func (c *authController) handleOrganizationCreationRegistration(ctx context.Context, input *RegisterInput, flowData map[string]interface{}) (*RegisterOutput, error) {
@@ -1102,6 +1320,7 @@ func (c *authController) handleEndUserRegistration(ctx context.Context, input *R
 		}
 	}
 
+	fmt.Println("orgID ---- ===> ", orgID)
 	if orgID == nil {
 		return nil, errors.New(errors.CodeBadRequest, "organization context is required for end user registration")
 	}
@@ -1141,11 +1360,16 @@ func (c *authController) logoutHandler(ctx context.Context, input *LogoutInput) 
 		return nil, errors.New(errors.CodeInternalServer, "auth service not available")
 	}
 
+	currentUser := middleware.GetUserFromContext(ctx)
+	currentSession := middleware.GetSessionFromContext(ctx)
+
 	auditEvent := audit.AuditEvent{
 		Action: audit.ActionUserLogout,
-		Status: audit.StatusFailure, // Will be updated if login fails
+		Status: audit.StatusFailure,
 		Details: map[string]interface{}{
-			"logout_all": input.Body.LogoutAll,
+			"logout_all":      input.Body.LogoutAll,
+			"organization_id": orgIDToString(currentUser.OrganizationID),
+			"session_id":      sessionIDToString(currentSession),
 		},
 		Source: audit.SourceWeb,
 	}
@@ -1159,10 +1383,19 @@ func (c *authController) logoutHandler(ctx context.Context, input *LogoutInput) 
 
 	auditEvent.Status = audit.StatusSuccess
 
-	return &LogoutOutput{
+	// Create response with cookie deletion
+	logoutResp := &LogoutOutput{
 		SetCookie: c.deleteCookie(),
 		Body:      *response,
-	}, nil
+	}
+
+	// Add additional cookies to clear if needed
+	if input.Body.LogoutAll {
+		// Clear any additional session-related cookies
+		logoutResp.Body.Message = "Logged out from all sessions successfully"
+	}
+
+	return logoutResp, nil
 }
 
 func (c *authController) refreshTokenHandler(ctx context.Context, input *RefreshTokenInput) (*RefreshTokenOutput, error) {
@@ -1423,23 +1656,32 @@ func (c *authController) resendVerificationHandler(ctx context.Context, input *R
 func (c *authController) magicLinkHandler(ctx context.Context, input *MagicLinkInput) (*MagicLinkOutput, error) {
 	// Check if user is already authenticated (but allow client API keys through)
 	currentUser := middleware.GetUserFromContext(ctx)
+	requestedOrgID := c.getRequestedOrganizationID(ctx)
+
+	// Allow magic link generation even if authenticated, but handle organization context switching
 	if currentUser != nil && !middleware.IsClientAPIKey(ctx) {
-		return nil, errors.New(errors.CodeBadRequest, "user is already authenticated")
+		needsOrgSwitch, err := c.needsOrganizationSwitch(ctx, currentUser, requestedOrgID)
+		if err != nil {
+			return nil, err
+		}
+
+		if needsOrgSwitch {
+			c.di.Logger().Debug("User requesting magic link for different organization context",
+				logging.String("userId", currentUser.ID.String()),
+				logging.String("currentOrgId", orgIDToString(currentUser.OrganizationID)),
+				logging.String("requestedOrgId", orgIDToString(requestedOrgID)))
+		}
 	}
 
-	// Get organization context from API key or header
+	// Get organization context from API key or header with enhanced detection
 	var orgID *xid.ID
 	if apiOrgID := c.getOrganizationFromAPIKey(ctx); apiOrgID != nil {
 		orgID = apiOrgID
 	} else {
-		userType := c.getDetectedUserType(ctx)
-		if err := c.validateOrganizationContext(ctx, userType, true); err != nil {
-			return nil, err
-		}
-		orgContext := c.getOrganizationContext(ctx)
-		if orgContext != nil {
-			orgID = &orgContext.ID
-		}
+		// Enhanced organization context detection for magic link
+		orgID = c.detectOrganizationContext(ctx, model.LoginRequest{
+			Email: input.Body.Email,
+		})
 	}
 
 	authSvc := c.di.Auth()
@@ -1455,8 +1697,10 @@ func (c *authController) magicLinkHandler(ctx context.Context, input *MagicLinkI
 		Action: audit.ActionGenerateMagicLink,
 		Status: audit.StatusFailure,
 		Details: map[string]interface{}{
-			"email":        input.Body.Email,
-			"redirect_url": input.Body.RedirectURL,
+			"email":               input.Body.Email,
+			"redirect_url":        input.Body.RedirectURL,
+			"organization_id":     orgIDToString(orgID),
+			"organization_switch": currentUser != nil,
 		},
 		Source: audit.SourceWeb,
 	}
@@ -3048,6 +3292,7 @@ func (c *authController) deleteCookie() http.Cookie {
 		Secure:   c.di.Config().Auth.CookieSecure,
 		HttpOnly: c.di.Config().Auth.CookieHTTPOnly,
 		MaxAge:   -1,
+		Expires:  time.Unix(0, 0),
 	}
 }
 
@@ -3175,7 +3420,7 @@ func (c *authController) getOrganizationContext(ctx context.Context) *contexts.O
 
 // getDetectedUserType retrieves detected user type from context
 func (c *authController) getDetectedUserType(ctx context.Context) string {
-	return middleware.GetDetectedUserTypeFromContext(ctx)
+	return string(middleware.GetDetectedUserTypeFromContext(ctx))
 }
 
 // getDetectedOrganizationID retrieves detected organization ID from context
@@ -3308,4 +3553,20 @@ func (c *authController) getOrganizationFromAPIKey(ctx context.Context) *xid.ID 
 		return apiKey.OrganizationID
 	}
 	return nil
+}
+
+// Helper function to convert organization ID to string for logging
+func orgIDToString(orgID *xid.ID) string {
+	if orgID == nil {
+		return "none"
+	}
+	return orgID.String()
+}
+
+// Helper function to convert session to string for logging
+func sessionIDToString(session *middleware.SessionContext) string {
+	if session == nil {
+		return "none"
+	}
+	return session.ID.String()
 }

@@ -16,6 +16,7 @@ import (
 	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/juicycleff/frank/pkg/logging"
 	"github.com/juicycleff/frank/pkg/model"
+	"github.com/juicycleff/frank/pkg/server"
 	"github.com/rs/xid"
 )
 
@@ -48,62 +49,47 @@ type TenantConfig struct {
 	EnableTenantCache   bool     // Enable tenant caching
 	CacheTTL            int      // Cache TTL in seconds
 	Logger              logging.Logger
+
+	// Enhanced configuration options
+	SkipPathsForMethods map[string][]string // Skip paths for specific HTTP methods
+	AlwaysSkipPaths     []string            // Paths that always skip regardless of mount
+	BasePathAware       bool                // Whether to use base path awareness
+	StrictPathMatching  bool                // Whether to use strict path matching
+	DebugPathMatching   bool                // Enable debug logging for path matching
 }
 
 // TenantContext represents the current tenant context
-type TenantContext struct {
-	Organization *model.Organization `json:"organization"`
-	Plan         string              `json:"plan"`
-	Type         model.OrgType       `json:"type"`
-	Features     []string            `json:"features,omitempty"`
-	Limits       *TenantLimits       `json:"limits,omitempty"`
-	Settings     map[string]any      `json:"settings,omitempty"`
-	Active       bool                `json:"active"`
-	Trial        *TrialInfo          `json:"trial,omitempty"`
-}
+type TenantContext = contexts2.TenantContext
 
 // TenantLimits represents tenant-specific limits
-type TenantLimits struct {
-	ExternalUsers  int   `json:"external_users"`
-	EndUsers       int   `json:"end_users"`
-	APIRequests    int   `json:"api_requests"`
-	Storage        int64 `json:"storage"` // bytes
-	EmailsPerMonth int   `json:"emails_per_month"`
-	SMSPerMonth    int   `json:"sms_per_month"`
-	Webhooks       int   `json:"webhooks"`
-	SSO            bool  `json:"sso"`
-	CustomDomains  int   `json:"custom_domains"`
-}
+type TenantLimits = contexts2.TenantLimits
 
 // TrialInfo represents trial information
-type TrialInfo struct {
-	Active    bool       `json:"active"`
-	ExpiresAt *time.Time `json:"expires_at,omitempty"`
-	DaysLeft  int        `json:"days_left"`
-	Used      bool       `json:"used"`
-}
+type TrialInfo = contexts2.TrialInfo
 
 // TenantMiddleware handles multi-tenant context and isolation
 type TenantMiddleware struct {
-	api      huma.API
-	config   *TenantConfig
-	orgRepo  repository.OrganizationRepository
-	userRepo repository.UserRepository
-	logger   logging.Logger
+	api       huma.API
+	config    *TenantConfig
+	orgRepo   repository.OrganizationRepository
+	userRepo  repository.UserRepository
+	logger    logging.Logger
+	mountOpts *server.MountOptions
 }
 
 // NewTenantMiddleware creates a new tenant middleware
-func NewTenantMiddleware(api huma.API, di di.Container, config *TenantConfig) *TenantMiddleware {
+func NewTenantMiddleware(api huma.API, di di.Container, config *TenantConfig, mountOpts *server.MountOptions) *TenantMiddleware {
 	if config.Logger == nil {
 		config.Logger = di.Logger().Named("tenant-middleware")
 	}
 
 	return &TenantMiddleware{
-		api:      api,
-		config:   config,
-		orgRepo:  di.Repo().Organization(),
-		userRepo: di.Repo().User(),
-		logger:   config.Logger,
+		api:       api,
+		config:    config,
+		orgRepo:   di.Repo().Organization(),
+		userRepo:  di.Repo().User(),
+		logger:    config.Logger,
+		mountOpts: mountOpts,
 	}
 }
 
@@ -119,17 +105,76 @@ func DefaultTenantConfig() *TenantConfig {
 		EnableTenantCache:   true,
 		CacheTTL:            300, // 5 minutes
 		SkipPaths: []string{
+			// System paths (these don't use base path)
 			"/health",
 			"/ready",
 			"/metrics",
 			"/favicon.ico",
 			"/robots.txt",
-			"/api/v1/auth/login",
-			"/api/v1/auth/register",
-			"/api/v1/auth/forgot-password",
-			"/api/v1/auth/reset-password",
-			// "/api/v1/organizations", // Organization creation
+			"/openapi",
+			"/docs",
+			"/debug",
+
+			// Authentication paths that don't require tenant context
+			"/auth/login",
+			"/auth/register",
+			"/auth/forgot-password",
+			"/auth/reset-password",
+			"/auth/verify-email",
+			"/auth/verify-phone",
+			"/auth/resend-verification",
+			"/auth/magic-link",
+			"/auth/verify-magic-link",
+			"/auth/validate-token",
+
+			// Personal auth operations
+			"/auth/logout",
+			"/auth/refresh",
+			"/auth/status",
+
+			// OAuth operations that might not need tenant context
+			"/auth/oauth",
+
+			// Passkey operations that might be public
+			"/auth/passkeys/authenticate",
+
+			// Organization creation (no tenant context needed)
+			"/organizations", // This will be handled with method checking
+
+			// Personal user operations
+			"/me/profile",
+			"/me/change-password",
+			"/me/organizations",
+			"/me/memberships",
+
+			// Public webhook endpoints
+			"/webhooks/public",
+
+			// SSO endpoints that might be public
+			"/sso/public",
 		},
+		SkipPathsForMethods: map[string][]string{
+			"POST": {
+				"/organizations", // Allow organization creation
+			},
+			"GET": {
+				"/organizations",        // Allow organization listing
+				"/auth/oauth/providers", // Allow listing OAuth providers
+			},
+			"OPTIONS": {
+				"*", // Allow all OPTIONS requests
+			},
+		},
+		AlwaysSkipPaths: []string{
+			"/health",
+			"/ready",
+			"/metrics",
+			"/favicon.ico",
+			"/robots.txt",
+		},
+		BasePathAware:      true,
+		StrictPathMatching: false,
+		DebugPathMatching:  false, // Set to true in development
 	}
 }
 
@@ -140,7 +185,7 @@ func (tm *TenantMiddleware) Middleware() func(http.Handler) http.Handler {
 			ctx := r.Context()
 
 			// Skip tenant resolution for certain paths
-			if tm.shouldSkipPath(r.URL.Path) {
+			if tm.shouldSkipPath(r.URL.Path, r.Method) {
 				next.ServeHTTP(w, r)
 				return
 			}
@@ -190,8 +235,28 @@ func (tm *TenantMiddleware) HumaMiddleware() func(huma.Context, func(huma.Contex
 		rctx := ctx.Context()
 		r := contexts2.GetRequestFromContext(rctx)
 
+		path := ctx.URL().Path
+		method := r.Method
+
+		// Debug logging if enabled
+		if tm.config.DebugPathMatching && tm.config.Logger != nil {
+			tm.config.Logger.Debug("Tenant middleware path checking",
+				logging.String("path", path),
+				logging.String("method", method),
+				logging.String("basePath", func() string {
+					if tm.mountOpts != nil {
+						return tm.mountOpts.BasePath
+					}
+					return "none"
+				}()),
+			)
+		}
+
 		// Skip tenant resolution for certain paths
-		if tm.shouldSkipPath(ctx.URL().Path) {
+		if tm.shouldSkipPath(path, method) {
+			if tm.config.DebugPathMatching && tm.config.Logger != nil {
+				tm.config.Logger.Debug("Skipping tenant resolution", logging.String("path", path))
+			}
 			next(ctx)
 			return
 		}
@@ -653,16 +718,54 @@ func (tm *TenantMiddleware) hasFeature(tenant *TenantContext, feature string) bo
 	return false
 }
 
-func (tm *TenantMiddleware) shouldSkipPath(path string) bool {
-	for _, skipPath := range tm.config.SkipPaths {
-		if strings.HasPrefix(path, skipPath) {
+func (tm *TenantMiddleware) shouldSkipPath(path, method string) bool {
+	// Always skip paths (regardless of base path)
+	for _, alwaysSkipPath := range tm.config.AlwaysSkipPaths {
+		if strings.Contains(path, alwaysSkipPath) {
 			return true
 		}
 	}
+
+	// Method-specific skip paths
+	if methodPaths, exists := tm.config.SkipPathsForMethods[method]; exists {
+		methodFullPaths := tm.buildFullPathsWithBasePath(methodPaths)
+		for _, methodPath := range methodFullPaths {
+			if methodPath == "*" || tm.matchPath(path, methodPath) {
+				return true
+			}
+		}
+	}
+
+	// Regular skip paths with base path consideration
+	if tm.config.BasePathAware {
+		fullPaths := tm.buildFullPathsWithBasePath(tm.config.SkipPaths)
+		for _, fullPath := range fullPaths {
+			if tm.matchPath(path, fullPath) {
+				return true
+			}
+		}
+	} else {
+		// Legacy behavior - direct path matching
+		for _, skipPath := range tm.config.SkipPaths {
+			if tm.matchPath(path, skipPath) {
+				return true
+			}
+		}
+	}
+
 	return false
 }
 
-// Context helper methods
+// Enhanced path matching with strict/loose options
+func (tm *TenantMiddleware) matchPath(requestPath, skipPath string) bool {
+	if tm.config.StrictPathMatching {
+		// Exact match
+		return requestPath == skipPath
+	} else {
+		// Flexible matching - check both prefix and suffix
+		return strings.HasPrefix(requestPath, skipPath) || strings.HasSuffix(requestPath, skipPath)
+	}
+}
 
 func (tm *TenantMiddleware) setTenantContext(ctx context.Context, tenant *TenantContext) context.Context {
 	ctx = context.WithValue(ctx, contexts2.TenantContextKey, tenant)
@@ -842,32 +945,113 @@ func CheckLimit(ctx context.Context, limitType string, current int) bool {
 }
 
 // PathBasedTenantMiddleware Path-based tenant middleware specifically for API routes
-func PathBasedTenantMiddleware(api huma.API, di di.Container) func(http.Handler) http.Handler {
+func PathBasedTenantMiddleware(api huma.API, di di.Container, mountOpts *server.MountOptions) func(http.Handler) http.Handler {
 	config := DefaultTenantConfig()
 	config.Strategy = ResolutionByPath
 	config.RequireTenant = true
 
-	tm := NewTenantMiddleware(api, di, config)
+	tm := NewTenantMiddleware(api, di, config, mountOpts)
 	return tm.Middleware()
 }
 
 // SubdomainBasedTenantMiddleware Subdomain-based tenant middleware for SaaS applications
-func SubdomainBasedTenantMiddleware(api huma.API, di di.Container, suffix string) func(http.Handler) http.Handler {
+func SubdomainBasedTenantMiddleware(api huma.API, di di.Container, mountOpts *server.MountOptions, suffix string) func(http.Handler) http.Handler {
 	config := DefaultTenantConfig()
 	config.Strategy = ResolutionBySubdomain
 	config.SubdomainSuffix = suffix
 	config.RequireTenant = true
 
-	tm := NewTenantMiddleware(api, di, config)
+	tm := NewTenantMiddleware(api, di, config, mountOpts)
 	return tm.Middleware()
 }
 
 // HeaderBasedTenantMiddleware Header-based tenant middleware for API clients
-func HeaderBasedTenantMiddleware(api huma.API, di di.Container) func(http.Handler) http.Handler {
+func HeaderBasedTenantMiddleware(api huma.API, di di.Container, mountOpts *server.MountOptions) func(http.Handler) http.Handler {
 	config := DefaultTenantConfig()
 	config.Strategy = ResolutionByHeader
 	config.RequireTenant = false
 
-	tm := NewTenantMiddleware(api, di, config)
+	tm := NewTenantMiddleware(api, di, config, mountOpts)
 	return tm.Middleware()
+}
+
+// TenantConfigForEnvironment Configuration builder for different environments
+func TenantConfigForEnvironment(env string, basePath string) *TenantConfig {
+	config := DefaultTenantConfig()
+
+	switch env {
+	case "development":
+		config.DebugPathMatching = true
+		config.StrictPathMatching = false
+		config.RequireTenant = false
+
+	case "staging":
+		config.DebugPathMatching = true
+		config.StrictPathMatching = false
+		config.RequireTenant = false
+
+	case "production":
+		config.DebugPathMatching = false
+		config.StrictPathMatching = true
+		config.RequireTenant = true
+	}
+
+	return config
+}
+
+// Validate Helper function to validate tenant configuration
+func (tc *TenantConfig) Validate() error {
+	if tc.Strategy == "" {
+		return errors.New(errors.CodeBadRequest, "tenant resolution strategy is required")
+	}
+
+	if tc.Strategy == ResolutionByHeader && tc.HeaderName == "" {
+		return errors.New(errors.CodeBadRequest, "header name is required for header-based resolution")
+	}
+
+	if tc.Strategy == ResolutionByQuery && tc.QueryParam == "" {
+		return errors.New(errors.CodeBadRequest, "query parameter is required for query-based resolution")
+	}
+
+	if tc.Strategy == ResolutionBySubdomain && tc.SubdomainSuffix == "" {
+		return errors.New(errors.CodeBadRequest, "subdomain suffix is required for subdomain-based resolution")
+	}
+
+	return nil
+}
+
+func MergeTenantConfigs(base, override *TenantConfig) *TenantConfig {
+	if base == nil {
+		return override
+	}
+	if override == nil {
+		return base
+	}
+
+	// Create a copy of base config
+	merged := *base
+
+	// Override non-zero values
+	if override.Strategy != "" {
+		merged.Strategy = override.Strategy
+	}
+	if override.HeaderName != "" {
+		merged.HeaderName = override.HeaderName
+	}
+	if override.QueryParam != "" {
+		merged.QueryParam = override.QueryParam
+	}
+	if len(override.SkipPaths) > 0 {
+		merged.SkipPaths = append(merged.SkipPaths, override.SkipPaths...)
+	}
+	if len(override.SkipPathsForMethods) > 0 {
+		if merged.SkipPathsForMethods == nil {
+			merged.SkipPathsForMethods = make(map[string][]string)
+		}
+		for method, paths := range override.SkipPathsForMethods {
+			merged.SkipPathsForMethods[method] = append(merged.SkipPathsForMethods[method], paths...)
+		}
+	}
+
+	return &merged
 }

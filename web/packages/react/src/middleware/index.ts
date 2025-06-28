@@ -24,7 +24,7 @@
  */
 
 import {NextRequest, NextResponse} from 'next/server';
-import {Session, User} from '@frank-auth/client';
+import {Session, User, UserType} from '@frank-auth/client';
 import {FrankAuthConfig} from '../types';
 import {FrankAuth} from "@frank-auth/sdk";
 
@@ -33,8 +33,11 @@ import {FrankAuth} from "@frank-auth/sdk";
 // ============================================================================
 
 export interface MiddlewareConfig extends Omit<FrankAuthConfig, 'enableDevMode'> {
-    storageKeyPrefix?: string
-    sessionCookieName?: string
+    storageKeyPrefix?: string;
+    sessionCookieName?: string;
+    userType?: UserType;
+    projectId?: string;
+    secretKey?: string;
 
     /**
      * Paths that are publicly accessible without authentication
@@ -272,7 +275,9 @@ async function validateSession(
         sessionCookieName: config.sessionCookieName,
         storageKeyPrefix: config.storageKeyPrefix,
         enableDevMode: config.debug,
-//        userType: userType ?? 'end_user',
+        userType: config.userType ?? 'end_user',
+        projectId: config.projectId,
+        secretKey: config.secretKey,
     })
 
     try {
@@ -281,7 +286,13 @@ async function validateSession(
             'Authorization': `Bearer ${token}`,
             'X-Publishable-Key': config.publishableKey,
             'Content-Type': 'application/json',
+            'X-Org-ID': config.projectId,
+            'X-User-Type': config.userType ?? 'end_user',
         };
+
+        if (config.secretKey) {
+            headers['X-API-Key'] = config.secretKey
+        }
 
         // Forward cookies if they exist
         const cookieHeader = req.headers.get('cookie');
@@ -320,6 +331,7 @@ async function validateSession(
             error: null,
         };
     } catch (error) {
+        debugLog(config, 'Validating session error:', error);
         return {
             isAuthenticated: false,
             user: null,
@@ -338,11 +350,28 @@ async function refreshSession(
     config: Required<MiddlewareConfig>,
     req: NextRequest
 ): Promise<{ accessToken: string; refreshToken: string } | null> {
+    const authApi = new FrankAuth({
+        apiUrl: config.apiUrl,
+        publishableKey: config.publishableKey,
+        sessionCookieName: config.sessionCookieName,
+        storageKeyPrefix: config.storageKeyPrefix,
+        enableDevMode: config.debug,
+        userType: config.userType ?? 'end_user',
+        projectId: config.projectId,
+        secretKey: config.secretKey,
+    })
+
     try {
         const headers: Record<string, string> = {
             'X-Publishable-Key': config.publishableKey,
             'Content-Type': 'application/json',
+            'X-Org-ID': config.projectId,
+            'X-User-Type': config.userType ?? 'end_user',
         };
+
+        if (config.secretKey) {
+            headers['X-API-Key'] = config.secretKey
+        }
 
         // Forward cookies for refresh
         const cookieHeader = req.headers.get('cookie');
@@ -350,19 +379,16 @@ async function refreshSession(
             headers['Cookie'] = cookieHeader;
         }
 
-        const response = await fetch(`${config.apiUrl}/api/v1/public/auth/refresh`, {
-            method: 'POST',
+        const result = await authApi.refreshSession(refreshToken, {
             credentials: 'include',
             headers,
-            body: JSON.stringify({refreshToken}),
         });
 
-        if (!response.ok) return null;
+        if (!result) return null;
 
-        const result = await response.json();
         return {
             accessToken: result.accessToken,
-            refreshToken: result.refreshToken,
+            refreshToken: result.refreshToken ?? '',
         };
     } catch {
         return null;

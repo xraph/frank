@@ -62,7 +62,7 @@ function preserveUseClient() {
 	};
 }
 
-export default defineConfig(({ command, mode }) => {
+export default defineConfig(({command, mode}) => {
 	const isProduction = mode === 'production';
 	const isBuild = command === 'build';
 
@@ -263,7 +263,7 @@ export default defineConfig(({ command, mode }) => {
 
 		// ESBuild configuration
 		esbuild: {
-			logOverride: { 'this-is-undefined-in-esm': 'silent' },
+			logOverride: {'this-is-undefined-in-esm': 'silent'},
 			target: 'es2020',
 			format: 'esm',
 			platform: 'browser',

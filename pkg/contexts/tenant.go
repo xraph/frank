@@ -5,14 +5,6 @@ import (
 	"net/http"
 )
 
-// GetOrganizationFromContext retrieves the organization from request context
-func GetOrganizationFromContext(ctx context.Context) *OrganizationContext {
-	if org, ok := ctx.Value(OrganizationContextKey).(*OrganizationContext); ok {
-		return org
-	}
-	return nil
-}
-
 // GetRequestIDFromContext retrieves the request ID from request context
 func GetRequestIDFromContext(ctx context.Context) string {
 	if requestID, ok := ctx.Value(RequestIDContextKey).(string); ok {
@@ -144,7 +136,7 @@ func ValidateAPIKeyContext(apiKey *APIKeyContext) error {
 	return nil
 }
 
-// Error types for context validation
+// ContextError Error types for context validation
 type ContextError struct {
 	Message string
 }

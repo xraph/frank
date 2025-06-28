@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/juicycleff/frank/config"
@@ -148,13 +149,20 @@ func (s *authService) Login(ctx context.Context, req model.LoginRequest, orgId *
 	var foundUser *model.User
 	var err error
 
-	if req.Email != "" {
-		foundUser, err = s.findUserByEmail(ctx, req.Email)
-	} else if req.Username != "" {
-		foundUser, err = s.findUserByUsername(ctx, req.Username)
-	} else if req.PhoneNumber != "" {
-		foundUser, err = s.findUserByPhone(ctx, req.PhoneNumber)
+	userType := contexts.GetUserTypeFromContext(ctx)
+	if userType == nil {
+		return nil, errors.New(errors.CodeBadRequest, "user type is required")
 	}
+
+	if req.Email != "" {
+		foundUser, err = s.findUserByEmail(ctx, req.Email, *userType, orgId)
+	} else if req.Username != "" {
+		foundUser, err = s.findUserByUsername(ctx, req.Username, *userType, orgId)
+	} else if req.PhoneNumber != "" {
+		foundUser, err = s.findUserByPhone(ctx, req.PhoneNumber, *userType, orgId)
+	}
+
+	fmt.Println("foundUser", foundUser, "err", err, req.Email, "orgId ", orgId, "userType", userType)
 
 	if err != nil {
 		return nil, errors.Wrap(err, errors.CodeInternalServer, "invalid credentials")
@@ -1019,8 +1027,13 @@ func (s *authService) SendMagicLink(ctx context.Context, req model.MagicLinkRequ
 		return nil, errors.New(errors.CodeBadRequest, "email is required")
 	}
 
+	userType := contexts.GetUserTypeFromContext(ctx)
+	if userType == nil {
+		return nil, errors.New(errors.CodeBadRequest, "external users cannot use magic links")
+	}
+
 	// Find user by email
-	foundUser, err := s.findUserByEmail(ctx, req.Email)
+	foundUser, err := s.findUserByEmail(ctx, req.Email, *userType, orgId)
 	if err != nil {
 		return nil, errors.Wrap(err, errors.CodeInternalServer, "failed to find user")
 	}
@@ -1155,15 +1168,9 @@ func (s *authService) VerifyMagicLink(ctx context.Context, token string) (*model
 	}, nil
 }
 
-func (s *authService) findUserByEmail(ctx context.Context, email string) (*model.User, error) {
-	// Try external user first
-	foundUser, err := s.userService.GetUserByEmail(ctx, email, model.UserTypeExternal, nil)
-	if err == nil && foundUser != nil {
-		return foundUser, nil
-	}
-
+func (s *authService) findUserByEmail(ctx context.Context, email string, userType model.UserType, orgId *xid.ID) (*model.User, error) {
 	// Try internal user
-	foundUser, err = s.userService.GetUserByEmail(ctx, email, model.UserTypeInternal, nil)
+	foundUser, err := s.userService.GetUserByEmail(ctx, email, userType, orgId)
 	if err == nil && foundUser != nil {
 		return foundUser, nil
 	}
@@ -1513,6 +1520,13 @@ func (s *authService) ResendVerification(ctx context.Context, req model.ResendVe
 	var user *model.User
 	var err error
 
+	userType := contexts.GetUserTypeFromContext(ctx)
+	if userType == nil {
+		return nil, errors.New(errors.CodeBadRequest, "user type is required")
+	}
+
+	orgId := contexts.GetOrganizationIDFromContext(ctx)
+
 	// Find user by email or phone
 	switch req.Type {
 	case "email":
@@ -1520,7 +1534,12 @@ func (s *authService) ResendVerification(ctx context.Context, req model.ResendVe
 			return nil, errors.New(errors.CodeBadRequest, "email is required for email verification")
 		}
 
-		user, err = s.findUserByEmail(ctx, req.Email)
+		userType := contexts.GetUserTypeFromContext(ctx)
+		if userType == nil {
+			return nil, errors.New(errors.CodeBadRequest, "user type is required")
+		}
+
+		user, err = s.findUserByEmail(ctx, req.Email, *userType, orgId)
 		if err != nil || user == nil {
 			// Don't reveal if user exists for security
 			return &model.ResendVerificationResponse{
@@ -1541,7 +1560,7 @@ func (s *authService) ResendVerification(ctx context.Context, req model.ResendVe
 			return nil, errors.New(errors.CodeBadRequest, "phone number is required for phone verification")
 		}
 
-		user, err = s.findUserByPhone(ctx, req.PhoneNumber)
+		user, err = s.findUserByPhone(ctx, req.PhoneNumber, *userType, orgId)
 		if err != nil || user == nil {
 			// Don't reveal if user exists for security
 			return &model.ResendVerificationResponse{

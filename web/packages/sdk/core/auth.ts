@@ -110,14 +110,14 @@ export class FrankAuth extends BaseFrankAPI {
         }
     }
 
-    async refreshSession(initOverrides?: RequestInit | InitOverrideFunction): Promise<RefreshTokenResponse> {
-        if (!this.refreshToken) {
+    async refreshSession(token?: string, initOverrides?: RequestInit | InitOverrideFunction): Promise<RefreshTokenResponse> {
+        if (!this.refreshToken && !token) {
             throw new FrankAuthError('No refresh token available');
         }
 
         try {
             const response = await this.authApi.refreshToken(
-                {refreshTokenRequest: {refreshToken: this.refreshToken}},
+                {refreshTokenRequest: {refreshToken: (token || this.refreshToken) as any}},
                 this.mergeHeaders(initOverrides)
             );
             await this.handleAuthResponse(response);

@@ -27,6 +27,13 @@ import {
     RoleInfoToJSON,
     RoleInfoToJSONTyped,
 } from './RoleInfo';
+import type { Membership } from './Membership';
+import {
+    MembershipFromJSON,
+    MembershipFromJSONTyped,
+    MembershipToJSON,
+    MembershipToJSONTyped,
+} from './Membership';
 import type { Session } from './Session';
 import {
     SessionFromJSON,
@@ -49,11 +56,53 @@ export interface AuthStatus {
      */
     readonly $schema?: string;
     /**
+     * API key ID
+     * @type {string}
+     * @memberof AuthStatus
+     */
+    apiKeyId?: string;
+    /**
+     * Type of API key being used
+     * @type {string}
+     * @memberof AuthStatus
+     */
+    apiKeyType?: string;
+    /**
+     * Authentication method used
+     * @type {string}
+     * @memberof AuthStatus
+     */
+    authMethod?: string;
+    /**
+     * User capabilities
+     * @type {Array<string>}
+     * @memberof AuthStatus
+     */
+    capabilities?: Array<string>;
+    /**
      * Authentication expiration time
      * @type {Date}
      * @memberof AuthStatus
      */
     expiresAt?: Date;
+    /**
+     * Available features
+     * @type {{ [key: string]: boolean; }}
+     * @memberof AuthStatus
+     */
+    features?: { [key: string]: boolean; };
+    /**
+     * Whether user has API access
+     * @type {boolean}
+     * @memberof AuthStatus
+     */
+    hasAPIAccess: boolean;
+    /**
+     * Client IP address
+     * @type {string}
+     * @memberof AuthStatus
+     */
+    ipAddress?: string;
     /**
      * Whether user is authenticated
      * @type {boolean}
@@ -61,7 +110,37 @@ export interface AuthStatus {
      */
     isAuthenticated: boolean;
     /**
-     * User permissions
+     * Last activity timestamp
+     * @type {Date}
+     * @memberof AuthStatus
+     */
+    lastActiveAt?: Date;
+    /**
+     * Organization membership info
+     * @type {Membership}
+     * @memberof AuthStatus
+     */
+    membership?: Membership;
+    /**
+     * Whether MFA is enabled
+     * @type {boolean}
+     * @memberof AuthStatus
+     */
+    mfaEnabled: boolean;
+    /**
+     * Whether MFA is verified for current session
+     * @type {boolean}
+     * @memberof AuthStatus
+     */
+    mfaVerified: boolean;
+    /**
+     * Current organization ID
+     * @type {string}
+     * @memberof AuthStatus
+     */
+    organizationId?: string;
+    /**
+     * User or API key permissions
      * @type {Array<string>}
      * @memberof AuthStatus
      */
@@ -72,6 +151,12 @@ export interface AuthStatus {
      * @memberof AuthStatus
      */
     roles?: Array<RoleInfo>;
+    /**
+     * API scopes
+     * @type {Array<string>}
+     * @memberof AuthStatus
+     */
+    scopes?: Array<string>;
     /**
      * Current session information
      * @type {Session}
@@ -84,13 +169,22 @@ export interface AuthStatus {
      * @memberof AuthStatus
      */
     user?: User;
+    /**
+     * User agent
+     * @type {string}
+     * @memberof AuthStatus
+     */
+    userAgent?: string;
 }
 
 /**
  * Check if a given object implements the AuthStatus interface.
  */
 export function instanceOfAuthStatus(value: object): value is AuthStatus {
+    if (!('hasAPIAccess' in value) || value['hasAPIAccess'] === undefined) return false;
     if (!('isAuthenticated' in value) || value['isAuthenticated'] === undefined) return false;
+    if (!('mfaEnabled' in value) || value['mfaEnabled'] === undefined) return false;
+    if (!('mfaVerified' in value) || value['mfaVerified'] === undefined) return false;
     return true;
 }
 
@@ -106,12 +200,26 @@ export function AuthStatusFromJSONTyped(json: any, ignoreDiscriminator: boolean)
         
             ...json,
         '$schema': json['$schema'] == null ? undefined : json['$schema'],
+        'apiKeyId': json['apiKeyId'] == null ? undefined : json['apiKeyId'],
+        'apiKeyType': json['apiKeyType'] == null ? undefined : json['apiKeyType'],
+        'authMethod': json['authMethod'] == null ? undefined : json['authMethod'],
+        'capabilities': json['capabilities'] == null ? undefined : json['capabilities'],
         'expiresAt': json['expiresAt'] == null ? undefined : (new Date(json['expiresAt'])),
+        'features': json['features'] == null ? undefined : json['features'],
+        'hasAPIAccess': json['hasAPIAccess'],
+        'ipAddress': json['ipAddress'] == null ? undefined : json['ipAddress'],
         'isAuthenticated': json['isAuthenticated'],
+        'lastActiveAt': json['lastActiveAt'] == null ? undefined : (new Date(json['lastActiveAt'])),
+        'membership': json['membership'] == null ? undefined : MembershipFromJSON(json['membership']),
+        'mfaEnabled': json['mfaEnabled'],
+        'mfaVerified': json['mfaVerified'],
+        'organizationId': json['organizationId'] == null ? undefined : json['organizationId'],
         'permissions': json['permissions'] == null ? undefined : json['permissions'],
         'roles': json['roles'] == null ? undefined : ((json['roles'] as Array<any>).map(RoleInfoFromJSON)),
+        'scopes': json['scopes'] == null ? undefined : json['scopes'],
         'session': json['session'] == null ? undefined : SessionFromJSON(json['session']),
         'user': json['user'] == null ? undefined : UserFromJSON(json['user']),
+        'userAgent': json['userAgent'] == null ? undefined : json['userAgent'],
     };
 }
 
@@ -127,12 +235,26 @@ export function AuthStatusToJSONTyped(value?: Omit<AuthStatus, '$schema'> | null
     return {
         
             ...value,
+        'apiKeyId': value['apiKeyId'],
+        'apiKeyType': value['apiKeyType'],
+        'authMethod': value['authMethod'],
+        'capabilities': value['capabilities'],
         'expiresAt': value['expiresAt'] == null ? undefined : ((value['expiresAt']).toISOString()),
+        'features': value['features'],
+        'hasAPIAccess': value['hasAPIAccess'],
+        'ipAddress': value['ipAddress'],
         'isAuthenticated': value['isAuthenticated'],
+        'lastActiveAt': value['lastActiveAt'] == null ? undefined : ((value['lastActiveAt']).toISOString()),
+        'membership': MembershipToJSON(value['membership']),
+        'mfaEnabled': value['mfaEnabled'],
+        'mfaVerified': value['mfaVerified'],
+        'organizationId': value['organizationId'],
         'permissions': value['permissions'],
         'roles': value['roles'] == null ? undefined : ((value['roles'] as Array<any>).map(RoleInfoToJSON)),
+        'scopes': value['scopes'],
         'session': SessionToJSON(value['session']),
         'user': UserToJSON(value['user']),
+        'userAgent': value['userAgent'],
     };
 }
 

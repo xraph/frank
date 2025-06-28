@@ -310,7 +310,7 @@ export class AuthenticationApi extends runtime.BaseAPI {
         const headerParameters: runtime.HTTPHeaders = {};
 
         const response = await this.request({
-            path: `/api/v1/auth/status`,
+            path: `/api/v1/me/auth/status`,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
@@ -385,7 +385,7 @@ export class AuthenticationApi extends runtime.BaseAPI {
         headerParameters['Content-Type'] = 'application/json';
 
         const response = await this.request({
-            path: `/api/v1/auth/passkeys/register/begin`,
+            path: `/api/v1/me/auth/passkeys/register/begin`,
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
@@ -421,7 +421,7 @@ export class AuthenticationApi extends runtime.BaseAPI {
         const headerParameters: runtime.HTTPHeaders = {};
 
         const response = await this.request({
-            path: `/api/v1/auth/passkeys/{id}`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
+            path: `/api/v1/me/auth/passkeys/{id}`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
             method: 'DELETE',
             headers: headerParameters,
             query: queryParameters,
@@ -449,7 +449,7 @@ export class AuthenticationApi extends runtime.BaseAPI {
         const headerParameters: runtime.HTTPHeaders = {};
 
         const response = await this.request({
-            path: `/api/v1/auth/mfa`,
+            path: `/api/v1/me/auth/mfa`,
             method: 'DELETE',
             headers: headerParameters,
             query: queryParameters,
@@ -524,7 +524,7 @@ export class AuthenticationApi extends runtime.BaseAPI {
         headerParameters['Content-Type'] = 'application/json';
 
         const response = await this.request({
-            path: `/api/v1/auth/passkeys/register/finish`,
+            path: `/api/v1/me/auth/passkeys/register/finish`,
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
@@ -600,7 +600,7 @@ export class AuthenticationApi extends runtime.BaseAPI {
         headerParameters['Content-Type'] = 'application/json';
 
         const response = await this.request({
-            path: `/api/v1/auth/mfa/backup-codes`,
+            path: `/api/v1/me/auth/mfa/backup-codes`,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
@@ -709,7 +709,7 @@ export class AuthenticationApi extends runtime.BaseAPI {
         const headerParameters: runtime.HTTPHeaders = {};
 
         const response = await this.request({
-            path: `/api/v1/auth/passkeys`,
+            path: `/api/v1/me/auth/passkeys`,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
@@ -777,7 +777,7 @@ export class AuthenticationApi extends runtime.BaseAPI {
         const headerParameters: runtime.HTTPHeaders = {};
 
         const response = await this.request({
-            path: `/api/v1/auth/sessions`,
+            path: `/api/v1/me/auth/sessions`,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
@@ -852,7 +852,7 @@ export class AuthenticationApi extends runtime.BaseAPI {
         headerParameters['Content-Type'] = 'application/json';
 
         const response = await this.request({
-            path: `/api/v1/public/auth/logout`,
+            path: `/api/v1/me/auth/logout`,
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
@@ -1102,7 +1102,7 @@ export class AuthenticationApi extends runtime.BaseAPI {
         const headerParameters: runtime.HTTPHeaders = {};
 
         const response = await this.request({
-            path: `/api/v1/auth/sessions/{id}/refresh`,
+            path: `/api/v1/me/auth/sessions/{id}/refresh`,
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
@@ -1139,7 +1139,7 @@ export class AuthenticationApi extends runtime.BaseAPI {
         headerParameters['Content-Type'] = 'application/json';
 
         const response = await this.request({
-            path: `/api/v1/public/auth/refresh`,
+            path: `/api/v1/me/auth/refresh`,
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
@@ -1286,7 +1286,7 @@ export class AuthenticationApi extends runtime.BaseAPI {
         const headerParameters: runtime.HTTPHeaders = {};
 
         const response = await this.request({
-            path: `/api/v1/auth/sessions`,
+            path: `/api/v1/me/auth/sessions`,
             method: 'DELETE',
             headers: headerParameters,
             query: queryParameters,
@@ -1321,7 +1321,7 @@ export class AuthenticationApi extends runtime.BaseAPI {
         const headerParameters: runtime.HTTPHeaders = {};
 
         const response = await this.request({
-            path: `/api/v1/auth/sessions/{id}`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
+            path: `/api/v1/me/auth/sessions/{id}`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
             method: 'DELETE',
             headers: headerParameters,
             query: queryParameters,
@@ -1358,7 +1358,7 @@ export class AuthenticationApi extends runtime.BaseAPI {
         headerParameters['Content-Type'] = 'application/json';
 
         const response = await this.request({
-            path: `/api/v1/auth/mfa/setup`,
+            path: `/api/v1/me/auth/mfa/setup`,
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
@@ -1510,7 +1510,7 @@ export class AuthenticationApi extends runtime.BaseAPI {
         headerParameters['Content-Type'] = 'application/json';
 
         const response = await this.request({
-            path: `/api/v1/auth/mfa/setup/verify`,
+            path: `/api/v1/me/auth/mfa/setup/verify`,
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,

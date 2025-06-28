@@ -18,18 +18,12 @@ import (
 	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/juicycleff/frank/pkg/logging"
 	"github.com/juicycleff/frank/pkg/model"
+	"github.com/juicycleff/frank/pkg/server"
 	"github.com/rs/xid"
 )
 
 // AuthMethod represents the authentication method used
-type AuthMethod string
-
-const (
-	AuthMethodJWT     AuthMethod = "jwt"
-	AuthMethodAPIKey  AuthMethod = "api_key"
-	AuthMethodSession AuthMethod = "session"
-	AuthMethodNone    AuthMethod = "none"
-)
+type AuthMethod = contexts.AuthMethod
 
 // UserContext represents the authenticated user context
 type UserContext = contexts.UserContext
@@ -70,10 +64,11 @@ type AuthMiddleware struct {
 	crypto           crypto.Util
 	api              huma.API
 	logger           logging.Logger
+	mountOpts        *server.MountOptions // Add mount options
 }
 
 // NewAuthMiddleware creates a new authentication middleware
-func NewAuthMiddleware(di di.Container, api huma.API) *AuthMiddleware {
+func NewAuthMiddleware(di di.Container, api huma.API, mountOpts *server.MountOptions) *AuthMiddleware {
 	return &AuthMiddleware{
 		api:              api,
 		di:               di,
@@ -84,6 +79,7 @@ func NewAuthMiddleware(di di.Container, api huma.API) *AuthMiddleware {
 		organizationRepo: di.Repo().Organization(),
 		crypto:           di.Crypto(),
 		logger:           di.Logger().Named("auth-middleware"),
+		mountOpts:        mountOpts,
 	}
 }
 
@@ -95,12 +91,16 @@ func (m *AuthMiddleware) RequireAuth() func(http.Handler) http.Handler {
 
 			// Try different authentication methods in order of preference
 			authenticated := false
+			var authContext *contexts.AuthenticationContext
 
 			// 1. Try JWT authentication
 			if m.config.Auth.AllowBearerToken {
 				if session, user, err := m.authenticateJWT(ctx, r); err == nil && user != nil {
-					ctx = m.setUserContext(ctx, user, AuthMethodJWT)
-					ctx = m.setSessionContext(ctx, session)
+					authContext = &contexts.AuthenticationContext{
+						User:    user,
+						Session: session,
+						Method:  contexts.AuthMethodJWT,
+					}
 					authenticated = true
 				}
 			}
@@ -108,26 +108,23 @@ func (m *AuthMiddleware) RequireAuth() func(http.Handler) http.Handler {
 			// 2. Try API Key authentication
 			if !authenticated && m.config.Auth.AllowAPIKey {
 				if apiKey, user, err := m.authenticateAPIKey(ctx, r); err == nil && apiKey != nil {
-					ctx = m.setAPIKeyContext(ctx, apiKey)
-					// For client-type API keys, we have apiKey but user is nil
-					// This provides API access without appearing as an authenticated user
-					if user != nil {
-						ctx = m.setUserContext(ctx, user, AuthMethodAPIKey)
-						authenticated = true
-					} else {
-						// Client-type API key - provide API access but don't mark as authenticated
-						// This allows access to auth endpoints while appearing unauthenticated
-						ctx = m.setAPIKeyOnlyContext(ctx, apiKey)
-						authenticated = true // API is authorized but not user-authenticated
+					authContext = &contexts.AuthenticationContext{
+						User:   user,
+						APIKey: apiKey,
+						Method: contexts.AuthMethodAPIKey,
 					}
+					authenticated = true
 				}
 			}
 
 			// 3. Try Session authentication
 			if !authenticated && m.config.Auth.AllowSession {
 				if session, user, err := m.authenticateSession(ctx, r); err == nil && session != nil && user != nil {
-					ctx = m.setUserContext(ctx, user, AuthMethodSession)
-					ctx = m.setSessionContext(ctx, session)
+					authContext = &contexts.AuthenticationContext{
+						User:    user,
+						Session: session,
+						Method:  contexts.AuthMethodSession,
+					}
 					authenticated = true
 				}
 			}
@@ -136,6 +133,19 @@ func (m *AuthMiddleware) RequireAuth() func(http.Handler) http.Handler {
 				m.respondUnauthorized(w, r, "authentication required")
 				return
 			}
+
+			// Validate organization context compatibility
+			if err := m.validateOrganizationContextCompatibility(ctx, r, authContext); err != nil {
+				m.logger.Warn("Organization context compatibility check failed",
+					logging.Error(err),
+					logging.String("method", string(authContext.Method)),
+					logging.String("path", r.URL.Path))
+				m.respondForbidden(w, r, err.Error())
+				return
+			}
+
+			// Set authentication context
+			ctx = m.setAuthenticationContext(ctx, authContext)
 
 			// Add request metadata
 			ctx = m.addRequestMetadata(ctx, r)
@@ -153,17 +163,16 @@ func (m *AuthMiddleware) RequireAuthHuma() func(huma.Context, func(huma.Context)
 
 		// Try different authentication methods in order of preference
 		authenticated := false
-		var authMethod AuthMethod
-		var userCtx *UserContext
-		var sessionCtx *SessionContext
-		var apiKeyCtx *APIKeyContext
+		var authContext *contexts.AuthenticationContext
 
 		// 1. Try JWT authentication
 		if m.config.Auth.AllowBearerToken {
 			if session, user, err := m.authenticateJWT(rctx, r); err == nil && user != nil {
-				authMethod = AuthMethodJWT
-				userCtx = user
-				sessionCtx = session
+				authContext = &contexts.AuthenticationContext{
+					User:    user,
+					Session: session,
+					Method:  contexts.AuthMethodJWT,
+				}
 				authenticated = true
 			}
 		}
@@ -171,45 +180,44 @@ func (m *AuthMiddleware) RequireAuthHuma() func(huma.Context, func(huma.Context)
 		// 2. Try API Key authentication
 		if !authenticated && m.config.Auth.AllowAPIKey {
 			if apiKey, user, err := m.authenticateAPIKey(rctx, r); err == nil && apiKey != nil {
-				apiKeyCtx = apiKey
-				if user != nil {
-					// Server/Admin API key - act as authenticated user
-					authMethod = AuthMethodAPIKey
-					userCtx = user
-					authenticated = true
-				} else {
-					// Client API key - provide API access but don't act as authenticated user
-					authMethod = AuthMethodAPIKey
-					authenticated = true
+				authContext = &contexts.AuthenticationContext{
+					User:   user,
+					APIKey: apiKey,
+					Method: contexts.AuthMethodAPIKey,
 				}
+				authenticated = true
 			}
 		}
 
 		// 3. Try Session authentication
 		if !authenticated && m.config.Auth.AllowSession {
 			if session, user, err := m.authenticateSession(rctx, r); err == nil && session != nil && user != nil {
-				authMethod = AuthMethodSession
-				userCtx = user
-				sessionCtx = session
+				authContext = &contexts.AuthenticationContext{
+					User:    user,
+					Session: session,
+					Method:  contexts.AuthMethodSession,
+				}
 				authenticated = true
 			}
 		}
 
 		if !authenticated {
-			m.respondUnauthorizedHuma(ctx, "authentication required")
+			m.respondUnauthorizedHuma(ctx, "authentication required 1")
 			return
 		}
 
-		// Set contexts with proper auth method
-		if userCtx != nil {
-			ctx = m.setUserContextHuma(ctx, userCtx, authMethod)
+		// Validate organization context compatibility
+		if err := m.validateOrganizationContextCompatibility(rctx, r, authContext); err != nil {
+			m.logger.Warn("Organization context compatibility check failed",
+				logging.Error(err),
+				logging.String("method", string(authContext.Method)),
+				logging.String("path", ctx.URL().Path))
+			m.respondForbiddenHuma(ctx, err.Error())
+			return
 		}
-		if sessionCtx != nil {
-			ctx = m.setSessionContextHuma(ctx, sessionCtx)
-		}
-		if apiKeyCtx != nil {
-			ctx = m.setAPIKeyContextHuma(ctx, apiKeyCtx)
-		}
+
+		// Set authentication context
+		ctx = m.setAuthenticationContextHuma(ctx, authContext)
 
 		// Add request metadata
 		ctx = m.addRequestMetadataHuma(ctx, r)
@@ -217,15 +225,281 @@ func (m *AuthMiddleware) RequireAuthHuma() func(huma.Context, func(huma.Context)
 	}
 }
 
+// validateOrganizationContextCompatibility validates that the authenticated user context
+// is compatible with the requested organization context
+func (m *AuthMiddleware) validateOrganizationContextCompatibility(ctx context.Context, r *http.Request, authCtx *contexts.AuthenticationContext) error {
+	// Skip validation for personal/auth operations that don't need org context
+	if m.shouldSkipOrgValidationForPath(r.URL.Path) {
+		m.logger.Debug("Skipping org validation for path", logging.String("path", r.URL.Path))
+		return nil
+	}
+
+	// Get requested organization context from various sources
+	requestedOrgID := m.getRequestedOrganizationID(ctx, r)
+
+	// For API key authentication, ensure organization compatibility
+	if authCtx.APIKey != nil {
+		return m.validateAPIKeyOrganizationCompatibility(requestedOrgID, authCtx)
+	}
+
+	// For user authentication (JWT/Session), validate user-organization relationship
+	if authCtx.User != nil {
+		return m.validateUserOrganizationCompatibility(ctx, requestedOrgID, authCtx)
+	}
+
+	return nil
+}
+
+// getRequestedOrganizationID gets the organization ID from various request sources
+func (m *AuthMiddleware) getRequestedOrganizationID(ctx context.Context, r *http.Request) *xid.ID {
+	// Priority order: API Key org > X-Org-ID header > URL parameter > query parameter
+
+	// 1. From API key context (highest priority)
+	if apiKey := GetAPIKeyFromContext(ctx); apiKey != nil && apiKey.OrganizationID != nil {
+		return apiKey.OrganizationID
+	}
+
+	// 2. From X-Org-ID header
+	if orgIDStr := r.Header.Get("X-Org-ID"); orgIDStr != "" {
+		if orgID, err := xid.FromString(orgIDStr); err == nil {
+			return &orgID
+		}
+	}
+
+	// 3. From URL parameter (chi route parameter)
+	if orgIDStr := chi.URLParam(r, "orgId"); orgIDStr != "" {
+		if orgID, err := xid.FromString(orgIDStr); err == nil {
+			return &orgID
+		}
+	}
+
+	// 4. From query parameter
+	if orgIDStr := r.URL.Query().Get("orgId"); orgIDStr != "" {
+		if orgID, err := xid.FromString(orgIDStr); err == nil {
+			return &orgID
+		}
+	}
+
+	return nil
+}
+
+// shouldSkipOrgValidationForPath checks if organization validation should be skipped for this path
+func (m *AuthMiddleware) shouldSkipOrgValidationForPath(path string) bool {
+	// Build base path prefix
+	basePath := ""
+	if m.mountOpts != nil && m.mountOpts.BasePath != "" {
+		basePath = strings.TrimSuffix(m.mountOpts.BasePath, "/")
+	}
+
+	// Helper function to build full path with base path
+	buildPath := func(p string) string {
+		return basePath + p
+	}
+
+	// Paths where organization context validation should be skipped
+	skipPaths := []string{
+		// Personal auth operations - these should work for all user types without org context
+		buildPath("/api/v1/me/auth/logout"),
+		buildPath("/api/v1/me/auth/refresh"),
+		buildPath("/api/v1/me/auth/status"),
+		buildPath("/api/v1/me/auth/mfa/setup"),
+		buildPath("/api/v1/me/auth/mfa/verify"),
+		buildPath("/api/v1/me/auth/mfa/disable"),
+		buildPath("/api/v1/me/auth/mfa/backup-codes"),
+		buildPath("/api/v1/me/auth/sessions"),
+		buildPath("/api/v1/me/auth/sessions/"), // For session management
+		buildPath("/api/v1/me/auth/passkeys"),  // Personal passkey operations
+		buildPath("/api/v1/me/auth/passkeys/"),
+
+		// Personal user operations
+		buildPath("/api/v1/me/profile"),
+		buildPath("/api/v1/me/change-password"),
+		buildPath("/api/v1/me/organizations"), // List user's organizations
+		buildPath("/api/v1/me/memberships"),   // List user's memberships
+
+		// Organization creation and listing (external users should be able to do these)
+		buildPath("/api/v1/organizations"), // POST to create, GET to list user's orgs
+
+		// Health checks and static endpoints
+		buildPath("/health"),
+		buildPath("/ready"),
+		buildPath("/metrics"),
+		buildPath("/favicon.ico"),
+		buildPath("/robots.txt"),
+
+		// Public auth endpoints (already handled elsewhere but included for completeness)
+		buildPath("/api/v1/public/auth/"),
+
+		// Internal user endpoints (internal users should never be restricted by org context)
+		buildPath("/api/v1/internal/"),
+	}
+
+	// Check exact matches and prefix matches
+	for _, skipPath := range skipPaths {
+		if path == skipPath || strings.HasPrefix(path, skipPath) {
+			return true
+		}
+	}
+
+	// Additional logic for internal users - they should never be restricted by org context
+	// This will be handled in validateUserOrganizationCompatibility, but we log it here
+	return false
+}
+
+// validateAPIKeyOrganizationCompatibility validates API key organization context
+func (m *AuthMiddleware) validateAPIKeyOrganizationCompatibility(requestedOrgID *xid.ID, authCtx *contexts.AuthenticationContext) error {
+	apiKey := authCtx.APIKey
+
+	// For client API keys, organization context is always from the API key
+	if apiKey.Type == model.APIKeyTypeClient {
+		if requestedOrgID != nil && apiKey.OrganizationID != nil && *requestedOrgID != *apiKey.OrganizationID {
+			return errors.New(errors.CodeForbidden, "API key organization does not match requested organization context")
+		}
+		return nil
+	}
+
+	// For server/admin API keys with user context
+	if authCtx.User != nil {
+		return m.validateUserOrganizationCompatibility(context.Background(), requestedOrgID, authCtx)
+	}
+
+	// For organization-scoped API keys without user context
+	if apiKey.OrganizationID != nil {
+		if requestedOrgID != nil && *requestedOrgID != *apiKey.OrganizationID {
+			return errors.New(errors.CodeForbidden, "API key organization does not match requested organization context")
+		}
+	}
+
+	return nil
+}
+
+// validateUserOrganizationCompatibility validates user organization context
+func (m *AuthMiddleware) validateUserOrganizationCompatibility(ctx context.Context, requestedOrgID *xid.ID, authCtx *contexts.AuthenticationContext) error {
+	user := authCtx.User
+
+	// Internal users can access any organization (or no organization)
+	if user.UserType == model.UserTypeInternal {
+		m.logger.Debug("Internal user bypassing org validation",
+			logging.String("userId", user.ID.String()))
+		return nil
+	}
+
+	// If no organization context is requested, check if it's allowed for this user type
+	if requestedOrgID == nil {
+		switch user.UserType {
+		case model.UserTypeExternal:
+			// External users can operate without organization context for personal operations
+			m.logger.Debug("External user allowed without org context for personal operation",
+				logging.String("userId", user.ID.String()))
+			return nil
+		case model.UserTypeEndUser:
+			// End users may not require organization context for personal operations only
+			// The organization context middleware will handle endpoint-specific requirements
+			m.logger.Debug("End user allowed without org context for personal operation",
+				logging.String("userId", user.ID.String()))
+			return nil
+		}
+		return nil
+	}
+
+	// External and end users must belong to the requested organization for org-scoped operations
+	if user.UserType == model.UserTypeExternal || user.UserType == model.UserTypeEndUser {
+		// Check if user belongs to the requested organization
+		if user.OrganizationID == nil {
+			// User doesn't belong to any organization
+			if user.UserType == model.UserTypeEndUser {
+				// End users MUST have organization context for most operations
+				return errors.New(errors.CodeBadRequest, "end user must have organization context")
+			}
+			// External users can exist without organization for personal operations
+			return nil
+		}
+
+		if *user.OrganizationID != *requestedOrgID {
+			// For sessions, check if this might be a stale session from a different organization
+			if authCtx.Session != nil {
+				m.logger.Warn("Session organization mismatch detected",
+					logging.String("sessionOrgId", user.OrganizationID.String()),
+					logging.String("requestedOrgId", requestedOrgID.String()),
+					logging.String("userId", user.ID.String()))
+				return errors.New(errors.CodeUnauthorized, "session organization context mismatch - please log in again")
+			}
+			return errors.New(errors.CodeForbidden, "user does not belong to the requested organization")
+		}
+	}
+
+	return nil
+}
+
+// setAuthenticationContext sets the authentication context in the request context
+func (m *AuthMiddleware) setAuthenticationContext(ctx context.Context, authCtx *contexts.AuthenticationContext) context.Context {
+	if authCtx.User != nil {
+		ctx = m.setUserContext(ctx, authCtx.User, authCtx.Method)
+	}
+	if authCtx.Session != nil {
+		ctx = m.setSessionContext(ctx, authCtx.Session)
+	}
+	if authCtx.APIKey != nil {
+		ctx = m.setAPIKeyContext(ctx, authCtx.APIKey)
+	}
+	return ctx
+}
+
+// setAuthenticationContextHuma sets the authentication context in the Huma context
+func (m *AuthMiddleware) setAuthenticationContextHuma(ctx huma.Context, authCtx *contexts.AuthenticationContext) huma.Context {
+	if authCtx.User != nil {
+		ctx = m.setUserContextHuma(ctx, authCtx.User, authCtx.Method)
+	}
+	if authCtx.Session != nil {
+		ctx = m.setSessionContextHuma(ctx, authCtx.Session)
+	}
+	if authCtx.APIKey != nil {
+		ctx = m.setAPIKeyContextHuma(ctx, authCtx.APIKey)
+	}
+
+	return ctx
+}
+
 // setAPIKeyOnlyContext sets only the API key context without user context
 func (m *AuthMiddleware) setAPIKeyOnlyContext(ctx context.Context, apiKey *APIKeyContext) context.Context {
 	ctx = context.WithValue(ctx, contexts.APIKeyContextKey, apiKey)
 	ctx = context.WithValue(ctx, contexts.APIKeyIDContextKey, apiKey.ID)
-	ctx = context.WithValue(ctx, contexts.AuthMethodContextKey, AuthMethodAPIKey)
+	ctx = context.WithValue(ctx, contexts.AuthMethodContextKey, contexts.AuthMethodAPIKey)
 
 	// Set organization context if available from API key
 	if apiKey.OrganizationID != nil {
 		ctx = context.WithValue(ctx, contexts.OrganizationIDContextKey, *apiKey.OrganizationID)
+	}
+
+	return ctx
+}
+
+// Enhanced organization context detection for end users
+func (m *AuthMiddleware) enhanceOrganizationContextForEndUsers(ctx context.Context, r *http.Request) context.Context {
+	// Skip enhancement for personal operations
+	if m.shouldSkipOrgValidationForPath(r.URL.Path) {
+		return ctx
+	}
+
+	// Check if this is an end user request without X-Org-ID
+	userType := GetDetectedUserTypeFromContext(ctx)
+	if userType == "" || userType != model.UserTypeEndUser {
+		return ctx
+	}
+
+	// Check if organization context is already set
+	if GetOrganizationIDFromContext(ctx) != nil {
+		return ctx
+	}
+
+	// Try to get organization context from API key
+	if apiKey := GetAPIKeyFromContext(ctx); apiKey != nil && apiKey.OrganizationID != nil {
+		m.logger.Debug("Setting organization context from API key for end user",
+			logging.String("orgId", apiKey.OrganizationID.String()))
+		ctx = context.WithValue(ctx, contexts.OrganizationIDContextKey, *apiKey.OrganizationID)
+
+		// Also set the X-Org-ID header for downstream processing
+		r.Header.Set("X-Org-ID", apiKey.OrganizationID.String())
 	}
 
 	return ctx
@@ -237,29 +511,77 @@ func (m *AuthMiddleware) OptionalAuth() func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
 
-			// Try authentication but don't fail if none found
+			authenticated := false
+			var authContext *contexts.AuthenticationContext
+
+			// Try JWT authentication first
 			if m.config.Auth.AllowBearerToken {
 				if session, user, err := m.authenticateJWT(ctx, r); err == nil && user != nil {
-					ctx = m.setUserContext(ctx, user, AuthMethodJWT)
-					ctx = m.setSessionContext(ctx, session)
+					authContext = &contexts.AuthenticationContext{
+						User:    user,
+						Session: session,
+						Method:  contexts.AuthMethodJWT,
+					}
+					authenticated = true
 				}
 			}
 
-			if GetUserFromContext(ctx) == nil && m.config.Auth.AllowAPIKey {
-				if apiKey, user, err := m.authenticateAPIKey(ctx, r); err == nil && apiKey != nil && user != nil {
-					ctx = m.setUserContext(ctx, user, AuthMethodAPIKey)
-					ctx = m.setAPIKeyContext(ctx, apiKey)
+			// Try API Key authentication if not already authenticated
+			if !authenticated && m.config.Auth.AllowAPIKey {
+				if apiKey, user, err := m.authenticateAPIKey(ctx, r); err == nil && apiKey != nil {
+					authContext = &contexts.AuthenticationContext{
+						User:   user,
+						APIKey: apiKey,
+						Method: contexts.AuthMethodAPIKey,
+					}
+					// Handle different API key types
+					if user != nil {
+						// Server/Admin API key - act as authenticated user
+						authenticated = true
+					} else {
+						// Client API key - provide API access but don't act as authenticated user
+						authenticated = false // Explicitly remain unauthenticated for client keys
+					}
 				}
 			}
 
-			if GetUserFromContext(ctx) == nil && m.config.Auth.AllowSession {
+			// Try Session authentication if not already authenticated
+			if !authenticated && m.config.Auth.AllowSession {
 				if session, user, err := m.authenticateSession(ctx, r); err == nil && session != nil && user != nil {
-					ctx = m.setUserContext(ctx, user, AuthMethodSession)
-					ctx = m.setSessionContext(ctx, session)
+					authContext = &contexts.AuthenticationContext{
+						User:    user,
+						Session: session,
+						Method:  contexts.AuthMethodSession,
+					}
+					authenticated = true
 				}
 			}
 
-			// Add request metadata regardless of authentication
+			// If authenticated, validate organization context compatibility
+			if authenticated && authContext != nil {
+				if err := m.validateOrganizationContextCompatibility(ctx, r, authContext); err != nil {
+					m.logger.Warn("Organization context compatibility check failed in optional auth",
+						logging.Error(err),
+						logging.String("method", string(authContext.Method)),
+						logging.String("path", r.URL.Path))
+					// For optional auth, we don't fail the request but clear the authentication
+					authContext = &contexts.AuthenticationContext{
+						APIKey: authContext.APIKey, // Keep API key for client access
+						Method: authContext.Method,
+					}
+					authenticated = false
+				}
+			}
+
+			// Set authentication context if available
+			if authContext != nil {
+				ctx = m.setAuthenticationContext(ctx, authContext)
+			}
+
+			// Enhance organization context for end users
+			ctx = m.enhanceOrganizationContextForEndUsers(ctx, r)
+
+			// Add request metadata regardless of authentication status
 			ctx = m.addRequestMetadata(ctx, r)
 
 			next.ServeHTTP(w, r.WithContext(ctx))
@@ -273,33 +595,98 @@ func (m *AuthMiddleware) OptionalAuthHuma() func(huma.Context, func(huma.Context
 		rctx := ctx.Context()
 		r := contexts.GetRequestFromContext(rctx)
 
-		// Try authentication but don't fail if none found
+		var authContext *contexts.AuthenticationContext
+		authenticated := false
+
+		// Try JWT authentication first
 		if m.config.Auth.AllowBearerToken {
 			if session, user, err := m.authenticateJWT(rctx, r); err == nil && user != nil {
-				ctx = m.setUserContextHuma(ctx, user, AuthMethodJWT)
-				ctx = m.setSessionContextHuma(ctx, session)
+				authContext = &contexts.AuthenticationContext{
+					User:    user,
+					Session: session,
+					Method:  contexts.AuthMethodJWT,
+				}
+				authenticated = true
 			}
 		}
 
-		if GetUserFromContext(rctx) == nil && m.config.Auth.AllowAPIKey {
-			if apiKey, user, err := m.authenticateAPIKey(rctx, r); err == nil && apiKey != nil && user != nil {
-				ctx = m.setUserContextHuma(ctx, user, AuthMethodAPIKey)
-				ctx = m.setAPIKeyContextHuma(ctx, apiKey)
+		// Try API Key authentication if not already authenticated
+		if !authenticated && m.config.Auth.AllowAPIKey {
+			if apiKey, user, err := m.authenticateAPIKey(rctx, r); err == nil && apiKey != nil {
+				authContext = &contexts.AuthenticationContext{
+					User:   user,
+					APIKey: apiKey,
+					Method: contexts.AuthMethodAPIKey,
+				}
+				// Handle different API key types
+				if user != nil {
+					// Server/Admin API key - act as authenticated user
+					authenticated = true
+				} else {
+					// Client API key - provide API access but don't act as authenticated user
+					authenticated = false // Explicitly set to false for client keys
+				}
 			}
 		}
 
-		if GetUserFromContext(rctx) == nil && m.config.Auth.AllowSession {
+		// Try Session authentication if not already authenticated
+		if !authenticated && m.config.Auth.AllowSession {
 			if session, user, err := m.authenticateSession(rctx, r); err == nil && session != nil && user != nil {
-				ctx = m.setUserContextHuma(ctx, user, AuthMethodSession)
-				ctx = m.setSessionContextHuma(ctx, session)
+				authContext = &contexts.AuthenticationContext{
+					User:    user,
+					Session: session,
+					Method:  contexts.AuthMethodSession,
+				}
+				authenticated = true
 			}
 		}
 
-		// Add request metadata regardless of authentication
+		// If authenticated, validate organization context compatibility
+		if authenticated && authContext != nil {
+			if err := m.validateOrganizationContextCompatibility(rctx, r, authContext); err != nil {
+				m.logger.Warn("Organization context compatibility check failed in optional auth",
+					logging.Error(err),
+					logging.String("method", string(authContext.Method)),
+					logging.String("path", ctx.URL().Path))
+				// For optional auth, we don't fail the request but clear the authentication
+				authContext = &contexts.AuthenticationContext{
+					APIKey: authContext.APIKey, // Keep API key for client access
+					Method: authContext.Method,
+				}
+				authenticated = false
+			}
+		}
+
+		// Set authentication context if available
+		if authContext != nil {
+			ctx = m.setAuthenticationContextHuma(ctx, authContext)
+		}
+
+		// Enhance organization context for end users
+		newCtx := m.enhanceOrganizationContextForEndUsers(rctx, r)
+		if newCtx != rctx {
+			// Update the Huma context with enhanced organization context
+			for key, value := range extractContextValues(newCtx) {
+				ctx = huma.WithValue(ctx, key, value)
+			}
+		}
+
+		// Add request metadata regardless of authentication status
 		ctx = m.addRequestMetadataHuma(ctx, r)
 
 		next(ctx)
 	}
+}
+
+// Helper function to extract context values for transfer
+func extractContextValues(ctx context.Context) map[interface{}]interface{} {
+	values := make(map[interface{}]interface{})
+
+	if orgID := GetOrganizationIDFromContext(ctx); orgID != nil {
+		values[contexts.OrganizationIDContextKey] = *orgID
+	}
+
+	return values
 }
 
 // RequireUserType middleware that requires a specific user type
@@ -329,7 +716,7 @@ func (m *AuthMiddleware) RequireUserTypeHuma(userTypes ...model.UserType) func(h
 	return func(ctx huma.Context, next func(huma.Context)) {
 		user := GetUserFromContext(ctx.Context())
 		if user == nil {
-			m.respondUnauthorizedHuma(ctx, "authentication required")
+			m.respondUnauthorizedHuma(ctx, "authentication required 2")
 			return
 		}
 
@@ -383,7 +770,7 @@ func (m *AuthMiddleware) HumaAuth() func(huma.Context, func(huma.Context)) {
 
 		if m.config.Auth.AllowBearerToken {
 			if session, currentUser, err := m.authenticateJWT(rctx, r); err == nil && currentUser != nil {
-				ctx = m.setUserContextHuma(ctx, currentUser, AuthMethodJWT)
+				ctx = m.setUserContextHuma(ctx, currentUser, contexts.AuthMethodJWT)
 				ctx = m.setSessionContextHuma(ctx, session)
 				authenticated = true
 			}
@@ -391,7 +778,7 @@ func (m *AuthMiddleware) HumaAuth() func(huma.Context, func(huma.Context)) {
 
 		if !authenticated && m.config.Auth.AllowAPIKey {
 			if apiKey, currentUser, err := m.authenticateAPIKey(rctx, r); err == nil && apiKey != nil && currentUser != nil {
-				ctx = m.setUserContextHuma(ctx, currentUser, AuthMethodAPIKey)
+				ctx = m.setUserContextHuma(ctx, currentUser, contexts.AuthMethodAPIKey)
 				ctx = m.setAPIKeyContextHuma(ctx, apiKey)
 				authenticated = true
 			}
@@ -399,7 +786,7 @@ func (m *AuthMiddleware) HumaAuth() func(huma.Context, func(huma.Context)) {
 
 		if !authenticated && m.config.Auth.AllowSession {
 			if session, currentUser, err := m.authenticateSession(rctx, r); err == nil && session != nil && currentUser != nil {
-				ctx = m.setUserContextHuma(ctx, currentUser, AuthMethodSession)
+				ctx = m.setUserContextHuma(ctx, currentUser, contexts.AuthMethodSession)
 				ctx = m.setSessionContextHuma(ctx, session)
 				authenticated = true
 			}
@@ -820,6 +1207,21 @@ func (m *AuthMiddleware) setSessionContext(ctx context.Context, session *Session
 func (m *AuthMiddleware) setAPIKeyContext(ctx context.Context, apiKey *APIKeyContext) context.Context {
 	ctx = context.WithValue(ctx, contexts.APIKeyContextKey, apiKey)
 	ctx = context.WithValue(ctx, contexts.APIKeyIDContextKey, apiKey.ID)
+
+	// Set organization context if available from API key
+	if apiKey.OrganizationID != nil {
+		ctx = context.WithValue(ctx, contexts.OrganizationIDContextKey, *apiKey.OrganizationID)
+	}
+
+	// Set permissions and scopes from API key
+	if len(apiKey.Permissions) > 0 {
+		ctx = context.WithValue(ctx, contexts.PermissionsContextKey, apiKey.Permissions)
+	}
+
+	if len(apiKey.Scopes) > 0 {
+		ctx = context.WithValue(ctx, contexts.ScopesContextKey, apiKey.Scopes)
+	}
+
 	return ctx
 }
 
@@ -884,6 +1286,21 @@ func (m *AuthMiddleware) setSessionContextHuma(ctx huma.Context, session *Sessio
 func (m *AuthMiddleware) setAPIKeyContextHuma(ctx huma.Context, apiKey *APIKeyContext) huma.Context {
 	ctx = huma.WithValue(ctx, contexts.APIKeyContextKey, apiKey)
 	ctx = huma.WithValue(ctx, contexts.APIKeyIDContextKey, apiKey.ID)
+
+	// Set organization context if available from API key
+	if apiKey.OrganizationID != nil {
+		ctx = huma.WithValue(ctx, contexts.OrganizationIDContextKey, *apiKey.OrganizationID)
+	}
+
+	// Set permissions and scopes from API key
+	if len(apiKey.Permissions) > 0 {
+		ctx = huma.WithValue(ctx, contexts.PermissionsContextKey, apiKey.Permissions)
+	}
+
+	if len(apiKey.Scopes) > 0 {
+		ctx = huma.WithValue(ctx, contexts.ScopesContextKey, apiKey.Scopes)
+	}
+
 	return ctx
 }
 
@@ -1031,7 +1448,7 @@ func GetAuthMethodFromContext(ctx context.Context) AuthMethod {
 	if method, ok := ctx.Value(contexts.AuthMethodContextKey).(AuthMethod); ok {
 		return method
 	}
-	return AuthMethodNone
+	return contexts.AuthMethodNone
 }
 
 // GetPermissionsFromContext retrieves permissions from request context
@@ -1154,4 +1571,125 @@ func IsUnauthenticatedUser(ctx context.Context) bool {
 	apiKey := GetAPIKeyFromContext(ctx)
 	// User is unauthenticated if no user context but may have client API key access
 	return user == nil && (apiKey == nil || apiKey.Type == model.APIKeyTypeClient)
+}
+
+// HasAnyAccess checks if the request has any form of access (user authentication or API key)
+func HasAnyAccess(ctx context.Context) bool {
+	return IsAuthenticated(ctx) || HasAPIKeyAccess(ctx)
+}
+
+// GetAuthenticationLevel returns the level of authentication for the request
+type AuthenticationLevel int
+
+const (
+	AuthLevelNone AuthenticationLevel = iota
+	AuthLevelAPIKeyOnly
+	AuthLevelUserAuthenticated
+)
+
+func GetAuthenticationLevel(ctx context.Context) AuthenticationLevel {
+	if IsAuthenticated(ctx) {
+		return AuthLevelUserAuthenticated
+	}
+	if HasAPIKeyAccess(ctx) {
+		return AuthLevelAPIKeyOnly
+	}
+	return AuthLevelNone
+}
+
+// GetEffectivePermissions returns permissions from either user context or API key context
+func GetEffectivePermissions(ctx context.Context) []string {
+	// Try user permissions first
+	if userPermissions := GetPermissionsFromContext(ctx); len(userPermissions) > 0 {
+		return userPermissions
+	}
+
+	// Fall back to API key permissions
+	if apiKey := GetAPIKeyFromContext(ctx); apiKey != nil {
+		return apiKey.Permissions
+	}
+
+	return nil
+}
+
+// GetEffectiveOrganizationID returns organization ID from user, API key, or context
+func GetEffectiveOrganizationID(ctx context.Context) *xid.ID {
+	// Try user organization first
+	if orgID := GetOrganizationIDFromContext(ctx); orgID != nil {
+		return orgID
+	}
+
+	// Try API key organization
+	if apiKey := GetAPIKeyFromContext(ctx); apiKey != nil && apiKey.OrganizationID != nil {
+		return apiKey.OrganizationID
+	}
+
+	return nil
+}
+
+// CanAccessEndpoint checks if the request can access a specific endpoint based on permissions
+func CanAccessEndpoint(ctx context.Context, requiredPermission string) bool {
+	permissions := GetEffectivePermissions(ctx)
+	for _, perm := range permissions {
+		if perm == requiredPermission {
+			return true
+		}
+	}
+	return false
+}
+
+// IsPublicAPIAccess checks if this is a public API access (client key or no auth)
+// Useful for determining if certain sensitive operations should be allowed
+func IsPublicAPIAccess(ctx context.Context) bool {
+	// No authentication at all
+	if !HasAnyAccess(ctx) {
+		return true
+	}
+
+	// Client API key access (considered public)
+	if IsClientAPIKey(ctx) {
+		return true
+	}
+
+	return false
+}
+
+// IsPrivateAPIAccess checks if this is private API access (server/admin key or user auth)
+func IsPrivateAPIAccess(ctx context.Context) bool {
+	return !IsPublicAPIAccess(ctx)
+}
+
+// GetAPIKeyType returns the type of API key being used, if any
+func GetAPIKeyType(ctx context.Context) *model.APIKeyType {
+	if apiKey := GetAPIKeyFromContext(ctx); apiKey != nil {
+		return &apiKey.Type
+	}
+	return nil
+}
+
+// RequiresUserAuthentication checks if an operation requires actual user authentication
+// (not just API key access)
+func RequiresUserAuthentication(ctx context.Context) bool {
+	return GetAuthenticationLevel(ctx) == AuthLevelUserAuthenticated
+}
+
+// AccessSummary GetAccessSummary returns a summary of the current access level for debugging/logging
+type AccessSummary struct {
+	HasUserAccess   bool              `json:"hasUserAccess"`
+	HasAPIKeyAccess bool              `json:"hasApiKeyAccess"`
+	APIKeyType      *model.APIKeyType `json:"apiKeyType,omitempty"`
+	AuthMethod      AuthMethod        `json:"authMethod"`
+	OrganizationID  *xid.ID           `json:"organizationId,omitempty"`
+	Permissions     []string          `json:"permissions,omitempty"`
+}
+
+func GetAccessSummary(ctx context.Context) AccessSummary {
+	return AccessSummary{
+		HasUserAccess:   IsAuthenticated(ctx),
+		HasAPIKeyAccess: HasAPIKeyAccess(ctx),
+		APIKeyType:      GetAPIKeyType(ctx),
+		AuthMethod:      GetAuthMethodFromContext(ctx),
+		OrganizationID:  GetEffectiveOrganizationID(ctx),
+		Permissions:     GetEffectivePermissions(ctx),
+	}
 }

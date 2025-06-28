@@ -13,6 +13,7 @@ import (
 	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/juicycleff/frank/pkg/logging"
 	"github.com/juicycleff/frank/pkg/model"
+	"github.com/juicycleff/frank/pkg/server"
 	"github.com/juicycleff/frank/pkg/services/organization"
 	"github.com/rs/xid"
 )
@@ -40,11 +41,13 @@ type SmartOrganizationMiddleware struct {
 	invitationService organization.InvitationService
 	logger            logging.Logger
 	api               huma.API
+	mountOpts         *server.MountOptions
 }
 
 // NewSmartOrganizationMiddleware creates middleware that handles registration flows intelligently
 func NewSmartOrganizationMiddleware(
-	api huma.API, di di.Container, config *OrganizationContextConfig) *SmartOrganizationMiddleware {
+	api huma.API, di di.Container, mountOpts *server.MountOptions, config *OrganizationContextConfig,
+) *SmartOrganizationMiddleware {
 	if config == nil {
 		config = DefaultOrganizationContextConfig()
 	}
@@ -61,14 +64,15 @@ func NewSmartOrganizationMiddleware(
 		logger:            config.Logger,
 		invitationService: di.InvitationService(),
 		api:               api,
+		mountOpts:         mountOpts,
 	}
 }
 
 // SmartOrganizationContextMiddleware intelligently handles organization context based on request type
 func (som *SmartOrganizationMiddleware) SmartOrganizationContextMiddleware() func(huma.Context, func(huma.Context)) {
 	return func(ctx huma.Context, next func(huma.Context)) {
-		r := contexts.GetRequestFromContext(ctx.Context())
-		rctx := r.Context()
+		rctx := ctx.Context()
+		r := contexts.GetRequestFromContext(rctx)
 
 		// Skip for certain paths
 		if som.shouldSkipPath(ctx.URL().Path) {

@@ -42,15 +42,8 @@ func (s *authService) invalidatePendingMFALogin(ctx context.Context, token strin
 	return s.mfaService.SessionStore().Delete(ctx, token)
 }
 
-func (s *authService) findUserByUsername(ctx context.Context, username string) (*model.User, error) {
-	// Try external user first
-	foundUser, err := s.userService.GetUserByUsername(ctx, username, model.UserTypeExternal, nil)
-	if err == nil && foundUser != nil {
-		return foundUser, nil
-	}
-
-	// Try internal user
-	foundUser, err = s.userService.GetUserByUsername(ctx, username, model.UserTypeInternal, nil)
+func (s *authService) findUserByUsername(ctx context.Context, username string, userType model.UserType, orgId *xid.ID) (*model.User, error) {
+	foundUser, err := s.userService.GetUserByUsername(ctx, username, userType, orgId)
 	if err == nil && foundUser != nil {
 		return foundUser, nil
 	}
@@ -58,15 +51,8 @@ func (s *authService) findUserByUsername(ctx context.Context, username string) (
 	return nil, nil
 }
 
-func (s *authService) findUserByPhone(ctx context.Context, phone string) (*model.User, error) {
-	// Try external user first
-	foundUser, err := s.userService.GetUserByPhone(ctx, phone, model.UserTypeExternal, nil)
-	if err == nil && foundUser != nil {
-		return foundUser, nil
-	}
-
-	// Try internal user
-	foundUser, err = s.userService.GetUserByPhone(ctx, phone, model.UserTypeInternal, nil)
+func (s *authService) findUserByPhone(ctx context.Context, phone string, userType model.UserType, orgId *xid.ID) (*model.User, error) {
+	foundUser, err := s.userService.GetUserByPhone(ctx, phone, userType, orgId)
 	if err == nil && foundUser != nil {
 		return foundUser, nil
 	}

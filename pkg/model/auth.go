@@ -169,8 +169,9 @@ type LogoutRequest struct {
 
 // LogoutResponse represents a logout response
 type LogoutResponse struct {
-	Success       bool `json:"success" example:"true" doc:"Whether logout was successful"`
-	SessionsEnded int  `json:"sessionsEnded" example:"1" doc:"Number of sessions that were ended"`
+	Success       bool   `json:"success" example:"true" doc:"Whether logout was successful"`
+	SessionsEnded int    `json:"sessionsEnded" example:"1" doc:"Number of sessions that were ended"`
+	Message       string `json:"message" example:"Logout successful" doc:"Response message"`
 }
 
 // PasswordResetRequest represents a password reset request
@@ -283,11 +284,13 @@ type SessionInfo struct {
 	IPAddress    string    `json:"ipAddress,omitempty" example:"192.168.1.1" doc:"IP address"`
 	UserAgent    string    `json:"userAgent,omitempty" example:"Mozilla/5.0..." doc:"User agent"`
 	DeviceID     string    `json:"deviceId,omitempty" example:"device-123" doc:"Device ID"`
+	DeviceType   string    `json:"deviceType,omitempty" example:"desktop" doc:"Device type"`
 	Location     string    `json:"location,omitempty" example:"New York, NY" doc:"Location"`
 	Active       bool      `json:"active" example:"true" doc:"Whether session is active"`
 	ExpiresAt    time.Time `json:"expiresAt" example:"2023-01-01T13:00:00Z" doc:"Session expiration time"`
 	LastActiveAt time.Time `json:"lastActiveAt" example:"2023-01-01T12:30:00Z" doc:"Last activity time"`
 	CreatedAt    time.Time `json:"createdAt" example:"2023-01-01T12:00:00Z" doc:"Session creation time"`
+	Suspicious   bool      `json:"suspicious" example:"false" doc:"Whether session is suspicious"`
 }
 
 // Session represents a complete session with metadata

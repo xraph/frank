@@ -7,13 +7,14 @@ type contextKey string
 const (
 	UserContextKey        contextKey = "user"
 	UserIDContextKey      contextKey = "user_id"
-	UserTypeContextKey    contextKey = "user_type"
+	UserTypeContextKey    contextKey = "detected_user_type"
 	SessionContextKey     contextKey = "session"
 	SessionIDContextKey   contextKey = "session_id"
 	APIKeyContextKey      contextKey = "api_key"
 	APIKeyIDContextKey    contextKey = "api_key_id"
 	AuthMethodContextKey  contextKey = "auth_method"
 	PermissionsContextKey contextKey = "permissions"
+	ScopesContextKey      contextKey = "scopes"
 	RolesContextKey       contextKey = "roles"
 	TokenClaimsContextKey contextKey = "token_claims"
 )
@@ -21,7 +22,7 @@ const (
 // Organization/Tenant context keys
 const (
 	OrganizationContextKey   contextKey = "organization"
-	OrganizationIDContextKey contextKey = "organization_id"
+	OrganizationIDContextKey contextKey = "detected_organization_id"
 	TenantContextKey         contextKey = "tenant"
 	TenantIDContextKey       contextKey = "tenant_id"
 	TenantSlugContextKey     contextKey = "tenant_slug"

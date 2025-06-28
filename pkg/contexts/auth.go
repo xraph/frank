@@ -11,6 +11,16 @@ import (
 	"github.com/rs/xid"
 )
 
+// AuthMethod represents the authentication method used
+type AuthMethod string
+
+const (
+	AuthMethodJWT     AuthMethod = "jwt"
+	AuthMethodAPIKey  AuthMethod = "api_key"
+	AuthMethodSession AuthMethod = "session"
+	AuthMethodNone    AuthMethod = "none"
+)
+
 // UserContext represents the authenticated user context
 type UserContext struct {
 	ID             xid.ID            `json:"id"`
@@ -39,6 +49,14 @@ type SessionContext struct {
 	IPAddress    string    `json:"ipAddress,omitempty"`
 	UserAgent    string    `json:"userAgent,omitempty"`
 	DeviceID     string    `json:"deviceId,omitempty"`
+}
+
+// AuthenticationContext holds all authentication-related information
+type AuthenticationContext struct {
+	User    *UserContext
+	Session *SessionContext
+	APIKey  *APIKeyContext
+	Method  AuthMethod
 }
 
 // APIKeyContext represents the API key context
@@ -79,6 +97,7 @@ type OrganizationContext struct {
 	IsPlatformOrganization bool           `json:"isPlatformOrganization"`
 	OrgType                model.OrgType  `json:"orgType"`
 	Metadata               map[string]any `json:"metadata,omitempty"`
+	Source                 string         `json:"source"`
 }
 
 // RequestContext represents request-specific context information
@@ -92,14 +111,37 @@ type RequestContext struct {
 	Headers   map[string]string `json:"headers,omitempty"`
 }
 
+// TenantLimits represents tenant-specific limits
+type TenantLimits struct {
+	ExternalUsers  int   `json:"external_users"`
+	EndUsers       int   `json:"end_users"`
+	APIRequests    int   `json:"api_requests"`
+	Storage        int64 `json:"storage"` // bytes
+	EmailsPerMonth int   `json:"emails_per_month"`
+	SMSPerMonth    int   `json:"sms_per_month"`
+	Webhooks       int   `json:"webhooks"`
+	SSO            bool  `json:"sso"`
+	CustomDomains  int   `json:"custom_domains"`
+}
+
+// TrialInfo represents trial information
+type TrialInfo struct {
+	Active    bool       `json:"active"`
+	ExpiresAt *time.Time `json:"expires_at,omitempty"`
+	DaysLeft  int        `json:"days_left"`
+	Used      bool       `json:"used"`
+}
+
 // TenantContext represents the tenant context for multi-tenancy
 type TenantContext struct {
 	Organization *model.Organization `json:"organization"`
 	Plan         string              `json:"plan"`
 	Type         model.OrgType       `json:"type"`
 	Features     []string            `json:"features,omitempty"`
-	Active       bool                `json:"active"`
+	Limits       *TenantLimits       `json:"limits,omitempty"`
 	Settings     map[string]any      `json:"settings,omitempty"`
+	Active       bool                `json:"active"`
+	Trial        *TrialInfo          `json:"trial,omitempty"`
 }
 
 // GetUserFromContextSafe retrieves the user from request context
@@ -138,14 +180,6 @@ func GetUserIDFromContext(ctx context.Context) *xid.ID {
 func GetUserTypeFromContext(ctx context.Context) *model.UserType {
 	if userType, ok := ctx.Value(UserTypeContextKey).(model.UserType); ok {
 		return &userType
-	}
-	return nil
-}
-
-// GetOrganizationIDFromContext retrieves the organization ID from request context
-func GetOrganizationIDFromContext(ctx context.Context) *xid.ID {
-	if orgID, ok := ctx.Value(OrganizationIDContextKey).(xid.ID); ok {
-		return &orgID
 	}
 	return nil
 }

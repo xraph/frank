@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/juicycleff/frank/pkg/contexts"
 	"github.com/juicycleff/frank/pkg/logging"
 	"github.com/rs/xid"
 )
@@ -397,7 +398,7 @@ func addUserContextToLogEntry(ctx context.Context, entry *LogEntry) {
 		entry.APIKeyID = &apiKey.ID
 	}
 
-	if authMethod := GetAuthMethodFromContext(ctx); authMethod != AuthMethodNone {
+	if authMethod := GetAuthMethodFromContext(ctx); authMethod != contexts.AuthMethodNone {
 		entry.AuthMethod = string(authMethod)
 	}
 }

@@ -319,7 +319,7 @@ export class UsersApi extends runtime.BaseAPI {
         headerParameters['Content-Type'] = 'application/json';
 
         const response = await this.request({
-            path: `/api/v1/user/change-password`,
+            path: `/api/v1/me/change-password`,
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
@@ -690,7 +690,7 @@ export class UsersApi extends runtime.BaseAPI {
         const headerParameters: runtime.HTTPHeaders = {};
 
         const response = await this.request({
-            path: `/api/v1/user/profile`,
+            path: `/api/v1/me/profile`,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
@@ -1245,7 +1245,7 @@ export class UsersApi extends runtime.BaseAPI {
         headerParameters['Content-Type'] = 'application/json';
 
         const response = await this.request({
-            path: `/api/v1/user/profile`,
+            path: `/api/v1/me/profile`,
             method: 'PUT',
             headers: headerParameters,
             query: queryParameters,

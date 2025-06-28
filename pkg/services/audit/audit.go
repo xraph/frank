@@ -135,6 +135,7 @@ const (
 	ActionInvitationAccept       = "invitation.accept"
 	ActionWebhookCreate          = "webhook.create"
 	ActionWebhookTrigger         = "webhook.trigger"
+	ActionOrganizationSwitch     = "organization.switch"
 
 	// Status
 	StatusSuccess = "success"

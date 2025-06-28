@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -13,6 +14,7 @@ import (
 	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/juicycleff/frank/pkg/logging"
 	"github.com/juicycleff/frank/pkg/model"
+	"github.com/juicycleff/frank/pkg/server"
 	"github.com/juicycleff/frank/pkg/services/organization"
 	"github.com/rs/xid"
 )
@@ -26,10 +28,11 @@ type UnifiedRegistrationMiddleware struct {
 	invitationService organization.InvitationService
 	logger            logging.Logger
 	api               huma.API
+	mountOpts         *server.MountOptions
 }
 
 // NewUnifiedRegistrationMiddleware creates middleware for unified registration flow detection
-func NewUnifiedRegistrationMiddleware(api huma.API, di di.Container, config *OrganizationContextConfig) *UnifiedRegistrationMiddleware {
+func NewUnifiedRegistrationMiddleware(api huma.API, di di.Container, mountOpts *server.MountOptions, config *OrganizationContextConfig) *UnifiedRegistrationMiddleware {
 	if config == nil {
 		config = DefaultOrganizationContextConfig()
 	}
@@ -46,14 +49,15 @@ func NewUnifiedRegistrationMiddleware(api huma.API, di di.Container, config *Org
 		invitationService: di.InvitationService(),
 		logger:            config.Logger,
 		api:               api,
+		mountOpts:         mountOpts,
 	}
 }
 
 // UnifiedRegistrationMiddleware detects flow and applies appropriate organization context rules
 func (urm *UnifiedRegistrationMiddleware) UnifiedRegistrationMiddleware() func(huma.Context, func(huma.Context)) {
 	return func(ctx huma.Context, next func(huma.Context)) {
-		r := contexts.GetRequestFromContext(ctx.Context())
-		rctx := r.Context()
+		rctx := ctx.Context()
+		r := contexts.GetRequestFromContext(rctx)
 
 		// Skip for non-registration paths
 		if !urm.isRegistrationPath(ctx.URL().Path) {
@@ -152,8 +156,6 @@ func (urm *UnifiedRegistrationMiddleware) applyFlowRules(ctx huma.Context, flow 
 	}
 }
 
-// Flow handlers
-
 func (urm *UnifiedRegistrationMiddleware) handleOrganizationCreationFlow(ctx huma.Context, flowData map[string]interface{}) error {
 	// Organization creation: NO organization context required
 	urm.logger.Debug("Organization creation flow: no organization context required")
@@ -200,6 +202,8 @@ func (urm *UnifiedRegistrationMiddleware) handleExternalUserFlow(ctx huma.Contex
 func (urm *UnifiedRegistrationMiddleware) handleEndUserFlow(ctx huma.Context, flowData map[string]interface{}) error {
 	// End users: Organization context REQUIRED
 	orgID := urm.getDetectedOrganizationID(ctx.Context())
+
+	fmt.Println("orgID ===> ", orgID)
 	if orgID == nil {
 		return errors.New(errors.CodeBadRequest, "organization context is required for end user registration. Provide organization context via API key (X-Publishable-Key) or headers (X-Org-ID).")
 	}

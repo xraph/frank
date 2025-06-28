@@ -27,6 +27,12 @@ export interface LogoutResponse {
      */
     readonly $schema?: string;
     /**
+     * Response message
+     * @type {string}
+     * @memberof LogoutResponse
+     */
+    message: string;
+    /**
      * Number of sessions that were ended
      * @type {number}
      * @memberof LogoutResponse
@@ -44,6 +50,7 @@ export interface LogoutResponse {
  * Check if a given object implements the LogoutResponse interface.
  */
 export function instanceOfLogoutResponse(value: object): value is LogoutResponse {
+    if (!('message' in value) || value['message'] === undefined) return false;
     if (!('sessionsEnded' in value) || value['sessionsEnded'] === undefined) return false;
     if (!('success' in value) || value['success'] === undefined) return false;
     return true;
@@ -61,6 +68,7 @@ export function LogoutResponseFromJSONTyped(json: any, ignoreDiscriminator: bool
         
             ...json,
         '$schema': json['$schema'] == null ? undefined : json['$schema'],
+        'message': json['message'],
         'sessionsEnded': json['sessionsEnded'],
         'success': json['success'],
     };
@@ -78,6 +86,7 @@ export function LogoutResponseToJSONTyped(value?: Omit<LogoutResponse, '$schema'
     return {
         
             ...value,
+        'message': value['message'],
         'sessionsEnded': value['sessionsEnded'],
         'success': value['success'],
     };

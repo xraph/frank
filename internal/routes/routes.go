@@ -74,20 +74,33 @@ func NewRouterWithOptions(di di.Container, existingRouter chi.Router, opts *serv
 	tenantConfig.Logger = di.Logger()
 
 	orgContextConfig := customMiddleware.DefaultOrganizationContextConfig()
-
 	orgContextConfig.Logger = di.Logger()
+	orgContextConfig.BasePath = opts.BasePath
 
-	authMw := customMiddleware.NewAuthMiddleware(di, api)
+	// Create auth middleware with mount options
+	authMw := customMiddleware.NewAuthMiddleware(di, api, opts)
+
+	// Create tenant middleware with mount options
+	tenantMw := customMiddleware.NewTenantMiddleware(api, di, tenantConfig, opts)
+
+	// Create organization context middleware with mount options
+	orgContextMw := customMiddleware.NewOrganizationContextMiddleware(api, di, authMw, orgContextConfig)
+
+	// Create smart organization middleware with mount options
+	smartOrgMw := customMiddleware.NewSmartOrganizationMiddleware(api, di, opts, orgContextConfig)
+
+	// Create unified registration middleware with mount options
+	unifiedOrgMw := customMiddleware.NewUnifiedRegistrationMiddleware(api, di, opts, orgContextConfig)
 
 	router := &Router{
 		di:           di,
 		router:       r,
 		api:          api,
 		authMw:       authMw,
-		tenantMw:     customMiddleware.NewTenantMiddleware(api, di, tenantConfig),
-		orgContextMw: customMiddleware.NewOrganizationContextMiddleware(api, di, authMw, orgContextConfig),
-		smartOrgMw:   customMiddleware.NewSmartOrganizationMiddleware(api, di, orgContextConfig),
-		unifiedOrgMw: customMiddleware.NewUnifiedRegistrationMiddleware(api, di, orgContextConfig),
+		tenantMw:     tenantMw,
+		orgContextMw: orgContextMw,
+		smartOrgMw:   smartOrgMw,
+		unifiedOrgMw: unifiedOrgMw,
 		logger:       logger,
 		mountOpts:    opts,
 		isEmbedded:   existingRouter != nil,
@@ -405,6 +418,7 @@ func (router *Router) RegisterRoutes() {
 	}
 
 	if router.mountOpts.IncludeRoutes.Protected && !router.mountOpts.ExcludeRoutes.Protected {
+		router.setupPersonalRoutes(v1Group)
 		router.setupProtectedRoutes(v1Group)
 	}
 
@@ -432,12 +446,14 @@ func (router *Router) RegisterRoutes() {
 func (router *Router) setupPublicRoutes(v1Group huma.API) {
 	publicGroup := huma.NewGroup(v1Group, "/public")
 
-	// Apply user type detection and organization context middleware
-	// This ensures that even public routes understand the user type and organization context
+	// Apply organization context detection (NOT enforcement) for public routes
+	// This allows organization context to be detected without requiring authentication
 	publicGroup.UseMiddleware(router.orgContextMw.UserTypeDetectionHumaMiddleware(true))
-	publicGroup.UseMiddleware(router.orgContextMw.RequireOrganizationForUserTypeHuma(true))
-	publicGroup.UseMiddleware(router.unifiedOrgMw.UnifiedRegistrationMiddleware())
 	publicGroup.UseMiddleware(router.authMw.OptionalAuthHuma())
+	publicGroup.UseMiddleware(router.orgContextMw.RequireOrganizationForUserTypeHuma(true))
+
+	// Apply unified registration flow detection
+	publicGroup.UseMiddleware(router.unifiedOrgMw.UnifiedRegistrationMiddleware())
 
 	// Authentication routes (login, register, etc.)
 	RegisterPublicAuthAPI(publicGroup, router.di)
@@ -457,28 +473,39 @@ func (router *Router) setupPublicRoutes(v1Group huma.API) {
 
 // setupProtectedRoutes configures routes that require authentication
 func (router *Router) setupProtectedRoutes(v1Group huma.API) {
-	protectedGroup := huma.NewGroup(v1Group)
+	// Base protected group - only requires authentication, no organization context
+	authOnlyGroup := huma.NewGroup(v1Group)
+	authOnlyGroup.UseMiddleware(router.authMw.RequireAuthHuma())
 
-	// Create a separate group for user-scoped endpoints (not organization-scoped)
-	// These endpoints are for personal user management regardless of organization
-	userGroup := huma.NewGroup(v1Group)
+	// Organization-aware group - applies user type detection and organization context
+	orgAwareGroup := huma.NewGroup(v1Group)
+	orgAwareGroup.UseMiddleware(router.orgContextMw.UserTypeDetectionHumaMiddleware(false))
+	orgAwareGroup.UseMiddleware(router.authMw.RequireAuthHuma())
+	// orgAwareGroup.UseMiddleware(router.orgContextMw.RequireOrganizationForUserTypeHuma(false))
 
-	// Apply user type detection, authentication, and organization context middleware
-	protectedGroup.UseMiddleware(router.authMw.RequireAuthHuma())
-	protectedGroup.UseMiddleware(router.orgContextMw.UserTypeDetectionHumaMiddleware(false))
-	protectedGroup.UseMiddleware(router.orgContextMw.RequireOrganizationForUserTypeHuma(false))
+	// Use more lenient organization context enforcement
+	// This allows internal users and personal operations to proceed without strict org validation
+	orgAwareGroup.UseMiddleware(router.orgContextMw.OptionalOrganizationContextHuma())
 
-	tenantGroup := huma.NewGroup(protectedGroup)
-	// tenantGroup.UseMiddleware(customMiddleware.AddRequestToContextHuma())
+	// Tenant-scoped group - full multi-tenant isolation
+	tenantGroup := huma.NewGroup(v1Group)
+	tenantGroup.UseMiddleware(router.orgContextMw.UserTypeDetectionHumaMiddleware(false))
+	tenantGroup.UseMiddleware(router.authMw.RequireAuthHuma())
+	tenantGroup.UseMiddleware(router.orgContextMw.RequireOrganizationForUserTypeHuma(false))
+
 	tenantGroup.UseMiddleware(router.tenantMw.HumaMiddleware())
 	tenantGroup.UseMiddleware(router.tenantMw.RequireTenantHuma())
 	tenantGroup.UseMiddleware(router.tenantMw.TenantIsolationHuma())
 
-	// Auth management endpoints (accessible to all authenticated users)
-	RegisterAuthAPI(protectedGroup, router.di)
+	// Auth management endpoints (logout, refresh, profile, etc.)
+	RegisterAuthAPI(authOnlyGroup, router.di)
 
-	// User management endpoints
-	RegisterUserAPI(protectedGroup, router.di)
+	// === ORGANIZATION-AWARE ROUTES (Organization context validated for external/end users) ===
+
+	// OAuth2 client management endpoints (can work with or without org context)
+	RegisterOAuthAPI(orgAwareGroup, router.di)
+
+	// === TENANT-SCOPED ROUTES (Full organization isolation required) ===
 
 	// Organization management endpoints
 	RegisterOrganizationAPI(tenantGroup, router.di)
@@ -486,14 +513,14 @@ func (router *Router) setupProtectedRoutes(v1Group huma.API) {
 	// Membership management endpoints
 	RegisterMembershipAPI(tenantGroup, router.di)
 
+	// User management endpoints (organization-scoped)
+	RegisterUserAPI(tenantGroup, router.di)
+
 	// RBAC endpoints (roles and permissions)
 	RegisterRBACAPI(tenantGroup, router.di)
 
-	// MFA management endpoints
+	// MFA management endpoints (organization-scoped)
 	RegisterMFAAPI(tenantGroup, router.di)
-
-	// OAuth2 client management endpoints
-	RegisterOAuthAPI(protectedGroup, router.di)
 
 	// SSO configuration endpoints
 	RegisterSSOAPI(tenantGroup, router.di)
@@ -507,19 +534,27 @@ func (router *Router) setupProtectedRoutes(v1Group huma.API) {
 	// Activity management endpoints
 	RegisterActivityAPI(tenantGroup, router.di)
 
-	// Activity management endpoints
+	// API Key management endpoints
 	RegisterAPIKeyAPI(tenantGroup, router.di)
-	userGroup.UseMiddleware(router.orgContextMw.UserTypeDetectionHumaMiddleware(false))
-	userGroup.UseMiddleware(router.authMw.RequireAuthHuma())
-	userGroup.UseMiddleware(router.authMw.RequireUserTypeHuma(
+}
+
+// setupProtectedRoutes configures routes that require authentication
+func (router *Router) setupPersonalRoutes(v1Group huma.API) {
+	personalGroup := huma.NewGroup(v1Group, "/me")
+	personalGroup.UseMiddleware(router.orgContextMw.UserTypeDetectionHumaMiddleware(false))
+	personalGroup.UseMiddleware(router.authMw.RequireAuthHuma())
+	personalGroup.UseMiddleware(router.authMw.RequireUserTypeHuma(
 		model.UserTypeInternal,
 		model.UserTypeExternal,
 		model.UserTypeEndUser,
 	))
-
-	// Personal user management endpoints
-	RegisterPersonalUserAPI(userGroup, router.di)
-	RegisterPersonalOrganizationAPI(userGroup, router.di)
+	// Auth management endpoints (logout, refresh, profile, etc.)
+	// These should NOT require organization context
+	RegisterPersonalAuthAPI(personalGroup, router.di)
+	// Personal organization operations (list my orgs, switch org context, etc.)
+	RegisterPersonalOrganizationAPI(personalGroup, router.di)
+	// Personal user management endpoints (profile, password change, personal MFA, etc.)
+	RegisterPersonalUserAPI(personalGroup, router.di)
 }
 
 // setupInternalRoutes configures routes for internal platform users only
@@ -544,7 +579,7 @@ func (router *Router) setupInternalRoutes(v1Group huma.API) {
 
 // setupWebhookRoutes configures webhook-specific routes with special handling
 func (router *Router) setupWebhookRoutes(v1Group huma.API) {
-	webhookGroup := huma.NewGroup(v1Group, "/webhooks")
+	webhookGroup := huma.NewGroup(v1Group)
 
 	// Apply webhook-specific CORS middleware
 	webhookGroup.UseMiddleware(customMiddleware.HumaWebhookCORSMiddleware(router.api))
