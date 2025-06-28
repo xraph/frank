@@ -7,7 +7,7 @@
 [![SOC 2](https://img.shields.io/badge/SOC%202-Compliant-blue?style=for-the-badge)](docs/compliance/)
 [![API Status](https://img.shields.io/badge/API-Production%20Ready-success?style=for-the-badge)](https://api.frankauth.com/docs)
 
-Frank Auth SaaS is a comprehensive, enterprise-ready authentication platform designed to provide seamless user management, multi-factor authentication, and advanced security features for modern applications. Built with a three-tier user system and multi-tenant architecture, it offers complete compatibility with Clerk.js while providing enhanced security and compliance features.
+Frank Auth SaaS is a comprehensive, enterprise-ready authentication platform designed to provide seamless user management, multi-factor authentication, and advanced security features for modern applications. Built with a three-tier user system and multi-tenant architecture, it offers enhanced security and compliance features. It's can be embedded to your GoLang Backend or just hosted standalone.
 
 ## 🚀 Quick Start
 
