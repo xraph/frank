@@ -8,10 +8,10 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/juicycleff/frank/config"
-	"github.com/juicycleff/frank/pkg/errors"
-	"github.com/juicycleff/frank/pkg/logging"
-	"github.com/juicycleff/frank/pkg/sms"
+	"github.com/xraph/frank/config"
+	"github.com/xraph/frank/pkg/errors"
+	"github.com/xraph/frank/pkg/logging"
+	"github.com/xraph/frank/pkg/sms"
 )
 
 // SMSProvider represents an SMS provider interface

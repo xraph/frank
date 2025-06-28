@@ -1,7 +1,7 @@
 package hooks
 
 import (
-	"github.com/juicycleff/frank/pkg/logging"
+	"github.com/xraph/frank/pkg/logging"
 )
 
 // MockHookRegistry is a registry that replaces all hooks with no-ops for testing

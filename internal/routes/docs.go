@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/MarceloPetrucio/go-scalar-api-reference"
-	customMiddleware "github.com/juicycleff/frank/internal/middleware"
-	"github.com/juicycleff/frank/pkg/logging"
+	customMiddleware "github.com/xraph/frank/internal/middleware"
+	"github.com/xraph/frank/pkg/logging"
 )
 
 // setupDocsRoutes configures modern API documentation routes

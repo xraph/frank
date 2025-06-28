@@ -3,8 +3,8 @@ package rbac
 import (
 	"time"
 
-	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
+	"github.com/xraph/frank/pkg/model"
 )
 
 // ================================

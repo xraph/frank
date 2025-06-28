@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/juicycleff/frank/ent"
-	"github.com/juicycleff/frank/ent/featureflag"
-	"github.com/juicycleff/frank/ent/organizationfeature"
-	"github.com/juicycleff/frank/pkg/errors"
-	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
+	"github.com/xraph/frank/ent"
+	"github.com/xraph/frank/ent/featureflag"
+	"github.com/xraph/frank/ent/organizationfeature"
+	"github.com/xraph/frank/pkg/errors"
+	"github.com/xraph/frank/pkg/model"
 )
 
 // OrganizationFeatureRepository defines the interface for organization feature data operations

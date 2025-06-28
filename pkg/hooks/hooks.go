@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/juicycleff/frank/pkg/logging"
-	"github.com/juicycleff/frank/pkg/model"
+	"github.com/xraph/frank/pkg/logging"
+	"github.com/xraph/frank/pkg/model"
 )
 
 // Hooks defines the interface for hook management and execution

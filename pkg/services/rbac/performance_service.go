@@ -8,9 +8,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/juicycleff/frank/ent"
-	"github.com/juicycleff/frank/pkg/logging"
 	"github.com/rs/xid"
+	"github.com/xraph/frank/ent"
+	"github.com/xraph/frank/pkg/logging"
 )
 
 // PerformanceOptimizedRBACService wraps the standard RBAC service with caching and optimization

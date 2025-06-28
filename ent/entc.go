@@ -30,7 +30,7 @@ import (
 	// "entgo.io/ent/entc/gen"
 	"github.com/flume/enthistory"
 	"github.com/hedwigz/entviz"
-	_ "github.com/juicycleff/frank/ent/runtime"
+	_ "github.com/xraph/frank/ent/runtime"
 )
 
 func main() {

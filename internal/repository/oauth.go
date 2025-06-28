@@ -6,15 +6,15 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqljson"
-	"github.com/juicycleff/frank/ent"
-	"github.com/juicycleff/frank/ent/oauthauthorization"
-	"github.com/juicycleff/frank/ent/oauthclient"
-	"github.com/juicycleff/frank/ent/oauthscope"
-	"github.com/juicycleff/frank/ent/oauthtoken"
-	"github.com/juicycleff/frank/pkg/errors"
-	"github.com/juicycleff/frank/pkg/logging"
-	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
+	"github.com/xraph/frank/ent"
+	"github.com/xraph/frank/ent/oauthauthorization"
+	"github.com/xraph/frank/ent/oauthclient"
+	"github.com/xraph/frank/ent/oauthscope"
+	"github.com/xraph/frank/ent/oauthtoken"
+	"github.com/xraph/frank/pkg/errors"
+	"github.com/xraph/frank/pkg/logging"
+	"github.com/xraph/frank/pkg/model"
 )
 
 // OAuthRepository defines the interface for OAuth data access

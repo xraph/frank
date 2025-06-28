@@ -8,7 +8,7 @@ package privacy
 import (
 	"context"
 
-	"github.com/juicycleff/frank/ent"
+	"github.com/xraph/frank/ent"
 
 	"entgo.io/ent/entql"
 	"entgo.io/ent/privacy"

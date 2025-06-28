@@ -5,11 +5,11 @@ import (
 	"net/http"
 
 	"github.com/danielgtaylor/huma/v2"
-	"github.com/juicycleff/frank/internal/authz"
-	"github.com/juicycleff/frank/internal/di"
-	"github.com/juicycleff/frank/pkg/model"
-	organization2 "github.com/juicycleff/frank/pkg/services/organization"
 	"github.com/rs/xid"
+	"github.com/xraph/frank/internal/authz"
+	"github.com/xraph/frank/internal/di"
+	"github.com/xraph/frank/pkg/model"
+	organization2 "github.com/xraph/frank/pkg/services/organization"
 )
 
 // RegisterMembershipAPI registers all membership management endpoints

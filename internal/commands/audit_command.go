@@ -6,10 +6,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/juicycleff/frank/ent"
-	"github.com/juicycleff/frank/ent/audit"
-	"github.com/juicycleff/frank/pkg/model"
 	"github.com/spf13/cobra"
+	"github.com/xraph/frank/ent"
+	"github.com/xraph/frank/ent/audit"
+	"github.com/xraph/frank/pkg/model"
 	"go.uber.org/zap"
 )
 

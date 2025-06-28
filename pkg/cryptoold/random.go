@@ -8,7 +8,7 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/juicycleff/frank/pkg/errors"
+	"github.com/xraph/frank/pkg/errors"
 )
 
 const (

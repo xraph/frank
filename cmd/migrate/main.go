@@ -18,10 +18,11 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/database/sqlite3"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
-	"github.com/juicycleff/frank/config"
-	"github.com/juicycleff/frank/internal/migration"
-	"github.com/juicycleff/frank/pkg/data"
-	"github.com/juicycleff/frank/pkg/logging"
+	"github.com/rs/xid"
+	"github.co
+	"github.com/xraph/frank/config"
+	"github.com/xraph/frank/internal/migration"
+	"github.com/xraph/frank/pkg/data"
 	"github.com/rs/xid"
 )
 

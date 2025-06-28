@@ -1,8 +1,8 @@
 package apikey
 
 import (
-	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
+	"github.com/xraph/frank/pkg/model"
 )
 
 // Configuration options for various operations

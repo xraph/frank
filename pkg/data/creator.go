@@ -7,8 +7,8 @@ import (
 
 	"entgo.io/ent/dialect"
 	entsql "entgo.io/ent/dialect/sql"
-	"github.com/juicycleff/frank/config"
-	"github.com/juicycleff/frank/ent"
+	"github.com/xraph/frank/config"
+	"github.com/xraph/frank/ent"
 
 	// Database drivers
 	_ "github.com/go-sql-driver/mysql" // MySQL

@@ -5,16 +5,16 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/juicycleff/frank/ent"
-	"github.com/juicycleff/frank/ent/permission"
-	"github.com/juicycleff/frank/ent/predicate"
-	"github.com/juicycleff/frank/ent/role"
-	entRole "github.com/juicycleff/frank/ent/role"
-	"github.com/juicycleff/frank/ent/user"
-	entUserRole "github.com/juicycleff/frank/ent/userrole"
-	"github.com/juicycleff/frank/pkg/errors"
-	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
+	"github.com/xraph/frank/ent"
+	"github.com/xraph/frank/ent/permission"
+	"github.com/xraph/frank/ent/predicate"
+	"github.com/xraph/frank/ent/role"
+	entRole "github.com/xraph/frank/ent/role"
+	"github.com/xraph/frank/ent/user"
+	entUserRole "github.com/xraph/frank/ent/userrole"
+	"github.com/xraph/frank/pkg/errors"
+	"github.com/xraph/frank/pkg/model"
 )
 
 var (

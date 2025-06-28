@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/juicycleff/frank/ent"
-	"github.com/juicycleff/frank/ent/predicate"
-	"github.com/juicycleff/frank/ent/user"
-	"github.com/juicycleff/frank/pkg/errors"
-	"github.com/juicycleff/frank/pkg/logging"
-	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
+	"github.com/xraph/frank/ent"
+	"github.com/xraph/frank/ent/predicate"
+	"github.com/xraph/frank/ent/user"
+	"github.com/xraph/frank/pkg/errors"
+	"github.com/xraph/frank/pkg/logging"
+	"github.com/xraph/frank/pkg/model"
 )
 
 // UserRepository defines the interface for user data access

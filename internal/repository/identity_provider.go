@@ -6,11 +6,11 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqljson"
-	"github.com/juicycleff/frank/ent"
-	"github.com/juicycleff/frank/ent/identityprovider"
-	"github.com/juicycleff/frank/pkg/errors"
-	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
+	"github.com/xraph/frank/ent"
+	"github.com/xraph/frank/ent/identityprovider"
+	"github.com/xraph/frank/pkg/errors"
+	"github.com/xraph/frank/pkg/model"
 )
 
 // IdentityProviderRepository defines the interface for identity provider data operations

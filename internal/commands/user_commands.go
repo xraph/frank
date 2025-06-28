@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/juicycleff/frank/ent"
-	"github.com/juicycleff/frank/ent/membership"
-	"github.com/juicycleff/frank/ent/organization"
-	"github.com/juicycleff/frank/ent/user"
-	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 	"github.com/spf13/cobra"
+	"github.com/xraph/frank/ent"
+	"github.com/xraph/frank/ent/membership"
+	"github.com/xraph/frank/ent/organization"
+	"github.com/xraph/frank/ent/user"
+	"github.com/xraph/frank/pkg/model"
 	"go.uber.org/zap"
 )
 

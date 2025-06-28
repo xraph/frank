@@ -16,9 +16,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/juicycleff/frank/ent/organizationprovider"
-	"github.com/juicycleff/frank/ent/predicate"
-	"github.com/juicycleff/frank/ent/providertemplate"
+	"github.com/xraph/frank/ent/organizationprovider"
+	"github.com/xraph/frank/ent/predicate"
+	"github.com/xraph/frank/ent/providertemplate"
 	"github.com/rs/xid"
 )
 

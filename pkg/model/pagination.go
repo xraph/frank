@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/juicycleff/frank/pkg/errors"
+	"github.com/xraph/frank/pkg/errors"
 )
 
 // WithPagination is a generic function that adds pagination to an ent query.

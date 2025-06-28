@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/juicycleff/frank/pkg/logging"
 	"github.com/rs/xid"
+	"github.com/xraph/frank/pkg/logging"
 )
 
 // HookRegistryInterface defines the contract for hook registry implementations

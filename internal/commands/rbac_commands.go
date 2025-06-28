@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/juicycleff/frank/ent"
-	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 	"github.com/spf13/cobra"
+	"github.com/xraph/frank/ent"
+	"github.com/xraph/frank/pkg/model"
 	"go.uber.org/zap"
 )
 

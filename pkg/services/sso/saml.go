@@ -18,10 +18,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/juicycleff/frank/pkg/errors"
-	"github.com/juicycleff/frank/pkg/logging"
-	"github.com/juicycleff/frank/pkg/model"
-	"github.com/juicycleff/frank/pkg/validation"
+	"github.com/xraph/frank/pkg/errors"
+	"github.com/xraph/frank/pkg/logging"
+	"github.com/xraph/frank/pkg/model"
+	"github.com/xraph/frank/pkg/validation"
 )
 
 // SAMLService defines the SAML SSO service interface

@@ -9,11 +9,11 @@ package integration
 // 	"net/http/httptest"
 // 	"testing"
 //
-// 	"github.com/juicycleff/frank/internal/handlers"
-// 	"github.com/juicycleff/frank/internal/middleware"
-// 	"github.com/juicycleff/frank/organization"
-// 	organization2 "github.com/juicycleff/frank/organization"
-// 	"github.com/juicycleff/frank/pkg/logging"
+// 	"github.com/xraph/frank/internal/handlers"
+// 	"github.com/xraph/frank/internal/middleware"
+// 	"github.com/xraph/frank/organization"
+// 	organization2 "github.com/xraph/frank/organization"
+// 	"github.com/xraph/frank/pkg/logging"
 // 	"github.com/stretchr/testify/assert"
 // 	"github.com/stretchr/testify/require"
 // )

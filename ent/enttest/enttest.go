@@ -8,12 +8,12 @@ package enttest
 import (
 	"context"
 
-	"github.com/juicycleff/frank/ent"
+	"github.com/xraph/frank/ent"
 	// required by schema hooks.
-	_ "github.com/juicycleff/frank/ent/runtime"
+	_ "github.com/xraph/frank/ent/runtime"
 
 	"entgo.io/ent/dialect/sql/schema"
-	"github.com/juicycleff/frank/ent/migrate"
+	"github.com/xraph/frank/ent/migrate"
 )
 
 type (

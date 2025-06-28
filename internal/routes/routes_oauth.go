@@ -5,13 +5,13 @@ import (
 	"net/http"
 
 	"github.com/danielgtaylor/huma/v2"
-	"github.com/juicycleff/frank/internal/authz"
-	"github.com/juicycleff/frank/internal/di"
-	"github.com/juicycleff/frank/pkg/errors"
-	"github.com/juicycleff/frank/pkg/logging"
-	"github.com/juicycleff/frank/pkg/model"
-	"github.com/juicycleff/frank/pkg/services/audit"
 	"github.com/rs/xid"
+	"github.com/xraph/frank/internal/authz"
+	"github.com/xraph/frank/internal/di"
+	"github.com/xraph/frank/pkg/errors"
+	"github.com/xraph/frank/pkg/logging"
+	"github.com/xraph/frank/pkg/model"
+	"github.com/xraph/frank/pkg/services/audit"
 )
 
 // RegisterOAuthAPI registers protected OAuth management endpoints

@@ -6,12 +6,12 @@ import (
 	"html/template"
 	"time"
 
-	"github.com/juicycleff/frank/config"
-	"github.com/juicycleff/frank/ent"
-	"github.com/juicycleff/frank/pkg/errors"
-	"github.com/juicycleff/frank/pkg/logging"
-	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
+	"github.com/xraph/frank/config"
+	"github.com/xraph/frank/ent"
+	"github.com/xraph/frank/pkg/errors"
+	"github.com/xraph/frank/pkg/logging"
+	"github.com/xraph/frank/pkg/model"
 )
 
 // Service provides email operations

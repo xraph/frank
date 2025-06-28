@@ -6,13 +6,13 @@ import (
 
 	"github.com/danielgtaylor/huma/v2/humacli"
 	_ "github.com/jackc/pgx/v5/stdlib"
-	"github.com/juicycleff/frank"
-	"github.com/juicycleff/frank/config"
-	"github.com/juicycleff/frank/internal/commands"
-	"github.com/juicycleff/frank/internal/di"
-	"github.com/juicycleff/frank/pkg/logging"
-	server2 "github.com/juicycleff/frank/pkg/server"
 	"github.com/spf13/cobra"
+	"github.com/xraph/frank"
+	"github.com/xraph/frank/config"
+	"github.com/xraph/frank/internal/commands"
+	"github.com/xraph/frank/internal/di"
+	"github.com/xraph/frank/pkg/logging"
+	server2 "github.com/xraph/frank/pkg/server"
 	"go.uber.org/zap"
 )
 

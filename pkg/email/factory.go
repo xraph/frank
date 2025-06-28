@@ -3,8 +3,8 @@ package email
 import (
 	"strings"
 
-	"github.com/juicycleff/frank/config"
-	"github.com/juicycleff/frank/pkg/logging"
+	"github.com/xraph/frank/config"
+	"github.com/xraph/frank/pkg/logging"
 )
 
 // SenderFactory creates an email sender based on configuration

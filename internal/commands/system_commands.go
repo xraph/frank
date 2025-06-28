@@ -4,15 +4,15 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/juicycleff/frank/ent/audit"
-	"github.com/juicycleff/frank/ent/oauthtoken"
-	"github.com/juicycleff/frank/ent/organization"
-	"github.com/juicycleff/frank/ent/session"
-	"github.com/juicycleff/frank/ent/user"
-	"github.com/juicycleff/frank/pkg/crypto"
-	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 	"github.com/spf13/cobra"
+	"github.com/xraph/frank/ent/audit"
+	"github.com/xraph/frank/ent/oauthtoken"
+	"github.com/xraph/frank/ent/organization"
+	"github.com/xraph/frank/ent/session"
+	"github.com/xraph/frank/ent/user"
+	"github.com/xraph/frank/pkg/crypto"
+	"github.com/xraph/frank/pkg/model"
 	"go.uber.org/zap"
 )
 

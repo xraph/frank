@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
+	
 )
 
 // GetAPIKeyFromContext retrieves the API key from request context

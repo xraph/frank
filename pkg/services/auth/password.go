@@ -9,16 +9,16 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/juicycleff/frank/config"
-	"github.com/juicycleff/frank/internal/repository"
-	"github.com/juicycleff/frank/pkg/contexts"
-	"github.com/juicycleff/frank/pkg/crypto"
-	"github.com/juicycleff/frank/pkg/errors"
-	"github.com/juicycleff/frank/pkg/logging"
-	"github.com/juicycleff/frank/pkg/model"
-	"github.com/juicycleff/frank/pkg/services/notification"
-	"github.com/juicycleff/frank/pkg/services/user"
 	"github.com/rs/xid"
+	"github.com/xraph/frank/config"
+	"github.com/xraph/frank/internal/repository"
+	"github.com/xraph/frank/pkg/contexts"
+	"github.com/xraph/frank/pkg/crypto"
+	"github.com/xraph/frank/pkg/errors"
+	"github.com/xraph/frank/pkg/logging"
+	"github.com/xraph/frank/pkg/model"
+	"github.com/xraph/frank/pkg/services/notification"
+	"github.com/xraph/frank/pkg/services/user"
 )
 
 // PasswordService defines the interface for password operations

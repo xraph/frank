@@ -9,7 +9,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/juicycleff/frank/ent"
+	"github.com/xraph/frank/ent"
 )
 
 // The ActivityFunc type is an adapter to allow the use of ordinary

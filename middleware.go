@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/danielgtaylor/huma/v2"
-	"github.com/juicycleff/frank/pkg/errors"
-	// "github.com/juicycleff/frank/pkg/utils"
+	"github.com/xraph/frank/pkg/errors"
+	// "github.com/xraph/frank/pkg/utils"
 )
 
 func (f *Frank) AuthMiddleware() func(http.Handler) http.Handler {

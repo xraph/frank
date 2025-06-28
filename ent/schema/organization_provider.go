@@ -7,8 +7,8 @@ import (
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
-	"github.com/juicycleff/frank/pkg/entity"
 	"github.com/rs/xid"
+	"github.com/xraph/frank/pkg/entity"
 )
 
 // OrganizationProvider holds the schema definition for the OrganizationProvider entity.

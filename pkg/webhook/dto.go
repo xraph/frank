@@ -3,9 +3,9 @@ package webhook
 import (
 	"time"
 
-	"github.com/juicycleff/frank/ent/webhook"
-	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
+	"github.com/xraph/frank/ent/webhook"
+	"github.com/xraph/frank/pkg/model"
 )
 
 // ListWebhooksParams defines the parameters for listing webhooks

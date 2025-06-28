@@ -15,10 +15,10 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/juicycleff/frank/ent/organization"
-	"github.com/juicycleff/frank/ent/webhook"
-	"github.com/juicycleff/frank/ent/webhookevent"
-	"github.com/juicycleff/frank/pkg/model"
+	"github.com/xraph/frank/ent/organization"
+	"github.com/xraph/frank/ent/webhook"
+	"github.com/xraph/frank/ent/webhookevent"
+	"github.com/xraph/frank/pkg/model"
 	"github.com/rs/xid"
 )
 

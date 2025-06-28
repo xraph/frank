@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
-	"github.com/juicycleff/frank/ent/predicate"
 	"github.com/rs/xid"
+	
 )
 
 // ID filters vertices based on their ID field.

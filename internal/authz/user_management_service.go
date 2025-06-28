@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/juicycleff/frank/ent"
-	entMembership "github.com/juicycleff/frank/ent/membership"
-	entOrganization "github.com/juicycleff/frank/ent/organization"
-	entUser "github.com/juicycleff/frank/ent/user"
-	"github.com/juicycleff/frank/pkg/data"
-	"github.com/juicycleff/frank/pkg/errors"
-	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
+	"github.com/xraph/frank/ent"
+	entMembership "github.com/xraph/frank/ent/membership"
+	entOrganization "github.com/xraph/frank/ent/organization"
+	entUser "github.com/xraph/frank/ent/user"
+	"github.com/xraph/frank/pkg/data"
+	"github.com/xraph/frank/pkg/errors"
+	"github.com/xraph/frank/pkg/model"
 )
 
 // UserManagementService handles both internal users and external end users

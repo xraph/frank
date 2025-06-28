@@ -10,9 +10,9 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
-	"github.com/juicycleff/frank/ent/predicate"
-	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
+	"github.com/xraph/frank/ent/predicate"
+	"github.com/xraph/frank/pkg/model"
 )
 
 // ID filters vertices based on their ID field.

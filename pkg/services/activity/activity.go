@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/juicycleff/frank/internal/repository"
-	"github.com/juicycleff/frank/pkg/logging"
-	"github.com/juicycleff/frank/pkg/model"
+	"github.com/rs/xid"
+	"github.com/xraph/frank
+	"github.com/xraph/frank/internal/repository"
+	"github.com/xraph/frank/pkg/logging"
 	"github.com/rs/xid"
 	"go.uber.org/zap"
 )

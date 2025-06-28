@@ -7,12 +7,12 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqljson"
-	"github.com/juicycleff/frank/ent"
-	"github.com/juicycleff/frank/ent/webhook"
-	"github.com/juicycleff/frank/ent/webhookevent"
-	"github.com/juicycleff/frank/pkg/errors"
-	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
+	"github.com/xraph/frank/ent"
+	"github.com/xraph/frank/ent/webhook"
+	"github.com/xraph/frank/ent/webhookevent"
+	"github.com/xraph/frank/pkg/errors"
+	"github.com/xraph/frank/pkg/model"
 )
 
 // WebhookRepository defines the interface for webhook data operations

@@ -3,7 +3,7 @@ package hooks
 import (
 	"time"
 
-	"github.com/juicycleff/frank/pkg/logging"
+	"github.com/xraph/frank/pkg/logging"
 )
 
 // =============================================================================

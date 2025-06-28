@@ -13,7 +13,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/juicycleff/frank/ent/providertemplate"
+	"github.com/xraph/frank/ent/providertemplate"
 	"github.com/rs/xid"
 )
 

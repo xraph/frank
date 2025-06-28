@@ -5,13 +5,13 @@ import (
 	"net/http"
 
 	"github.com/danielgtaylor/huma/v2"
-	"github.com/juicycleff/frank/internal/authz"
-	"github.com/juicycleff/frank/internal/di"
-	"github.com/juicycleff/frank/internal/middleware"
-	"github.com/juicycleff/frank/pkg/errors"
-	"github.com/juicycleff/frank/pkg/logging"
-	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
+	"github.com/xraph/frank/internal/authz"
+	"github.com/xraph/frank/internal/di"
+	"github.com/xraph/frank/internal/middleware"
+	"github.com/xraph/frank/pkg/errors"
+	"github.com/xraph/frank/pkg/logging"
+	"github.com/xraph/frank/pkg/model"
 )
 
 // RegisterUserAPI registers all user management endpoints

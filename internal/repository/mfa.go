@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/juicycleff/frank/ent"
-	"github.com/juicycleff/frank/ent/mfa"
-	"github.com/juicycleff/frank/pkg/errors"
-	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
+	"github.com/xraph/frank/ent"
+	"github.com/xraph/frank/ent/mfa"
+	"github.com/xraph/frank/pkg/errors"
+	"github.com/xraph/frank/pkg/model"
 )
 
 // MFARepository defines the interface for MFA data operations

@@ -6,12 +6,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/juicycleff/frank/ent"
-	"github.com/juicycleff/frank/ent/organization"
-	"github.com/juicycleff/frank/pkg/model"
-	organization2 "github.com/juicycleff/frank/pkg/services/organization"
 	"github.com/rs/xid"
 	"github.com/spf13/cobra"
+	"github.com/xraph/frank/ent"
+	"github.com/xraph/frank/ent/organization"
+	"github.com/xraph/frank/pkg/model"
+	organization2 "github.com/xraph/frank/pkg/services/organization"
 	"go.uber.org/zap"
 )
 

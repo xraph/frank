@@ -12,7 +12,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/juicycleff/frank/ent/ssostate"
+	"github.com/xraph/frank/ent/ssostate"
 	"github.com/rs/xid"
 )
 

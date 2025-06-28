@@ -7,9 +7,9 @@ import (
 	"log"
 	"os"
 
-	"github.com/juicycleff/frank/config"
-	"github.com/juicycleff/frank/ent"
-	"github.com/juicycleff/frank/ent/migrate"
+	"github.com/xraph/frank/config"
+	"github.com/xraph/frank/ent"
+	"github.com/xraph/frank/ent/migrate"
 
 	"ariga.io/atlas/sql/sqltool"
 	"entgo.io/ent/dialect"

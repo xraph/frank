@@ -11,8 +11,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/juicycleff/frank/ent/organizationfeature"
-	"github.com/juicycleff/frank/ent/predicate"
+	"github.com/xraph/frank/ent/organizationfeature"
+	"github.com/xraph/frank/ent/predicate"
 )
 
 // OrganizationFeatureDelete is the builder for deleting a OrganizationFeature entity.

@@ -4,16 +4,16 @@ import (
 	"context"
 	"strings"
 
-	"github.com/juicycleff/frank/ent"
-	entMembership "github.com/juicycleff/frank/ent/membership"
-	entOrganization "github.com/juicycleff/frank/ent/organization"
-	entRole "github.com/juicycleff/frank/ent/role"
-	entUser "github.com/juicycleff/frank/ent/user"
-	"github.com/juicycleff/frank/pkg/contexts"
-	"github.com/juicycleff/frank/pkg/data"
-	"github.com/juicycleff/frank/pkg/errors"
-	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
+	"github.com/xraph/frank/ent"
+	entMembership "github.com/xraph/frank/ent/membership"
+	entOrganization "github.com/xraph/frank/ent/organization"
+	entRole "github.com/xraph/frank/ent/role"
+	entUser "github.com/xraph/frank/ent/user"
+	"github.com/xraph/frank/pkg/contexts"
+	"github.com/xraph/frank/pkg/data"
+	"github.com/xraph/frank/pkg/errors"
+	"github.com/xraph/frank/pkg/model"
 )
 
 // DefaultPermissionChecker is the default implementation of PermissionChecker

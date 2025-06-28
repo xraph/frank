@@ -13,8 +13,8 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/juicycleff/frank/ent/organization"
-	"github.com/juicycleff/frank/ent/smstemplate"
+	"github.com/xraph/frank/ent/organization"
+	"github.com/xraph/frank/ent/smstemplate"
 	"github.com/rs/xid"
 )
 

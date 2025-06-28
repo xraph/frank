@@ -16,7 +16,7 @@ import (
 	"time"
 
 	"github.com/andybalholm/brotli"
-	"github.com/juicycleff/frank/pkg/logging"
+	"github.com/xraph/frank/pkg/logging"
 	"golang.org/x/net/http2"
 )
 

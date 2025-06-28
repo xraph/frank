@@ -4,10 +4,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/juicycleff/frank/ent/permissiondependency"
-	"github.com/juicycleff/frank/pkg/logging"
-	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
+	"github.com/xraph/frank/ent/permissiondependency"
+	"github.com/xraph/frank/pkg/logging"
+	"github.com/xraph/frank/pkg/model"
 )
 
 // ================================

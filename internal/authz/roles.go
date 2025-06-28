@@ -3,7 +3,7 @@ package authz
 import (
 	"fmt"
 
-	"github.com/juicycleff/frank/pkg/model"
+	"github.com/xraph/frank/pkg/model"
 )
 
 // RolePermissions maps role names to their permissions

@@ -1,11 +1,11 @@
 package notification
 
 import (
-	"github.com/juicycleff/frank/config"
-	"github.com/juicycleff/frank/internal/repository"
-	"github.com/juicycleff/frank/pkg/email"
-	"github.com/juicycleff/frank/pkg/logging"
-	"github.com/juicycleff/frank/pkg/sms"
+	"github.com/xraph/frank/config"
+	"github.com/xraph/frank/internal/repository"
+	"github.com/xraph/frank/pkg/email"
+	"github.com/xraph/frank/pkg/logging"
+	"github.com/xraph/frank/pkg/sms"
 )
 
 type Service interface {

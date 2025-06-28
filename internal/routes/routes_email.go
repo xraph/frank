@@ -5,12 +5,12 @@ package routes
 // 	"net/http"
 //
 // 	"github.com/danielgtaylor/huma/v2"
-// 	"github.com/juicycleff/frank/ent"
-// 	"github.com/juicycleff/frank/internal/authz"
-// 	"github.com/juicycleff/frank/internal/di"
-// 	"github.com/juicycleff/frank/pkg/model"
-// 	"github.com/juicycleff/frank/pkg/email"
-// 	"github.com/juicycleff/frank/pkg/errors"
+// 	"github.com/xraph/frank/ent"
+// 	"github.com/xraph/frank/internal/authz"
+// 	"github.com/xraph/frank/internal/di"
+// 	"github.com/xraph/frank/pkg/model"
+// 	"github.com/xraph/frank/pkg/email"
+// 	"github.com/xraph/frank/pkg/errors"
 // 	"github.com/rs/xid"
 // )
 //

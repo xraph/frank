@@ -9,15 +9,15 @@ import (
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/go-chi/chi/v5"
-	"github.com/juicycleff/frank/ent"
-	"github.com/juicycleff/frank/internal/di"
-	"github.com/juicycleff/frank/internal/repository"
-	contexts2 "github.com/juicycleff/frank/pkg/contexts"
-	"github.com/juicycleff/frank/pkg/errors"
-	"github.com/juicycleff/frank/pkg/logging"
-	"github.com/juicycleff/frank/pkg/model"
-	"github.com/juicycleff/frank/pkg/server"
 	"github.com/rs/xid"
+	"github.com/xraph/frank/ent"
+	"github.com/xraph/frank/internal/di"
+	"github.com/xraph/frank/internal/repository"
+	contexts2 "github.com/xraph/frank/pkg/contexts"
+	"github.com/xraph/frank/pkg/errors"
+	"github.com/xraph/frank/pkg/logging"
+	"github.com/xraph/frank/pkg/model"
+	"github.com/xraph/frank/pkg/server"
 )
 
 // TenantResolutionStrategy defines how tenants are resolved

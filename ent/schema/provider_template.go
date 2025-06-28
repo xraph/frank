@@ -5,7 +5,7 @@ import (
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
-	"github.com/juicycleff/frank/pkg/entity"
+	"github.com/xraph/frank/pkg/entity"
 )
 
 // ProviderTemplate holds the schema definition for the ProviderTemplate entity.

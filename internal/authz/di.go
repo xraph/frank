@@ -1,7 +1,7 @@
 package authz
 
 import (
-	"github.com/juicycleff/frank/pkg/data"
+	"github.com/xraph/frank/pkg/data"
 )
 
 // PermissionsService represents the permission checking service

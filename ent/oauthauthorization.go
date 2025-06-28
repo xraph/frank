@@ -13,9 +13,9 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/juicycleff/frank/ent/oauthauthorization"
-	"github.com/juicycleff/frank/ent/oauthclient"
-	"github.com/juicycleff/frank/ent/user"
+	"github.com/xraph/frank/ent/oauthauthorization"
+	"github.com/xraph/frank/ent/oauthclient"
+	"github.com/xraph/frank/ent/user"
 	"github.com/rs/xid"
 )
 

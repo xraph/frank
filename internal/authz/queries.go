@@ -3,11 +3,11 @@ package authz
 import (
 	"context"
 
-	"github.com/juicycleff/frank/ent"
-	entMembership "github.com/juicycleff/frank/ent/membership"
-	entRole "github.com/juicycleff/frank/ent/role"
-	"github.com/juicycleff/frank/pkg/data"
 	"github.com/rs/xid"
+	"github.com/xraph/frank/ent"
+	entMembership "github.com/xraph/frank/ent/membership"
+	entRole "github.com/xraph/frank/ent/role"
+	"github.com/xraph/frank/pkg/data"
 )
 
 // MembershipQueries provides convenient methods for querying membership relationships

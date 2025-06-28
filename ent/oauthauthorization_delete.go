@@ -11,8 +11,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/juicycleff/frank/ent/oauthauthorization"
-	"github.com/juicycleff/frank/ent/predicate"
+	"github.com/xraph/frank/ent/oauthauthorization"
+	"github.com/xraph/frank/ent/predicate"
 )
 
 // OAuthAuthorizationDelete is the builder for deleting a OAuthAuthorization entity.

@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
+	"github.com/xraph/frank/pkg/model"
 )
 
 // ResourcePermissionChecker provides permission checking for specific resources

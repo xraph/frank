@@ -7,14 +7,15 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/juicycleff/frank/config"
-	"github.com/juicycleff/frank/internal/di"
-	"github.com/juicycleff/frank/internal/routes"
-	"github.com/juicycleff/frank/pkg/data"
-	"github.com/juicycleff/frank/pkg/hooks"
-	"github.com/juicycleff/frank/pkg/logging"
-	"github.com/juicycleff/frank/pkg/model"
-	server2 "github.com/juicycleff/frank/pkg/server"
+	"github.com/redis/go-redis/v9"
+
+	"github.com/xraph/frank/config"
+	"github.com/xraph/frank/internal/di"
+	"github.com/xraph/frank/internal/routes"
+	"github.com/xraph/frank/pkg/data"
+	"github.com/xraph/frank/pkg/hooks"
+	"github.com/xraph/frank/pkg/logging"
+	"github.com/xraph/frank/pkg/model"
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 )

@@ -3,7 +3,7 @@ package authz
 import (
 	"strings"
 
-	"github.com/juicycleff/frank/pkg/model"
+	"github.com/xraph/frank/pkg/model"
 )
 
 // ================================

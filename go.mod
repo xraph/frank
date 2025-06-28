@@ -1,4 +1,4 @@
-module github.com/juicycleff/frank
+module github.com/xraph/frank
 
 go 1.24.2
 

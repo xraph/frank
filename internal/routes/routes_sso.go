@@ -5,10 +5,10 @@ import (
 	"net/http"
 
 	"github.com/danielgtaylor/huma/v2"
-	"github.com/juicycleff/frank/internal/authz"
-	"github.com/juicycleff/frank/internal/di"
-	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
+	"github.com/xraph/frank/internal/authz"
+	"github.com/xraph/frank/internal/di"
+	"github.com/xraph/frank/pkg/model"
 )
 
 // RegisterSSOAPI registers SSO management endpoints (protected routes)

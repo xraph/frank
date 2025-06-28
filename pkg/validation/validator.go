@@ -10,7 +10,7 @@ import (
 	"unicode"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/juicycleff/frank/pkg/errors"
+	"github.com/xraph/frank/pkg/errors"
 )
 
 var (

@@ -1,7 +1,7 @@
 package hooks
 
 import (
-	"github.com/juicycleff/frank/pkg/logging"
+	"github.com/xraph/frank/pkg/logging"
 )
 
 // NoOpHookRegistry extends HookRegistry with noop-specific functionality

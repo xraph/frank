@@ -4,13 +4,13 @@ import (
 	"context"
 	"time"
 
-	"github.com/juicycleff/frank/config"
-	"github.com/juicycleff/frank/ent"
-	"github.com/juicycleff/frank/ent/webhook"
-	"github.com/juicycleff/frank/pkg/cryptoold"
-	"github.com/juicycleff/frank/pkg/logging"
-	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
+	"github.com/xraph/frank/config"
+	"github.com/xraph/frank/ent"
+	"github.com/xraph/frank/ent/webhook"
+	"github.com/xraph/frank/pkg/cryptoold"
+	"github.com/xraph/frank/pkg/logging"
+	"github.com/xraph/frank/pkg/model"
 )
 
 // Service provides webhook operations

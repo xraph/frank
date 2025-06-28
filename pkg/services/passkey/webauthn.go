@@ -6,9 +6,9 @@ import (
 	"encoding/base64"
 	"time"
 
-	"github.com/juicycleff/frank/pkg/errors"
-	"github.com/juicycleff/frank/pkg/logging"
 	"github.com/rs/xid"
+	"github.com/xraph/frank/pkg/errors"
+	"github.com/xraph/frank/pkg/logging"
 )
 
 // WebAuthnService defines the interface for WebAuthn operations

@@ -15,10 +15,11 @@ import (
 	schema2 "ariga.io/atlas/sql/schema"
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql/schema"
-	"github.com/juicycleff/frank/ent"
-	"github.com/juicycleff/frank/ent/migrate"
-	"github.com/juicycleff/frank/pkg/data"
-	"github.com/juicycleff/frank/pkg/logging"
+	"github.com/rs/xid"
+	"github
+	"github.com/xraph/frank/ent"
+	"github.com/xraph/frank/ent/migrate"
+	"github.com/xraph/frank/pkg/data"
 	"github.com/rs/xid"
 )
 

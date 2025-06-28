@@ -11,8 +11,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/juicycleff/frank/ent/apikey"
-	"github.com/juicycleff/frank/ent/predicate"
+	"github.com/xraph/frank/ent/apikey"
+	"github.com/xraph/frank/ent/predicate"
 )
 
 // ApiKeyDelete is the builder for deleting a ApiKey entity.

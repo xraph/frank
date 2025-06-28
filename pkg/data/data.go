@@ -8,12 +8,12 @@ import (
 	"github.com/redis/go-redis/v9"
 
 	// _ "github.com/jackc/pgx/v5/stdlib"
-	"github.com/juicycleff/frank/config"
-	"github.com/juicycleff/frank/ent"
-	"github.com/juicycleff/frank/ent/migrate"
-	"github.com/juicycleff/frank/pkg/logging"
 	_ "github.com/lib/pq"           // PostgreSQL driver
 	_ "github.com/mattn/go-sqlite3" // SQLite driver
+	"github.com/xraph/frank/config"
+	"github.com/xraph/frank/ent"
+	"github.com/xraph/frank/ent/migrate"
+	"github.com/xraph/frank/pkg/logging"
 )
 
 type Clients struct {

@@ -15,10 +15,10 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
-	"github.com/juicycleff/frank/ent/identityprovider"
-	"github.com/juicycleff/frank/ent/organization"
-	"github.com/juicycleff/frank/ent/organizationprovider"
-	"github.com/juicycleff/frank/ent/predicate"
+	"github.com/xraph/frank/ent/identityprovider"
+	"github.com/xraph/frank/ent/organization"
+	"github.com/xraph/frank/ent/organizationprovider"
+	"github.com/xraph/frank/ent/predicate"
 	"github.com/rs/xid"
 )
 

@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"runtime/debug"
 
-	"github.com/juicycleff/frank/config"
-	"github.com/juicycleff/frank/pkg/errors"
-	"github.com/juicycleff/frank/pkg/logging"
-	"github.com/juicycleff/frank/pkg/utils"
+	"github.com/xraph/frank/config"
+	"github.com/xraph/frank/pkg/errors"
+	"github.com/xraph/frank/pkg/logging"
+	"github.com/xraph/frank/pkg/utils"
 )
 
 // Recovery is a middleware that recovers from panics and returns a 500 response

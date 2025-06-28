@@ -3,8 +3,8 @@ package organization
 import (
 	"fmt"
 
-	"github.com/juicycleff/frank/ent"
-	"github.com/juicycleff/frank/pkg/model"
+	"github.com/xraph/frank/ent"
+	"github.com/xraph/frank/pkg/model"
 )
 
 // Helper methods

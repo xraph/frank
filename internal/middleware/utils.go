@@ -3,7 +3,7 @@ package middleware
 import (
 	"strings"
 
-	"github.com/juicycleff/frank/pkg/server"
+	"github.com/xraph/frank/pkg/server"
 )
 
 // buildFullPathsWithBasePath constructs full paths considering mount options

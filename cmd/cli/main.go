@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/juicycleff/frank/config"
-	"github.com/juicycleff/frank/internal/commands"
-	"github.com/juicycleff/frank/internal/di"
-	"github.com/juicycleff/frank/pkg/logging"
+	"github.com/spf13/cobra"
+	"gith
+	"github.com/xraph/frank/config"
+	"github.com/xraph/frank/internal/commands"
+	"github.com/xraph/frank/internal/di"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 )

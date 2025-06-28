@@ -5,7 +5,7 @@ import (
 	"time"
 
 	entsql "entgo.io/ent/dialect/sql"
-	"github.com/juicycleff/frank/ent"
+	"github.com/xraph/frank/ent"
 )
 
 // Configuration values

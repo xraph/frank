@@ -1,8 +1,8 @@
 package repository
 
 import (
-	"github.com/juicycleff/frank/pkg/data"
-	"github.com/juicycleff/frank/pkg/logging"
+	"github.com/xraph/frank/pkg/data"
+	"github.com/xraph/frank/pkg/logging"
 )
 
 type Repository interface {

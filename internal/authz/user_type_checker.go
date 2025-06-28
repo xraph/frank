@@ -3,11 +3,11 @@ package authz
 import (
 	"context"
 
-	"github.com/juicycleff/frank/pkg/contexts"
-	"github.com/juicycleff/frank/pkg/data"
-	"github.com/juicycleff/frank/pkg/errors"
-	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
+	"github.com/xraph/frank/pkg/contexts"
+	"github.com/xraph/frank/pkg/data"
+	"github.com/xraph/frank/pkg/errors"
+	"github.com/xraph/frank/pkg/model"
 )
 
 // UserTypeChecker defines interface for checking user types

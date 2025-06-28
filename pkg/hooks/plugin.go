@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/juicycleff/frank/pkg/logging"
+	"github.com/xraph/frank/pkg/logging"
 )
 
 // HookPlugin Plugin system for hooks

@@ -1,9 +1,9 @@
 package oauth
 
 import (
-	"github.com/juicycleff/frank/internal/repository"
-	"github.com/juicycleff/frank/pkg/crypto"
-	"github.com/juicycleff/frank/pkg/logging"
+	"github.com/xraph/frank/internal/repository"
+	"github.com/xraph/frank/pkg/crypto"
+	"github.com/xraph/frank/pkg/logging"
 )
 
 type Service interface {

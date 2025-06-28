@@ -3,9 +3,9 @@ package organization
 import (
 	"time"
 
-	"github.com/juicycleff/frank/ent/organization"
-	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
+	"github.com/xraph/frank/ent/organization"
+	"github.com/xraph/frank/pkg/model"
 )
 
 // Payment provider types and inputs

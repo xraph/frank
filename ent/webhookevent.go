@@ -13,8 +13,8 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/juicycleff/frank/ent/webhook"
-	"github.com/juicycleff/frank/ent/webhookevent"
+	"github.com/xraph/frank/ent/webhook"
+	"github.com/xraph/frank/ent/webhookevent"
 	"github.com/rs/xid"
 )
 

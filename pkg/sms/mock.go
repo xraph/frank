@@ -3,8 +3,8 @@ package sms
 import (
 	"context"
 
-	"github.com/juicycleff/frank/config"
-	"github.com/juicycleff/frank/pkg/logging"
+	"github.com/xraph/frank/config"
+	"github.com/xraph/frank/pkg/logging"
 )
 
 // mockProvider implements a mock SMS provider for testing

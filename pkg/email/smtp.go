@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/juicycleff/frank/config"
-	"github.com/juicycleff/frank/pkg/errors"
-	"github.com/juicycleff/frank/pkg/logging"
+	"github.com/xraph/frank/config"
+	"github.com/xraph/frank/pkg/errors"
+	"github.com/xraph/frank/pkg/logging"
 )
 
 // SMTPSender sends emails using SMTP

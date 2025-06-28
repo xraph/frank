@@ -10,12 +10,12 @@ import (
 	"time"
 
 	"github.com/gdamore/tcell/v2"
-	"github.com/juicycleff/frank/config"
-	"github.com/juicycleff/frank/internal/di"
-	"github.com/juicycleff/frank/pkg/logging"
-	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rivo/tview"
 	"github.com/spf13/cobra"
+	"github.com/xraph/frank/config"
+	"github.com/xraph/frank/internal/di"
+	"github.com/xraph/frank/pkg/logging"
+	"github.com/xraph/frank/pkg/model"
 	"go.uber.org/zap"
 )
 

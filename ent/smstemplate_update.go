@@ -15,9 +15,9 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
-	"github.com/juicycleff/frank/ent/organization"
-	"github.com/juicycleff/frank/ent/predicate"
-	"github.com/juicycleff/frank/ent/smstemplate"
+	"github.com/xraph/frank/ent/organization"
+	"github.com/xraph/frank/ent/predicate"
+	"github.com/xraph/frank/ent/smstemplate"
 	"github.com/rs/xid"
 )
 

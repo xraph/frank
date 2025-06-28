@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/juicycleff/frank/pkg/errors"
+	"github.com/xraph/frank/pkg/errors"
 )
 
 // JWTClaims represents JWT claims with standard and custom fields

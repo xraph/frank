@@ -12,12 +12,12 @@ import (
 	"github.com/danielgtaylor/huma/v2/adapters/humachi"
 	"github.com/go-chi/chi/v5"
 	chimw "github.com/go-chi/chi/v5/middleware"
-	"github.com/juicycleff/frank/internal/di"
-	customMiddleware "github.com/juicycleff/frank/internal/middleware"
-	"github.com/juicycleff/frank/pkg/errors"
-	"github.com/juicycleff/frank/pkg/logging"
-	"github.com/juicycleff/frank/pkg/model"
-	"github.com/juicycleff/frank/pkg/server"
+	"github.com/xraph/frank/internal/di"
+	customMiddleware "github.com/xraph/frank/internal/middleware"
+	"github.com/xraph/frank/pkg/errors"
+	"github.com/xraph/frank/pkg/logging"
+	"github.com/xraph/frank/pkg/model"
+	"github.com/xraph/frank/pkg/server"
 )
 
 // Router represents the main application router with support for:

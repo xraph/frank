@@ -3,8 +3,8 @@ package model
 import (
 	"time"
 
-	"github.com/juicycleff/frank/pkg/common"
 	"github.com/rs/xid"
+	
 )
 
 // APIKey represents an API key for authentication

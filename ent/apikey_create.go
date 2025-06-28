@@ -15,12 +15,12 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/juicycleff/frank/ent/apikey"
-	"github.com/juicycleff/frank/ent/apikeyactivity"
-	"github.com/juicycleff/frank/ent/organization"
-	"github.com/juicycleff/frank/ent/user"
-	"github.com/juicycleff/frank/pkg/common"
-	"github.com/juicycleff/frank/pkg/model"
+	"github.com/xraph/frank/ent/apikey"
+	"github.com/xraph/frank/ent/apikeyactivity"
+	"github.com/xraph/frank/ent/organization"
+	"github.com/xraph/frank/ent/user"
+	"github.com/xraph/frank/pkg/common"
+	"github.com/xraph/frank/pkg/model"
 	"github.com/rs/xid"
 )
 

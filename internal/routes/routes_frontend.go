@@ -5,7 +5,7 @@ package routes
 // 	"strings"
 //
 // 	"github.com/go-chi/chi/v5"
-// 	"github.com/juicycleff/frank/web"
+// 	"github.com/xraph/frank/web"
 // )
 //
 // // RegisterFrontendRoutes configures routes for serving the Next.js frontend

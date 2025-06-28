@@ -7,11 +7,12 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqljson"
-	"github.com/juicycleff/frank/ent"
-	"github.com/juicycleff/frank/ent/activity"
-	"github.com/juicycleff/frank/pkg/data"
-	"github.com/juicycleff/frank/pkg/logging"
-	"github.com/juicycleff/frank/pkg/model"
+	"github.com/rs/xid"
+	"github
+	"github.com/xraph/frank/ent"
+	"github.com/xraph/frank/ent/activity"
+	"github.com/xraph/frank/pkg/data"
+	"github.com/xraph/frank/pkg/logging"
 	"github.com/rs/xid"
 	"go.uber.org/zap"
 )

@@ -13,9 +13,9 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/juicycleff/frank/ent/featureflag"
-	"github.com/juicycleff/frank/ent/organization"
-	"github.com/juicycleff/frank/ent/organizationfeature"
+	"github.com/xraph/frank/ent/featureflag"
+	"github.com/xraph/frank/ent/organization"
+	"github.com/xraph/frank/ent/organizationfeature"
 	"github.com/rs/xid"
 )
 

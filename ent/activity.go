@@ -13,11 +13,11 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/juicycleff/frank/ent/activity"
-	"github.com/juicycleff/frank/ent/organization"
-	"github.com/juicycleff/frank/ent/session"
-	"github.com/juicycleff/frank/ent/user"
-	"github.com/juicycleff/frank/pkg/model"
+	"github.com/xraph/frank/ent/activity"
+	"github.com/xraph/frank/ent/organization"
+	"github.com/xraph/frank/ent/session"
+	"github.com/xraph/frank/ent/user"
+	"github.com/xraph/frank/pkg/model"
 	"github.com/rs/xid"
 )
 

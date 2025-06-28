@@ -8,12 +8,12 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/juicycleff/frank/config"
-	"github.com/juicycleff/frank/internal/repository"
-	"github.com/juicycleff/frank/pkg/crypto"
-	"github.com/juicycleff/frank/pkg/errors"
-	"github.com/juicycleff/frank/pkg/logging"
 	"github.com/rs/xid"
+	"github.com/xraph/frank/config"
+	"github.com/xraph/frank/internal/repository"
+	"github.com/xraph/frank/pkg/crypto"
+	"github.com/xraph/frank/pkg/errors"
+	"github.com/xraph/frank/pkg/logging"
 )
 
 // TokenService defines the interface for token operations

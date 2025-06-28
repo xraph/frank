@@ -15,11 +15,11 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/juicycleff/frank/ent/organization"
-	"github.com/juicycleff/frank/ent/permission"
-	"github.com/juicycleff/frank/ent/user"
-	"github.com/juicycleff/frank/ent/userpermission"
-	"github.com/juicycleff/frank/pkg/model"
+	"github.com/xraph/frank/ent/organization"
+	"github.com/xraph/frank/ent/permission"
+	"github.com/xraph/frank/ent/user"
+	"github.com/xraph/frank/ent/userpermission"
+	"github.com/xraph/frank/pkg/model"
 	"github.com/rs/xid"
 )
 

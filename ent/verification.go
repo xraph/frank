@@ -13,8 +13,8 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/juicycleff/frank/ent/user"
-	"github.com/juicycleff/frank/ent/verification"
+	"github.com/xraph/frank/ent/user"
+	"github.com/xraph/frank/ent/verification"
 	"github.com/rs/xid"
 )
 

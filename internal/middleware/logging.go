@@ -12,9 +12,9 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/juicycleff/frank/pkg/contexts"
-	"github.com/juicycleff/frank/pkg/logging"
 	"github.com/rs/xid"
+	"github.com/xraph/frank/pkg/contexts"
+	"github.com/xraph/frank/pkg/logging"
 )
 
 // LoggingConfig represents logging middleware configuration

@@ -4,13 +4,13 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/juicycleff/frank/ent"
-	"github.com/juicycleff/frank/ent/permissiondependency"
-	"github.com/juicycleff/frank/internal/repository"
-	"github.com/juicycleff/frank/pkg/logging"
-	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
 	"github.com/samber/lo"
+	"github.com/xraph/frank/ent"
+	"github.com/xraph/frank/ent/permissiondependency"
+	"github.com/xraph/frank/internal/repository"
+	"github.com/xraph/frank/pkg/logging"
+	"github.com/xraph/frank/pkg/model"
 )
 
 // Service provides role-based access control operations

@@ -10,9 +10,9 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/juicycleff/frank/config"
-	"github.com/juicycleff/frank/pkg/astro_fs"
-	"github.com/juicycleff/frank/pkg/logging"
+	"github.com/xraph/frank/config"
+	"github.com/xraph/frank/pkg/astro_fs"
+	"github.com/xraph/frank/pkg/logging"
 )
 
 // Server represents an HTTP server

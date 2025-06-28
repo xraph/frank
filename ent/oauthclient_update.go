@@ -15,12 +15,12 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
-	"github.com/juicycleff/frank/ent/oauthauthorization"
-	"github.com/juicycleff/frank/ent/oauthclient"
-	"github.com/juicycleff/frank/ent/oauthscope"
-	"github.com/juicycleff/frank/ent/oauthtoken"
-	"github.com/juicycleff/frank/ent/organization"
-	"github.com/juicycleff/frank/ent/predicate"
+	"github.com/xraph/frank/ent/oauthauthorization"
+	"github.com/xraph/frank/ent/oauthclient"
+	"github.com/xraph/frank/ent/oauthscope"
+	"github.com/xraph/frank/ent/oauthtoken"
+	"github.com/xraph/frank/ent/organization"
+	"github.com/xraph/frank/ent/predicate"
 	"github.com/rs/xid"
 )
 

@@ -8,12 +8,12 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/juicycleff/frank/ent"
-	"github.com/juicycleff/frank/internal/repository"
-	"github.com/juicycleff/frank/pkg/errors"
-	"github.com/juicycleff/frank/pkg/logging"
-	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
+	"github.com/xraph/frank/ent"
+	"github.com/xraph/frank/internal/repository"
+	"github.com/xraph/frank/pkg/errors"
+	"github.com/xraph/frank/pkg/logging"
+	"github.com/xraph/frank/pkg/model"
 )
 
 // ClientService defines the interface for OAuth client management

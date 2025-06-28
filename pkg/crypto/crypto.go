@@ -11,7 +11,7 @@ import (
 	"hash"
 	"strings"
 
-	"github.com/juicycleff/frank/pkg/errors"
+	"github.com/xraph/frank/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/crypto/scrypt"
 )

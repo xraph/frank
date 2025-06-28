@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/juicycleff/frank/pkg/logging"
 	"github.com/rs/xid"
+	"github.com/xraph/frank/pkg/logging"
 	"go.uber.org/zap"
 )
 

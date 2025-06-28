@@ -3,8 +3,8 @@ package hooks
 import (
 	"context"
 
-	"github.com/juicycleff/frank/pkg/logging"
-	"github.com/juicycleff/frank/pkg/model"
+	"github.com/xraph/frank/pkg/logging"
+	"github.com/xraph/frank/pkg/model"
 )
 
 // Fluent configuration methods

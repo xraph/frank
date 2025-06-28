@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/danielgtaylor/huma/v2"
-	"github.com/juicycleff/frank/pkg/errors"
 	"github.com/rs/xid"
+	"github.com/xraph/frank/pkg/errors"
 )
 
 const InPath = "path"

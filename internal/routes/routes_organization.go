@@ -5,12 +5,12 @@ import (
 	"net/http"
 
 	"github.com/danielgtaylor/huma/v2"
-	"github.com/juicycleff/frank/internal/authz"
-	"github.com/juicycleff/frank/internal/di"
-	"github.com/juicycleff/frank/internal/middleware"
-	"github.com/juicycleff/frank/pkg/model"
-	"github.com/juicycleff/frank/pkg/services/organization"
 	"github.com/rs/xid"
+	"github.com/xraph/frank/internal/authz"
+	"github.com/xraph/frank/internal/di"
+	"github.com/xraph/frank/internal/middleware"
+	"github.com/xraph/frank/pkg/model"
+	"github.com/xraph/frank/pkg/services/organization"
 )
 
 // RegisterPersonalOrganizationAPI registers all organization management endpoints

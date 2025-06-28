@@ -6,12 +6,12 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
-	"github.com/juicycleff/frank/ent"
-	"github.com/juicycleff/frank/ent/passkey"
-	"github.com/juicycleff/frank/pkg/errors"
-	"github.com/juicycleff/frank/pkg/logging"
-	"github.com/juicycleff/frank/pkg/model"
 	"github.com/rs/xid"
+	"github.com/xraph/frank/ent"
+	"github.com/xraph/frank/ent/passkey"
+	"github.com/xraph/frank/pkg/errors"
+	"github.com/xraph/frank/pkg/logging"
+	"github.com/xraph/frank/pkg/model"
 )
 
 // PasskeyRepository defines the interface for passkey data access

@@ -12,8 +12,8 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/juicycleff/frank/ent/permission"
-	"github.com/juicycleff/frank/ent/permissiondependency"
+	"github.com/xraph/frank/ent/permission"
+	"github.com/xraph/frank/ent/permissiondependency"
 	"github.com/rs/xid"
 )
 

@@ -5,7 +5,7 @@ import (
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
-	"github.com/juicycleff/frank/pkg/model"
+	"github.com/xraph/frank/pkg/model"
 )
 
 // Permission holds enhanced permission definition

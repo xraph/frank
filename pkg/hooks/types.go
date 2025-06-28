@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/juicycleff/frank/pkg/logging"
 	"github.com/rs/xid"
+	"github.com/xraph/frank/pkg/logging"
 )
 
 // HookType defines the type of hook

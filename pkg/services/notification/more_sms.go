@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/juicycleff/frank/ent"
+	"github.com/xraph/frank/ent"
 	"go.uber.org/zap"
 )
 

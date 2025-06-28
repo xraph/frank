@@ -5,7 +5,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/juicycleff/frank/pkg/errors"
+	"github.com/xraph/frank/pkg/errors"
 )
 
 // URLValidationOptions contains options for URL validation

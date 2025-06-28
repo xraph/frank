@@ -6,9 +6,9 @@ import (
 	"strings"
 
 	"github.com/danielgtaylor/huma/v2"
-	"github.com/juicycleff/frank/config"
-	"github.com/juicycleff/frank/pkg/contexts"
-	"github.com/juicycleff/frank/pkg/logging"
+	"github.com/xraph/frank/config"
+	"github.com/xraph/frank/pkg/contexts"
+	"github.com/xraph/frank/pkg/logging"
 )
 
 // CORSConfig represents CORS configuration options

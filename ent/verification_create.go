@@ -15,8 +15,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/juicycleff/frank/ent/user"
-	"github.com/juicycleff/frank/ent/verification"
+	"github.com/xraph/frank/ent/user"
+	"github.com/xraph/frank/ent/verification"
 	"github.com/rs/xid"
 )
 
