@@ -1,6 +1,6 @@
 {
 	"name": "@frank-auth/react",
-	"version": "0.1.20",
+	"version": "0.1.21",
 	"description": "Flexible and customizable React UI components for Frank Authentication",
 	"keywords": [
 		"frank-auth",
