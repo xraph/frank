@@ -16,11 +16,10 @@ import (
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql/schema"
 	"github.com/rs/xid"
-	"github
 	"github.com/xraph/frank/ent"
 	"github.com/xraph/frank/ent/migrate"
 	"github.com/xraph/frank/pkg/data"
-	"github.com/rs/xid"
+	"github.com/xraph/frank/pkg/logging"
 )
 
 // Migrator handles database operations that complement entgo's versioned migrations

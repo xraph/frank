@@ -6,11 +6,10 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"gith
 	"github.com/xraph/frank/config"
 	"github.com/xraph/frank/internal/commands"
 	"github.com/xraph/frank/internal/di"
-	"github.com/spf13/cobra"
+	"github.com/xraph/frank/pkg/logging"
 	"go.uber.org/zap"
 )
 

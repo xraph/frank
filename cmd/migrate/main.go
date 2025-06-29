@@ -19,11 +19,10 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/database/sqlite3"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/rs/xid"
-	"github.co
 	"github.com/xraph/frank/config"
 	"github.com/xraph/frank/internal/migration"
 	"github.com/xraph/frank/pkg/data"
-	"github.com/rs/xid"
+	"github.com/xraph/frank/pkg/logging"
 )
 
 const (
