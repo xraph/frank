@@ -1,3 +1,12 @@
+## [0.9.1](https://github.com/xraph/frank/compare/v0.9.0...v0.9.1) (2025-06-29)
+
+
+### Bug Fixes
+
+* fixed path update ([7477915](https://github.com/xraph/frank/commit/7477915b54f2e202eedb18f3e8d51144c968ff24))
+
+
+
 # [0.9.0](https://github.com/xraph/frank/compare/v0.8.2...v0.9.0) (2025-06-29)
 
 
@@ -37,15 +46,6 @@
 * migrate from goa to huma ([c38109d](https://github.com/xraph/frank/commit/c38109da0441813af8bd970be4c8e976bd26c975))
 * migrate from goa to huma ([2400f0e](https://github.com/xraph/frank/commit/2400f0ef1774ac64301e9170eb2d13a4a3742d68))
 * **react:** fixed nextjs edge runtime bug ([e121ff6](https://github.com/xraph/frank/commit/e121ff6a00b0e283a50beeeb4cb25b8a6b4d66e8))
-
-
-
-# [0.7.0](https://github.com/xraph/frank/compare/v0.6.0...v0.7.0) (2025-06-04)
-
-
-### Features
-
-* **react:** fixed nextjs edge runtime bug ([26f1c63](https://github.com/xraph/frank/commit/26f1c635d5fec630a01558380c2f73460c58a875))
 
 
 
