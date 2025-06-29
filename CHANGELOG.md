@@ -1,8 +1,9 @@
-## [0.9.1](https://github.com/xraph/frank/compare/v0.9.0...v0.9.1) (2025-06-29)
+## [0.9.2](https://github.com/xraph/frank/compare/v0.9.1...v0.9.2) (2025-06-29)
 
 
 ### Bug Fixes
 
+* fixed path update ([8a45de4](https://github.com/xraph/frank/commit/8a45de4a19f5e104251b2f9ccc5ee322cbaa4a62))
 * fixed path update ([7477915](https://github.com/xraph/frank/commit/7477915b54f2e202eedb18f3e8d51144c968ff24))
 
 
@@ -32,20 +33,6 @@
 
 * fixed user type detection middlewares ([57ecd5e](https://github.com/xraph/frank/commit/57ecd5e9e2b5924b3d9a3928d393b1b66bd37fe5))
 * fixed user type detection middlewares ([f4812dc](https://github.com/xraph/frank/commit/f4812dcd6dc06c3cd71c8d2499eada41fada41a2))
-
-
-
-# [0.8.0](https://github.com/xraph/frank/compare/v0.7.0...v0.8.0) (2025-06-19)
-
-
-### Features
-
-* migrate from goa to huma ([290f20f](https://github.com/xraph/frank/commit/290f20f4eac0a7d55a13eed22dd078319b68d7ee))
-* migrate from goa to huma ([ccc121b](https://github.com/xraph/frank/commit/ccc121bfe3b453a34a402b22006dd3cb0e225cc4))
-* migrate from goa to huma ([ad50f16](https://github.com/xraph/frank/commit/ad50f16da35fc5f4172b73ae8665e1321b62919e))
-* migrate from goa to huma ([c38109d](https://github.com/xraph/frank/commit/c38109da0441813af8bd970be4c8e976bd26c975))
-* migrate from goa to huma ([2400f0e](https://github.com/xraph/frank/commit/2400f0ef1774ac64301e9170eb2d13a4a3742d68))
-* **react:** fixed nextjs edge runtime bug ([e121ff6](https://github.com/xraph/frank/commit/e121ff6a00b0e283a50beeeb4cb25b8a6b4d66e8))
 
 
 
