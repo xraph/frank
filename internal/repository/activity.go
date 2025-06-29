@@ -8,12 +8,11 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqljson"
 	"github.com/rs/xid"
-	"github
 	"github.com/xraph/frank/ent"
 	"github.com/xraph/frank/ent/activity"
 	"github.com/xraph/frank/pkg/data"
 	"github.com/xraph/frank/pkg/logging"
-	"github.com/rs/xid"
+	"github.com/xraph/frank/pkg/model"
 	"go.uber.org/zap"
 )
 

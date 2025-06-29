@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/rs/xid"
-	"github
 	"github.com/xraph/frank/ent"
 	"github.com/xraph/frank/internal/repository"
 	"github.com/xraph/frank/pkg/contexts"
@@ -20,7 +19,7 @@ import (
 	"github.com/xraph/frank/pkg/model"
 	"github.com/xraph/frank/pkg/services/activity"
 	"github.com/xraph/frank/pkg/services/audit"
-	"github.com/rs/xid"
+	"github.com/xraph/frank/pkg/services/rbac"
 )
 
 // Service defines the API key service interface

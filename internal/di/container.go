@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/redis/go-redis/v9"
+	"github.com/xraph/frank/pkg/validation"
 
 	"github.com/xraph/frank/config"
 	"github.com/xraph/frank/ent"
@@ -29,7 +30,6 @@ import (
 	user2 "github.com/xraph/frank/pkg/services/user"
 	"github.com/xraph/frank/pkg/services/webhook"
 	sms2 "github.com/xraph/frank/pkg/sms"
-	"github.com/redis/go-redis/v9"
 )
 
 // Container holds all application dependencies

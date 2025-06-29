@@ -11,7 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/rs/xid"
-	
+	"github.com/xraph/frank/pkg/model"
 )
 
 const (

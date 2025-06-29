@@ -7,11 +7,10 @@ import (
 	"time"
 
 	"github.com/rs/xid"
-	"github
 	"github.com/xraph/frank/ent"
 	"github.com/xraph/frank/internal/repository"
 	"github.com/xraph/frank/pkg/errors"
-	"github.com/rs/xid"
+	"github.com/xraph/frank/pkg/logging"
 )
 
 // AnalyticsService provides comprehensive analytics and reporting for RBAC

@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/xraph
+	"github.com/xraph/frank/pkg/crypto"
 	"go.uber.org/zap"
 )
 

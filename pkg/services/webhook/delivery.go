@@ -14,11 +14,10 @@ import (
 	"time"
 
 	"github.com/rs/xid"
-	"github.com/xraph/frank
 	"github.com/xraph/frank/internal/repository"
 	"github.com/xraph/frank/pkg/errors"
 	"github.com/xraph/frank/pkg/logging"
-	"github.com/rs/xid"
+	"github.com/xraph/frank/pkg/model"
 )
 
 // DeliveryService defines the interface for webhook delivery operations

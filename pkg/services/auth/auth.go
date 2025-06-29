@@ -7,7 +7,6 @@ import (
 
 	"github.com/rs/xid"
 	"github.com/samber/lo"
-	"github.com/xrap
 	"github.com/xraph/frank/config"
 	"github.com/xraph/frank/ent"
 	"github.com/xraph/frank/ent/organization"
@@ -23,7 +22,7 @@ import (
 	"github.com/xraph/frank/pkg/services/notification"
 	"github.com/xraph/frank/pkg/services/oauth"
 	organizationService "github.com/xraph/frank/pkg/services/organization"
-	"github.com/samber/lo"
+	userService "github.com/xraph/frank/pkg/services/user"
 )
 
 // AuthService defines the interface for authentication operations

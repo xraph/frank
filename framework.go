@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/redis/go-redis/v9"
+	server2 "github.com/xraph/frank/pkg/server"
 
 	"github.com/xraph/frank/config"
 	"github.com/xraph/frank/internal/di"
@@ -16,7 +17,6 @@ import (
 	"github.com/xraph/frank/pkg/hooks"
 	"github.com/xraph/frank/pkg/logging"
 	"github.com/xraph/frank/pkg/model"
-	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 )
 

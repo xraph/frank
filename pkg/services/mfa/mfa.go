@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/rs/xid"
-	"github.co
 	"github.com/xraph/frank/config"
 	"github.com/xraph/frank/ent"
 	"github.com/xraph/frank/internal/repository"
@@ -13,7 +12,7 @@ import (
 	"github.com/xraph/frank/pkg/errors"
 	"github.com/xraph/frank/pkg/logging"
 	"github.com/xraph/frank/pkg/model"
-	"github.com/rs/xid"
+	"github.com/xraph/frank/pkg/sms"
 )
 
 // Service defines the interface for MFA operations

@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/rs/xid"
-	
+	"github.com/xraph/frank/pkg/model"
 )
 
 // GetAPIKeyFromContext retrieves the API key from request context

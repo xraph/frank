@@ -6,12 +6,11 @@ import (
 	"time"
 
 	"github.com/rs/xid"
-	"github
 	"github.com/xraph/frank/ent"
 	"github.com/xraph/frank/internal/repository"
 	"github.com/xraph/frank/pkg/errors"
 	"github.com/xraph/frank/pkg/logging"
-	"github.com/rs/xid"
+	"github.com/xraph/frank/pkg/model"
 )
 
 // Service defines the interface for passkey operations

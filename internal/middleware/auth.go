@@ -10,7 +10,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/rs/xid"
-	"github.co
 	"github.com/xraph/frank/config"
 	"github.com/xraph/frank/ent"
 	"github.com/xraph/frank/internal/di"
@@ -20,7 +19,7 @@ import (
 	"github.com/xraph/frank/pkg/errors"
 	"github.com/xraph/frank/pkg/logging"
 	"github.com/xraph/frank/pkg/model"
-	"github.com/rs/xid"
+	"github.com/xraph/frank/pkg/server"
 )
 
 // AuthMethod represents the authentication method used
