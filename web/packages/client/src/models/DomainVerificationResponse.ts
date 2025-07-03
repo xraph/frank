@@ -91,7 +91,7 @@ export function DomainVerificationResponseToJSON(json: any): DomainVerificationR
     return DomainVerificationResponseToJSONTyped(json, false);
 }
 
-export function DomainVerificationResponseToJSONTyped(value?: Omit<DomainVerificationResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function DomainVerificationResponseToJSONTyped(value?: Omit<DomainVerificationResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

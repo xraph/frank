@@ -84,7 +84,7 @@ export function FeatureTargetingToJSON(json: any): FeatureTargeting {
     return FeatureTargetingToJSONTyped(json, false);
 }
 
-export function FeatureTargetingToJSONTyped(value?: FeatureTargeting | null, ignoreDiscriminator: boolean = false): any {
+export function FeatureTargetingToJSONTyped(value?: FeatureTargeting | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

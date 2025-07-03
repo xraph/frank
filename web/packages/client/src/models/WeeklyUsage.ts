@@ -77,7 +77,7 @@ export function WeeklyUsageToJSON(json: any): WeeklyUsage {
     return WeeklyUsageToJSONTyped(json, false);
 }
 
-export function WeeklyUsageToJSONTyped(value?: WeeklyUsage | null, ignoreDiscriminator: boolean = false): any {
+export function WeeklyUsageToJSONTyped(value?: WeeklyUsage | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

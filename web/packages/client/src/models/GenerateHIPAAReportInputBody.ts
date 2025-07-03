@@ -60,7 +60,7 @@ export function GenerateHIPAAReportInputBodyToJSON(json: any): GenerateHIPAARepo
     return GenerateHIPAAReportInputBodyToJSONTyped(json, false);
 }
 
-export function GenerateHIPAAReportInputBodyToJSONTyped(value?: Omit<GenerateHIPAAReportInputBody, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function GenerateHIPAAReportInputBodyToJSONTyped(value?: Omit<GenerateHIPAAReportInputBody, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -98,7 +98,7 @@ export function PlatformOrganizationListResponseToJSON(json: any): PlatformOrgan
     return PlatformOrganizationListResponseToJSONTyped(json, false);
 }
 
-export function PlatformOrganizationListResponseToJSONTyped(value?: Omit<PlatformOrganizationListResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function PlatformOrganizationListResponseToJSONTyped(value?: Omit<PlatformOrganizationListResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

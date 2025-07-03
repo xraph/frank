@@ -77,7 +77,7 @@ export function OrgOwnerToJSON(json: any): OrgOwner {
     return OrgOwnerToJSONTyped(json, false);
 }
 
-export function OrgOwnerToJSONTyped(value?: OrgOwner | null, ignoreDiscriminator: boolean = false): any {
+export function OrgOwnerToJSONTyped(value?: OrgOwner | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

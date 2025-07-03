@@ -83,7 +83,7 @@ export function PaginatedOutputAPIKeySummaryToJSON(json: any): PaginatedOutputAP
     return PaginatedOutputAPIKeySummaryToJSONTyped(json, false);
 }
 
-export function PaginatedOutputAPIKeySummaryToJSONTyped(value?: Omit<PaginatedOutputAPIKeySummary, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function PaginatedOutputAPIKeySummaryToJSONTyped(value?: Omit<PaginatedOutputAPIKeySummary, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

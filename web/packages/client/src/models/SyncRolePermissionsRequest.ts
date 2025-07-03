@@ -60,7 +60,7 @@ export function SyncRolePermissionsRequestToJSON(json: any): SyncRolePermissions
     return SyncRolePermissionsRequestToJSONTyped(json, false);
 }
 
-export function SyncRolePermissionsRequestToJSONTyped(value?: Omit<SyncRolePermissionsRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function SyncRolePermissionsRequestToJSONTyped(value?: Omit<SyncRolePermissionsRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

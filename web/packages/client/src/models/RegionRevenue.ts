@@ -77,7 +77,7 @@ export function RegionRevenueToJSON(json: any): RegionRevenue {
     return RegionRevenueToJSONTyped(json, false);
 }
 
-export function RegionRevenueToJSONTyped(value?: RegionRevenue | null, ignoreDiscriminator: boolean = false): any {
+export function RegionRevenueToJSONTyped(value?: RegionRevenue | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

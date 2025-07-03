@@ -93,7 +93,7 @@ export function ResponseTimeMetricsToJSON(json: any): ResponseTimeMetrics {
     return ResponseTimeMetricsToJSONTyped(json, false);
 }
 
-export function ResponseTimeMetricsToJSONTyped(value?: ResponseTimeMetrics | null, ignoreDiscriminator: boolean = false): any {
+export function ResponseTimeMetricsToJSONTyped(value?: ResponseTimeMetrics | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

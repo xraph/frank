@@ -86,7 +86,7 @@ export function MFARecoveryOptionsToJSON(json: any): MFARecoveryOptions {
     return MFARecoveryOptionsToJSONTyped(json, false);
 }
 
-export function MFARecoveryOptionsToJSONTyped(value?: Omit<MFARecoveryOptions, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function MFARecoveryOptionsToJSONTyped(value?: Omit<MFARecoveryOptions, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -70,7 +70,7 @@ export function PasskeyBackupRequestToJSON(json: any): PasskeyBackupRequest {
     return PasskeyBackupRequestToJSONTyped(json, false);
 }
 
-export function PasskeyBackupRequestToJSONTyped(value?: Omit<PasskeyBackupRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function PasskeyBackupRequestToJSONTyped(value?: Omit<PasskeyBackupRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

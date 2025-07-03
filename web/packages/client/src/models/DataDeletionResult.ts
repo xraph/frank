@@ -131,7 +131,7 @@ export function DataDeletionResultToJSON(json: any): DataDeletionResult {
     return DataDeletionResultToJSONTyped(json, false);
 }
 
-export function DataDeletionResultToJSONTyped(value?: Omit<DataDeletionResult, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function DataDeletionResultToJSONTyped(value?: Omit<DataDeletionResult, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

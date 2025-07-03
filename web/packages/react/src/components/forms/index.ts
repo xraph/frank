@@ -16,7 +16,7 @@ import {PasswordConfirmationField, PasswordField, type PasswordFieldProps,} from
 import {EmailField, type EmailFieldProps,} from './email-field';
 import {PhoneField, type PhoneFieldProps,} from './phone-field';
 import {VerificationCode, type VerificationCodeProps} from './verification-code';
-import FieldError, {FieldErrorProps, useFieldError} from './field-error';
+import FieldError, {type FieldErrorProps, useFieldError} from './field-error';
 
 export {
     FormWrapper,

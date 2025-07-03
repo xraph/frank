@@ -85,7 +85,7 @@ export function DeleteOrganizationRequestToJSON(json: any): DeleteOrganizationRe
     return DeleteOrganizationRequestToJSONTyped(json, false);
 }
 
-export function DeleteOrganizationRequestToJSONTyped(value?: Omit<DeleteOrganizationRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function DeleteOrganizationRequestToJSONTyped(value?: Omit<DeleteOrganizationRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

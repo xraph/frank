@@ -99,7 +99,7 @@ export function SecurityEvidenceToJSON(json: any): SecurityEvidence {
     return SecurityEvidenceToJSONTyped(json, false);
 }
 
-export function SecurityEvidenceToJSONTyped(value?: SecurityEvidence | null, ignoreDiscriminator: boolean = false): any {
+export function SecurityEvidenceToJSONTyped(value?: SecurityEvidence | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

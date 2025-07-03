@@ -142,7 +142,7 @@ export function CreateAPIKeyRequestToJSON(json: any): CreateAPIKeyRequest {
     return CreateAPIKeyRequestToJSONTyped(json, false);
 }
 
-export function CreateAPIKeyRequestToJSONTyped(value?: Omit<CreateAPIKeyRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function CreateAPIKeyRequestToJSONTyped(value?: Omit<CreateAPIKeyRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

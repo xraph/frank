@@ -66,7 +66,7 @@ export function DeleteUserRequestToJSON(json: any): DeleteUserRequest {
     return DeleteUserRequestToJSONTyped(json, false);
 }
 
-export function DeleteUserRequestToJSONTyped(value?: Omit<DeleteUserRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function DeleteUserRequestToJSONTyped(value?: Omit<DeleteUserRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

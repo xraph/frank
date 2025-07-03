@@ -85,7 +85,7 @@ export function BillingUsageToJSON(json: any): BillingUsage {
     return BillingUsageToJSONTyped(json, false);
 }
 
-export function BillingUsageToJSONTyped(value?: BillingUsage | null, ignoreDiscriminator: boolean = false): any {
+export function BillingUsageToJSONTyped(value?: BillingUsage | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

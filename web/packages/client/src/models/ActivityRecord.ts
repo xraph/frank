@@ -254,7 +254,7 @@ export function ActivityRecordToJSON(json: any): ActivityRecord {
     return ActivityRecordToJSONTyped(json, false);
 }
 
-export function ActivityRecordToJSONTyped(value?: Omit<ActivityRecord, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function ActivityRecordToJSONTyped(value?: Omit<ActivityRecord, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

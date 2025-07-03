@@ -123,7 +123,7 @@ export function OrgStatsToJSON(json: any): OrgStats {
     return OrgStatsToJSONTyped(json, false);
 }
 
-export function OrgStatsToJSONTyped(value?: Omit<OrgStats, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function OrgStatsToJSONTyped(value?: Omit<OrgStats, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

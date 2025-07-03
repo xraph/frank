@@ -60,7 +60,7 @@ export function AssignPermissionToRoleRequestToJSON(json: any): AssignPermission
     return AssignPermissionToRoleRequestToJSONTyped(json, false);
 }
 
-export function AssignPermissionToRoleRequestToJSONTyped(value?: Omit<AssignPermissionToRoleRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function AssignPermissionToRoleRequestToJSONTyped(value?: Omit<AssignPermissionToRoleRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

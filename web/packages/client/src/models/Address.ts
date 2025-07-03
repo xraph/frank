@@ -92,7 +92,7 @@ export function AddressToJSON(json: any): Address {
     return AddressToJSONTyped(json, false);
 }
 
-export function AddressToJSONTyped(value?: Address | null, ignoreDiscriminator: boolean = false): any {
+export function AddressToJSONTyped(value?: Address | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

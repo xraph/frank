@@ -279,7 +279,7 @@ export function RoleToJSON(json: any): Role {
     return RoleToJSONTyped(json, false);
 }
 
-export function RoleToJSONTyped(value?: Omit<Role, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function RoleToJSONTyped(value?: Omit<Role, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -69,7 +69,7 @@ export function PlatformRateLimitStatsToJSON(json: any): PlatformRateLimitStats 
     return PlatformRateLimitStatsToJSONTyped(json, false);
 }
 
-export function PlatformRateLimitStatsToJSONTyped(value?: PlatformRateLimitStats | null, ignoreDiscriminator: boolean = false): any {
+export function PlatformRateLimitStatsToJSONTyped(value?: PlatformRateLimitStats | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

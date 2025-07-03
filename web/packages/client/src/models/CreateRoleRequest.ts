@@ -174,7 +174,7 @@ export function CreateRoleRequestToJSON(json: any): CreateRoleRequest {
     return CreateRoleRequestToJSONTyped(json, false);
 }
 
-export function CreateRoleRequestToJSONTyped(value?: Omit<CreateRoleRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function CreateRoleRequestToJSONTyped(value?: Omit<CreateRoleRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -97,7 +97,7 @@ export function RemediationStepToJSON(json: any): RemediationStep {
     return RemediationStepToJSONTyped(json, false);
 }
 
-export function RemediationStepToJSONTyped(value?: RemediationStep | null, ignoreDiscriminator: boolean = false): any {
+export function RemediationStepToJSONTyped(value?: RemediationStep | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

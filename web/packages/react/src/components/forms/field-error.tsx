@@ -11,7 +11,7 @@ import React from 'react';
 import {AnimatePresence, motion} from 'framer-motion';
 import {useTheme} from '../../hooks/use-theme';
 import {useConfig} from '../../hooks/use-config';
-import {SizeT} from "@/types";
+import type {SizeT} from "@/types";
 
 // ============================================================================
 // Field Error Interface

@@ -91,7 +91,7 @@ export function UsageTrendsToJSON(json: any): UsageTrends {
     return UsageTrendsToJSONTyped(json, false);
 }
 
-export function UsageTrendsToJSONTyped(value?: UsageTrends | null, ignoreDiscriminator: boolean = false): any {
+export function UsageTrendsToJSONTyped(value?: UsageTrends | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

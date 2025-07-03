@@ -77,7 +77,7 @@ export function RecentAssessmentToJSON(json: any): RecentAssessment {
     return RecentAssessmentToJSONTyped(json, false);
 }
 
-export function RecentAssessmentToJSONTyped(value?: RecentAssessment | null, ignoreDiscriminator: boolean = false): any {
+export function RecentAssessmentToJSONTyped(value?: RecentAssessment | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

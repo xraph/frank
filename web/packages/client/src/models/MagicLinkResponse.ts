@@ -77,7 +77,7 @@ export function MagicLinkResponseToJSON(json: any): MagicLinkResponse {
     return MagicLinkResponseToJSONTyped(json, false);
 }
 
-export function MagicLinkResponseToJSONTyped(value?: Omit<MagicLinkResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function MagicLinkResponseToJSONTyped(value?: Omit<MagicLinkResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -77,7 +77,7 @@ export function GrowthPredictionsToJSON(json: any): GrowthPredictions {
     return GrowthPredictionsToJSONTyped(json, false);
 }
 
-export function GrowthPredictionsToJSONTyped(value?: GrowthPredictions | null, ignoreDiscriminator: boolean = false): any {
+export function GrowthPredictionsToJSONTyped(value?: GrowthPredictions | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

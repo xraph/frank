@@ -67,7 +67,7 @@ export function VerificationRequestToJSON(json: any): VerificationRequest {
     return VerificationRequestToJSONTyped(json, false);
 }
 
-export function VerificationRequestToJSONTyped(value?: Omit<VerificationRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function VerificationRequestToJSONTyped(value?: Omit<VerificationRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

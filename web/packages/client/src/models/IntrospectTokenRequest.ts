@@ -82,7 +82,7 @@ export function IntrospectTokenRequestToJSON(json: any): IntrospectTokenRequest 
     return IntrospectTokenRequestToJSONTyped(json, false);
 }
 
-export function IntrospectTokenRequestToJSONTyped(value?: Omit<IntrospectTokenRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function IntrospectTokenRequestToJSONTyped(value?: Omit<IntrospectTokenRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -85,7 +85,7 @@ export function ForecastDataToJSON(json: any): ForecastData {
     return ForecastDataToJSONTyped(json, false);
 }
 
-export function ForecastDataToJSONTyped(value?: ForecastData | null, ignoreDiscriminator: boolean = false): any {
+export function ForecastDataToJSONTyped(value?: ForecastData | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

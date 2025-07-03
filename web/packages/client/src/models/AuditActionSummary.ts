@@ -85,7 +85,7 @@ export function AuditActionSummaryToJSON(json: any): AuditActionSummary {
     return AuditActionSummaryToJSONTyped(json, false);
 }
 
-export function AuditActionSummaryToJSONTyped(value?: AuditActionSummary | null, ignoreDiscriminator: boolean = false): any {
+export function AuditActionSummaryToJSONTyped(value?: AuditActionSummary | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

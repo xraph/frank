@@ -118,7 +118,7 @@ export function MembershipActivityToJSON(json: any): MembershipActivity {
     return MembershipActivityToJSONTyped(json, false);
 }
 
-export function MembershipActivityToJSONTyped(value?: MembershipActivity | null, ignoreDiscriminator: boolean = false): any {
+export function MembershipActivityToJSONTyped(value?: MembershipActivity | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

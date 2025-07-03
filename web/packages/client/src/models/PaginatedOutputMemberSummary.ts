@@ -83,7 +83,7 @@ export function PaginatedOutputMemberSummaryToJSON(json: any): PaginatedOutputMe
     return PaginatedOutputMemberSummaryToJSONTyped(json, false);
 }
 
-export function PaginatedOutputMemberSummaryToJSONTyped(value?: Omit<PaginatedOutputMemberSummary, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function PaginatedOutputMemberSummaryToJSONTyped(value?: Omit<PaginatedOutputMemberSummary, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

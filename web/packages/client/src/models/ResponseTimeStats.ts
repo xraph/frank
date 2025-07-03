@@ -101,7 +101,7 @@ export function ResponseTimeStatsToJSON(json: any): ResponseTimeStats {
     return ResponseTimeStatsToJSONTyped(json, false);
 }
 
-export function ResponseTimeStatsToJSONTyped(value?: ResponseTimeStats | null, ignoreDiscriminator: boolean = false): any {
+export function ResponseTimeStatsToJSONTyped(value?: ResponseTimeStats | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

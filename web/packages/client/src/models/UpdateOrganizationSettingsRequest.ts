@@ -172,7 +172,7 @@ export function UpdateOrganizationSettingsRequestToJSON(json: any): UpdateOrgani
     return UpdateOrganizationSettingsRequestToJSONTyped(json, false);
 }
 
-export function UpdateOrganizationSettingsRequestToJSONTyped(value?: Omit<UpdateOrganizationSettingsRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function UpdateOrganizationSettingsRequestToJSONTyped(value?: Omit<UpdateOrganizationSettingsRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

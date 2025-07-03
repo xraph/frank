@@ -129,7 +129,7 @@ export function RateLimitStatsToJSON(json: any): RateLimitStats {
     return RateLimitStatsToJSONTyped(json, false);
 }
 
-export function RateLimitStatsToJSONTyped(value?: Omit<RateLimitStats, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function RateLimitStatsToJSONTyped(value?: Omit<RateLimitStats, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -93,7 +93,7 @@ export function EndpointStatsToJSON(json: any): EndpointStats {
     return EndpointStatsToJSONTyped(json, false);
 }
 
-export function EndpointStatsToJSONTyped(value?: EndpointStats | null, ignoreDiscriminator: boolean = false): any {
+export function EndpointStatsToJSONTyped(value?: EndpointStats | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

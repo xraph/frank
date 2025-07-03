@@ -148,7 +148,7 @@ export function AttestationToJSON(json: any): Attestation {
     return AttestationToJSONTyped(json, false);
 }
 
-export function AttestationToJSONTyped(value?: Omit<Attestation, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function AttestationToJSONTyped(value?: Omit<Attestation, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

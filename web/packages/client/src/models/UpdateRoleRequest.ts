@@ -165,7 +165,7 @@ export function UpdateRoleRequestToJSON(json: any): UpdateRoleRequest {
     return UpdateRoleRequestToJSONTyped(json, false);
 }
 
-export function UpdateRoleRequestToJSONTyped(value?: Omit<UpdateRoleRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function UpdateRoleRequestToJSONTyped(value?: Omit<UpdateRoleRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -85,7 +85,7 @@ export function HealthMetricsToJSON(json: any): HealthMetrics {
     return HealthMetricsToJSONTyped(json, false);
 }
 
-export function HealthMetricsToJSONTyped(value?: HealthMetrics | null, ignoreDiscriminator: boolean = false): any {
+export function HealthMetricsToJSONTyped(value?: HealthMetrics | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -109,7 +109,7 @@ export function TransferAssessmentToJSON(json: any): TransferAssessment {
     return TransferAssessmentToJSONTyped(json, false);
 }
 
-export function TransferAssessmentToJSONTyped(value?: TransferAssessment | null, ignoreDiscriminator: boolean = false): any {
+export function TransferAssessmentToJSONTyped(value?: TransferAssessment | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

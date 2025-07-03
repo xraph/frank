@@ -136,7 +136,7 @@ export function CreatePasskeyRequestToJSON(json: any): CreatePasskeyRequest {
     return CreatePasskeyRequestToJSONTyped(json, false);
 }
 
-export function CreatePasskeyRequestToJSONTyped(value?: Omit<CreatePasskeyRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function CreatePasskeyRequestToJSONTyped(value?: Omit<CreatePasskeyRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

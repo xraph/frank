@@ -592,7 +592,7 @@ export function appearanceConfigToTailwind(config: ComponentAppearance): Record<
     // Convert input config
     if (config.input) {
         const { variant, size, color, radius } = config.input;
-        let classes = ['transition-all', 'duration-200'];
+        const classes = ['transition-all', 'duration-200'];
 
         // Variant classes
         switch (variant) {

@@ -84,7 +84,7 @@ export function RoleInfoToJSON(json: any): RoleInfo {
     return RoleInfoToJSONTyped(json, false);
 }
 
-export function RoleInfoToJSONTyped(value?: RoleInfo | null, ignoreDiscriminator: boolean = false): any {
+export function RoleInfoToJSONTyped(value?: RoleInfo | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

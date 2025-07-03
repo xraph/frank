@@ -89,7 +89,7 @@ export function CreateOrganizationRequestToJSON(json: any): CreateOrganizationRe
     return CreateOrganizationRequestToJSONTyped(json, false);
 }
 
-export function CreateOrganizationRequestToJSONTyped(value?: Omit<CreateOrganizationRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function CreateOrganizationRequestToJSONTyped(value?: Omit<CreateOrganizationRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

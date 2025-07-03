@@ -85,7 +85,7 @@ export function OrgTrendsToJSON(json: any): OrgTrends {
     return OrgTrendsToJSONTyped(json, false);
 }
 
-export function OrgTrendsToJSONTyped(value?: OrgTrends | null, ignoreDiscriminator: boolean = false): any {
+export function OrgTrendsToJSONTyped(value?: OrgTrends | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

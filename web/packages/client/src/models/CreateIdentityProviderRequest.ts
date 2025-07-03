@@ -129,7 +129,7 @@ export function CreateIdentityProviderRequestToJSON(json: any): CreateIdentityPr
     return CreateIdentityProviderRequestToJSONTyped(json, false);
 }
 
-export function CreateIdentityProviderRequestToJSONTyped(value?: Omit<CreateIdentityProviderRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function CreateIdentityProviderRequestToJSONTyped(value?: Omit<CreateIdentityProviderRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

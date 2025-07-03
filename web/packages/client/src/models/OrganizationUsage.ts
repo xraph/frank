@@ -140,7 +140,7 @@ export function OrganizationUsageToJSON(json: any): OrganizationUsage {
     return OrganizationUsageToJSONTyped(json, false);
 }
 
-export function OrganizationUsageToJSONTyped(value?: Omit<OrganizationUsage, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function OrganizationUsageToJSONTyped(value?: Omit<OrganizationUsage, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

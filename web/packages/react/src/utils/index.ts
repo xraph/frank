@@ -189,8 +189,8 @@ export const randomChoice = <T>(array: T[]): T => {
 
 export const retry = async <T>(
     fn: () => Promise<T>,
-    maxAttempts: number = 3,
-    delay: number = 1000
+    maxAttempts = 3,
+    delay = 1000
 ): Promise<T> => {
     let lastError: Error;
 

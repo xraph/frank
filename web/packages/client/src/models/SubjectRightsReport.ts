@@ -117,7 +117,7 @@ export function SubjectRightsReportToJSON(json: any): SubjectRightsReport {
     return SubjectRightsReportToJSONTyped(json, false);
 }
 
-export function SubjectRightsReportToJSONTyped(value?: SubjectRightsReport | null, ignoreDiscriminator: boolean = false): any {
+export function SubjectRightsReportToJSONTyped(value?: SubjectRightsReport | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -77,7 +77,7 @@ export function ChannelRevenueToJSON(json: any): ChannelRevenue {
     return ChannelRevenueToJSONTyped(json, false);
 }
 
-export function ChannelRevenueToJSONTyped(value?: ChannelRevenue | null, ignoreDiscriminator: boolean = false): any {
+export function ChannelRevenueToJSONTyped(value?: ChannelRevenue | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

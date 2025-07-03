@@ -174,7 +174,7 @@ export function AuditSummaryToJSON(json: any): AuditSummary {
     return AuditSummaryToJSONTyped(json, false);
 }
 
-export function AuditSummaryToJSONTyped(value?: Omit<AuditSummary, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function AuditSummaryToJSONTyped(value?: Omit<AuditSummary, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

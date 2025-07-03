@@ -98,7 +98,7 @@ export function SecurityIncidentListResponseToJSON(json: any): SecurityIncidentL
     return SecurityIncidentListResponseToJSONTyped(json, false);
 }
 
-export function SecurityIncidentListResponseToJSONTyped(value?: Omit<SecurityIncidentListResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function SecurityIncidentListResponseToJSONTyped(value?: Omit<SecurityIncidentListResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

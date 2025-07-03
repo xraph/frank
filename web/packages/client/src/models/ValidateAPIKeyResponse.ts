@@ -163,7 +163,7 @@ export function ValidateAPIKeyResponseToJSON(json: any): ValidateAPIKeyResponse 
     return ValidateAPIKeyResponseToJSONTyped(json, false);
 }
 
-export function ValidateAPIKeyResponseToJSONTyped(value?: Omit<ValidateAPIKeyResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function ValidateAPIKeyResponseToJSONTyped(value?: Omit<ValidateAPIKeyResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -77,7 +77,7 @@ export function ResourceMetricToJSON(json: any): ResourceMetric {
     return ResourceMetricToJSONTyped(json, false);
 }
 
-export function ResourceMetricToJSONTyped(value?: ResourceMetric | null, ignoreDiscriminator: boolean = false): any {
+export function ResourceMetricToJSONTyped(value?: ResourceMetric | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

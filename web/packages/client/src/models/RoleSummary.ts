@@ -110,7 +110,7 @@ export function RoleSummaryToJSON(json: any): RoleSummary {
     return RoleSummaryToJSONTyped(json, false);
 }
 
-export function RoleSummaryToJSONTyped(value?: RoleSummary | null, ignoreDiscriminator: boolean = false): any {
+export function RoleSummaryToJSONTyped(value?: RoleSummary | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

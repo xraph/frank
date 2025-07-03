@@ -129,7 +129,7 @@ export function UsageAnalyticsToJSON(json: any): UsageAnalytics {
     return UsageAnalyticsToJSONTyped(json, false);
 }
 
-export function UsageAnalyticsToJSONTyped(value?: Omit<UsageAnalytics, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function UsageAnalyticsToJSONTyped(value?: Omit<UsageAnalytics, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

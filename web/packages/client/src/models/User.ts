@@ -367,7 +367,7 @@ export function UserToJSON(json: any): User {
     return UserToJSONTyped(json, false);
 }
 
-export function UserToJSONTyped(value?: Omit<User, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function UserToJSONTyped(value?: Omit<User, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

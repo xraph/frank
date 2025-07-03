@@ -141,7 +141,7 @@ export function AuthenticationStatisticsToJSON(json: any): AuthenticationStatist
     return AuthenticationStatisticsToJSONTyped(json, false);
 }
 
-export function AuthenticationStatisticsToJSONTyped(value?: AuthenticationStatistics | null, ignoreDiscriminator: boolean = false): any {
+export function AuthenticationStatisticsToJSONTyped(value?: AuthenticationStatistics | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

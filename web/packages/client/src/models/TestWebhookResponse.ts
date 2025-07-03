@@ -100,7 +100,7 @@ export function TestWebhookResponseToJSON(json: any): TestWebhookResponse {
     return TestWebhookResponseToJSONTyped(json, false);
 }
 
-export function TestWebhookResponseToJSONTyped(value?: Omit<TestWebhookResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function TestWebhookResponseToJSONTyped(value?: Omit<TestWebhookResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

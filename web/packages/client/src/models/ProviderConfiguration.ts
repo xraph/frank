@@ -97,7 +97,7 @@ export function ProviderConfigurationToJSON(json: any): ProviderConfiguration {
     return ProviderConfigurationToJSONTyped(json, false);
 }
 
-export function ProviderConfigurationToJSONTyped(value?: Omit<ProviderConfiguration, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function ProviderConfigurationToJSONTyped(value?: Omit<ProviderConfiguration, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

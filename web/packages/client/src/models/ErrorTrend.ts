@@ -69,7 +69,7 @@ export function ErrorTrendToJSON(json: any): ErrorTrend {
     return ErrorTrendToJSONTyped(json, false);
 }
 
-export function ErrorTrendToJSONTyped(value?: ErrorTrend | null, ignoreDiscriminator: boolean = false): any {
+export function ErrorTrendToJSONTyped(value?: ErrorTrend | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

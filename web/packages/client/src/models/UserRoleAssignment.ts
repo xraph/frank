@@ -122,7 +122,7 @@ export function UserRoleAssignmentToJSON(json: any): UserRoleAssignment {
     return UserRoleAssignmentToJSONTyped(json, false);
 }
 
-export function UserRoleAssignmentToJSONTyped(value?: UserRoleAssignment | null, ignoreDiscriminator: boolean = false): any {
+export function UserRoleAssignmentToJSONTyped(value?: UserRoleAssignment | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -159,7 +159,7 @@ export function SecurityDashboardToJSON(json: any): SecurityDashboard {
     return SecurityDashboardToJSONTyped(json, false);
 }
 
-export function SecurityDashboardToJSONTyped(value?: Omit<SecurityDashboard, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function SecurityDashboardToJSONTyped(value?: Omit<SecurityDashboard, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

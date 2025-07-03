@@ -101,7 +101,7 @@ export function PlatformComplianceOverviewToJSON(json: any): PlatformComplianceO
     return PlatformComplianceOverviewToJSONTyped(json, false);
 }
 
-export function PlatformComplianceOverviewToJSONTyped(value?: PlatformComplianceOverview | null, ignoreDiscriminator: boolean = false): any {
+export function PlatformComplianceOverviewToJSONTyped(value?: PlatformComplianceOverview | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

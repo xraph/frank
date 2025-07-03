@@ -226,7 +226,7 @@ export function IdentityProviderToJSON(json: any): IdentityProvider {
     return IdentityProviderToJSONTyped(json, false);
 }
 
-export function IdentityProviderToJSONTyped(value?: Omit<IdentityProvider, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function IdentityProviderToJSONTyped(value?: Omit<IdentityProvider, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -68,7 +68,7 @@ export function VerifySMSRequestToJSON(json: any): VerifySMSRequest {
     return VerifySMSRequestToJSONTyped(json, false);
 }
 
-export function VerifySMSRequestToJSONTyped(value?: Omit<VerifySMSRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function VerifySMSRequestToJSONTyped(value?: Omit<VerifySMSRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

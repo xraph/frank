@@ -116,7 +116,7 @@ export function TokenUsageStatsToJSON(json: any): TokenUsageStats {
     return TokenUsageStatsToJSONTyped(json, false);
 }
 
-export function TokenUsageStatsToJSONTyped(value?: Omit<TokenUsageStats, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function TokenUsageStatsToJSONTyped(value?: Omit<TokenUsageStats, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

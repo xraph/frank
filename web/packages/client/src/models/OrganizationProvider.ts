@@ -252,7 +252,7 @@ export function OrganizationProviderToJSON(json: any): OrganizationProvider {
     return OrganizationProviderToJSONTyped(json, false);
 }
 
-export function OrganizationProviderToJSONTyped(value?: OrganizationProvider | null, ignoreDiscriminator: boolean = false): any {
+export function OrganizationProviderToJSONTyped(value?: OrganizationProvider | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

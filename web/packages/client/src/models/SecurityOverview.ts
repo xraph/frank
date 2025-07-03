@@ -101,7 +101,7 @@ export function SecurityOverviewToJSON(json: any): SecurityOverview {
     return SecurityOverviewToJSONTyped(json, false);
 }
 
-export function SecurityOverviewToJSONTyped(value?: SecurityOverview | null, ignoreDiscriminator: boolean = false): any {
+export function SecurityOverviewToJSONTyped(value?: SecurityOverview | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

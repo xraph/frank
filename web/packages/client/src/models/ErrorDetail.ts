@@ -85,7 +85,7 @@ export function ErrorDetailToJSON(json: any): ErrorDetail {
     return ErrorDetailToJSONTyped(json, false);
 }
 
-export function ErrorDetailToJSONTyped(value?: ErrorDetail | null, ignoreDiscriminator: boolean = false): any {
+export function ErrorDetailToJSONTyped(value?: ErrorDetail | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

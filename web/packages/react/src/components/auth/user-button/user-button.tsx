@@ -7,7 +7,7 @@
 
 'use client';
 
-import React from 'react';
+import type React from 'react';
 import {Button} from '@heroui/react';
 import {useAuth} from '../../../hooks/use-auth';
 import {useConfig} from '../../../hooks/use-config';

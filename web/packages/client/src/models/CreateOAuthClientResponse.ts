@@ -76,7 +76,7 @@ export function CreateOAuthClientResponseToJSON(json: any): CreateOAuthClientRes
     return CreateOAuthClientResponseToJSONTyped(json, false);
 }
 
-export function CreateOAuthClientResponseToJSONTyped(value?: Omit<CreateOAuthClientResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function CreateOAuthClientResponseToJSONTyped(value?: Omit<CreateOAuthClientResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -194,7 +194,7 @@ export function PlatformUserDetailsToJSON(json: any): PlatformUserDetails {
     return PlatformUserDetailsToJSONTyped(json, false);
 }
 
-export function PlatformUserDetailsToJSONTyped(value?: Omit<PlatformUserDetails, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function PlatformUserDetailsToJSONTyped(value?: Omit<PlatformUserDetails, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

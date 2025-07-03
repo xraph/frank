@@ -109,7 +109,7 @@ export function PerformanceStatisticsToJSON(json: any): PerformanceStatistics {
     return PerformanceStatisticsToJSONTyped(json, false);
 }
 
-export function PerformanceStatisticsToJSONTyped(value?: PerformanceStatistics | null, ignoreDiscriminator: boolean = false): any {
+export function PerformanceStatisticsToJSONTyped(value?: PerformanceStatistics | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

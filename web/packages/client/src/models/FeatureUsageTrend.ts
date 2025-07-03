@@ -77,7 +77,7 @@ export function FeatureUsageTrendToJSON(json: any): FeatureUsageTrend {
     return FeatureUsageTrendToJSONTyped(json, false);
 }
 
-export function FeatureUsageTrendToJSONTyped(value?: FeatureUsageTrend | null, ignoreDiscriminator: boolean = false): any {
+export function FeatureUsageTrendToJSONTyped(value?: FeatureUsageTrend | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -77,7 +77,7 @@ export function StatusCodeErrorsToJSON(json: any): StatusCodeErrors {
     return StatusCodeErrorsToJSONTyped(json, false);
 }
 
-export function StatusCodeErrorsToJSONTyped(value?: StatusCodeErrors | null, ignoreDiscriminator: boolean = false): any {
+export function StatusCodeErrorsToJSONTyped(value?: StatusCodeErrors | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -86,7 +86,7 @@ export function BulkMemberStatusUpdateToJSON(json: any): BulkMemberStatusUpdate 
     return BulkMemberStatusUpdateToJSONTyped(json, false);
 }
 
-export function BulkMemberStatusUpdateToJSONTyped(value?: BulkMemberStatusUpdate | null, ignoreDiscriminator: boolean = false): any {
+export function BulkMemberStatusUpdateToJSONTyped(value?: BulkMemberStatusUpdate | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

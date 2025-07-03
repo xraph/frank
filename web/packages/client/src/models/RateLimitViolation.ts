@@ -125,7 +125,7 @@ export function RateLimitViolationToJSON(json: any): RateLimitViolation {
     return RateLimitViolationToJSONTyped(json, false);
 }
 
-export function RateLimitViolationToJSONTyped(value?: RateLimitViolation | null, ignoreDiscriminator: boolean = false): any {
+export function RateLimitViolationToJSONTyped(value?: RateLimitViolation | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

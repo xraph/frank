@@ -1,4 +1,4 @@
-import {ReactNode} from 'react';
+import type {ReactNode} from 'react';
 
 // Base variants that apply across all components
 export type BaseVariant = 'primary' | 'secondary' | 'destructive' | 'success' | 'warning' | 'ghost' | 'link';

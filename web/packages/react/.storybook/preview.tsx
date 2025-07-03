@@ -1,5 +1,5 @@
 import type {Preview} from '@storybook/react';
-import * as React from 'react';
+import type * as React from 'react';
 import {HeroUIProvider} from '@heroui/react';
 import {action} from '@storybook/addon-actions';
 

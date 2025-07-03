@@ -137,7 +137,7 @@ export function LineItemToJSON(json: any): LineItem {
     return LineItemToJSONTyped(json, false);
 }
 
-export function LineItemToJSONTyped(value?: LineItem | null, ignoreDiscriminator: boolean = false): any {
+export function LineItemToJSONTyped(value?: LineItem | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

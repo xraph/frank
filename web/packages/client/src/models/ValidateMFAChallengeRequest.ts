@@ -76,7 +76,7 @@ export function ValidateMFAChallengeRequestToJSON(json: any): ValidateMFAChallen
     return ValidateMFAChallengeRequestToJSONTyped(json, false);
 }
 
-export function ValidateMFAChallengeRequestToJSONTyped(value?: Omit<ValidateMFAChallengeRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function ValidateMFAChallengeRequestToJSONTyped(value?: Omit<ValidateMFAChallengeRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

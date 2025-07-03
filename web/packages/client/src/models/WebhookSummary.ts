@@ -124,7 +124,7 @@ export function WebhookSummaryToJSON(json: any): WebhookSummary {
     return WebhookSummaryToJSONTyped(json, false);
 }
 
-export function WebhookSummaryToJSONTyped(value?: WebhookSummary | null, ignoreDiscriminator: boolean = false): any {
+export function WebhookSummaryToJSONTyped(value?: WebhookSummary | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

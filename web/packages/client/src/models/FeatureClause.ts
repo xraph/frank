@@ -76,7 +76,7 @@ export function FeatureClauseToJSON(json: any): FeatureClause {
     return FeatureClauseToJSONTyped(json, false);
 }
 
-export function FeatureClauseToJSONTyped(value?: FeatureClause | null, ignoreDiscriminator: boolean = false): any {
+export function FeatureClauseToJSONTyped(value?: FeatureClause | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

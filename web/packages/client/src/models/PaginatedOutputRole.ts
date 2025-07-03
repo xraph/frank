@@ -83,7 +83,7 @@ export function PaginatedOutputRoleToJSON(json: any): PaginatedOutputRole {
     return PaginatedOutputRoleToJSONTyped(json, false);
 }
 
-export function PaginatedOutputRoleToJSONTyped(value?: Omit<PaginatedOutputRole, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function PaginatedOutputRoleToJSONTyped(value?: Omit<PaginatedOutputRole, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

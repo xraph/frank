@@ -75,7 +75,7 @@ export function ImpersonateUserRequestToJSON(json: any): ImpersonateUserRequest 
     return ImpersonateUserRequestToJSONTyped(json, false);
 }
 
-export function ImpersonateUserRequestToJSONTyped(value?: Omit<ImpersonateUserRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function ImpersonateUserRequestToJSONTyped(value?: Omit<ImpersonateUserRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

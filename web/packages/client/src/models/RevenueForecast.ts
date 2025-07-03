@@ -93,7 +93,7 @@ export function RevenueForecastToJSON(json: any): RevenueForecast {
     return RevenueForecastToJSONTyped(json, false);
 }
 
-export function RevenueForecastToJSONTyped(value?: RevenueForecast | null, ignoreDiscriminator: boolean = false): any {
+export function RevenueForecastToJSONTyped(value?: RevenueForecast | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

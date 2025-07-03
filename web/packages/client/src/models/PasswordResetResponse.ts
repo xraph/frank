@@ -77,7 +77,7 @@ export function PasswordResetResponseToJSON(json: any): PasswordResetResponse {
     return PasswordResetResponseToJSONTyped(json, false);
 }
 
-export function PasswordResetResponseToJSONTyped(value?: Omit<PasswordResetResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function PasswordResetResponseToJSONTyped(value?: Omit<PasswordResetResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

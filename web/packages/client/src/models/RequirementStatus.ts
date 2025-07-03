@@ -93,7 +93,7 @@ export function RequirementStatusToJSON(json: any): RequirementStatus {
     return RequirementStatusToJSONTyped(json, false);
 }
 
-export function RequirementStatusToJSONTyped(value?: RequirementStatus | null, ignoreDiscriminator: boolean = false): any {
+export function RequirementStatusToJSONTyped(value?: RequirementStatus | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -77,7 +77,7 @@ export function SecurityComplianceScoreToJSON(json: any): SecurityComplianceScor
     return SecurityComplianceScoreToJSONTyped(json, false);
 }
 
-export function SecurityComplianceScoreToJSONTyped(value?: SecurityComplianceScore | null, ignoreDiscriminator: boolean = false): any {
+export function SecurityComplianceScoreToJSONTyped(value?: SecurityComplianceScore | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

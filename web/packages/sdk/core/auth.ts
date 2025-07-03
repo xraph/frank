@@ -1,54 +1,54 @@
 import {
-    AcceptInvitationRequest,
-    AcceptInvitationResponse,
+    type AcceptInvitationRequest,
+    type AcceptInvitationResponse,
     AuthenticationApi,
-    AuthProvider,
-    AuthStatus,
+    type AuthProvider,
+    type AuthStatus,
     Configuration,
-    DeclineInvitationRequest,
-    InitOverrideFunction,
+    type DeclineInvitationRequest,
+    type InitOverrideFunction,
     InvitationsApi,
-    InvitationValidationRequest,
-    InvitationValidationResponse,
-    LoginRequest,
-    LoginResponse,
-    LogoutRequest,
-    LogoutResponse,
-    MagicLinkRequest,
-    MagicLinkResponse,
-    MFASetupResponse,
-    MFAVerifyRequest,
-    MFAVerifyResponse,
-    PasskeyAuthenticationBeginRequest,
-    PasskeyAuthenticationBeginResponse,
-    PasskeyAuthenticationFinishRequest,
-    PasskeyAuthenticationFinishResponse,
-    PasskeyRegistrationBeginRequest,
-    PasskeyRegistrationBeginResponse,
-    PasskeyRegistrationFinishRequest,
-    PasskeyRegistrationFinishResponse,
-    PasswordResetConfirmRequest,
-    PasswordResetConfirmResponse,
-    PasswordResetRequest,
-    PasswordResetResponse,
-    RefreshTokenResponse,
-    RegisterRequest,
-    RegisterResponse,
-    ResendVerificationRequest,
-    ResendVerificationResponse,
-    SetupMFARequest,
+    type InvitationValidationRequest,
+    type InvitationValidationResponse,
+    type LoginRequest,
+    type LoginResponse,
+    type LogoutRequest,
+    type LogoutResponse,
+    type MagicLinkRequest,
+    type MagicLinkResponse,
+    type MFASetupResponse,
+    type MFAVerifyRequest,
+    type MFAVerifyResponse,
+    type PasskeyAuthenticationBeginRequest,
+    type PasskeyAuthenticationBeginResponse,
+    type PasskeyAuthenticationFinishRequest,
+    type PasskeyAuthenticationFinishResponse,
+    type PasskeyRegistrationBeginRequest,
+    type PasskeyRegistrationBeginResponse,
+    type PasskeyRegistrationFinishRequest,
+    type PasskeyRegistrationFinishResponse,
+    type PasswordResetConfirmRequest,
+    type PasswordResetConfirmResponse,
+    type PasswordResetRequest,
+    type PasswordResetResponse,
+    type RefreshTokenResponse,
+    type RegisterRequest,
+    type RegisterResponse,
+    type ResendVerificationRequest,
+    type ResendVerificationResponse,
+    type SetupMFARequest,
     SSOApi,
-    SSOCallbackRequest,
-    SSOCallbackResponse,
-    SSOLoginRequest,
-    SSOLoginResponse,
-    ValidateTokenInputBody,
-    ValidateTokenResponse,
-    VerificationRequest,
-    VerificationResponse,
+    type SSOCallbackRequest,
+    type SSOCallbackResponse,
+    type SSOLoginRequest,
+    type SSOLoginResponse,
+    type ValidateTokenInputBody,
+    type ValidateTokenResponse,
+    type VerificationRequest,
+    type VerificationResponse,
 } from '@frank-auth/client';
 
-import {FrankAuthConfig, FrankAuthError} from './index';
+import {type FrankAuthConfig, FrankAuthError} from './index';
 import {handleError} from "./errors";
 import {BaseFrankAPI} from "./base";
 
@@ -58,14 +58,19 @@ export class FrankAuth extends BaseFrankAPI {
     private ssoApi: SSOApi;
 
     constructor(config: FrankAuthConfig) {
+      if (!config) {
+        throw new FrankAuthError('Missing configuration');
+      }
+
+      if (!config.storageKeyPrefix) {
+        config.storageKeyPrefix = config.projectId || 'frankAuth';
+      }
+
         super(config)
 
         this.authApi = new AuthenticationApi(this.config);
         this.ssoApi = new SSOApi(this.config);
         this.invitationsApi = new InvitationsApi(this.config);
-
-        // Load tokens from storage
-        this.loadTokensFromStorage();
     }
 
     // Authentication methods
@@ -419,28 +424,4 @@ export class FrankAuth extends BaseFrankAPI {
         }
     }
 
-    private async clearTokens(): Promise<void> {
-        this.resetTokens();
-        await this.removeFromStorage('accessToken');
-        await this.removeFromStorage('refreshToken');
-    }
-
-    private loadTokensFromStorage(): void {
-        if (typeof window === 'undefined') return;
-
-        this.accessToken = localStorage.getItem(`${this.options.storageKeyPrefix}accessToken`);
-        this.refreshToken = localStorage.getItem(`${this.options.storageKeyPrefix}refreshToken`);
-    }
-
-    private async saveToStorage(key: string, value: string): Promise<void> {
-        if (typeof window === 'undefined') return;
-
-        localStorage.setItem(`${this.options.storageKeyPrefix}${key}`, value);
-    }
-
-    private async removeFromStorage(key: string): Promise<void> {
-        if (typeof window === 'undefined') return;
-
-        localStorage.removeItem(`${this.options.storageKeyPrefix}${key}`);
-    }
 }

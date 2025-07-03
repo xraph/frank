@@ -100,7 +100,7 @@ export function VerificationResponseToJSON(json: any): VerificationResponse {
     return VerificationResponseToJSONTyped(json, false);
 }
 
-export function VerificationResponseToJSONTyped(value?: Omit<VerificationResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function VerificationResponseToJSONTyped(value?: Omit<VerificationResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

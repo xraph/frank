@@ -130,7 +130,7 @@ export function PasskeyActivityToJSON(json: any): PasskeyActivity {
     return PasskeyActivityToJSONTyped(json, false);
 }
 
-export function PasskeyActivityToJSONTyped(value?: PasskeyActivity | null, ignoreDiscriminator: boolean = false): any {
+export function PasskeyActivityToJSONTyped(value?: PasskeyActivity | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

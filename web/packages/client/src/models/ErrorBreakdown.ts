@@ -77,7 +77,7 @@ export function ErrorBreakdownToJSON(json: any): ErrorBreakdown {
     return ErrorBreakdownToJSONTyped(json, false);
 }
 
-export function ErrorBreakdownToJSONTyped(value?: ErrorBreakdown | null, ignoreDiscriminator: boolean = false): any {
+export function ErrorBreakdownToJSONTyped(value?: ErrorBreakdown | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

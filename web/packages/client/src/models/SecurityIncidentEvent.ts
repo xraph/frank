@@ -93,7 +93,7 @@ export function SecurityIncidentEventToJSON(json: any): SecurityIncidentEvent {
     return SecurityIncidentEventToJSONTyped(json, false);
 }
 
-export function SecurityIncidentEventToJSONTyped(value?: SecurityIncidentEvent | null, ignoreDiscriminator: boolean = false): any {
+export function SecurityIncidentEventToJSONTyped(value?: SecurityIncidentEvent | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -98,7 +98,7 @@ export function FeatureFlagListResponseToJSON(json: any): FeatureFlagListRespons
     return FeatureFlagListResponseToJSONTyped(json, false);
 }
 
-export function FeatureFlagListResponseToJSONTyped(value?: Omit<FeatureFlagListResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function FeatureFlagListResponseToJSONTyped(value?: Omit<FeatureFlagListResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

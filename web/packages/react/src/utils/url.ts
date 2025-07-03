@@ -497,7 +497,7 @@ export const getURLParams = (url: string): Record<string, string | string[]> => 
 export const isSafeRedirectURL = (
     url: string,
     allowedDomains: string[],
-    allowRelative: boolean = true
+    allowRelative = true
 ): boolean => {
     if (!url) return false;
 
@@ -518,7 +518,7 @@ export const isSafeRedirectURL = (
 export const sanitizeRedirectURL = (
     url: string,
     allowedDomains: string[],
-    fallbackURL: string = '/'
+    fallbackURL = '/'
 ): string => {
     if (isSafeRedirectURL(url, allowedDomains)) {
         return url;
@@ -550,7 +550,7 @@ export const getCurrentParams = (): Record<string, string | string[]> => {
         : {};
 };
 
-export const redirectTo = (url: string, replace: boolean = false): void => {
+export const redirectTo = (url: string, replace = false): void => {
     if (typeof window !== 'undefined') {
         if (replace) {
             window.location.replace(url);

@@ -1,12 +1,12 @@
 import {
     AuthenticationApi,
-    ListSessionsRequest,
-    PaginatedOutputSessionInfo,
-    Session,
-    SessionInfo,
+    type ListSessionsRequest,
+    type PaginatedOutputSessionInfo,
+    type Session,
+    type SessionInfo,
 } from '@frank-auth/client';
 
-import {BaseFrankAPI, FrankAuthConfig} from './index';
+import {BaseFrankAPI, type FrankAuthConfig} from './index';
 import {handleError} from './errors';
 
 export class FrankSession extends BaseFrankAPI {

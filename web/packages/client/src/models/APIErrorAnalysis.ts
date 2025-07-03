@@ -92,7 +92,7 @@ export function APIErrorAnalysisToJSON(json: any): APIErrorAnalysis {
     return APIErrorAnalysisToJSONTyped(json, false);
 }
 
-export function APIErrorAnalysisToJSONTyped(value?: APIErrorAnalysis | null, ignoreDiscriminator: boolean = false): any {
+export function APIErrorAnalysisToJSONTyped(value?: APIErrorAnalysis | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

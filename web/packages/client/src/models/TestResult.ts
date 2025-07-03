@@ -93,7 +93,7 @@ export function TestResultToJSON(json: any): TestResult {
     return TestResultToJSONTyped(json, false);
 }
 
-export function TestResultToJSONTyped(value?: TestResult | null, ignoreDiscriminator: boolean = false): any {
+export function TestResultToJSONTyped(value?: TestResult | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

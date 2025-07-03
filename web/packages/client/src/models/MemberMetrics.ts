@@ -302,7 +302,7 @@ export function MemberMetricsToJSON(json: any): MemberMetrics {
     return MemberMetricsToJSONTyped(json, false);
 }
 
-export function MemberMetricsToJSONTyped(value?: Omit<MemberMetrics, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function MemberMetricsToJSONTyped(value?: Omit<MemberMetrics, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

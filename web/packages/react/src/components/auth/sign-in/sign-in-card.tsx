@@ -6,7 +6,7 @@
 
 'use client';
 
-import React from 'react';
+import type React from 'react';
 import {Card, CardBody, CardFooter, CardHeader, Divider} from '@heroui/react';
 import {motion} from 'framer-motion';
 

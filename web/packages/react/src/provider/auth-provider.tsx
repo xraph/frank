@@ -15,7 +15,7 @@ import {
     FrankOrganization,
     FrankSession,
     FrankUser,
-    PasswordResetRequest
+    type PasswordResetRequest
 } from '@frank-auth/sdk';
 import type {
     LoginRequest,

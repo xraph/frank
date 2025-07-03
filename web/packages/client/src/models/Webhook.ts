@@ -248,7 +248,7 @@ export function WebhookToJSON(json: any): Webhook {
     return WebhookToJSONTyped(json, false);
 }
 
-export function WebhookToJSONTyped(value?: Omit<Webhook, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function WebhookToJSONTyped(value?: Omit<Webhook, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

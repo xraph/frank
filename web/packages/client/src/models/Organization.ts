@@ -356,7 +356,7 @@ export function OrganizationToJSON(json: any): Organization {
     return OrganizationToJSONTyped(json, false);
 }
 
-export function OrganizationToJSONTyped(value?: Omit<Organization, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function OrganizationToJSONTyped(value?: Omit<Organization, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

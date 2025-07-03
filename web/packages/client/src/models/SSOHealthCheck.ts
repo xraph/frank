@@ -109,7 +109,7 @@ export function SSOHealthCheckToJSON(json: any): SSOHealthCheck {
     return SSOHealthCheckToJSONTyped(json, false);
 }
 
-export function SSOHealthCheckToJSONTyped(value?: Omit<SSOHealthCheck, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function SSOHealthCheckToJSONTyped(value?: Omit<SSOHealthCheck, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

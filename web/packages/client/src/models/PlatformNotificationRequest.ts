@@ -114,7 +114,7 @@ export function PlatformNotificationRequestToJSON(json: any): PlatformNotificati
     return PlatformNotificationRequestToJSONTyped(json, false);
 }
 
-export function PlatformNotificationRequestToJSONTyped(value?: Omit<PlatformNotificationRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function PlatformNotificationRequestToJSONTyped(value?: Omit<PlatformNotificationRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

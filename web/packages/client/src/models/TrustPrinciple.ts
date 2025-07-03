@@ -123,7 +123,7 @@ export function TrustPrincipleToJSON(json: any): TrustPrinciple {
     return TrustPrincipleToJSONTyped(json, false);
 }
 
-export function TrustPrincipleToJSONTyped(value?: TrustPrinciple | null, ignoreDiscriminator: boolean = false): any {
+export function TrustPrincipleToJSONTyped(value?: TrustPrinciple | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

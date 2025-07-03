@@ -85,7 +85,7 @@ export function TrainingEventToJSON(json: any): TrainingEvent {
     return TrainingEventToJSONTyped(json, false);
 }
 
-export function TrainingEventToJSONTyped(value?: TrainingEvent | null, ignoreDiscriminator: boolean = false): any {
+export function TrainingEventToJSONTyped(value?: TrainingEvent | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

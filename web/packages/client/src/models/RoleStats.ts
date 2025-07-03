@@ -164,7 +164,7 @@ export function RoleStatsToJSON(json: any): RoleStats {
     return RoleStatsToJSONTyped(json, false);
 }
 
-export function RoleStatsToJSONTyped(value?: Omit<RoleStats, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function RoleStatsToJSONTyped(value?: Omit<RoleStats, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

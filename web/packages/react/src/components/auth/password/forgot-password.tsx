@@ -24,7 +24,7 @@ import { useMagicLink } from "../../../hooks/use-magic-link";
 import FormWrapper from "../../forms/form-wrapper";
 import EmailField from "../../forms/email-field";
 import PasswordField from "../../forms/password-field";
-import { RadiusT, SizeT } from "../../../types";
+import type { RadiusT, SizeT } from "../../../types";
 
 // ============================================================================
 // Forgot Password Types

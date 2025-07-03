@@ -100,7 +100,7 @@ export function MaintenanceStatsToJSON(json: any): MaintenanceStats {
     return MaintenanceStatsToJSONTyped(json, false);
 }
 
-export function MaintenanceStatsToJSONTyped(value?: MaintenanceStats | null, ignoreDiscriminator: boolean = false): any {
+export function MaintenanceStatsToJSONTyped(value?: MaintenanceStats | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

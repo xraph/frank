@@ -107,7 +107,7 @@ export function IdentityProviderSummaryToJSON(json: any): IdentityProviderSummar
     return IdentityProviderSummaryToJSONTyped(json, false);
 }
 
-export function IdentityProviderSummaryToJSONTyped(value?: IdentityProviderSummary | null, ignoreDiscriminator: boolean = false): any {
+export function IdentityProviderSummaryToJSONTyped(value?: IdentityProviderSummary | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

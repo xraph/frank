@@ -148,7 +148,7 @@ export function DataBreachToJSON(json: any): DataBreach {
     return DataBreachToJSONTyped(json, false);
 }
 
-export function DataBreachToJSONTyped(value?: DataBreach | null, ignoreDiscriminator: boolean = false): any {
+export function DataBreachToJSONTyped(value?: DataBreach | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

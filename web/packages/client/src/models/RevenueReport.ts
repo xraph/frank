@@ -151,7 +151,7 @@ export function RevenueReportToJSON(json: any): RevenueReport {
     return RevenueReportToJSONTyped(json, false);
 }
 
-export function RevenueReportToJSONTyped(value?: Omit<RevenueReport, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function RevenueReportToJSONTyped(value?: Omit<RevenueReport, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

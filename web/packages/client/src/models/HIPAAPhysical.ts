@@ -77,7 +77,7 @@ export function HIPAAPhysicalToJSON(json: any): HIPAAPhysical {
     return HIPAAPhysicalToJSONTyped(json, false);
 }
 
-export function HIPAAPhysicalToJSONTyped(value?: HIPAAPhysical | null, ignoreDiscriminator: boolean = false): any {
+export function HIPAAPhysicalToJSONTyped(value?: HIPAAPhysical | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

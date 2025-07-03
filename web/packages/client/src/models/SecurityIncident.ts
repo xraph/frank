@@ -211,7 +211,7 @@ export function SecurityIncidentToJSON(json: any): SecurityIncident {
     return SecurityIncidentToJSONTyped(json, false);
 }
 
-export function SecurityIncidentToJSONTyped(value?: SecurityIncident | null, ignoreDiscriminator: boolean = false): any {
+export function SecurityIncidentToJSONTyped(value?: SecurityIncident | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

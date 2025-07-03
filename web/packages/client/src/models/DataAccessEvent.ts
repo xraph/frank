@@ -148,7 +148,7 @@ export function DataAccessEventToJSON(json: any): DataAccessEvent {
     return DataAccessEventToJSONTyped(json, false);
 }
 
-export function DataAccessEventToJSONTyped(value?: Omit<DataAccessEvent, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function DataAccessEventToJSONTyped(value?: Omit<DataAccessEvent, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

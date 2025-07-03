@@ -87,7 +87,7 @@ export function BrandingSettingsToJSON(json: any): BrandingSettings {
     return BrandingSettingsToJSONTyped(json, false);
 }
 
-export function BrandingSettingsToJSONTyped(value?: BrandingSettings | null, ignoreDiscriminator: boolean = false): any {
+export function BrandingSettingsToJSONTyped(value?: BrandingSettings | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

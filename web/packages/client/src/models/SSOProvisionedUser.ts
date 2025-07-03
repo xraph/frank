@@ -71,7 +71,7 @@ export function SSOProvisionedUserToJSON(json: any): SSOProvisionedUser {
     return SSOProvisionedUserToJSONTyped(json, false);
 }
 
-export function SSOProvisionedUserToJSONTyped(value?: SSOProvisionedUser | null, ignoreDiscriminator: boolean = false): any {
+export function SSOProvisionedUserToJSONTyped(value?: SSOProvisionedUser | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

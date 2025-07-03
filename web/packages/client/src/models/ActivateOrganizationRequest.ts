@@ -59,7 +59,7 @@ export function ActivateOrganizationRequestToJSON(json: any): ActivateOrganizati
     return ActivateOrganizationRequestToJSONTyped(json, false);
 }
 
-export function ActivateOrganizationRequestToJSONTyped(value?: Omit<ActivateOrganizationRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function ActivateOrganizationRequestToJSONTyped(value?: Omit<ActivateOrganizationRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

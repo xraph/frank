@@ -175,7 +175,7 @@ export function SSOProviderConfigToJSON(json: any): SSOProviderConfig {
     return SSOProviderConfigToJSONTyped(json, false);
 }
 
-export function SSOProviderConfigToJSONTyped(value?: SSOProviderConfig | null, ignoreDiscriminator: boolean = false): any {
+export function SSOProviderConfigToJSONTyped(value?: SSOProviderConfig | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

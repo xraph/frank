@@ -145,7 +145,7 @@ export function MFAActivityToJSON(json: any): MFAActivity {
     return MFAActivityToJSONTyped(json, false);
 }
 
-export function MFAActivityToJSONTyped(value?: MFAActivity | null, ignoreDiscriminator: boolean = false): any {
+export function MFAActivityToJSONTyped(value?: MFAActivity | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

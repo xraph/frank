@@ -85,7 +85,7 @@ export function AuditUserActivityToJSON(json: any): AuditUserActivity {
     return AuditUserActivityToJSONTyped(json, false);
 }
 
-export function AuditUserActivityToJSONTyped(value?: AuditUserActivity | null, ignoreDiscriminator: boolean = false): any {
+export function AuditUserActivityToJSONTyped(value?: AuditUserActivity | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

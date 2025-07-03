@@ -180,7 +180,7 @@ export function APIKeyStatsToJSON(json: any): APIKeyStats {
     return APIKeyStatsToJSONTyped(json, false);
 }
 
-export function APIKeyStatsToJSONTyped(value?: Omit<APIKeyStats, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function APIKeyStatsToJSONTyped(value?: Omit<APIKeyStats, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

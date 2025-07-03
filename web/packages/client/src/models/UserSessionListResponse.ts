@@ -84,7 +84,7 @@ export function UserSessionListResponseToJSON(json: any): UserSessionListRespons
     return UserSessionListResponseToJSONTyped(json, false);
 }
 
-export function UserSessionListResponseToJSONTyped(value?: Omit<UserSessionListResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function UserSessionListResponseToJSONTyped(value?: Omit<UserSessionListResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

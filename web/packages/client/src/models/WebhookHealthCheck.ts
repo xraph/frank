@@ -117,7 +117,7 @@ export function WebhookHealthCheckToJSON(json: any): WebhookHealthCheck {
     return WebhookHealthCheckToJSONTyped(json, false);
 }
 
-export function WebhookHealthCheckToJSONTyped(value?: Omit<WebhookHealthCheck, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function WebhookHealthCheckToJSONTyped(value?: Omit<WebhookHealthCheck, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

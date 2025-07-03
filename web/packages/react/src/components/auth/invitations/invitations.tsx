@@ -5,7 +5,8 @@
  * preview, accept/decline actions, and post-invitation redirects.
  */
 
-import React, {useCallback, useEffect, useState} from 'react';
+import type React from 'react';
+import {useCallback, useEffect, useState} from 'react';
 import {Avatar, Badge, Button, Card, CardBody, CardHeader, Divider, Input} from '@heroui/react';
 import {
     BuildingOfficeIcon,

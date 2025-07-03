@@ -68,7 +68,7 @@ export function TransferOwnershipResponseToJSON(json: any): TransferOwnershipRes
     return TransferOwnershipResponseToJSONTyped(json, false);
 }
 
-export function TransferOwnershipResponseToJSONTyped(value?: Omit<TransferOwnershipResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function TransferOwnershipResponseToJSONTyped(value?: Omit<TransferOwnershipResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

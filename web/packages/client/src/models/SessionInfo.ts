@@ -138,7 +138,7 @@ export function SessionInfoToJSON(json: any): SessionInfo {
     return SessionInfoToJSONTyped(json, false);
 }
 
-export function SessionInfoToJSONTyped(value?: SessionInfo | null, ignoreDiscriminator: boolean = false): any {
+export function SessionInfoToJSONTyped(value?: SessionInfo | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

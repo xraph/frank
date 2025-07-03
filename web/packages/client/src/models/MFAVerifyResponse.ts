@@ -101,7 +101,7 @@ export function MFAVerifyResponseToJSON(json: any): MFAVerifyResponse {
     return MFAVerifyResponseToJSONTyped(json, false);
 }
 
-export function MFAVerifyResponseToJSONTyped(value?: Omit<MFAVerifyResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function MFAVerifyResponseToJSONTyped(value?: Omit<MFAVerifyResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

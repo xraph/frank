@@ -246,7 +246,7 @@ export function InvitationToJSON(json: any): Invitation {
     return InvitationToJSONTyped(json, false);
 }
 
-export function InvitationToJSONTyped(value?: Omit<Invitation, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function InvitationToJSONTyped(value?: Omit<Invitation, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

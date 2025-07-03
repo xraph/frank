@@ -93,7 +93,7 @@ export function DatabaseMetricsToJSON(json: any): DatabaseMetrics {
     return DatabaseMetricsToJSONTyped(json, false);
 }
 
-export function DatabaseMetricsToJSONTyped(value?: DatabaseMetrics | null, ignoreDiscriminator: boolean = false): any {
+export function DatabaseMetricsToJSONTyped(value?: DatabaseMetrics | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

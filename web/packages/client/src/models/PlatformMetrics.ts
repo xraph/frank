@@ -176,7 +176,7 @@ export function PlatformMetricsToJSON(json: any): PlatformMetrics {
     return PlatformMetricsToJSONTyped(json, false);
 }
 
-export function PlatformMetricsToJSONTyped(value?: Omit<PlatformMetrics, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function PlatformMetricsToJSONTyped(value?: Omit<PlatformMetrics, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

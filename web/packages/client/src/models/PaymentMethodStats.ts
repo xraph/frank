@@ -77,7 +77,7 @@ export function PaymentMethodStatsToJSON(json: any): PaymentMethodStats {
     return PaymentMethodStatsToJSONTyped(json, false);
 }
 
-export function PaymentMethodStatsToJSONTyped(value?: PaymentMethodStats | null, ignoreDiscriminator: boolean = false): any {
+export function PaymentMethodStatsToJSONTyped(value?: PaymentMethodStats | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

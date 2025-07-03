@@ -91,7 +91,7 @@ export function BulkMembershipOperationResponseToJSON(json: any): BulkMembership
     return BulkMembershipOperationResponseToJSONTyped(json, false);
 }
 
-export function BulkMembershipOperationResponseToJSONTyped(value?: Omit<BulkMembershipOperationResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function BulkMembershipOperationResponseToJSONTyped(value?: Omit<BulkMembershipOperationResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

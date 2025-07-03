@@ -103,7 +103,7 @@ export function UpdateWebhookSecurityRequestToJSON(json: any): UpdateWebhookSecu
     return UpdateWebhookSecurityRequestToJSONTyped(json, false);
 }
 
-export function UpdateWebhookSecurityRequestToJSONTyped(value?: Omit<UpdateWebhookSecurityRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function UpdateWebhookSecurityRequestToJSONTyped(value?: Omit<UpdateWebhookSecurityRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

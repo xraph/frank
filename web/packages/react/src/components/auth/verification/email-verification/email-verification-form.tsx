@@ -4,7 +4,7 @@
 // ============================================================================
 
 import React from "react";
-import {EmailVerification, EmailVerificationFormProps} from "./email-verification";
+import {EmailVerification, type EmailVerificationFormProps} from "./email-verification";
 import {withErrorBoundary} from "@/components";
 
 export const EmailVerificationForm = withErrorBoundary(function EmailVerificationForm({

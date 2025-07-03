@@ -103,7 +103,7 @@ export function UserProfileUpdateRequestToJSON(json: any): UserProfileUpdateRequ
     return UserProfileUpdateRequestToJSONTyped(json, false);
 }
 
-export function UserProfileUpdateRequestToJSONTyped(value?: Omit<UserProfileUpdateRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function UserProfileUpdateRequestToJSONTyped(value?: Omit<UserProfileUpdateRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

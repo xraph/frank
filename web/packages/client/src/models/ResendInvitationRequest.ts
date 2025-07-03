@@ -84,7 +84,7 @@ export function ResendInvitationRequestToJSON(json: any): ResendInvitationReques
     return ResendInvitationRequestToJSONTyped(json, false);
 }
 
-export function ResendInvitationRequestToJSONTyped(value?: Omit<ResendInvitationRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function ResendInvitationRequestToJSONTyped(value?: Omit<ResendInvitationRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

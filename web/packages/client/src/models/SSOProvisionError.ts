@@ -69,7 +69,7 @@ export function SSOProvisionErrorToJSON(json: any): SSOProvisionError {
     return SSOProvisionErrorToJSONTyped(json, false);
 }
 
-export function SSOProvisionErrorToJSONTyped(value?: SSOProvisionError | null, ignoreDiscriminator: boolean = false): any {
+export function SSOProvisionErrorToJSONTyped(value?: SSOProvisionError | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

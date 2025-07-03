@@ -85,7 +85,7 @@ export function QueueMetricsToJSON(json: any): QueueMetrics {
     return QueueMetricsToJSONTyped(json, false);
 }
 
-export function QueueMetricsToJSONTyped(value?: QueueMetrics | null, ignoreDiscriminator: boolean = false): any {
+export function QueueMetricsToJSONTyped(value?: QueueMetrics | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

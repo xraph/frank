@@ -83,7 +83,7 @@ export function PaginatedOutputPermissionToJSON(json: any): PaginatedOutputPermi
     return PaginatedOutputPermissionToJSONTyped(json, false);
 }
 
-export function PaginatedOutputPermissionToJSONTyped(value?: Omit<PaginatedOutputPermission, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function PaginatedOutputPermissionToJSONTyped(value?: Omit<PaginatedOutputPermission, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

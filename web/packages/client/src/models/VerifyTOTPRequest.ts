@@ -68,7 +68,7 @@ export function VerifyTOTPRequestToJSON(json: any): VerifyTOTPRequest {
     return VerifyTOTPRequestToJSONTyped(json, false);
 }
 
-export function VerifyTOTPRequestToJSONTyped(value?: Omit<VerifyTOTPRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function VerifyTOTPRequestToJSONTyped(value?: Omit<VerifyTOTPRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -77,7 +77,7 @@ export function SystemResourceMetricsToJSON(json: any): SystemResourceMetrics {
     return SystemResourceMetricsToJSONTyped(json, false);
 }
 
-export function SystemResourceMetricsToJSONTyped(value?: SystemResourceMetrics | null, ignoreDiscriminator: boolean = false): any {
+export function SystemResourceMetricsToJSONTyped(value?: SystemResourceMetrics | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -85,7 +85,7 @@ export function NetworkMetricsToJSON(json: any): NetworkMetrics {
     return NetworkMetricsToJSONTyped(json, false);
 }
 
-export function NetworkMetricsToJSONTyped(value?: NetworkMetrics | null, ignoreDiscriminator: boolean = false): any {
+export function NetworkMetricsToJSONTyped(value?: NetworkMetrics | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -34,7 +34,7 @@ import type {
     OrganizationConfig,
     Theme,
 } from '../config';
-import {FrankAuth, FrankOrganization, FrankSession, FrankUser, PasswordResetRequest} from "@frank-auth/sdk";
+import type {FrankAuth, FrankOrganization, FrankSession, FrankUser, PasswordResetRequest} from "@frank-auth/sdk";
 
 // ============================================================================
 // Auth State Types

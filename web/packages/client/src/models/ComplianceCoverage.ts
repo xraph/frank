@@ -69,7 +69,7 @@ export function ComplianceCoverageToJSON(json: any): ComplianceCoverage {
     return ComplianceCoverageToJSONTyped(json, false);
 }
 
-export function ComplianceCoverageToJSONTyped(value?: ComplianceCoverage | null, ignoreDiscriminator: boolean = false): any {
+export function ComplianceCoverageToJSONTyped(value?: ComplianceCoverage | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

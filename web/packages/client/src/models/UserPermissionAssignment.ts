@@ -160,7 +160,7 @@ export function UserPermissionAssignmentToJSON(json: any): UserPermissionAssignm
     return UserPermissionAssignmentToJSONTyped(json, false);
 }
 
-export function UserPermissionAssignmentToJSONTyped(value?: UserPermissionAssignment | null, ignoreDiscriminator: boolean = false): any {
+export function UserPermissionAssignmentToJSONTyped(value?: UserPermissionAssignment | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

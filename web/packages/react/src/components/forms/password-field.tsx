@@ -14,8 +14,8 @@ import {useConfig} from '../../hooks/use-config';
 import {useFormField} from './form-wrapper';
 import {FieldError} from './field-error';
 import {CheckIcon, ExclamationTriangleIcon, EyeIcon, EyeSlashIcon} from "@heroicons/react/24/outline";
-import {FieldProps} from "@/components/forms/shared";
-import {generatePasswordSuggestions, getPasswordStrength, SignUpFormProps} from "@/components";
+import type {FieldProps} from "@/components/forms/shared";
+import {generatePasswordSuggestions, getPasswordStrength, type SignUpFormProps} from "@/components";
 
 // ============================================================================
 // Password Field Interface

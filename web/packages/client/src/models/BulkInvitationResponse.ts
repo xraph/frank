@@ -113,7 +113,7 @@ export function BulkInvitationResponseToJSON(json: any): BulkInvitationResponse 
     return BulkInvitationResponseToJSONTyped(json, false);
 }
 
-export function BulkInvitationResponseToJSONTyped(value?: Omit<BulkInvitationResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function BulkInvitationResponseToJSONTyped(value?: Omit<BulkInvitationResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

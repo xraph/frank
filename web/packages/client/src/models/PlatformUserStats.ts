@@ -117,7 +117,7 @@ export function PlatformUserStatsToJSON(json: any): PlatformUserStats {
     return PlatformUserStatsToJSONTyped(json, false);
 }
 
-export function PlatformUserStatsToJSONTyped(value?: PlatformUserStats | null, ignoreDiscriminator: boolean = false): any {
+export function PlatformUserStatsToJSONTyped(value?: PlatformUserStats | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

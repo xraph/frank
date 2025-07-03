@@ -83,7 +83,7 @@ export function PaginatedOutputOAuthScopeToJSON(json: any): PaginatedOutputOAuth
     return PaginatedOutputOAuthScopeToJSONTyped(json, false);
 }
 
-export function PaginatedOutputOAuthScopeToJSONTyped(value?: Omit<PaginatedOutputOAuthScope, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function PaginatedOutputOAuthScopeToJSONTyped(value?: Omit<PaginatedOutputOAuthScope, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

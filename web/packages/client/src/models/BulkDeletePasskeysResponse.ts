@@ -74,7 +74,7 @@ export function BulkDeletePasskeysResponseToJSON(json: any): BulkDeletePasskeysR
     return BulkDeletePasskeysResponseToJSONTyped(json, false);
 }
 
-export function BulkDeletePasskeysResponseToJSONTyped(value?: Omit<BulkDeletePasskeysResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function BulkDeletePasskeysResponseToJSONTyped(value?: Omit<BulkDeletePasskeysResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

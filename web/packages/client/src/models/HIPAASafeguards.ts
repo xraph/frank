@@ -91,7 +91,7 @@ export function HIPAASafeguardsToJSON(json: any): HIPAASafeguards {
     return HIPAASafeguardsToJSONTyped(json, false);
 }
 
-export function HIPAASafeguardsToJSONTyped(value?: HIPAASafeguards | null, ignoreDiscriminator: boolean = false): any {
+export function HIPAASafeguardsToJSONTyped(value?: HIPAASafeguards | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

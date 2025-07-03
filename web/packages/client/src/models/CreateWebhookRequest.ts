@@ -137,7 +137,7 @@ export function CreateWebhookRequestToJSON(json: any): CreateWebhookRequest {
     return CreateWebhookRequestToJSONTyped(json, false);
 }
 
-export function CreateWebhookRequestToJSONTyped(value?: Omit<CreateWebhookRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function CreateWebhookRequestToJSONTyped(value?: Omit<CreateWebhookRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

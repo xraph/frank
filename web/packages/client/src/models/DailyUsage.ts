@@ -77,7 +77,7 @@ export function DailyUsageToJSON(json: any): DailyUsage {
     return DailyUsageToJSONTyped(json, false);
 }
 
-export function DailyUsageToJSONTyped(value?: DailyUsage | null, ignoreDiscriminator: boolean = false): any {
+export function DailyUsageToJSONTyped(value?: DailyUsage | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

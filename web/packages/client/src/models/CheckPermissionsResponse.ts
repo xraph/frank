@@ -75,7 +75,7 @@ export function CheckPermissionsResponseToJSON(json: any): CheckPermissionsRespo
     return CheckPermissionsResponseToJSONTyped(json, false);
 }
 
-export function CheckPermissionsResponseToJSONTyped(value?: Omit<CheckPermissionsResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function CheckPermissionsResponseToJSONTyped(value?: Omit<CheckPermissionsResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

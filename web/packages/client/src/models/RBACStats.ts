@@ -140,7 +140,7 @@ export function RBACStatsToJSON(json: any): RBACStats {
     return RBACStatsToJSONTyped(json, false);
 }
 
-export function RBACStatsToJSONTyped(value?: Omit<RBACStats, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function RBACStatsToJSONTyped(value?: Omit<RBACStats, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

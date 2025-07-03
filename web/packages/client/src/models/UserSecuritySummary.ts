@@ -107,7 +107,7 @@ export function UserSecuritySummaryToJSON(json: any): UserSecuritySummary {
     return UserSecuritySummaryToJSONTyped(json, false);
 }
 
-export function UserSecuritySummaryToJSONTyped(value?: UserSecuritySummary | null, ignoreDiscriminator: boolean = false): any {
+export function UserSecuritySummaryToJSONTyped(value?: UserSecuritySummary | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -131,7 +131,7 @@ export function OrganizationActivityToJSON(json: any): OrganizationActivity {
     return OrganizationActivityToJSONTyped(json, false);
 }
 
-export function OrganizationActivityToJSONTyped(value?: Omit<OrganizationActivity, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function OrganizationActivityToJSONTyped(value?: Omit<OrganizationActivity, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

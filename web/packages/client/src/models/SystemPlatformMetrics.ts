@@ -133,7 +133,7 @@ export function SystemPlatformMetricsToJSON(json: any): SystemPlatformMetrics {
     return SystemPlatformMetricsToJSONTyped(json, false);
 }
 
-export function SystemPlatformMetricsToJSONTyped(value?: Omit<SystemPlatformMetrics, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function SystemPlatformMetricsToJSONTyped(value?: Omit<SystemPlatformMetrics, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

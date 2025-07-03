@@ -74,7 +74,7 @@ export function RotateAPIKeyRequestToJSON(json: any): RotateAPIKeyRequest {
     return RotateAPIKeyRequestToJSONTyped(json, false);
 }
 
-export function RotateAPIKeyRequestToJSONTyped(value?: Omit<RotateAPIKeyRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function RotateAPIKeyRequestToJSONTyped(value?: Omit<RotateAPIKeyRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

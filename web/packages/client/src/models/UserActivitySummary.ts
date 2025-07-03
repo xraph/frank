@@ -85,7 +85,7 @@ export function UserActivitySummaryToJSON(json: any): UserActivitySummary {
     return UserActivitySummaryToJSONTyped(json, false);
 }
 
-export function UserActivitySummaryToJSONTyped(value?: UserActivitySummary | null, ignoreDiscriminator: boolean = false): any {
+export function UserActivitySummaryToJSONTyped(value?: UserActivitySummary | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

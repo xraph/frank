@@ -175,7 +175,7 @@ export function LoginRequestToJSON(json: any): LoginRequest {
     return LoginRequestToJSONTyped(json, false);
 }
 
-export function LoginRequestToJSONTyped(value?: Omit<LoginRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function LoginRequestToJSONTyped(value?: Omit<LoginRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

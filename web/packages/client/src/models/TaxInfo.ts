@@ -76,7 +76,7 @@ export function TaxInfoToJSON(json: any): TaxInfo {
     return TaxInfoToJSONTyped(json, false);
 }
 
-export function TaxInfoToJSONTyped(value?: TaxInfo | null, ignoreDiscriminator: boolean = false): any {
+export function TaxInfoToJSONTyped(value?: TaxInfo | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

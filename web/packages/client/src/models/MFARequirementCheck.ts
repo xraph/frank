@@ -99,7 +99,7 @@ export function MFARequirementCheckToJSON(json: any): MFARequirementCheck {
     return MFARequirementCheckToJSONTyped(json, false);
 }
 
-export function MFARequirementCheckToJSONTyped(value?: Omit<MFARequirementCheck, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function MFARequirementCheckToJSONTyped(value?: Omit<MFARequirementCheck, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

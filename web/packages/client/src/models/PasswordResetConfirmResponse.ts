@@ -70,7 +70,7 @@ export function PasswordResetConfirmResponseToJSON(json: any): PasswordResetConf
     return PasswordResetConfirmResponseToJSONTyped(json, false);
 }
 
-export function PasswordResetConfirmResponseToJSONTyped(value?: Omit<PasswordResetConfirmResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function PasswordResetConfirmResponseToJSONTyped(value?: Omit<PasswordResetConfirmResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

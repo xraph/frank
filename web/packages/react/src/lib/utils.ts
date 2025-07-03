@@ -11,7 +11,7 @@ export function cn(...inputs: ClassValue[]) {
 /**
  * Generate a unique ID for components
  */
-export function generateId(prefix: string = 'hero-ui'): string {
+export function generateId(prefix = 'hero-ui'): string {
   return `${prefix}-${Math.random().toString(36).substr(2, 9)}`;
 }
 

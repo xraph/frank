@@ -17,8 +17,8 @@
 // Phone Number Utilities
 // ============================================================================
 
-import {VerificationMethod, VerificationStatus} from "@/types";
-import {InvitationData} from "@/components/auth/invitations";
+import type {VerificationMethod, VerificationStatus} from "@/types";
+import type {InvitationData} from "@/components/auth/invitations";
 
 /**
  * Format phone number for display
@@ -197,7 +197,7 @@ export function isDisposableEmail(email: string): boolean {
 /**
  * Generate verification code
  */
-export function generateVerificationCode(length: number = 6): string {
+export function generateVerificationCode(length = 6): string {
     const digits = '0123456789';
     let code = '';
 
@@ -211,7 +211,7 @@ export function generateVerificationCode(length: number = 6): string {
 /**
  * Validate verification code format
  */
-export function validateVerificationCode(code: string, expectedLength: number = 6): { isValid: boolean; error?: string } {
+export function validateVerificationCode(code: string, expectedLength = 6): { isValid: boolean; error?: string } {
     if (!code) {
         return { isValid: false, error: 'Verification code is required' };
     }
@@ -230,7 +230,7 @@ export function validateVerificationCode(code: string, expectedLength: number = 
 /**
  * Format verification code for display
  */
-export function formatVerificationCode(code: string, separator: string = ' '): string {
+export function formatVerificationCode(code: string, separator = ' '): string {
     return code.split('').join(separator);
 }
 

@@ -129,7 +129,7 @@ export function PerformanceMetricsToJSON(json: any): PerformanceMetrics {
     return PerformanceMetricsToJSONTyped(json, false);
 }
 
-export function PerformanceMetricsToJSONTyped(value?: Omit<PerformanceMetrics, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function PerformanceMetricsToJSONTyped(value?: Omit<PerformanceMetrics, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

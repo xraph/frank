@@ -108,7 +108,7 @@ export function PlatformAPIStatsToJSON(json: any): PlatformAPIStats {
     return PlatformAPIStatsToJSONTyped(json, false);
 }
 
-export function PlatformAPIStatsToJSONTyped(value?: PlatformAPIStats | null, ignoreDiscriminator: boolean = false): any {
+export function PlatformAPIStatsToJSONTyped(value?: PlatformAPIStats | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

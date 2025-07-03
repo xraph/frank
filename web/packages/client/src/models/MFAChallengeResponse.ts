@@ -108,7 +108,7 @@ export function MFAChallengeResponseToJSON(json: any): MFAChallengeResponse {
     return MFAChallengeResponseToJSONTyped(json, false);
 }
 
-export function MFAChallengeResponseToJSONTyped(value?: Omit<MFAChallengeResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function MFAChallengeResponseToJSONTyped(value?: Omit<MFAChallengeResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

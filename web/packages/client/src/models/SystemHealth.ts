@@ -129,7 +129,7 @@ export function SystemHealthToJSON(json: any): SystemHealth {
     return SystemHealthToJSONTyped(json, false);
 }
 
-export function SystemHealthToJSONTyped(value?: Omit<SystemHealth, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function SystemHealthToJSONTyped(value?: Omit<SystemHealth, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

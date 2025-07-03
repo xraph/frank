@@ -80,7 +80,7 @@ export function NotificationRecipientsToJSON(json: any): NotificationRecipients 
     return NotificationRecipientsToJSONTyped(json, false);
 }
 
-export function NotificationRecipientsToJSONTyped(value?: NotificationRecipients | null, ignoreDiscriminator: boolean = false): any {
+export function NotificationRecipientsToJSONTyped(value?: NotificationRecipients | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

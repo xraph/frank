@@ -77,7 +77,7 @@ export function PlatformOrganizationActivityToJSON(json: any): PlatformOrganizat
     return PlatformOrganizationActivityToJSONTyped(json, false);
 }
 
-export function PlatformOrganizationActivityToJSONTyped(value?: PlatformOrganizationActivity | null, ignoreDiscriminator: boolean = false): any {
+export function PlatformOrganizationActivityToJSONTyped(value?: PlatformOrganizationActivity | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

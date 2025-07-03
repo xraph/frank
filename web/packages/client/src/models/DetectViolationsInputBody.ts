@@ -60,7 +60,7 @@ export function DetectViolationsInputBodyToJSON(json: any): DetectViolationsInpu
     return DetectViolationsInputBodyToJSONTyped(json, false);
 }
 
-export function DetectViolationsInputBodyToJSONTyped(value?: Omit<DetectViolationsInputBody, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function DetectViolationsInputBodyToJSONTyped(value?: Omit<DetectViolationsInputBody, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

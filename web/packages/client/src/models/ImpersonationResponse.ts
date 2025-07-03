@@ -99,7 +99,7 @@ export function ImpersonationResponseToJSON(json: any): ImpersonationResponse {
     return ImpersonationResponseToJSONTyped(json, false);
 }
 
-export function ImpersonationResponseToJSONTyped(value?: Omit<ImpersonationResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function ImpersonationResponseToJSONTyped(value?: Omit<ImpersonationResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

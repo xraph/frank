@@ -106,7 +106,7 @@ export function UserActivityToJSON(json: any): UserActivity {
     return UserActivityToJSONTyped(json, false);
 }
 
-export function UserActivityToJSONTyped(value?: UserActivity | null, ignoreDiscriminator: boolean = false): any {
+export function UserActivityToJSONTyped(value?: UserActivity | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

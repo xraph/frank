@@ -204,7 +204,7 @@ export function PermissionAssignmentToJSON(json: any): PermissionAssignment {
     return PermissionAssignmentToJSONTyped(json, false);
 }
 
-export function PermissionAssignmentToJSONTyped(value?: PermissionAssignment | null, ignoreDiscriminator: boolean = false): any {
+export function PermissionAssignmentToJSONTyped(value?: PermissionAssignment | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

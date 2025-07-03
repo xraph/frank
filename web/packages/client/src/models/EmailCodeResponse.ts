@@ -68,7 +68,7 @@ export function EmailCodeResponseToJSON(json: any): EmailCodeResponse {
     return EmailCodeResponseToJSONTyped(json, false);
 }
 
-export function EmailCodeResponseToJSONTyped(value?: Omit<EmailCodeResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function EmailCodeResponseToJSONTyped(value?: Omit<EmailCodeResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

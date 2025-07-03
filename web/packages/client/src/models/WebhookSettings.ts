@@ -77,7 +77,7 @@ export function WebhookSettingsToJSON(json: any): WebhookSettings {
     return WebhookSettingsToJSONTyped(json, false);
 }
 
-export function WebhookSettingsToJSONTyped(value?: WebhookSettings | null, ignoreDiscriminator: boolean = false): any {
+export function WebhookSettingsToJSONTyped(value?: WebhookSettings | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

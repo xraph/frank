@@ -52,7 +52,7 @@ export function EmptyOutputBodyToJSON(json: any): EmptyOutputBody {
     return EmptyOutputBodyToJSONTyped(json, false);
 }
 
-export function EmptyOutputBodyToJSONTyped(value?: Omit<EmptyOutputBody, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function EmptyOutputBodyToJSONTyped(value?: Omit<EmptyOutputBody, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

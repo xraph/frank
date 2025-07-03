@@ -83,7 +83,7 @@ export function PaginatedOutputIdentityProviderSummaryToJSON(json: any): Paginat
     return PaginatedOutputIdentityProviderSummaryToJSONTyped(json, false);
 }
 
-export function PaginatedOutputIdentityProviderSummaryToJSONTyped(value?: Omit<PaginatedOutputIdentityProviderSummary, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function PaginatedOutputIdentityProviderSummaryToJSONTyped(value?: Omit<PaginatedOutputIdentityProviderSummary, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -227,7 +227,7 @@ export function AuthStatusToJSON(json: any): AuthStatus {
     return AuthStatusToJSONTyped(json, false);
 }
 
-export function AuthStatusToJSONTyped(value?: Omit<AuthStatus, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function AuthStatusToJSONTyped(value?: Omit<AuthStatus, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -68,7 +68,7 @@ export function RegenerateClientSecretResponseToJSON(json: any): RegenerateClien
     return RegenerateClientSecretResponseToJSONTyped(json, false);
 }
 
-export function RegenerateClientSecretResponseToJSONTyped(value?: Omit<RegenerateClientSecretResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function RegenerateClientSecretResponseToJSONTyped(value?: Omit<RegenerateClientSecretResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

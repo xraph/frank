@@ -13,7 +13,7 @@ import {AnimatePresence, motion} from 'framer-motion';
 import {useConfig} from '../../hooks/use-config';
 import {useFormField} from './form-wrapper';
 import {FieldError} from './field-error';
-import {FieldProps} from "@/components/forms/shared";
+import type {FieldProps} from "@/components/forms/shared";
 
 // ============================================================================
 // Email Field Interface

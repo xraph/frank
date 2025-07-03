@@ -93,7 +93,7 @@ export function AcquisitionMetricsToJSON(json: any): AcquisitionMetrics {
     return AcquisitionMetricsToJSONTyped(json, false);
 }
 
-export function AcquisitionMetricsToJSONTyped(value?: AcquisitionMetrics | null, ignoreDiscriminator: boolean = false): any {
+export function AcquisitionMetricsToJSONTyped(value?: AcquisitionMetrics | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

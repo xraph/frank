@@ -84,7 +84,7 @@ export function ServiceHealthToJSON(json: any): ServiceHealth {
     return ServiceHealthToJSONTyped(json, false);
 }
 
-export function ServiceHealthToJSONTyped(value?: ServiceHealth | null, ignoreDiscriminator: boolean = false): any {
+export function ServiceHealthToJSONTyped(value?: ServiceHealth | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -183,7 +183,7 @@ export function RegisterRequestToJSON(json: any): RegisterRequest {
     return RegisterRequestToJSONTyped(json, false);
 }
 
-export function RegisterRequestToJSONTyped(value?: Omit<RegisterRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function RegisterRequestToJSONTyped(value?: Omit<RegisterRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

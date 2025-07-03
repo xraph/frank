@@ -70,7 +70,7 @@ export function SetPasswordRequestToJSON(json: any): SetPasswordRequest {
     return SetPasswordRequestToJSONTyped(json, false);
 }
 
-export function SetPasswordRequestToJSONTyped(value?: Omit<SetPasswordRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function SetPasswordRequestToJSONTyped(value?: Omit<SetPasswordRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

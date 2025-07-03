@@ -85,7 +85,7 @@ export function FeatureUsageRankingToJSON(json: any): FeatureUsageRanking {
     return FeatureUsageRankingToJSONTyped(json, false);
 }
 
-export function FeatureUsageRankingToJSONTyped(value?: FeatureUsageRanking | null, ignoreDiscriminator: boolean = false): any {
+export function FeatureUsageRankingToJSONTyped(value?: FeatureUsageRanking | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -66,7 +66,7 @@ export function UpdateMFAMethodRequestToJSON(json: any): UpdateMFAMethodRequest 
     return UpdateMFAMethodRequestToJSONTyped(json, false);
 }
 
-export function UpdateMFAMethodRequestToJSONTyped(value?: Omit<UpdateMFAMethodRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function UpdateMFAMethodRequestToJSONTyped(value?: Omit<UpdateMFAMethodRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

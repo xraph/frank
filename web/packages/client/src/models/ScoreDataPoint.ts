@@ -61,7 +61,7 @@ export function ScoreDataPointToJSON(json: any): ScoreDataPoint {
     return ScoreDataPointToJSONTyped(json, false);
 }
 
-export function ScoreDataPointToJSONTyped(value?: ScoreDataPoint | null, ignoreDiscriminator: boolean = false): any {
+export function ScoreDataPointToJSONTyped(value?: ScoreDataPoint | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

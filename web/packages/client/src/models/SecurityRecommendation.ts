@@ -116,7 +116,7 @@ export function SecurityRecommendationToJSON(json: any): SecurityRecommendation 
     return SecurityRecommendationToJSONTyped(json, false);
 }
 
-export function SecurityRecommendationToJSONTyped(value?: SecurityRecommendation | null, ignoreDiscriminator: boolean = false): any {
+export function SecurityRecommendationToJSONTyped(value?: SecurityRecommendation | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

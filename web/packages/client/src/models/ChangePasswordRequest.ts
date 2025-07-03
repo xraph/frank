@@ -68,7 +68,7 @@ export function ChangePasswordRequestToJSON(json: any): ChangePasswordRequest {
     return ChangePasswordRequestToJSONTyped(json, false);
 }
 
-export function ChangePasswordRequestToJSONTyped(value?: Omit<ChangePasswordRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function ChangePasswordRequestToJSONTyped(value?: Omit<ChangePasswordRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

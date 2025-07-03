@@ -17,7 +17,7 @@ import {useMagicLink} from '../../../hooks/use-magic-link';
 import {useAuth} from '../../../hooks/use-auth';
 import {useConfig} from '../../../hooks/use-config';
 import FormWrapper from '../../forms/form-wrapper';
-import {RadiusT, SizeT} from "@/types";
+import type {RadiusT, SizeT} from "@/types";
 
 // ============================================================================
 // Magic Link Verification Types

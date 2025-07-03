@@ -117,7 +117,7 @@ export function ComplianceRecommendationToJSON(json: any): ComplianceRecommendat
     return ComplianceRecommendationToJSONTyped(json, false);
 }
 
-export function ComplianceRecommendationToJSONTyped(value?: ComplianceRecommendation | null, ignoreDiscriminator: boolean = false): any {
+export function ComplianceRecommendationToJSONTyped(value?: ComplianceRecommendation | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

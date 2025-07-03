@@ -83,7 +83,7 @@ export function SSOMetadataResponseToJSON(json: any): SSOMetadataResponse {
     return SSOMetadataResponseToJSONTyped(json, false);
 }
 
-export function SSOMetadataResponseToJSONTyped(value?: Omit<SSOMetadataResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function SSOMetadataResponseToJSONTyped(value?: Omit<SSOMetadataResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

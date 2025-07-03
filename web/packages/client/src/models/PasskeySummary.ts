@@ -109,7 +109,7 @@ export function PasskeySummaryToJSON(json: any): PasskeySummary {
     return PasskeySummaryToJSONTyped(json, false);
 }
 
-export function PasskeySummaryToJSONTyped(value?: PasskeySummary | null, ignoreDiscriminator: boolean = false): any {
+export function PasskeySummaryToJSONTyped(value?: PasskeySummary | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -189,7 +189,7 @@ export function PlatformStatisticsToJSON(json: any): PlatformStatistics {
     return PlatformStatisticsToJSONTyped(json, false);
 }
 
-export function PlatformStatisticsToJSONTyped(value?: Omit<PlatformStatistics, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function PlatformStatisticsToJSONTyped(value?: Omit<PlatformStatistics, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

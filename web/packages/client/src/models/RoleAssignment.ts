@@ -175,7 +175,7 @@ export function RoleAssignmentToJSON(json: any): RoleAssignment {
     return RoleAssignmentToJSONTyped(json, false);
 }
 
-export function RoleAssignmentToJSONTyped(value?: RoleAssignment | null, ignoreDiscriminator: boolean = false): any {
+export function RoleAssignmentToJSONTyped(value?: RoleAssignment | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

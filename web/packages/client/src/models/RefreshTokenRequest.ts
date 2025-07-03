@@ -60,7 +60,7 @@ export function RefreshTokenRequestToJSON(json: any): RefreshTokenRequest {
     return RefreshTokenRequestToJSONTyped(json, false);
 }
 
-export function RefreshTokenRequestToJSONTyped(value?: Omit<RefreshTokenRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function RefreshTokenRequestToJSONTyped(value?: Omit<RefreshTokenRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

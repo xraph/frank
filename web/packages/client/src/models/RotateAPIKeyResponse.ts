@@ -99,7 +99,7 @@ export function RotateAPIKeyResponseToJSON(json: any): RotateAPIKeyResponse {
     return RotateAPIKeyResponseToJSONTyped(json, false);
 }
 
-export function RotateAPIKeyResponseToJSONTyped(value?: Omit<RotateAPIKeyResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function RotateAPIKeyResponseToJSONTyped(value?: Omit<RotateAPIKeyResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

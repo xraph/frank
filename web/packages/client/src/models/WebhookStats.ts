@@ -161,7 +161,7 @@ export function WebhookStatsToJSON(json: any): WebhookStats {
     return WebhookStatsToJSONTyped(json, false);
 }
 
-export function WebhookStatsToJSONTyped(value?: Omit<WebhookStats, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function WebhookStatsToJSONTyped(value?: Omit<WebhookStats, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

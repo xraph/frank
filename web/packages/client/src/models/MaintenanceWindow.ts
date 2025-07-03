@@ -177,7 +177,7 @@ export function MaintenanceWindowToJSON(json: any): MaintenanceWindow {
     return MaintenanceWindowToJSONTyped(json, false);
 }
 
-export function MaintenanceWindowToJSONTyped(value?: Omit<MaintenanceWindow, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function MaintenanceWindowToJSONTyped(value?: Omit<MaintenanceWindow, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

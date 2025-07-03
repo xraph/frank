@@ -115,7 +115,7 @@ export function OAuthClientSummaryToJSON(json: any): OAuthClientSummary {
     return OAuthClientSummaryToJSONTyped(json, false);
 }
 
-export function OAuthClientSummaryToJSONTyped(value?: OAuthClientSummary | null, ignoreDiscriminator: boolean = false): any {
+export function OAuthClientSummaryToJSONTyped(value?: OAuthClientSummary | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

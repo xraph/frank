@@ -67,7 +67,7 @@ export function SetupSMSRequestToJSON(json: any): SetupSMSRequest {
     return SetupSMSRequestToJSONTyped(json, false);
 }
 
-export function SetupSMSRequestToJSONTyped(value?: Omit<SetupSMSRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function SetupSMSRequestToJSONTyped(value?: Omit<SetupSMSRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

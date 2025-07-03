@@ -8,11 +8,11 @@
 import ErrorBoundary, {
     ApiErrorBoundary,
     AuthErrorBoundary,
-    ErrorBoundaryProps,
+    type ErrorBoundaryProps,
     FormErrorBoundary,
     withErrorBoundary
 } from './error-boundary';
-import LoadingSpinner, {LoadingButton, LoadingProvider, LoadingSpinnerProps} from './loading-spinner';
+import LoadingSpinner, {LoadingButton, LoadingProvider, type LoadingSpinnerProps} from './loading-spinner';
 import MagicLink, {MagicLinkVerification} from './magic-link';
 import OAuthButtons, {OAuthDivider} from './oauth-buttons';
 import RedirectHandler from './redirect-handler';

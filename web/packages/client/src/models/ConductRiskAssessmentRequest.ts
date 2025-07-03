@@ -60,7 +60,7 @@ export function ConductRiskAssessmentRequestToJSON(json: any): ConductRiskAssess
     return ConductRiskAssessmentRequestToJSONTyped(json, false);
 }
 
-export function ConductRiskAssessmentRequestToJSONTyped(value?: Omit<ConductRiskAssessmentRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function ConductRiskAssessmentRequestToJSONTyped(value?: Omit<ConductRiskAssessmentRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

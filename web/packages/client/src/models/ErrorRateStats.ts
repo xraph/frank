@@ -93,7 +93,7 @@ export function ErrorRateStatsToJSON(json: any): ErrorRateStats {
     return ErrorRateStatsToJSONTyped(json, false);
 }
 
-export function ErrorRateStatsToJSONTyped(value?: ErrorRateStats | null, ignoreDiscriminator: boolean = false): any {
+export function ErrorRateStatsToJSONTyped(value?: ErrorRateStats | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

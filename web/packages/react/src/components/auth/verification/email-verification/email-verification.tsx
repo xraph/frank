@@ -5,7 +5,8 @@
  * Integrates with Frank Auth API for MFA and identity verification.
  */
 
-import React, {useCallback, useEffect, useMemo, useState} from 'react';
+import type React from 'react';
+import {useCallback, useEffect, useMemo, useState} from 'react';
 import {Button as HeroButton } from '@heroui/react';
 import {ArrowPathIcon, CheckCircleIcon, EnvelopeIcon, XCircleIcon} from '@heroicons/react/24/outline';
 

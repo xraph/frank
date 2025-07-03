@@ -9,7 +9,7 @@
 // Main Components
 // ============================================================================
 
-import {RadiusT, SizeT} from "@/types";
+import type {RadiusT, SizeT} from "@/types";
 
 export * from './sign-up';
 export { SignUpForm } from './sign-up-form';

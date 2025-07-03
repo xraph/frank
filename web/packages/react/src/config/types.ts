@@ -5,13 +5,13 @@
  * multi-tenant authentication with HeroUI and custom theming.
  */
 
-import {ComponentType, ReactNode} from 'react';
+import type {ComponentType, ReactNode} from 'react';
 
 import type {UserType} from '@frank-auth/client';
-import {Locale, LocaleDirection, LocaleMessages} from '../locales';
-import {BorderRadius, LayoutConfig, Shadows, type Theme, ThemeMode, Typography} from "../types";
+import type {Locale, LocaleDirection, LocaleMessages} from '../locales';
+import type {BorderRadius, LayoutConfig, Shadows, Theme, ThemeMode, Typography} from "../types";
 import {ThemeUtils} from "../utils";
-import {LinksPathConfig} from "@/provider/types";
+import type {LinksPathConfig} from "@/provider/types";
 
 
 /**

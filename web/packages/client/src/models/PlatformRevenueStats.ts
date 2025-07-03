@@ -101,7 +101,7 @@ export function PlatformRevenueStatsToJSON(json: any): PlatformRevenueStats {
     return PlatformRevenueStatsToJSONTyped(json, false);
 }
 
-export function PlatformRevenueStatsToJSONTyped(value?: PlatformRevenueStats | null, ignoreDiscriminator: boolean = false): any {
+export function PlatformRevenueStatsToJSONTyped(value?: PlatformRevenueStats | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -195,7 +195,7 @@ export function ComplianceViolationToJSON(json: any): ComplianceViolation {
     return ComplianceViolationToJSONTyped(json, false);
 }
 
-export function ComplianceViolationToJSONTyped(value?: ComplianceViolation | null, ignoreDiscriminator: boolean = false): any {
+export function ComplianceViolationToJSONTyped(value?: ComplianceViolation | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

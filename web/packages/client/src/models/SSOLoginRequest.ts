@@ -81,7 +81,7 @@ export function SSOLoginRequestToJSON(json: any): SSOLoginRequest {
     return SSOLoginRequestToJSONTyped(json, false);
 }
 
-export function SSOLoginRequestToJSONTyped(value?: Omit<SSOLoginRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function SSOLoginRequestToJSONTyped(value?: Omit<SSOLoginRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -114,7 +114,7 @@ export function SecurityIncidentSummaryToJSON(json: any): SecurityIncidentSummar
     return SecurityIncidentSummaryToJSONTyped(json, false);
 }
 
-export function SecurityIncidentSummaryToJSONTyped(value?: SecurityIncidentSummary | null, ignoreDiscriminator: boolean = false): any {
+export function SecurityIncidentSummaryToJSONTyped(value?: SecurityIncidentSummary | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

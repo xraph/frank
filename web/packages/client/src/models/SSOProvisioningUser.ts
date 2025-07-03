@@ -81,7 +81,7 @@ export function SSOProvisioningUserToJSON(json: any): SSOProvisioningUser {
     return SSOProvisioningUserToJSONTyped(json, false);
 }
 
-export function SSOProvisioningUserToJSONTyped(value?: SSOProvisioningUser | null, ignoreDiscriminator: boolean = false): any {
+export function SSOProvisioningUserToJSONTyped(value?: SSOProvisioningUser | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

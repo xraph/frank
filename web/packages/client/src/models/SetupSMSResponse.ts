@@ -92,7 +92,7 @@ export function SetupSMSResponseToJSON(json: any): SetupSMSResponse {
     return SetupSMSResponseToJSONTyped(json, false);
 }
 
-export function SetupSMSResponseToJSONTyped(value?: Omit<SetupSMSResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function SetupSMSResponseToJSONTyped(value?: Omit<SetupSMSResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

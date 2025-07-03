@@ -273,7 +273,7 @@ export function PlatformUserSummaryToJSON(json: any): PlatformUserSummary {
     return PlatformUserSummaryToJSONTyped(json, false);
 }
 
-export function PlatformUserSummaryToJSONTyped(value?: PlatformUserSummary | null, ignoreDiscriminator: boolean = false): any {
+export function PlatformUserSummaryToJSONTyped(value?: PlatformUserSummary | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

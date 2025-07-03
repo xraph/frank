@@ -110,7 +110,7 @@ export function TokenRequestToJSON(json: any): TokenRequest {
     return TokenRequestToJSONTyped(json, false);
 }
 
-export function TokenRequestToJSONTyped(value?: Omit<TokenRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function TokenRequestToJSONTyped(value?: Omit<TokenRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

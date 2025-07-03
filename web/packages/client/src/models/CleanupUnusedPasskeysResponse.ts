@@ -60,7 +60,7 @@ export function CleanupUnusedPasskeysResponseToJSON(json: any): CleanupUnusedPas
     return CleanupUnusedPasskeysResponseToJSONTyped(json, false);
 }
 
-export function CleanupUnusedPasskeysResponseToJSONTyped(value?: Omit<CleanupUnusedPasskeysResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function CleanupUnusedPasskeysResponseToJSONTyped(value?: Omit<CleanupUnusedPasskeysResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

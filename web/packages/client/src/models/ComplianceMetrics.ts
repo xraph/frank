@@ -154,7 +154,7 @@ export function ComplianceMetricsToJSON(json: any): ComplianceMetrics {
     return ComplianceMetricsToJSONTyped(json, false);
 }
 
-export function ComplianceMetricsToJSONTyped(value?: Omit<ComplianceMetrics, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function ComplianceMetricsToJSONTyped(value?: Omit<ComplianceMetrics, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

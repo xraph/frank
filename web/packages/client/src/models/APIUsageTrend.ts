@@ -77,7 +77,7 @@ export function APIUsageTrendToJSON(json: any): APIUsageTrend {
     return APIUsageTrendToJSONTyped(json, false);
 }
 
-export function APIUsageTrendToJSONTyped(value?: APIUsageTrend | null, ignoreDiscriminator: boolean = false): any {
+export function APIUsageTrendToJSONTyped(value?: APIUsageTrend | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

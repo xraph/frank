@@ -77,7 +77,7 @@ export function AuthMethodUsageToJSON(json: any): AuthMethodUsage {
     return AuthMethodUsageToJSONTyped(json, false);
 }
 
-export function AuthMethodUsageToJSONTyped(value?: AuthMethodUsage | null, ignoreDiscriminator: boolean = false): any {
+export function AuthMethodUsageToJSONTyped(value?: AuthMethodUsage | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -7,7 +7,8 @@
 
 'use client';
 
-import React, {createContext, useCallback, useContext, useEffect, useMemo, useReducer} from 'react';
+import type React from 'react';
+import {createContext, useCallback, useContext, useEffect, useMemo, useReducer} from 'react';
 
 import type {Organization} from '@frank-auth/client';
 

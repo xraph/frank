@@ -112,7 +112,7 @@ export function SSOCallbackResponseToJSON(json: any): SSOCallbackResponse {
     return SSOCallbackResponseToJSONTyped(json, false);
 }
 
-export function SSOCallbackResponseToJSONTyped(value?: Omit<SSOCallbackResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function SSOCallbackResponseToJSONTyped(value?: Omit<SSOCallbackResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

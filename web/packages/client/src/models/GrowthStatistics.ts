@@ -100,7 +100,7 @@ export function GrowthStatisticsToJSON(json: any): GrowthStatistics {
     return GrowthStatisticsToJSONTyped(json, false);
 }
 
-export function GrowthStatisticsToJSONTyped(value?: GrowthStatistics | null, ignoreDiscriminator: boolean = false): any {
+export function GrowthStatisticsToJSONTyped(value?: GrowthStatistics | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

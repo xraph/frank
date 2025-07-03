@@ -113,7 +113,7 @@ export function EnableProviderBodyToJSON(json: any): EnableProviderBody {
     return EnableProviderBodyToJSONTyped(json, false);
 }
 
-export function EnableProviderBodyToJSONTyped(value?: Omit<EnableProviderBody, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function EnableProviderBodyToJSONTyped(value?: Omit<EnableProviderBody, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

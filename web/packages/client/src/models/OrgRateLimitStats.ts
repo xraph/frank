@@ -101,7 +101,7 @@ export function OrgRateLimitStatsToJSON(json: any): OrgRateLimitStats {
     return OrgRateLimitStatsToJSONTyped(json, false);
 }
 
-export function OrgRateLimitStatsToJSONTyped(value?: OrgRateLimitStats | null, ignoreDiscriminator: boolean = false): any {
+export function OrgRateLimitStatsToJSONTyped(value?: OrgRateLimitStats | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

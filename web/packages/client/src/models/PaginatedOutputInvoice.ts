@@ -83,7 +83,7 @@ export function PaginatedOutputInvoiceToJSON(json: any): PaginatedOutputInvoice 
     return PaginatedOutputInvoiceToJSONTyped(json, false);
 }
 
-export function PaginatedOutputInvoiceToJSONTyped(value?: Omit<PaginatedOutputInvoice, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function PaginatedOutputInvoiceToJSONTyped(value?: Omit<PaginatedOutputInvoice, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

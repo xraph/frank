@@ -109,7 +109,7 @@ export function PaginationToJSON(json: any): Pagination {
     return PaginationToJSONTyped(json, false);
 }
 
-export function PaginationToJSONTyped(value?: Pagination | null, ignoreDiscriminator: boolean = false): any {
+export function PaginationToJSONTyped(value?: Pagination | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

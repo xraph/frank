@@ -93,7 +93,7 @@ export function AuditSecuritySummaryToJSON(json: any): AuditSecuritySummary {
     return AuditSecuritySummaryToJSONTyped(json, false);
 }
 
-export function AuditSecuritySummaryToJSONTyped(value?: AuditSecuritySummary | null, ignoreDiscriminator: boolean = false): any {
+export function AuditSecuritySummaryToJSONTyped(value?: AuditSecuritySummary | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

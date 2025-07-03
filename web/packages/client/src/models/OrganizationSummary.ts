@@ -126,7 +126,7 @@ export function OrganizationSummaryToJSON(json: any): OrganizationSummary {
     return OrganizationSummaryToJSONTyped(json, false);
 }
 
-export function OrganizationSummaryToJSONTyped(value?: OrganizationSummary | null, ignoreDiscriminator: boolean = false): any {
+export function OrganizationSummaryToJSONTyped(value?: OrganizationSummary | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -139,7 +139,7 @@ export function UpdatePermissionRequestToJSON(json: any): UpdatePermissionReques
     return UpdatePermissionRequestToJSONTyped(json, false);
 }
 
-export function UpdatePermissionRequestToJSONTyped(value?: Omit<UpdatePermissionRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function UpdatePermissionRequestToJSONTyped(value?: Omit<UpdatePermissionRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

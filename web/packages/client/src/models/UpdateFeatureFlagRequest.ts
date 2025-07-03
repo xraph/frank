@@ -130,7 +130,7 @@ export function UpdateFeatureFlagRequestToJSON(json: any): UpdateFeatureFlagRequ
     return UpdateFeatureFlagRequestToJSONTyped(json, false);
 }
 
-export function UpdateFeatureFlagRequestToJSONTyped(value?: Omit<UpdateFeatureFlagRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function UpdateFeatureFlagRequestToJSONTyped(value?: Omit<UpdateFeatureFlagRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

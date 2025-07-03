@@ -86,7 +86,7 @@ export function FeatureSummaryToJSON(json: any): FeatureSummary {
     return FeatureSummaryToJSONTyped(json, false);
 }
 
-export function FeatureSummaryToJSONTyped(value?: FeatureSummary | null, ignoreDiscriminator: boolean = false): any {
+export function FeatureSummaryToJSONTyped(value?: FeatureSummary | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

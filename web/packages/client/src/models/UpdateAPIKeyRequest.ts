@@ -118,7 +118,7 @@ export function UpdateAPIKeyRequestToJSON(json: any): UpdateAPIKeyRequest {
     return UpdateAPIKeyRequestToJSONTyped(json, false);
 }
 
-export function UpdateAPIKeyRequestToJSONTyped(value?: Omit<UpdateAPIKeyRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function UpdateAPIKeyRequestToJSONTyped(value?: Omit<UpdateAPIKeyRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

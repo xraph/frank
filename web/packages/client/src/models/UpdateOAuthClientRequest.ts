@@ -152,7 +152,7 @@ export function UpdateOAuthClientRequestToJSON(json: any): UpdateOAuthClientRequ
     return UpdateOAuthClientRequestToJSONTyped(json, false);
 }
 
-export function UpdateOAuthClientRequestToJSONTyped(value?: Omit<UpdateOAuthClientRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function UpdateOAuthClientRequestToJSONTyped(value?: Omit<UpdateOAuthClientRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

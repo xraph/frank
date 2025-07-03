@@ -160,7 +160,7 @@ export function HIPAAReportToJSON(json: any): HIPAAReport {
     return HIPAAReportToJSONTyped(json, false);
 }
 
-export function HIPAAReportToJSONTyped(value?: Omit<HIPAAReport, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function HIPAAReportToJSONTyped(value?: Omit<HIPAAReport, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

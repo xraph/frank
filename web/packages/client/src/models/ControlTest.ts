@@ -125,7 +125,7 @@ export function ControlTestToJSON(json: any): ControlTest {
     return ControlTestToJSONTyped(json, false);
 }
 
-export function ControlTestToJSONTyped(value?: ControlTest | null, ignoreDiscriminator: boolean = false): any {
+export function ControlTestToJSONTyped(value?: ControlTest | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

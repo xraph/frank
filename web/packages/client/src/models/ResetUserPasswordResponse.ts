@@ -90,7 +90,7 @@ export function ResetUserPasswordResponseToJSON(json: any): ResetUserPasswordRes
     return ResetUserPasswordResponseToJSONTyped(json, false);
 }
 
-export function ResetUserPasswordResponseToJSONTyped(value?: Omit<ResetUserPasswordResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function ResetUserPasswordResponseToJSONTyped(value?: Omit<ResetUserPasswordResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

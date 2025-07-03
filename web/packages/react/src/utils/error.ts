@@ -10,7 +10,7 @@ export class FrankAuthBaseError extends Error {
 
     constructor(
         message: string,
-        code: string = 'FRANK_AUTH_ERROR',
+        code = 'FRANK_AUTH_ERROR',
         statusCode?: number,
         details?: JSONObject,
         context?: string
@@ -41,13 +41,13 @@ export class FrankAuthBaseError extends Error {
 
 // Specific error classes
 export class AuthenticationError extends FrankAuthBaseError {
-    constructor(message: string = 'Authentication failed', details?: JSONObject) {
+    constructor(message = 'Authentication failed', details?: JSONObject) {
         super(message, 'AUTHENTICATION_ERROR', 401, details, 'authentication');
     }
 }
 
 export class AuthorizationError extends FrankAuthBaseError {
-    constructor(message: string = 'Access denied', details?: JSONObject) {
+    constructor(message = 'Access denied', details?: JSONObject) {
         super(message, 'AUTHORIZATION_ERROR', 403, details, 'authorization');
     }
 }
@@ -56,7 +56,7 @@ export class ValidationError extends FrankAuthBaseError {
     public readonly fieldErrors: Record<string, string[]>;
 
     constructor(
-        message: string = 'Validation failed',
+        message = 'Validation failed',
         fieldErrors: Record<string, string[]> = {},
         details?: JSONObject
     ) {
@@ -82,8 +82,8 @@ export class NetworkError extends FrankAuthBaseError {
     public readonly isRetryable: boolean;
 
     constructor(
-        message: string = 'Network request failed',
-        isRetryable: boolean = true,
+        message = 'Network request failed',
+        isRetryable = true,
         details?: JSONObject
     ) {
         super(message, 'NETWORK_ERROR', undefined, details, 'network');
@@ -92,7 +92,7 @@ export class NetworkError extends FrankAuthBaseError {
 }
 
 export class TimeoutError extends FrankAuthBaseError {
-    constructor(message: string = 'Request timed out', details?: JSONObject) {
+    constructor(message = 'Request timed out', details?: JSONObject) {
         super(message, 'TIMEOUT_ERROR', 408, details, 'timeout');
     }
 }
@@ -101,7 +101,7 @@ export class RateLimitError extends FrankAuthBaseError {
     public readonly retryAfter?: number;
 
     constructor(
-        message: string = 'Rate limit exceeded',
+        message = 'Rate limit exceeded',
         retryAfter?: number,
         details?: JSONObject
     ) {
@@ -111,19 +111,19 @@ export class RateLimitError extends FrankAuthBaseError {
 }
 
 export class ServerError extends FrankAuthBaseError {
-    constructor(message: string = 'Internal server error', details?: JSONObject) {
+    constructor(message = 'Internal server error', details?: JSONObject) {
         super(message, 'SERVER_ERROR', 500, details, 'server');
     }
 }
 
 export class ConfigurationError extends FrankAuthBaseError {
-    constructor(message: string = 'Configuration error', details?: JSONObject) {
+    constructor(message = 'Configuration error', details?: JSONObject) {
         super(message, 'CONFIGURATION_ERROR', undefined, details, 'configuration');
     }
 }
 
 export class SessionError extends FrankAuthBaseError {
-    constructor(message: string = 'Session error', details?: JSONObject) {
+    constructor(message = 'Session error', details?: JSONObject) {
         super(message, 'SESSION_ERROR', 401, details, 'session');
     }
 }
@@ -132,7 +132,7 @@ export class MFAError extends FrankAuthBaseError {
     public readonly challenge?: any;
 
     constructor(
-        message: string = 'Multi-factor authentication required',
+        message = 'Multi-factor authentication required',
         challenge?: any,
         details?: JSONObject
     ) {
@@ -142,7 +142,7 @@ export class MFAError extends FrankAuthBaseError {
 }
 
 export class PasskeyError extends FrankAuthBaseError {
-    constructor(message: string = 'Passkey operation failed', details?: JSONObject) {
+    constructor(message = 'Passkey operation failed', details?: JSONObject) {
         super(message, 'PASSKEY_ERROR', undefined, details, 'passkey');
     }
 }
@@ -152,7 +152,7 @@ export class OAuthError extends FrankAuthBaseError {
     public readonly errorCode?: string;
 
     constructor(
-        message: string = 'OAuth authentication failed',
+        message = 'OAuth authentication failed',
         provider?: string,
         errorCode?: string,
         details?: JSONObject
@@ -164,13 +164,13 @@ export class OAuthError extends FrankAuthBaseError {
 }
 
 export class OrganizationError extends FrankAuthBaseError {
-    constructor(message: string = 'Organization error', details?: JSONObject) {
+    constructor(message = 'Organization error', details?: JSONObject) {
         super(message, 'ORGANIZATION_ERROR', 400, details, 'organization');
     }
 }
 
 export class InvitationError extends FrankAuthBaseError {
-    constructor(message: string = 'Invitation error', details?: JSONObject) {
+    constructor(message = 'Invitation error', details?: JSONObject) {
         super(message, 'INVITATION_ERROR', 400, details, 'invitation');
     }
 }

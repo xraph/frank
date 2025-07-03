@@ -110,7 +110,7 @@ export function ControlStatusToJSON(json: any): ControlStatus {
     return ControlStatusToJSONTyped(json, false);
 }
 
-export function ControlStatusToJSONTyped(value?: ControlStatus | null, ignoreDiscriminator: boolean = false): any {
+export function ControlStatusToJSONTyped(value?: ControlStatus | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

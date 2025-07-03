@@ -6,7 +6,8 @@
 
 'use client';
 
-import React, {useCallback} from 'react';
+import type React from 'react';
+import {useCallback} from 'react';
 import {Button} from '@heroui/react';
 import {ArrowRightOnRectangleIcon, LockClosedIcon, UserIcon} from '@heroicons/react/24/outline';
 

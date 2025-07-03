@@ -85,7 +85,7 @@ export function UsageOverageToJSON(json: any): UsageOverage {
     return UsageOverageToJSONTyped(json, false);
 }
 
-export function UsageOverageToJSONTyped(value?: UsageOverage | null, ignoreDiscriminator: boolean = false): any {
+export function UsageOverageToJSONTyped(value?: UsageOverage | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

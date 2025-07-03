@@ -69,7 +69,7 @@ export function FeatureVariationStatsToJSON(json: any): FeatureVariationStats {
     return FeatureVariationStatsToJSONTyped(json, false);
 }
 
-export function FeatureVariationStatsToJSONTyped(value?: FeatureVariationStats | null, ignoreDiscriminator: boolean = false): any {
+export function FeatureVariationStatsToJSONTyped(value?: FeatureVariationStats | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

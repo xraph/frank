@@ -87,7 +87,7 @@ export function StorageMetricsToJSON(json: any): StorageMetrics {
     return StorageMetricsToJSONTyped(json, false);
 }
 
-export function StorageMetricsToJSONTyped(value?: StorageMetrics | null, ignoreDiscriminator: boolean = false): any {
+export function StorageMetricsToJSONTyped(value?: StorageMetrics | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -75,7 +75,7 @@ export function UpdateOAuthScopeRequestToJSON(json: any): UpdateOAuthScopeReques
     return UpdateOAuthScopeRequestToJSONTyped(json, false);
 }
 
-export function UpdateOAuthScopeRequestToJSONTyped(value?: Omit<UpdateOAuthScopeRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function UpdateOAuthScopeRequestToJSONTyped(value?: Omit<UpdateOAuthScopeRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

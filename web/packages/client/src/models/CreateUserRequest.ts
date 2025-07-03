@@ -223,7 +223,7 @@ export function CreateUserRequestToJSON(json: any): CreateUserRequest {
     return CreateUserRequestToJSONTyped(json, false);
 }
 
-export function CreateUserRequestToJSONTyped(value?: Omit<CreateUserRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function CreateUserRequestToJSONTyped(value?: Omit<CreateUserRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

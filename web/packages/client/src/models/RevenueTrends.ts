@@ -127,7 +127,7 @@ export function RevenueTrendsToJSON(json: any): RevenueTrends {
     return RevenueTrendsToJSONTyped(json, false);
 }
 
-export function RevenueTrendsToJSONTyped(value?: RevenueTrends | null, ignoreDiscriminator: boolean = false): any {
+export function RevenueTrendsToJSONTyped(value?: RevenueTrends | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

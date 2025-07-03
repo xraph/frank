@@ -101,7 +101,7 @@ export function AnomalyToJSON(json: any): Anomaly {
     return AnomalyToJSONTyped(json, false);
 }
 
-export function AnomalyToJSONTyped(value?: Anomaly | null, ignoreDiscriminator: boolean = false): any {
+export function AnomalyToJSONTyped(value?: Anomaly | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

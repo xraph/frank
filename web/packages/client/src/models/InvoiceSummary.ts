@@ -116,7 +116,7 @@ export function InvoiceSummaryToJSON(json: any): InvoiceSummary {
     return InvoiceSummaryToJSONTyped(json, false);
 }
 
-export function InvoiceSummaryToJSONTyped(value?: InvoiceSummary | null, ignoreDiscriminator: boolean = false): any {
+export function InvoiceSummaryToJSONTyped(value?: InvoiceSummary | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

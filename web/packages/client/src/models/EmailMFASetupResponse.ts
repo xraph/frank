@@ -94,7 +94,7 @@ export function EmailMFASetupResponseToJSON(json: any): EmailMFASetupResponse {
     return EmailMFASetupResponseToJSONTyped(json, false);
 }
 
-export function EmailMFASetupResponseToJSONTyped(value?: Omit<EmailMFASetupResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function EmailMFASetupResponseToJSONTyped(value?: Omit<EmailMFASetupResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

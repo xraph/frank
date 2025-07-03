@@ -69,7 +69,7 @@ export function RiskDataPointToJSON(json: any): RiskDataPoint {
     return RiskDataPointToJSONTyped(json, false);
 }
 
-export function RiskDataPointToJSONTyped(value?: RiskDataPoint | null, ignoreDiscriminator: boolean = false): any {
+export function RiskDataPointToJSONTyped(value?: RiskDataPoint | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -99,7 +99,7 @@ export function SubscriptionUsageToJSON(json: any): SubscriptionUsage {
     return SubscriptionUsageToJSONTyped(json, false);
 }
 
-export function SubscriptionUsageToJSONTyped(value?: SubscriptionUsage | null, ignoreDiscriminator: boolean = false): any {
+export function SubscriptionUsageToJSONTyped(value?: SubscriptionUsage | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

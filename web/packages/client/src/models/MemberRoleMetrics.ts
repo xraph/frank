@@ -101,7 +101,7 @@ export function MemberRoleMetricsToJSON(json: any): MemberRoleMetrics {
     return MemberRoleMetricsToJSONTyped(json, false);
 }
 
-export function MemberRoleMetricsToJSONTyped(value?: MemberRoleMetrics | null, ignoreDiscriminator: boolean = false): any {
+export function MemberRoleMetricsToJSONTyped(value?: MemberRoleMetrics | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

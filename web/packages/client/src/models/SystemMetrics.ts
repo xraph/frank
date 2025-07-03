@@ -151,7 +151,7 @@ export function SystemMetricsToJSON(json: any): SystemMetrics {
     return SystemMetricsToJSONTyped(json, false);
 }
 
-export function SystemMetricsToJSONTyped(value?: Omit<SystemMetrics, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function SystemMetricsToJSONTyped(value?: Omit<SystemMetrics, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

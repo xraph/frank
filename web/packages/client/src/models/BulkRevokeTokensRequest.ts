@@ -87,7 +87,7 @@ export function BulkRevokeTokensRequestToJSON(json: any): BulkRevokeTokensReques
     return BulkRevokeTokensRequestToJSONTyped(json, false);
 }
 
-export function BulkRevokeTokensRequestToJSONTyped(value?: Omit<BulkRevokeTokensRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function BulkRevokeTokensRequestToJSONTyped(value?: Omit<BulkRevokeTokensRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

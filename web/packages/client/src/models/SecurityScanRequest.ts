@@ -98,7 +98,7 @@ export function SecurityScanRequestToJSON(json: any): SecurityScanRequest {
     return SecurityScanRequestToJSONTyped(json, false);
 }
 
-export function SecurityScanRequestToJSONTyped(value?: Omit<SecurityScanRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function SecurityScanRequestToJSONTyped(value?: Omit<SecurityScanRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

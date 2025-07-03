@@ -76,7 +76,7 @@ export function WebhookDeliveryRetryResponseToJSON(json: any): WebhookDeliveryRe
     return WebhookDeliveryRetryResponseToJSONTyped(json, false);
 }
 
-export function WebhookDeliveryRetryResponseToJSONTyped(value?: Omit<WebhookDeliveryRetryResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function WebhookDeliveryRetryResponseToJSONTyped(value?: Omit<WebhookDeliveryRetryResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

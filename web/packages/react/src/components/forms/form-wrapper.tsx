@@ -15,7 +15,7 @@ import {useTheme} from '../../hooks/use-theme';
 import {useConfig} from '../../hooks/use-config';
 import {FieldError} from './field-error';
 import {getTitleAlignment} from "@/utils";
-import {RadiusT, SizeT} from "@/types";
+import type {RadiusT, SizeT} from "@/types";
 
 // ============================================================================
 // Form Context

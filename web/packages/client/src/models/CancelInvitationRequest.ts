@@ -59,7 +59,7 @@ export function CancelInvitationRequestToJSON(json: any): CancelInvitationReques
     return CancelInvitationRequestToJSONTyped(json, false);
 }
 
-export function CancelInvitationRequestToJSONTyped(value?: Omit<CancelInvitationRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function CancelInvitationRequestToJSONTyped(value?: Omit<CancelInvitationRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

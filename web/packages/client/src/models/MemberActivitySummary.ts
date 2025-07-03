@@ -109,7 +109,7 @@ export function MemberActivitySummaryToJSON(json: any): MemberActivitySummary {
     return MemberActivitySummaryToJSONTyped(json, false);
 }
 
-export function MemberActivitySummaryToJSONTyped(value?: MemberActivitySummary | null, ignoreDiscriminator: boolean = false): any {
+export function MemberActivitySummaryToJSONTyped(value?: MemberActivitySummary | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

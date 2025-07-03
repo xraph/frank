@@ -169,7 +169,7 @@ export function InvitationSummaryToJSON(json: any): InvitationSummary {
     return InvitationSummaryToJSONTyped(json, false);
 }
 
-export function InvitationSummaryToJSONTyped(value?: InvitationSummary | null, ignoreDiscriminator: boolean = false): any {
+export function InvitationSummaryToJSONTyped(value?: InvitationSummary | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

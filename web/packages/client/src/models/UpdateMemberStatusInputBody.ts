@@ -67,7 +67,7 @@ export function UpdateMemberStatusInputBodyToJSON(json: any): UpdateMemberStatus
     return UpdateMemberStatusInputBodyToJSONTyped(json, false);
 }
 
-export function UpdateMemberStatusInputBodyToJSONTyped(value?: Omit<UpdateMemberStatusInputBody, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function UpdateMemberStatusInputBodyToJSONTyped(value?: Omit<UpdateMemberStatusInputBody, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

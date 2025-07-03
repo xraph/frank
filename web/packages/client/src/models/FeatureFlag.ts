@@ -226,7 +226,7 @@ export function FeatureFlagToJSON(json: any): FeatureFlag {
     return FeatureFlagToJSONTyped(json, false);
 }
 
-export function FeatureFlagToJSONTyped(value?: Omit<FeatureFlag, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function FeatureFlagToJSONTyped(value?: Omit<FeatureFlag, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

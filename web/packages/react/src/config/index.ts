@@ -48,7 +48,7 @@ import {AppearanceManager} from './appearance';
 import {LocalizationManager} from './localization';
 import {OrganizationConfigManager, transformOrganizationSettings} from './organization';
 import {ThemeManager} from './theme';
-import {ConfigValidationResult, FrankAuthUIConfig, OrganizationConfig, UserType} from './types';
+import type {ConfigValidationResult, FrankAuthUIConfig, OrganizationConfig, UserType} from './types';
 import {CONFIG_PRESETS, DEFAULT_FRANK_AUTH_CONFIG,} from './defaults';
 import {
     assertValidConfig,

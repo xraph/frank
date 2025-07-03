@@ -133,7 +133,7 @@ export function ProcessingRecordToJSON(json: any): ProcessingRecord {
     return ProcessingRecordToJSONTyped(json, false);
 }
 
-export function ProcessingRecordToJSONTyped(value?: ProcessingRecord | null, ignoreDiscriminator: boolean = false): any {
+export function ProcessingRecordToJSONTyped(value?: ProcessingRecord | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

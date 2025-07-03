@@ -101,7 +101,7 @@ export function PenetrationTestToJSON(json: any): PenetrationTest {
     return PenetrationTestToJSONTyped(json, false);
 }
 
-export function PenetrationTestToJSONTyped(value?: PenetrationTest | null, ignoreDiscriminator: boolean = false): any {
+export function PenetrationTestToJSONTyped(value?: PenetrationTest | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

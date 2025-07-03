@@ -81,7 +81,7 @@ export function SetupMFARequestToJSON(json: any): SetupMFARequest {
     return SetupMFARequestToJSONTyped(json, false);
 }
 
-export function SetupMFARequestToJSONTyped(value?: Omit<SetupMFARequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function SetupMFARequestToJSONTyped(value?: Omit<SetupMFARequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -194,7 +194,7 @@ export function ActivityStatsToJSON(json: any): ActivityStats {
     return ActivityStatsToJSONTyped(json, false);
 }
 
-export function ActivityStatsToJSONTyped(value?: Omit<ActivityStats, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function ActivityStatsToJSONTyped(value?: Omit<ActivityStats, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

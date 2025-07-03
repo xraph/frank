@@ -112,7 +112,7 @@ export function PlatformOrganizationStatsToJSON(json: any): PlatformOrganization
     return PlatformOrganizationStatsToJSONTyped(json, false);
 }
 
-export function PlatformOrganizationStatsToJSONTyped(value?: Omit<PlatformOrganizationStats, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function PlatformOrganizationStatsToJSONTyped(value?: Omit<PlatformOrganizationStats, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

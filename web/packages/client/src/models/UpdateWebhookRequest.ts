@@ -117,7 +117,7 @@ export function UpdateWebhookRequestToJSON(json: any): UpdateWebhookRequest {
     return UpdateWebhookRequestToJSONTyped(json, false);
 }
 
-export function UpdateWebhookRequestToJSONTyped(value?: Omit<UpdateWebhookRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function UpdateWebhookRequestToJSONTyped(value?: Omit<UpdateWebhookRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

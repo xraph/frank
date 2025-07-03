@@ -80,7 +80,7 @@ export function OrganizationFilterSummaryToJSON(json: any): OrganizationFilterSu
     return OrganizationFilterSummaryToJSONTyped(json, false);
 }
 
-export function OrganizationFilterSummaryToJSONTyped(value?: OrganizationFilterSummary | null, ignoreDiscriminator: boolean = false): any {
+export function OrganizationFilterSummaryToJSONTyped(value?: OrganizationFilterSummary | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

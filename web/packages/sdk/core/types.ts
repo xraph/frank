@@ -1,5 +1,6 @@
-import {Session, SessionInfo, User, UserType} from '@frank-auth/client';
-import {FrankAuthError} from "./errors";
+import type {Session, SessionInfo, User, UserType} from '@frank-auth/client';
+import type {FrankAuthError} from "./errors";
+import type { StorageManager, StorageType } from './storage';
 
 // Re-export types from the generated client
 export type {
@@ -34,6 +35,13 @@ export type {
     AuthProvider,
 } from '@frank-auth/client';
 
+// Common utility types
+export type XID = string; // Frank Auth uses XID format for all IDs
+export type Timestamp = string; // ISO 8601 timestamp
+export type JSONValue = string | number | boolean | null | JSONObject | JSONArray;
+export type JSONObject = { [key: string]: JSONValue };
+export type JSONArray = JSONValue[];
+
 // Configuration interface
 export interface FrankAuthConfig {
     apiUrl?: string;
@@ -44,6 +52,8 @@ export interface FrankAuthConfig {
     enableDevMode?: boolean;
     sessionCookieName?: string;
     storageKeyPrefix?: string;
+    storage?: StorageManager;
+    storageType?: StorageType;
 }
 
 // Default configuration

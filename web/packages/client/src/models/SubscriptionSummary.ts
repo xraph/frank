@@ -147,7 +147,7 @@ export function SubscriptionSummaryToJSON(json: any): SubscriptionSummary {
     return SubscriptionSummaryToJSONTyped(json, false);
 }
 
-export function SubscriptionSummaryToJSONTyped(value?: SubscriptionSummary | null, ignoreDiscriminator: boolean = false): any {
+export function SubscriptionSummaryToJSONTyped(value?: SubscriptionSummary | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

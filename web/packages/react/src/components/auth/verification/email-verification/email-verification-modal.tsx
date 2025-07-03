@@ -5,7 +5,7 @@
 
 import {Modal, ModalBody, ModalContent, ModalHeader} from "@heroui/react";
 import React from "react";
-import {EmailVerification, EmailVerificationModalProps} from "./email-verification";
+import {EmailVerification, type EmailVerificationModalProps} from "./email-verification";
 import {withErrorBoundary} from "@/components/auth/common";
 
 export const EmailVerificationModal = withErrorBoundary(function EmailVerificationModal({

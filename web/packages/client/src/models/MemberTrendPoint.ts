@@ -85,7 +85,7 @@ export function MemberTrendPointToJSON(json: any): MemberTrendPoint {
     return MemberTrendPointToJSONTyped(json, false);
 }
 
-export function MemberTrendPointToJSONTyped(value?: MemberTrendPoint | null, ignoreDiscriminator: boolean = false): any {
+export function MemberTrendPointToJSONTyped(value?: MemberTrendPoint | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

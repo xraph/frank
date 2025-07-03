@@ -84,7 +84,7 @@ export function PasskeyExportResponseToJSON(json: any): PasskeyExportResponse {
     return PasskeyExportResponseToJSONTyped(json, false);
 }
 
-export function PasskeyExportResponseToJSONTyped(value?: Omit<PasskeyExportResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function PasskeyExportResponseToJSONTyped(value?: Omit<PasskeyExportResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

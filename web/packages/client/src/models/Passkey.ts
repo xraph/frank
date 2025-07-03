@@ -205,7 +205,7 @@ export function PasskeyToJSON(json: any): Passkey {
     return PasskeyToJSONTyped(json, false);
 }
 
-export function PasskeyToJSONTyped(value?: Omit<Passkey, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function PasskeyToJSONTyped(value?: Omit<Passkey, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -126,7 +126,7 @@ export function ComplianceControlToJSON(json: any): ComplianceControl {
     return ComplianceControlToJSONTyped(json, false);
 }
 
-export function ComplianceControlToJSONTyped(value?: ComplianceControl | null, ignoreDiscriminator: boolean = false): any {
+export function ComplianceControlToJSONTyped(value?: ComplianceControl | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

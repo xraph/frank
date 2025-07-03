@@ -60,7 +60,7 @@ export function SSODomainVerificationRequestToJSON(json: any): SSODomainVerifica
     return SSODomainVerificationRequestToJSONTyped(json, false);
 }
 
-export function SSODomainVerificationRequestToJSONTyped(value?: Omit<SSODomainVerificationRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function SSODomainVerificationRequestToJSONTyped(value?: Omit<SSODomainVerificationRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

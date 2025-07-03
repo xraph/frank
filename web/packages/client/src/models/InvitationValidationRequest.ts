@@ -60,7 +60,7 @@ export function InvitationValidationRequestToJSON(json: any): InvitationValidati
     return InvitationValidationRequestToJSONTyped(json, false);
 }
 
-export function InvitationValidationRequestToJSONTyped(value?: Omit<InvitationValidationRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function InvitationValidationRequestToJSONTyped(value?: Omit<InvitationValidationRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

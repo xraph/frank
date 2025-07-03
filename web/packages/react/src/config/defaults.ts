@@ -6,21 +6,21 @@
  */
 
 import {
-    AppearanceConfig,
-    AppearanceMode,
-    BrandingConfig,
-    ComponentAppearance,
-    ComponentSize,
-    FrankAuthUIConfig,
-    LocalizationConfig,
-    OrganizationConfig,
-    Theme,
+    type AppearanceConfig,
+    type AppearanceMode,
+    type BrandingConfig,
+    type ComponentAppearance,
+    type ComponentSize,
+    type FrankAuthUIConfig,
+    type LocalizationConfig,
+    type OrganizationConfig,
+    type Theme,
     ThemeUtils,
-    Typography,
-    UserType,
+    type Typography,
+    type UserType,
 } from './types';
 import {AVAILABLE_LOCALES, DEFAULT_LOCALE, getLocale} from "../locales";
-import {Animations, BorderRadius, LayoutConfig, Shadows, Spacing, ThemeColors} from "../types";
+import type {Animations, BorderRadius, LayoutConfig, Shadows, Spacing, ThemeColors} from "../types";
 
 // ============================================================================
 // Default Color Palette (Based on HeroUI)

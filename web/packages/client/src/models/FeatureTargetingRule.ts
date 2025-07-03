@@ -91,7 +91,7 @@ export function FeatureTargetingRuleToJSON(json: any): FeatureTargetingRule {
     return FeatureTargetingRuleToJSONTyped(json, false);
 }
 
-export function FeatureTargetingRuleToJSONTyped(value?: FeatureTargetingRule | null, ignoreDiscriminator: boolean = false): any {
+export function FeatureTargetingRuleToJSONTyped(value?: FeatureTargetingRule | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

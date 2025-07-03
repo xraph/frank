@@ -91,7 +91,7 @@ export function BulkUserOperationResponseToJSON(json: any): BulkUserOperationRes
     return BulkUserOperationResponseToJSONTyped(json, false);
 }
 
-export function BulkUserOperationResponseToJSONTyped(value?: Omit<BulkUserOperationResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function BulkUserOperationResponseToJSONTyped(value?: Omit<BulkUserOperationResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

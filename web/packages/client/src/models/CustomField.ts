@@ -93,7 +93,7 @@ export function CustomFieldToJSON(json: any): CustomField {
     return CustomFieldToJSONTyped(json, false);
 }
 
-export function CustomFieldToJSONTyped(value?: CustomField | null, ignoreDiscriminator: boolean = false): any {
+export function CustomFieldToJSONTyped(value?: CustomField | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

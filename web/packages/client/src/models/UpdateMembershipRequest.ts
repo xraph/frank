@@ -96,7 +96,7 @@ export function UpdateMembershipRequestToJSON(json: any): UpdateMembershipReques
     return UpdateMembershipRequestToJSONTyped(json, false);
 }
 
-export function UpdateMembershipRequestToJSONTyped(value?: Omit<UpdateMembershipRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function UpdateMembershipRequestToJSONTyped(value?: Omit<UpdateMembershipRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

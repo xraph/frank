@@ -85,7 +85,7 @@ export function MonthlyRevenueTrendToJSON(json: any): MonthlyRevenueTrend {
     return MonthlyRevenueTrendToJSONTyped(json, false);
 }
 
-export function MonthlyRevenueTrendToJSONTyped(value?: MonthlyRevenueTrend | null, ignoreDiscriminator: boolean = false): any {
+export function MonthlyRevenueTrendToJSONTyped(value?: MonthlyRevenueTrend | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -92,7 +92,7 @@ export function DependencyHealthToJSON(json: any): DependencyHealth {
     return DependencyHealthToJSONTyped(json, false);
 }
 
-export function DependencyHealthToJSONTyped(value?: DependencyHealth | null, ignoreDiscriminator: boolean = false): any {
+export function DependencyHealthToJSONTyped(value?: DependencyHealth | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

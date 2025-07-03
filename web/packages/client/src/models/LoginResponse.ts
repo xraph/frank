@@ -158,7 +158,7 @@ export function LoginResponseToJSON(json: any): LoginResponse {
     return LoginResponseToJSONTyped(json, false);
 }
 
-export function LoginResponseToJSONTyped(value?: Omit<LoginResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function LoginResponseToJSONTyped(value?: Omit<LoginResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

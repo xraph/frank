@@ -101,7 +101,7 @@ export function MFASetupVerifyResponseToJSON(json: any): MFASetupVerifyResponse 
     return MFASetupVerifyResponseToJSONTyped(json, false);
 }
 
-export function MFASetupVerifyResponseToJSONTyped(value?: Omit<MFASetupVerifyResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function MFASetupVerifyResponseToJSONTyped(value?: Omit<MFASetupVerifyResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

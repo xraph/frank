@@ -66,7 +66,7 @@ export function PasskeyAuthenticationBeginRequestToJSON(json: any): PasskeyAuthe
     return PasskeyAuthenticationBeginRequestToJSONTyped(json, false);
 }
 
-export function PasskeyAuthenticationBeginRequestToJSONTyped(value?: Omit<PasskeyAuthenticationBeginRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function PasskeyAuthenticationBeginRequestToJSONTyped(value?: Omit<PasskeyAuthenticationBeginRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

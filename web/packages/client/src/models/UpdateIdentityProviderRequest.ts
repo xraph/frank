@@ -124,7 +124,7 @@ export function UpdateIdentityProviderRequestToJSON(json: any): UpdateIdentityPr
     return UpdateIdentityProviderRequestToJSONTyped(json, false);
 }
 
-export function UpdateIdentityProviderRequestToJSONTyped(value?: Omit<UpdateIdentityProviderRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function UpdateIdentityProviderRequestToJSONTyped(value?: Omit<UpdateIdentityProviderRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

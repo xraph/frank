@@ -69,7 +69,7 @@ export function SecurityIncidentCountToJSON(json: any): SecurityIncidentCount {
     return SecurityIncidentCountToJSONTyped(json, false);
 }
 
-export function SecurityIncidentCountToJSONTyped(value?: SecurityIncidentCount | null, ignoreDiscriminator: boolean = false): any {
+export function SecurityIncidentCountToJSONTyped(value?: SecurityIncidentCount | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

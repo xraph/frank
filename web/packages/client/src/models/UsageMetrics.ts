@@ -188,7 +188,7 @@ export function UsageMetricsToJSON(json: any): UsageMetrics {
     return UsageMetricsToJSONTyped(json, false);
 }
 
-export function UsageMetricsToJSONTyped(value?: Omit<UsageMetrics, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function UsageMetricsToJSONTyped(value?: Omit<UsageMetrics, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

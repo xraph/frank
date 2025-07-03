@@ -108,7 +108,7 @@ export function DataRetentionResultToJSON(json: any): DataRetentionResult {
     return DataRetentionResultToJSONTyped(json, false);
 }
 
-export function DataRetentionResultToJSONTyped(value?: Omit<DataRetentionResult, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function DataRetentionResultToJSONTyped(value?: Omit<DataRetentionResult, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

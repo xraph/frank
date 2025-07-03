@@ -68,7 +68,7 @@ export function VerifyEmailRequestBodyToJSON(json: any): VerifyEmailRequestBody 
     return VerifyEmailRequestBodyToJSONTyped(json, false);
 }
 
-export function VerifyEmailRequestBodyToJSONTyped(value?: Omit<VerifyEmailRequestBody, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function VerifyEmailRequestBodyToJSONTyped(value?: Omit<VerifyEmailRequestBody, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

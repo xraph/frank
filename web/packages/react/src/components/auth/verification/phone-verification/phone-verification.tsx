@@ -5,7 +5,8 @@
  * Integrates with Frank Auth API for SMS-based identity verification.
  */
 
-import React, {useCallback, useEffect, useState} from 'react';
+import type React from 'react';
+import {useCallback, useEffect, useState} from 'react';
 import {Button, Card, CardBody, Chip, Modal, ModalBody, ModalContent, ModalHeader} from '@heroui/react';
 import {ArrowPathIcon, CheckCircleIcon, DevicePhoneMobileIcon, XCircleIcon} from '@heroicons/react/24/outline';
 

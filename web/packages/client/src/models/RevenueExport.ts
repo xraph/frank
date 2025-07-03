@@ -77,7 +77,7 @@ export function RevenueExportToJSON(json: any): RevenueExport {
     return RevenueExportToJSONTyped(json, false);
 }
 
-export function RevenueExportToJSONTyped(value?: RevenueExport | null, ignoreDiscriminator: boolean = false): any {
+export function RevenueExportToJSONTyped(value?: RevenueExport | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

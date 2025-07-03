@@ -86,7 +86,7 @@ export function CreateOAuthScopeRequestToJSON(json: any): CreateOAuthScopeReques
     return CreateOAuthScopeRequestToJSONTyped(json, false);
 }
 
-export function CreateOAuthScopeRequestToJSONTyped(value?: Omit<CreateOAuthScopeRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function CreateOAuthScopeRequestToJSONTyped(value?: Omit<CreateOAuthScopeRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

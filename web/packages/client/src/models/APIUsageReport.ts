@@ -144,7 +144,7 @@ export function APIUsageReportToJSON(json: any): APIUsageReport {
     return APIUsageReportToJSONTyped(json, false);
 }
 
-export function APIUsageReportToJSONTyped(value?: Omit<APIUsageReport, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function APIUsageReportToJSONTyped(value?: Omit<APIUsageReport, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

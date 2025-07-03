@@ -157,7 +157,7 @@ export function ManagedOrganizationToJSON(json: any): ManagedOrganization {
     return ManagedOrganizationToJSONTyped(json, false);
 }
 
-export function ManagedOrganizationToJSONTyped(value?: ManagedOrganization | null, ignoreDiscriminator: boolean = false): any {
+export function ManagedOrganizationToJSONTyped(value?: ManagedOrganization | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

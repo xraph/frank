@@ -133,7 +133,7 @@ export function RiskItemToJSON(json: any): RiskItem {
     return RiskItemToJSONTyped(json, false);
 }
 
-export function RiskItemToJSONTyped(value?: RiskItem | null, ignoreDiscriminator: boolean = false): any {
+export function RiskItemToJSONTyped(value?: RiskItem | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

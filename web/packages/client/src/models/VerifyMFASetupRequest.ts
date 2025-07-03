@@ -84,7 +84,7 @@ export function VerifyMFASetupRequestToJSON(json: any): VerifyMFASetupRequest {
     return VerifyMFASetupRequestToJSONTyped(json, false);
 }
 
-export function VerifyMFASetupRequestToJSONTyped(value?: Omit<VerifyMFASetupRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function VerifyMFASetupRequestToJSONTyped(value?: Omit<VerifyMFASetupRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

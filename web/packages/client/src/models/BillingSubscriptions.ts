@@ -101,7 +101,7 @@ export function BillingSubscriptionsToJSON(json: any): BillingSubscriptions {
     return BillingSubscriptionsToJSONTyped(json, false);
 }
 
-export function BillingSubscriptionsToJSONTyped(value?: BillingSubscriptions | null, ignoreDiscriminator: boolean = false): any {
+export function BillingSubscriptionsToJSONTyped(value?: BillingSubscriptions | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

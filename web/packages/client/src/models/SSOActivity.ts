@@ -151,7 +151,7 @@ export function SSOActivityToJSON(json: any): SSOActivity {
     return SSOActivityToJSONTyped(json, false);
 }
 
-export function SSOActivityToJSONTyped(value?: SSOActivity | null, ignoreDiscriminator: boolean = false): any {
+export function SSOActivityToJSONTyped(value?: SSOActivity | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

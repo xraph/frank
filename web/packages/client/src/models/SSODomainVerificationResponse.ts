@@ -89,7 +89,7 @@ export function SSODomainVerificationResponseToJSON(json: any): SSODomainVerific
     return SSODomainVerificationResponseToJSONTyped(json, false);
 }
 
-export function SSODomainVerificationResponseToJSONTyped(value?: Omit<SSODomainVerificationResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function SSODomainVerificationResponseToJSONTyped(value?: Omit<SSODomainVerificationResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

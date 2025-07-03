@@ -114,7 +114,7 @@ export function WebhookExportRequestToJSON(json: any): WebhookExportRequest {
     return WebhookExportRequestToJSONTyped(json, false);
 }
 
-export function WebhookExportRequestToJSONTyped(value?: Omit<WebhookExportRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function WebhookExportRequestToJSONTyped(value?: Omit<WebhookExportRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

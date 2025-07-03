@@ -100,7 +100,7 @@ export function ComplianceEvidenceToJSON(json: any): ComplianceEvidence {
     return ComplianceEvidenceToJSONTyped(json, false);
 }
 
-export function ComplianceEvidenceToJSONTyped(value?: ComplianceEvidence | null, ignoreDiscriminator: boolean = false): any {
+export function ComplianceEvidenceToJSONTyped(value?: ComplianceEvidence | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

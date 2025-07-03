@@ -68,7 +68,7 @@ export function DomainResponseToJSON(json: any): DomainResponse {
     return DomainResponseToJSONTyped(json, false);
 }
 
-export function DomainResponseToJSONTyped(value?: Omit<DomainResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function DomainResponseToJSONTyped(value?: Omit<DomainResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -149,7 +149,7 @@ export function ControlToJSON(json: any): Control {
     return ControlToJSONTyped(json, false);
 }
 
-export function ControlToJSONTyped(value?: Control | null, ignoreDiscriminator: boolean = false): any {
+export function ControlToJSONTyped(value?: Control | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

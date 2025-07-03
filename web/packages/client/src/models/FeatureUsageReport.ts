@@ -129,7 +129,7 @@ export function FeatureUsageReportToJSON(json: any): FeatureUsageReport {
     return FeatureUsageReportToJSONTyped(json, false);
 }
 
-export function FeatureUsageReportToJSONTyped(value?: Omit<FeatureUsageReport, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function FeatureUsageReportToJSONTyped(value?: Omit<FeatureUsageReport, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

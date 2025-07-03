@@ -101,7 +101,7 @@ export function HIPAAAdministrativeToJSON(json: any): HIPAAAdministrative {
     return HIPAAAdministrativeToJSONTyped(json, false);
 }
 
-export function HIPAAAdministrativeToJSONTyped(value?: HIPAAAdministrative | null, ignoreDiscriminator: boolean = false): any {
+export function HIPAAAdministrativeToJSONTyped(value?: HIPAAAdministrative | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

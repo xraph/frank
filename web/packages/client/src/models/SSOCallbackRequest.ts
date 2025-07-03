@@ -95,7 +95,7 @@ export function SSOCallbackRequestToJSON(json: any): SSOCallbackRequest {
     return SSOCallbackRequestToJSONTyped(json, false);
 }
 
-export function SSOCallbackRequestToJSONTyped(value?: Omit<SSOCallbackRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function SSOCallbackRequestToJSONTyped(value?: Omit<SSOCallbackRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

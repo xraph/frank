@@ -5,11 +5,11 @@
  * custom color palettes, and HeroUI integration.
  */
 
-import {BrandingConfig, Theme, ThemeMode, ThemeUtils,} from './types';
+import {type BrandingConfig, type Theme, type ThemeMode, ThemeUtils,} from './types';
 
 import {DEFAULT_COLOR_PALETTE, DEFAULT_THEME_CONFIG,} from './defaults';
 import {generateColorPalette} from '../utils';
-import {ThemeColors} from '../types';
+import type {ThemeColors} from '../types';
 
 // ============================================================================
 // Theme Utilities

@@ -77,7 +77,7 @@ export function RetainedDataReasonToJSON(json: any): RetainedDataReason {
     return RetainedDataReasonToJSONTyped(json, false);
 }
 
-export function RetainedDataReasonToJSONTyped(value?: RetainedDataReason | null, ignoreDiscriminator: boolean = false): any {
+export function RetainedDataReasonToJSONTyped(value?: RetainedDataReason | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

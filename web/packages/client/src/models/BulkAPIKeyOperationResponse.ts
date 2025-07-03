@@ -90,7 +90,7 @@ export function BulkAPIKeyOperationResponseToJSON(json: any): BulkAPIKeyOperatio
     return BulkAPIKeyOperationResponseToJSONTyped(json, false);
 }
 
-export function BulkAPIKeyOperationResponseToJSONTyped(value?: Omit<BulkAPIKeyOperationResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function BulkAPIKeyOperationResponseToJSONTyped(value?: Omit<BulkAPIKeyOperationResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -237,7 +237,7 @@ export function OAuthTokenToJSON(json: any): OAuthToken {
     return OAuthTokenToJSONTyped(json, false);
 }
 
-export function OAuthTokenToJSONTyped(value?: Omit<OAuthToken, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function OAuthTokenToJSONTyped(value?: Omit<OAuthToken, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

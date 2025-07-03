@@ -85,7 +85,7 @@ export function AuditTrendToJSON(json: any): AuditTrend {
     return AuditTrendToJSONTyped(json, false);
 }
 
-export function AuditTrendToJSONTyped(value?: AuditTrend | null, ignoreDiscriminator: boolean = false): any {
+export function AuditTrendToJSONTyped(value?: AuditTrend | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

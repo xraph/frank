@@ -211,7 +211,7 @@ export function RevenueMetricsToJSON(json: any): RevenueMetrics {
     return RevenueMetricsToJSONTyped(json, false);
 }
 
-export function RevenueMetricsToJSONTyped(value?: Omit<RevenueMetrics, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function RevenueMetricsToJSONTyped(value?: Omit<RevenueMetrics, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

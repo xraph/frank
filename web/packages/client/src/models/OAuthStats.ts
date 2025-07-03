@@ -140,7 +140,7 @@ export function OAuthStatsToJSON(json: any): OAuthStats {
     return OAuthStatsToJSONTyped(json, false);
 }
 
-export function OAuthStatsToJSONTyped(value?: Omit<OAuthStats, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function OAuthStatsToJSONTyped(value?: Omit<OAuthStats, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -36,7 +36,7 @@ import type {
     SignUpResult,
     UpdateUserParams,
 } from '../provider/types';
-import {PasswordResetRequest} from "@frank-auth/sdk";
+import type {PasswordResetRequest} from "@frank-auth/sdk";
 
 // ============================================================================
 // Auth Hook Interface

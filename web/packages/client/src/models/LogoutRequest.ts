@@ -76,7 +76,7 @@ export function LogoutRequestToJSON(json: any): LogoutRequest {
     return LogoutRequestToJSONTyped(json, false);
 }
 
-export function LogoutRequestToJSONTyped(value?: Omit<LogoutRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function LogoutRequestToJSONTyped(value?: Omit<LogoutRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

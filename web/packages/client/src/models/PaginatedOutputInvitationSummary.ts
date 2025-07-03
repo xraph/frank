@@ -83,7 +83,7 @@ export function PaginatedOutputInvitationSummaryToJSON(json: any): PaginatedOutp
     return PaginatedOutputInvitationSummaryToJSONTyped(json, false);
 }
 
-export function PaginatedOutputInvitationSummaryToJSONTyped(value?: Omit<PaginatedOutputInvitationSummary, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function PaginatedOutputInvitationSummaryToJSONTyped(value?: Omit<PaginatedOutputInvitationSummary, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

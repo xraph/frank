@@ -85,7 +85,7 @@ export function AcquisitionChannelToJSON(json: any): AcquisitionChannel {
     return AcquisitionChannelToJSONTyped(json, false);
 }
 
-export function AcquisitionChannelToJSONTyped(value?: AcquisitionChannel | null, ignoreDiscriminator: boolean = false): any {
+export function AcquisitionChannelToJSONTyped(value?: AcquisitionChannel | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

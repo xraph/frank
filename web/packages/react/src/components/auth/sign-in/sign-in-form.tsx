@@ -21,7 +21,7 @@ import {usePasskeys} from '../../../hooks/use-passkeys';
 import EmailField from "@/components/forms/email-field";
 import FormWrapper from "@/components/forms/form-wrapper";
 import PasswordField from "@/components/forms/password-field";
-import {RadiusT, SizeT} from "@/types";
+import type {RadiusT, SizeT} from "@/types";
 
 // ============================================================================
 // Sign In Form Types

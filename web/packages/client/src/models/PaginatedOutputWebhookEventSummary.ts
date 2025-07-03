@@ -83,7 +83,7 @@ export function PaginatedOutputWebhookEventSummaryToJSON(json: any): PaginatedOu
     return PaginatedOutputWebhookEventSummaryToJSONTyped(json, false);
 }
 
-export function PaginatedOutputWebhookEventSummaryToJSONTyped(value?: Omit<PaginatedOutputWebhookEventSummary, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function PaginatedOutputWebhookEventSummaryToJSONTyped(value?: Omit<PaginatedOutputWebhookEventSummary, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

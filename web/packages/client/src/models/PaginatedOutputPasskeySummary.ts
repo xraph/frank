@@ -83,7 +83,7 @@ export function PaginatedOutputPasskeySummaryToJSON(json: any): PaginatedOutputP
     return PaginatedOutputPasskeySummaryToJSONTyped(json, false);
 }
 
-export function PaginatedOutputPasskeySummaryToJSONTyped(value?: Omit<PaginatedOutputPasskeySummary, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function PaginatedOutputPasskeySummaryToJSONTyped(value?: Omit<PaginatedOutputPasskeySummary, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

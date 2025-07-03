@@ -240,7 +240,7 @@ export function InvoiceToJSON(json: any): Invoice {
     return InvoiceToJSONTyped(json, false);
 }
 
-export function InvoiceToJSONTyped(value?: Invoice | null, ignoreDiscriminator: boolean = false): any {
+export function InvoiceToJSONTyped(value?: Invoice | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

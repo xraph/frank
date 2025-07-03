@@ -91,7 +91,7 @@ export function RefreshTokenResponseToJSON(json: any): RefreshTokenResponse {
     return RefreshTokenResponseToJSONTyped(json, false);
 }
 
-export function RefreshTokenResponseToJSONTyped(value?: Omit<RefreshTokenResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function RefreshTokenResponseToJSONTyped(value?: Omit<RefreshTokenResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

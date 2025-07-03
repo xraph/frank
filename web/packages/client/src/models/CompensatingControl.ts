@@ -93,7 +93,7 @@ export function CompensatingControlToJSON(json: any): CompensatingControl {
     return CompensatingControlToJSONTyped(json, false);
 }
 
-export function CompensatingControlToJSONTyped(value?: CompensatingControl | null, ignoreDiscriminator: boolean = false): any {
+export function CompensatingControlToJSONTyped(value?: CompensatingControl | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

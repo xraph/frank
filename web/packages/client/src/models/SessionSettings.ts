@@ -76,7 +76,7 @@ export function SessionSettingsToJSON(json: any): SessionSettings {
     return SessionSettingsToJSONTyped(json, false);
 }
 
-export function SessionSettingsToJSONTyped(value?: SessionSettings | null, ignoreDiscriminator: boolean = false): any {
+export function SessionSettingsToJSONTyped(value?: SessionSettings | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

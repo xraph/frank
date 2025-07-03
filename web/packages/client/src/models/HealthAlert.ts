@@ -100,7 +100,7 @@ export function HealthAlertToJSON(json: any): HealthAlert {
     return HealthAlertToJSONTyped(json, false);
 }
 
-export function HealthAlertToJSONTyped(value?: HealthAlert | null, ignoreDiscriminator: boolean = false): any {
+export function HealthAlertToJSONTyped(value?: HealthAlert | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

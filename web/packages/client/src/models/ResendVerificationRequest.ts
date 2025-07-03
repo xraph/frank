@@ -81,7 +81,7 @@ export function ResendVerificationRequestToJSON(json: any): ResendVerificationRe
     return ResendVerificationRequestToJSONTyped(json, false);
 }
 
-export function ResendVerificationRequestToJSONTyped(value?: Omit<ResendVerificationRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function ResendVerificationRequestToJSONTyped(value?: Omit<ResendVerificationRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -228,7 +228,7 @@ export function MemberSummaryToJSON(json: any): MemberSummary {
     return MemberSummaryToJSONTyped(json, false);
 }
 
-export function MemberSummaryToJSONTyped(value?: MemberSummary | null, ignoreDiscriminator: boolean = false): any {
+export function MemberSummaryToJSONTyped(value?: MemberSummary | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

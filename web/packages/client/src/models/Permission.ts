@@ -253,7 +253,7 @@ export function PermissionToJSON(json: any): Permission {
     return PermissionToJSONTyped(json, false);
 }
 
-export function PermissionToJSONTyped(value?: Omit<Permission, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function PermissionToJSONTyped(value?: Omit<Permission, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

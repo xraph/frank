@@ -60,7 +60,7 @@ export function GeneratePCIDSSReportInputBodyToJSON(json: any): GeneratePCIDSSRe
     return GeneratePCIDSSReportInputBodyToJSONTyped(json, false);
 }
 
-export function GeneratePCIDSSReportInputBodyToJSONTyped(value?: Omit<GeneratePCIDSSReportInputBody, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function GeneratePCIDSSReportInputBodyToJSONTyped(value?: Omit<GeneratePCIDSSReportInputBody, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

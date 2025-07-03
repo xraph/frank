@@ -107,7 +107,7 @@ export function UserPermissionsResponseToJSON(json: any): UserPermissionsRespons
     return UserPermissionsResponseToJSONTyped(json, false);
 }
 
-export function UserPermissionsResponseToJSONTyped(value?: Omit<UserPermissionsResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function UserPermissionsResponseToJSONTyped(value?: Omit<UserPermissionsResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

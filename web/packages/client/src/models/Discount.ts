@@ -84,7 +84,7 @@ export function DiscountToJSON(json: any): Discount {
     return DiscountToJSONTyped(json, false);
 }
 
-export function DiscountToJSONTyped(value?: Discount | null, ignoreDiscriminator: boolean = false): any {
+export function DiscountToJSONTyped(value?: Discount | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

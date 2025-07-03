@@ -93,7 +93,7 @@ export function ServiceStatusToJSON(json: any): ServiceStatus {
     return ServiceStatusToJSONTyped(json, false);
 }
 
-export function ServiceStatusToJSONTyped(value?: ServiceStatus | null, ignoreDiscriminator: boolean = false): any {
+export function ServiceStatusToJSONTyped(value?: ServiceStatus | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

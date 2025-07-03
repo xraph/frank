@@ -160,7 +160,7 @@ export function GDPRReportToJSON(json: any): GDPRReport {
     return GDPRReportToJSONTyped(json, false);
 }
 
-export function GDPRReportToJSONTyped(value?: Omit<GDPRReport, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function GDPRReportToJSONTyped(value?: Omit<GDPRReport, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -84,7 +84,7 @@ export function ComplianceAttestationToJSON(json: any): ComplianceAttestation {
     return ComplianceAttestationToJSONTyped(json, false);
 }
 
-export function ComplianceAttestationToJSONTyped(value?: ComplianceAttestation | null, ignoreDiscriminator: boolean = false): any {
+export function ComplianceAttestationToJSONTyped(value?: ComplianceAttestation | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

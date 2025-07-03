@@ -245,7 +245,7 @@ export function ProviderTemplateToJSON(json: any): ProviderTemplate {
     return ProviderTemplateToJSONTyped(json, false);
 }
 
-export function ProviderTemplateToJSONTyped(value?: Omit<ProviderTemplate, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function ProviderTemplateToJSONTyped(value?: Omit<ProviderTemplate, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

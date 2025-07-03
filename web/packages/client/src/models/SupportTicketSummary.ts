@@ -144,7 +144,7 @@ export function SupportTicketSummaryToJSON(json: any): SupportTicketSummary {
     return SupportTicketSummaryToJSONTyped(json, false);
 }
 
-export function SupportTicketSummaryToJSONTyped(value?: SupportTicketSummary | null, ignoreDiscriminator: boolean = false): any {
+export function SupportTicketSummaryToJSONTyped(value?: SupportTicketSummary | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

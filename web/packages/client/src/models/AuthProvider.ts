@@ -91,7 +91,7 @@ export function AuthProviderToJSON(json: any): AuthProvider {
     return AuthProviderToJSONTyped(json, false);
 }
 
-export function AuthProviderToJSONTyped(value?: AuthProvider | null, ignoreDiscriminator: boolean = false): any {
+export function AuthProviderToJSONTyped(value?: AuthProvider | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

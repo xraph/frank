@@ -67,7 +67,7 @@ export function SetupEmailRequestToJSON(json: any): SetupEmailRequest {
     return SetupEmailRequestToJSONTyped(json, false);
 }
 
-export function SetupEmailRequestToJSONTyped(value?: Omit<SetupEmailRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function SetupEmailRequestToJSONTyped(value?: Omit<SetupEmailRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

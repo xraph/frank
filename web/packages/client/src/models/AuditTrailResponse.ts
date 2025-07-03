@@ -93,7 +93,7 @@ export function AuditTrailResponseToJSON(json: any): AuditTrailResponse {
     return AuditTrailResponseToJSONTyped(json, false);
 }
 
-export function AuditTrailResponseToJSONTyped(value?: Omit<AuditTrailResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function AuditTrailResponseToJSONTyped(value?: Omit<AuditTrailResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

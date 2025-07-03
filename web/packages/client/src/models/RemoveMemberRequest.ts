@@ -76,7 +76,7 @@ export function RemoveMemberRequestToJSON(json: any): RemoveMemberRequest {
     return RemoveMemberRequestToJSONTyped(json, false);
 }
 
-export function RemoveMemberRequestToJSONTyped(value?: Omit<RemoveMemberRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function RemoveMemberRequestToJSONTyped(value?: Omit<RemoveMemberRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -84,7 +84,7 @@ export function SSOExportResponseToJSON(json: any): SSOExportResponse {
     return SSOExportResponseToJSONTyped(json, false);
 }
 
-export function SSOExportResponseToJSONTyped(value?: Omit<SSOExportResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function SSOExportResponseToJSONTyped(value?: Omit<SSOExportResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

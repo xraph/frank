@@ -69,7 +69,7 @@ export function CountryUserStatsToJSON(json: any): CountryUserStats {
     return CountryUserStatsToJSONTyped(json, false);
 }
 
-export function CountryUserStatsToJSONTyped(value?: CountryUserStats | null, ignoreDiscriminator: boolean = false): any {
+export function CountryUserStatsToJSONTyped(value?: CountryUserStats | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

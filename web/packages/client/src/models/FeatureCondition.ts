@@ -69,7 +69,7 @@ export function FeatureConditionToJSON(json: any): FeatureCondition {
     return FeatureConditionToJSONTyped(json, false);
 }
 
-export function FeatureConditionToJSONTyped(value?: FeatureCondition | null, ignoreDiscriminator: boolean = false): any {
+export function FeatureConditionToJSONTyped(value?: FeatureCondition | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

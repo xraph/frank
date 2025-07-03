@@ -83,7 +83,7 @@ export function PaginatedOutputOrganizationProviderToJSON(json: any): PaginatedO
     return PaginatedOutputOrganizationProviderToJSONTyped(json, false);
 }
 
-export function PaginatedOutputOrganizationProviderToJSONTyped(value?: Omit<PaginatedOutputOrganizationProvider, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function PaginatedOutputOrganizationProviderToJSONTyped(value?: Omit<PaginatedOutputOrganizationProvider, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

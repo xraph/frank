@@ -98,7 +98,7 @@ export function MaintenanceWindowListResponseToJSON(json: any): MaintenanceWindo
     return MaintenanceWindowListResponseToJSONTyped(json, false);
 }
 
-export function MaintenanceWindowListResponseToJSONTyped(value?: Omit<MaintenanceWindowListResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function MaintenanceWindowListResponseToJSONTyped(value?: Omit<MaintenanceWindowListResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

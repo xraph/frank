@@ -69,7 +69,7 @@ export function AuditRiskSummaryToJSON(json: any): AuditRiskSummary {
     return AuditRiskSummaryToJSONTyped(json, false);
 }
 
-export function AuditRiskSummaryToJSONTyped(value?: AuditRiskSummary | null, ignoreDiscriminator: boolean = false): any {
+export function AuditRiskSummaryToJSONTyped(value?: AuditRiskSummary | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

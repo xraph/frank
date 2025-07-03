@@ -113,7 +113,7 @@ export function AuditLogSummaryToJSON(json: any): AuditLogSummary {
     return AuditLogSummaryToJSONTyped(json, false);
 }
 
-export function AuditLogSummaryToJSONTyped(value?: AuditLogSummary | null, ignoreDiscriminator: boolean = false): any {
+export function AuditLogSummaryToJSONTyped(value?: AuditLogSummary | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

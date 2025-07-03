@@ -75,7 +75,7 @@ export function BulkWebhookOperationRequestToJSON(json: any): BulkWebhookOperati
     return BulkWebhookOperationRequestToJSONTyped(json, false);
 }
 
-export function BulkWebhookOperationRequestToJSONTyped(value?: Omit<BulkWebhookOperationRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function BulkWebhookOperationRequestToJSONTyped(value?: Omit<BulkWebhookOperationRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

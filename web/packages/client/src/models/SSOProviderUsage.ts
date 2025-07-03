@@ -69,7 +69,7 @@ export function SSOProviderUsageToJSON(json: any): SSOProviderUsage {
     return SSOProviderUsageToJSONTyped(json, false);
 }
 
-export function SSOProviderUsageToJSONTyped(value?: SSOProviderUsage | null, ignoreDiscriminator: boolean = false): any {
+export function SSOProviderUsageToJSONTyped(value?: SSOProviderUsage | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

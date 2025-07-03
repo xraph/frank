@@ -76,7 +76,7 @@ export function ResetUserPasswordRequestToJSON(json: any): ResetUserPasswordRequ
     return ResetUserPasswordRequestToJSONTyped(json, false);
 }
 
-export function ResetUserPasswordRequestToJSONTyped(value?: Omit<ResetUserPasswordRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function ResetUserPasswordRequestToJSONTyped(value?: Omit<ResetUserPasswordRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -67,7 +67,7 @@ export function BulkRemoveMembersInputBodyToJSON(json: any): BulkRemoveMembersIn
     return BulkRemoveMembersInputBodyToJSONTyped(json, false);
 }
 
-export function BulkRemoveMembersInputBodyToJSONTyped(value?: Omit<BulkRemoveMembersInputBody, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function BulkRemoveMembersInputBodyToJSONTyped(value?: Omit<BulkRemoveMembersInputBody, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

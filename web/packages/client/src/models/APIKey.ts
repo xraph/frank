@@ -274,7 +274,7 @@ export function APIKeyToJSON(json: any): APIKey {
     return APIKeyToJSONTyped(json, false);
 }
 
-export function APIKeyToJSONTyped(value?: Omit<APIKey, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function APIKeyToJSONTyped(value?: Omit<APIKey, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

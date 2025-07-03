@@ -4,7 +4,7 @@ import type {XID} from '../types';
 export const formatDate = (
     date: Date | string | number,
     options: Intl.DateTimeFormatOptions = {},
-    locale: string = 'en'
+    locale = 'en'
 ): string => {
     try {
         const dateObj = typeof date === 'string' || typeof date === 'number'
@@ -31,7 +31,7 @@ export const formatDate = (
 export const formatDateTime = (
     date: Date | string | number,
     options: Intl.DateTimeFormatOptions = {},
-    locale: string = 'en'
+    locale = 'en'
 ): string => {
     const defaultOptions: Intl.DateTimeFormatOptions = {
         year: 'numeric',
@@ -48,7 +48,7 @@ export const formatDateTime = (
 export const formatTime = (
     date: Date | string | number,
     options: Intl.DateTimeFormatOptions = {},
-    locale: string = 'en'
+    locale = 'en'
 ): string => {
     const defaultOptions: Intl.DateTimeFormatOptions = {
         hour: 'numeric',
@@ -63,7 +63,7 @@ export const formatTime = (
 
 export const formatRelativeTime = (
     date: Date | string | number,
-    locale: string = 'en'
+    locale = 'en'
 ): string => {
     try {
         const dateObj = typeof date === 'string' || typeof date === 'number'
@@ -144,7 +144,7 @@ export const formatTimeAgo = (date: Date | string | number): string => {
 export const formatNumber = (
     value: number,
     options: Intl.NumberFormatOptions = {},
-    locale: string = 'en'
+    locale = 'en'
 ): string => {
     try {
         return new Intl.NumberFormat(locale, options).format(value);
@@ -155,8 +155,8 @@ export const formatNumber = (
 
 export const formatCurrency = (
     amount: number,
-    currency: string = 'USD',
-    locale: string = 'en'
+    currency = 'USD',
+    locale = 'en'
 ): string => {
     return formatNumber(amount, {
         style: 'currency',
@@ -166,8 +166,8 @@ export const formatCurrency = (
 
 export const formatPercentage = (
     value: number,
-    decimals: number = 1,
-    locale: string = 'en'
+    decimals = 1,
+    locale = 'en'
 ): string => {
     return formatNumber(value / 100, {
         style: 'percent',
@@ -183,12 +183,12 @@ export const formatFileSize = (bytes: number): string => {
     const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
 
-    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
+    return `${Number.parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
 };
 
 export const formatCompactNumber = (
     value: number,
-    locale: string = 'en'
+    locale = 'en'
 ): string => {
     if (Math.abs(value) < 1000) {
         return value.toString();
@@ -205,7 +205,7 @@ export const formatCompactNumber = (
         const sizes = ['', 'K', 'M', 'B', 'T'];
         const i = Math.floor(Math.log(Math.abs(value)) / Math.log(k));
 
-        return `${parseFloat((value / Math.pow(k, i)).toFixed(1))}${sizes[i]}`;
+        return `${Number.parseFloat((value / Math.pow(k, i)).toFixed(1))}${sizes[i]}`;
     }
 };
 
@@ -327,7 +327,7 @@ export const maskPhoneNumber = (phone: string): string => {
 export const truncateText = (
     text: string,
     maxLength: number,
-    suffix: string = '...'
+    suffix = '...'
 ): string => {
     if (text.length <= maxLength) return text;
 
@@ -338,7 +338,7 @@ export const truncateText = (
 export const truncateMiddle = (
     text: string,
     maxLength: number,
-    separator: string = '...'
+    separator = '...'
 ): string => {
     if (text.length <= maxLength) return text;
 
@@ -468,8 +468,8 @@ export const formatList = (
 // JSON formatting utilities
 export const formatJSON = (
     obj: any,
-    indent: number = 2,
-    maxDepth: number = 10
+    indent = 2,
+    maxDepth = 10
 ): string => {
     try {
         return JSON.stringify(obj, null, indent);

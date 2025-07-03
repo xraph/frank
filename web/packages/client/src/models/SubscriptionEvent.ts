@@ -93,7 +93,7 @@ export function SubscriptionEventToJSON(json: any): SubscriptionEvent {
     return SubscriptionEventToJSONTyped(json, false);
 }
 
-export function SubscriptionEventToJSONTyped(value?: SubscriptionEvent | null, ignoreDiscriminator: boolean = false): any {
+export function SubscriptionEventToJSONTyped(value?: SubscriptionEvent | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

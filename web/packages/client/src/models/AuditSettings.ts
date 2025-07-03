@@ -77,7 +77,7 @@ export function AuditSettingsToJSON(json: any): AuditSettings {
     return AuditSettingsToJSONTyped(json, false);
 }
 
-export function AuditSettingsToJSONTyped(value?: AuditSettings | null, ignoreDiscriminator: boolean = false): any {
+export function AuditSettingsToJSONTyped(value?: AuditSettings | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

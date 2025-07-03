@@ -184,7 +184,7 @@ export function CreatePermissionRequestToJSON(json: any): CreatePermissionReques
     return CreatePermissionRequestToJSONTyped(json, false);
 }
 
-export function CreatePermissionRequestToJSONTyped(value?: Omit<CreatePermissionRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function CreatePermissionRequestToJSONTyped(value?: Omit<CreatePermissionRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

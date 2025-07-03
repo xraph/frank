@@ -93,7 +93,7 @@ export function PlatformSecurityStatsToJSON(json: any): PlatformSecurityStats {
     return PlatformSecurityStatsToJSONTyped(json, false);
 }
 
-export function PlatformSecurityStatsToJSONTyped(value?: PlatformSecurityStats | null, ignoreDiscriminator: boolean = false): any {
+export function PlatformSecurityStatsToJSONTyped(value?: PlatformSecurityStats | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

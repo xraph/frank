@@ -93,7 +93,7 @@ export function BillingForecastToJSON(json: any): BillingForecast {
     return BillingForecastToJSONTyped(json, false);
 }
 
-export function BillingForecastToJSONTyped(value?: BillingForecast | null, ignoreDiscriminator: boolean = false): any {
+export function BillingForecastToJSONTyped(value?: BillingForecast | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

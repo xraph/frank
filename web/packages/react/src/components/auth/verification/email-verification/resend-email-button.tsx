@@ -6,7 +6,7 @@
 import {Button} from "@heroui/react";
 import {ArrowPathIcon} from "@heroicons/react/24/outline";
 import React from "react";
-import {ResendEmailButtonProps} from "./email-verification";
+import type {ResendEmailButtonProps} from "./email-verification";
 import {withErrorBoundary} from "@/components";
 
 export const ResendEmailButton = withErrorBoundary(function ResendEmailButton({

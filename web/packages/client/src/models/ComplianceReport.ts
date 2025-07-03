@@ -190,7 +190,7 @@ export function ComplianceReportToJSON(json: any): ComplianceReport {
     return ComplianceReportToJSONTyped(json, false);
 }
 
-export function ComplianceReportToJSONTyped(value?: Omit<ComplianceReport, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function ComplianceReportToJSONTyped(value?: Omit<ComplianceReport, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

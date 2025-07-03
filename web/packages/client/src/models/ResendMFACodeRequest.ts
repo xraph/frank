@@ -60,7 +60,7 @@ export function ResendMFACodeRequestToJSON(json: any): ResendMFACodeRequest {
     return ResendMFACodeRequestToJSONTyped(json, false);
 }
 
-export function ResendMFACodeRequestToJSONTyped(value?: Omit<ResendMFACodeRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function ResendMFACodeRequestToJSONTyped(value?: Omit<ResendMFACodeRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

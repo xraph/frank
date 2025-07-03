@@ -128,7 +128,7 @@ export function MFASetupResponseToJSON(json: any): MFASetupResponse {
     return MFASetupResponseToJSONTyped(json, false);
 }
 
-export function MFASetupResponseToJSONTyped(value?: Omit<MFASetupResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function MFASetupResponseToJSONTyped(value?: Omit<MFASetupResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

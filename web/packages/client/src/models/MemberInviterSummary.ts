@@ -109,7 +109,7 @@ export function MemberInviterSummaryToJSON(json: any): MemberInviterSummary {
     return MemberInviterSummaryToJSONTyped(json, false);
 }
 
-export function MemberInviterSummaryToJSONTyped(value?: MemberInviterSummary | null, ignoreDiscriminator: boolean = false): any {
+export function MemberInviterSummaryToJSONTyped(value?: MemberInviterSummary | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

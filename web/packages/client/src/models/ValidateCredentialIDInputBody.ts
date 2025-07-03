@@ -60,7 +60,7 @@ export function ValidateCredentialIDInputBodyToJSON(json: any): ValidateCredenti
     return ValidateCredentialIDInputBodyToJSONTyped(json, false);
 }
 
-export function ValidateCredentialIDInputBodyToJSONTyped(value?: Omit<ValidateCredentialIDInputBody, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function ValidateCredentialIDInputBodyToJSONTyped(value?: Omit<ValidateCredentialIDInputBody, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -85,7 +85,7 @@ export function AuditResourceSummaryToJSON(json: any): AuditResourceSummary {
     return AuditResourceSummaryToJSONTyped(json, false);
 }
 
-export function AuditResourceSummaryToJSONTyped(value?: AuditResourceSummary | null, ignoreDiscriminator: boolean = false): any {
+export function AuditResourceSummaryToJSONTyped(value?: AuditResourceSummary | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

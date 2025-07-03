@@ -144,7 +144,7 @@ export function OrganizationBillingToJSON(json: any): OrganizationBilling {
     return OrganizationBillingToJSONTyped(json, false);
 }
 
-export function OrganizationBillingToJSONTyped(value?: Omit<OrganizationBilling, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function OrganizationBillingToJSONTyped(value?: Omit<OrganizationBilling, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

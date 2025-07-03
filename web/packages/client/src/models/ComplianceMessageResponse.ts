@@ -68,7 +68,7 @@ export function ComplianceMessageResponseToJSON(json: any): ComplianceMessageRes
     return ComplianceMessageResponseToJSONTyped(json, false);
 }
 
-export function ComplianceMessageResponseToJSONTyped(value?: Omit<ComplianceMessageResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function ComplianceMessageResponseToJSONTyped(value?: Omit<ComplianceMessageResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

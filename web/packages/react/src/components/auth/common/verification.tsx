@@ -5,12 +5,13 @@
  * Includes input fields, timers, error displays, and status indicators.
  */
 
-import React, {useEffect, useRef, useState} from 'react';
+import type React from 'react';
+import {useEffect, useRef, useState} from 'react';
 import {Alert, Input as HeroInput, Button, Chip, Progress} from '@heroui/react';
 import {CheckCircleIcon, ClockIcon, ExclamationTriangleIcon, XCircleIcon} from '@heroicons/react/24/outline';
 import {withErrorBoundary} from './error-boundary';
 import {useConfig} from "@/hooks";
-import {RadiusT, SizeT} from "@/types";
+import type {RadiusT, SizeT} from "@/types";
 
 // ============================================================================
 // Verification Input Component

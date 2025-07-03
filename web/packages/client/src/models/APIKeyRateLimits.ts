@@ -77,7 +77,7 @@ export function APIKeyRateLimitsToJSON(json: any): APIKeyRateLimits {
     return APIKeyRateLimitsToJSONTyped(json, false);
 }
 
-export function APIKeyRateLimitsToJSONTyped(value?: APIKeyRateLimits | null, ignoreDiscriminator: boolean = false): any {
+export function APIKeyRateLimitsToJSONTyped(value?: APIKeyRateLimits | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

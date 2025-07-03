@@ -77,7 +77,7 @@ export function MonthlyGrowthToJSON(json: any): MonthlyGrowth {
     return MonthlyGrowthToJSONTyped(json, false);
 }
 
-export function MonthlyGrowthToJSONTyped(value?: MonthlyGrowth | null, ignoreDiscriminator: boolean = false): any {
+export function MonthlyGrowthToJSONTyped(value?: MonthlyGrowth | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

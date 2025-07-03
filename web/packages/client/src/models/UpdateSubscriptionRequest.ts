@@ -89,7 +89,7 @@ export function UpdateSubscriptionRequestToJSON(json: any): UpdateSubscriptionRe
     return UpdateSubscriptionRequestToJSONTyped(json, false);
 }
 
-export function UpdateSubscriptionRequestToJSONTyped(value?: Omit<UpdateSubscriptionRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function UpdateSubscriptionRequestToJSONTyped(value?: Omit<UpdateSubscriptionRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

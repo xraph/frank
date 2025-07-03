@@ -98,7 +98,7 @@ export function SubscriptionListResponseToJSON(json: any): SubscriptionListRespo
     return SubscriptionListResponseToJSONTyped(json, false);
 }
 
-export function SubscriptionListResponseToJSONTyped(value?: Omit<SubscriptionListResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function SubscriptionListResponseToJSONTyped(value?: Omit<SubscriptionListResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -67,7 +67,7 @@ export function GenerateSOC2ReportRequestToJSON(json: any): GenerateSOC2ReportRe
     return GenerateSOC2ReportRequestToJSONTyped(json, false);
 }
 
-export function GenerateSOC2ReportRequestToJSONTyped(value?: Omit<GenerateSOC2ReportRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function GenerateSOC2ReportRequestToJSONTyped(value?: Omit<GenerateSOC2ReportRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

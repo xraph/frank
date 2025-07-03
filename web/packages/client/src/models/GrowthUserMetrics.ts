@@ -85,7 +85,7 @@ export function GrowthUserMetricsToJSON(json: any): GrowthUserMetrics {
     return GrowthUserMetricsToJSONTyped(json, false);
 }
 
-export function GrowthUserMetricsToJSONTyped(value?: GrowthUserMetrics | null, ignoreDiscriminator: boolean = false): any {
+export function GrowthUserMetricsToJSONTyped(value?: GrowthUserMetrics | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

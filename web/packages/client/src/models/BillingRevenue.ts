@@ -109,7 +109,7 @@ export function BillingRevenueToJSON(json: any): BillingRevenue {
     return BillingRevenueToJSONTyped(json, false);
 }
 
-export function BillingRevenueToJSONTyped(value?: BillingRevenue | null, ignoreDiscriminator: boolean = false): any {
+export function BillingRevenueToJSONTyped(value?: BillingRevenue | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

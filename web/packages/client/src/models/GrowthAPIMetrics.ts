@@ -69,7 +69,7 @@ export function GrowthAPIMetricsToJSON(json: any): GrowthAPIMetrics {
     return GrowthAPIMetricsToJSONTyped(json, false);
 }
 
-export function GrowthAPIMetricsToJSONTyped(value?: GrowthAPIMetrics | null, ignoreDiscriminator: boolean = false): any {
+export function GrowthAPIMetricsToJSONTyped(value?: GrowthAPIMetrics | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -67,7 +67,7 @@ export function PasskeyDiscoveryRequestToJSON(json: any): PasskeyDiscoveryReques
     return PasskeyDiscoveryRequestToJSONTyped(json, false);
 }
 
-export function PasskeyDiscoveryRequestToJSONTyped(value?: Omit<PasskeyDiscoveryRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function PasskeyDiscoveryRequestToJSONTyped(value?: Omit<PasskeyDiscoveryRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

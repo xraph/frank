@@ -123,7 +123,7 @@ export function SubscriptionBillingToJSON(json: any): SubscriptionBilling {
     return SubscriptionBillingToJSONTyped(json, false);
 }
 
-export function SubscriptionBillingToJSONTyped(value?: SubscriptionBilling | null, ignoreDiscriminator: boolean = false): any {
+export function SubscriptionBillingToJSONTyped(value?: SubscriptionBilling | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

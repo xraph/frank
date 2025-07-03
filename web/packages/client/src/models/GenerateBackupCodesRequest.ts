@@ -59,7 +59,7 @@ export function GenerateBackupCodesRequestToJSON(json: any): GenerateBackupCodes
     return GenerateBackupCodesRequestToJSONTyped(json, false);
 }
 
-export function GenerateBackupCodesRequestToJSONTyped(value?: Omit<GenerateBackupCodesRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function GenerateBackupCodesRequestToJSONTyped(value?: Omit<GenerateBackupCodesRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

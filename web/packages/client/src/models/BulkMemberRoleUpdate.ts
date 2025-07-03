@@ -78,7 +78,7 @@ export function BulkMemberRoleUpdateToJSON(json: any): BulkMemberRoleUpdate {
     return BulkMemberRoleUpdateToJSONTyped(json, false);
 }
 
-export function BulkMemberRoleUpdateToJSONTyped(value?: BulkMemberRoleUpdate | null, ignoreDiscriminator: boolean = false): any {
+export function BulkMemberRoleUpdateToJSONTyped(value?: BulkMemberRoleUpdate | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

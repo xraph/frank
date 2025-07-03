@@ -103,7 +103,7 @@ export function UserRolesResponseToJSON(json: any): UserRolesResponse {
     return UserRolesResponseToJSONTyped(json, false);
 }
 
-export function UserRolesResponseToJSONTyped(value?: Omit<UserRolesResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function UserRolesResponseToJSONTyped(value?: Omit<UserRolesResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -148,7 +148,7 @@ export function MembershipStatsToJSON(json: any): MembershipStats {
     return MembershipStatsToJSONTyped(json, false);
 }
 
-export function MembershipStatsToJSONTyped(value?: Omit<MembershipStats, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function MembershipStatsToJSONTyped(value?: Omit<MembershipStats, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

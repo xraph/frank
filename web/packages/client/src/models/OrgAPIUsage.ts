@@ -101,7 +101,7 @@ export function OrgAPIUsageToJSON(json: any): OrgAPIUsage {
     return OrgAPIUsageToJSONTyped(json, false);
 }
 
-export function OrgAPIUsageToJSONTyped(value?: OrgAPIUsage | null, ignoreDiscriminator: boolean = false): any {
+export function OrgAPIUsageToJSONTyped(value?: OrgAPIUsage | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

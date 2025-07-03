@@ -102,7 +102,7 @@ export function PasskeyDiscoveryResponseToJSON(json: any): PasskeyDiscoveryRespo
     return PasskeyDiscoveryResponseToJSONTyped(json, false);
 }
 
-export function PasskeyDiscoveryResponseToJSONTyped(value?: Omit<PasskeyDiscoveryResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function PasskeyDiscoveryResponseToJSONTyped(value?: Omit<PasskeyDiscoveryResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

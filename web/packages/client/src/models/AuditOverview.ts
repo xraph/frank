@@ -85,7 +85,7 @@ export function AuditOverviewToJSON(json: any): AuditOverview {
     return AuditOverviewToJSONTyped(json, false);
 }
 
-export function AuditOverviewToJSONTyped(value?: AuditOverview | null, ignoreDiscriminator: boolean = false): any {
+export function AuditOverviewToJSONTyped(value?: AuditOverview | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

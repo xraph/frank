@@ -93,7 +93,7 @@ export function ApplicationMetricsToJSON(json: any): ApplicationMetrics {
     return ApplicationMetricsToJSONTyped(json, false);
 }
 
-export function ApplicationMetricsToJSONTyped(value?: ApplicationMetrics | null, ignoreDiscriminator: boolean = false): any {
+export function ApplicationMetricsToJSONTyped(value?: ApplicationMetrics | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

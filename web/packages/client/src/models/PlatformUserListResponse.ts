@@ -98,7 +98,7 @@ export function PlatformUserListResponseToJSON(json: any): PlatformUserListRespo
     return PlatformUserListResponseToJSONTyped(json, false);
 }
 
-export function PlatformUserListResponseToJSONTyped(value?: Omit<PlatformUserListResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function PlatformUserListResponseToJSONTyped(value?: Omit<PlatformUserListResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

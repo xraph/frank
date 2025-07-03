@@ -77,7 +77,7 @@ export function MFAUsageStatsToJSON(json: any): MFAUsageStats {
     return MFAUsageStatsToJSONTyped(json, false);
 }
 
-export function MFAUsageStatsToJSONTyped(value?: MFAUsageStats | null, ignoreDiscriminator: boolean = false): any {
+export function MFAUsageStatsToJSONTyped(value?: MFAUsageStats | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

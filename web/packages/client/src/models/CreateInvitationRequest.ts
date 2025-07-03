@@ -106,7 +106,7 @@ export function CreateInvitationRequestToJSON(json: any): CreateInvitationReques
     return CreateInvitationRequestToJSONTyped(json, false);
 }
 
-export function CreateInvitationRequestToJSONTyped(value?: Omit<CreateInvitationRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function CreateInvitationRequestToJSONTyped(value?: Omit<CreateInvitationRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

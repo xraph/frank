@@ -74,7 +74,7 @@ export function PasskeyBackupResponseToJSON(json: any): PasskeyBackupResponse {
     return PasskeyBackupResponseToJSONTyped(json, false);
 }
 
-export function PasskeyBackupResponseToJSONTyped(value?: Omit<PasskeyBackupResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function PasskeyBackupResponseToJSONTyped(value?: Omit<PasskeyBackupResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

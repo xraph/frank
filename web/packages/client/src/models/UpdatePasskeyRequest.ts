@@ -66,7 +66,7 @@ export function UpdatePasskeyRequestToJSON(json: any): UpdatePasskeyRequest {
     return UpdatePasskeyRequestToJSONTyped(json, false);
 }
 
-export function UpdatePasskeyRequestToJSONTyped(value?: Omit<UpdatePasskeyRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function UpdatePasskeyRequestToJSONTyped(value?: Omit<UpdatePasskeyRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

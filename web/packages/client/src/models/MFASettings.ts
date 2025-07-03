@@ -69,7 +69,7 @@ export function MFASettingsToJSON(json: any): MFASettings {
     return MFASettingsToJSONTyped(json, false);
 }
 
-export function MFASettingsToJSONTyped(value?: MFASettings | null, ignoreDiscriminator: boolean = false): any {
+export function MFASettingsToJSONTyped(value?: MFASettings | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

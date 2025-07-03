@@ -101,7 +101,7 @@ export function ComplianceGapToJSON(json: any): ComplianceGap {
     return ComplianceGapToJSONTyped(json, false);
 }
 
-export function ComplianceGapToJSONTyped(value?: ComplianceGap | null, ignoreDiscriminator: boolean = false): any {
+export function ComplianceGapToJSONTyped(value?: ComplianceGap | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

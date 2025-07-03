@@ -77,7 +77,7 @@ export function RegionalStatsToJSON(json: any): RegionalStats {
     return RegionalStatsToJSONTyped(json, false);
 }
 
-export function RegionalStatsToJSONTyped(value?: RegionalStats | null, ignoreDiscriminator: boolean = false): any {
+export function RegionalStatsToJSONTyped(value?: RegionalStats | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

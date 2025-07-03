@@ -85,7 +85,7 @@ export function SSOUsageStatsToJSON(json: any): SSOUsageStats {
     return SSOUsageStatsToJSONTyped(json, false);
 }
 
-export function SSOUsageStatsToJSONTyped(value?: SSOUsageStats | null, ignoreDiscriminator: boolean = false): any {
+export function SSOUsageStatsToJSONTyped(value?: SSOUsageStats | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

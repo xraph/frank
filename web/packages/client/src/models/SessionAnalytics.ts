@@ -92,7 +92,7 @@ export function SessionAnalyticsToJSON(json: any): SessionAnalytics {
     return SessionAnalyticsToJSONTyped(json, false);
 }
 
-export function SessionAnalyticsToJSONTyped(value?: SessionAnalytics | null, ignoreDiscriminator: boolean = false): any {
+export function SessionAnalyticsToJSONTyped(value?: SessionAnalytics | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

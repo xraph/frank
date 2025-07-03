@@ -134,7 +134,7 @@ export function DataAccessLogToJSON(json: any): DataAccessLog {
     return DataAccessLogToJSONTyped(json, false);
 }
 
-export function DataAccessLogToJSONTyped(value?: DataAccessLog | null, ignoreDiscriminator: boolean = false): any {
+export function DataAccessLogToJSONTyped(value?: DataAccessLog | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -1,5 +1,5 @@
-import React from "react";
-import {RadiusT, SizeT} from "@/types";
+import type React from "react";
+import type {RadiusT, SizeT} from "@/types";
 
 
 export interface FieldProps<T = any> {

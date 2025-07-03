@@ -93,7 +93,7 @@ export function BillingSnapshotOverviewToJSON(json: any): BillingSnapshotOvervie
     return BillingSnapshotOverviewToJSONTyped(json, false);
 }
 
-export function BillingSnapshotOverviewToJSONTyped(value?: BillingSnapshotOverview | null, ignoreDiscriminator: boolean = false): any {
+export function BillingSnapshotOverviewToJSONTyped(value?: BillingSnapshotOverview | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

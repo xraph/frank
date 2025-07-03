@@ -461,9 +461,7 @@ export interface EventContext {
 }
 
 // Event middleware
-export interface EventMiddleware {
-    (event: FrankAuthEvent, next: () => void): void | Promise<void>;
-}
+export type EventMiddleware = (event: FrankAuthEvent, next: () => void) => void | Promise<void>
 
 // Event pipeline
 export interface EventPipeline {

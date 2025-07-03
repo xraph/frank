@@ -85,7 +85,7 @@ export function HIPAAIncidentSummaryToJSON(json: any): HIPAAIncidentSummary {
     return HIPAAIncidentSummaryToJSONTyped(json, false);
 }
 
-export function HIPAAIncidentSummaryToJSONTyped(value?: HIPAAIncidentSummary | null, ignoreDiscriminator: boolean = false): any {
+export function HIPAAIncidentSummaryToJSONTyped(value?: HIPAAIncidentSummary | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -107,7 +107,7 @@ export function ScheduleMaintenanceRequestToJSON(json: any): ScheduleMaintenance
     return ScheduleMaintenanceRequestToJSONTyped(json, false);
 }
 
-export function ScheduleMaintenanceRequestToJSONTyped(value?: Omit<ScheduleMaintenanceRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function ScheduleMaintenanceRequestToJSONTyped(value?: Omit<ScheduleMaintenanceRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

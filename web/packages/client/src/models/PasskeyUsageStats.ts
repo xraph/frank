@@ -85,7 +85,7 @@ export function PasskeyUsageStatsToJSON(json: any): PasskeyUsageStats {
     return PasskeyUsageStatsToJSONTyped(json, false);
 }
 
-export function PasskeyUsageStatsToJSONTyped(value?: PasskeyUsageStats | null, ignoreDiscriminator: boolean = false): any {
+export function PasskeyUsageStatsToJSONTyped(value?: PasskeyUsageStats | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

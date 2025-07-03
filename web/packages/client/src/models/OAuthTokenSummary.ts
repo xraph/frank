@@ -110,7 +110,7 @@ export function OAuthTokenSummaryToJSON(json: any): OAuthTokenSummary {
     return OAuthTokenSummaryToJSONTyped(json, false);
 }
 
-export function OAuthTokenSummaryToJSONTyped(value?: OAuthTokenSummary | null, ignoreDiscriminator: boolean = false): any {
+export function OAuthTokenSummaryToJSONTyped(value?: OAuthTokenSummary | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

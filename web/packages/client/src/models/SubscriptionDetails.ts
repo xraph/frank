@@ -158,7 +158,7 @@ export function SubscriptionDetailsToJSON(json: any): SubscriptionDetails {
     return SubscriptionDetailsToJSONTyped(json, false);
 }
 
-export function SubscriptionDetailsToJSONTyped(value?: Omit<SubscriptionDetails, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function SubscriptionDetailsToJSONTyped(value?: Omit<SubscriptionDetails, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

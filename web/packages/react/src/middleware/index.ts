@@ -24,9 +24,10 @@
  */
 
 import {NextRequest, NextResponse} from 'next/server';
-import {Session, User, UserType} from '@frank-auth/client';
-import {FrankAuthConfig} from '../types';
+import type {Session, User, UserType} from '@frank-auth/client';
+import type {FrankAuthConfig} from '../types';
 import {FrankAuth} from "@frank-auth/sdk";
+import {AuthStorageUtils} from "@/utils";
 
 // ============================================================================
 // Types and Interfaces
@@ -249,7 +250,7 @@ function matchesPath(path: string, patterns: string[]): boolean {
  */
 function getSessionToken(req: NextRequest, config: Required<MiddlewareConfig>): string | null {
     // Try cookies first
-    const cookieToken = req.cookies.get(config.sessionCookieName)?.value;
+    const cookieToken = req.cookies.get(`${config.storageKeyPrefix}${AuthStorageUtils.accessTokenKey}`)?.value;
     if (cookieToken) return cookieToken;
 
     // Try Authorization header
@@ -503,8 +504,9 @@ async function processRequest(
                     // Set new tokens in response
                     if (auth.isAuthenticated) {
                         const response = NextResponse.next();
-                        response.cookies.set(config.sessionCookieName, refreshResult.accessToken, config.cookieOptions);
-                        response.cookies.set(`${config.storageKeyPrefix}refresh_token`, refreshResult.refreshToken, config.cookieOptions);
+                        // response.cookies.set(config.sessionCookieName, refreshResult.accessToken, config.cookieOptions);
+                        response.cookies.set(`${config.storageKeyPrefix}${AuthStorageUtils.accessTokenKey}`, refreshResult.accessToken, config.cookieOptions);
+                        response.cookies.set(`${config.storageKeyPrefix}${AuthStorageUtils.refreshTokenKey}`, refreshResult.refreshToken, config.cookieOptions);
                         return response;
                     }
                 }
@@ -636,6 +638,10 @@ export function createFrankAuthMiddleware(userConfig: MiddlewareConfig) {
     // Validate required configuration
     if (!config.publishableKey) {
         throw new Error('publishableKey is required for Frank Auth middleware');
+    }
+
+    if (!config.storageKeyPrefix) {
+        config.storageKeyPrefix = config.projectId || 'frank_auth';
     }
 
     debugLog(config, 'Frank Auth middleware initialized with config:', {

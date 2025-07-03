@@ -87,7 +87,7 @@ export function EvidenceToJSON(json: any): Evidence {
     return EvidenceToJSONTyped(json, false);
 }
 
-export function EvidenceToJSONTyped(value?: Evidence | null, ignoreDiscriminator: boolean = false): any {
+export function EvidenceToJSONTyped(value?: Evidence | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

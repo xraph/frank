@@ -76,7 +76,7 @@ export function MFABackCodesToJSON(json: any): MFABackCodes {
     return MFABackCodesToJSONTyped(json, false);
 }
 
-export function MFABackCodesToJSONTyped(value?: Omit<MFABackCodes, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function MFABackCodesToJSONTyped(value?: Omit<MFABackCodes, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

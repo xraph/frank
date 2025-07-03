@@ -145,7 +145,7 @@ export function ComplianceOverviewToJSON(json: any): ComplianceOverview {
     return ComplianceOverviewToJSONTyped(json, false);
 }
 
-export function ComplianceOverviewToJSONTyped(value?: Omit<ComplianceOverview, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function ComplianceOverviewToJSONTyped(value?: Omit<ComplianceOverview, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

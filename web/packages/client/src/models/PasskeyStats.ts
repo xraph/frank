@@ -132,7 +132,7 @@ export function PasskeyStatsToJSON(json: any): PasskeyStats {
     return PasskeyStatsToJSONTyped(json, false);
 }
 
-export function PasskeyStatsToJSONTyped(value?: Omit<PasskeyStats, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function PasskeyStatsToJSONTyped(value?: Omit<PasskeyStats, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

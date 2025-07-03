@@ -93,7 +93,7 @@ export function PlatformGrowthStatsToJSON(json: any): PlatformGrowthStats {
     return PlatformGrowthStatsToJSONTyped(json, false);
 }
 
-export function PlatformGrowthStatsToJSONTyped(value?: PlatformGrowthStats | null, ignoreDiscriminator: boolean = false): any {
+export function PlatformGrowthStatsToJSONTyped(value?: PlatformGrowthStats | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

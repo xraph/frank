@@ -15,7 +15,7 @@ import {useConfig} from '../../../hooks/use-config';
 import {EmailField} from '../../forms/email-field';
 import {FormWrapper} from '../../forms/form-wrapper';
 import {LoadingSpinner} from './loading-spinner';
-import {RadiusT, SizeT} from "@/types";
+import type {RadiusT, SizeT} from "@/types";
 
 // ============================================================================
 // Magic Link Types

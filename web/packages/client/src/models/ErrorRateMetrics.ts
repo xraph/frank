@@ -129,7 +129,7 @@ export function ErrorRateMetricsToJSON(json: any): ErrorRateMetrics {
     return ErrorRateMetricsToJSONTyped(json, false);
 }
 
-export function ErrorRateMetricsToJSONTyped(value?: Omit<ErrorRateMetrics, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function ErrorRateMetricsToJSONTyped(value?: Omit<ErrorRateMetrics, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

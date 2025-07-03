@@ -132,7 +132,7 @@ export function SSOProviderMetricsToJSON(json: any): SSOProviderMetrics {
     return SSOProviderMetricsToJSONTyped(json, false);
 }
 
-export function SSOProviderMetricsToJSONTyped(value?: Omit<SSOProviderMetrics, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function SSOProviderMetricsToJSONTyped(value?: Omit<SSOProviderMetrics, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

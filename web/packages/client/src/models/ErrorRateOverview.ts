@@ -77,7 +77,7 @@ export function ErrorRateOverviewToJSON(json: any): ErrorRateOverview {
     return ErrorRateOverviewToJSONTyped(json, false);
 }
 
-export function ErrorRateOverviewToJSONTyped(value?: ErrorRateOverview | null, ignoreDiscriminator: boolean = false): any {
+export function ErrorRateOverviewToJSONTyped(value?: ErrorRateOverview | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

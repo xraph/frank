@@ -12,9 +12,9 @@ import type {
 
 // Color utilities
 export const hexToHsl = (hex: string): [number, number, number] => {
-    const r = parseInt(hex.slice(1, 3), 16) / 255;
-    const g = parseInt(hex.slice(3, 5), 16) / 255;
-    const b = parseInt(hex.slice(5, 7), 16) / 255;
+    const r = Number.parseInt(hex.slice(1, 3), 16) / 255;
+    const g = Number.parseInt(hex.slice(3, 5), 16) / 255;
+    const b = Number.parseInt(hex.slice(5, 7), 16) / 255;
 
     const max = Math.max(r, g, b);
     const min = Math.min(r, g, b);
@@ -92,9 +92,9 @@ export const adjustHue = (hex: string, amount: number): string => {
 
 export const getContrastRatio = (color1: string, color2: string): number => {
     const getLuminance = (hex: string): number => {
-        const r = parseInt(hex.slice(1, 3), 16) / 255;
-        const g = parseInt(hex.slice(3, 5), 16) / 255;
-        const b = parseInt(hex.slice(5, 7), 16) / 255;
+        const r = Number.parseInt(hex.slice(1, 3), 16) / 255;
+        const g = Number.parseInt(hex.slice(3, 5), 16) / 255;
+        const b = Number.parseInt(hex.slice(5, 7), 16) / 255;
 
         const gamma = (c: number) => c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
 
@@ -119,8 +119,8 @@ export const findAccessibleColor = (
     backgroundColor: string,
     level: 'AA' | 'AAA' = 'AA'
 ): string => {
-    let color = baseColor;
-    let [h, s, l] = hexToHsl(color);
+    const color = baseColor;
+    const [h, s, l] = hexToHsl(color);
 
     // Try adjusting lightness first
     for (let adjustment = 0; adjustment <= 50; adjustment += 5) {
@@ -496,7 +496,7 @@ export const getComponentVariant = (
     theme: Theme,
     component: string,
     variant: string,
-    color: string = 'default'
+    color = 'default'
 ): ComponentVariant | undefined => {
     const componentVariants = theme.components[component as keyof typeof theme.components];
     if (!componentVariants) return undefined;
@@ -511,8 +511,8 @@ export const getComponentStyles = (
     theme: Theme,
     component: string,
     variant: string,
-    color: string = 'default',
-    size: string = 'md'
+    color = 'default',
+    size = 'md'
 ): string => {
     const variantConfig = getComponentVariant(theme, component, variant, color);
     if (!variantConfig) return '';

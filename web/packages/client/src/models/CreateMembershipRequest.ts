@@ -135,7 +135,7 @@ export function CreateMembershipRequestToJSON(json: any): CreateMembershipReques
     return CreateMembershipRequestToJSONTyped(json, false);
 }
 
-export function CreateMembershipRequestToJSONTyped(value?: Omit<CreateMembershipRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function CreateMembershipRequestToJSONTyped(value?: Omit<CreateMembershipRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

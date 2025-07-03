@@ -60,7 +60,7 @@ export function UseBackupCodeRequestToJSON(json: any): UseBackupCodeRequest {
     return UseBackupCodeRequestToJSONTyped(json, false);
 }
 
-export function UseBackupCodeRequestToJSONTyped(value?: Omit<UseBackupCodeRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function UseBackupCodeRequestToJSONTyped(value?: Omit<UseBackupCodeRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

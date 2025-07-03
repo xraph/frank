@@ -67,7 +67,7 @@ export function TestSSOConnectionRequestToJSON(json: any): TestSSOConnectionRequ
     return TestSSOConnectionRequestToJSONTyped(json, false);
 }
 
-export function TestSSOConnectionRequestToJSONTyped(value?: Omit<TestSSOConnectionRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function TestSSOConnectionRequestToJSONTyped(value?: Omit<TestSSOConnectionRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

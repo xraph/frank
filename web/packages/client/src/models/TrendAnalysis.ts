@@ -161,7 +161,7 @@ export function TrendAnalysisToJSON(json: any): TrendAnalysis {
     return TrendAnalysisToJSONTyped(json, false);
 }
 
-export function TrendAnalysisToJSONTyped(value?: Omit<TrendAnalysis, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function TrendAnalysisToJSONTyped(value?: Omit<TrendAnalysis, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

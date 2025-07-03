@@ -91,7 +91,7 @@ export function BulkRoleAssignmentResponseToJSON(json: any): BulkRoleAssignmentR
     return BulkRoleAssignmentResponseToJSONTyped(json, false);
 }
 
-export function BulkRoleAssignmentResponseToJSONTyped(value?: Omit<BulkRoleAssignmentResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function BulkRoleAssignmentResponseToJSONTyped(value?: Omit<BulkRoleAssignmentResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -109,7 +109,7 @@ export function MemberAnniversaryToJSON(json: any): MemberAnniversary {
     return MemberAnniversaryToJSONTyped(json, false);
 }
 
-export function MemberAnniversaryToJSONTyped(value?: MemberAnniversary | null, ignoreDiscriminator: boolean = false): any {
+export function MemberAnniversaryToJSONTyped(value?: MemberAnniversary | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

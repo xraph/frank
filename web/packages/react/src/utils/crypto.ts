@@ -389,7 +389,7 @@ export const generateDeviceFingerprint = (): string => {
 };
 
 // Secure random utilities
-export const generateSecureToken = (length: number = 32): string => {
+export const generateSecureToken = (length = 32): string => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     return generateRandomString(length, chars);
 };
@@ -421,7 +421,7 @@ export const generateTOTPSecret = (): string => {
     return generateRandomString(32, base32Chars);
 };
 
-export const generateBackupCodes = (count: number = 10): string[] => {
+export const generateBackupCodes = (count = 10): string[] => {
     const codes: string[] = [];
     for (let i = 0; i < count; i++) {
         codes.push(generateRandomString(8, '0123456789ABCDEF'));
@@ -452,7 +452,7 @@ export const verifyChecksum = (data: string, expectedChecksum: string): boolean 
 };
 
 // Key derivation utilities (for client-side use only)
-export const deriveKey = async (password: string, salt: string, iterations: number = 1000): Promise<string> => {
+export const deriveKey = async (password: string, salt: string, iterations = 1000): Promise<string> => {
     if (typeof crypto !== 'undefined' && crypto.subtle) {
         const encoder = new TextEncoder();
         const keyMaterial = await crypto.subtle.importKey(

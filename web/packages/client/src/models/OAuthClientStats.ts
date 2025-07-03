@@ -115,7 +115,7 @@ export function OAuthClientStatsToJSON(json: any): OAuthClientStats {
     return OAuthClientStatsToJSONTyped(json, false);
 }
 
-export function OAuthClientStatsToJSONTyped(value?: Omit<OAuthClientStats, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function OAuthClientStatsToJSONTyped(value?: Omit<OAuthClientStats, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

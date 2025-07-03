@@ -93,7 +93,7 @@ export function RemoveRoleInputToJSON(json: any): RemoveRoleInput {
     return RemoveRoleInputToJSONTyped(json, false);
 }
 
-export function RemoveRoleInputToJSONTyped(value?: Omit<RemoveRoleInput, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function RemoveRoleInputToJSONTyped(value?: Omit<RemoveRoleInput, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

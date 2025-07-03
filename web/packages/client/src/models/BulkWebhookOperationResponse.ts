@@ -90,7 +90,7 @@ export function BulkWebhookOperationResponseToJSON(json: any): BulkWebhookOperat
     return BulkWebhookOperationResponseToJSONTyped(json, false);
 }
 
-export function BulkWebhookOperationResponseToJSONTyped(value?: Omit<BulkWebhookOperationResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function BulkWebhookOperationResponseToJSONTyped(value?: Omit<BulkWebhookOperationResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

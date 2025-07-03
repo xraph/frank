@@ -100,7 +100,7 @@ export function HIPAARiskAssessmentToJSON(json: any): HIPAARiskAssessment {
     return HIPAARiskAssessmentToJSONTyped(json, false);
 }
 
-export function HIPAARiskAssessmentToJSONTyped(value?: HIPAARiskAssessment | null, ignoreDiscriminator: boolean = false): any {
+export function HIPAARiskAssessmentToJSONTyped(value?: HIPAARiskAssessment | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

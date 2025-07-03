@@ -8,7 +8,7 @@
 import type {Locale, LocaleDirection, LocalizationConfig,} from './types';
 
 import {DEFAULT_LOCALE_MESSAGES, DEFAULT_LOCALIZATION_CONFIG} from './defaults';
-import {LOCALE_INFO, LocaleMessages} from "@/locales";
+import {LOCALE_INFO, type LocaleMessages} from "@/locales";
 
 // ============================================================================
 // Translation Keys and Type Safety

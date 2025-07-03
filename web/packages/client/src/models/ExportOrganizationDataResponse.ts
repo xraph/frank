@@ -76,7 +76,7 @@ export function ExportOrganizationDataResponseToJSON(json: any): ExportOrganizat
     return ExportOrganizationDataResponseToJSONTyped(json, false);
 }
 
-export function ExportOrganizationDataResponseToJSONTyped(value?: Omit<ExportOrganizationDataResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function ExportOrganizationDataResponseToJSONTyped(value?: Omit<ExportOrganizationDataResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

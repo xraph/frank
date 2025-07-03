@@ -90,7 +90,7 @@ export function PasskeyVerificationResponseToJSON(json: any): PasskeyVerificatio
     return PasskeyVerificationResponseToJSONTyped(json, false);
 }
 
-export function PasskeyVerificationResponseToJSONTyped(value?: Omit<PasskeyVerificationResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function PasskeyVerificationResponseToJSONTyped(value?: Omit<PasskeyVerificationResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

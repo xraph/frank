@@ -106,7 +106,7 @@ export function OrganizationManagementToJSON(json: any): OrganizationManagement 
     return OrganizationManagementToJSONTyped(json, false);
 }
 
-export function OrganizationManagementToJSONTyped(value?: Omit<OrganizationManagement, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function OrganizationManagementToJSONTyped(value?: Omit<OrganizationManagement, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -118,7 +118,7 @@ export function UserDataExportToJSON(json: any): UserDataExport {
     return UserDataExportToJSONTyped(json, false);
 }
 
-export function UserDataExportToJSONTyped(value?: Omit<UserDataExport, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function UserDataExportToJSONTyped(value?: Omit<UserDataExport, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

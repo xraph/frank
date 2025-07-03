@@ -109,7 +109,7 @@ export function AssignRoleToUserRequestToJSON(json: any): AssignRoleToUserReques
     return AssignRoleToUserRequestToJSONTyped(json, false);
 }
 
-export function AssignRoleToUserRequestToJSONTyped(value?: Omit<AssignRoleToUserRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function AssignRoleToUserRequestToJSONTyped(value?: Omit<AssignRoleToUserRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

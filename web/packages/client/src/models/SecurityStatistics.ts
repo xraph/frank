@@ -125,7 +125,7 @@ export function SecurityStatisticsToJSON(json: any): SecurityStatistics {
     return SecurityStatisticsToJSONTyped(json, false);
 }
 
-export function SecurityStatisticsToJSONTyped(value?: SecurityStatistics | null, ignoreDiscriminator: boolean = false): any {
+export function SecurityStatisticsToJSONTyped(value?: SecurityStatistics | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -117,7 +117,7 @@ export function APIUsageStatisticsToJSON(json: any): APIUsageStatistics {
     return APIUsageStatisticsToJSONTyped(json, false);
 }
 
-export function APIUsageStatisticsToJSONTyped(value?: APIUsageStatistics | null, ignoreDiscriminator: boolean = false): any {
+export function APIUsageStatisticsToJSONTyped(value?: APIUsageStatistics | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -83,7 +83,7 @@ export function PaginatedOutputMFAActivityToJSON(json: any): PaginatedOutputMFAA
     return PaginatedOutputMFAActivityToJSONTyped(json, false);
 }
 
-export function PaginatedOutputMFAActivityToJSONTyped(value?: Omit<PaginatedOutputMFAActivity, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function PaginatedOutputMFAActivityToJSONTyped(value?: Omit<PaginatedOutputMFAActivity, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

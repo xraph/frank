@@ -159,7 +159,7 @@ export function UpdateOrganizationRequestToJSON(json: any): UpdateOrganizationRe
     return UpdateOrganizationRequestToJSONTyped(json, false);
 }
 
-export function UpdateOrganizationRequestToJSONTyped(value?: Omit<UpdateOrganizationRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function UpdateOrganizationRequestToJSONTyped(value?: Omit<UpdateOrganizationRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -69,7 +69,7 @@ export function ComplianceTrendAnalysisToJSON(json: any): ComplianceTrendAnalysi
     return ComplianceTrendAnalysisToJSONTyped(json, false);
 }
 
-export function ComplianceTrendAnalysisToJSONTyped(value?: ComplianceTrendAnalysis | null, ignoreDiscriminator: boolean = false): any {
+export function ComplianceTrendAnalysisToJSONTyped(value?: ComplianceTrendAnalysis | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

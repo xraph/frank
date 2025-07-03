@@ -162,7 +162,7 @@ export function CreateOrganizationPlatformRequestToJSON(json: any): CreateOrgani
     return CreateOrganizationPlatformRequestToJSONTyped(json, false);
 }
 
-export function CreateOrganizationPlatformRequestToJSONTyped(value?: Omit<CreateOrganizationPlatformRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function CreateOrganizationPlatformRequestToJSONTyped(value?: Omit<CreateOrganizationPlatformRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

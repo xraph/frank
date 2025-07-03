@@ -110,7 +110,7 @@ export function OAuthScopeToJSON(json: any): OAuthScope {
     return OAuthScopeToJSONTyped(json, false);
 }
 
-export function OAuthScopeToJSONTyped(value?: Omit<OAuthScope, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function OAuthScopeToJSONTyped(value?: Omit<OAuthScope, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

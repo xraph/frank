@@ -272,7 +272,7 @@ export function OAuthClientToJSON(json: any): OAuthClient {
     return OAuthClientToJSONTyped(json, false);
 }
 
-export function OAuthClientToJSONTyped(value?: Omit<OAuthClient, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function OAuthClientToJSONTyped(value?: Omit<OAuthClient, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

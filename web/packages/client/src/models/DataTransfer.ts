@@ -77,7 +77,7 @@ export function DataTransferToJSON(json: any): DataTransfer {
     return DataTransferToJSONTyped(json, false);
 }
 
-export function DataTransferToJSONTyped(value?: DataTransfer | null, ignoreDiscriminator: boolean = false): any {
+export function DataTransferToJSONTyped(value?: DataTransfer | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -147,7 +147,7 @@ export function SSSProviderStatsToJSON(json: any): SSSProviderStats {
     return SSSProviderStatsToJSONTyped(json, false);
 }
 
-export function SSSProviderStatsToJSONTyped(value?: Omit<SSSProviderStats, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function SSSProviderStatsToJSONTyped(value?: Omit<SSSProviderStats, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

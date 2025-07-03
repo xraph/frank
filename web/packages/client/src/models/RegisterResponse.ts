@@ -179,7 +179,7 @@ export function RegisterResponseToJSON(json: any): RegisterResponse {
     return RegisterResponseToJSONTyped(json, false);
 }
 
-export function RegisterResponseToJSONTyped(value?: Omit<RegisterResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function RegisterResponseToJSONTyped(value?: Omit<RegisterResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

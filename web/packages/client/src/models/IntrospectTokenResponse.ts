@@ -125,7 +125,7 @@ export function IntrospectTokenResponseToJSON(json: any): IntrospectTokenRespons
     return IntrospectTokenResponseToJSONTyped(json, false);
 }
 
-export function IntrospectTokenResponseToJSONTyped(value?: Omit<IntrospectTokenResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function IntrospectTokenResponseToJSONTyped(value?: Omit<IntrospectTokenResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

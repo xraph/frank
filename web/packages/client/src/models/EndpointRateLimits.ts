@@ -93,7 +93,7 @@ export function EndpointRateLimitsToJSON(json: any): EndpointRateLimits {
     return EndpointRateLimitsToJSONTyped(json, false);
 }
 
-export function EndpointRateLimitsToJSONTyped(value?: EndpointRateLimits | null, ignoreDiscriminator: boolean = false): any {
+export function EndpointRateLimitsToJSONTyped(value?: EndpointRateLimits | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

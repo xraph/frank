@@ -116,7 +116,7 @@ export function DataDeletionRequestToJSON(json: any): DataDeletionRequest {
     return DataDeletionRequestToJSONTyped(json, false);
 }
 
-export function DataDeletionRequestToJSONTyped(value?: Omit<DataDeletionRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function DataDeletionRequestToJSONTyped(value?: Omit<DataDeletionRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

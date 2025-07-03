@@ -88,7 +88,7 @@ export function ValidateAPIKeyRequestToJSON(json: any): ValidateAPIKeyRequest {
     return ValidateAPIKeyRequestToJSONTyped(json, false);
 }
 
-export function ValidateAPIKeyRequestToJSONTyped(value?: Omit<ValidateAPIKeyRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function ValidateAPIKeyRequestToJSONTyped(value?: Omit<ValidateAPIKeyRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

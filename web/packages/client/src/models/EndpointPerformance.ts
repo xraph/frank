@@ -93,7 +93,7 @@ export function EndpointPerformanceToJSON(json: any): EndpointPerformance {
     return EndpointPerformanceToJSONTyped(json, false);
 }
 
-export function EndpointPerformanceToJSONTyped(value?: EndpointPerformance | null, ignoreDiscriminator: boolean = false): any {
+export function EndpointPerformanceToJSONTyped(value?: EndpointPerformance | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

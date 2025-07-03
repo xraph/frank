@@ -84,7 +84,7 @@ export function RevokeUserSessionsResponseToJSON(json: any): RevokeUserSessionsR
     return RevokeUserSessionsResponseToJSONTyped(json, false);
 }
 
-export function RevokeUserSessionsResponseToJSONTyped(value?: Omit<RevokeUserSessionsResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function RevokeUserSessionsResponseToJSONTyped(value?: Omit<RevokeUserSessionsResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

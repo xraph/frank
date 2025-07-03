@@ -60,7 +60,7 @@ export function DomainVerificationRequestToJSON(json: any): DomainVerificationRe
     return DomainVerificationRequestToJSONTyped(json, false);
 }
 
-export function DomainVerificationRequestToJSONTyped(value?: Omit<DomainVerificationRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function DomainVerificationRequestToJSONTyped(value?: Omit<DomainVerificationRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -159,7 +159,7 @@ export function SessionToJSON(json: any): Session {
     return SessionToJSONTyped(json, false);
 }
 
-export function SessionToJSONTyped(value?: Omit<Session, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function SessionToJSONTyped(value?: Omit<Session, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

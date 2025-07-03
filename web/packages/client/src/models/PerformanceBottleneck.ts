@@ -93,7 +93,7 @@ export function PerformanceBottleneckToJSON(json: any): PerformanceBottleneck {
     return PerformanceBottleneckToJSONTyped(json, false);
 }
 
-export function PerformanceBottleneckToJSONTyped(value?: PerformanceBottleneck | null, ignoreDiscriminator: boolean = false): any {
+export function PerformanceBottleneckToJSONTyped(value?: PerformanceBottleneck | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

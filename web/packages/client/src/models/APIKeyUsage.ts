@@ -137,7 +137,7 @@ export function APIKeyUsageToJSON(json: any): APIKeyUsage {
     return APIKeyUsageToJSONTyped(json, false);
 }
 
-export function APIKeyUsageToJSONTyped(value?: Omit<APIKeyUsage, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function APIKeyUsageToJSONTyped(value?: Omit<APIKeyUsage, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

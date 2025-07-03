@@ -109,7 +109,7 @@ export function SecurityIncidentStatsToJSON(json: any): SecurityIncidentStats {
     return SecurityIncidentStatsToJSONTyped(json, false);
 }
 
-export function SecurityIncidentStatsToJSONTyped(value?: SecurityIncidentStats | null, ignoreDiscriminator: boolean = false): any {
+export function SecurityIncidentStatsToJSONTyped(value?: SecurityIncidentStats | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

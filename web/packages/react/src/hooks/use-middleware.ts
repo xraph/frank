@@ -7,8 +7,8 @@
 
 import {createContext, useCallback, useContext, useEffect, useState} from 'react';
 import {useRouter} from 'next/router';
-import {AuthStatus, Session, User} from '@frank-auth/client';
-import {FrankAuthConfig} from '../types';
+import type {AuthStatus, Session, User} from '@frank-auth/client';
+import type {FrankAuthConfig} from '../types';
 
 // ============================================================================
 // Types and Interfaces

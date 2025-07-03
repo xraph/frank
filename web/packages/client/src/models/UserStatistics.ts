@@ -125,7 +125,7 @@ export function UserStatisticsToJSON(json: any): UserStatistics {
     return UserStatisticsToJSONTyped(json, false);
 }
 
-export function UserStatisticsToJSONTyped(value?: UserStatistics | null, ignoreDiscriminator: boolean = false): any {
+export function UserStatisticsToJSONTyped(value?: UserStatistics | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

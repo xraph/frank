@@ -69,7 +69,7 @@ export function RemediationMetricsToJSON(json: any): RemediationMetrics {
     return RemediationMetricsToJSONTyped(json, false);
 }
 
-export function RemediationMetricsToJSONTyped(value?: RemediationMetrics | null, ignoreDiscriminator: boolean = false): any {
+export function RemediationMetricsToJSONTyped(value?: RemediationMetrics | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

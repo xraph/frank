@@ -60,7 +60,7 @@ export function SimpleMessageToJSON(json: any): SimpleMessage {
     return SimpleMessageToJSONTyped(json, false);
 }
 
-export function SimpleMessageToJSONTyped(value?: Omit<SimpleMessage, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function SimpleMessageToJSONTyped(value?: Omit<SimpleMessage, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

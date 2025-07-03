@@ -1,6 +1,6 @@
 {
   "name": "@frank-auth/react",
-  "version": "0.1.22",
+  "version": "0.1.23",
   "description": "Flexible and customizable React UI components for Frank Authentication",
   "keywords": [
     "frank-auth",
@@ -83,12 +83,13 @@
     "test:coverage": "jest --coverage",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
+    "pub": "npm publish --access public",
     "prepublishOnly": "pnpm run clean:dist && pnpm run build",
     "docs": "typedoc src/index.ts --out docs --theme minimal"
   },
   "dependencies": {
     "@frank-auth/client": "^0.2.9",
-    "@frank-auth/sdk": "^0.2.17",
+    "@frank-auth/sdk": "^0.2.19",
     "@heroicons/react": "^2.2.0",
     "@heroui/react": "^2.8.0-beta.9",
     "@hookform/resolvers": "^4.1.3",
@@ -147,6 +148,7 @@
     "rimraf": "^5.0.10",
     "storybook": "^8.4.7",
     "tailwindcss": "^4.1.10",
+    "@tailwindcss/postcss": "^4.1.11",
     "tw-animate-css": "^1.3.4",
     "typedoc": "^0.28.5",
     "typescript": "^5.8.2",

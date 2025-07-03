@@ -84,7 +84,7 @@ export function FeatureAnalyticsToJSON(json: any): FeatureAnalytics {
     return FeatureAnalyticsToJSONTyped(json, false);
 }
 
-export function FeatureAnalyticsToJSONTyped(value?: FeatureAnalytics | null, ignoreDiscriminator: boolean = false): any {
+export function FeatureAnalyticsToJSONTyped(value?: FeatureAnalytics | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

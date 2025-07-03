@@ -99,7 +99,7 @@ export function SSOExportRequestToJSON(json: any): SSOExportRequest {
     return SSOExportRequestToJSONTyped(json, false);
 }
 
-export function SSOExportRequestToJSONTyped(value?: Omit<SSOExportRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function SSOExportRequestToJSONTyped(value?: Omit<SSOExportRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

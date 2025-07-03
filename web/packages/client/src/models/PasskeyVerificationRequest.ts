@@ -76,7 +76,7 @@ export function PasskeyVerificationRequestToJSON(json: any): PasskeyVerification
     return PasskeyVerificationRequestToJSONTyped(json, false);
 }
 
-export function PasskeyVerificationRequestToJSONTyped(value?: Omit<PasskeyVerificationRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function PasskeyVerificationRequestToJSONTyped(value?: Omit<PasskeyVerificationRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

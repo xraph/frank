@@ -85,7 +85,7 @@ export function SubRequirementToJSON(json: any): SubRequirement {
     return SubRequirementToJSONTyped(json, false);
 }
 
-export function SubRequirementToJSONTyped(value?: SubRequirement | null, ignoreDiscriminator: boolean = false): any {
+export function SubRequirementToJSONTyped(value?: SubRequirement | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

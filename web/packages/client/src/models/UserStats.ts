@@ -124,7 +124,7 @@ export function UserStatsToJSON(json: any): UserStats {
     return UserStatsToJSONTyped(json, false);
 }
 
-export function UserStatsToJSONTyped(value?: Omit<UserStats, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function UserStatsToJSONTyped(value?: Omit<UserStats, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

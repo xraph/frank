@@ -85,7 +85,7 @@ export function MFAInfoToJSON(json: any): MFAInfo {
     return MFAInfoToJSONTyped(json, false);
 }
 
-export function MFAInfoToJSONTyped(value?: MFAInfo | null, ignoreDiscriminator: boolean = false): any {
+export function MFAInfoToJSONTyped(value?: MFAInfo | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

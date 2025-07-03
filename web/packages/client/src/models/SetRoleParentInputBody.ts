@@ -60,7 +60,7 @@ export function SetRoleParentInputBodyToJSON(json: any): SetRoleParentInputBody 
     return SetRoleParentInputBodyToJSONTyped(json, false);
 }
 
-export function SetRoleParentInputBodyToJSONTyped(value?: Omit<SetRoleParentInputBody, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function SetRoleParentInputBodyToJSONTyped(value?: Omit<SetRoleParentInputBody, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -77,7 +77,7 @@ export function OAuthDailyUsageToJSON(json: any): OAuthDailyUsage {
     return OAuthDailyUsageToJSONTyped(json, false);
 }
 
-export function OAuthDailyUsageToJSONTyped(value?: OAuthDailyUsage | null, ignoreDiscriminator: boolean = false): any {
+export function OAuthDailyUsageToJSONTyped(value?: OAuthDailyUsage | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -83,7 +83,7 @@ export function FeatureVariationToJSON(json: any): FeatureVariation {
     return FeatureVariationToJSONTyped(json, false);
 }
 
-export function FeatureVariationToJSONTyped(value?: FeatureVariation | null, ignoreDiscriminator: boolean = false): any {
+export function FeatureVariationToJSONTyped(value?: FeatureVariation | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

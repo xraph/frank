@@ -284,7 +284,7 @@ export function MembershipToJSON(json: any): Membership {
     return MembershipToJSONTyped(json, false);
 }
 
-export function MembershipToJSONTyped(value?: Omit<Membership, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function MembershipToJSONTyped(value?: Omit<Membership, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -93,7 +93,7 @@ export function OrganizationSummaryStatsToJSON(json: any): OrganizationSummarySt
     return OrganizationSummaryStatsToJSONTyped(json, false);
 }
 
-export function OrganizationSummaryStatsToJSONTyped(value?: OrganizationSummaryStats | null, ignoreDiscriminator: boolean = false): any {
+export function OrganizationSummaryStatsToJSONTyped(value?: OrganizationSummaryStats | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

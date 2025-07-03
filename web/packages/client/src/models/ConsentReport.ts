@@ -93,7 +93,7 @@ export function ConsentReportToJSON(json: any): ConsentReport {
     return ConsentReportToJSONTyped(json, false);
 }
 
-export function ConsentReportToJSONTyped(value?: ConsentReport | null, ignoreDiscriminator: boolean = false): any {
+export function ConsentReportToJSONTyped(value?: ConsentReport | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

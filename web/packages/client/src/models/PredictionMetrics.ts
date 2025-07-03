@@ -85,7 +85,7 @@ export function PredictionMetricsToJSON(json: any): PredictionMetrics {
     return PredictionMetricsToJSONTyped(json, false);
 }
 
-export function PredictionMetricsToJSONTyped(value?: PredictionMetrics | null, ignoreDiscriminator: boolean = false): any {
+export function PredictionMetricsToJSONTyped(value?: PredictionMetrics | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

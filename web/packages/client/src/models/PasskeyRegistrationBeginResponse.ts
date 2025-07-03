@@ -86,7 +86,7 @@ export function PasskeyRegistrationBeginResponseToJSON(json: any): PasskeyRegist
     return PasskeyRegistrationBeginResponseToJSONTyped(json, false);
 }
 
-export function PasskeyRegistrationBeginResponseToJSONTyped(value?: Omit<PasskeyRegistrationBeginResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function PasskeyRegistrationBeginResponseToJSONTyped(value?: Omit<PasskeyRegistrationBeginResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

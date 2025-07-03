@@ -174,7 +174,7 @@ export function PlatformStatsToJSON(json: any): PlatformStats {
     return PlatformStatsToJSONTyped(json, false);
 }
 
-export function PlatformStatsToJSONTyped(value?: Omit<PlatformStats, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function PlatformStatsToJSONTyped(value?: Omit<PlatformStats, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

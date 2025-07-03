@@ -68,7 +68,7 @@ export function SMSCodeResponseToJSON(json: any): SMSCodeResponse {
     return SMSCodeResponseToJSONTyped(json, false);
 }
 
-export function SMSCodeResponseToJSONTyped(value?: Omit<SMSCodeResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function SMSCodeResponseToJSONTyped(value?: Omit<SMSCodeResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

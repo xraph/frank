@@ -92,7 +92,7 @@ export function FeatureRuleToJSON(json: any): FeatureRule {
     return FeatureRuleToJSONTyped(json, false);
 }
 
-export function FeatureRuleToJSONTyped(value?: FeatureRule | null, ignoreDiscriminator: boolean = false): any {
+export function FeatureRuleToJSONTyped(value?: FeatureRule | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

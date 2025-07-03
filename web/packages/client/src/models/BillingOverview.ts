@@ -144,7 +144,7 @@ export function BillingOverviewToJSON(json: any): BillingOverview {
     return BillingOverviewToJSONTyped(json, false);
 }
 
-export function BillingOverviewToJSONTyped(value?: Omit<BillingOverview, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function BillingOverviewToJSONTyped(value?: Omit<BillingOverview, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

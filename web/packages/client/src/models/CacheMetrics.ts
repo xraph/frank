@@ -93,7 +93,7 @@ export function CacheMetricsToJSON(json: any): CacheMetrics {
     return CacheMetricsToJSONTyped(json, false);
 }
 
-export function CacheMetricsToJSONTyped(value?: CacheMetrics | null, ignoreDiscriminator: boolean = false): any {
+export function CacheMetricsToJSONTyped(value?: CacheMetrics | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

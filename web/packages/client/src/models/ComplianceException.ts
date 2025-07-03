@@ -139,7 +139,7 @@ export function ComplianceExceptionToJSON(json: any): ComplianceException {
     return ComplianceExceptionToJSONTyped(json, false);
 }
 
-export function ComplianceExceptionToJSONTyped(value?: ComplianceException | null, ignoreDiscriminator: boolean = false): any {
+export function ComplianceExceptionToJSONTyped(value?: ComplianceException | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

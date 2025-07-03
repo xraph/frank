@@ -60,7 +60,7 @@ export function RevokeAPIKeyRequestToJSON(json: any): RevokeAPIKeyRequest {
     return RevokeAPIKeyRequestToJSONTyped(json, false);
 }
 
-export function RevokeAPIKeyRequestToJSONTyped(value?: Omit<RevokeAPIKeyRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function RevokeAPIKeyRequestToJSONTyped(value?: Omit<RevokeAPIKeyRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

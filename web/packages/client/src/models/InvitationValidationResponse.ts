@@ -114,7 +114,7 @@ export function InvitationValidationResponseToJSON(json: any): InvitationValidat
     return InvitationValidationResponseToJSONTyped(json, false);
 }
 
-export function InvitationValidationResponseToJSONTyped(value?: Omit<InvitationValidationResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function InvitationValidationResponseToJSONTyped(value?: Omit<InvitationValidationResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

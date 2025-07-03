@@ -182,7 +182,7 @@ export function OrganizationSettingsToJSON(json: any): OrganizationSettings {
     return OrganizationSettingsToJSONTyped(json, false);
 }
 
-export function OrganizationSettingsToJSONTyped(value?: Omit<OrganizationSettings, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function OrganizationSettingsToJSONTyped(value?: Omit<OrganizationSettings, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

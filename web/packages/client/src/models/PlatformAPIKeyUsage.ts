@@ -85,7 +85,7 @@ export function PlatformAPIKeyUsageToJSON(json: any): PlatformAPIKeyUsage {
     return PlatformAPIKeyUsageToJSONTyped(json, false);
 }
 
-export function PlatformAPIKeyUsageToJSONTyped(value?: PlatformAPIKeyUsage | null, ignoreDiscriminator: boolean = false): any {
+export function PlatformAPIKeyUsageToJSONTyped(value?: PlatformAPIKeyUsage | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

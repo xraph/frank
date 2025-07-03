@@ -77,7 +77,7 @@ export function RateLimitOverviewToJSON(json: any): RateLimitOverview {
     return RateLimitOverviewToJSONTyped(json, false);
 }
 
-export function RateLimitOverviewToJSONTyped(value?: RateLimitOverview | null, ignoreDiscriminator: boolean = false): any {
+export function RateLimitOverviewToJSONTyped(value?: RateLimitOverview | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -124,7 +124,7 @@ export function AttestationRequestToJSON(json: any): AttestationRequest {
     return AttestationRequestToJSONTyped(json, false);
 }
 
-export function AttestationRequestToJSONTyped(value?: Omit<AttestationRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function AttestationRequestToJSONTyped(value?: Omit<AttestationRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

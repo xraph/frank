@@ -69,7 +69,7 @@ export function HourlyThroughputToJSON(json: any): HourlyThroughput {
     return HourlyThroughputToJSONTyped(json, false);
 }
 
-export function HourlyThroughputToJSONTyped(value?: HourlyThroughput | null, ignoreDiscriminator: boolean = false): any {
+export function HourlyThroughputToJSONTyped(value?: HourlyThroughput | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

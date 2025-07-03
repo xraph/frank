@@ -98,7 +98,7 @@ export function SupportTicketListResponseToJSON(json: any): SupportTicketListRes
     return SupportTicketListResponseToJSONTyped(json, false);
 }
 
-export function SupportTicketListResponseToJSONTyped(value?: Omit<SupportTicketListResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function SupportTicketListResponseToJSONTyped(value?: Omit<SupportTicketListResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

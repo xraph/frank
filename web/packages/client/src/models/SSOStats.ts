@@ -148,7 +148,7 @@ export function SSOStatsToJSON(json: any): SSOStats {
     return SSOStatsToJSONTyped(json, false);
 }
 
-export function SSOStatsToJSONTyped(value?: Omit<SSOStats, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function SSOStatsToJSONTyped(value?: Omit<SSOStats, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

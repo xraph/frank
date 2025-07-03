@@ -93,7 +93,7 @@ export function HIPAATrainingSummaryToJSON(json: any): HIPAATrainingSummary {
     return HIPAATrainingSummaryToJSONTyped(json, false);
 }
 
-export function HIPAATrainingSummaryToJSONTyped(value?: HIPAATrainingSummary | null, ignoreDiscriminator: boolean = false): any {
+export function HIPAATrainingSummaryToJSONTyped(value?: HIPAATrainingSummary | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

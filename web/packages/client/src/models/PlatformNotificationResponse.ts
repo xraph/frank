@@ -90,7 +90,7 @@ export function PlatformNotificationResponseToJSON(json: any): PlatformNotificat
     return PlatformNotificationResponseToJSONTyped(json, false);
 }
 
-export function PlatformNotificationResponseToJSONTyped(value?: Omit<PlatformNotificationResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function PlatformNotificationResponseToJSONTyped(value?: Omit<PlatformNotificationResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -77,7 +77,7 @@ export function BulkInvitationInputToJSON(json: any): BulkInvitationInput {
     return BulkInvitationInputToJSONTyped(json, false);
 }
 
-export function BulkInvitationInputToJSONTyped(value?: BulkInvitationInput | null, ignoreDiscriminator: boolean = false): any {
+export function BulkInvitationInputToJSONTyped(value?: BulkInvitationInput | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

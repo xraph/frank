@@ -93,7 +93,7 @@ export function SubscriptionStatsToJSON(json: any): SubscriptionStats {
     return SubscriptionStatsToJSONTyped(json, false);
 }
 
-export function SubscriptionStatsToJSONTyped(value?: SubscriptionStats | null, ignoreDiscriminator: boolean = false): any {
+export function SubscriptionStatsToJSONTyped(value?: SubscriptionStats | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

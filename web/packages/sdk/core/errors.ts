@@ -42,7 +42,7 @@ export class FrankAuthError extends Error {
     public readonly code: string;
     public readonly details?: ErrorDetails;
 
-    constructor(message: string, code: string = 'UNKNOWN_ERROR', details?: ErrorDetails) {
+    constructor(message: string, code = 'UNKNOWN_ERROR', details?: ErrorDetails) {
         super(message);
         this.name = 'FrankAuthError';
         this.code = code;
@@ -72,7 +72,7 @@ export class FrankAuthValidationError extends FrankAuthError {
 }
 
 // errors.ts - Enhanced error handling utilities
-import {FetchError, RequiredError, ResponseError} from '@frank-auth/client';
+import type {FetchError, RequiredError, ResponseError} from '@frank-auth/client';
 
 export function isResponseError(error: any): error is ResponseError {
     return error && error.name === 'ResponseError' && error.response instanceof Response;

@@ -101,7 +101,7 @@ export function SecurityComplianceToJSON(json: any): SecurityCompliance {
     return SecurityComplianceToJSONTyped(json, false);
 }
 
-export function SecurityComplianceToJSONTyped(value?: SecurityCompliance | null, ignoreDiscriminator: boolean = false): any {
+export function SecurityComplianceToJSONTyped(value?: SecurityCompliance | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

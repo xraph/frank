@@ -93,7 +93,7 @@ export function RetentionMetricsToJSON(json: any): RetentionMetrics {
     return RetentionMetricsToJSONTyped(json, false);
 }
 
-export function RetentionMetricsToJSONTyped(value?: RetentionMetrics | null, ignoreDiscriminator: boolean = false): any {
+export function RetentionMetricsToJSONTyped(value?: RetentionMetrics | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

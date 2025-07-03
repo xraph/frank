@@ -92,7 +92,7 @@ const SpinnerVariant = ({ size, color, duration = 1 }: { size: string; color: st
     <motion.div
         className={`border-2 border-transparent border-t-current border-r-current rounded-full ${size}`}
         animate={{ rotate: 360 }}
-        transition={{ duration, repeat: Infinity, ease: "linear" }}
+        transition={{ duration, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
         style={{ color: `var(--${color})` }}
     />
 );
@@ -117,7 +117,7 @@ const DotsVariant = ({ size, color, duration = 1.4 }: { size: string; color: str
                     animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
                     transition={{
                         duration,
-                        repeat: Infinity,
+                        repeat: Number.POSITIVE_INFINITY,
                         delay: index * 0.2,
                         ease: "easeInOut"
                     }}
@@ -132,7 +132,7 @@ const PulseVariant = ({ size, color, duration = 1.5 }: { size: string; color: st
         className={`rounded-full bg-current ${size}`}
         style={{ color: `var(--${color})` }}
         animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
-        transition={{ duration, repeat: Infinity, ease: "easeInOut" }}
+        transition={{ duration, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
     />
 );
 
@@ -156,7 +156,7 @@ const BarsVariant = ({ size, color, duration = 1.2 }: { size: string; color: str
                     animate={{ scaleY: [1, 2, 1] }}
                     transition={{
                         duration,
-                        repeat: Infinity,
+                        repeat: Number.POSITIVE_INFINITY,
                         delay: index * 0.1,
                         ease: "easeInOut"
                     }}

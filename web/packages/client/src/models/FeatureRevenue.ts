@@ -77,7 +77,7 @@ export function FeatureRevenueToJSON(json: any): FeatureRevenue {
     return FeatureRevenueToJSONTyped(json, false);
 }
 
-export function FeatureRevenueToJSONTyped(value?: FeatureRevenue | null, ignoreDiscriminator: boolean = false): any {
+export function FeatureRevenueToJSONTyped(value?: FeatureRevenue | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

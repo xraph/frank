@@ -83,7 +83,7 @@ export function CancelSubscriptionRequestToJSON(json: any): CancelSubscriptionRe
     return CancelSubscriptionRequestToJSONTyped(json, false);
 }
 
-export function CancelSubscriptionRequestToJSONTyped(value?: Omit<CancelSubscriptionRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function CancelSubscriptionRequestToJSONTyped(value?: Omit<CancelSubscriptionRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

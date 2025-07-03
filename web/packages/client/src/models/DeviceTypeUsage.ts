@@ -69,7 +69,7 @@ export function DeviceTypeUsageToJSON(json: any): DeviceTypeUsage {
     return DeviceTypeUsageToJSONTyped(json, false);
 }
 
-export function DeviceTypeUsageToJSONTyped(value?: DeviceTypeUsage | null, ignoreDiscriminator: boolean = false): any {
+export function DeviceTypeUsageToJSONTyped(value?: DeviceTypeUsage | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

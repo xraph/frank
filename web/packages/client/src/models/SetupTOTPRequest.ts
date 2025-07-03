@@ -59,7 +59,7 @@ export function SetupTOTPRequestToJSON(json: any): SetupTOTPRequest {
     return SetupTOTPRequestToJSONTyped(json, false);
 }
 
-export function SetupTOTPRequestToJSONTyped(value?: Omit<SetupTOTPRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function SetupTOTPRequestToJSONTyped(value?: Omit<SetupTOTPRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -131,7 +131,7 @@ export function ComplianceFindingToJSON(json: any): ComplianceFinding {
     return ComplianceFindingToJSONTyped(json, false);
 }
 
-export function ComplianceFindingToJSONTyped(value?: ComplianceFinding | null, ignoreDiscriminator: boolean = false): any {
+export function ComplianceFindingToJSONTyped(value?: ComplianceFinding | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -78,7 +78,7 @@ export function ResendMFACodeResponseToJSON(json: any): ResendMFACodeResponse {
     return ResendMFACodeResponseToJSONTyped(json, false);
 }
 
-export function ResendMFACodeResponseToJSONTyped(value?: Omit<ResendMFACodeResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function ResendMFACodeResponseToJSONTyped(value?: Omit<ResendMFACodeResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

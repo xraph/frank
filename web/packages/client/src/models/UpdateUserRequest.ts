@@ -131,7 +131,7 @@ export function UpdateUserRequestToJSON(json: any): UpdateUserRequest {
     return UpdateUserRequestToJSONTyped(json, false);
 }
 
-export function UpdateUserRequestToJSONTyped(value?: Omit<UpdateUserRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function UpdateUserRequestToJSONTyped(value?: Omit<UpdateUserRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

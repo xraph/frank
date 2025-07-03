@@ -95,7 +95,7 @@ export function UpdateBillingRequestToJSON(json: any): UpdateBillingRequest {
     return UpdateBillingRequestToJSONTyped(json, false);
 }
 
-export function UpdateBillingRequestToJSONTyped(value?: Omit<UpdateBillingRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function UpdateBillingRequestToJSONTyped(value?: Omit<UpdateBillingRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

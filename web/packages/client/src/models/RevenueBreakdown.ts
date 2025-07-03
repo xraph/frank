@@ -106,7 +106,7 @@ export function RevenueBreakdownToJSON(json: any): RevenueBreakdown {
     return RevenueBreakdownToJSONTyped(json, false);
 }
 
-export function RevenueBreakdownToJSONTyped(value?: RevenueBreakdown | null, ignoreDiscriminator: boolean = false): any {
+export function RevenueBreakdownToJSONTyped(value?: RevenueBreakdown | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -83,7 +83,7 @@ export function PaginatedOutputMFAMethodToJSON(json: any): PaginatedOutputMFAMet
     return PaginatedOutputMFAMethodToJSONTyped(json, false);
 }
 
-export function PaginatedOutputMFAMethodToJSONTyped(value?: Omit<PaginatedOutputMFAMethod, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function PaginatedOutputMFAMethodToJSONTyped(value?: Omit<PaginatedOutputMFAMethod, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

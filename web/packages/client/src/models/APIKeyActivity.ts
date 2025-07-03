@@ -150,7 +150,7 @@ export function APIKeyActivityToJSON(json: any): APIKeyActivity {
     return APIKeyActivityToJSONTyped(json, false);
 }
 
-export function APIKeyActivityToJSONTyped(value?: APIKeyActivity | null, ignoreDiscriminator: boolean = false): any {
+export function APIKeyActivityToJSONTyped(value?: APIKeyActivity | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

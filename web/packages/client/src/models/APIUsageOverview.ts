@@ -93,7 +93,7 @@ export function APIUsageOverviewToJSON(json: any): APIUsageOverview {
     return APIUsageOverviewToJSONTyped(json, false);
 }
 
-export function APIUsageOverviewToJSONTyped(value?: APIUsageOverview | null, ignoreDiscriminator: boolean = false): any {
+export function APIUsageOverviewToJSONTyped(value?: APIUsageOverview | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

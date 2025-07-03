@@ -107,7 +107,7 @@ export function PasskeyAuthenticationFinishResponseToJSON(json: any): PasskeyAut
     return PasskeyAuthenticationFinishResponseToJSONTyped(json, false);
 }
 
-export function PasskeyAuthenticationFinishResponseToJSONTyped(value?: Omit<PasskeyAuthenticationFinishResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function PasskeyAuthenticationFinishResponseToJSONTyped(value?: Omit<PasskeyAuthenticationFinishResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

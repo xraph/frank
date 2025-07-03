@@ -61,7 +61,7 @@ export function TimeRangeToJSON(json: any): TimeRange {
     return TimeRangeToJSONTyped(json, false);
 }
 
-export function TimeRangeToJSONTyped(value?: TimeRange | null, ignoreDiscriminator: boolean = false): any {
+export function TimeRangeToJSONTyped(value?: TimeRange | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

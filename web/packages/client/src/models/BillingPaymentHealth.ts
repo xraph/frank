@@ -101,7 +101,7 @@ export function BillingPaymentHealthToJSON(json: any): BillingPaymentHealth {
     return BillingPaymentHealthToJSONTyped(json, false);
 }
 
-export function BillingPaymentHealthToJSONTyped(value?: BillingPaymentHealth | null, ignoreDiscriminator: boolean = false): any {
+export function BillingPaymentHealthToJSONTyped(value?: BillingPaymentHealth | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

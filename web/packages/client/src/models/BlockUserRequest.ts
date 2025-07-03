@@ -60,7 +60,7 @@ export function BlockUserRequestToJSON(json: any): BlockUserRequest {
     return BlockUserRequestToJSONTyped(json, false);
 }
 
-export function BlockUserRequestToJSONTyped(value?: Omit<BlockUserRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function BlockUserRequestToJSONTyped(value?: Omit<BlockUserRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

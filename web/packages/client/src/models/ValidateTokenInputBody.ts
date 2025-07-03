@@ -68,7 +68,7 @@ export function ValidateTokenInputBodyToJSON(json: any): ValidateTokenInputBody 
     return ValidateTokenInputBodyToJSONTyped(json, false);
 }
 
-export function ValidateTokenInputBodyToJSONTyped(value?: Omit<ValidateTokenInputBody, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function ValidateTokenInputBodyToJSONTyped(value?: Omit<ValidateTokenInputBody, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

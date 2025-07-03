@@ -75,7 +75,7 @@ export function GetGlobalActivityStats400ResponseToJSON(json: any): GetGlobalAct
     return GetGlobalActivityStats400ResponseToJSONTyped(json, false);
 }
 
-export function GetGlobalActivityStats400ResponseToJSONTyped(value?: GetGlobalActivityStats400Response | null, ignoreDiscriminator: boolean = false): any {
+export function GetGlobalActivityStats400ResponseToJSONTyped(value?: GetGlobalActivityStats400Response | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

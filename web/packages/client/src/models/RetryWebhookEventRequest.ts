@@ -70,7 +70,7 @@ export function RetryWebhookEventRequestToJSON(json: any): RetryWebhookEventRequ
     return RetryWebhookEventRequestToJSONTyped(json, false);
 }
 
-export function RetryWebhookEventRequestToJSONTyped(value?: Omit<RetryWebhookEventRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function RetryWebhookEventRequestToJSONTyped(value?: Omit<RetryWebhookEventRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

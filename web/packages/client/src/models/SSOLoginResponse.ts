@@ -76,7 +76,7 @@ export function SSOLoginResponseToJSON(json: any): SSOLoginResponse {
     return SSOLoginResponseToJSONTyped(json, false);
 }
 
-export function SSOLoginResponseToJSONTyped(value?: Omit<SSOLoginResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function SSOLoginResponseToJSONTyped(value?: Omit<SSOLoginResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

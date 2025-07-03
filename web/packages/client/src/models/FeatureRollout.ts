@@ -74,7 +74,7 @@ export function FeatureRolloutToJSON(json: any): FeatureRollout {
     return FeatureRolloutToJSONTyped(json, false);
 }
 
-export function FeatureRolloutToJSONTyped(value?: FeatureRollout | null, ignoreDiscriminator: boolean = false): any {
+export function FeatureRolloutToJSONTyped(value?: FeatureRollout | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -109,7 +109,7 @@ export function SystemAlertToJSON(json: any): SystemAlert {
     return SystemAlertToJSONTyped(json, false);
 }
 
-export function SystemAlertToJSONTyped(value?: SystemAlert | null, ignoreDiscriminator: boolean = false): any {
+export function SystemAlertToJSONTyped(value?: SystemAlert | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

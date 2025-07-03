@@ -125,7 +125,7 @@ export function OrganizationStatisticsToJSON(json: any): OrganizationStatistics 
     return OrganizationStatisticsToJSONTyped(json, false);
 }
 
-export function OrganizationStatisticsToJSONTyped(value?: OrganizationStatistics | null, ignoreDiscriminator: boolean = false): any {
+export function OrganizationStatisticsToJSONTyped(value?: OrganizationStatistics | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

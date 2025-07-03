@@ -82,7 +82,7 @@ export function AuthorizeResponseToJSON(json: any): AuthorizeResponse {
     return AuthorizeResponseToJSONTyped(json, false);
 }
 
-export function AuthorizeResponseToJSONTyped(value?: Omit<AuthorizeResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function AuthorizeResponseToJSONTyped(value?: Omit<AuthorizeResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

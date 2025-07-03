@@ -69,7 +69,7 @@ export function AuthFailureReasonToJSON(json: any): AuthFailureReason {
     return AuthFailureReasonToJSONTyped(json, false);
 }
 
-export function AuthFailureReasonToJSONTyped(value?: AuthFailureReason | null, ignoreDiscriminator: boolean = false): any {
+export function AuthFailureReasonToJSONTyped(value?: AuthFailureReason | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

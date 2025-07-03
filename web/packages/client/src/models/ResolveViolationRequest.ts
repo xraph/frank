@@ -60,7 +60,7 @@ export function ResolveViolationRequestToJSON(json: any): ResolveViolationReques
     return ResolveViolationRequestToJSONTyped(json, false);
 }
 
-export function ResolveViolationRequestToJSONTyped(value?: Omit<ResolveViolationRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function ResolveViolationRequestToJSONTyped(value?: Omit<ResolveViolationRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

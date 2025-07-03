@@ -85,7 +85,7 @@ export function UserBillingSummaryToJSON(json: any): UserBillingSummary {
     return UserBillingSummaryToJSONTyped(json, false);
 }
 
-export function UserBillingSummaryToJSONTyped(value?: UserBillingSummary | null, ignoreDiscriminator: boolean = false): any {
+export function UserBillingSummaryToJSONTyped(value?: UserBillingSummary | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

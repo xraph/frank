@@ -69,7 +69,7 @@ export function LocationUsageToJSON(json: any): LocationUsage {
     return LocationUsageToJSONTyped(json, false);
 }
 
-export function LocationUsageToJSONTyped(value?: LocationUsage | null, ignoreDiscriminator: boolean = false): any {
+export function LocationUsageToJSONTyped(value?: LocationUsage | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

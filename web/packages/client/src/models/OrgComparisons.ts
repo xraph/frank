@@ -74,7 +74,7 @@ export function OrgComparisonsToJSON(json: any): OrgComparisons {
     return OrgComparisonsToJSONTyped(json, false);
 }
 
-export function OrgComparisonsToJSONTyped(value?: OrgComparisons | null, ignoreDiscriminator: boolean = false): any {
+export function OrgComparisonsToJSONTyped(value?: OrgComparisons | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

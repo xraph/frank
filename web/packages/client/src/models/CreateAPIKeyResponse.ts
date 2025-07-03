@@ -91,7 +91,7 @@ export function CreateAPIKeyResponseToJSON(json: any): CreateAPIKeyResponse {
     return CreateAPIKeyResponseToJSONTyped(json, false);
 }
 
-export function CreateAPIKeyResponseToJSONTyped(value?: Omit<CreateAPIKeyResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function CreateAPIKeyResponseToJSONTyped(value?: Omit<CreateAPIKeyResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -108,7 +108,7 @@ export function FeatureUsageDetailToJSON(json: any): FeatureUsageDetail {
     return FeatureUsageDetailToJSONTyped(json, false);
 }
 
-export function FeatureUsageDetailToJSONTyped(value?: FeatureUsageDetail | null, ignoreDiscriminator: boolean = false): any {
+export function FeatureUsageDetailToJSONTyped(value?: FeatureUsageDetail | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

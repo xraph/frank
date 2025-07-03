@@ -166,7 +166,7 @@ export function PlatformOrganizationDetailsToJSON(json: any): PlatformOrganizati
     return PlatformOrganizationDetailsToJSONTyped(json, false);
 }
 
-export function PlatformOrganizationDetailsToJSONTyped(value?: Omit<PlatformOrganizationDetails, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function PlatformOrganizationDetailsToJSONTyped(value?: Omit<PlatformOrganizationDetails, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

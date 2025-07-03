@@ -60,7 +60,7 @@ export function GenerateGDPRReportInputBodyToJSON(json: any): GenerateGDPRReport
     return GenerateGDPRReportInputBodyToJSONTyped(json, false);
 }
 
-export function GenerateGDPRReportInputBodyToJSONTyped(value?: Omit<GenerateGDPRReportInputBody, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function GenerateGDPRReportInputBodyToJSONTyped(value?: Omit<GenerateGDPRReportInputBody, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

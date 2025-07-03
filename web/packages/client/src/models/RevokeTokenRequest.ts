@@ -82,7 +82,7 @@ export function RevokeTokenRequestToJSON(json: any): RevokeTokenRequest {
     return RevokeTokenRequestToJSONTyped(json, false);
 }
 
-export function RevokeTokenRequestToJSONTyped(value?: Omit<RevokeTokenRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function RevokeTokenRequestToJSONTyped(value?: Omit<RevokeTokenRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -6,9 +6,7 @@ export interface ValidationResult {
 }
 
 // Validation rule interface
-export interface ValidationRule {
-    (value: any): ValidationResult | Promise<ValidationResult>;
-}
+export type ValidationRule = (value: any) => ValidationResult | Promise<ValidationResult>
 
 // Common validation rules
 export const required = (message = 'This field is required'): ValidationRule => {

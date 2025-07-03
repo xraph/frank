@@ -85,7 +85,7 @@ export function PlanRevenueToJSON(json: any): PlanRevenue {
     return PlanRevenueToJSONTyped(json, false);
 }
 
-export function PlanRevenueToJSONTyped(value?: PlanRevenue | null, ignoreDiscriminator: boolean = false): any {
+export function PlanRevenueToJSONTyped(value?: PlanRevenue | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

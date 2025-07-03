@@ -107,7 +107,7 @@ export function ModelErrorToJSON(json: any): ModelError {
     return ModelErrorToJSONTyped(json, false);
 }
 
-export function ModelErrorToJSONTyped(value?: Omit<ModelError, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function ModelErrorToJSONTyped(value?: Omit<ModelError, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

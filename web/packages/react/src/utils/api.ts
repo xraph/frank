@@ -269,8 +269,8 @@ export const handleAPIError = (error: any): APIError => {
 
 export const retryRequest = async <T>(
     requestFn: () => Promise<T>,
-    maxRetries: number = 3,
-    delay: number = 1000
+    maxRetries = 3,
+    delay = 1000
 ): Promise<T> => {
     let lastError: Error;
 
@@ -294,7 +294,7 @@ export const retryRequest = async <T>(
 export const withCache = <T>(
     requestFn: () => Promise<T>,
     cacheKey: string,
-    ttl: number = 300000 // 5 minutes
+    ttl = 300000 // 5 minutes
 ): Promise<T> => {
     const cache = new Map<string, { data: T; expires: number }>();
 
@@ -314,8 +314,8 @@ export const withCache = <T>(
 
 export const batchRequests = async <T>(
     requests: (() => Promise<T>)[],
-    batchSize: number = 5,
-    delay: number = 100
+    batchSize = 5,
+    delay = 100
 ): Promise<T[]> => {
     const results: T[] = [];
 

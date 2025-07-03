@@ -115,7 +115,7 @@ export function WebhookEventSummaryToJSON(json: any): WebhookEventSummary {
     return WebhookEventSummaryToJSONTyped(json, false);
 }
 
-export function WebhookEventSummaryToJSONTyped(value?: WebhookEventSummary | null, ignoreDiscriminator: boolean = false): any {
+export function WebhookEventSummaryToJSONTyped(value?: WebhookEventSummary | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

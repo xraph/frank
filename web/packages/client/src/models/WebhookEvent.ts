@@ -181,7 +181,7 @@ export function WebhookEventToJSON(json: any): WebhookEvent {
     return WebhookEventToJSONTyped(json, false);
 }
 
-export function WebhookEventToJSONTyped(value?: Omit<WebhookEvent, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function WebhookEventToJSONTyped(value?: Omit<WebhookEvent, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

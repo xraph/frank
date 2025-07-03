@@ -68,7 +68,7 @@ export function EnableOrganizationFeatureResponseToJSON(json: any): EnableOrgani
     return EnableOrganizationFeatureResponseToJSONTyped(json, false);
 }
 
-export function EnableOrganizationFeatureResponseToJSONTyped(value?: Omit<EnableOrganizationFeatureResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function EnableOrganizationFeatureResponseToJSONTyped(value?: Omit<EnableOrganizationFeatureResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

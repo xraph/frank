@@ -117,7 +117,7 @@ export function PasswordPolicyToJSON(json: any): PasswordPolicy {
     return PasswordPolicyToJSONTyped(json, false);
 }
 
-export function PasswordPolicyToJSONTyped(value?: PasswordPolicy | null, ignoreDiscriminator: boolean = false): any {
+export function PasswordPolicyToJSONTyped(value?: PasswordPolicy | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

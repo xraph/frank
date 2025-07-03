@@ -83,7 +83,7 @@ export function PaginatedOutputSSOActivityToJSON(json: any): PaginatedOutputSSOA
     return PaginatedOutputSSOActivityToJSONTyped(json, false);
 }
 
-export function PaginatedOutputSSOActivityToJSONTyped(value?: Omit<PaginatedOutputSSOActivity, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function PaginatedOutputSSOActivityToJSONTyped(value?: Omit<PaginatedOutputSSOActivity, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -91,7 +91,7 @@ export function TestSSOConnectionResponseToJSON(json: any): TestSSOConnectionRes
     return TestSSOConnectionResponseToJSONTyped(json, false);
 }
 
-export function TestSSOConnectionResponseToJSONTyped(value?: Omit<TestSSOConnectionResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function TestSSOConnectionResponseToJSONTyped(value?: Omit<TestSSOConnectionResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

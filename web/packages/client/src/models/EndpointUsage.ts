@@ -85,7 +85,7 @@ export function EndpointUsageToJSON(json: any): EndpointUsage {
     return EndpointUsageToJSONTyped(json, false);
 }
 
-export function EndpointUsageToJSONTyped(value?: EndpointUsage | null, ignoreDiscriminator: boolean = false): any {
+export function EndpointUsageToJSONTyped(value?: EndpointUsage | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

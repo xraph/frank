@@ -101,7 +101,7 @@ export function RevenueOverviewToJSON(json: any): RevenueOverview {
     return RevenueOverviewToJSONTyped(json, false);
 }
 
-export function RevenueOverviewToJSONTyped(value?: RevenueOverview | null, ignoreDiscriminator: boolean = false): any {
+export function RevenueOverviewToJSONTyped(value?: RevenueOverview | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

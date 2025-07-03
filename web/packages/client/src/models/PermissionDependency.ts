@@ -132,7 +132,7 @@ export function PermissionDependencyToJSON(json: any): PermissionDependency {
     return PermissionDependencyToJSONTyped(json, false);
 }
 
-export function PermissionDependencyToJSONTyped(value?: PermissionDependency | null, ignoreDiscriminator: boolean = false): any {
+export function PermissionDependencyToJSONTyped(value?: PermissionDependency | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

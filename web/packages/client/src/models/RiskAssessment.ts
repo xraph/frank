@@ -164,7 +164,7 @@ export function RiskAssessmentToJSON(json: any): RiskAssessment {
     return RiskAssessmentToJSONTyped(json, false);
 }
 
-export function RiskAssessmentToJSONTyped(value?: Omit<RiskAssessment, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function RiskAssessmentToJSONTyped(value?: Omit<RiskAssessment, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

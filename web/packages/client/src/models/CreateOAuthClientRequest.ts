@@ -164,7 +164,7 @@ export function CreateOAuthClientRequestToJSON(json: any): CreateOAuthClientRequ
     return CreateOAuthClientRequestToJSONTyped(json, false);
 }
 
-export function CreateOAuthClientRequestToJSONTyped(value?: Omit<CreateOAuthClientRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function CreateOAuthClientRequestToJSONTyped(value?: Omit<CreateOAuthClientRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

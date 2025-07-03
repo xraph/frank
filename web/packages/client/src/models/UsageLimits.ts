@@ -85,7 +85,7 @@ export function UsageLimitsToJSON(json: any): UsageLimits {
     return UsageLimitsToJSONTyped(json, false);
 }
 
-export function UsageLimitsToJSONTyped(value?: UsageLimits | null, ignoreDiscriminator: boolean = false): any {
+export function UsageLimitsToJSONTyped(value?: UsageLimits | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

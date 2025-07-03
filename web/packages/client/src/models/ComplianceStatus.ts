@@ -148,7 +148,7 @@ export function ComplianceStatusToJSON(json: any): ComplianceStatus {
     return ComplianceStatusToJSONTyped(json, false);
 }
 
-export function ComplianceStatusToJSONTyped(value?: Omit<ComplianceStatus, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function ComplianceStatusToJSONTyped(value?: Omit<ComplianceStatus, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

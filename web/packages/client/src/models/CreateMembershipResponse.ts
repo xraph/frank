@@ -93,7 +93,7 @@ export function CreateMembershipResponseToJSON(json: any): CreateMembershipRespo
     return CreateMembershipResponseToJSONTyped(json, false);
 }
 
-export function CreateMembershipResponseToJSONTyped(value?: Omit<CreateMembershipResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function CreateMembershipResponseToJSONTyped(value?: Omit<CreateMembershipResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

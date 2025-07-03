@@ -114,7 +114,7 @@ export function PaymentRecordToJSON(json: any): PaymentRecord {
     return PaymentRecordToJSONTyped(json, false);
 }
 
-export function PaymentRecordToJSONTyped(value?: PaymentRecord | null, ignoreDiscriminator: boolean = false): any {
+export function PaymentRecordToJSONTyped(value?: PaymentRecord | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

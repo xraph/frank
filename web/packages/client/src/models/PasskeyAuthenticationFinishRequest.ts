@@ -70,7 +70,7 @@ export function PasskeyAuthenticationFinishRequestToJSON(json: any): PasskeyAuth
     return PasskeyAuthenticationFinishRequestToJSONTyped(json, false);
 }
 
-export function PasskeyAuthenticationFinishRequestToJSONTyped(value?: Omit<PasskeyAuthenticationFinishRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function PasskeyAuthenticationFinishRequestToJSONTyped(value?: Omit<PasskeyAuthenticationFinishRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

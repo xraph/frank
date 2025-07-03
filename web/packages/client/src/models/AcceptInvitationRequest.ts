@@ -91,7 +91,7 @@ export function AcceptInvitationRequestToJSON(json: any): AcceptInvitationReques
     return AcceptInvitationRequestToJSONTyped(json, false);
 }
 
-export function AcceptInvitationRequestToJSONTyped(value?: Omit<AcceptInvitationRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function AcceptInvitationRequestToJSONTyped(value?: Omit<AcceptInvitationRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -92,7 +92,7 @@ export function TOTPSetupResponseToJSON(json: any): TOTPSetupResponse {
     return TOTPSetupResponseToJSONTyped(json, false);
 }
 
-export function TOTPSetupResponseToJSONTyped(value?: Omit<TOTPSetupResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function TOTPSetupResponseToJSONTyped(value?: Omit<TOTPSetupResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -82,7 +82,7 @@ export function BulkAPIKeyOperationRequestToJSON(json: any): BulkAPIKeyOperation
     return BulkAPIKeyOperationRequestToJSONTyped(json, false);
 }
 
-export function BulkAPIKeyOperationRequestToJSONTyped(value?: Omit<BulkAPIKeyOperationRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function BulkAPIKeyOperationRequestToJSONTyped(value?: Omit<BulkAPIKeyOperationRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

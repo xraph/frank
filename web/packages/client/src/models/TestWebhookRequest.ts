@@ -76,7 +76,7 @@ export function TestWebhookRequestToJSON(json: any): TestWebhookRequest {
     return TestWebhookRequestToJSONTyped(json, false);
 }
 
-export function TestWebhookRequestToJSONTyped(value?: Omit<TestWebhookRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function TestWebhookRequestToJSONTyped(value?: Omit<TestWebhookRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

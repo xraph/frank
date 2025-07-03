@@ -83,7 +83,7 @@ export function PaginatedOutputOAuthClientSummaryToJSON(json: any): PaginatedOut
     return PaginatedOutputOAuthClientSummaryToJSONTyped(json, false);
 }
 
-export function PaginatedOutputOAuthClientSummaryToJSONTyped(value?: Omit<PaginatedOutputOAuthClientSummary, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function PaginatedOutputOAuthClientSummaryToJSONTyped(value?: Omit<PaginatedOutputOAuthClientSummary, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -86,7 +86,7 @@ export function SSOBulkProvisionRequestToJSON(json: any): SSOBulkProvisionReques
     return SSOBulkProvisionRequestToJSONTyped(json, false);
 }
 
-export function SSOBulkProvisionRequestToJSONTyped(value?: Omit<SSOBulkProvisionRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function SSOBulkProvisionRequestToJSONTyped(value?: Omit<SSOBulkProvisionRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

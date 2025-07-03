@@ -97,7 +97,7 @@ export function TokenResponseToJSON(json: any): TokenResponse {
     return TokenResponseToJSONTyped(json, false);
 }
 
-export function TokenResponseToJSONTyped(value?: Omit<TokenResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function TokenResponseToJSONTyped(value?: Omit<TokenResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

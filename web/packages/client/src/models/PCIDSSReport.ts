@@ -161,7 +161,7 @@ export function PCIDSSReportToJSON(json: any): PCIDSSReport {
     return PCIDSSReportToJSONTyped(json, false);
 }
 
-export function PCIDSSReportToJSONTyped(value?: Omit<PCIDSSReport, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function PCIDSSReportToJSONTyped(value?: Omit<PCIDSSReport, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

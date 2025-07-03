@@ -117,7 +117,7 @@ export function ThreatSummaryToJSON(json: any): ThreatSummary {
     return ThreatSummaryToJSONTyped(json, false);
 }
 
-export function ThreatSummaryToJSONTyped(value?: ThreatSummary | null, ignoreDiscriminator: boolean = false): any {
+export function ThreatSummaryToJSONTyped(value?: ThreatSummary | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

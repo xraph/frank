@@ -69,7 +69,7 @@ export function CohortDataToJSON(json: any): CohortData {
     return CohortDataToJSONTyped(json, false);
 }
 
-export function CohortDataToJSONTyped(value?: CohortData | null, ignoreDiscriminator: boolean = false): any {
+export function CohortDataToJSONTyped(value?: CohortData | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

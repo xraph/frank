@@ -121,7 +121,7 @@ export function CreateFeatureFlagRequestToJSON(json: any): CreateFeatureFlagRequ
     return CreateFeatureFlagRequestToJSONTyped(json, false);
 }
 
-export function CreateFeatureFlagRequestToJSONTyped(value?: Omit<CreateFeatureFlagRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function CreateFeatureFlagRequestToJSONTyped(value?: Omit<CreateFeatureFlagRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

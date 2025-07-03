@@ -93,7 +93,7 @@ export function ResourceUsageOverviewToJSON(json: any): ResourceUsageOverview {
     return ResourceUsageOverviewToJSONTyped(json, false);
 }
 
-export function ResourceUsageOverviewToJSONTyped(value?: ResourceUsageOverview | null, ignoreDiscriminator: boolean = false): any {
+export function ResourceUsageOverviewToJSONTyped(value?: ResourceUsageOverview | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

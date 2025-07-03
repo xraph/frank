@@ -77,7 +77,7 @@ export function ComplianceDeadlineToJSON(json: any): ComplianceDeadline {
     return ComplianceDeadlineToJSONTyped(json, false);
 }
 
-export function ComplianceDeadlineToJSONTyped(value?: ComplianceDeadline | null, ignoreDiscriminator: boolean = false): any {
+export function ComplianceDeadlineToJSONTyped(value?: ComplianceDeadline | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -61,7 +61,7 @@ export function ViolationDataPointToJSON(json: any): ViolationDataPoint {
     return ViolationDataPointToJSONTyped(json, false);
 }
 
-export function ViolationDataPointToJSONTyped(value?: ViolationDataPoint | null, ignoreDiscriminator: boolean = false): any {
+export function ViolationDataPointToJSONTyped(value?: ViolationDataPoint | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

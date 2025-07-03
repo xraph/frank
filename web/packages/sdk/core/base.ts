@@ -1,12 +1,19 @@
 import {
-    Configuration, InitOverrideFunction,
+    Configuration, type InitOverrideFunction,
 } from '@frank-auth/client';
 
-import {FrankAuthConfig, FrankAuthError} from './index';
+import {
+    AuthStorage,
+    AuthStorageUtils,
+    type FrankAuthConfig,
+    FrankAuthError,
+    StorageAdapter,
+    StorageManager
+} from './index';
 import {convertError} from './errors';
 import {
-    ConfigValidationError, validateSecretKey, validateApiUrl, validateProjectId, validatePublishableKey,
-    ValidationResult, validateSessionCookieName, validateStorageKeyPrefix, validateUserType,
+    type ConfigValidationError, validateSecretKey, validateApiUrl, validateProjectId, validatePublishableKey,
+    type ValidationResult, validateSessionCookieName, validateStorageKeyPrefix, validateUserType,
     createError, createWarning,
 } from './validation';
 
@@ -24,6 +31,8 @@ import {
  * Supports multi-tenant architecture with organization-scoped operations
  */
 export class BaseFrankAPI {
+    private readonly _storage: StorageManager
+    private _authStorage: AuthStorage
     private readonly _options: FrankAuthConfig
     private readonly _config: Configuration
     private readonly _validationResult: ValidationResult
@@ -33,6 +42,11 @@ export class BaseFrankAPI {
     private _activeSessionId: string | null = null;
 
     constructor(config: FrankAuthConfig, accessToken?: string) {
+        this._storage = config.storage || new StorageManager({
+            prefix: config.storageKeyPrefix ?? 'frank_auth',
+            type: config.storageType ?? 'localStorage'
+        });
+        this._authStorage = new AuthStorage(this._storage);
         this._options = config;
         this._accessToken = accessToken || null;
 
@@ -63,6 +77,17 @@ export class BaseFrankAPI {
             credentials: 'include',
             headers,
         });
+
+        this._storage.on(AuthStorageUtils.accessTokenKey, () => {
+            this.loadTokensFromStorage();
+        });
+
+        this._storage.on(AuthStorageUtils.refreshTokenKey, () => {
+            this.loadTokensFromStorage();
+        });
+
+        // Load tokens from storage
+        this.loadTokensFromStorage();
     }
 
     // ================================
@@ -83,6 +108,18 @@ export class BaseFrankAPI {
 
     get refreshToken(): string | null {
         return this._refreshToken;
+    }
+
+    get activeSessionId(): string | null {
+        return this._activeSessionId;
+    }
+
+    get authStorage(): AuthStorage {
+        return this._authStorage;
+    }
+
+    get storage(): StorageAdapter {
+        return this._storage;
     }
 
 
@@ -152,6 +189,37 @@ export class BaseFrankAPI {
         }
 
         return h
+    }
+
+
+    protected async clearTokens(): Promise<void> {
+        this.resetTokens();
+        // await this.removeFromStorage('accessToken');
+        // await this.removeFromStorage('refreshToken');
+        this._authStorage.clearAll()
+    }
+
+    protected loadTokensFromStorage(): void {
+        // if (typeof window === 'undefined') return;
+        //
+        // this.accessToken = localStorage.getItem(`${this.options.storageKeyPrefix}accessToken`);
+        // this.refreshToken = localStorage.getItem(`${this.options.storageKeyPrefix}refreshToken`);
+        this.accessToken = this._authStorage.getAccessToken()
+        this.refreshToken = this._authStorage.getRefreshToken()
+    }
+
+    protected async saveToStorage(key: string, value: string): Promise<void> {
+        // if (typeof window === 'undefined') return;
+        //
+        // localStorage.setItem(`${this.options.storageKeyPrefix}${key}`, value);
+        this._storage.set(key, value)
+    }
+
+    protected async removeFromStorage(key: string): Promise<void> {
+        // if (typeof window === 'undefined') return;
+        //
+        // localStorage.removeItem(`${this.options.storageKeyPrefix}${key}`);
+        this._storage.remove(key);
     }
 
     /**
@@ -389,6 +457,7 @@ export class BaseFrankAPI {
     // Error Handling
     // ================================
 
+    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
     public handleError(error: any): Promise<FrankAuthError> {
         return convertError(error)
     }

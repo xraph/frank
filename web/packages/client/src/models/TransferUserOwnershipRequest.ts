@@ -67,7 +67,7 @@ export function TransferUserOwnershipRequestToJSON(json: any): TransferUserOwner
     return TransferUserOwnershipRequestToJSONTyped(json, false);
 }
 
-export function TransferUserOwnershipRequestToJSONTyped(value?: Omit<TransferUserOwnershipRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function TransferUserOwnershipRequestToJSONTyped(value?: Omit<TransferUserOwnershipRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

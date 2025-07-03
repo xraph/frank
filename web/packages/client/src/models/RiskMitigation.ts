@@ -140,7 +140,7 @@ export function RiskMitigationToJSON(json: any): RiskMitigation {
     return RiskMitigationToJSONTyped(json, false);
 }
 
-export function RiskMitigationToJSONTyped(value?: Omit<RiskMitigation, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function RiskMitigationToJSONTyped(value?: Omit<RiskMitigation, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

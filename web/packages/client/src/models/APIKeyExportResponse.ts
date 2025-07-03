@@ -108,7 +108,7 @@ export function APIKeyExportResponseToJSON(json: any): APIKeyExportResponse {
     return APIKeyExportResponseToJSONTyped(json, false);
 }
 
-export function APIKeyExportResponseToJSONTyped(value?: Omit<APIKeyExportResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function APIKeyExportResponseToJSONTyped(value?: Omit<APIKeyExportResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

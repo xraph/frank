@@ -349,7 +349,7 @@ export function PlatformOrganizationSummaryToJSON(json: any): PlatformOrganizati
     return PlatformOrganizationSummaryToJSONTyped(json, false);
 }
 
-export function PlatformOrganizationSummaryToJSONTyped(value?: PlatformOrganizationSummary | null, ignoreDiscriminator: boolean = false): any {
+export function PlatformOrganizationSummaryToJSONTyped(value?: PlatformOrganizationSummary | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

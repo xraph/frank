@@ -85,7 +85,7 @@ export function MemberCohortToJSON(json: any): MemberCohort {
     return MemberCohortToJSONTyped(json, false);
 }
 
-export function MemberCohortToJSONTyped(value?: MemberCohort | null, ignoreDiscriminator: boolean = false): any {
+export function MemberCohortToJSONTyped(value?: MemberCohort | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

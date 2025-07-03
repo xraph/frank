@@ -123,7 +123,7 @@ export function PCIDSSRequirementToJSON(json: any): PCIDSSRequirement {
     return PCIDSSRequirementToJSONTyped(json, false);
 }
 
-export function PCIDSSRequirementToJSONTyped(value?: PCIDSSRequirement | null, ignoreDiscriminator: boolean = false): any {
+export function PCIDSSRequirementToJSONTyped(value?: PCIDSSRequirement | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

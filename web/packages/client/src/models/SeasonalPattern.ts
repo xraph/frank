@@ -69,7 +69,7 @@ export function SeasonalPatternToJSON(json: any): SeasonalPattern {
     return SeasonalPatternToJSONTyped(json, false);
 }
 
-export function SeasonalPatternToJSONTyped(value?: SeasonalPattern | null, ignoreDiscriminator: boolean = false): any {
+export function SeasonalPatternToJSONTyped(value?: SeasonalPattern | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

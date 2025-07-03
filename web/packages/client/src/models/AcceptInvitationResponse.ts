@@ -122,7 +122,7 @@ export function AcceptInvitationResponseToJSON(json: any): AcceptInvitationRespo
     return AcceptInvitationResponseToJSONTyped(json, false);
 }
 
-export function AcceptInvitationResponseToJSONTyped(value?: Omit<AcceptInvitationResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function AcceptInvitationResponseToJSONTyped(value?: Omit<AcceptInvitationResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

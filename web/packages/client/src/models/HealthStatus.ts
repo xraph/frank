@@ -101,7 +101,7 @@ export function HealthStatusToJSON(json: any): HealthStatus {
     return HealthStatusToJSONTyped(json, false);
 }
 
-export function HealthStatusToJSONTyped(value?: Omit<HealthStatus, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function HealthStatusToJSONTyped(value?: Omit<HealthStatus, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

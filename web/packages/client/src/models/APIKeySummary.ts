@@ -158,7 +158,7 @@ export function APIKeySummaryToJSON(json: any): APIKeySummary {
     return APIKeySummaryToJSONTyped(json, false);
 }
 
-export function APIKeySummaryToJSONTyped(value?: APIKeySummary | null, ignoreDiscriminator: boolean = false): any {
+export function APIKeySummaryToJSONTyped(value?: APIKeySummary | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

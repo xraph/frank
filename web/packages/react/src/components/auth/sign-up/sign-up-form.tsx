@@ -7,7 +7,8 @@
 
 'use client';
 
-import React, {useCallback, useMemo, useState} from 'react';
+import type React from 'react';
+import {useCallback, useMemo, useState} from 'react';
 import {Button as HeroButton, Checkbox, Divider, Input as HeroInput, Link} from '@heroui/react';
 import {motion} from 'framer-motion';
 import {
@@ -29,7 +30,7 @@ import {DEFAULT_PASSWORD_REQUIREMENTS, formatInvitationData, type SignUpFormProp
 import FormWrapper from "@/components/forms/form-wrapper";
 import EmailField from "@/components/forms/email-field";
 import PasswordField from "@/components/forms/password-field";
-import {RadiusT, SizeT} from "@/types";
+import type {RadiusT, SizeT} from "@/types";
 
 // ============================================================================
 // Sign Up Form State

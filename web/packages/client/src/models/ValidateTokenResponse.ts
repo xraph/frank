@@ -70,7 +70,7 @@ export function ValidateTokenResponseToJSON(json: any): ValidateTokenResponse {
     return ValidateTokenResponseToJSONTyped(json, false);
 }
 
-export function ValidateTokenResponseToJSONTyped(value?: Omit<ValidateTokenResponse, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function ValidateTokenResponseToJSONTyped(value?: Omit<ValidateTokenResponse, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -61,7 +61,7 @@ export function TimeSeriesPointToJSON(json: any): TimeSeriesPoint {
     return TimeSeriesPointToJSONTyped(json, false);
 }
 
-export function TimeSeriesPointToJSONTyped(value?: TimeSeriesPoint | null, ignoreDiscriminator: boolean = false): any {
+export function TimeSeriesPointToJSONTyped(value?: TimeSeriesPoint | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

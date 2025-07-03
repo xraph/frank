@@ -100,7 +100,7 @@ export function APIUsageAnalyticsToJSON(json: any): APIUsageAnalytics {
     return APIUsageAnalyticsToJSONTyped(json, false);
 }
 
-export function APIUsageAnalyticsToJSONTyped(value?: APIUsageAnalytics | null, ignoreDiscriminator: boolean = false): any {
+export function APIUsageAnalyticsToJSONTyped(value?: APIUsageAnalytics | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

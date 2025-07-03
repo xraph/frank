@@ -78,7 +78,7 @@ export function PasskeyRegistrationFinishRequestToJSON(json: any): PasskeyRegist
     return PasskeyRegistrationFinishRequestToJSONTyped(json, false);
 }
 
-export function PasskeyRegistrationFinishRequestToJSONTyped(value?: Omit<PasskeyRegistrationFinishRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function PasskeyRegistrationFinishRequestToJSONTyped(value?: Omit<PasskeyRegistrationFinishRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

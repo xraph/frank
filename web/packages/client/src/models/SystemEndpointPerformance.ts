@@ -77,7 +77,7 @@ export function SystemEndpointPerformanceToJSON(json: any): SystemEndpointPerfor
     return SystemEndpointPerformanceToJSONTyped(json, false);
 }
 
-export function SystemEndpointPerformanceToJSONTyped(value?: SystemEndpointPerformance | null, ignoreDiscriminator: boolean = false): any {
+export function SystemEndpointPerformanceToJSONTyped(value?: SystemEndpointPerformance | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

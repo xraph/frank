@@ -101,7 +101,7 @@ export function SecurityAlertToJSON(json: any): SecurityAlert {
     return SecurityAlertToJSONTyped(json, false);
 }
 
-export function SecurityAlertToJSONTyped(value?: SecurityAlert | null, ignoreDiscriminator: boolean = false): any {
+export function SecurityAlertToJSONTyped(value?: SecurityAlert | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

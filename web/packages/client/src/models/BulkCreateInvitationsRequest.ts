@@ -92,7 +92,7 @@ export function BulkCreateInvitationsRequestToJSON(json: any): BulkCreateInvitat
     return BulkCreateInvitationsRequestToJSONTyped(json, false);
 }
 
-export function BulkCreateInvitationsRequestToJSONTyped(value?: Omit<BulkCreateInvitationsRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function BulkCreateInvitationsRequestToJSONTyped(value?: Omit<BulkCreateInvitationsRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

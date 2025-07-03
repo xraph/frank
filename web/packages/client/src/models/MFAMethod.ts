@@ -174,7 +174,7 @@ export function MFAMethodToJSON(json: any): MFAMethod {
     return MFAMethodToJSONTyped(json, false);
 }
 
-export function MFAMethodToJSONTyped(value?: Omit<MFAMethod, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function MFAMethodToJSONTyped(value?: Omit<MFAMethod, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

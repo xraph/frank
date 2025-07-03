@@ -108,7 +108,7 @@ export function WebhookSecuritySettingsToJSON(json: any): WebhookSecuritySetting
     return WebhookSecuritySettingsToJSONTyped(json, false);
 }
 
-export function WebhookSecuritySettingsToJSONTyped(value?: Omit<WebhookSecuritySettings, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function WebhookSecuritySettingsToJSONTyped(value?: Omit<WebhookSecuritySettings, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

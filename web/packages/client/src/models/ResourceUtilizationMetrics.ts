@@ -85,7 +85,7 @@ export function ResourceUtilizationMetricsToJSON(json: any): ResourceUtilization
     return ResourceUtilizationMetricsToJSONTyped(json, false);
 }
 
-export function ResourceUtilizationMetricsToJSONTyped(value?: ResourceUtilizationMetrics | null, ignoreDiscriminator: boolean = false): any {
+export function ResourceUtilizationMetricsToJSONTyped(value?: ResourceUtilizationMetrics | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

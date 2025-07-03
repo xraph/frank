@@ -186,7 +186,7 @@ export function SOC2ReportToJSON(json: any): SOC2Report {
     return SOC2ReportToJSONTyped(json, false);
 }
 
-export function SOC2ReportToJSONTyped(value?: Omit<SOC2Report, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function SOC2ReportToJSONTyped(value?: Omit<SOC2Report, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

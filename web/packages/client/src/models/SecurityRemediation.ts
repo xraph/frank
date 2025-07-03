@@ -90,7 +90,7 @@ export function SecurityRemediationToJSON(json: any): SecurityRemediation {
     return SecurityRemediationToJSONTyped(json, false);
 }
 
-export function SecurityRemediationToJSONTyped(value?: SecurityRemediation | null, ignoreDiscriminator: boolean = false): any {
+export function SecurityRemediationToJSONTyped(value?: SecurityRemediation | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -83,7 +83,7 @@ export function PaginatedOutputMembershipActivityToJSON(json: any): PaginatedOut
     return PaginatedOutputMembershipActivityToJSONTyped(json, false);
 }
 
-export function PaginatedOutputMembershipActivityToJSONTyped(value?: Omit<PaginatedOutputMembershipActivity, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function PaginatedOutputMembershipActivityToJSONTyped(value?: Omit<PaginatedOutputMembershipActivity, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

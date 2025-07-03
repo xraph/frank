@@ -106,7 +106,7 @@ export function RoleHierarchyToJSON(json: any): RoleHierarchy {
     return RoleHierarchyToJSONTyped(json, false);
 }
 
-export function RoleHierarchyToJSONTyped(value?: Omit<RoleHierarchy, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function RoleHierarchyToJSONTyped(value?: Omit<RoleHierarchy, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

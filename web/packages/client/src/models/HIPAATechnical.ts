@@ -85,7 +85,7 @@ export function HIPAATechnicalToJSON(json: any): HIPAATechnical {
     return HIPAATechnicalToJSONTyped(json, false);
 }
 
-export function HIPAATechnicalToJSONTyped(value?: HIPAATechnical | null, ignoreDiscriminator: boolean = false): any {
+export function HIPAATechnicalToJSONTyped(value?: HIPAATechnical | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

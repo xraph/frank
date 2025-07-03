@@ -93,7 +93,7 @@ export function PlatformPerformanceStatsToJSON(json: any): PlatformPerformanceSt
     return PlatformPerformanceStatsToJSONTyped(json, false);
 }
 
-export function PlatformPerformanceStatsToJSONTyped(value?: PlatformPerformanceStats | null, ignoreDiscriminator: boolean = false): any {
+export function PlatformPerformanceStatsToJSONTyped(value?: PlatformPerformanceStats | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

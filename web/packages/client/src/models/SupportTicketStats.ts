@@ -101,7 +101,7 @@ export function SupportTicketStatsToJSON(json: any): SupportTicketStats {
     return SupportTicketStatsToJSONTyped(json, false);
 }
 
-export function SupportTicketStatsToJSONTyped(value?: SupportTicketStats | null, ignoreDiscriminator: boolean = false): any {
+export function SupportTicketStatsToJSONTyped(value?: SupportTicketStats | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

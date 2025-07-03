@@ -77,7 +77,7 @@ export function ForecastPeriodToJSON(json: any): ForecastPeriod {
     return ForecastPeriodToJSONTyped(json, false);
 }
 
-export function ForecastPeriodToJSONTyped(value?: ForecastPeriod | null, ignoreDiscriminator: boolean = false): any {
+export function ForecastPeriodToJSONTyped(value?: ForecastPeriod | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

@@ -82,7 +82,7 @@ export function BulkUserOperationToJSON(json: any): BulkUserOperation {
     return BulkUserOperationToJSONTyped(json, false);
 }
 
-export function BulkUserOperationToJSONTyped(value?: Omit<BulkUserOperation, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function BulkUserOperationToJSONTyped(value?: Omit<BulkUserOperation, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }

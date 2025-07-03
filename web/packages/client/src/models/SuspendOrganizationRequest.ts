@@ -75,7 +75,7 @@ export function SuspendOrganizationRequestToJSON(json: any): SuspendOrganization
     return SuspendOrganizationRequestToJSONTyped(json, false);
 }
 
-export function SuspendOrganizationRequestToJSONTyped(value?: Omit<SuspendOrganizationRequest, '$schema'> | null, ignoreDiscriminator: boolean = false): any {
+export function SuspendOrganizationRequestToJSONTyped(value?: Omit<SuspendOrganizationRequest, '$schema'> | null, ignoreDiscriminator = false): any {
     if (value == null) {
         return value;
     }
