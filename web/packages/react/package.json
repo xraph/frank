@@ -1,169 +1,169 @@
 {
-	"name": "@frank-auth/react",
-	"version": "0.1.21",
-	"description": "Flexible and customizable React UI components for Frank Authentication",
-	"keywords": [
-		"frank-auth",
-		"authentication",
-		"react",
-		"ui-components",
-		"typescript",
-		"heroui",
-		"tailwindcss",
-		"multi-tenant",
-		"saas"
-	],
-	"homepage": "https://github.com/frank-auth/react",
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/frank-auth/react.git"
-	},
-	"license": "MIT",
-	"author": "Frank Auth Team",
-	"main": "dist/cjs/index.js",
-	"module": "dist/esm/index.js",
-	"types": "dist/types/index.d.ts",
-	"style": "dist/assets/styles/global.css",
-	"sideEffects": [
-		"**/*.css"
-	],
-	"exports": {
-		".": {
-			"import": "./dist/esm/index.js",
-			"require": "./dist/cjs/index.js",
-			"types": "./dist/types/index.d.ts"
-		},
-		"./config": {
-			"import": "./dist/esm/config/index.js",
-			"require": "./dist/cjs/config/index.js",
-			"types": "./dist/types/config/index.d.ts"
-		},
-		"./components": {
-			"import": "./dist/esm/components/index.js",
-			"require": "./dist/cjs/components/index.js",
-			"types": "./dist/types/components/index.d.ts"
-		},
-		"./hooks": {
-			"import": "./dist/esm/hooks/index.js",
-			"require": "./dist/cjs/hooks/index.js",
-			"types": "./dist/types/hooks/index.d.ts"
-		},
-		"./utils": {
-			"import": "./dist/esm/utils/index.js",
-			"require": "./dist/cjs/utils/index.js",
-			"types": "./dist/types/utils/index.d.ts"
-		},
-		"./next": {
-			"import": "./dist/esm/next/index.js",
-			"require": "./dist/cjs/next/index.js",
-			"types": "./dist/types/next/index.d.ts"
-		},
-		"./styles": {
-			"require": "./dist/assets/styles/global.css",
-			"import": "./dist/assets/styles/global.css"
-		}
-	},
-	"files": [
-		"dist",
-		"src",
-		"README.md",
-		"CHANGELOG.md"
-	],
-	"scripts": {
-		"build": "pnpm run clean:dist && vite build",
-		"build:watch": "vite build --watch",
-		"clean": "git clean -xdf .cache .turbo dist node_modules",
-		"clean:dist": "rimraf dist",
-		"dev": "vite",
-		"preview": "vite preview",
-		"typecheck": "tsc --noEmit --emitDeclarationOnly false",
-		"type-check": "tsc --noEmit",
-		"test": "jest",
-		"test:watch": "jest --watch",
-		"test:coverage": "jest --coverage",
-		"storybook": "storybook dev -p 6006",
-		"build-storybook": "storybook build",
-		"prepublishOnly": "pnpm run clean:dist && pnpm run build",
-		"docs": "typedoc src/index.ts --out docs --theme minimal"
-	},
-	"dependencies": {
-		"@frank-auth/client": "^0.2.9",
-		"@frank-auth/sdk": "^0.2.17",
-		"@heroicons/react": "^2.2.0",
-		"@heroui/react": "^2.8.0-beta.9",
-		"@hookform/resolvers": "^4.1.3",
-		"@radix-ui/react-label": "^2.1.2",
-		"@radix-ui/react-select": "^2.2.5",
-		"@radix-ui/react-slot": "^1.2.3",
-		"class-variance-authority": "^0.7.1",
-		"clsx": "^2.1.1",
-		"framer-motion": "^12.19.1",
-		"lucide-react": "^0.483.0",
-		"next-themes": "^0.4.6",
-		"react-hook-form": "^7.58.0",
-		"sonner": "^2.0.5",
-		"tailwind-merge": "^3.3.1",
-		"zod": "^3.25.65"
-	},
-	"devDependencies": {
-		"@storybook/addon-backgrounds": "^9.0.8",
-		"@storybook/addon-controls": "^9.0.8",
-		"@storybook/addon-docs": "^9.0.10",
-		"@storybook/addon-essentials": "^8.6.14",
-		"@storybook/addon-interactions": "^8.6.14",
-		"@storybook/addon-links": "^9.0.10",
-		"@storybook/addon-measure": "^9.0.8",
-		"@storybook/addon-onboarding": "^8.6.14",
-		"@storybook/addon-outline": "^9.0.8",
-		"@storybook/addon-styling": "^1.3.7",
-		"@storybook/addon-viewport": "^9.0.8",
-		"@storybook/blocks": "^8.6.14",
-		"@storybook/react": "^8.4.7",
-		"@storybook/react-vite": "^8.4.7",
-		"@storybook/test": "^8.6.14",
-		"@storybook/theming": "^8.6.14",
-		"@tailwindcss/vite": "^4.1.10",
-		"@testing-library/jest-dom": "^6.6.3",
-		"@testing-library/react": "^16.3.0",
-		"@testing-library/user-event": "^14.6.1",
-		"@types/jest": "^29.5.14",
-		"@types/node": "^20.14.8",
-		"@types/react": "^18.2.21",
-		"@types/react-dom": "^18.2.7",
-		"@typescript-eslint/eslint-plugin": "^8.15.0",
-		"@typescript-eslint/parser": "^8.15.0",
-		"@vitejs/plugin-react": "^4.3.3",
-		"autoprefixer": "^10.4.20",
-		"eslint": "^8.57.1",
-		"eslint-config-prettier": "^9.1.0",
-		"eslint-plugin-prettier": "^5.2.1",
-		"eslint-plugin-react": "^7.37.2",
-		"eslint-plugin-react-hooks": "^5.0.0",
-		"eslint-plugin-storybook": "^0.11.6",
-		"jest": "^29.7.0",
-		"jest-environment-jsdom": "^29.7.0",
-		"postcss": "^8.4.49",
-		"prettier": "^3.3.3",
-		"rimraf": "^5.0.10",
-		"storybook": "^8.4.7",
-		"tailwindcss": "^4.1.10",
-		"tw-animate-css": "^1.3.4",
-		"typedoc": "^0.28.5",
-		"typescript": "^5.8.2",
-		"vite": "^6.3.5",
-		"vite-plugin-dts": "^4.5.4"
-	},
-	"peerDependencies": {
-		"next": "^15.3.3",
-		"react": "^19.0.0",
-		"react-dom": "^19.0.0",
-		"tailwindcss": "^4.1.10",
-		"tailwindcss-animate": "^1.0.7"
-	},
-	"publishConfig": {
-		"access": "public"
-	},
-	"engines": {
-		"node": ">=18.0.0"
-	}
+  "name": "@frank-auth/react",
+  "version": "0.1.22",
+  "description": "Flexible and customizable React UI components for Frank Authentication",
+  "keywords": [
+    "frank-auth",
+    "authentication",
+    "react",
+    "ui-components",
+    "typescript",
+    "heroui",
+    "tailwindcss",
+    "multi-tenant",
+    "saas"
+  ],
+  "homepage": "https://github.com/frank-auth/react",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/frank-auth/react.git"
+  },
+  "license": "MIT",
+  "author": "Frank Auth Team",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/types/index.d.ts",
+  "style": "dist/assets/styles/global.css",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js",
+      "types": "./dist/types/index.d.ts"
+    },
+    "./config": {
+      "import": "./dist/esm/config/index.js",
+      "require": "./dist/cjs/config/index.js",
+      "types": "./dist/types/config/index.d.ts"
+    },
+    "./components": {
+      "import": "./dist/esm/components/index.js",
+      "require": "./dist/cjs/components/index.js",
+      "types": "./dist/types/components/index.d.ts"
+    },
+    "./hooks": {
+      "import": "./dist/esm/hooks/index.js",
+      "require": "./dist/cjs/hooks/index.js",
+      "types": "./dist/types/hooks/index.d.ts"
+    },
+    "./utils": {
+      "import": "./dist/esm/utils/index.js",
+      "require": "./dist/cjs/utils/index.js",
+      "types": "./dist/types/utils/index.d.ts"
+    },
+    "./next": {
+      "import": "./dist/esm/next/index.js",
+      "require": "./dist/cjs/next/index.js",
+      "types": "./dist/types/next/index.d.ts"
+    },
+    "./styles": {
+      "require": "./dist/assets/styles/global.css",
+      "import": "./dist/assets/styles/global.css"
+    }
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "build": "pnpm run clean:dist && vite build",
+    "build:watch": "vite build --watch",
+    "clean": "git clean -xdf .cache .turbo dist node_modules",
+    "clean:dist": "rimraf dist",
+    "dev": "vite",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit --emitDeclarationOnly false",
+    "type-check": "tsc --noEmit",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build",
+    "prepublishOnly": "pnpm run clean:dist && pnpm run build",
+    "docs": "typedoc src/index.ts --out docs --theme minimal"
+  },
+  "dependencies": {
+    "@frank-auth/client": "^0.2.9",
+    "@frank-auth/sdk": "^0.2.17",
+    "@heroicons/react": "^2.2.0",
+    "@heroui/react": "^2.8.0-beta.9",
+    "@hookform/resolvers": "^4.1.3",
+    "@radix-ui/react-label": "^2.1.2",
+    "@radix-ui/react-select": "^2.2.5",
+    "@radix-ui/react-slot": "^1.2.3",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "framer-motion": "^12.19.1",
+    "lucide-react": "^0.483.0",
+    "next-themes": "^0.4.6",
+    "react-hook-form": "^7.58.0",
+    "sonner": "^2.0.5",
+    "tailwind-merge": "^3.3.1",
+    "zod": "^3.25.65"
+  },
+  "devDependencies": {
+    "@storybook/addon-backgrounds": "^9.0.8",
+    "@storybook/addon-controls": "^9.0.8",
+    "@storybook/addon-docs": "^9.0.10",
+    "@storybook/addon-essentials": "^8.6.14",
+    "@storybook/addon-interactions": "^8.6.14",
+    "@storybook/addon-links": "^9.0.10",
+    "@storybook/addon-measure": "^9.0.8",
+    "@storybook/addon-onboarding": "^8.6.14",
+    "@storybook/addon-outline": "^9.0.8",
+    "@storybook/addon-styling": "^1.3.7",
+    "@storybook/addon-viewport": "^9.0.8",
+    "@storybook/blocks": "^8.6.14",
+    "@storybook/react": "^8.4.7",
+    "@storybook/react-vite": "^8.4.7",
+    "@storybook/test": "^8.6.14",
+    "@storybook/theming": "^8.6.14",
+    "@tailwindcss/vite": "^4.1.10",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^20.14.8",
+    "@types/react": "^18.2.21",
+    "@types/react-dom": "^18.2.7",
+    "@typescript-eslint/eslint-plugin": "^8.15.0",
+    "@typescript-eslint/parser": "^8.15.0",
+    "@vitejs/plugin-react": "^4.3.3",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^8.57.1",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.2.1",
+    "eslint-plugin-react": "^7.37.2",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "eslint-plugin-storybook": "^0.11.6",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "postcss": "^8.4.49",
+    "prettier": "^3.3.3",
+    "rimraf": "^5.0.10",
+    "storybook": "^8.4.7",
+    "tailwindcss": "^4.1.10",
+    "tw-animate-css": "^1.3.4",
+    "typedoc": "^0.28.5",
+    "typescript": "^5.8.2",
+    "vite": "^6.3.5",
+    "vite-plugin-dts": "^4.5.4"
+  },
+  "peerDependencies": {
+    "next": "^15.3.3",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tailwindcss": "^4.1.10",
+    "tailwindcss-animate": "^1.0.7"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
 }

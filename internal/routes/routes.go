@@ -57,13 +57,13 @@ func NewRouterWithOptions(di di.Container, existingRouter chi.Router, opts *serv
 	}
 
 	// Create or use existing Chi router
-	var r chi.Router
+	var r = chi.NewRouter()
 	if existingRouter == nil {
-		r = chi.NewRouter()
+		logger.Info("Creating new Chi router")
 		setupMiddleware(r, di, logger)
 	} else {
-		logger.Debug("Using existing Chi router")
-		r = existingRouter
+		logger.Info("Using existing Chi router", logging.String("base_path", opts.BasePath))
+		setupSharedMiddleware(r)
 	}
 
 	// Create Huma API configuration
@@ -117,6 +117,10 @@ func NewRouterWithOptions(di di.Container, existingRouter chi.Router, opts *serv
 
 	// Register all routes
 	router.RegisterRoutes()
+
+	if existingRouter != nil {
+		// existingRouter.Mount(opts.BasePath, router.router)
+	}
 
 	return router
 }
@@ -178,9 +182,7 @@ func setupMiddleware(r chi.Router, di di.Container, logger logging.Logger) {
 		r.Use(customMiddleware.DevelopmentLogging(logger))
 	}
 
-	// Security and request enhancement middleware
-	r.Use(customMiddleware.AddRequestInfo())
-	r.Use(customMiddleware.AddHeader())
+	setupSharedMiddleware(r)
 
 	// Rate limiting with configuration
 	if di.Config().Security.RateLimitEnabled {
@@ -207,7 +209,7 @@ func setupMiddleware(r chi.Router, di di.Container, logger logging.Logger) {
 	if di.Config().App.Environment == "development" {
 		r.Use(customMiddleware.DevelopmentCORS())
 	} else {
-		r.Use(customMiddleware.CORS(di.Config()))
+		r.Use(customMiddleware.ProductionCORS(di.Config().Security.AllowedOrigins))
 	}
 
 	// Security headers
@@ -219,6 +221,13 @@ func setupMiddleware(r chi.Router, di di.Container, logger logging.Logger) {
 	if di.Config().App.Environment == "development" {
 		r.Mount("/debug", chimw.Profiler())
 	}
+}
+
+// setupMiddleware configures all Chi middleware for the router
+func setupSharedMiddleware(r chi.Router) {
+	// Security and request enhancement middleware
+	r.Use(customMiddleware.AddRequestInfo())
+	r.Use(customMiddleware.AddHeader())
 }
 
 // createHumaAPI creates and configures the Huma API instance
