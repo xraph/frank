@@ -1,3 +1,12 @@
+# [0.10.0](https://github.com/xraph/frank/compare/v0.9.3...v0.10.0) (2025-07-03)
+
+
+### Features
+
+* add storage manager with auth utilities and type usage improvements ([f861d42](https://github.com/xraph/frank/commit/f861d42c697b3ad93a7481b36f7bdf38c1217ca0))
+
+
+
 ## [0.9.3](https://github.com/xraph/frank/compare/v0.9.2...v0.9.3) (2025-07-03)
 
 
@@ -15,15 +24,6 @@
 ### Features
 
 * add Huma middleware and context helpers ([7675d0c](https://github.com/xraph/frank/commit/7675d0c3baac89eb6eeeb49ad19ad13ba6ed7c9e))
-
-
-
-## [0.8.2](https://github.com/xraph/frank/compare/v0.8.1...v0.8.2) (2025-06-28)
-
-
-### Bug Fixes
-
-* fixed user type detection middlewares ([abea098](https://github.com/xraph/frank/commit/abea098ec3a481fcde02545ab2a6153a9e71a515))
 
 
 
