@@ -297,7 +297,7 @@ func (ocm *OrganizationContextMiddleware) RequireOrganizationForUserType(allowMi
 
 			// Validate organization context if present
 			if orgID != nil {
-				if err := ocm.validateOrganizationContext(ctx, *orgID, model.UserType(userType), allowMissing); err != nil {
+				if err := ocm.validateOrganizationContext(ctx, *orgID, userType, allowMissing); err != nil {
 					ocm.respondError(w, r, err)
 					return
 				}
@@ -339,7 +339,7 @@ func (ocm *OrganizationContextMiddleware) RequireOrganizationForUserTypeHuma(isP
 			// Use detected user type for unauthenticated requests
 			detectedType := GetDetectedUserTypeFromContext(rctx)
 			if detectedType != "" {
-				userType = model.UserType(detectedType)
+				userType = detectedType
 			} else {
 				// Default for public endpoints
 				if isPublic {
@@ -540,27 +540,27 @@ func (ocm *OrganizationContextMiddleware) getEffectiveUserType(ctx context.Conte
 // getEffectiveOrganizationID gets organization ID from various sources
 func (ocm *OrganizationContextMiddleware) getEffectiveOrganizationID(ctx context.Context, r *http.Request) *xid.ID {
 	// Priority order:
-	// 1. From current organization context
+	// From current organization context
 	if orgID := GetOrganizationIDFromContext(ctx); orgID != nil {
 		return orgID
 	}
 
-	// 2. From detected organization context
+	// From detected organization context
 	if orgID := GetDetectedOrganizationIDFromContext(ctx); orgID != nil {
 		return orgID
 	}
 
-	// 3. From API key
+	// From API key
 	if apiKey := GetAPIKeyFromContext(ctx); apiKey != nil && apiKey.OrganizationID != nil {
 		return apiKey.OrganizationID
 	}
 
-	// 4. From authenticated user
+	// From authenticated user
 	if user := GetUserFromContext(ctx); user != nil && user.OrganizationID != nil {
 		return user.OrganizationID
 	}
 
-	// 5. From X-Org-ID header
+	// From X-Org-ID header
 	if orgIDStr := r.Header.Get("X-Org-ID"); orgIDStr != "" {
 		if orgID, err := xid.FromString(orgIDStr); err == nil {
 			return &orgID
