@@ -26,8 +26,8 @@
 import {NextRequest, NextResponse} from 'next/server';
 import type {Session, User, UserType} from '@frank-auth/client';
 import type {FrankAuthConfig} from '../types';
-import {FrankAuth} from "@frank-auth/sdk";
 import {AuthStorageUtils} from "@/utils";
+import {AuthSDK} from "@frank-auth/sdk";
 
 // ============================================================================
 // Types and Interfaces
@@ -268,19 +268,9 @@ function getSessionToken(req: NextRequest, config: Required<MiddlewareConfig>): 
 async function validateSession(
     token: string,
     config: Required<MiddlewareConfig>,
-    req: NextRequest
+    req: NextRequest,
+    authApi: AuthSDK
 ): Promise<AuthResult> {
-    const authApi = new FrankAuth({
-        apiUrl: config.apiUrl,
-        publishableKey: config.publishableKey,
-        sessionCookieName: config.sessionCookieName,
-        storageKeyPrefix: config.storageKeyPrefix,
-        enableDevMode: config.debug,
-        userType: config.userType ?? 'end_user',
-        projectId: config.projectId,
-        secretKey: config.secretKey,
-    })
-
     try {
         // Forward important headers from the original request
         const headers: Record<string, string> = {
@@ -351,7 +341,7 @@ async function refreshSession(
     config: Required<MiddlewareConfig>,
     req: NextRequest
 ): Promise<{ accessToken: string; refreshToken: string } | null> {
-    const authApi = new FrankAuth({
+    const authApi = new AuthSDK({
         apiUrl: config.apiUrl,
         publishableKey: config.publishableKey,
         sessionCookieName: config.sessionCookieName,
@@ -436,7 +426,8 @@ function debugLog(config: Required<MiddlewareConfig>, message: string, data?: an
  */
 async function processRequest(
     req: NextRequest,
-    config: Required<MiddlewareConfig>
+    config: Required<MiddlewareConfig>,
+    authApi: AuthSDK,
 ): Promise<NextResponse> {
     const path = req.nextUrl.pathname;
 
@@ -491,22 +482,22 @@ async function processRequest(
     // Validate session if token exists
     if (sessionToken) {
 
-        auth = await validateSession(sessionToken, config, req);
+        auth = await validateSession(sessionToken, config, req, authApi);
 
         // Try to refresh if validation failed
         if (!auth.isAuthenticated && auth.error) {
-            const refreshToken = req.cookies.get(`${config.storageKeyPrefix}refresh_token`)?.value;
+            const refreshToken = req.cookies.get(`${config.storageKeyPrefix}_refresh_token`)?.value;
             if (refreshToken) {
                 const refreshResult = await refreshSession(refreshToken, config, req);
                 if (refreshResult) {
-                    auth = await validateSession(refreshResult.accessToken, config, req);
+                    auth = await validateSession(refreshResult.accessToken, config, req, authApi);
 
                     // Set new tokens in response
                     if (auth.isAuthenticated) {
                         const response = NextResponse.next();
                         // response.cookies.set(config.sessionCookieName, refreshResult.accessToken, config.cookieOptions);
-                        response.cookies.set(`${config.storageKeyPrefix}${AuthStorageUtils.accessTokenKey}`, refreshResult.accessToken, config.cookieOptions);
-                        response.cookies.set(`${config.storageKeyPrefix}${AuthStorageUtils.refreshTokenKey}`, refreshResult.refreshToken, config.cookieOptions);
+                        response.cookies.set(`${config.storageKeyPrefix}_${AuthStorageUtils.accessTokenKey}`, refreshResult.accessToken, config.cookieOptions);
+                        response.cookies.set(`${config.storageKeyPrefix}_${AuthStorageUtils.refreshTokenKey}`, refreshResult.refreshToken, config.cookieOptions);
                         return response;
                     }
                 }
@@ -652,8 +643,20 @@ export function createFrankAuthMiddleware(userConfig: MiddlewareConfig) {
         enableOrgRouting: config.enableOrgRouting,
     });
 
+
+    const authApi = new AuthSDK({
+        apiUrl: config.apiUrl,
+        publishableKey: config.publishableKey,
+        sessionCookieName: config.sessionCookieName,
+        storageKeyPrefix: config.storageKeyPrefix,
+        enableDevMode: config.debug,
+        userType: config.userType ?? 'end_user',
+        projectId: config.projectId,
+        secretKey: config.secretKey,
+    })
+
     return async function middleware(req: NextRequest): Promise<NextResponse> {
-        return processRequest(req, config);
+        return processRequest(req, config, authApi);
     };
 }
 

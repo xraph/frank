@@ -8,7 +8,6 @@
 import {useCallback, useEffect, useMemo, useState} from 'react';
 
 import type {Session, SessionInfo} from '@frank-auth/client';
-import {FrankSession} from '@frank-auth/sdk';
 
 import {useAuth} from './use-auth';
 import {useConfig} from '../provider/config-provider';
@@ -141,22 +140,12 @@ export interface DeviceInfo {
  * ```
  */
 export function useSession(): UseSessionReturn {
-    const {session, createSession: authCreateSession, reload, userType} = useAuth();
+    const {session, sdk, createSession: authCreateSession, reload, userType} = useAuth();
     const {apiUrl, publishableKey} = useConfig();
 
     const [sessions, setSessions] = useState<SessionInfo[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<AuthError | null>(null);
-
-    // Initialize Frank Session SDK
-    const frankSession = useMemo(() => {
-        if (!session?.accessToken) return null;
-        return new FrankSession({
-            publishableKey,
-            apiUrl,
-            userType: userType ?? 'end_user',
-        }, session.accessToken);
-    }, [publishableKey, apiUrl, session?.accessToken]);
 
     // Error handler
     const handleError = useCallback((err: any) => {
@@ -172,13 +161,11 @@ export function useSession(): UseSessionReturn {
 
     // Load sessions on mount and session change
     const loadSessions = useCallback(async () => {
-        if (!frankSession) return;
-
         try {
             setIsLoading(true);
             setError(null);
 
-            const sessionsData = await frankSession.listSessions();
+            const sessionsData = await sdk.session.listSessions({fields: []});
             setSessions(sessionsData.data as any);
         } catch (err) {
             console.error('Failed to load sessions:', err);
@@ -189,7 +176,7 @@ export function useSession(): UseSessionReturn {
         } finally {
             setIsLoading(false);
         }
-    }, [frankSession]);
+    }, [sdk.session]);
 
     useEffect(() => {
         loadSessions();
@@ -201,13 +188,11 @@ export function useSession(): UseSessionReturn {
     }, [authCreateSession]);
 
     const setActiveSession = useCallback(async (sessionId: string): Promise<void> => {
-        if (!frankSession) throw new Error('Session not available');
-
         try {
             setIsLoading(true);
             setError(null);
 
-            frankSession.setActiveSession(sessionId);
+            sdk.session.activeSession = sessionId;
             await reload(); // Refresh auth state
             await loadSessions(); // Refresh sessions list
         } catch (err) {
@@ -215,16 +200,14 @@ export function useSession(): UseSessionReturn {
         } finally {
             setIsLoading(false);
         }
-    }, [frankSession, reload, loadSessions, handleError]);
+    }, [sdk.session, reload, loadSessions, handleError]);
 
     const refreshSession = useCallback(async (): Promise<Session | null> => {
-        if (!frankSession) throw new Error('Session not available');
-
         try {
             setIsLoading(true);
             setError(null);
 
-            const refreshedSession = await frankSession.refreshSession();
+            const refreshedSession = await sdk.session.refreshSession();
             await reload(); // Refresh auth state
 
             return refreshedSession;
@@ -234,16 +217,14 @@ export function useSession(): UseSessionReturn {
         } finally {
             setIsLoading(false);
         }
-    }, [frankSession, reload, handleError]);
+    }, [sdk.session, reload, handleError]);
 
     const revokeSession = useCallback(async (sessionId: string): Promise<void> => {
-        if (!frankSession) throw new Error('Session not available');
-
         try {
             setIsLoading(true);
             setError(null);
 
-            await frankSession.revokeSession(sessionId);
+            await sdk.session.revokeSession(sessionId);
 
             // If we revoked the current session, reload auth state
             if (sessionId === session?.id) {
@@ -257,16 +238,14 @@ export function useSession(): UseSessionReturn {
         } finally {
             setIsLoading(false);
         }
-    }, [frankSession, session?.id, reload, loadSessions, handleError]);
+    }, [sdk.session, session?.id, reload, loadSessions, handleError]);
 
     const revokeAllSessions = useCallback(async (exceptCurrent = false): Promise<void> => {
-        if (!frankSession) throw new Error('Session not available');
-
         try {
             setIsLoading(true);
             setError(null);
 
-            await frankSession.revokeAllSessions({
+            await sdk.session.revokeAllSessions({
                 exceptCurrent,
             });
 
@@ -282,11 +261,9 @@ export function useSession(): UseSessionReturn {
         } finally {
             setIsLoading(false);
         }
-    }, [frankSession, reload, loadSessions, handleError]);
+    }, [sdk.session, reload, loadSessions, handleError]);
 
     const endSession = useCallback(async (): Promise<void> => {
-        if (!frankSession) throw new Error('Session not available');
-
         try {
             setIsLoading(true);
             setError(null);
@@ -298,7 +275,7 @@ export function useSession(): UseSessionReturn {
         } finally {
             setIsLoading(false);
         }
-    }, [frankSession, reload, handleError]);
+    }, [sdk.session, reload, handleError]);
 
     // Session information
     const sessionId = useMemo(() => session?.id || null, [session]);

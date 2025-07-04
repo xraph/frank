@@ -15,7 +15,6 @@ import type {
     VerifyMFASetupRequest,
 } from '@frank-auth/client';
 
-import {FrankUser} from '@frank-auth/sdk';
 import {useAuth} from './use-auth';
 import {useConfig} from '../provider/config-provider';
 
@@ -297,23 +296,13 @@ export const MFA_METHOD_CONFIGS = {
  * ```
  */
 export function useMFA(): UseMFAReturn {
-    const {user, session, reload, userType} = useAuth();
+    const {user, session, reload, userType, sdk} = useAuth();
     const {apiUrl, publishableKey, features} = useConfig();
 
     const [mfaMethods, setMFAMethods] = useState<MFAMethod[]>([]);
     const [backupCodes, setBackupCodes] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<AuthError | null>(null);
-
-    // Initialize Frank User SDK
-    const frankUser = useMemo(() => {
-        if (!session?.accessToken) return null;
-        return new FrankUser({
-            publishableKey,
-            apiUrl,
-            userType: userType ?? 'end_user',
-        }, session.accessToken);
-    }, [publishableKey, apiUrl, session?.accessToken]);
 
     // Check if MFA is available
     const isMFAAvailable = useMemo(() => features.mfa, [features.mfa]);
@@ -332,20 +321,23 @@ export function useMFA(): UseMFAReturn {
 
     // Load MFA methods and backup codes
     const loadMFAData = useCallback(async () => {
-        if (!frankUser || !user || !isMFAAvailable) return;
+        if (!sdk.user || !user || !isMFAAvailable) return;
 
         try {
             setIsLoading(true);
             setError(null);
 
             // Load MFA methods
-            const methods = await frankUser.getMFAMethods();
+            const methods = await sdk.user.getMFAMethods({
+                orgId: sdk.user.getOrganizationId(),
+                userId: sdk.user.getUserData()
+            });
             setMFAMethods(methods.data || []);
 
             // Load backup codes if MFA is enabled
             if (user.mfaEnabled) {
                 try {
-                    const codes = await frankUser.getMFABackupCodes();
+                    const codes = await sdk.user.getBackupCodes();
                     setBackupCodes(codes.codes || []);
                 } catch (backupError) {
                     // Backup codes might not be set up yet
@@ -361,7 +353,7 @@ export function useMFA(): UseMFAReturn {
         } finally {
             setIsLoading(false);
         }
-    }, [frankUser, user, isMFAAvailable]);
+    }, [sdk.user, user, isMFAAvailable]);
 
     useEffect(() => {
         loadMFAData();
@@ -369,7 +361,7 @@ export function useMFA(): UseMFAReturn {
 
     // MFA setup methods
     const setupTOTP = useCallback(async (): Promise<MFASetupData> => {
-        if (!frankUser) throw new Error('User not authenticated');
+        if (!sdk.user) throw new Error('User not authenticated');
         if (!isMFAAvailable) throw new Error('MFA not available');
 
         try {
@@ -380,7 +372,7 @@ export function useMFA(): UseMFAReturn {
                 method: 'totp',
             };
 
-            const response = await frankUser.setupMFA(setupRequest);
+            const response = await sdk.user.setupMFA(setupRequest);
 
             return {
                 method: 'totp',
@@ -394,10 +386,10 @@ export function useMFA(): UseMFAReturn {
         } finally {
             setIsLoading(false);
         }
-    }, [frankUser, isMFAAvailable, handleError]);
+    }, [sdk.user, isMFAAvailable, handleError]);
 
     const setupSMS = useCallback(async (phoneNumber: string): Promise<MFASetupData> => {
-        if (!frankUser) throw new Error('User not authenticated');
+        if (!sdk.user) throw new Error('User not authenticated');
         if (!isMFAAvailable) throw new Error('MFA not available');
 
         try {
@@ -409,7 +401,7 @@ export function useMFA(): UseMFAReturn {
                 phoneNumber,
             };
 
-            const response = await frankUser.setupMFA(setupRequest);
+            const response = await sdk.user.setupMFA(setupRequest);
 
             return {
                 method: 'sms',
@@ -420,10 +412,10 @@ export function useMFA(): UseMFAReturn {
         } finally {
             setIsLoading(false);
         }
-    }, [frankUser, isMFAAvailable, handleError]);
+    }, [sdk.user, isMFAAvailable, handleError]);
 
     const setupEmail = useCallback(async (email?: string): Promise<MFASetupData> => {
-        if (!frankUser) throw new Error('User not authenticated');
+        if (!sdk.user) throw new Error('User not authenticated');
         if (!isMFAAvailable) throw new Error('MFA not available');
 
         try {
@@ -435,7 +427,7 @@ export function useMFA(): UseMFAReturn {
                 email: email || user?.primaryEmailAddress,
             };
 
-            const response = await frankUser.setupMFA(setupRequest);
+            const response = await sdk.user.setupMFA(setupRequest);
 
             return {
                 method: 'email',
@@ -446,10 +438,9 @@ export function useMFA(): UseMFAReturn {
         } finally {
             setIsLoading(false);
         }
-    }, [frankUser, user, isMFAAvailable, handleError]);
+    }, [sdk.user, user, isMFAAvailable, handleError]);
 
     const setupWebAuthn = useCallback(async (): Promise<MFASetupData> => {
-        if (!frankUser) throw new Error('User not authenticated');
         if (!isMFAAvailable) throw new Error('MFA not available');
 
         try {
@@ -460,7 +451,7 @@ export function useMFA(): UseMFAReturn {
                 method: 'webauthn',
             };
 
-            const response = await frankUser.setupMFA(setupRequest);
+            const response = await sdk.auth.setupMFA(setupRequest);
 
             return {
                 method: 'webauthn',
@@ -472,11 +463,11 @@ export function useMFA(): UseMFAReturn {
         } finally {
             setIsLoading(false);
         }
-    }, [frankUser, isMFAAvailable, handleError]);
+    }, [sdk.user, isMFAAvailable, handleError]);
 
     // MFA verification during setup
     const verifySetup = useCallback(async (method: string, code: string, methodId?: string): Promise<MFAMethod> => {
-        if (!frankUser) throw new Error('User not authenticated');
+        if (!sdk.user) throw new Error('User not authenticated');
 
         try {
             setIsLoading(true);
@@ -486,9 +477,10 @@ export function useMFA(): UseMFAReturn {
                 method,
                 code,
                 methodId,
+                generateBackupCodes: false
             };
 
-            const response = await frankUser.verifyMFASetup(verifyRequest);
+            const response = await sdk.user.verifyMFASetup(verifyRequest);
 
             // Refresh MFA data and user state
             await loadMFAData();
@@ -500,11 +492,11 @@ export function useMFA(): UseMFAReturn {
         } finally {
             setIsLoading(false);
         }
-    }, [frankUser, loadMFAData, reload, handleError]);
+    }, [sdk.user, loadMFAData, reload, handleError]);
 
     // MFA verification during authentication
     const verifyMFA = useCallback(async (method: string, code: string, token: string): Promise<MFAVerifyResponse> => {
-        if (!frankUser) throw new Error('User not authenticated');
+        if (!sdk.user) throw new Error('User not authenticated');
 
         try {
             setIsLoading(true);
@@ -517,7 +509,7 @@ export function useMFA(): UseMFAReturn {
                 context: 'login',
             };
 
-            const response = await frankUser.verifyMFA(verifyRequest);
+            const response = await sdk.auth.verifyMFA(verifyRequest);
 
             return response;
         } catch (err) {
@@ -525,17 +517,17 @@ export function useMFA(): UseMFAReturn {
         } finally {
             setIsLoading(false);
         }
-    }, [frankUser, handleError]);
+    }, [sdk.user, handleError]);
 
     // Method management
     const removeMFAMethod = useCallback(async (methodId: string): Promise<void> => {
-        if (!frankUser) throw new Error('User not authenticated');
+        if (!sdk.user) throw new Error('User not authenticated');
 
         try {
             setIsLoading(true);
             setError(null);
 
-            await frankUser.removeMFAMethod(methodId);
+            await sdk.user.removeMFAMethod(methodId);
 
             // Refresh MFA data
             await loadMFAData();
@@ -545,16 +537,16 @@ export function useMFA(): UseMFAReturn {
         } finally {
             setIsLoading(false);
         }
-    }, [frankUser, loadMFAData, reload, handleError]);
+    }, [sdk.user, loadMFAData, reload, handleError]);
 
     const setPrimaryMethod = useCallback(async (methodId: string): Promise<void> => {
-        if (!frankUser) throw new Error('User not authenticated');
+        if (!sdk.user) throw new Error('User not authenticated');
 
         try {
             setIsLoading(true);
             setError(null);
 
-            await frankUser.setPrimaryMFAMethod(methodId);
+            await sdk.user.setPrimaryMFAMethod(methodId);
 
             // Refresh MFA data
             await loadMFAData();
@@ -563,16 +555,16 @@ export function useMFA(): UseMFAReturn {
         } finally {
             setIsLoading(false);
         }
-    }, [frankUser, loadMFAData, handleError]);
+    }, [sdk.user, loadMFAData, handleError]);
 
     const regenerateBackupCodes = useCallback(async (): Promise<string[]> => {
-        if (!frankUser) throw new Error('User not authenticated');
+        if (!sdk.user) throw new Error('User not authenticated');
 
         try {
             setIsLoading(true);
             setError(null);
 
-            const response = await frankUser.regenerateMFABackupCodes();
+            const response = await sdk.user.regenerateMFABackupCodes();
 
             setBackupCodes(response.codes);
             return response.codes;
@@ -581,7 +573,7 @@ export function useMFA(): UseMFAReturn {
         } finally {
             setIsLoading(false);
         }
-    }, [frankUser, handleError]);
+    }, [sdk.user, handleError]);
 
     // MFA status and method checking
     const isEnabled = useMemo(() => user?.mfaEnabled || false, [user]);
@@ -634,13 +626,13 @@ export function useMFA(): UseMFAReturn {
 
     // Convenience methods
     const disable = useCallback(async (): Promise<void> => {
-        if (!frankUser) throw new Error('User not authenticated');
+        if (!sdk.user) throw new Error('User not authenticated');
 
         try {
             setIsLoading(true);
             setError(null);
 
-            await frankUser.disableMFA();
+            await sdk.user.disableMFA();
 
             // Clear local state
             setMFAMethods([]);
@@ -652,23 +644,23 @@ export function useMFA(): UseMFAReturn {
         } finally {
             setIsLoading(false);
         }
-    }, [frankUser, reload, handleError]);
+    }, [sdk.user, reload, handleError]);
 
     const enable = useCallback(async (): Promise<void> => {
-        if (!frankUser) throw new Error('User not authenticated');
+        if (!sdk.user) throw new Error('User not authenticated');
 
         try {
             setIsLoading(true);
             setError(null);
 
-            await frankUser.enableMFA();
+            await sdk.user.enableMFA();
             await reload();
         } catch (err) {
             handleError(err);
         } finally {
             setIsLoading(false);
         }
-    }, [frankUser, reload, handleError]);
+    }, [sdk.user, reload, handleError]);
 
     const refreshMethods = useCallback(async (): Promise<void> => {
         await loadMFAData();

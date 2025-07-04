@@ -28,7 +28,7 @@ import {useConfig} from '../provider/config-provider';
 
 import type {
     AuthError,
-    OrganizationMembership,
+    OrganizationMembership, SDKState,
     SetActiveParams,
     SignInParams,
     SignInResult,
@@ -43,6 +43,8 @@ import type {PasswordResetRequest} from "@frank-auth/sdk";
 // ============================================================================
 
 export interface UseAuthReturn {
+    sdk: SDKState
+
     // Authentication state
     isLoaded: boolean;
     isLoading: boolean;
@@ -279,6 +281,8 @@ export function useAuth(): UseAuthReturn {
     }, []);
 
     return {
+        sdk: authContext.sdk,
+
         // Core authentication state
         isLoaded: authContext.isLoaded,
         isLoading: authContext.isLoading,

@@ -498,6 +498,7 @@ func (router *Router) setupProtectedRoutes(v1Group huma.API) {
 
 	// Tenant-scoped group - full multi-tenant isolation
 	tenantGroup := huma.NewGroup(v1Group)
+
 	tenantGroup.UseMiddleware(router.orgContextMw.UserTypeDetectionHumaMiddleware(false))
 	tenantGroup.UseMiddleware(router.authMw.RequireAuthHuma())
 	tenantGroup.UseMiddleware(router.orgContextMw.RequireOrganizationForUserTypeHuma(false))
@@ -557,6 +558,7 @@ func (router *Router) setupPersonalRoutes(v1Group huma.API) {
 		model.UserTypeExternal,
 		model.UserTypeEndUser,
 	))
+
 	// Auth management endpoints (logout, refresh, profile, etc.)
 	// These should NOT require organization context
 	RegisterPersonalAuthAPI(personalGroup, router.di)

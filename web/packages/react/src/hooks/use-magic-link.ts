@@ -9,7 +9,6 @@ import {useCallback, useEffect, useMemo, useState} from 'react';
 
 import type {MagicLinkRequest,} from '@frank-auth/client';
 
-import {FrankAuth} from '@frank-auth/sdk';
 import {useAuth} from './use-auth';
 import {useConfig} from '../provider/config-provider';
 
@@ -293,22 +292,13 @@ export const MAGIC_LINK_CONFIG = {
  * ```
  */
 export function useMagicLink(): UseMagicLinkReturn {
-    const {activeOrganization, reload, userType} = useAuth();
+    const {activeOrganization, reload, userType, sdk} = useAuth();
     const {apiUrl, publishableKey, features, linksPath, frontendUrl} = useConfig();
 
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<AuthError | null>(null);
     const [lastSentEmail, setLastSentEmail] = useState<string | null>(null);
     const [lastSentAt, setLastSentAt] = useState<Date | null>(null);
-
-    // Initialize Frank Auth SDK
-    const frankAuth = useMemo(() => {
-        return new FrankAuth({
-            publishableKey,
-            apiUrl,
-            userType: userType ?? 'end_user',
-        });
-    }, [publishableKey, apiUrl]);
 
     // Check if magic links are available
     const isMagicLinkAvailable = useMemo(() => features.magicLink, [features.magicLink]);
@@ -387,7 +377,7 @@ export function useMagicLink(): UseMagicLinkReturn {
                 // locale: options?.locale,
             };
 
-            const response = await frankAuth.sendMagicLink(magicLinkRequest);
+            const response = await sdk.auth.sendMagicLink(magicLinkRequest);
 
             // Update state
             setLastSentEmail(email);
@@ -409,7 +399,7 @@ export function useMagicLink(): UseMagicLinkReturn {
         } finally {
             setIsLoading(false);
         }
-    }, [frankAuth, isMagicLinkAvailable, isValidEmail, activeOrganization]);
+    }, [sdk.auth, isMagicLinkAvailable, isValidEmail, activeOrganization]);
 
     // Verify magic link
     const verifyMagicLink = useCallback(async (token: string): Promise<MagicLinkVerifyResult> => {
@@ -420,7 +410,7 @@ export function useMagicLink(): UseMagicLinkReturn {
             setIsLoading(true);
             setError(null);
 
-            const response = await frankAuth.verifyMagicLink(token);
+            const response = await sdk.auth.verifyMagicLink(token);
 
             if (response.session) {
                 // Reload auth state with new user session
@@ -447,7 +437,7 @@ export function useMagicLink(): UseMagicLinkReturn {
         } finally {
             setIsLoading(false);
         }
-    }, [frankAuth, isMagicLinkAvailable, reload]);
+    }, [sdk.auth, isMagicLinkAvailable, reload]);
 
     // Verify magic link from URL
     const verifyFromUrl = useCallback(async (url?: string): Promise<MagicLinkVerifyResult> => {

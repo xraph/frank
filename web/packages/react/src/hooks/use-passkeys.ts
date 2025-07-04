@@ -14,7 +14,6 @@ import type {
     UpdatePasskeyRequest,
 } from '@frank-auth/client';
 
-import {FrankUser} from '@frank-auth/sdk';
 import {useAuth} from './use-auth';
 import {useConfig} from '../provider/config-provider';
 
@@ -355,23 +354,13 @@ function serializeCredential(credential: PublicKeyCredential): any {
  * ```
  */
 export function usePasskeys(): UsePasskeysReturn {
-    const {user, session, userType} = useAuth();
+    const {user, sdk} = useAuth();
     const {apiUrl, publishableKey, features} = useConfig();
 
     const [passkeys, setPasskeys] = useState<PasskeySummary[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<AuthError | null>(null);
     const [isAvailable, setIsAvailable] = useState(false);
-
-    // Initialize Frank User SDK
-    const frankUser = useMemo(() => {
-        if (!session?.accessToken) return null;
-        return new FrankUser({
-            publishableKey,
-            apiUrl,
-            userType: userType ?? 'end_user',
-        }, session.accessToken);
-    }, [publishableKey, apiUrl, session?.accessToken]);
 
     // Check WebAuthn support
     const isSupported = useMemo(() => isWebAuthnSupported(), []);
@@ -407,13 +396,13 @@ export function usePasskeys(): UsePasskeysReturn {
 
     // Load user's passkeys
     const loadPasskeys = useCallback(async () => {
-        if (!frankUser || !user || !isPasskeysEnabled) return;
+        if (!sdk.user || !user || !isPasskeysEnabled) return;
 
         try {
             setIsLoading(true);
             setError(null);
 
-            const response = await frankUser.listPasskeys();
+            const response = await sdk.user.getPasskeys({fields: []});
             setPasskeys(response.data || []);
         } catch (err) {
             console.error('Failed to load passkeys:', err);
@@ -424,7 +413,7 @@ export function usePasskeys(): UsePasskeysReturn {
         } finally {
             setIsLoading(false);
         }
-    }, [frankUser, user, isPasskeysEnabled]);
+    }, [sdk.user, user, isPasskeysEnabled]);
 
     // Initialize hook
     useEffect(() => {
@@ -434,7 +423,7 @@ export function usePasskeys(): UsePasskeysReturn {
 
     // Begin passkey registration
     const beginRegistration = useCallback(async (name?: string): Promise<PasskeyRegistrationData> => {
-        if (!frankUser) throw new Error('User not authenticated');
+        if (!sdk.user) throw new Error('User not authenticated');
         if (!isSupported) throw new Error('WebAuthn not supported');
         if (!isPasskeysEnabled) throw new Error('Passkeys not enabled');
 
@@ -442,7 +431,7 @@ export function usePasskeys(): UsePasskeysReturn {
             setIsLoading(true);
             setError(null);
 
-            const response = await frankUser.beginPasskeyRegistration({
+            const response = await sdk.auth.beginPasskeyRegistration({
                 name: name || `Passkey ${passkeys.length + 1}`,
             });
 
@@ -458,14 +447,14 @@ export function usePasskeys(): UsePasskeysReturn {
         } finally {
             setIsLoading(false);
         }
-    }, [frankUser, isSupported, isPasskeysEnabled, passkeys.length, handleError]);
+    }, [sdk.auth, isSupported, isPasskeysEnabled, passkeys.length, handleError]);
 
     // Finish passkey registration
     const finishRegistration = useCallback(async (
         registrationData: PasskeyRegistrationData,
         credential: PublicKeyCredential
     ): Promise<PasskeySummary> => {
-        if (!frankUser) throw new Error('User not authenticated');
+        if (!sdk.user) throw new Error('User not authenticated');
 
         try {
             setIsLoading(true);
@@ -478,7 +467,7 @@ export function usePasskeys(): UsePasskeysReturn {
                 credential: serializedCredential,
             };
 
-            const response = await frankUser.finishPasskeyRegistration(request);
+            const response = await sdk.auth.finishPasskeyRegistration(request);
 
             // Refresh passkeys list
             await loadPasskeys();
@@ -489,7 +478,7 @@ export function usePasskeys(): UsePasskeysReturn {
         } finally {
             setIsLoading(false);
         }
-    }, [frankUser, loadPasskeys, handleError]);
+    }, [sdk.user, loadPasskeys, handleError]);
 
     // Complete passkey registration (convenience method)
     const registerPasskey = useCallback(async (name?: string): Promise<PasskeySummary> => {
@@ -518,14 +507,14 @@ export function usePasskeys(): UsePasskeysReturn {
 
     // Begin passkey authentication
     const beginAuthentication = useCallback(async (): Promise<PasskeyAuthenticationData> => {
-        if (!frankUser) throw new Error('User not authenticated');
+        if (!sdk.auth) throw new Error('User not authenticated');
         if (!isSupported) throw new Error('WebAuthn not supported');
 
         try {
             setIsLoading(true);
             setError(null);
 
-            const response = await frankUser.beginPasskeyAuthentication();
+            const response = await sdk.auth.beginPasskeyAuthentication({});
 
             const options = parseCredentialRequestOptions(response.options);
 
@@ -539,14 +528,14 @@ export function usePasskeys(): UsePasskeysReturn {
         } finally {
             setIsLoading(false);
         }
-    }, [frankUser, isSupported, handleError]);
+    }, [sdk.auth, isSupported, handleError]);
 
     // Finish passkey authentication
     const finishAuthentication = useCallback(async (
         authenticationData: PasskeyAuthenticationData,
         credential: PublicKeyCredential
     ): Promise<AuthenticationResult> => {
-        if (!frankUser) throw new Error('User not authenticated');
+        if (!sdk.user) throw new Error('User not authenticated');
 
         try {
             setIsLoading(true);
@@ -559,7 +548,7 @@ export function usePasskeys(): UsePasskeysReturn {
                 credential: serializedCredential,
             };
 
-            const response = await frankUser.finishPasskeyAuthentication(request);
+            const response = await sdk.auth.finishPasskeyAuthentication(request);
 
             return {
                 success: true,
@@ -574,7 +563,7 @@ export function usePasskeys(): UsePasskeysReturn {
         } finally {
             setIsLoading(false);
         }
-    }, [frankUser, handleError]);
+    }, [sdk.auth, handleError]);
 
     // Complete passkey authentication (convenience method)
     const authenticateWithPasskey = useCallback(async (): Promise<AuthenticationResult> => {
@@ -607,13 +596,13 @@ export function usePasskeys(): UsePasskeysReturn {
 
     // Update passkey
     const updatePasskey = useCallback(async (passkeyId: string, updates: UpdatePasskeyRequest): Promise<PasskeySummary> => {
-        if (!frankUser) throw new Error('User not authenticated');
+        if (!sdk.user) throw new Error('User not authenticated');
 
         try {
             setIsLoading(true);
             setError(null);
 
-            const response = await frankUser.updatePasskey(passkeyId, updates);
+            const response = await sdk.user.updatePasskey(passkeyId, updates);
 
             // Refresh passkeys list
             await loadPasskeys();
@@ -624,17 +613,17 @@ export function usePasskeys(): UsePasskeysReturn {
         } finally {
             setIsLoading(false);
         }
-    }, [frankUser, loadPasskeys, handleError]);
+    }, [sdk.user, loadPasskeys, handleError]);
 
     // Delete passkey
     const deletePasskey = useCallback(async (passkeyId: string): Promise<void> => {
-        if (!frankUser) throw new Error('User not authenticated');
+        if (!sdk.user) throw new Error('User not authenticated');
 
         try {
             setIsLoading(true);
             setError(null);
 
-            await frankUser.deletePasskey(passkeyId);
+            await sdk.user.deletePasskey(passkeyId);
 
             // Refresh passkeys list
             await loadPasskeys();
@@ -643,7 +632,7 @@ export function usePasskeys(): UsePasskeysReturn {
         } finally {
             setIsLoading(false);
         }
-    }, [frankUser, loadPasskeys, handleError]);
+    }, [sdk.user, loadPasskeys, handleError]);
 
     // Rename passkey (convenience method)
     const renamePasskey = useCallback(async (passkeyId: string, name: string): Promise<PasskeySummary> => {

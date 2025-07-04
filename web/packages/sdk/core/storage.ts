@@ -1,7 +1,26 @@
 import type {JSONObject, XID} from './index';
 
 // Storage types
-export type StorageType = 'localStorage' | 'sessionStorage' | 'memoryStorage';
+export type StorageType = 'localStorage' | 'sessionStorage' | 'memoryStorage' | 'cookieStorage';
+
+// Cookie options interface
+export interface CookieOptions {
+    httpOnly?: boolean;
+    secure?: boolean;
+    sameSite?: 'strict' | 'lax' | 'none';
+    path?: string;
+    domain?: string;
+    maxAge?: number; // in seconds
+    expires?: Date;
+}
+
+// Generic cookie interface (framework-agnostic)
+export interface CookieContext {
+    get(name: string): string | null;
+    set(name: string, value: string, options?: CookieOptions): void;
+    delete(name: string): void;
+    getAll(): Record<string, string>;
+}
 
 // Storage item with metadata
 export interface StorageItem<T = any> {
@@ -18,6 +37,9 @@ export interface StorageConfig {
     encryption?: boolean;
     compression?: boolean;
     ttl?: number; // Time to live in milliseconds
+    cookieOptions?: CookieOptions;
+    cookieContext?: CookieContext;
+    storageAdapter?: Storage;
 }
 
 // Storage event
@@ -69,8 +91,52 @@ class MemoryStorage implements Storage {
     }
 }
 
+// Cookie storage implementation
+class CookieStorage implements Storage {
+    private cookieContext: CookieContext;
+    private defaultOptions: CookieOptions;
+
+    constructor(cookieContext: CookieContext, defaultOptions: CookieOptions = {}) {
+        this.cookieContext = cookieContext;
+        this.defaultOptions = {
+            path: '/',
+            sameSite: 'strict',
+            secure: true,
+            ...defaultOptions,
+        };
+    }
+
+    get length(): number {
+        return Object.keys(this.cookieContext.getAll()).length;
+    }
+
+    key(index: number): string | null {
+        const keys = Object.keys(this.cookieContext.getAll());
+        return keys[index] || null;
+    }
+
+    getItem(key: string): string | null {
+        return this.cookieContext.get(key);
+    }
+
+    setItem(key: string, value: string): void {
+        this.cookieContext.set(key, value, this.defaultOptions);
+    }
+
+    removeItem(key: string): void {
+        this.cookieContext.delete(key);
+    }
+
+    clear(): void {
+        const cookies = this.cookieContext.getAll();
+        Object.keys(cookies).forEach(key => {
+            this.cookieContext.delete(key);
+        });
+    }
+}
+
 // Get storage instance
-const getStorageInstance = (type: StorageType): Storage => {
+const getStorageInstance = (type: StorageType, cookieContext?: CookieContext, cookieOptions?: CookieOptions): Storage => {
     switch (type) {
         case 'localStorage':
             return typeof window !== 'undefined' && window.localStorage
@@ -80,6 +146,11 @@ const getStorageInstance = (type: StorageType): Storage => {
             return typeof window !== 'undefined' && window.sessionStorage
                 ? window.sessionStorage
                 : new MemoryStorage();
+        case 'cookieStorage':
+            if (!cookieContext) {
+                throw new Error('Cookie context is required for cookie storage');
+            }
+            return new CookieStorage(cookieContext, cookieOptions);
         case 'memoryStorage':
         default:
             return new MemoryStorage();
@@ -101,10 +172,15 @@ export class StorageManager implements StorageAdapter {
             ...config,
         };
 
-        this.storage = getStorageInstance(this.config.type);
+        this.storage = config?.storageAdapter ?? getStorageInstance(
+            this.config.type,
+            this.config.cookieContext,
+            this.config.cookieOptions
+        );
 
         // Listen for storage changes (only for localStorage/sessionStorage)
-        if (typeof window !== 'undefined' && this.config.type !== 'memoryStorage') {
+        if (typeof window !== 'undefined' &&
+            (this.config.type === 'localStorage' || this.config.type === 'sessionStorage')) {
             window.addEventListener('storage', this.handleStorageChange.bind(this));
         }
     }
@@ -454,6 +530,158 @@ export class StorageManager implements StorageAdapter {
     }
 }
 
+// Cookie context implementations for different frameworks
+export class NextJSCookieContext implements CookieContext {
+    constructor(
+        private req: { cookies: Record<string, string> },
+        private res: {
+            setHeader: (name: string, value: string | string[]) => void;
+            getHeader?: (name: string) => string | string[] | undefined;
+        }
+    ) {}
+
+    get(name: string): string | null {
+        return this.req.cookies[name] || null;
+    }
+
+    set(name: string, value: string, options: CookieOptions = {}): void {
+        const cookieString = this.serializeCookie(name, value, options);
+
+        // Get existing Set-Cookie headers
+        const existingHeader = this.res.getHeader?.('Set-Cookie');
+
+        if (existingHeader) {
+            // If there are existing Set-Cookie headers, append to them
+            const existingCookies = Array.isArray(existingHeader)
+                ? existingHeader
+                : [existingHeader as string];
+
+            existingCookies.push(cookieString);
+            this.res.setHeader('Set-Cookie', existingCookies);
+        } else {
+            // No existing cookies, set the first one
+            this.res.setHeader('Set-Cookie', cookieString);
+        }
+    }
+
+    delete(name: string): void {
+        this.set(name, '', { expires: new Date(0) });
+    }
+
+    getAll(): Record<string, string> {
+        return this.req.cookies;
+    }
+
+    private serializeCookie(name: string, value: string, options: CookieOptions): string {
+        let cookie = `${name}=${encodeURIComponent(value)}`;
+
+        if (options.maxAge) {
+            cookie += `; Max-Age=${options.maxAge}`;
+        }
+
+        if (options.expires) {
+            cookie += `; Expires=${options.expires.toUTCString()}`;
+        }
+
+        if (options.path) {
+            cookie += `; Path=${options.path}`;
+        }
+
+        if (options.domain) {
+            cookie += `; Domain=${options.domain}`;
+        }
+
+        if (options.secure) {
+            cookie += '; Secure';
+        }
+
+        if (options.httpOnly) {
+            cookie += '; HttpOnly';
+        }
+
+        if (options.sameSite) {
+            cookie += `; SameSite=${options.sameSite}`;
+        }
+
+        return cookie;
+    }
+}
+
+// Client-side cookie context (for browser environments)
+export class ClientCookieContext implements CookieContext {
+    get(name: string): string | null {
+        if (typeof document === 'undefined') return null;
+
+        const cookies = document.cookie.split(';');
+        for (const cookie of cookies) {
+            const [key, value] = cookie.trim().split('=');
+            if (key === name) {
+                return decodeURIComponent(value);
+            }
+        }
+        return null;
+    }
+
+    set(name: string, value: string, options: CookieOptions = {}): void {
+        if (typeof document === 'undefined') return;
+
+        const cookieString = this.serializeCookie(name, value, options);
+        document.cookie = cookieString;
+    }
+
+    delete(name: string): void {
+        this.set(name, '', { expires: new Date(0) });
+    }
+
+    getAll(): Record<string, string> {
+        if (typeof document === 'undefined') return {};
+
+        const cookies: Record<string, string> = {};
+        const cookieString = document.cookie;
+
+        if (cookieString) {
+            cookieString.split(';').forEach(cookie => {
+                const [key, value] = cookie.trim().split('=');
+                if (key && value) {
+                    cookies[key] = decodeURIComponent(value);
+                }
+            });
+        }
+
+        return cookies;
+    }
+
+    private serializeCookie(name: string, value: string, options: CookieOptions): string {
+        let cookie = `${name}=${encodeURIComponent(value)}`;
+
+        if (options.maxAge) {
+            cookie += `; Max-Age=${options.maxAge}`;
+        }
+
+        if (options.expires) {
+            cookie += `; Expires=${options.expires.toUTCString()}`;
+        }
+
+        if (options.path) {
+            cookie += `; Path=${options.path}`;
+        }
+
+        if (options.domain) {
+            cookie += `; Domain=${options.domain}`;
+        }
+
+        if (options.secure) {
+            cookie += '; Secure';
+        }
+
+        if (options.sameSite) {
+            cookie += `; SameSite=${options.sameSite}`;
+        }
+
+        return cookie;
+    }
+}
+
 // Default storage manager instances
 export const defaultStorage = new StorageManager({
     type: 'localStorage',
@@ -469,6 +697,24 @@ export const memoryStorage = new StorageManager({
     type: 'memoryStorage',
     prefix: 'frank_auth_memory_',
 });
+
+// Factory function for creating cookie storage
+export const createCookieStorage = (
+    cookieContext: CookieContext,
+    options?: {
+        prefix?: string;
+        cookieOptions?: CookieOptions;
+        ttl?: number;
+    }
+): StorageManager => {
+    return new StorageManager({
+        type: 'cookieStorage',
+        prefix: options?.prefix || 'frank_auth_cookie_',
+        cookieContext,
+        cookieOptions: options?.cookieOptions,
+        ttl: options?.ttl,
+    });
+};
 
 // Utility functions
 export const createStorageKey = (key: string, organizationId?: XID): string => {
@@ -491,6 +737,7 @@ export const parseStorageKey = (storageKey: string): { key: string; organization
 export const isStorageAvailable = (type: StorageType): boolean => {
     if (typeof window === 'undefined') return false;
     if (type === 'memoryStorage') return true;
+    if (type === 'cookieStorage') return typeof document !== 'undefined';
 
     try {
         const storage = type === 'localStorage' ? window.localStorage : window.sessionStorage;
@@ -506,6 +753,9 @@ export const isStorageAvailable = (type: StorageType): boolean => {
 export const getStorageSize = (type: StorageType): number => {
     if (typeof window === 'undefined') return 0;
     if (type === 'memoryStorage') return 0;
+    if (type === 'cookieStorage') {
+        return typeof document !== 'undefined' ? document.cookie.length : 0;
+    }
 
     try {
         const storage = type === 'localStorage' ? window.localStorage : window.sessionStorage;
@@ -659,6 +909,10 @@ export const AuthStorageUtils = {
 export class AuthStorage {
     constructor(private readonly storage: StorageManager) {}
 
+    get adapter(): StorageManager {
+        return this.storage;
+    }
+
     // Token management
     getAccessToken(): string | null {
         return this.storage.getString(AuthStorageUtils.accessTokenKey);
@@ -753,4 +1007,4 @@ export class AuthStorage {
     setRememberMe(remember: boolean): void {
         this.storage.setBoolean(AuthStorageUtils.rememberMeKey, remember);
     }
-};
+}

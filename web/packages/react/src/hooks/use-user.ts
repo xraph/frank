@@ -9,7 +9,6 @@ import {useCallback, useMemo, useState} from 'react';
 
 import type {ChangePasswordRequest, User, UserProfileUpdateRequest, VerificationRequest,} from '@frank-auth/client';
 
-import {FrankAuth, FrankUser} from '@frank-auth/sdk';
 import {useAuth} from './use-auth';
 import {useConfig} from '../provider/config-provider';
 
@@ -143,30 +142,10 @@ export interface UseUserReturn {
  * ```
  */
 export function useUser(): UseUserReturn {
-    const {user, updateUser, deleteUser, reload, session, userType} = useAuth();
-    const {apiUrl, publishableKey} = useConfig();
+    const {user, updateUser, deleteUser, reload, sdk} = useAuth();
 
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<AuthError | null>(null);
-
-    // Initialize Frank User SDK
-    const frankUser = useMemo(() => {
-        if (!session?.accessToken) return null;
-        return new FrankUser({
-            publishableKey,
-            apiUrl,
-            userType: userType ?? 'end_user',
-        }, session.accessToken);
-    }, [publishableKey, apiUrl, session?.accessToken]);
-
-    const frankAuth = useMemo(() => {
-        if (!session?.accessToken) return null;
-        return new FrankAuth({
-            publishableKey,
-            apiUrl,
-            userType: userType ?? 'end_user',
-        });
-    }, [publishableKey, apiUrl, session?.accessToken]);
 
     // Error handler
     const handleError = useCallback((err: any) => {
@@ -182,13 +161,13 @@ export function useUser(): UseUserReturn {
 
     // Profile management
     const updateProfile = useCallback(async (data: UserProfileUpdateRequest): Promise<User> => {
-        if (!frankUser) throw new Error('User not authenticated');
+        if (!sdk.user) throw new Error('User not authenticated');
 
         try {
             setIsLoading(true);
             setError(null);
 
-            const updatedUser = await frankUser.updateProfile(data);
+            const updatedUser = await sdk.user.updateProfile(data);
             await reload(); // Refresh auth state
 
             return updatedUser;
@@ -197,22 +176,22 @@ export function useUser(): UseUserReturn {
         } finally {
             setIsLoading(false);
         }
-    }, [frankUser, reload, handleError]);
+    }, [sdk.user, reload, handleError]);
 
     const changePassword = useCallback(async (data: ChangePasswordRequest): Promise<void> => {
-        if (!frankUser) throw new Error('User not authenticated');
+        if (!sdk.user) throw new Error('User not authenticated');
 
         try {
             setIsLoading(true);
             setError(null);
 
-            await frankUser.changePassword(data);
+            await sdk.user.changePassword(data);
         } catch (err) {
             handleError(err);
         } finally {
             setIsLoading(false);
         }
-    }, [frankUser, handleError]);
+    }, [sdk.user, handleError]);
 
     const deleteAccount = useCallback(async (): Promise<void> => {
         try {
@@ -242,7 +221,7 @@ export function useUser(): UseUserReturn {
     }, [updateProfile, handleError]);
 
     const verifyEmail = useCallback(async (code: string): Promise<void> => {
-        if (!frankUser) throw new Error('User not authenticated');
+        if (!sdk.user) throw new Error('User not authenticated');
 
         try {
             setIsLoading(true);
@@ -253,29 +232,29 @@ export function useUser(): UseUserReturn {
                 type: 'email',
             };
 
-            await frankAuth.verifyEmail(verificationRequest);
+            await sdk.auth.verifyEmail(verificationRequest);
             await reload(); // Refresh auth state
         } catch (err) {
             handleError(err);
         } finally {
             setIsLoading(false);
         }
-    }, [frankUser, reload, handleError]);
+    }, [sdk.user, reload, handleError]);
 
     const resendEmailVerification = useCallback(async (): Promise<void> => {
-        if (!frankUser || !user?.primaryEmailAddress) throw new Error('User not authenticated');
+        if (!sdk.user || !user?.primaryEmailAddress) throw new Error('User not authenticated');
 
         try {
             setIsLoading(true);
             setError(null);
 
-            await frankUser.resendEmailVerification(user.primaryEmailAddress);
+            await sdk.user.resendEmailVerification(user.primaryEmailAddress);
         } catch (err) {
             handleError(err);
         } finally {
             setIsLoading(false);
         }
-    }, [frankUser, user?.primaryEmailAddress, handleError]);
+    }, [sdk.user, user?.primaryEmailAddress, handleError]);
 
     // Phone management
     const updatePhone = useCallback(async (phone: string): Promise<void> => {
@@ -292,7 +271,7 @@ export function useUser(): UseUserReturn {
     }, [updateProfile, handleError]);
 
     const verifyPhone = useCallback(async (code: string): Promise<void> => {
-        if (!frankUser) throw new Error('User not authenticated');
+        if (!sdk.user) throw new Error('User not authenticated');
 
         try {
             setIsLoading(true);
@@ -303,29 +282,29 @@ export function useUser(): UseUserReturn {
                 type: 'phone',
             };
 
-            await frankUser.verifyPhone(verificationRequest);
+            await sdk.auth.verifyPhone(verificationRequest);
             await reload(); // Refresh auth state
         } catch (err) {
             handleError(err);
         } finally {
             setIsLoading(false);
         }
-    }, [frankUser, reload, handleError]);
+    }, [sdk.user, reload, handleError]);
 
     const resendPhoneVerification = useCallback(async (): Promise<void> => {
-        if (!frankUser || !user?.primaryPhoneNumber) throw new Error('User not authenticated');
+        if (!sdk.user || !user?.primaryPhoneNumber) throw new Error('User not authenticated');
 
         try {
             setIsLoading(true);
             setError(null);
 
-            await frankUser.resendPhoneVerification(user.primaryPhoneNumber);
+            await sdk.user.resendPhoneVerification(user.primaryPhoneNumber);
         } catch (err) {
             handleError(err);
         } finally {
             setIsLoading(false);
         }
-    }, [frankUser, user?.primaryPhoneNumber, handleError]);
+    }, [sdk.user, user?.primaryPhoneNumber, handleError]);
 
     // Profile image management
     const updateProfileImage = useCallback(async (imageUrl: string): Promise<User> => {

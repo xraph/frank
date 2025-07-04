@@ -1,7 +1,6 @@
 package authz
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -37,8 +36,6 @@ func HumaPermissionMiddleware(api huma.API, permChecker PermissionChecker, logge
 				next(ctx)
 				return
 			}
-
-			fmt.Println("userType: ", userType)
 
 			// Check permission
 			hasPermission, err := permChecker.HasPermissionString(rctx, permission, resourceType, resourceID)

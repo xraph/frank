@@ -12,7 +12,6 @@ import {useCallback, useEffect, useMemo, useState} from 'react';
 
 import type {AuthProvider, SSOCallbackRequest, SSOLoginRequest,} from '@frank-auth/client';
 
-import {FrankAuth} from '@frank-auth/sdk';
 import {useAuth} from './use-auth';
 import {useConfig} from '../provider/config-provider';
 
@@ -264,21 +263,12 @@ export type OAuthProviderType = keyof typeof OAUTH_PROVIDERS;
  * ```
  */
 export function useOAuth(): UseOAuthReturn {
-    const {user, activeOrganization, reload, userType} = useAuth();
-    const {apiUrl, publishableKey, features} = useConfig();
+    const {user, activeOrganization, reload, sdk} = useAuth();
+    const {features} = useConfig();
 
     const [providers, setProviders] = useState<AuthProvider[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<AuthError | null>(null);
-
-    // Initialize Frank Auth SDK
-    const frankAuth = useMemo(() => {
-        return new FrankAuth({
-            publishableKey,
-            apiUrl,
-            userType: userType ?? 'end_user',
-        });
-    }, [publishableKey, apiUrl]);
 
     // Check if OAuth is available
     const isOAuthAvailable = useMemo(() => features.oauth, [features.oauth]);
@@ -303,7 +293,7 @@ export function useOAuth(): UseOAuthReturn {
             setIsLoading(true);
             setError(null);
 
-            const providersList = await frankAuth.listOAuthProviders();
+            const providersList = await sdk.auth.getOAuthProviders();
             setProviders(providersList);
         } catch (err) {
             console.error('Failed to load OAuth providers:', err);
@@ -314,7 +304,7 @@ export function useOAuth(): UseOAuthReturn {
         } finally {
             setIsLoading(false);
         }
-    }, [frankAuth, isOAuthAvailable]);
+    }, [sdk.auth, isOAuthAvailable]);
 
     useEffect(() => {
         loadProviders();
@@ -335,13 +325,13 @@ export function useOAuth(): UseOAuthReturn {
                 connection: options?.connection,
             };
 
-            const response = await frankAuth.initiateSSOLogin(ssoLoginRequest);
+            const response = await sdk.auth.initiateSSOLogin(ssoLoginRequest);
             return response.authUrl;
         } catch (err) {
             handleError(err);
             return '';
         }
-    }, [frankAuth, isOAuthAvailable, activeOrganization, handleError]);
+    }, [sdk.auth, isOAuthAvailable, activeOrganization, handleError]);
 
     // Sign in with OAuth provider
     const signInWithProvider = useCallback(async (provider: string, options?: OAuthSignInOptions): Promise<void> => {
@@ -380,7 +370,7 @@ export function useOAuth(): UseOAuthReturn {
                 state: state || new URLSearchParams(window.location.search).get('state') || '',
             };
 
-            const response = await frankAuth.handleSSOCallback(callbackRequest);
+            const response = await sdk.auth.handleSSOCallback(callbackRequest);
 
             if (response.success) {
                 // Reload user data
@@ -405,7 +395,7 @@ export function useOAuth(): UseOAuthReturn {
         } finally {
             setIsLoading(false);
         }
-    }, [frankAuth, isOAuthAvailable, reload]);
+    }, [sdk.auth, isOAuthAvailable, reload]);
 
     // Connect OAuth provider to existing account
     const connectProvider = useCallback(async (provider: string, options?: OAuthConnectOptions): Promise<void> => {
@@ -439,7 +429,7 @@ export function useOAuth(): UseOAuthReturn {
             setIsLoading(true);
             setError(null);
 
-            await frankAuth.disconnectOAuthProvider(provider);
+            await sdk.auth.disconnectOAuthProvider(provider);
 
             // Reload user data
             await reload();
@@ -448,7 +438,7 @@ export function useOAuth(): UseOAuthReturn {
         } finally {
             setIsLoading(false);
         }
-    }, [frankAuth, user, isOAuthAvailable, reload, handleError]);
+    }, [sdk.auth, user, isOAuthAvailable, reload, handleError]);
 
     // Check if provider is connected
     const isProviderConnected = useCallback((provider: string): boolean => {

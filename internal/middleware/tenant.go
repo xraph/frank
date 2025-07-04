@@ -173,7 +173,7 @@ func DefaultTenantConfig() *TenantConfig {
 			"/robots.txt",
 		},
 		BasePathAware:      true,
-		StrictPathMatching: false,
+		StrictPathMatching: true,
 		DebugPathMatching:  false, // Set to true in development
 	}
 }
@@ -191,7 +191,7 @@ func (tm *TenantMiddleware) Middleware() func(http.Handler) http.Handler {
 			}
 
 			// Resolve tenant based on strategy
-			tenant, err := tm.resolveTenant(ctx, r)
+			tenant, err := tm.resolveTenantByAll(ctx, r)
 			if err != nil {
 				tm.logger.Error("Failed to resolve tenant", logging.Error(err))
 
@@ -257,12 +257,13 @@ func (tm *TenantMiddleware) HumaMiddleware() func(huma.Context, func(huma.Contex
 			if tm.config.DebugPathMatching && tm.config.Logger != nil {
 				tm.config.Logger.Debug("Skipping tenant resolution", logging.String("path", path))
 			}
+
 			next(ctx)
 			return
 		}
 
 		// Resolve tenant based on strategy
-		tenant, err := tm.resolveTenant(rctx, r)
+		tenant, err := tm.resolveTenantByAll(rctx, r)
 		if err != nil {
 			tm.logger.Error("Failed to resolve tenant", logging.Error(err))
 
@@ -501,6 +502,26 @@ func (tm *TenantMiddleware) resolveTenant(ctx context.Context, r *http.Request) 
 	default:
 		return nil, errors.New(errors.CodeInternalServer, "unknown tenant resolution strategy")
 	}
+}
+
+func (tm *TenantMiddleware) resolveTenantByAll(ctx context.Context, r *http.Request) (*TenantContext, error) {
+	if tx, err := tm.resolveTenantByHeader(ctx, r); err == nil && tx != nil {
+		return tx, err
+	}
+	if tx, err := tm.resolveTenantByPath(ctx, r); err == nil && tx != nil {
+		return tx, err
+	}
+	if tx, err := tm.resolveTenantBySubdomain(ctx, r); err == nil && tx != nil {
+		return tx, err
+	}
+	if tx, err := tm.resolveTenantByQuery(ctx, r); err == nil && tx != nil {
+		return tx, err
+	}
+	if tx, err := tm.resolveTenantByAuth(ctx, r); err == nil && tx != nil {
+		return tx, err
+	}
+
+	return nil, errors.New(errors.CodeInternalServer, "unknown tenant resolution strategy")
 }
 
 func (tm *TenantMiddleware) resolveTenantByPath(ctx context.Context, r *http.Request) (*TenantContext, error) {

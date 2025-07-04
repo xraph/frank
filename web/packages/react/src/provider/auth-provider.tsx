@@ -10,12 +10,12 @@
 import React, {createContext, useCallback, useContext, useEffect, useMemo, useReducer} from 'react';
 
 import {
-    FrankAuth,
     FrankAuthError,
-    FrankOrganization,
-    FrankSession,
-    FrankUser,
-    type PasswordResetRequest
+    SessionSDK,
+    UserSDK,
+    OrganizationSDK,
+    AuthSDK,
+    type PasswordResetRequest,
 } from '@frank-auth/sdk';
 import type {
     LoginRequest,
@@ -161,6 +161,8 @@ const initialAuthState: AuthState = {
         userProfile: true,
         sessionManagement: true,
     },
+    // @ts-expect-error
+    sdk: undefined
 };
 
 // ============================================================================
@@ -186,8 +188,8 @@ export function AuthProvider({
     });
 
     // Initialize Frank Auth SDK
-    const frankAuth = useMemo(() => {
-        return new FrankAuth({
+    const authSdk = useMemo(() => {
+        return new AuthSDK({
             publishableKey,
             apiUrl,
             enableDevMode: debug,
@@ -198,8 +200,8 @@ export function AuthProvider({
     }, [publishableKey, apiUrl, debug]);
 
     // Initialize Frank Auth SDK
-    const frankOrg = useMemo(() => {
-        return new FrankOrganization({
+    const orgSdk = useMemo(() => {
+        return new OrganizationSDK({
             publishableKey,
             apiUrl,
             enableDevMode: debug,
@@ -210,8 +212,8 @@ export function AuthProvider({
     }, [publishableKey, apiUrl, debug]);
 
     // Initialize Frank Auth SDK
-    const frankSess = useMemo(() => {
-        return new FrankSession({
+    const sessionSdk = useMemo(() => {
+        return new SessionSDK({
             publishableKey,
             apiUrl,
             enableDevMode: debug,
@@ -220,8 +222,8 @@ export function AuthProvider({
             secretKey,
         });
     }, [publishableKey, apiUrl, debug]);
-    const frankUser = useMemo(() => {
-        return new FrankUser({
+    const userSdk = useMemo(() => {
+        return new UserSDK({
             publishableKey,
             apiUrl,
             enableDevMode: debug,
@@ -230,6 +232,14 @@ export function AuthProvider({
             secretKey,
         });
     }, [publishableKey, apiUrl, debug]);
+    const allSdk = useMemo(() => {
+        return {
+            auth: authSdk,
+            organization: orgSdk,
+            session: sessionSdk,
+            user: userSdk
+        }
+    }, [userSdk, authSdk, orgSdk, sessionSdk]);
 
     // Error handler
     const handleError = useCallback((error: any) => {
@@ -254,7 +264,7 @@ export function AuthProvider({
             dispatch({type: 'SET_LOADING', payload: true});
 
             // Get auth status
-            const authStatus = await frankAuth.getAuthStatus();
+            const authStatus = await authSdk.getAuthStatus();
 
             if (authStatus.isAuthenticated && authStatus.user) {
                 dispatch({type: 'SET_USER', payload: authStatus.user});
@@ -264,12 +274,12 @@ export function AuthProvider({
                 if (projectId || authStatus.user.organizationId) {
                     try {
                         const orgId = projectId || authStatus.user.organizationId || '';
-                        const org = await frankOrg.getOrganization(orgId);
+                        const org = await orgSdk.getOrganization(orgId);
                         dispatch({type: 'SET_ORGANIZATION', payload: org});
                         dispatch({type: 'SET_ACTIVE_ORGANIZATION', payload: org});
 
                         // Load organization memberships
-                        const memberships = await frankOrg.listMembers(orgId);
+                        const memberships = await orgSdk.listMembers(orgId);
                         dispatch({type: 'SET_MEMBERSHIPS', payload: memberships.data});
                     } catch (orgError) {
                         if (debug) {
@@ -289,7 +299,7 @@ export function AuthProvider({
         } finally {
             dispatch({type: 'SET_LOADING', payload: false});
         }
-    }, [frankAuth, projectId, userType, debug, handleError]);
+    }, [authSdk, projectId, userType, debug, handleError]);
 
     // Determine available features based on context
     const determineFeatures = async (
@@ -371,7 +381,7 @@ export function AuthProvider({
                         rememberMe: true,
                     };
 
-                    result = await frankAuth.signIn(loginRequest);
+                    result = await authSdk.signIn(loginRequest);
 
                     if (result.mfaRequired) {
                         status = 'needs_mfa';
@@ -386,7 +396,7 @@ export function AuthProvider({
                         throw new Error('OAuth provider is required');
                     }
 
-                    result = await frankAuth.initiateOAuthLogin(params.provider, {
+                    result = await authSdk.initiateOAuthLogin(params.provider, {
                         redirectUrl: params.redirectUrl,
                         organizationId: params.organizationId,
                     });
@@ -397,7 +407,7 @@ export function AuthProvider({
                         throw new Error('Email is required for magic link');
                     }
 
-                    result = await frankAuth.sendMagicLink({
+                    result = await authSdk.sendMagicLink({
                         email: params.identifier,
                         redirectUrl: params.redirectUrl,
                         // organizationId: params.organizationId,
@@ -405,7 +415,7 @@ export function AuthProvider({
                     break;
 
                 case 'passkey':
-                    result = await frankAuth.beginPasskeyAuthentication({
+                    result = await authSdk.beginPasskeyAuthentication({
                         // todo fix
                     });
 
@@ -417,7 +427,7 @@ export function AuthProvider({
                         throw new Error('Organization ID is required for SSO');
                     }
 
-                    result = await frankAuth.initiateSSOLogin(params.organizationId, {
+                    result = await authSdk.initiateSSOLogin(params.organizationId, {
                         redirectUrl: params.redirectUrl,
                     });
                     break;
@@ -454,7 +464,7 @@ export function AuthProvider({
         } finally {
             dispatch({type: 'SET_LOADING', payload: false});
         }
-    }, [frankAuth, onSignIn, handleError]);
+    }, [authSdk, onSignIn, handleError]);
 
     // Sign up method
     const signUp = useCallback(async (params: SignUpParams): Promise<SignUpResult> => {
@@ -478,7 +488,7 @@ export function AuthProvider({
                 customAttributes: params.unsafeMetadata,
             };
 
-            const result = await frankAuth.signUp(registerRequest);
+            const result = await authSdk.signUp(registerRequest);
 
             // Handle successful registration
             if (result.user && result.session) {
@@ -512,14 +522,14 @@ export function AuthProvider({
         } finally {
             dispatch({type: 'SET_LOADING', payload: false});
         }
-    }, [frankAuth, onSignIn, handleError]);
+    }, [authSdk, onSignIn, handleError]);
 
     // Sign out method
     const signOut = useCallback(async () => {
         try {
             dispatch({type: 'SET_LOADING', payload: true});
 
-            await frankAuth.signOut({logoutAll: false});
+            await authSdk.signOut({logoutAll: false});
 
             dispatch({type: 'RESET_STATE'});
             onSignOut?.();
@@ -529,47 +539,50 @@ export function AuthProvider({
         } finally {
             dispatch({type: 'SET_LOADING', payload: false});
         }
-    }, [frankAuth, onSignOut, handleError]);
+    }, [authSdk, onSignOut, handleError]);
 
     // Create session method
     const createSession = useCallback(async (token: string): Promise<Session> => {
         try {
-            const session = await frankAuth.createSession(token);
+            sessionSdk.activeSession = token;
+            const session = await sessionSdk.getCurrentSession();
             dispatch({type: 'SET_SESSION', payload: session});
             return session;
         } catch (error) {
             handleError(error);
             throw error;
         }
-    }, [frankAuth, handleError]);
+    }, [authSdk, handleError]);
 
     // Set active method
     const setActive = useCallback(async (params: SetActiveParams) => {
         try {
             if (params.session) {
-                const session = typeof params.session === 'string'
-                    ? await frankAuth.setActiveSession(params.session)
-                    : params.session;
+                const session = params.session
+                if (typeof params.session === 'string'){
+                     sessionSdk.activeSession = params.session
+                    await sessionSdk.getCurrentSession()
+                }
                 dispatch({type: 'SET_SESSION', payload: session});
             }
 
             if (params.organization) {
                 const organization = typeof params.organization === 'string'
-                    ? await frankOrg.getOrganization(params.organization)
+                    ? await orgSdk.getOrganization(params.organization)
                     : params.organization;
                 dispatch({type: 'SET_ACTIVE_ORGANIZATION', payload: organization});
             }
         } catch (error) {
             handleError(error);
         }
-    }, [frankAuth, handleError]);
+    }, [authSdk, handleError]);
 
     // Set active organization
     const setActiveOrganization = useCallback(async (org: string | Organization) => {
         try {
             let organization
             if (typeof org === 'string') {
-                organization = await frankOrg.getOrganization(org);
+                organization = await orgSdk.getOrganization(org);
             } else {
                 organization = org;
             }
@@ -577,14 +590,14 @@ export function AuthProvider({
         } catch (error) {
             handleError(error);
         }
-    }, [frankAuth, handleError]);
+    }, [authSdk, handleError]);
 
     // Switch organization
     const switchOrganization = useCallback(async (organizationId: string) => {
         try {
             dispatch({type: 'SET_LOADING', payload: true});
 
-            const organization = await frankAuth.switchOrganization(organizationId);
+            const organization = await authSdk.switchOrganization(organizationId);
             dispatch({type: 'SET_ACTIVE_ORGANIZATION', payload: organization});
 
             // Reload user data with new organization context
@@ -595,96 +608,96 @@ export function AuthProvider({
         } finally {
             dispatch({type: 'SET_LOADING', payload: false});
         }
-    }, [frankAuth, handleError, loadAuthState]);
+    }, [authSdk, handleError, loadAuthState]);
 
     // Update user method
     const updateUser = useCallback(async (params: UpdateUserParams): Promise<User> => {
         try {
-            const updatedUser = await frankAuth.updateProfile(params);
+            const updatedUser = await authSdk.updateProfile(params);
             dispatch({type: 'SET_USER', payload: updatedUser});
             return updatedUser;
         } catch (error) {
             handleError(error);
             throw error;
         }
-    }, [frankAuth, handleError]);
+    }, [authSdk, handleError]);
 
     // Delete user method
     const deleteUser = useCallback(async () => {
         try {
-            await frankUser.deleteUser();
+            await userSdk.deleteUser();
             dispatch({type: 'RESET_STATE'});
             onSignOut?.();
         } catch (error) {
             handleError(error);
         }
-    }, [frankAuth, handleError, onSignOut]);
+    }, [authSdk, handleError, onSignOut]);
 
     // Password request method
     const requestPasswordReset = useCallback(async (request: PasswordResetRequest) => {
         try {
             dispatch({type: 'SET_LOADING', payload: true});
-            return await frankAuth.requestPasswordReset(request);
+            return await authSdk.requestPasswordReset(request);
         } catch (error) {
             handleError(error);
             throw error;
         } finally {
             dispatch({type: 'SET_LOADING', payload: false});
         }
-    }, [frankAuth, handleError]);
+    }, [authSdk, handleError]);
 
     // Password request method
     const resetPassword = useCallback(async (request: PasswordResetConfirmRequest) => {
         try {
             dispatch({type: 'SET_LOADING', payload: true});
-            return await frankAuth.resetPassword(request);
+            return await authSdk.resetPassword(request);
         } catch (error) {
             handleError(error);
             throw error;
         } finally {
             dispatch({type: 'SET_LOADING', payload: false});
         }
-    }, [frankAuth, handleError]);
+    }, [authSdk, handleError]);
 
     // Resend verification method
     const resendVerification = useCallback(async (request: ResendVerificationRequest) => {
         try {
             dispatch({type: 'SET_LOADING', payload: true});
-            return await frankAuth.resendVerification(request);
+            return await authSdk.resendVerification(request);
         } catch (error) {
             handleError(error);
             throw error;
         } finally {
             dispatch({type: 'SET_LOADING', payload: false});
         }
-    }, [frankAuth, handleError]);
+    }, [authSdk, handleError]);
 
     // Resend verification method
     const verifyIdentity = useCallback(async (type: 'email' | 'phone', request: VerificationRequest) => {
         try {
             dispatch({type: 'SET_LOADING', payload: true});
-            if (type === 'phone') return await frankAuth.verifyPhone(request);
-            return await frankAuth.verifyEmail(request);
+            if (type === 'phone') return await authSdk.verifyPhone(request);
+            return await authSdk.verifyEmail(request);
         } catch (error) {
             handleError(error);
             throw error;
         } finally {
             dispatch({type: 'SET_LOADING', payload: false});
         }
-    }, [frankAuth, handleError]);
+    }, [authSdk, handleError]);
 
     // Resend verification method
     const validateToken = useCallback(async (request: ValidateTokenInputBody) => {
         try {
             dispatch({type: 'SET_LOADING', payload: true});
-            return await frankAuth.validateToken(request);
+            return await authSdk.validateToken(request);
         } catch (error) {
             handleError(error);
             throw error;
         } finally {
             dispatch({type: 'SET_LOADING', payload: false});
         }
-    }, [frankAuth, handleError]);
+    }, [authSdk, handleError]);
 
     // Reload method
     const reload = useCallback(async () => {
@@ -717,10 +730,7 @@ export function AuthProvider({
         validateToken,
         resendVerification,
         verifyIdentity,
-        frankAuth,
-        frankOrg,
-        frankSess,
-        frankUser,
+        sdk: allSdk,
     };
 
     return (

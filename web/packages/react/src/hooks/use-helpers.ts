@@ -1,6 +1,7 @@
 import {useAuth} from "./use-auth";
-import {useIdentityVerification} from "./use-invitation";
+import {useIdentityVerification, useInvitation} from "./use-invitation";
 import {toast} from "sonner";
+import {InvitationUtils} from "@/utils/invitation";
 
 export function useVerificationFlow() {
     const { user, organization } = useAuth();
@@ -11,7 +12,6 @@ export function useVerificationFlow() {
         userId: user?.id,
         organizationId: organization?.id,
         methods: ['email', 'phone'],
-        requireBoth: false
     });
 
     const startVerification = (method: 'email' | 'phone') => {

@@ -34,7 +34,7 @@ import type {
     OrganizationConfig,
     Theme,
 } from '../config';
-import type {FrankAuth, FrankOrganization, FrankSession, FrankUser, PasswordResetRequest} from "@frank-auth/sdk";
+import type {AuthSDK, OrganizationSDK, SessionSDK, UserSDK, PasswordResetRequest} from "@frank-auth/sdk";
 
 // ============================================================================
 // Auth State Types
@@ -63,12 +63,14 @@ export interface AuthState {
 
     // Feature availability
     features: AuthFeatures;
+    sdk: SDKState
+}
 
-
-    frankAuth?: FrankAuth
-    frankSess?: FrankSession
-    frankOrg?: FrankOrganization
-    frankUser?: FrankUser
+export interface SDKState {
+    auth: AuthSDK
+    session: SessionSDK
+    organization: OrganizationSDK
+    user: UserSDK
 }
 
 /**

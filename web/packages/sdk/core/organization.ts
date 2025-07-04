@@ -63,10 +63,10 @@ import {
 
 import {type FrankAuthConfig, FrankAuthError} from './index';
 import {handleError} from './errors';
-import {BaseFrankAPI} from './base';
+import {BaseSDK} from './base';
 
 /**
- * FrankOrganization - Organization Management SDK
+ * FrankOrganizationAPI - Organization Management SDK
  *
  * Provides comprehensive organization management capabilities including:
  * - Organization CRUD operations
@@ -78,7 +78,7 @@ import {BaseFrankAPI} from './base';
  *
  * Supports multi-tenant architecture with organization-scoped operations
  */
-export class FrankOrganization extends BaseFrankAPI {
+export class OrganizationSDK extends BaseSDK {
     private organizationsApi: OrganizationsApi;
     private membershipApi: MembershipApi;
     private invitationsApi: InvitationsApi;
@@ -106,70 +106,60 @@ export class FrankOrganization extends BaseFrankAPI {
      * Create a new organization
      */
     async createOrganization(request: CreateOrganizationRequest): Promise<Organization> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.organizationsApi.createOrganization(
                 {createOrganizationRequest: request},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     /**
      * Get organization by ID
      */
     async getOrganization(id: string): Promise<Organization> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.organizationsApi.getOrganization(
                 {id},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     /**
      * Update organization
      */
     async updateOrganization(id: string, request: UpdateOrganizationRequest): Promise<Organization> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.organizationsApi.updateOrganization(
                 {id, updateOrganizationRequest: request},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     /**
      * Delete organization and all associated data
      */
     async deleteOrganization(id: string, request: DeleteOrganizationRequest): Promise<void> {
-        try {
+        return this.executeApiCall(async () => {
             await this.organizationsApi.deleteOrganization(
                 {id, deleteOrganizationRequest: request},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     /**
      * List organizations with filtering and pagination
      */
     async listOrganizations(options?: ListOrganizationsRequest): Promise<PaginatedOutputOrganizationSummary> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.organizationsApi.listOrganizations(
                 {...(options ?? {fields: null})},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     // ================================
@@ -180,14 +170,12 @@ export class FrankOrganization extends BaseFrankAPI {
      * Get organization settings
      */
     async getOrganizationSettings(id: string): Promise<OrganizationSettings> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.organizationsApi.getOrganizationSettings(
                 {id},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     /**
@@ -197,14 +185,12 @@ export class FrankOrganization extends BaseFrankAPI {
         id: string,
         request: UpdateOrganizationSettingsRequest
     ): Promise<OrganizationSettings> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.organizationsApi.updateOrganizationSettings(
                 {id, updateOrganizationSettingsRequest: request},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     // ================================
@@ -215,14 +201,12 @@ export class FrankOrganization extends BaseFrankAPI {
      * List organization domains
      */
     async listOrganizationDomains(id: string): Promise<DomainsResponse> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.organizationsApi.listOrganizationDomains(
                 {id},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     /**
@@ -232,42 +216,36 @@ export class FrankOrganization extends BaseFrankAPI {
         id: string,
         request: DomainVerificationRequest
     ): Promise<DomainResponse> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.organizationsApi.addOrganizationDomain(
                 {id, domainVerificationRequest: request},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     /**
      * Verify organization domain
      */
     async verifyOrganizationDomain(id: string, domain: string): Promise<DomainVerificationResponse> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.organizationsApi.verifyOrganizationDomain(
                 {id, domain},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     /**
      * Remove domain from organization
      */
     async removeOrganizationDomain(id: string, domain: string): Promise<void> {
-        try {
+        return this.executeApiCall(async () => {
             await this.organizationsApi.removeOrganizationDomain(
                 {id, domain},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     // ================================
@@ -278,42 +256,36 @@ export class FrankOrganization extends BaseFrankAPI {
      * List organization features
      */
     async listOrganizationFeatures(id: string): Promise<FeatureSummary[]> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.organizationsApi.listOrganizationFeatures(
                 {id},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     /**
      * Enable organization feature
      */
     async enableOrganizationFeature(id: string, feature: string): Promise<EnableOrganizationFeatureResponse> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.organizationsApi.enableOrganizationFeature(
                 {id, feature},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     /**
      * Disable organization feature
      */
     async disableOrganizationFeature(id: string, feature: string): Promise<void> {
-        try {
+        return this.executeApiCall(async () => {
             await this.organizationsApi.disableOrganizationFeature(
                 {id, feature},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     // ================================
@@ -324,28 +296,24 @@ export class FrankOrganization extends BaseFrankAPI {
      * Get organization statistics
      */
     async getOrganizationStats(id: string): Promise<OrgStats> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.organizationsApi.getOrganizationStats(
                 {id},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     /**
      * Get organization usage metrics
      */
     async getOrganizationUsage(id: string): Promise<OrganizationUsage> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.organizationsApi.getOrganizationUsage(
                 {id},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     // ================================
@@ -356,28 +324,24 @@ export class FrankOrganization extends BaseFrankAPI {
      * Get organization billing information
      */
     async getOrganizationBilling(id: string): Promise<OrganizationBilling> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.organizationsApi.getOrganizationBilling(
                 {id},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     /**
      * Get organization invoices with filtering
      */
     async getOrganizationInvoices(id: string, options?: Omit<GetOrganizationInvoicesRequest, 'id'>): Promise<PaginatedOutputInvoice> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.organizationsApi.getOrganizationInvoices(
                 {id, ...(options ?? {fields: null})},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     // ================================
@@ -388,14 +352,12 @@ export class FrankOrganization extends BaseFrankAPI {
      * Get organization ownership information
      */
     async getOrganizationOwnership(id: string): Promise<UserSummary> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.organizationsApi.getOrganizationOwnership(
                 {id},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     /**
@@ -405,14 +367,12 @@ export class FrankOrganization extends BaseFrankAPI {
         id: string,
         request: TransferUserOwnershipRequest
     ): Promise<TransferOwnershipResponse> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.organizationsApi.transferOrganizationOwnership(
                 {id, transferUserOwnershipRequest: request},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     // ================================
@@ -423,14 +383,12 @@ export class FrankOrganization extends BaseFrankAPI {
      * Export organization data for compliance/backup
      */
     async exportOrganizationData(id: string): Promise<ExportOrganizationDataResponse> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.organizationsApi.exportOrganizationData(
                 {id},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     // ================================
@@ -441,140 +399,120 @@ export class FrankOrganization extends BaseFrankAPI {
      * List organization members with filtering and pagination
      */
     async listMembers(orgId: string, options?: Omit<ListOrganizationMembersRequest, 'orgId'>): Promise<PaginatedOutputMemberSummary> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.membershipApi.listOrganizationMembers(
                 {orgId, ...(options ?? {fields: null})},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     /**
      * Get detailed member information
      */
     async getMember(organizationId: string, userId: string): Promise<Membership> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.membershipApi.getMember(
                 {orgId: organizationId, userId},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     /**
      * Add existing user as organization member
      */
     async addMember(organizationId: string, request: CreateMembershipRequest): Promise<CreateMembershipResponse> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.membershipApi.addMember(
                 {orgId: organizationId, createMembershipRequest: request},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     /**
      * Update member information
      */
     async updateMember(organizationId: string, userId: string, request: UpdateMembershipRequest): Promise<Membership> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.membershipApi.updateMember(
                 {orgId: organizationId, userId, updateMembershipRequest: request},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     /**
      * Update member role
      */
     async updateMemberRole(organizationId: string, userId: string, request: UpdateMemberRoleInputBody): Promise<Membership> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.membershipApi.updateMemberRole(
                 {orgId: organizationId, userId, updateMemberRoleInputBody: request},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     /**
      * Update member status (active, inactive, suspended)
      */
     async updateMemberStatus(organizationId: string, userId: string, request: UpdateMemberStatusInputBody): Promise<Membership> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.membershipApi.updateMemberStatus(
                 {orgId: organizationId, userId, updateMemberStatusInputBody: request},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     /**
      * Remove member from organization
      */
     async removeMember(organizationId: string, userId: string, request: RemoveMemberRequest): Promise<void> {
-        try {
+        return this.executeApiCall(async () => {
             await this.membershipApi.removeMember(
                 {orgId: organizationId, userId, removeMemberRequest: request},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     /**
      * Bulk remove multiple members
      */
     async bulkRemoveMembers(organizationId: string, request: BulkRemoveMembersInputBody): Promise<BulkMembershipOperationResponse> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.membershipApi.bulkRemoveMembers(
                 {orgId: organizationId, bulkRemoveMembersInputBody: request},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     /**
      * Bulk update member roles
      */
     async bulkUpdateMemberRoles(organizationId: string, updates: BulkMemberRoleUpdate[]): Promise<BulkMembershipOperationResponse> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.membershipApi.bulkUpdateMemberRoles(
                 {orgId: organizationId, bulkMemberRoleUpdate: updates},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     /**
      * Bulk update member status
      */
     async bulkUpdateMemberStatus(organizationId: string, updates: BulkMemberStatusUpdate[]): Promise<BulkMembershipOperationResponse> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.membershipApi.bulkUpdateMemberStatus(
                 {orgId: organizationId, bulkMemberStatusUpdate: updates},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     // ================================
@@ -587,28 +525,24 @@ export class FrankOrganization extends BaseFrankAPI {
     async checkMemberPermission(organizationId: string, userId: string, permission: string): Promise<{
         [key: string]: any
     }> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.membershipApi.checkMemberPermission(
                 {orgId: organizationId, userId, permission},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     /**
      * Get all permissions for a member
      */
     async getMemberPermissions(organizationId: string, userId: string): Promise<{ [key: string]: any }> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.membershipApi.getMemberPermissions(
                 {orgId: organizationId, userId},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     // ================================
@@ -619,42 +553,36 @@ export class FrankOrganization extends BaseFrankAPI {
      * Set member as billing contact
      */
     async setBillingContact(organizationId: string, userId: string): Promise<SimpleMessage> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.membershipApi.setBillingContact(
                 {orgId: organizationId, userId},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     /**
      * Remove member as billing contact
      */
     async removeBillingContact(organizationId: string, userId: string): Promise<void> {
-        try {
+        return this.executeApiCall(async () => {
             await this.membershipApi.removeBillingContact(
                 {orgId: organizationId, userId},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     /**
      * Set member as primary contact
      */
     async setPrimaryContact(organizationId: string, userId: string): Promise<SimpleMessage> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.membershipApi.setPrimaryContact(
                 {orgId: organizationId, userId},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     // ================================
@@ -665,42 +593,36 @@ export class FrankOrganization extends BaseFrankAPI {
      * Get comprehensive membership statistics
      */
     async getMembershipStats(organizationId: string): Promise<MembershipStats> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.membershipApi.getMembershipStats(
                 {orgId: organizationId},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     /**
      * Get member metrics for specific time period
      */
     async getMemberMetrics(organizationId: string, period?: string): Promise<MemberMetrics> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.membershipApi.getMemberMetrics(
                 {orgId: organizationId, period},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     /**
      * Get recent member activity
      */
     async getMemberActivity(organizationId: string, days?: number): Promise<PaginatedOutputMembershipActivity> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.membershipApi.getMemberActivity(
                 {orgId: organizationId, days},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     // ================================
@@ -711,126 +633,108 @@ export class FrankOrganization extends BaseFrankAPI {
      * Create and send organization invitation
      */
     async createInvitation(organizationId: string, request: CreateInvitationRequest): Promise<Invitation> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.invitationsApi.createInvitation(
                 {orgId: organizationId, createInvitationRequest: request},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     /**
      * Create multiple invitations at once
      */
     async bulkCreateInvitations(organizationId: string, request: BulkCreateInvitationsRequest): Promise<BulkInvitationResponse> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.invitationsApi.bulkInvitations(
                 {orgId: organizationId, bulkCreateInvitationsRequest: request},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     /**
      * List organization invitations with filtering
      */
     async listInvitations(orgId: string, options?: Omit<ListInvitationsRequest, 'orgId'>): Promise<PaginatedOutputInvitationSummary> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.invitationsApi.listInvitations(
                 {orgId, ...(options ?? {fields: null})},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     /**
      * Get invitation details
      */
     async getInvitation(organizationId: string, invitationId: string): Promise<Invitation> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.invitationsApi.getInvitation(
                 {orgId: organizationId, invitationId},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     /**
      * Cancel pending invitation
      */
     async cancelInvitation(organizationId: string, invitationId: string, request: CancelInvitationRequest): Promise<SimpleMessage> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.invitationsApi.cancelInvitation(
                 {orgId: organizationId, invitationId, cancelInvitationRequest: request},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     /**
      * Resend invitation email
      */
     async resendInvitation(organizationId: string, invitationId: string, request: ResendInvitationRequest): Promise<SimpleMessage> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.invitationsApi.resendInvitation(
                 {orgId: organizationId, invitationId, resendInvitationRequest: request},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     /**
      * Accept organization invitation (typically called by invitee)
      */
     async acceptInvitation(request: AcceptInvitationRequest): Promise<AcceptInvitationResponse> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.invitationsApi.acceptInvitation(
                 {acceptInvitationRequest: request},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     /**
      * Decline organization invitation (typically called by invitee)
      */
     async declineInvitation(request: DeclineInvitationRequest): Promise<SimpleMessage> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.invitationsApi.declineInvitation(
                 {declineInvitationRequest: request},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     /**
      * Validate invitation token without accepting
      */
     async validateInvitation(request: InvitationValidationRequest): Promise<InvitationValidationResponse> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.invitationsApi.validateInvitation(
                 {invitationValidationRequest: request},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     // ================================
@@ -841,19 +745,17 @@ export class FrankOrganization extends BaseFrankAPI {
      * Check if user is organization owner
      */
     async isOrganizationOwner(organizationId: string, userId?: string): Promise<boolean> {
-        try {
+        return this.executeApiCall(async () => {
             const ownership = await this.getOrganizationOwnership(organizationId);
             return userId ? ownership.id === userId : true; // If no userId provided, assume current user
-        } catch (error) {
-            return false; // If we can't get ownership info, assume not owner
-        }
+        }, false).catch(() => false); // Return false if we can't get ownership info
     }
 
     /**
      * Get organization by slug
      */
     async getOrganizationBySlug(slug: string, options?: ListOrganizationsRequest): Promise<Organization | null> {
-        try {
+        return this.executeApiCall(async () => {
             const response = await this.listOrganizations({
                 search: slug,
                 ...(options ?? {fields: null}),
@@ -863,29 +765,25 @@ export class FrankOrganization extends BaseFrankAPI {
             const org = organizations.find(o => o.slug === slug);
 
             return org ? await this.getOrganization(org.id) : null;
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     /**
      * Check if organization has feature enabled
      */
     async hasFeatureEnabled(organizationId: string, featureName: string): Promise<boolean> {
-        try {
+        return this.executeApiCall(async () => {
             const features = await this.listOrganizationFeatures(organizationId);
             const feature = features.find(f => f.name === featureName);
             return feature?.enabled ?? false;
-        } catch (error) {
-            return false;
-        }
+        }, false).catch(() => false);
     }
 
     /**
      * Get organization summary for listings
      */
     async getOrganizationSummary(id: string): Promise<OrganizationSummary> {
-        try {
+        return this.executeApiCall(async () => {
             const organization = await this.getOrganization(id);
 
             // Convert full organization to summary format
@@ -900,9 +798,7 @@ export class FrankOrganization extends BaseFrankAPI {
                 memberCount: organization.stats?.totalMembers || 0,
                 role: ''
             };
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     // ================================
@@ -913,88 +809,74 @@ export class FrankOrganization extends BaseFrankAPI {
      * Get active members count
      */
     async getActiveMembersCount(organizationId: string): Promise<number> {
-        try {
+        return this.executeApiCall(async () => {
             const stats = await this.getMembershipStats(organizationId);
             return stats.activeMembers;
-        } catch (error) {
-            return 0;
-        }
+        }, false).catch(() => 0);
     }
 
     /**
      * Get pending invitations count
      */
     async getPendingInvitationsCount(organizationId: string): Promise<number> {
-        try {
+        return this.executeApiCall(async () => {
             const invitations = await this.listInvitations(organizationId, {
                 fields: null,
                 status: 'pending',
                 limit: 1,
             });
             return invitations.pagination.totalCount || 0;
-        } catch (error) {
-            return 0;
-        }
+        }, false).catch(() => 0);
     }
 
     /**
      * Check if user is member of organization
      */
     async isMember(organizationId: string, userId: string): Promise<boolean> {
-        try {
+        return this.executeApiCall(async () => {
             await this.getMember(organizationId, userId);
             return true;
-        } catch (error) {
-            return false;
-        }
+        }, false).catch(() => false);
     }
 
     /**
      * Check if user has specific role in organization
      */
     async hasRole(organizationId: string, userId: string, roleName: string): Promise<boolean> {
-        try {
+        return this.executeApiCall(async () => {
             const member = await this.getMember(organizationId, userId);
             return member.role?.name === roleName;
-        } catch (error) {
-            return false;
-        }
+        }, false).catch(() => false);
     }
 
     /**
      * Get members by role
      */
     async getMembersByRole(organizationId: string, roleName: string): Promise<MemberSummary[]> {
-        try {
+        return this.executeApiCall(async () => {
             const members = await this.listMembers(organizationId, {fields: null, limit: 1000});
             return (members.data || []).filter(member => member.roleName === roleName);
-        } catch (error) {
-            return [];
-        }
+        }, false).catch(() => []);
     }
 
     /**
      * Get organization owners
      */
     async getOwners(organizationId: string): Promise<MemberSummary[]> {
-        try {
+        return this.executeApiCall(async () => {
             const members = await this.listMembers(organizationId, {fields: null, limit: 1000});
             return (members.data || []).filter(member => member.isOwner);
-        } catch (error) {
-            return [];
-        }
+        }, false).catch(() => []);
     }
 
     /**
      * Get billing contacts
      */
     async getBillingContacts(organizationId: string, options?: Omit<ListOrganizationMembersRequest, "orgId">): Promise<MemberSummary[]> {
-        try {
+        return this.executeApiCall(async () => {
             const members = await this.listMembers(organizationId, options);
             return (members.data || []).filter(member => member.isBilling);
-        } catch (error) {
-            return [];
-        }
+        }, false).catch(() => []);
     }
 
     /**
@@ -1010,7 +892,7 @@ export class FrankOrganization extends BaseFrankAPI {
             customFields?: object;
         }
     ): Promise<Invitation> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.createInvitation(organizationId, {
                 email,
                 roleId,
@@ -1019,9 +901,7 @@ export class FrankOrganization extends BaseFrankAPI {
                 customFields: options?.customFields,
                 sendEmail: true,
             });
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     /**
@@ -1031,19 +911,16 @@ export class FrankOrganization extends BaseFrankAPI {
         organizationId: string,
         invitations: Array<{ email: string; roleId: string; message?: string }>
     ): Promise<BulkInvitationResponse> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.bulkCreateInvitations(organizationId, {
                 invitations: invitations.map(inv => ({
                     email: inv.email,
                     roleId: inv.roleId,
                     message: inv.message,
-
                 })),
                 sendEmails: true,
             });
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 
     /**
@@ -1057,7 +934,7 @@ export class FrankOrganization extends BaseFrankAPI {
         memberGrowthRate: number;
         inviteAcceptanceRate: number;
     }> {
-        try {
+        return this.executeApiCall(async () => {
             const [stats, invitations] = await Promise.all([
                 this.getMembershipStats(organizationId),
                 this.listInvitations(organizationId, {fields: null, status: 'pending', limit: 1}),
@@ -1075,9 +952,7 @@ export class FrankOrganization extends BaseFrankAPI {
                 memberGrowthRate: stats.growthRate,
                 inviteAcceptanceRate: Math.round(inviteAcceptanceRate * 100) / 100,
             };
-        } catch (error) {
-            throw await handleError(error)
-        }
+        });
     }
 }
 

@@ -8,16 +8,14 @@
 import {useCallback, useEffect, useMemo, useState} from "react";
 
 import type {
-    AcceptInvitationRequest,
+    AcceptInvitationRequest, CreateMembershipRequest,
     CreateOrganizationRequest,
     DeclineInvitationRequest,
-    InviteMemberRequest,
     Organization,
     OrganizationSettings,
     UpdateOrganizationRequest,
 } from "@frank-auth/client";
 
-import {FrankOrganization} from "@frank-auth/sdk";
 import {useAuth} from "./use-auth";
 import {useAuth as useAuthProvider} from "../provider/auth-provider";
 import {useConfig} from "../provider/config-provider";
@@ -204,7 +202,7 @@ export function useOrganization(): UseOrganizationReturn {
         session,
         reload,
     } = useAuth();
-    const {frankOrg} = useAuthProvider();
+    const {sdk} = useAuthProvider();
 
     const {apiUrl, publishableKey, userType} = useConfig();
 
@@ -212,28 +210,6 @@ export function useOrganization(): UseOrganizationReturn {
     const [invitations, setInvitations] = useState<OrganizationInvitation[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<AuthError | null>(null);
-
-    // Initialize Frank Organization SDK
-    const frankOrganization = useMemo(() => {
-        // if (frankOrg) return frankOrg;
-        console.log(
-            "Initializing Frank Organization SDK",
-            session,
-            apiUrl,
-            publishableKey,
-            userType,
-        );
-
-        // if (!session?.accessToken) return null;
-        return new FrankOrganization(
-            {
-                publishableKey,
-                apiUrl,
-                userType: userType ?? 'end_user',
-            },
-            session?.accessToken,
-        );
-    }, [publishableKey, apiUrl, session?.accessToken]);
 
     // Error handler
     const handleError = useCallback((err: any) => {
@@ -249,20 +225,18 @@ export function useOrganization(): UseOrganizationReturn {
 
     // Load organizations and invitations
     const loadOrganizations = useCallback(async () => {
-        if (!frankOrganization) return;
-
         try {
             setIsLoading(true);
             setError(null);
 
             // Load organizations user belongs to
-            const orgsData = await frankOrganization.listOrganizations({
+            const orgsData = await sdk.organization.listOrganizations({
                 fields: [],
             });
             setOrganizations((orgsData.data ?? []) as any);
 
             // Load pending invitations
-            // const invitationsData = await frankOrganization.listInvitations();
+            // const invitationsData = await sdk.organization.listInvitations();
             // setInvitations(invitationsData?.data ?? []);
         } catch (err) {
             console.error("Failed to load organizations:", err);
@@ -273,7 +247,7 @@ export function useOrganization(): UseOrganizationReturn {
         } finally {
             setIsLoading(false);
         }
-    }, [frankOrganization]);
+    }, [sdk.organization]);
 
     useEffect(() => {
         loadOrganizations();
@@ -282,7 +256,7 @@ export function useOrganization(): UseOrganizationReturn {
     // Organization management methods
     const createOrganization = useCallback(
         async (params: CreateOrganizationParams): Promise<Organization> => {
-            if (!frankOrganization)
+            if (!sdk.organization)
                 throw new Error("Organization service not available");
 
             try {
@@ -307,7 +281,7 @@ export function useOrganization(): UseOrganizationReturn {
                 };
 
                 const newOrganization =
-                    await frankOrganization.createOrganization(createRequest);
+                    await sdk.organization.createOrganization(createRequest);
 
                 // Refresh organizations list
                 await loadOrganizations();
@@ -320,7 +294,7 @@ export function useOrganization(): UseOrganizationReturn {
                 setIsLoading(false);
             }
         },
-        [frankOrganization, loadOrganizations, reload, handleError],
+        [sdk.organization, loadOrganizations, reload, handleError],
     );
 
     const updateOrganization = useCallback(
@@ -328,7 +302,7 @@ export function useOrganization(): UseOrganizationReturn {
             organizationId: string,
             params: UpdateOrganizationParams,
         ): Promise<Organization> => {
-            if (!frankOrganization)
+            if (!sdk.organization)
                 throw new Error("Organization service not available");
 
             try {
@@ -344,7 +318,7 @@ export function useOrganization(): UseOrganizationReturn {
                     settings: params.settings,
                 };
 
-                const updatedOrganization = await frankOrganization.updateOrganization(
+                const updatedOrganization = await sdk.organization.updateOrganization(
                     organizationId,
                     updateRequest,
                 );
@@ -360,19 +334,19 @@ export function useOrganization(): UseOrganizationReturn {
                 setIsLoading(false);
             }
         },
-        [frankOrganization, loadOrganizations, reload, handleError],
+        [sdk.organization, loadOrganizations, reload, handleError],
     );
 
     const deleteOrganization = useCallback(
         async (organizationId: string): Promise<void> => {
-            if (!frankOrganization)
+            if (!sdk.organization)
                 throw new Error("Organization service not available");
 
             try {
                 setIsLoading(true);
                 setError(null);
 
-                await frankOrganization.deleteOrganization(organizationId, {
+                await sdk.organization.deleteOrganization(organizationId, {
                     notifyMembers: true,
                     confirm: true,
                     dataRetention: 0,
@@ -387,7 +361,7 @@ export function useOrganization(): UseOrganizationReturn {
                 setIsLoading(false);
             }
         },
-        [frankOrganization, loadOrganizations, reload, handleError],
+        [sdk.organization, loadOrganizations, reload, handleError],
     );
 
     const switchOrganization = useCallback(
@@ -401,22 +375,26 @@ export function useOrganization(): UseOrganizationReturn {
     // Member management methods
     const inviteMember = useCallback(
         async (params: InviteMemberParams): Promise<void> => {
-            if (!frankOrganization || !activeOrganization)
+            if (!sdk.organization || !activeOrganization)
                 throw new Error("Organization service not available");
 
             try {
                 setIsLoading(true);
                 setError(null);
 
-                const inviteRequest: InviteMemberRequest = {
+                const inviteRequest: CreateMembershipRequest = {
                     emailAddress: params.emailAddress,
                     role: params.role,
                     redirectUrl: params.redirectUrl,
                     publicMetadata: params.publicMetadata,
                     privateMetadata: params.privateMetadata,
+                    isBillingContact: false,
+                    isPrimaryContact: false,
+                    roleId: params.role,
+                    sendInvitationEmail: false
                 };
 
-                await frankOrganization.addMember(activeOrganization.id, inviteRequest);
+                await sdk.organization.addMember(activeOrganization.id, inviteRequest);
 
                 // Refresh invitations
                 await loadOrganizations();
@@ -426,19 +404,19 @@ export function useOrganization(): UseOrganizationReturn {
                 setIsLoading(false);
             }
         },
-        [frankOrganization, activeOrganization, loadOrganizations, handleError],
+        [sdk.organization, activeOrganization, loadOrganizations, handleError],
     );
 
     const removeMember = useCallback(
         async (memberId: string): Promise<void> => {
-            if (!frankOrganization || !activeOrganization)
+            if (!sdk.organization || !activeOrganization)
                 throw new Error("Organization service not available");
 
             try {
                 setIsLoading(true);
                 setError(null);
 
-                await frankOrganization.removeMember(activeOrganization.id, memberId, {
+                await sdk.organization.removeMember(activeOrganization.id, memberId, {
                     notifyUser: true,
                 });
 
@@ -450,19 +428,19 @@ export function useOrganization(): UseOrganizationReturn {
                 setIsLoading(false);
             }
         },
-        [frankOrganization, activeOrganization, loadOrganizations, handleError],
+        [sdk.organization, activeOrganization, loadOrganizations, handleError],
     );
 
     const updateMemberRole = useCallback(
         async (memberId: string, role: string): Promise<void> => {
-            if (!frankOrganization || !activeOrganization)
+            if (!sdk.organization || !activeOrganization)
                 throw new Error("Organization service not available");
 
             try {
                 setIsLoading(true);
                 setError(null);
 
-                await frankOrganization.updateMemberRole(
+                await sdk.organization.updateMemberRole(
                     activeOrganization.id,
                     memberId,
                     {
@@ -478,15 +456,15 @@ export function useOrganization(): UseOrganizationReturn {
                 setIsLoading(false);
             }
         },
-        [frankOrganization, activeOrganization, loadOrganizations, handleError],
+        [sdk.organization, activeOrganization, loadOrganizations, handleError],
     );
 
     const getMembers = useCallback(async (): Promise<OrganizationMember[]> => {
-        if (!frankOrganization || !activeOrganization)
+        if (!sdk.organization || !activeOrganization)
             throw new Error("Organization service not available");
 
         try {
-            const res = await frankOrganization.listMembers(activeOrganization.id);
+            const res = await sdk.organization.listMembers(activeOrganization.id);
             return (res.data ?? []).map(
                 (item) =>
                     ({
@@ -503,7 +481,7 @@ export function useOrganization(): UseOrganizationReturn {
             handleError(err);
             return [];
         }
-    }, [frankOrganization, activeOrganization, handleError]);
+    }, [sdk.organization, activeOrganization, handleError]);
 
     // Invitation management methods
     const acceptInvitation = useCallback(
@@ -515,7 +493,7 @@ export function useOrganization(): UseOrganizationReturn {
                 password?: string;
             },
         ): Promise<void> => {
-            if (!frankOrganization)
+            if (!sdk.organization)
                 throw new Error("Organization service not available");
 
             try {
@@ -527,7 +505,7 @@ export function useOrganization(): UseOrganizationReturn {
                     token,
                     acceptTerms: true,
                 };
-                await frankOrganization.acceptInvitation(acceptRequest);
+                await sdk.organization.acceptInvitation(acceptRequest);
 
                 // Refresh organizations and invitations
                 await loadOrganizations();
@@ -538,12 +516,12 @@ export function useOrganization(): UseOrganizationReturn {
                 setIsLoading(false);
             }
         },
-        [frankOrganization, loadOrganizations, reload, handleError],
+        [sdk.organization, loadOrganizations, reload, handleError],
     );
 
     const declineInvitation = useCallback(
         async (token: string): Promise<void> => {
-            if (!frankOrganization)
+            if (!sdk.organization)
                 throw new Error("Organization service not available");
 
             try {
@@ -553,7 +531,7 @@ export function useOrganization(): UseOrganizationReturn {
                 const declineRequest: DeclineInvitationRequest = {
                     token: token,
                 };
-                await frankOrganization.declineInvitation(declineRequest);
+                await sdk.organization.declineInvitation(declineRequest);
 
                 // Refresh invitations
                 await loadOrganizations();
@@ -563,19 +541,19 @@ export function useOrganization(): UseOrganizationReturn {
                 setIsLoading(false);
             }
         },
-        [frankOrganization, loadOrganizations, handleError],
+        [sdk.organization, loadOrganizations, handleError],
     );
 
     const cancelInvitation = useCallback(
         async (invitationId: string): Promise<void> => {
-            if (!frankOrganization)
+            if (!sdk.organization)
                 throw new Error("Organization service not available");
 
             try {
                 setIsLoading(true);
                 setError(null);
 
-                await frankOrganization.cancelInvitation(invitationId);
+                await sdk.organization.cancelInvitation(invitationId);
 
                 // Refresh invitations
                 await loadOrganizations();
@@ -585,26 +563,26 @@ export function useOrganization(): UseOrganizationReturn {
                 setIsLoading(false);
             }
         },
-        [frankOrganization, loadOrganizations, handleError],
+        [sdk.organization, loadOrganizations, handleError],
     );
 
     const resendInvitation = useCallback(
         async (invitationId: string): Promise<void> => {
-            if (!frankOrganization)
+            if (!sdk.organization)
                 throw new Error("Organization service not available");
 
             try {
                 setIsLoading(true);
                 setError(null);
 
-                await frankOrganization.resendInvitation(invitationId);
+                await sdk.organization.resendInvitation(invitationId);
             } catch (err) {
                 handleError(err);
             } finally {
                 setIsLoading(false);
             }
         },
-        [frankOrganization, handleError],
+        [sdk.organization, handleError],
     );
 
     // Settings management
@@ -612,7 +590,7 @@ export function useOrganization(): UseOrganizationReturn {
         async (
             settings: Partial<OrganizationSettings>,
         ): Promise<OrganizationSettings> => {
-            if (!frankOrganization || !activeOrganization)
+            if (!sdk.organization || !activeOrganization)
                 throw new Error("Organization service not available");
 
             try {
@@ -620,7 +598,7 @@ export function useOrganization(): UseOrganizationReturn {
                 setError(null);
 
                 const updatedSettings =
-                    await frankOrganization.updateOrganizationSettings(
+                    await sdk.organization.updateOrganizationSettings(
                         activeOrganization.id,
                         settings,
                     );
@@ -637,7 +615,7 @@ export function useOrganization(): UseOrganizationReturn {
             }
         },
         [
-            frankOrganization,
+            sdk.organization,
             activeOrganization,
             loadOrganizations,
             reload,
@@ -715,7 +693,7 @@ export function useOrganization(): UseOrganizationReturn {
         activeOrganization,
         memberships: organizationMemberships,
         invitations,
-        isLoaded: !!frankOrganization,
+        isLoaded: !!sdk.organization,
         isLoading,
         error,
 

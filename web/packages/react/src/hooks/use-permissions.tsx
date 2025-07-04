@@ -11,7 +11,6 @@ import {useCallback, useEffect, useMemo, useState} from 'react';
 
 import type {UserPermissionAssignment, UserRoleAssignment,} from '@frank-auth/client';
 
-import {FrankAuth} from '@frank-auth/sdk';
 import {useAuth} from './use-auth';
 import {useConfig} from '@/provider';
 
@@ -258,9 +257,8 @@ export const ORGANIZATION_ROLES = {
  * ```
  */
 export function usePermissions(): UsePermissionsReturn {
-    const {user, activeOrganization, session} = useAuth();
-    const {apiUrl, publishableKey, userType} = useConfig();
-
+    const {user, activeOrganization, sdk} = useAuth();
+    
     const [permissions, setPermissions] = useState<string[]>([]);
     const [roles, setRoles] = useState<string[]>([]);
     const [roleAssignments, setRoleAssignments] = useState<UserRoleAssignment[]>([]);
@@ -273,16 +271,6 @@ export function usePermissions(): UsePermissionsReturn {
         type: 'system',
         organizationId: activeOrganization?.id,
     });
-
-    // Initialize Frank Auth SDK for permissions
-    const frankAuth = useMemo(() => {
-        if (!session?.accessToken) return null;
-        return new FrankAuth({
-            publishableKey,
-            apiUrl,
-            userType: userType ?? 'end_user',
-        });
-    }, [publishableKey, apiUrl, session?.accessToken]);
 
     // Error handler
     const handleError = useCallback((err: any) => {
@@ -297,7 +285,7 @@ export function usePermissions(): UsePermissionsReturn {
 
     // Load user permissions and roles
     const loadPermissions = useCallback(async () => {
-        if (!frankAuth || !user) return;
+        if (!sdk.auth || !user) return;
 
         try {
             setIsLoading(true);
@@ -305,8 +293,8 @@ export function usePermissions(): UsePermissionsReturn {
 
             // Load user roles and permissions
             const [userRoles, userPermissions] = await Promise.all([
-                frankAuth.getUserRoles(user.id),
-                frankAuth.getUserPermissions(user.id),
+                sdk.auth.getUserRoles(user.id),
+                sdk.auth.getUserPermissions(user.id),
             ]);
 
             setRoleAssignments(userRoles);
@@ -329,7 +317,7 @@ export function usePermissions(): UsePermissionsReturn {
         } finally {
             setIsLoading(false);
         }
-    }, [frankAuth, user, handleError]);
+    }, [sdk.auth, user, handleError]);
 
     // Load permissions when user or organization changes
     useEffect(() => {

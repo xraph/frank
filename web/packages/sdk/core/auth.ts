@@ -50,9 +50,15 @@ import {
 
 import {type FrankAuthConfig, FrankAuthError} from './index';
 import {handleError} from "./errors";
-import {BaseFrankAPI} from "./base";
+import {BaseSDK} from "./base";
 
-export class FrankAuth extends BaseFrankAPI {
+/**
+ * The FrankAuth class provides a comprehensive authentication system that extends from the BaseFrankAPI.
+ * It implements multiple authentication mechanisms, including email/password-based login, OAuth, SSO,
+ * magic links, password resets, multifactor authentication (MFA), passkey authentication, and token validation.
+ * The class manages APIs for authorization, SSO, and invitations and provides methods for handling authentication workflows.
+ */
+export class AuthSDK extends BaseSDK {
     private authApi: AuthenticationApi;
     private invitationsApi: InvitationsApi;
     private ssoApi: SSOApi;
@@ -63,7 +69,7 @@ export class FrankAuth extends BaseFrankAPI {
       }
 
       if (!config.storageKeyPrefix) {
-        config.storageKeyPrefix = config.projectId || 'frankAuth';
+        config.storageKeyPrefix = config.projectId || 'frank_auth';
       }
 
         super(config)
@@ -73,22 +79,21 @@ export class FrankAuth extends BaseFrankAPI {
         this.invitationsApi = new InvitationsApi(this.config);
     }
 
-    // Authentication methods
+
+    // Authentication methods with prehook execution
     async signIn(request: LoginRequest): Promise<LoginResponse> {
-        try {
+        return this.executeApiCall(async () => {
             const response = await this.authApi.login(
                 {loginRequest: request},
                 this.mergeHeaders()
             );
             await this.handleAuthResponse(response);
             return response;
-        } catch (error) {
-            throw await handleError(error);
-        }
+        });
     }
 
     async signUp(request: RegisterRequest): Promise<RegisterResponse> {
-        try {
+        return this.executeApiCall(async () => {
             const response = await this.authApi.register(
                 {registerRequest: request},
                 this.mergeHeaders()
@@ -97,22 +102,18 @@ export class FrankAuth extends BaseFrankAPI {
                 await this.handleAuthResponse(response);
             }
             return response;
-        } catch (error) {
-            throw await handleError(error);
-        }
+        });
     }
 
     async signOut(request: LogoutRequest): Promise<LogoutResponse> {
-        try {
+        return this.executeApiCall(async () => {
             const response = await this.authApi.logout(
                 {logoutRequest: request},
                 this.mergeHeaders()
             );
             await this.clearTokens();
             return response;
-        } catch (error) {
-            throw await handleError(error);
-        }
+        });
     }
 
     async refreshSession(token?: string, initOverrides?: RequestInit | InitOverrideFunction): Promise<RefreshTokenResponse> {
@@ -120,135 +121,112 @@ export class FrankAuth extends BaseFrankAPI {
             throw new FrankAuthError('No refresh token available');
         }
 
-        try {
+        return this.executeApiCall(async () => {
             const response = await this.authApi.refreshToken(
                 {refreshTokenRequest: {refreshToken: (token || this.refreshToken) as any}},
                 this.mergeHeaders(initOverrides)
             );
             await this.handleAuthResponse(response);
             return response;
-        } catch (error) {
-            await this.clearTokens();
-            throw await handleError(error);
-        }
+        });
     }
 
     async getAuthStatus(initOverrides?: RequestInit | InitOverrideFunction): Promise<AuthStatus> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.authApi.authStatus(this.mergeHeaders(initOverrides));
-        } catch (error) {
-            throw await handleError(error);
-        }
+        });
     }
 
     // Password reset methods
     async requestPasswordReset(request: PasswordResetRequest): Promise<PasswordResetResponse> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.authApi.forgotPassword(
                 {passwordResetRequest: request},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error);
-        }
+        });
     }
 
     async resetPassword(request: PasswordResetConfirmRequest): Promise<PasswordResetConfirmResponse> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.authApi.resetPassword(
                 {passwordResetConfirmRequest: request},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error);
-        }
+        });
     }
 
     // Magic link methods
     async sendMagicLink(request: MagicLinkRequest): Promise<MagicLinkResponse> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.authApi.magicLink(
                 {magicLinkRequest: request},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error);
-        }
+        });
     }
 
     async verifyMagicLink(token: string): Promise<LoginResponse> {
-        try {
+        return this.executeApiCall(async () => {
             const response = await this.authApi.verifyMagicLink(
                 {token},
                 this.mergeHeaders()
             );
             await this.handleAuthResponse(response);
             return response;
-        } catch (error) {
-            throw await handleError(error);
-        }
+        });
     }
 
-    // Resend verification methods
+    // Token validation methods
     async validateToken(request: Omit<ValidateTokenInputBody, '$schema'>, initOverrides?: RequestInit | InitOverrideFunction): Promise<ValidateTokenResponse> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.authApi.validateToken(
                 {validateTokenInputBody: request},
                 this.mergeHeaders(initOverrides)
             );
-        } catch (error) {
-            throw await handleError(error);
-        }
+        });
     }
 
     async resendVerification(request: ResendVerificationRequest): Promise<ResendVerificationResponse> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.authApi.resendVerification(
                 {resendVerificationRequest: request},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error);
-        }
+        });
     }
 
     // Email verification methods
     async verifyEmail(request: VerificationRequest): Promise<VerificationResponse> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.authApi.verifyEmail(
                 {verificationRequest: request},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error);
-        }
+        });
     }
 
     async verifyPhone(request: VerificationRequest): Promise<VerificationResponse> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.authApi.verifyPhone(
                 {verificationRequest: request},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error);
-        }
+        });
     }
 
     // MFA methods
     async setupMFA(request: SetupMFARequest): Promise<MFASetupResponse> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.authApi.setupMFA(
                 {setupMFARequest: request},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error);
-        }
+        });
     }
 
     async verifyMFA(request: MFAVerifyRequest): Promise<MFAVerifyResponse> {
-        try {
+        return this.executeApiCall(async () => {
             const response = await this.authApi.verifyMFAAuth(
                 {mFAVerifyRequest: request},
                 this.mergeHeaders()
@@ -257,55 +235,45 @@ export class FrankAuth extends BaseFrankAPI {
                 await this.handleAuthResponse(response);
             }
             return response;
-        } catch (error) {
-            throw await handleError(error);
-        }
+        });
     }
 
     async disableMFA(): Promise<void> {
-        try {
+        return this.executeApiCall(async () => {
             await this.authApi.disableMFA(this.mergeHeaders());
-        } catch (error) {
-            throw await handleError(error);
-        }
+        });
     }
 
     // Passkey methods
     async beginPasskeyRegistration(request: PasskeyRegistrationBeginRequest): Promise<PasskeyRegistrationBeginResponse> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.authApi.beginPasskeyRegistrationAuth(
                 {passkeyRegistrationBeginRequest: request},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error);
-        }
+        });
     }
 
     async finishPasskeyRegistration(request: PasskeyRegistrationFinishRequest): Promise<PasskeyRegistrationFinishResponse> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.authApi.finishPasskeyRegistrationAuth(
                 {passkeyRegistrationFinishRequest: request},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error);
-        }
+        });
     }
 
     async beginPasskeyAuthentication(request: PasskeyAuthenticationBeginRequest): Promise<PasskeyAuthenticationBeginResponse> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.authApi.beginPasskeyAuthenticationAuth(
                 {passkeyAuthenticationBeginRequest: request},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error);
-        }
+        });
     }
 
     async finishPasskeyAuthentication(request: PasskeyAuthenticationFinishRequest): Promise<PasskeyAuthenticationFinishResponse> {
-        try {
+        return this.executeApiCall(async () => {
             const response = await this.authApi.finishPasskeyAuthenticationAuth(
                 {passkeyAuthenticationFinishRequest: request},
                 this.mergeHeaders()
@@ -314,53 +282,48 @@ export class FrankAuth extends BaseFrankAPI {
                 await this.handleAuthResponse(response);
             }
             return response;
-        } catch (error) {
-            throw await handleError(error);
-        }
+        });
     }
 
     // OAuth methods
     async getOAuthProviders(): Promise<AuthProvider[]> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.authApi.listOAuthProviders(this.mergeHeaders());
-        } catch (error) {
-            throw await handleError(error);
-        }
+        });
     }
 
     async redirectToOAuth(provider: string, redirectUrl?: string): Promise<void> {
+        // Execute prehooks before redirect (to ensure latest tokens are loaded)
+        await this.executePrehooks();
+
         const state = redirectUrl ? btoa(JSON.stringify({redirectUrl})) : undefined;
         const url = `${this.options.apiUrl}/api/v1/public/auth/oauth/${provider}/authorize${state ? `?state=${state}` : ''}`;
         window.location.href = url;
     }
 
     async handleOAuthCallback(provider: string, code: string, state?: string): Promise<LoginResponse> {
-        try {
+        return this.executeApiCall(async () => {
             const response = await this.authApi.oauthCallback(
                 {provider, code, state},
                 this.mergeHeaders()
             );
             await this.handleAuthResponse(response);
             return response;
-        } catch (error) {
-            throw await handleError(error);
-        }
+        });
     }
 
     // SSO methods
     async initiateSSOLogin(request: SSOLoginRequest): Promise<SSOLoginResponse> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.ssoApi.initiateSSOLogin(
                 {sSOLoginRequest: request},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error);
-        }
+        });
     }
 
     async handleSSOCallback(request: SSOCallbackRequest): Promise<SSOCallbackResponse> {
-        try {
+        return this.executeApiCall(async () => {
             const response = await this.ssoApi.handleSSOCallback(
                 {sSOCallbackRequest: request},
                 this.mergeHeaders()
@@ -369,25 +332,21 @@ export class FrankAuth extends BaseFrankAPI {
                 await this.handleAuthResponse(response);
             }
             return response;
-        } catch (error) {
-            throw await handleError(error);
-        }
+        });
     }
 
     // Invitation methods
     async validateInvitation(request: InvitationValidationRequest): Promise<InvitationValidationResponse> {
-        try {
+        return this.executeApiCall(async () => {
             return await this.invitationsApi.validateInvitation(
                 {invitationValidationRequest: request},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error);
-        }
+        });
     }
 
     async acceptInvitation(request: AcceptInvitationRequest): Promise<AcceptInvitationResponse> {
-        try {
+        return this.executeApiCall(async () => {
             const response = await this.invitationsApi.acceptInvitation(
                 {acceptInvitationRequest: request},
                 this.mergeHeaders()
@@ -396,32 +355,15 @@ export class FrankAuth extends BaseFrankAPI {
                 await this.handleAuthResponse(response);
             }
             return response;
-        } catch (error) {
-            throw await handleError(error);
-        }
+        });
     }
 
     async declineInvitation(request: DeclineInvitationRequest): Promise<void> {
-        try {
+        return this.executeApiCall(async () => {
             await this.invitationsApi.declineInvitation(
                 {declineInvitationRequest: request},
                 this.mergeHeaders()
             );
-        } catch (error) {
-            throw await handleError(error);
-        }
+        });
     }
-
-    // Private methods
-    private async handleAuthResponse(response: LoginResponse): Promise<void> {
-        if (response.accessToken) {
-            this.accessToken = response.accessToken;
-            await this.saveToStorage('accessToken', response.accessToken);
-        }
-        if (response.refreshToken) {
-            this.refreshToken = response.refreshToken;
-            await this.saveToStorage('refreshToken', response.refreshToken);
-        }
-    }
-
 }
