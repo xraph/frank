@@ -1,3 +1,12 @@
+## [0.10.3](https://github.com/xraph/frank/compare/v0.10.2...v0.10.3) (2025-07-05)
+
+
+### Bug Fixes
+
+* remove debug logging and refine auth route handling logic ([ee7132e](https://github.com/xraph/frank/commit/ee7132eb0c36c18a764da87c8d2f8a541cdd65c1))
+
+
+
 ## [0.10.2](https://github.com/xraph/frank/compare/v0.10.1...v0.10.2) (2025-07-04)
 
 
@@ -31,7 +40,6 @@
 ### Bug Fixes
 
 * fixed path update ([78b8340](https://github.com/xraph/frank/commit/78b8340039b400bec86eab167f7be8359421140c))
-* fixed path update ([8a45de4](https://github.com/xraph/frank/commit/8a45de4a19f5e104251b2f9ccc5ee322cbaa4a62))
 
 
 
