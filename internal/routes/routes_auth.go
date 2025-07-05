@@ -2,7 +2,6 @@ package routes
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -1320,9 +1319,8 @@ func (c *authController) handleEndUserRegistration(ctx context.Context, input *R
 		}
 	}
 
-	fmt.Println("orgID ---- ===> ", orgID)
 	if orgID == nil {
-		return nil, errors.New(errors.CodeBadRequest, "organization context is required for end user registration")
+		return nil, errors.New(errors.CodeBadRequest, "organization context is required for end user registration 3")
 	}
 
 	auditEvent := audit.AuditEvent{

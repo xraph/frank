@@ -2,7 +2,6 @@ package auth
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/rs/xid"
@@ -161,8 +160,6 @@ func (s *authService) Login(ctx context.Context, req model.LoginRequest, orgId *
 	} else if req.PhoneNumber != "" {
 		foundUser, err = s.findUserByPhone(ctx, req.PhoneNumber, *userType, orgId)
 	}
-
-	fmt.Println("foundUser", foundUser, "err", err, req.Email, "orgId ", orgId, "userType", userType)
 
 	if err != nil {
 		return nil, errors.Wrap(err, errors.CodeInternalServer, "invalid credentials")

@@ -109,7 +109,6 @@ func (r *mfaRepository) Create(ctx context.Context, input CreateMFAInput) (*ent.
 		if ent.IsConstraintError(err) {
 			return nil, errors.New(errors.CodeConflict, fmt.Sprintf("MFA method '%s' already exists for this user", input.Method))
 		}
-		fmt.Println("Error:", err)
 		return nil, errors.Wrap(err, errors.CodeDatabaseError, "Failed to create MFA method")
 	}
 

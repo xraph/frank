@@ -716,7 +716,7 @@ func (m *AuthMiddleware) RequireUserTypeHuma(userTypes ...model.UserType) func(h
 	return func(ctx huma.Context, next func(huma.Context)) {
 		user := GetUserFromContext(ctx.Context())
 		if user == nil {
-			m.respondUnauthorizedHuma(ctx, "authentication required 2")
+			m.respondUnauthorizedHuma(ctx, "authentication required")
 			return
 		}
 
@@ -860,6 +860,50 @@ func (m *AuthMiddleware) authenticateJWT(ctx context.Context, r *http.Request) (
 	return sessionCtx, userCtx, nil
 }
 
+func (m *AuthMiddleware) allowReadonlyOpsForAuthRoutes(path string) bool {
+	// Build base path prefix
+	basePath := ""
+	if m.mountOpts != nil && m.mountOpts.BasePath != "" {
+		basePath = strings.TrimSuffix(m.mountOpts.BasePath, "/")
+	}
+
+	// Helper function to build full path with base path
+	buildPath := func(p string) string {
+		return basePath + p
+	}
+
+	// Paths where organization context validation should be skipped
+	skipPaths := []string{
+		// Personal auth operations - these should work for all user types without org context
+		buildPath("/api/v1/me/auth/logout"),
+		buildPath("/api/v1/me/auth/refresh"),
+		buildPath("/api/v1/me/auth/status"),
+		buildPath("/api/v1/me/auth/mfa/setup"),
+		buildPath("/api/v1/me/auth/mfa/verify"),
+		buildPath("/api/v1/me/auth/mfa/disable"),
+		buildPath("/api/v1/me/auth/mfa/backup-codes"),
+		buildPath("/api/v1/me/auth/sessions"),
+		buildPath("/api/v1/me/auth/sessions/"), // For session management
+		buildPath("/api/v1/me/auth/passkeys"),  // Personal passkey operations
+		buildPath("/api/v1/me/auth/passkeys/"),
+
+		// Personal user operations
+		buildPath("/api/v1/me/profile"),
+		buildPath("/api/v1/me/change-password"),
+		buildPath("/api/v1/me/organizations"), // List user's organizations
+		buildPath("/api/v1/me/memberships"),   // List user's memberships
+	}
+
+	// Check exact matches and prefix matches
+	for _, skipPath := range skipPaths {
+		if path == skipPath || strings.HasPrefix(path, skipPath) {
+			return true
+		}
+	}
+
+	return false
+}
+
 // authenticateAPIKey handles both public and secret API key authentication
 func (m *AuthMiddleware) authenticateAPIKey(ctx context.Context, r *http.Request) (*APIKeyContext, *UserContext, error) {
 	keyValue, keyType, err := m.extractAPIKey(r)
@@ -873,7 +917,7 @@ func (m *AuthMiddleware) authenticateAPIKey(ctx context.Context, r *http.Request
 	}
 
 	// For public keys, only allow read operations
-	if keyType == "public" && !m.isReadOnlyOperation(r.Method) {
+	if keyType == "public" && !m.isReadOnlyOperation(r.Method) && !m.allowReadonlyOpsForAuthRoutes(r.URL.Path) {
 		return nil, nil, errors.New(errors.CodeForbidden, "public keys can only be used for read operations")
 	}
 

@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -202,8 +201,6 @@ func (urm *UnifiedRegistrationMiddleware) handleExternalUserFlow(ctx huma.Contex
 func (urm *UnifiedRegistrationMiddleware) handleEndUserFlow(ctx huma.Context, flowData map[string]interface{}) error {
 	// End users: Organization context REQUIRED
 	orgID := urm.getDetectedOrganizationID(ctx.Context())
-
-	fmt.Println("orgID ===> ", orgID)
 	if orgID == nil {
 		return errors.New(errors.CodeBadRequest, "organization context is required for end user registration. Provide organization context via API key (X-Publishable-Key) or headers (X-Org-ID).")
 	}
@@ -214,7 +211,8 @@ func (urm *UnifiedRegistrationMiddleware) handleEndUserFlow(ctx huma.Context, fl
 	}
 
 	urm.logger.Debug("End user flow: organization context validated",
-		logging.String("orgId", orgID.String()))
+		logging.String("orgId", orgID.String()),
+	)
 
 	return nil
 }
