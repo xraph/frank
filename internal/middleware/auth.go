@@ -875,6 +875,8 @@ func (m *AuthMiddleware) allowReadonlyOpsForAuthRoutes(path string) bool {
 	// Paths where organization context validation should be skipped
 	skipPaths := []string{
 		// Personal auth operations - these should work for all user types without org context
+		buildPath("/api/v1/public/auth/register"),
+		buildPath("/api/v1/public/auth/login"),
 		buildPath("/api/v1/me/auth/logout"),
 		buildPath("/api/v1/me/auth/refresh"),
 		buildPath("/api/v1/me/auth/status"),
@@ -1054,7 +1056,7 @@ func (m *AuthMiddleware) getAPIKeyFromDatabase(ctx context.Context, keyValue, ke
 	case "secret":
 		// For secret keys, hash and lookup by hashed secret key
 		hashedKey := m.crypto.Hasher().HashAPIKey(keyValue)
-		apiKey, err := m.apiKeyRepo.GetActiveByHashedKey(ctx, hashedKey)
+		apiKey, err := m.apiKeyRepo.GetBySecretKey(ctx, hashedKey)
 		if err != nil {
 			return nil, errors.New(errors.CodeUnauthorized, "invalid secret key")
 		}
