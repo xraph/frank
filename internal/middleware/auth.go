@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -129,6 +130,8 @@ func (m *AuthMiddleware) RequireAuth() func(http.Handler) http.Handler {
 				}
 			}
 
+			fmt.Println("Auth Middleware authenticated", authenticated)
+
 			if !authenticated {
 				m.respondUnauthorized(w, r, "authentication required")
 				return
@@ -178,6 +181,7 @@ func (m *AuthMiddleware) RequireAuthHuma() func(huma.Context, func(huma.Context)
 		}
 
 		// 2. Try API Key authentication
+		usedAPIKey := false
 		if !authenticated && m.config.Auth.AllowAPIKey {
 			if apiKey, user, err := m.authenticateAPIKey(rctx, r); err == nil && apiKey != nil {
 				authContext = &contexts.AuthenticationContext{
@@ -186,11 +190,12 @@ func (m *AuthMiddleware) RequireAuthHuma() func(huma.Context, func(huma.Context)
 					Method: contexts.AuthMethodAPIKey,
 				}
 				authenticated = true
+				usedAPIKey = true
 			}
 		}
 
 		// 3. Try Session authentication
-		if !authenticated && m.config.Auth.AllowSession {
+		if (!authenticated || (authenticated && authContext.User == nil && usedAPIKey)) && m.config.Auth.AllowSession {
 			if session, user, err := m.authenticateSession(rctx, r); err == nil && session != nil && user != nil {
 				authContext = &contexts.AuthenticationContext{
 					User:    user,
@@ -202,7 +207,7 @@ func (m *AuthMiddleware) RequireAuthHuma() func(huma.Context, func(huma.Context)
 		}
 
 		if !authenticated {
-			m.respondUnauthorizedHuma(ctx, "authentication required 1")
+			m.respondUnauthorizedHuma(ctx, "authentication required")
 			return
 		}
 
@@ -211,7 +216,8 @@ func (m *AuthMiddleware) RequireAuthHuma() func(huma.Context, func(huma.Context)
 			m.logger.Warn("Organization context compatibility check failed",
 				logging.Error(err),
 				logging.String("method", string(authContext.Method)),
-				logging.String("path", ctx.URL().Path))
+				logging.String("path", ctx.URL().Path),
+			)
 			m.respondForbiddenHuma(ctx, err.Error())
 			return
 		}
@@ -695,7 +701,7 @@ func (m *AuthMiddleware) RequireUserType(userTypes ...model.UserType) func(http.
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			user := GetUserFromContext(r.Context())
 			if user == nil {
-				m.respondUnauthorized(w, r, "authentication required")
+				m.respondUnauthorized(w, r, "authentication required user")
 				return
 			}
 
@@ -716,7 +722,7 @@ func (m *AuthMiddleware) RequireUserTypeHuma(userTypes ...model.UserType) func(h
 	return func(ctx huma.Context, next func(huma.Context)) {
 		user := GetUserFromContext(ctx.Context())
 		if user == nil {
-			m.respondUnauthorizedHuma(ctx, "authentication required")
+			m.respondUnauthorizedHuma(ctx, "authentication required 5")
 			return
 		}
 

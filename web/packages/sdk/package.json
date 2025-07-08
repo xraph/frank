@@ -1,6 +1,6 @@
 {
 	"name": "@frank-auth/sdk",
-	"version": "0.2.24",
+	"version": "0.2.26",
 	"description": "Frank Authentication TypeScript Client",
 	"main": "dist/cjs/index.js",
 	"module": "dist/esm/index.js",
@@ -28,7 +28,7 @@
 	},
 	"dependencies": {
 		"@frank-auth/client": "^0.2.9",
-		"zod": "^3.24.2"
+		"zod": "^3.25.76"
 	},
 	"devDependencies": {
 		"@types/node": "^20.19.4",

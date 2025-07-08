@@ -1764,7 +1764,7 @@ func (c *authController) verifyMagicLinkHandler(ctx context.Context, input *Veri
 	return logResp, nil
 }
 
-func (c *authController) authStatusHandler(ctx context.Context, input *struct{}) (*AuthStatusOutput, error) { // Get current user from context
+func (c *authController) authStatusHandler(ctx context.Context, input *struct{}) (*AuthStatusOutput, error) {
 	// Get current user from context
 	currentUser := middleware.GetUserFromContext(ctx)
 	currentSession := middleware.GetSessionFromContext(ctx)
