@@ -1,8 +1,9 @@
-# [0.11.0](https://github.com/xraph/frank/compare/v0.10.3...v0.11.0) (2025-07-05)
+## [0.11.1](https://github.com/xraph/frank/compare/v0.11.0...v0.11.1) (2025-07-08)
 
 
 ### Bug Fixes
 
+* **auth:** remove unnecessary debug logs and improve token handling logic in middleware ([7bc4f91](https://github.com/xraph/frank/commit/7bc4f916019559b2dc544bbe37630c0fe2e0df4f))
 * remove debug logging and refine auth route handling logic ([ee7132e](https://github.com/xraph/frank/commit/ee7132eb0c36c18a764da87c8d2f8a541cdd65c1))
 
 
@@ -27,15 +28,6 @@
 ### Bug Fixes
 
 * fixed path update ([a83fcf5](https://github.com/xraph/frank/commit/a83fcf542ca46c92624efa2dc8907beab9103e50))
-
-
-
-# [0.10.0](https://github.com/xraph/frank/compare/v0.9.3...v0.10.0) (2025-07-03)
-
-
-### Features
-
-* add storage manager with auth utilities and type usage improvements ([f861d42](https://github.com/xraph/frank/commit/f861d42c697b3ad93a7481b36f7bdf38c1217ca0))
 
 
 
