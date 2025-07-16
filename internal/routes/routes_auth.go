@@ -3305,8 +3305,8 @@ func (c *authController) getCookieDomain(ctx context.Context) string {
 	domain, ok := lo.Find(c.di.Config().Auth.CookieDomains, func(item string) bool {
 		req := contexts.GetRequestFromContext(ctx)
 		host := c.getOriginHostFromRequest(req)
-		fmt.Println(req.Host, item)
-		return strings.HasSuffix(host, item)
+		fmt.Println("------- > ", host, item)
+		return strings.HasPrefix(host, item)
 	})
 	if !ok {
 		return c.di.Config().Auth.CookieDomain
