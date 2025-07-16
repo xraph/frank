@@ -2,7 +2,6 @@ package routes
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -3305,11 +3304,14 @@ func (c *authController) getCookieDomain(ctx context.Context) string {
 	domain, ok := lo.Find(c.di.Config().Auth.CookieDomains, func(item string) bool {
 		req := contexts.GetRequestFromContext(ctx)
 		host := c.getOriginHostFromRequest(req)
-		fmt.Println("------- > ", host, item)
 		return strings.HasPrefix(host, item)
 	})
 	if !ok {
 		return c.di.Config().Auth.CookieDomain
+	}
+
+	if !config.IsDevelopment() && (!strings.HasPrefix(domain, "localhost") || domain == "localhost") {
+		return ""
 	}
 
 	return domain
@@ -3325,10 +3327,13 @@ func (c *authController) createCookie(ctx context.Context, token string) http.Co
 		sameSite = http.SameSiteLaxMode
 	}
 
+	domain := c.getCookieDomain(ctx)
+	c.di.Logger().Info("Creating cookie", logging.String("domain", domain))
+
 	return http.Cookie{
 		Name:     c.di.Config().Auth.SessionName,
 		Value:    token,
-		Domain:   c.getCookieDomain(ctx),
+		Domain:   domain,
 		Path:     "/",
 		Secure:   c.di.Config().Auth.CookieSecure,
 		HttpOnly: c.di.Config().Auth.CookieHTTPOnly,
