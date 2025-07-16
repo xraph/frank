@@ -193,6 +193,7 @@ type AuthConfig struct {
 	SessionDuration  time.Duration `json:"session_duration" yaml:"session_duration" mapstructure:"session_duration" env:"AUTH_SESSION_DURATION" envDefault:"24h"`
 	SessionSecretKey string        `json:"session_secret_key" yaml:"session_secret_key" mapstructure:"session_secret_key" env:"AUTH_SESSION_SECRET_KEY"`
 	CookieDomain     string        `json:"cookie_domain" yaml:"cookie_domain" mapstructure:"cookie_domain" env:"AUTH_COOKIE_DOMAIN" envDefault:"localhost"`
+	CookieDomains    []string      `json:"cookie_domains" yaml:"cookie_domains" mapstructure:"cookie_domains" env:"AUTH_COOKIE_DOMAINS"`
 	CookieSecure     bool          `json:"cookie_secure" yaml:"cookie_secure" mapstructure:"cookie_secure" env:"AUTH_COOKIE_SECURE" envDefault:"false"`
 	CookieHTTPOnly   bool          `json:"cookie_http_only" yaml:"cookie_http_only" mapstructure:"cookie_http_only" env:"AUTH_COOKIE_HTTP_ONLY" envDefault:"true"`
 	CookieMaxAge     time.Duration `json:"cookie_max_age" yaml:"cookie_max_age" mapstructure:"cookie_max_age" env:"AUTH_COOKIE_MAX_AGE" envDefault:"500h"`
