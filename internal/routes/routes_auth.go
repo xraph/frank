@@ -2,12 +2,15 @@ package routes
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/rs/xid"
+	"github.com/samber/lo"
 	"github.com/xraph/frank/config"
 	"github.com/xraph/frank/internal/di"
 	"github.com/xraph/frank/internal/middleware"
@@ -784,7 +787,7 @@ func (c *authController) loginHandler(ctx context.Context, input *LoginInput) (*
 	}
 
 	if response.Session != nil && c.di.Config().Auth.AllowSession && response.Session.Token != "" {
-		logResp.SetCookie = c.createCookie(response.Session.Token)
+		logResp.SetCookie = c.createCookie(ctx, response.Session.Token)
 	}
 
 	return logResp, nil
@@ -1383,7 +1386,7 @@ func (c *authController) logoutHandler(ctx context.Context, input *LogoutInput) 
 
 	// Create response with cookie deletion
 	logoutResp := &LogoutOutput{
-		SetCookie: c.deleteCookie(),
+		SetCookie: c.deleteCookie(ctx),
 		Body:      *response,
 	}
 
@@ -1758,7 +1761,7 @@ func (c *authController) verifyMagicLinkHandler(ctx context.Context, input *Veri
 
 	// Set session cookie if configured
 	if response.Session != nil && c.di.Config().Auth.AllowSession && response.Session.Token != "" {
-		logResp.SetCookie = c.createCookie(response.Session.Token)
+		logResp.SetCookie = c.createCookie(ctx, response.Session.Token)
 	}
 
 	return logResp, nil
@@ -2209,7 +2212,7 @@ func (c *authController) handleMFALoginCompletion(ctx context.Context, input *Ve
 
 	// Set session cookie if configured
 	if loginResponse.Session.Token != "" && c.di.Config().Auth.AllowSession {
-		verifyOutput.SetCookie = c.createCookie(loginResponse.Session.Token)
+		verifyOutput.SetCookie = c.createCookie(ctx, loginResponse.Session.Token)
 	}
 
 	return verifyOutput, nil
@@ -2594,7 +2597,7 @@ func (c *authController) passkeyAuthenticationFinishHandler(ctx context.Context,
 
 	// Set session cookie if configured
 	if session != nil && c.di.Config().Auth.AllowSession && session.Token != "" {
-		logResp.SetCookie = c.createCookie(session.Token)
+		logResp.SetCookie = c.createCookie(ctx, session.Token)
 	}
 
 	return logResp, nil
@@ -3281,11 +3284,11 @@ func (c *authController) getLoginMethod(req model.LoginRequest) string {
 	return "unknown"
 }
 
-func (c *authController) deleteCookie() http.Cookie {
+func (c *authController) deleteCookie(ctx context.Context) http.Cookie {
 	return http.Cookie{
 		Name:     c.di.Config().Auth.SessionName,
 		Value:    "",
-		Domain:   c.di.Config().Auth.CookieDomain,
+		Domain:   c.getCookieDomain(ctx),
 		Path:     "/",
 		Secure:   c.di.Config().Auth.CookieSecure,
 		HttpOnly: c.di.Config().Auth.CookieHTTPOnly,
@@ -3294,7 +3297,25 @@ func (c *authController) deleteCookie() http.Cookie {
 	}
 }
 
-func (c *authController) createCookie(token string) http.Cookie {
+func (c *authController) getCookieDomain(ctx context.Context) string {
+	if c.di.Config().Auth.CookieDomains == nil || len(c.di.Config().Auth.CookieDomains) == 0 {
+		return c.di.Config().Auth.CookieDomain
+	}
+
+	domain, ok := lo.Find(c.di.Config().Auth.CookieDomains, func(item string) bool {
+		req := contexts.GetRequestFromContext(ctx)
+		host := c.getOriginHostFromRequest(req)
+		fmt.Println(req.Host, item)
+		return strings.HasSuffix(host, item)
+	})
+	if !ok {
+		return c.di.Config().Auth.CookieDomain
+	}
+
+	return domain
+}
+
+func (c *authController) createCookie(ctx context.Context, token string) http.Cookie {
 	sameSite := http.SameSiteDefaultMode
 	if c.di.Config().Auth.CookieSameSite == "none" {
 		sameSite = http.SameSiteNoneMode
@@ -3307,7 +3328,7 @@ func (c *authController) createCookie(token string) http.Cookie {
 	return http.Cookie{
 		Name:     c.di.Config().Auth.SessionName,
 		Value:    token,
-		Domain:   c.di.Config().Auth.CookieDomain,
+		Domain:   c.getCookieDomain(ctx),
 		Path:     "/",
 		Secure:   c.di.Config().Auth.CookieSecure,
 		HttpOnly: c.di.Config().Auth.CookieHTTPOnly,
@@ -3529,6 +3550,34 @@ func (c *authController) getDomainFromRequest(req model.RegisterRequest) string 
 		return parts[1]
 	}
 	return ""
+}
+
+func (c *authController) getOriginHostFromRequest(r *http.Request) string {
+	// 1. Try Origin header first (most reliable for CORS requests)
+	if origin := r.Header.Get("Origin"); origin != "" {
+		if parsedURL, err := url.Parse(origin); err == nil && parsedURL.Host != "" {
+			return parsedURL.Host
+		}
+	}
+
+	// 2. Try X-Forwarded-Host header (for requests through proxies)
+	if forwardedHost := r.Header.Get("X-Forwarded-Host"); forwardedHost != "" {
+		// X-Forwarded-Host might contain multiple hosts, take the first one
+		hosts := strings.Split(forwardedHost, ",")
+		if len(hosts) > 0 {
+			return strings.TrimSpace(hosts[0])
+		}
+	}
+
+	// 3. Try Referer header
+	if referer := r.Header.Get("Referer"); referer != "" {
+		if parsedURL, err := url.Parse(referer); err == nil && parsedURL.Host != "" {
+			return parsedURL.Host
+		}
+	}
+
+	// 4. Final fallback to Host header
+	return r.Host
 }
 
 func (c *authController) getPlanFromRequest(req model.RegisterRequest) string {
