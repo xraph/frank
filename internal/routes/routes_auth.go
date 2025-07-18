@@ -3310,9 +3310,9 @@ func (c *authController) getCookieDomain(ctx context.Context) string {
 		return c.di.Config().Auth.CookieDomain
 	}
 
-	if !config.IsDevelopment() && (!strings.HasPrefix(domain, "localhost") || domain == "localhost") {
-		return ""
-	}
+	// if !config.IsDevelopment() && (!strings.HasPrefix(domain, "localhost") || domain == "localhost") {
+	// 	return ""
+	// }
 
 	return domain
 }
