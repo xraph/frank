@@ -51,7 +51,7 @@ temp/
 gomock_*
 
 # Air configuration
-.air.toml
+#.air.toml
 
 # Certificate files
 *.pem
