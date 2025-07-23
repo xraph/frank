@@ -551,6 +551,7 @@ func (router *Router) setupProtectedRoutes(v1Group huma.API) {
 // setupProtectedRoutes configures routes that require authentication
 func (router *Router) setupPersonalRoutes(v1Group huma.API) {
 	personalGroup := huma.NewGroup(v1Group, "/me")
+
 	plainGroup := huma.NewGroup(personalGroup)
 	plainGroup.UseMiddleware(router.orgContextMw.UserTypeDetectionHumaMiddleware(false))
 	plainGroup.UseMiddleware(router.authMw.OptionalAuthHuma())
@@ -559,6 +560,7 @@ func (router *Router) setupPersonalRoutes(v1Group huma.API) {
 		model.UserTypeExternal,
 		model.UserTypeEndUser,
 	))
+
 	personalGroup.UseMiddleware(router.orgContextMw.UserTypeDetectionHumaMiddleware(false))
 	personalGroup.UseMiddleware(router.authMw.RequireAuthHuma())
 	personalGroup.UseMiddleware(router.authMw.RequireUserTypeHuma(
