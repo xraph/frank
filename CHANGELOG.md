@@ -1,3 +1,12 @@
+## [0.13.5](https://github.com/xraph/frank/compare/v0.13.4...v0.13.5) (2025-07-23)
+
+
+### Bug Fixes
+
+* **routes:** remove redundant middleware in setupPersonalRoutes function ([c40ed0e](https://github.com/xraph/frank/commit/c40ed0e10275f6ed7624fbb2b133ab973431351f))
+
+
+
 ## [0.13.4](https://github.com/xraph/frank/compare/v0.13.3...v0.13.4) (2025-07-23)
 
 
@@ -7,15 +16,6 @@
 * **auth:** refine cookie domain resolution and remove debug logs ([ef39370](https://github.com/xraph/frank/commit/ef39370e615ebe201506d99f18c2b96e9e4f4365))
 * **auth:** update domain matching logic to use HasPrefix instead of HasSuffix ([f7c30fd](https://github.com/xraph/frank/commit/f7c30fd9b4eff0bdf5d46f80f56911cb60b27318))
 * **routes:** add spacing for readability in setupPersonalRoutes function ([ea3df79](https://github.com/xraph/frank/commit/ea3df7935b7b146f0781ba055a0d9bb42199abc8))
-
-
-
-# [0.13.0](https://github.com/xraph/frank/compare/v0.12.0...v0.13.0) (2025-07-16)
-
-
-### Features
-
-* **config:** add support for multiple cookie domains ([c9e90c8](https://github.com/xraph/frank/commit/c9e90c808f12b2c5833427dfeb8049da3c0f6236))
 
 
 
