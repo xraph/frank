@@ -555,11 +555,6 @@ func (router *Router) setupPersonalRoutes(v1Group huma.API) {
 	plainGroup := huma.NewGroup(personalGroup)
 	plainGroup.UseMiddleware(router.orgContextMw.UserTypeDetectionHumaMiddleware(false))
 	plainGroup.UseMiddleware(router.authMw.OptionalAuthHuma())
-	plainGroup.UseMiddleware(router.authMw.RequireUserTypeHuma(
-		model.UserTypeInternal,
-		model.UserTypeExternal,
-		model.UserTypeEndUser,
-	))
 
 	personalGroup.UseMiddleware(router.orgContextMw.UserTypeDetectionHumaMiddleware(false))
 	personalGroup.UseMiddleware(router.authMw.RequireAuthHuma())
