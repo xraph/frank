@@ -63,6 +63,31 @@ export interface FrankAuthConfig {
 	storageManager?: StorageManager;
 	storage?: HybridAuthStorage;
 	// storageType?: StorageType;
+	/**
+	 * Enable debug mode
+	 * @default false
+	 */
+	debug?: boolean;
+
+	/**
+	 * Debug configuration options
+	 */
+	debugConfig?: Partial<DebugConfig>;
+}
+
+/**
+ * Debug configuration options
+ */
+export interface DebugConfig {
+	enabled: boolean;
+	logLevel: "error" | "warn" | "info" | "debug" | "verbose";
+	logApiCalls: boolean;
+	logHeaders: boolean;
+	logTokens: boolean; // Be careful with this in production
+	logStorage: boolean;
+	logErrors: boolean;
+	logPrehooks: boolean;
+	prefix: string;
 }
 
 // Default configuration

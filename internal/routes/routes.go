@@ -551,6 +551,14 @@ func (router *Router) setupProtectedRoutes(v1Group huma.API) {
 // setupProtectedRoutes configures routes that require authentication
 func (router *Router) setupPersonalRoutes(v1Group huma.API) {
 	personalGroup := huma.NewGroup(v1Group, "/me")
+	plainGroup := huma.NewGroup(personalGroup)
+	plainGroup.UseMiddleware(router.orgContextMw.UserTypeDetectionHumaMiddleware(false))
+	plainGroup.UseMiddleware(router.authMw.OptionalAuthHuma())
+	plainGroup.UseMiddleware(router.authMw.RequireUserTypeHuma(
+		model.UserTypeInternal,
+		model.UserTypeExternal,
+		model.UserTypeEndUser,
+	))
 	personalGroup.UseMiddleware(router.orgContextMw.UserTypeDetectionHumaMiddleware(false))
 	personalGroup.UseMiddleware(router.authMw.RequireAuthHuma())
 	personalGroup.UseMiddleware(router.authMw.RequireUserTypeHuma(
@@ -562,6 +570,7 @@ func (router *Router) setupPersonalRoutes(v1Group huma.API) {
 	// Auth management endpoints (logout, refresh, profile, etc.)
 	// These should NOT require organization context
 	RegisterPersonalAuthAPI(personalGroup, router.di)
+	RegisterPersonalAuthPublicAPI(plainGroup, router.di)
 	// Personal organization operations (list my orgs, switch org context, etc.)
 	RegisterPersonalOrganizationAPI(personalGroup, router.di)
 	// Personal user management endpoints (profile, password change, personal MFA, etc.)

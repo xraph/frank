@@ -1,6 +1,6 @@
 {
 	"name": "@frank-auth/sdk",
-	"version": "0.2.26",
+	"version": "0.2.40",
 	"description": "Frank Authentication TypeScript Client",
 	"main": "dist/cjs/index.js",
 	"module": "dist/esm/index.js",

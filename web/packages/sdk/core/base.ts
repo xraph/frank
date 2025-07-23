@@ -10,6 +10,7 @@ import { convertError } from "./errors";
 import {
 	type AuthStorage,
 	AuthStorageUtils,
+	type DebugConfig,
 	type FrankAuthConfig,
 	FrankAuthError,
 	HybridAuthStorage,
@@ -53,6 +54,20 @@ interface TokenExpirationResult {
 }
 
 /**
+ * API call debug information
+ */
+interface ApiCallDebugInfo {
+	method: string;
+	url: string;
+	headers: Record<string, string>;
+	timestamp: number;
+	requestId: string;
+	duration?: number;
+	statusCode?: number;
+	error?: any;
+}
+
+/**
  * FrankOrganization - Organization Management SDK
  *
  * Provides comprehensive organization management capabilities including:
@@ -64,6 +79,7 @@ interface TokenExpirationResult {
  * - Settings and configuration
  *
  * Supports multi-tenant architecture with organization-scoped operations
+ * Now with enhanced debugging capabilities for API calls, headers, and operations
  */
 export class BaseSDK {
 	private readonly _storage: StorageManager;
@@ -73,6 +89,7 @@ export class BaseSDK {
 	private readonly _config: Configuration;
 	private readonly _validationResult: ValidationResult;
 	private readonly _prehooks: Set<PrehookFunction> = new Set();
+	private readonly _debugConfig: DebugConfig;
 
 	private readonly internalAuthApi: AuthenticationApi;
 
@@ -82,6 +99,10 @@ export class BaseSDK {
 
 	// Token expiration buffer (in seconds) - refresh token if it expires within this time
 	private readonly TOKEN_REFRESH_BUFFER = 300; // 5 minutes
+
+	// Debug tracking
+	private readonly _apiCallHistory: ApiCallDebugInfo[] = [];
+	private _requestCounter = 0;
 
 	constructor(config: FrankAuthConfig, accessToken?: string) {
 		this._hybridAuthStorage =
@@ -93,7 +114,29 @@ export class BaseSDK {
 		this._storage = this._authStorage.adapter;
 		this._options = config;
 		this._accessToken = accessToken || null;
-		this.internalAuthApi = new AuthenticationApi(this.config);
+
+		// Initialize debug configuration
+		this._debugConfig = {
+			enabled: config.debug ?? false,
+			logLevel: config.debugConfig?.logLevel ?? "info",
+			logApiCalls: config.debugConfig?.logApiCalls ?? true,
+			logHeaders: config.debugConfig?.logHeaders ?? true,
+			logTokens: config.debugConfig?.logTokens ?? false, // Dangerous in production
+			logStorage: config.debugConfig?.logStorage ?? true,
+			logErrors: config.debugConfig?.logErrors ?? true,
+			logPrehooks: config.debugConfig?.logPrehooks ?? false,
+			prefix: config.debugConfig?.prefix ?? "[FrankAuth SDK]",
+		};
+
+		this.debugLog("info", "Initializing BaseSDK", {
+			apiUrl: config.apiUrl,
+			publishableKey: this.sanitizeKey(config.publishableKey),
+			secretKey: config.secretKey ? "[PRESENT]" : "[NOT SET]",
+			userType: config.userType,
+			projectId: config.projectId,
+			storageKeyPrefix: config.storageKeyPrefix,
+			debugEnabled: this._debugConfig.enabled,
+		});
 
 		// Validate configuration
 		this._validationResult = this.validateConfig(config);
@@ -108,13 +151,13 @@ export class BaseSDK {
 			headers["X-API-Key"] = this._options.secretKey;
 		}
 
-		if (this._options.secretKey) {
-			headers["X-API-Key"] = this._options.secretKey;
+		if (this._accessToken) {
+			headers.Authorization = `Bearer ${this._accessToken}`;
 		}
 
-		if (this._accessToken) {
-			headers["Authorization"] = `Bearer ${this._accessToken}`;
-		}
+		this.debugLog("debug", "Initial headers configured", {
+			headers: this.sanitizeHeaders(headers),
+		});
 
 		this._config = new Configuration({
 			basePath: config.apiUrl,
@@ -123,11 +166,15 @@ export class BaseSDK {
 			headers,
 		});
 
+		this.internalAuthApi = new AuthenticationApi(this.config);
+
 		this._storage.on(AuthStorageUtils.accessTokenKey, () => {
+			this.debugLog("debug", "Access token changed in storage");
 			this.loadTokensFromStorage();
 		});
 
 		this._storage.on(AuthStorageUtils.refreshTokenKey, () => {
+			this.debugLog("debug", "Refresh token changed in storage");
 			this.loadTokensFromStorage();
 		});
 
@@ -139,10 +186,277 @@ export class BaseSDK {
 
 		// Load tokens from storage initially
 		this.loadTokensFromStorage();
+
+		this.debugLog("info", "BaseSDK initialization complete");
 	}
 
 	// ================================
-	// Token Expiration & Renewal
+	// Debug Logging Methods
+	// ================================
+
+	/**
+	 * Debug logger with configurable levels and formatting
+	 */
+	private debugLog(
+		level: DebugConfig["logLevel"],
+		message: string,
+		data?: any,
+	): void {
+		if (!this._debugConfig.enabled) return;
+
+		const logLevels = ["error", "warn", "info", "debug", "verbose"];
+		const currentLevelIndex = logLevels.indexOf(this._debugConfig.logLevel);
+		const messageLevelIndex = logLevels.indexOf(level);
+
+		if (messageLevelIndex > currentLevelIndex) return;
+
+		const timestamp = new Date().toISOString();
+		const prefix = `${this._debugConfig.prefix} [${level.toUpperCase()}] ${timestamp}`;
+
+		if (data) {
+			console[level === "error" ? "error" : level === "warn" ? "warn" : "log"](
+				`${prefix} ${message}`,
+				data,
+			);
+		} else {
+			console[level === "error" ? "error" : level === "warn" ? "warn" : "log"](
+				`${prefix} ${message}`,
+			);
+		}
+	}
+
+	/**
+	 * Log API call details for debugging
+	 */
+	private logApiCall(debugInfo: ApiCallDebugInfo): void {
+		if (!this._debugConfig.logApiCalls) return;
+
+		this.debugLog("debug", `API Call: ${debugInfo.method} ${debugInfo.url}`, {
+			requestId: debugInfo.requestId,
+			headers: this._debugConfig.logHeaders
+				? this.sanitizeHeaders(debugInfo.headers)
+				: "[HIDDEN]",
+			timestamp: debugInfo.timestamp,
+			duration: debugInfo.duration ? `${debugInfo.duration}ms` : "pending",
+			statusCode: debugInfo.statusCode,
+		});
+
+		// Store in history for diagnostics
+		this._apiCallHistory.push(debugInfo);
+
+		// Keep only last 50 calls to prevent memory issues
+		if (this._apiCallHistory.length > 50) {
+			this._apiCallHistory.shift();
+		}
+	}
+
+	/**
+	 * Log token operations
+	 */
+	private logTokenOperation(operation: string, details?: any): void {
+		if (!this._debugConfig.logTokens) return;
+
+		this.debugLog("debug", `Token Operation: ${operation}`, details);
+	}
+
+	/**
+	 * Log storage operations
+	 */
+	private logStorageOperation(
+		operation: string,
+		key: string,
+		details?: any,
+	): void {
+		if (!this._debugConfig.logStorage) return;
+
+		this.debugLog("debug", `Storage Operation: ${operation} - ${key}`, details);
+	}
+
+	/**
+	 * Log prehook execution
+	 */
+	private logPrehookExecution(count: number, duration?: number): void {
+		if (!this._debugConfig.logPrehooks) return;
+
+		this.debugLog("debug", `Executed ${count} prehooks`, {
+			duration: duration ? `${duration}ms` : undefined,
+		});
+	}
+
+	/**
+	 * Sanitize headers for logging (remove sensitive data)
+	 */
+	private sanitizeHeaders(
+		headers: Record<string, string>,
+	): Record<string, string> {
+		const sanitized = { ...headers };
+
+		if (sanitized.Authorization) {
+			sanitized.Authorization = sanitized.Authorization.replace(
+				/Bearer .+/,
+				"Bearer [REDACTED]",
+			);
+		}
+
+		if (sanitized["X-API-Key"]) {
+			sanitized["X-API-Key"] = "[REDACTED]";
+		}
+
+		return sanitized;
+	}
+
+	/**
+	 * Sanitize API key for logging
+	 */
+	private sanitizeKey(key: string): string {
+		if (!key) return "[NOT SET]";
+		if (key.length <= 12) return "[REDACTED]";
+		return `${key.substring(0, 12)}...`;
+	}
+
+	/**
+	 * Get API call history for debugging
+	 */
+	public getApiCallHistory(): ApiCallDebugInfo[] {
+		return [...this._apiCallHistory];
+	}
+
+	/**
+	 * Clear API call history
+	 */
+	public clearApiCallHistory(): void {
+		this._apiCallHistory.length = 0;
+		this.debugLog("debug", "API call history cleared");
+	}
+
+	/**
+	 * Enable/disable debug mode at runtime
+	 */
+	public setDebugMode(enabled: boolean, config?: Partial<DebugConfig>): void {
+		this._debugConfig.enabled = enabled;
+
+		if (config) {
+			Object.assign(this._debugConfig, config);
+		}
+
+		this.debugLog("info", `Debug mode ${enabled ? "enabled" : "disabled"}`, {
+			config: this._debugConfig,
+		});
+	}
+
+	/**
+	 * Get current debug configuration
+	 */
+	public getDebugConfig(): DebugConfig {
+		return { ...this._debugConfig };
+	}
+
+	// ================================
+	// Enhanced API Call Wrapper
+	// ================================
+
+	/**
+	 * Enhanced API call wrapper with comprehensive debugging
+	 */
+	protected async executeApiCallWithDebug<T>(
+		apiCall: () => Promise<T>,
+		callInfo: {
+			method: string;
+			endpoint: string;
+			skipPrehooks?: boolean;
+			retryOn401?: boolean;
+			maxRetries?: number;
+		},
+	): Promise<T> {
+		const requestId = `req_${++this._requestCounter}_${Date.now()}`;
+		const startTime = Date.now();
+
+		const debugInfo: ApiCallDebugInfo = {
+			method: callInfo.method,
+			url: `${this._config.basePath}${callInfo.endpoint}`,
+			headers: this.dynamicHeaders,
+			timestamp: startTime,
+			requestId,
+		};
+
+		this.logApiCall(debugInfo);
+
+		try {
+			// Execute prehooks unless explicitly skipped
+			if (!callInfo.skipPrehooks) {
+				const prehookStart = Date.now();
+				await this.executePrehooks();
+				const prehookDuration = Date.now() - prehookStart;
+				this.logPrehookExecution(this._prehooks.size, prehookDuration);
+			}
+
+			// Execute the actual API call
+			let result: T;
+
+			if (callInfo.retryOn401 !== false) {
+				result = await this.refreshTokenAndRetry(
+					apiCall,
+					callInfo.maxRetries || 1,
+				);
+			} else {
+				result = await apiCall();
+			}
+
+			// Log successful completion
+			const duration = Date.now() - startTime;
+			debugInfo.duration = duration;
+			debugInfo.statusCode = 200; // Assume success if no error thrown
+
+			this.debugLog(
+				"debug",
+				`API call completed successfully: ${callInfo.method} ${callInfo.endpoint}`,
+				{
+					requestId,
+					duration: `${duration}ms`,
+				},
+			);
+
+			return result;
+		} catch (error) {
+			const duration = Date.now() - startTime;
+			debugInfo.duration = duration;
+			debugInfo.error = error;
+
+			// Determine status code from error
+			if (error && typeof error === "object") {
+				debugInfo.statusCode =
+					(error as any).status ||
+					(error as any).response?.status ||
+					(error as any).statusCode ||
+					500;
+			}
+
+			this.debugLog(
+				"error",
+				`API call failed: ${callInfo.method} ${callInfo.endpoint}`,
+				{
+					requestId,
+					duration: `${duration}ms`,
+					error: {
+						message: error instanceof Error ? error.message : "Unknown error",
+						status: debugInfo.statusCode,
+						stack:
+							this._debugConfig.logLevel === "verbose" && error instanceof Error
+								? error.stack
+								: undefined,
+					},
+				},
+			);
+
+			// Re-log the updated debug info
+			this.logApiCall(debugInfo);
+
+			throw await this.handleError(error);
+		}
+	}
+
+	// ================================
+	// Token Expiration & Renewal (Enhanced with Debug)
 	// ================================
 
 	/**
@@ -155,6 +469,10 @@ export class BaseSDK {
 			// Split the token into parts
 			const parts = token.split(".");
 			if (parts.length !== 3) {
+				this.debugLog(
+					"warn",
+					"Invalid JWT format: token does not have 3 parts",
+				);
 				return null;
 			}
 
@@ -169,9 +487,19 @@ export class BaseSDK {
 			const decoded = atob(paddedPayload.replace(/-/g, "+").replace(/_/g, "/"));
 
 			// Parse JSON
-			return JSON.parse(decoded) as JWTPayload;
+			const parsedPayload = JSON.parse(decoded) as JWTPayload;
+
+			this.debugLog("verbose", "JWT token decoded successfully", {
+				exp: parsedPayload.exp,
+				iat: parsedPayload.iat,
+				hasExpiration: !!parsedPayload.exp,
+			});
+
+			return parsedPayload;
 		} catch (error) {
-			console.warn("Failed to decode JWT token:", error);
+			this.debugLog("warn", "Failed to decode JWT token", {
+				error: error instanceof Error ? error.message : error,
+			});
 			return null;
 		}
 	}
@@ -187,6 +515,7 @@ export class BaseSDK {
 		bufferSeconds: number = this.TOKEN_REFRESH_BUFFER,
 	): TokenExpirationResult {
 		if (!token) {
+			this.logTokenOperation("checkExpiration", { result: "token_null" });
 			return {
 				isExpired: true,
 				isValid: false,
@@ -196,6 +525,7 @@ export class BaseSDK {
 
 		const payload = this.decodeJWTPayload(token);
 		if (!payload) {
+			this.logTokenOperation("checkExpiration", { result: "invalid_format" });
 			return {
 				isExpired: true,
 				isValid: false,
@@ -204,6 +534,7 @@ export class BaseSDK {
 		}
 
 		if (!payload.exp) {
+			this.logTokenOperation("checkExpiration", { result: "no_expiration" });
 			return {
 				isExpired: false,
 				isValid: true,
@@ -215,6 +546,13 @@ export class BaseSDK {
 		const expiresAt = new Date(payload.exp * 1000);
 		const expiresIn = payload.exp - now;
 		const isExpired = payload.exp - bufferSeconds <= now;
+
+		this.logTokenOperation("checkExpiration", {
+			expiresIn: `${expiresIn}s`,
+			isExpired,
+			bufferSeconds,
+			expiresAt: expiresAt.toISOString(),
+		});
 
 		return {
 			isExpired,
@@ -277,9 +615,14 @@ export class BaseSDK {
 			refreshToken: string;
 		};
 	}> {
+		this.debugLog("info", "Verifying and renewing refresh token", {
+			forceRenew,
+		});
+
 		const refreshTokenResult = this.isRefreshTokenExpired();
 
 		if (!refreshTokenResult.isValid) {
+			this.debugLog("error", "Invalid refresh token during renewal attempt");
 			throw new FrankAuthError(
 				"Invalid refresh token",
 				"INVALID_REFRESH_TOKEN",
@@ -289,6 +632,7 @@ export class BaseSDK {
 		const shouldRenew = forceRenew || refreshTokenResult.isExpired;
 
 		if (!shouldRenew) {
+			this.debugLog("debug", "Refresh token renewal not needed");
 			return {
 				renewed: false,
 				wasExpired: refreshTokenResult.isExpired,
@@ -296,6 +640,7 @@ export class BaseSDK {
 		}
 
 		if (!this._refreshToken) {
+			this.debugLog("error", "No refresh token available for renewal");
 			throw new FrankAuthError(
 				"No refresh token available",
 				"NO_REFRESH_TOKEN",
@@ -303,8 +648,10 @@ export class BaseSDK {
 		}
 
 		try {
+			this.debugLog("info", "Attempting to renew refresh token");
 			const response = await this.renewRefreshToken();
 
+			this.debugLog("info", "Refresh token renewal successful");
 			return {
 				renewed: true,
 				wasExpired: refreshTokenResult.isExpired,
@@ -314,6 +661,7 @@ export class BaseSDK {
 				},
 			};
 		} catch (error) {
+			this.debugLog("error", "Failed to renew refresh token", { error });
 			throw new FrankAuthError(
 				"Failed to renew refresh token",
 				"REFRESH_TOKEN_RENEWAL_FAILED",
@@ -330,6 +678,7 @@ export class BaseSDK {
 		try {
 			// Check if we have tokens
 			if (!this._accessToken || !this._refreshToken) {
+				this.debugLog("debug", "No tokens available for renewal check");
 				return;
 			}
 
@@ -337,6 +686,8 @@ export class BaseSDK {
 			const accessTokenResult = this.isAccessTokenExpired();
 
 			if (accessTokenResult.isExpired && accessTokenResult.isValid) {
+				this.debugLog("info", "Access token expired, attempting renewal");
+
 				// Access token is expired, try to renew using refresh token
 				const refreshTokenResult = this.isRefreshTokenExpired();
 
@@ -345,13 +696,30 @@ export class BaseSDK {
 					await this.verifyAndRenewRefreshToken();
 				} else {
 					// Both tokens are expired, clear them
-					await this.clearTokens();
+					this.debugLog(
+						"warn",
+						"Both access and refresh tokens expired, clearing tokens",
+					);
+					// await this.clearTokens();
 				}
+			} else {
+				this.debugLog("verbose", "Access token is still valid");
 			}
 		} catch (error) {
-			console.warn("Failed to check and renew tokens:", error);
-			// Don't throw error to avoid breaking API calls
+			this.debugLog("warn", "Failed to check and renew tokens", { error });
+			// Don't clear tokens on network errors or temporary failures
+			// Only clear on authentication errors (401, 403)
+			if (this.isAuthenticationError(error)) {
+				// await this.clearTokens();
+			}
 		}
+	}
+
+	// Add helper to identify authentication vs network errors
+	private isAuthenticationError(error: any): boolean {
+		const status =
+			error?.status || error?.response?.status || error?.statusCode;
+		return status === 401 || status === 403;
 	}
 
 	/**
@@ -362,10 +730,13 @@ export class BaseSDK {
 		accessToken: TokenExpirationResult;
 		refreshToken: TokenExpirationResult;
 	} {
-		return {
+		const result = {
 			accessToken: this.isAccessTokenExpired(),
 			refreshToken: this.isRefreshTokenExpired(),
 		};
+
+		this.debugLog("verbose", "Token expiration info retrieved", result);
+		return result;
 	}
 
 	/**
@@ -376,6 +747,8 @@ export class BaseSDK {
 		if (bufferSeconds < 0) {
 			throw new Error("Token refresh buffer must be non-negative");
 		}
+
+		this.debugLog("info", "Token refresh buffer updated", { bufferSeconds });
 		// We can't modify the readonly property, but we can add this for future use
 		// For now, methods will use the provided buffer parameter
 	}
@@ -456,12 +829,15 @@ export class BaseSDK {
 			recommendedAction = "reauth";
 		}
 
-		return {
+		const result = {
 			is401Error: is401,
 			isTokenExpired: accessTokenResult.isExpired,
 			isRefreshTokenExpired: refreshTokenResult.isExpired,
 			recommendedAction,
 		};
+
+		this.debugLog("debug", "Token error analysis completed", result);
+		return result;
 	}
 
 	/**
@@ -485,6 +861,11 @@ export class BaseSDK {
 					throw error;
 				}
 
+				this.debugLog(
+					"info",
+					`Attempting to handle 401 error (retry ${retryCount + 1}/${maxRetries})`,
+				);
+
 				// Attempt to handle 401 error by refreshing token
 				const tokenRefreshed = await this.handle401Error(error);
 
@@ -494,7 +875,8 @@ export class BaseSDK {
 				}
 
 				retryCount++;
-				console.log(
+				this.debugLog(
+					"info",
 					`Retrying API call after token refresh (attempt ${retryCount}/${maxRetries})`,
 				);
 			}
@@ -518,6 +900,10 @@ export class BaseSDK {
 
 			// Check if we have a refresh token
 			if (!this._refreshToken) {
+				this.debugLog(
+					"warn",
+					"Cannot handle 401 error: no refresh token available",
+				);
 				return false;
 			}
 
@@ -525,17 +911,24 @@ export class BaseSDK {
 			const refreshTokenResult = this.isRefreshTokenExpired();
 			if (refreshTokenResult.isExpired || !refreshTokenResult.isValid) {
 				// Refresh token is also expired/invalid, clear tokens
-				await this.clearTokens();
+				this.debugLog(
+					"warn",
+					"Cannot handle 401 error: refresh token is expired/invalid",
+				);
+				// await this.clearTokens();
 				return false;
 			}
 
 			// Attempt to refresh tokens
+			this.debugLog("info", "Attempting to refresh tokens to handle 401 error");
 			await this.verifyAndRenewRefreshToken(true); // Force renewal
 			return true;
 		} catch (refreshError) {
-			console.warn("Failed to refresh token after 401 error:", refreshError);
+			this.debugLog("error", "Failed to refresh token after 401 error", {
+				refreshError,
+			});
 			// Clear tokens if refresh fails
-			await this.clearTokens();
+			// await this.clearTokens();
 			return false;
 		}
 	}
@@ -547,17 +940,27 @@ export class BaseSDK {
 	 */
 	private is401Error(error: any): boolean {
 		// Check different possible error structures
-		return (
+		const is401 =
 			error?.status === 401 ||
 			error?.response?.status === 401 ||
 			error?.statusCode === 401 ||
 			(error?.message && error.message.includes("401")) ||
-			error?.response?.data?.status === 401
-		);
+			error?.response?.data?.status === 401;
+
+		if (is401) {
+			this.debugLog("debug", "401 error detected", {
+				status: error?.status,
+				responseStatus: error?.response?.status,
+				statusCode: error?.statusCode,
+				message: error?.message,
+			});
+		}
+
+		return is401;
 	}
 
 	// ================================
-	// Prehook Management
+	// Prehook Management (Enhanced with Debug)
 	// ================================
 
 	/**
@@ -565,6 +968,9 @@ export class BaseSDK {
 	 */
 	public addPrehook(prehook: PrehookFunction): void {
 		this._prehooks.add(prehook);
+		this.debugLog("debug", "Prehook added", {
+			totalPrehooks: this._prehooks.size,
+		});
 	}
 
 	/**
@@ -572,22 +978,40 @@ export class BaseSDK {
 	 */
 	public removePrehook(prehook: PrehookFunction): void {
 		this._prehooks.delete(prehook);
+		this.debugLog("debug", "Prehook removed", {
+			totalPrehooks: this._prehooks.size,
+		});
 	}
 
 	/**
 	 * Clear all prehooks
 	 */
 	public clearPrehooks(): void {
+		const count = this._prehooks.size;
 		this._prehooks.clear();
+		this.debugLog("debug", "All prehooks cleared", { previousCount: count });
 	}
 
 	/**
 	 * Execute all prehooks
 	 */
 	protected async executePrehooks(): Promise<void> {
+		if (this._prehooks.size === 0) return;
+
+		const startTime = Date.now();
+		this.debugLog("verbose", `Executing ${this._prehooks.size} prehooks`);
+
 		for (const prehook of this._prehooks) {
-			await prehook();
+			try {
+				await prehook();
+			} catch (error) {
+				this.debugLog("error", "Prehook execution failed", { error });
+				throw error;
+			}
 		}
+
+		const duration = Date.now() - startTime;
+		this.logPrehookExecution(this._prehooks.size, duration);
 	}
 
 	/**
@@ -617,7 +1041,7 @@ export class BaseSDK {
 	 * Get the current count of active prehooks
 	 */
 	public getPrehookCount(): number {
-		return this.getDiagnostics().prehooksCount;
+		return this._prehooks.size;
 	}
 
 	// ================================
@@ -653,27 +1077,44 @@ export class BaseSDK {
 	}
 
 	// ================================
-	// Token Management
+	// Token Management (Enhanced with Debug)
 	// ================================
 
 	/**
 	 * Update access token (called by FrankAuth when token changes)
 	 */
 	set accessToken(token: string | null) {
+		const changed = this._accessToken !== token;
 		this._accessToken = token;
+
+		if (changed) {
+			this.logTokenOperation("accessToken.set", {
+				hasToken: !!token,
+				tokenPrefix: token ? this.sanitizeKey(token) : null,
+			});
+		}
 	}
 
 	/**
 	 * Update refresh token (called by FrankAuth when token changes)
 	 */
 	set refreshToken(token: string | null) {
+		const changed = this._refreshToken !== token;
 		this._refreshToken = token;
+
+		if (changed) {
+			this.logTokenOperation("refreshToken.set", {
+				hasToken: !!token,
+				tokenPrefix: token ? this.sanitizeKey(token) : null,
+			});
+		}
 	}
 
 	/**
 	 * Reset all tokens
 	 */
 	resetTokens() {
+		this.logTokenOperation("resetTokens");
 		this._accessToken = null;
 		this._refreshToken = null;
 	}
@@ -682,19 +1123,32 @@ export class BaseSDK {
 	 * Update active session (called by FrankAuth when session changes)
 	 */
 	set activeSession(session: string | null) {
+		const changed = this._activeSessionId !== session;
 		this._activeSessionId = session;
+
+		if (changed) {
+			this.debugLog("debug", "Active session updated", {
+				hasSession: !!session,
+				sessionId: session ? `${session.substring(0, 8)}...` : null,
+			});
+		}
 	}
 
 	/**
 	 * Check if user is currently signed in
 	 */
 	isSignedIn(): boolean {
-		return !!this.accessToken;
+		const signedIn = !!this.accessToken;
+		this.debugLog("verbose", "Sign-in status checked", {
+			isSignedIn: signedIn,
+		});
+		return signedIn;
 	}
 
 	// Update access token (called by FrankAuth when token changes)
 	setProjectId(id: string): void {
 		this._options.projectId = id;
+		this.debugLog("debug", "Project ID updated", { projectId: id });
 	}
 
 	public getOrganizationId() {
@@ -721,27 +1175,48 @@ export class BaseSDK {
 		}
 
 		if (this._accessToken) {
-			h["Authorization"] = `Bearer ${this._accessToken}`;
+			h.Authorization = `Bearer ${this._accessToken}`;
 		}
 
 		return h;
 	}
 
 	protected async clearTokens(): Promise<void> {
+		this.logTokenOperation("clearTokens");
+		this.resetTokens();
+		// this._authStorage.clearAll();
+		this._authStorage.removeAccessToken();
+		this._authStorage.removeRefreshToken();
+		this._authStorage.removeSessionId();
+	}
+
+	// Add a method for complete sign out
+	protected async clearAllAuthData(): Promise<void> {
+		this.logTokenOperation("clearAllAuthData");
 		this.resetTokens();
 		this._authStorage.clearAll();
 	}
 
 	protected loadTokensFromStorage(): void {
-		this.accessToken = this._authStorage.getAccessToken();
-		this.refreshToken = this._authStorage.getRefreshToken();
+		const accessToken = this._authStorage.getAccessToken();
+		const refreshToken = this._authStorage.getRefreshToken();
+
+		this.logStorageOperation("loadTokens", "tokens", {
+			hasAccessToken: !!accessToken,
+			hasRefreshToken: !!refreshToken,
+		});
+
+		this.accessToken = accessToken;
+		this.refreshToken = refreshToken;
 	}
 
 	protected async saveToStorage(key: string, value: string): Promise<void> {
+		this.logStorageOperation("save", key);
 		this._storage.set(key, value);
 	}
 
 	protected async removeFromStorage(key: string): Promise<void> {
+		this.logStorageOperation("remove", key);
 		this._storage.remove(key);
 	}
 
@@ -752,9 +1227,16 @@ export class BaseSDK {
 	protected mergeHeaders(
 		initOverrides?: RequestInit | InitOverrideFunction,
 	): RequestInit | InitOverrideFunction {
+		const headers = this.dynamicHeaders;
+
+		this.debugLog("verbose", "Merging headers", {
+			headers: this.sanitizeHeaders(headers),
+			hasOverrides: !!initOverrides,
+		});
+
 		if (!initOverrides) {
 			return {
-				headers: this.dynamicHeaders,
+				headers,
 				// Add prehook execution as a custom property that will be handled in API calls
 				...(this._prehooks.size > 0 && {
 					[Symbol.for("executePrehooks")]: () => this.executePrehooks(),
@@ -771,19 +1253,17 @@ export class BaseSDK {
 				return {
 					...result,
 					headers: {
-						...this.dynamicHeaders,
+						...headers,
 						...result?.headers,
 					},
 				};
 			};
 		}
 
-		console.log("initOverrides", JSON.stringify(initOverrides, null, 2));
-
 		return {
 			...initOverrides,
 			headers: {
-				...this.dynamicHeaders,
+				...headers,
 				...initOverrides.headers,
 			},
 			// Store prehook execution function for manual execution if needed
@@ -853,6 +1333,8 @@ export class BaseSDK {
 
 		// Don't use executeApiCall here to avoid recursive 401 handling during token refresh
 		try {
+			this.debugLog("info", "Renewing refresh token");
+
 			const response = await this.internalAuthApi.refreshToken(
 				{
 					refreshTokenRequest: {
@@ -861,15 +1343,23 @@ export class BaseSDK {
 				},
 				this.mergeHeaders(initOverrides),
 			);
+
 			await this.handleAuthResponse(response);
+			this.debugLog("info", "Refresh token renewal completed successfully");
 			return response;
 		} catch (error) {
+			this.debugLog("error", "Refresh token renewal failed", { error });
 			throw await this.handleError(error);
 		}
 	}
 
 	// Private methods
 	protected async handleAuthResponse(response: LoginResponse): Promise<void> {
+		this.debugLog("debug", "Handling auth response", {
+			hasAccessToken: !!response.accessToken,
+			hasRefreshToken: !!response.refreshToken,
+		});
+
 		if (response.accessToken) {
 			this.accessToken = response.accessToken;
 			this.authStorage.setAccessToken(response.accessToken);
@@ -906,11 +1396,19 @@ export class BaseSDK {
 		const errors = allErrors.filter((e) => e.severity === "error");
 		const warnings = allErrors.filter((e) => e.severity === "warning");
 
-		return {
+		const result = {
 			isValid: errors.length === 0,
 			errors,
 			warnings,
 		};
+
+		this.debugLog("debug", "Configuration validation completed", {
+			isValid: result.isValid,
+			errorCount: errors.length,
+			warningCount: warnings.length,
+		});
+
+		return result;
 	}
 
 	/**
@@ -959,7 +1457,11 @@ export class BaseSDK {
 	private handleValidationResult(result: ValidationResult): void {
 		// Log warnings
 		if (result.warnings.length > 0) {
-			console.warn("Frank Auth Configuration Warnings:", result.warnings);
+			this.debugLog(
+				"warn",
+				"Frank Auth Configuration Warnings",
+				result.warnings,
+			);
 		}
 
 		// Throw on errors
@@ -1096,46 +1598,63 @@ export class BaseSDK {
 			projectId: this.options.projectId,
 			storageKeyPrefix: this.options.storageKeyPrefix,
 			sessionCookieName: this.options.sessionCookieName,
+			debug: this.options.debug,
+			debugConfig: this.options.debugConfig,
 		};
 	}
 
 	// ================================
-	// Error Handling
+	// Error Handling (Enhanced with Debug)
 	// ================================
 
-	public handleError(error: any): Promise<FrankAuthError> {
+	public async handleError(error: any): Promise<FrankAuthError> {
+		if (this._debugConfig.logErrors) {
+			this.debugLog("error", "Handling error", {
+				message: error instanceof Error ? error.message : "Unknown error",
+				status: error?.status || error?.response?.status || error?.statusCode,
+				stack:
+					this._debugConfig.logLevel === "verbose" && error instanceof Error
+						? error.stack
+						: undefined,
+			});
+		}
+
 		return convertError(error);
 	}
 
 	// ================================
-	// Debugging & Diagnostics
+	// Enhanced Debugging & Diagnostics
 	// ================================
 
 	/**
-	 * Get diagnostic information about the SDK configuration
+	 * Get enhanced diagnostic information about the SDK configuration
 	 */
-	public getDiagnostics(): {
-		isConfigValid: boolean;
-		environment: string;
-		hasSecretKey: boolean;
-		hasProjectId: boolean;
-		isSignedIn: boolean;
-		validationErrors: ConfigValidationError[];
-		validationWarnings: ConfigValidationError[];
-		sanitizedConfig: Partial<FrankAuthConfig>;
-		prehooksCount: number;
-		tokenExpiration: {
-			accessToken: TokenExpirationResult;
-			refreshToken: TokenExpirationResult;
-		};
-		tokenRefreshBuffer: number;
-		canRefreshTokens: boolean;
-	} {
+	public getDiagnostics(): DiagnosisResult {
 		const tokenExpiration = this.getTokenExpirationInfo();
 		const canRefreshTokens =
 			this._refreshToken !== null &&
 			tokenExpiration.refreshToken.isValid &&
 			!tokenExpiration.refreshToken.isExpired;
+
+		// Calculate performance metrics
+		const totalApiCalls = this._apiCallHistory.length;
+		const completedCalls = this._apiCallHistory.filter(
+			(call) => call.duration !== undefined,
+		);
+		const averageResponseTime =
+			completedCalls.length > 0
+				? Math.round(
+						completedCalls.reduce(
+							(sum, call) => sum + (call.duration || 0),
+							0,
+						) / completedCalls.length,
+					)
+				: 0;
+		const errorCalls = this._apiCallHistory.filter((call) => call.error);
+		const errorRate =
+			totalApiCalls > 0
+				? Math.round((errorCalls.length / totalApiCalls) * 100)
+				: 0;
 
 		return {
 			isConfigValid: this.isConfigValid(),
@@ -1150,14 +1669,196 @@ export class BaseSDK {
 			tokenExpiration,
 			tokenRefreshBuffer: this.TOKEN_REFRESH_BUFFER,
 			canRefreshTokens,
+			debugConfig: this._debugConfig,
+			apiCallHistory: this.getApiCallHistory(),
+			performance: {
+				totalApiCalls,
+				averageResponseTime,
+				errorRate,
+			},
 		};
 	}
 
 	/**
-	 * Log diagnostic information (useful for debugging)
+	 * Log comprehensive diagnostic information (useful for debugging)
 	 */
 	public logDiagnostics(): void {
 		const diagnostics = this.getDiagnostics();
-		console.log("Frank Auth SDK Diagnostics:", diagnostics);
+		this.debugLog("info", "Frank Auth SDK Diagnostics", diagnostics);
 	}
+
+	/**
+	 * Get performance metrics for API calls
+	 */
+	public getPerformanceMetrics(): PerfResult {
+		const calls = this._apiCallHistory;
+		const completedCalls = calls.filter((call) => call.duration !== undefined);
+		const errorCalls = calls.filter((call) => call.error);
+		const successfulCalls = calls.filter(
+			(call) => !call.error && call.duration !== undefined,
+		);
+
+		const averageResponseTime =
+			completedCalls.length > 0
+				? Math.round(
+						completedCalls.reduce(
+							(sum, call) => sum + (call.duration || 0),
+							0,
+						) / completedCalls.length,
+					)
+				: 0;
+
+		const slowestCall = completedCalls.reduce(
+			(slowest, call) =>
+				!slowest || (call.duration || 0) > (slowest.duration || 0)
+					? call
+					: slowest,
+			undefined as ApiCallDebugInfo | undefined,
+		);
+
+		const fastestCall = completedCalls.reduce(
+			(fastest, call) =>
+				!fastest || (call.duration || 0) < (fastest.duration || 0)
+					? call
+					: fastest,
+			undefined as ApiCallDebugInfo | undefined,
+		);
+
+		const recentErrors = errorCalls
+			.sort((a, b) => b.timestamp - a.timestamp)
+			.slice(0, 5);
+
+		return {
+			totalCalls: calls.length,
+			successfulCalls: successfulCalls.length,
+			errorCalls: errorCalls.length,
+			averageResponseTime,
+			errorRate:
+				calls.length > 0
+					? Math.round((errorCalls.length / calls.length) * 100)
+					: 0,
+			slowestCall,
+			fastestCall,
+			recentErrors,
+		};
+	}
+
+	/**
+	 * Generate a debug report for troubleshooting
+	 */
+	public generateDebugReport(): string {
+		const diagnostics = this.getDiagnostics();
+		const performance = this.getPerformanceMetrics();
+		const timestamp = new Date().toISOString();
+
+		return `
+# Frank Auth SDK Debug Report
+Generated: ${timestamp}
+
+## Configuration
+- Environment: ${diagnostics.environment}
+- API URL: ${diagnostics.sanitizedConfig.apiUrl}
+- User Type: ${diagnostics.sanitizedConfig.userType}
+- Project ID: ${diagnostics.sanitizedConfig.projectId || "Not set"}
+- Debug Enabled: ${diagnostics.debugConfig.enabled}
+- Config Valid: ${diagnostics.isConfigValid}
+
+## Authentication Status
+- Is Signed In: ${diagnostics.isSignedIn}
+- Has Secret Key: ${diagnostics.hasSecretKey}
+- Can Refresh Tokens: ${diagnostics.canRefreshTokens}
+- Access Token Expired: ${diagnostics.tokenExpiration.accessToken.isExpired}
+- Refresh Token Expired: ${diagnostics.tokenExpiration.refreshToken.isExpired}
+
+## Performance Metrics
+- Total API Calls: ${performance.totalCalls}
+- Successful Calls: ${performance.successfulCalls}
+- Error Calls: ${performance.errorCalls}
+- Error Rate: ${performance.errorRate}%
+- Average Response Time: ${performance.averageResponseTime}ms
+
+## Prehooks
+- Active Prehooks: ${diagnostics.prehooksCount}
+
+## Configuration Issues
+${
+	diagnostics.validationErrors.length > 0
+		? `Errors:\n${diagnostics.validationErrors.map((e) => `- ${e.field}: ${e.message}`).join("\n")}`
+		: "No configuration errors"
+}
+
+${
+	diagnostics.validationWarnings.length > 0
+		? `Warnings:\n${diagnostics.validationWarnings.map((w) => `- ${w.field}: ${w.message}`).join("\n")}`
+		: "No configuration warnings"
+}
+
+## Recent Errors
+${
+	performance.recentErrors.length > 0
+		? performance.recentErrors
+				.map(
+					(error) =>
+						`- ${error.method} ${error.url}: ${error.error?.message || "Unknown error"} (${new Date(error.timestamp).toISOString()})`,
+				)
+				.join("\n")
+		: "No recent errors"
+}
+`.trim();
+	}
+
+	/**
+	 * Export debug data for external analysis
+	 */
+	public exportDebugData(): {
+		timestamp: string;
+		diagnostics: DiagnosisResult;
+		performance: PerfResult;
+		apiCallHistory: ApiCallDebugInfo[];
+		sdkVersion?: string;
+	} {
+		return {
+			timestamp: new Date().toISOString(),
+			diagnostics: this.getDiagnostics(),
+			performance: this.getPerformanceMetrics(),
+			apiCallHistory: this.getApiCallHistory(),
+			sdkVersion: "1.0.0", // This should be injected at build time
+		};
+	}
+}
+
+interface DiagnosisResult {
+	isConfigValid: boolean;
+	environment: string;
+	hasSecretKey: boolean;
+	hasProjectId: boolean;
+	isSignedIn: boolean;
+	validationErrors: ConfigValidationError[];
+	validationWarnings: ConfigValidationError[];
+	sanitizedConfig: Partial<FrankAuthConfig>;
+	prehooksCount: number;
+	tokenExpiration: {
+		accessToken: TokenExpirationResult;
+		refreshToken: TokenExpirationResult;
+	};
+	tokenRefreshBuffer: number;
+	canRefreshTokens: boolean;
+	debugConfig: DebugConfig;
+	apiCallHistory: ApiCallDebugInfo[];
+	performance: {
+		totalApiCalls: number;
+		averageResponseTime: number;
+		errorRate: number;
+	};
+}
+
+interface PerfResult {
+	totalCalls: number;
+	successfulCalls: number;
+	errorCalls: number;
+	averageResponseTime: number;
+	errorRate: number;
+	slowestCall?: ApiCallDebugInfo;
+	fastestCall?: ApiCallDebugInfo;
+	recentErrors: ApiCallDebugInfo[];
 }

@@ -80,7 +80,6 @@ func RegisterPersonalAuthAPI(group huma.API, di di.Container) {
 
 	// Personal auth operations that don't need organization context
 	registerLogout(group, authCtrl)
-	registerRefreshToken(group, authCtrl)
 	registerAuthStatus(group, authCtrl)
 
 	// Personal MFA endpoints
@@ -100,6 +99,17 @@ func RegisterPersonalAuthAPI(group huma.API, di di.Container) {
 	registerListSessions(group, authCtrl)
 	registerRevokeSession(group, authCtrl)
 	registerRevokeAllSessions(group, authCtrl)
+}
+
+// RegisterPersonalAuthAPI New function to register personal auth endpoints
+func RegisterPersonalAuthPublicAPI(group huma.API, di di.Container) {
+	authCtrl := &authController{
+		group: group,
+		di:    di,
+	}
+
+	// Personal auth operations that don't need organization context
+	registerRefreshToken(group, authCtrl)
 }
 
 // authController handles authentication-related API requests

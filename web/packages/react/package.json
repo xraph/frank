@@ -82,7 +82,7 @@
 	},
 	"dependencies": {
 		"@frank-auth/client": "^0.2.9",
-		"@frank-auth/sdk": "^0.2.26",
+		"@frank-auth/sdk": "^0.2.40",
 		"@heroicons/react": "^2.2.0",
 		"@heroui/react": "^2.8.0-beta.9",
 		"@hookform/resolvers": "^5.1.1",

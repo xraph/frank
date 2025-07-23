@@ -74,7 +74,7 @@ export class AuthSDK extends BaseSDK {
 
 		super(config);
 
-		this.authApi = new AuthenticationApi(this.config);
+		this.authApi = new AuthenticationApi(super.config);
 		this.ssoApi = new SSOApi(this.config);
 		this.invitationsApi = new InvitationsApi(this.config);
 	}

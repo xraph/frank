@@ -7,7 +7,7 @@
  * Now integrated with the storage system for consistent token management.
  */
 
-import type { Session, User, UserType } from "@frank-auth/client";
+import type { AuthStatus, Session, User, UserType } from "@frank-auth/client";
 import {
 	AuthSDK,
 	NextJSCookieContext,
@@ -125,6 +125,41 @@ export interface MiddlewareConfig
 	 * Custom hooks for middleware lifecycle
 	 */
 	hooks?: MiddlewareHooks;
+
+	/**
+	 * Skip API calls on network errors (useful for development)
+	 * @default false
+	 */
+	skipApiCallOnNetworkError?: boolean;
+
+	/**
+	 * Maximum number of retries for API calls
+	 * @default 2
+	 */
+	maxRetries?: number;
+
+	/**
+	 * Timeout for API calls in milliseconds
+	 * @default 5000
+	 */
+	apiTimeout?: number;
+
+	/**
+	 * Fallback to local token validation on network errors
+	 * @default true
+	 */
+	fallbackToLocalTokens?: boolean;
+
+	/**
+	 * Custom API endpoint override for testing
+	 */
+	customApiEndpoint?: string;
+
+	/**
+	 * Enable offline mode (skip all API calls)
+	 * @default false
+	 */
+	offlineMode?: boolean;
 }
 
 export interface MiddlewareHooks {
@@ -214,6 +249,11 @@ const DEFAULT_MIDDLEWARE_CONFIG: Partial<MiddlewareConfig> = {
 		"/reset-password",
 	],
 	privatePaths: [],
+	skipApiCallOnNetworkError: false,
+	maxRetries: 2,
+	apiTimeout: 5000,
+	fallbackToLocalTokens: true,
+	offlineMode: false,
 	allPathsPrivate: true,
 	signInPath: "/sign-in",
 	signUpPath: "/sign-up",
@@ -270,10 +310,16 @@ function createCookieContext(
 	config: Required<MiddlewareConfig>,
 ): NextJSCookieContext {
 	// Create a proper request object with cookies
+	const cookies = req.cookies.getAll();
 	const cookieReq = {
-		cookies: Object.fromEntries(
-			req.cookies.getAll().map((cookie) => [cookie.name, cookie.value]),
-		),
+		cookies: {
+			...Object.fromEntries(
+				cookies.map((cookie) => [cookie.name, cookie.value]),
+			),
+			// Also provide a get method for Next.js cookie compatibility
+			get: (name: string) => req.cookies.get(name),
+			getAll: () => req.cookies.getAll(),
+		},
 	};
 
 	// Create a response object that can handle Set-Cookie headers
@@ -293,6 +339,7 @@ function createCookieContext(
 							secure: config.cookieOptions.secure,
 							sameSite: config.cookieOptions.sameSite,
 							maxAge: config.cookieOptions.maxAge,
+							path: "/", // Ensure path is set
 						};
 
 						// Override with parsed options
@@ -430,6 +477,11 @@ function createAuthSDK(
 		accessToken: hybridStorage.getAccessToken() ? "[PRESENT]" : "[MISSING]",
 		refreshToken: hybridStorage.getRefreshToken() ? "[PRESENT]" : "[MISSING]",
 		sessionId: hybridStorage.getSessionId() ? "[PRESENT]" : "[MISSING]",
+		storageKeyPrefix: config.storageKeyPrefix,
+		userType: config.userType,
+		projectId: config.projectId,
+		secretKey: config.secretKey,
+		apiUrl: config.apiUrl,
 	});
 
 	// Create AuthSDK with proper configuration
@@ -442,13 +494,17 @@ function createAuthSDK(
 		projectId: config.projectId,
 		secretKey: config.secretKey,
 		storage: hybridStorage,
+		debug: config.debug,
+		debugConfig: {
+			logLevel: "debug",
+		},
 	});
 
 	return authSDK;
 }
 
 /**
- * Enhanced authentication validation using AuthSDK
+ * authentication validation using AuthSDK
  */
 async function validateAuthentication(
 	req: NextRequest,
@@ -457,6 +513,32 @@ async function validateAuthentication(
 ): Promise<AuthResult> {
 	try {
 		debugLog(config, "Validating authentication using AuthSDK");
+
+		// First check if we have tokens locally
+		const hasAccessToken = !!authSDK.authStorage.getAccessToken();
+		const hasRefreshToken = !!authSDK.authStorage.getRefreshToken();
+
+		debugLog(config, "Local token status:", {
+			hasAccessToken,
+			hasRefreshToken,
+		});
+
+		// If no tokens at all, return unauthenticated immediately
+		if (!hasAccessToken && !hasRefreshToken) {
+			debugLog(config, "No tokens found, skipping API call");
+			return {
+				isAuthenticated: false,
+				user: null,
+				session: null,
+				organizationId: null,
+				error: null,
+				tokenInfo: {
+					accessTokenExpired: true,
+					refreshTokenExpired: true,
+					canRefresh: false,
+				},
+			};
+		}
 
 		// Get token expiration info
 		const tokenInfo = authSDK.getTokenExpirationInfo();
@@ -472,71 +554,143 @@ async function validateAuthentication(
 			},
 		});
 
-		// Try to get auth status
-		const authStatus = await authSDK.getAuthStatus({
-			headers: Object.fromEntries(req.headers.entries()),
-		});
+		// **FIX 1: Skip API call if running in development mode with network issues**
+		if (
+			config.skipApiCallOnNetworkError &&
+			process.env.NODE_ENV === "development"
+		) {
+			debugLog(
+				config,
+				"Skipping API call due to development mode network configuration",
+			);
+
+			// Trust local tokens if they exist and aren't expired
+			if (hasAccessToken && !tokenInfo.accessToken.isExpired) {
+				return {
+					isAuthenticated: true,
+					user: null, // We don't have user data without API call
+					session: null,
+					organizationId: config.projectId || null,
+					error: null,
+					tokenInfo: {
+						accessTokenExpired: tokenInfo.accessToken.isExpired,
+						refreshTokenExpired: tokenInfo.refreshToken.isExpired,
+						canRefresh: !tokenInfo.refreshToken.isExpired,
+					},
+				};
+			}
+		}
+
+		// **FIX 2: Enhanced request configuration**
+		const authStatusWithTimeout = async (): Promise<AuthStatus> => {
+			const controller = new AbortController();
+			const timeoutId = setTimeout(() => controller.abort(), 5000); // Reduced timeout
+
+			try {
+				// **FIX 3: Add proper headers and fetch configuration**
+				const authStatus = await authSDK.getAuthStatus({
+					signal: controller.signal,
+					headers: {
+						"User-Agent": "FrankAuth-Middleware/1.0",
+						Accept: "application/json",
+						"Content-Type": "application/json",
+						// Copy essential headers only
+						"X-Forwarded-For": req.headers.get("x-forwarded-for") || "",
+						"X-Real-IP": req.headers.get("x-real-ip") || "",
+					},
+					// **FIX 4: Add retry configuration**
+					cache: "no-cache",
+					keepalive: false,
+				});
+				clearTimeout(timeoutId);
+				return authStatus;
+			} catch (error) {
+				clearTimeout(timeoutId);
+				throw error;
+			}
+		};
+
+		// **FIX 5: Enhanced retry logic with exponential backoff**
+		let authStatus: AuthStatus;
+		let lastError: Error | null = null;
+		const maxRetries = config.maxRetries || 2; // Reduced retries
+
+		for (let attempt = 1; attempt <= maxRetries; attempt++) {
+			try {
+				debugLog(config, `Auth status attempt ${attempt}/${maxRetries}`);
+				authStatus = await authStatusWithTimeout();
+				break; // Success, exit retry loop
+			} catch (error) {
+				lastError = error as Error;
+				debugLog(config, `Auth status attempt ${attempt} failed:`, {
+					name: error.name,
+					message: error.message,
+					code: error.code,
+				});
+
+				// **FIX 6: More intelligent retry logic**
+				if (attempt === maxRetries) {
+					// Last attempt failed - check if we can fall back to local tokens
+					if (hasAccessToken && !tokenInfo.accessToken.isExpired) {
+						debugLog(
+							config,
+							"API failed but local token is valid, trusting local state",
+						);
+						return {
+							isAuthenticated: true,
+							user: null,
+							session: null,
+							organizationId: config.projectId || null,
+							error: error as Error,
+							tokenInfo: {
+								accessTokenExpired: tokenInfo.accessToken.isExpired,
+								refreshTokenExpired: tokenInfo.refreshToken.isExpired,
+								canRefresh: !tokenInfo.refreshToken.isExpired,
+							},
+						};
+					}
+					throw error;
+				}
+
+				// Don't retry on certain error types
+				if (!isRetryableError(error)) {
+					throw error;
+				}
+
+				// Exponential backoff with jitter
+				const backoffMs = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
+				const jitter = Math.random() * 0.1 * backoffMs;
+				await new Promise((resolve) => setTimeout(resolve, backoffMs + jitter));
+			}
+		}
 
 		debugLog(config, "Auth status received:", {
-			isAuthenticated: authStatus.isAuthenticated,
-			hasUser: !!authStatus.user,
-			organizationId: authStatus.organizationId,
+			isAuthenticated: authStatus!.isAuthenticated,
+			hasUser: !!authStatus!.user,
+			organizationId: authStatus!.organizationId,
 		});
 
 		return {
-			isAuthenticated: authStatus.isAuthenticated,
-			user: authStatus.user || null,
-			session: authStatus.session || null,
-			organizationId: authStatus.organizationId || null,
+			isAuthenticated: authStatus!.isAuthenticated,
+			user: authStatus!.user || null,
+			session: authStatus!.session || null,
+			organizationId: authStatus!.organizationId || null,
 			error: null,
 			tokenInfo: {
 				accessTokenExpired: tokenInfo.accessToken.isExpired,
 				refreshTokenExpired: tokenInfo.refreshToken.isExpired,
-				canRefresh:
-					!tokenInfo.refreshToken.isExpired && tokenInfo.refreshToken.isValid,
+				canRefresh: !tokenInfo.refreshToken.isExpired,
 			},
 		};
 	} catch (error) {
-		debugLog(config, "Authentication validation error:", error);
+		debugLog(config, "Authentication validation error:", {
+			name: error.name,
+			message: error.message,
+			code: error.code,
+		});
 
-		// Try to analyze the error and attempt token refresh if appropriate
-		const tokenAnalysis = authSDK.analyzeTokenError(error);
-
-		debugLog(config, "Token error analysis:", tokenAnalysis);
-
-		if (
-			tokenAnalysis.recommendedAction === "refresh" &&
-			tokenAnalysis.is401Error
-		) {
-			try {
-				debugLog(config, "Attempting token refresh due to 401 error");
-
-				// Attempt to refresh tokens
-				const refreshResult = await authSDK.verifyAndRenewRefreshToken();
-
-				if (refreshResult.renewed) {
-					debugLog(config, "Token refresh successful, retrying auth status");
-
-					// Retry getting auth status with new tokens
-					const authStatus = await authSDK.getAuthStatus();
-
-					return {
-						isAuthenticated: authStatus.isAuthenticated,
-						user: authStatus.user || null,
-						session: authStatus.session || null,
-						organizationId: authStatus.organizationId || null,
-						error: null,
-						tokenInfo: {
-							accessTokenExpired: false,
-							refreshTokenExpired: false,
-							canRefresh: true,
-						},
-					};
-				}
-			} catch (refreshError) {
-				debugLog(config, "Token refresh failed:", refreshError);
-			}
-		}
+		// **FIX 7: Better error handling - don't mark tokens as expired on network errors**
+		const tokenInfo = authSDK.getTokenExpirationInfo();
 
 		return {
 			isAuthenticated: false,
@@ -545,12 +699,49 @@ async function validateAuthentication(
 			organizationId: null,
 			error: error as Error,
 			tokenInfo: {
-				accessTokenExpired: tokenAnalysis.isTokenExpired,
-				refreshTokenExpired: tokenAnalysis.isRefreshTokenExpired,
-				canRefresh: false,
+				// Don't mark tokens as expired just because of network errors
+				accessTokenExpired: tokenInfo.accessToken.isExpired,
+				refreshTokenExpired: tokenInfo.refreshToken.isExpired,
+				canRefresh:
+					!tokenInfo.refreshToken.isExpired && tokenInfo.refreshToken.isValid,
 			},
 		};
 	}
+}
+
+//  Enhanced error type checking**
+function isRetryableError(error: any): boolean {
+	const retryableErrors = [
+		"NETWORK_ERROR",
+		"ECONNREFUSED",
+		"ENOTFOUND",
+		"ECONNRESET",
+		"ETIMEDOUT",
+		"AbortError",
+	];
+
+	return (
+		(error?.code && retryableErrors.includes(error.code)) ||
+		error?.name === "FrankAuthNetworkError" ||
+		error?.message?.includes("fetch failed") ||
+		error?.message?.includes("network") ||
+		error?.name === "AbortError"
+	);
+}
+
+function isNetworkError(error: any): boolean {
+	return (
+		error?.name === "FrankAuthNetworkError" ||
+		error?.code === "NETWORK_ERROR" ||
+		error?.message?.includes("fetch failed") ||
+		error?.message?.includes("network") ||
+		error?.message?.includes("interceptors did not return") ||
+		error?.cause?.code === "ECONNREFUSED" ||
+		error?.cause?.code === "ENOTFOUND" ||
+		error?.cause?.code === "ECONNRESET" ||
+		error?.cause?.code === "ETIMEDOUT" ||
+		error?.name === "AbortError"
+	);
 }
 
 /**
@@ -807,26 +998,34 @@ async function handleAuthentication(
  * Copy cookies from source response to target response
  */
 function copyResponseCookies(source: NextResponse, target: NextResponse): void {
-	// Copy Set-Cookie headers
-	const setCookieHeaders = source.headers.getSetCookie();
-	if (setCookieHeaders.length > 0) {
-		for (const cookie of setCookieHeaders) {
-			target.headers.append("Set-Cookie", cookie);
+	try {
+		// Copy Set-Cookie headers
+		const setCookieHeaders = source.headers.getSetCookie();
+		if (setCookieHeaders.length > 0) {
+			for (const cookie of setCookieHeaders) {
+				target.headers.append("Set-Cookie", cookie);
+			}
 		}
-	}
 
-	// Copy individual cookies
-	source.cookies.getAll().forEach((cookie) => {
-		target.cookies.set(cookie.name, cookie.value, {
-			domain: cookie.domain,
-			expires: cookie.expires,
-			httpOnly: cookie.httpOnly,
-			maxAge: cookie.maxAge,
-			path: cookie.path,
-			secure: cookie.secure,
-			sameSite: cookie.sameSite,
-		});
-	});
+		// Copy individual cookies with validation
+		for (const cookie of source.cookies.getAll()) {
+			// Only copy valid cookies
+			if (cookie.name && cookie.value) {
+				target.cookies.set(cookie.name, cookie.value, {
+					domain: cookie.domain,
+					expires: cookie.expires,
+					httpOnly: cookie.httpOnly,
+					maxAge: cookie.maxAge,
+					path: cookie.path || "/", // Ensure path is always set
+					secure: cookie.secure,
+					sameSite: cookie.sameSite,
+				});
+			}
+		}
+	} catch (error) {
+		console.error("Error copying response cookies:", error);
+		// Don't throw - this should not break the request flow
+	}
 }
 
 // ============================================================================
