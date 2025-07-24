@@ -552,13 +552,15 @@ func (router *Router) setupProtectedRoutes(v1Group huma.API) {
 func (router *Router) setupPersonalRoutes(v1Group huma.API) {
 	personalGroup := huma.NewGroup(v1Group, "/me")
 
+	secureGroup := huma.NewGroup(personalGroup)
 	plainGroup := huma.NewGroup(personalGroup)
+
 	plainGroup.UseMiddleware(router.orgContextMw.UserTypeDetectionHumaMiddleware(false))
 	plainGroup.UseMiddleware(router.authMw.OptionalAuthHuma())
 
-	personalGroup.UseMiddleware(router.orgContextMw.UserTypeDetectionHumaMiddleware(false))
-	personalGroup.UseMiddleware(router.authMw.RequireAuthHuma())
-	personalGroup.UseMiddleware(router.authMw.RequireUserTypeHuma(
+	secureGroup.UseMiddleware(router.orgContextMw.UserTypeDetectionHumaMiddleware(false))
+	secureGroup.UseMiddleware(router.authMw.RequireAuthHuma())
+	secureGroup.UseMiddleware(router.authMw.RequireUserTypeHuma(
 		model.UserTypeInternal,
 		model.UserTypeExternal,
 		model.UserTypeEndUser,
@@ -566,12 +568,12 @@ func (router *Router) setupPersonalRoutes(v1Group huma.API) {
 
 	// Auth management endpoints (logout, refresh, profile, etc.)
 	// These should NOT require organization context
-	RegisterPersonalAuthAPI(personalGroup, router.di)
+	RegisterPersonalAuthAPI(secureGroup, router.di)
 	RegisterPersonalAuthPublicAPI(plainGroup, router.di)
 	// Personal organization operations (list my orgs, switch org context, etc.)
-	RegisterPersonalOrganizationAPI(personalGroup, router.di)
+	RegisterPersonalOrganizationAPI(secureGroup, router.di)
 	// Personal user management endpoints (profile, password change, personal MFA, etc.)
-	RegisterPersonalUserAPI(personalGroup, router.di)
+	RegisterPersonalUserAPI(secureGroup, router.di)
 }
 
 // setupInternalRoutes configures routes for internal platform users only
