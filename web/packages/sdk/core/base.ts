@@ -109,6 +109,8 @@ export class BaseSDK {
 			config.storage ??
 			new HybridAuthStorage(
 				config.storageKeyPrefix ? `${config.storageKeyPrefix}_` : "frank_auth_",
+				undefined,
+				config.cookieOptions,
 			);
 		this._authStorage = this._hybridAuthStorage.store;
 		this._storage = this._authStorage.adapter;

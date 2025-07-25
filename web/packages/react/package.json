@@ -1,6 +1,6 @@
 {
 	"name": "@frank-auth/react",
-	"version": "0.1.29",
+	"version": "0.1.30",
 	"description": "Flexible and customizable React UI components for Frank Authentication",
 	"keywords": [
 		"frank-auth",
@@ -82,9 +82,9 @@
 	},
 	"dependencies": {
 		"@frank-auth/client": "^0.2.9",
-		"@frank-auth/sdk": "^0.2.40",
+		"@frank-auth/sdk": "^0.2.47",
 		"@heroicons/react": "^2.2.0",
-		"@heroui/react": "^2.8.0-beta.9",
+		"@heroui/react": "^2.8.1",
 		"@hookform/resolvers": "^5.1.1",
 		"@radix-ui/react-label": "^2.1.7",
 		"@radix-ui/react-select": "^2.2.5",

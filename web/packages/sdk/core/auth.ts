@@ -69,7 +69,7 @@ export class AuthSDK extends BaseSDK {
 		}
 
 		if (!config.storageKeyPrefix) {
-			config.storageKeyPrefix = config.projectId || "frank_auth";
+			config.storageKeyPrefix = "frank_auth";
 		}
 
 		super(config);

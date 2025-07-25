@@ -554,7 +554,7 @@ async function validateAuthentication(
 			},
 		});
 
-		// **FIX 1: Skip API call if running in development mode with network issues**
+		// Skip API call if running in development mode with network issues**
 		if (
 			config.skipApiCallOnNetworkError &&
 			process.env.NODE_ENV === "development"
@@ -581,13 +581,13 @@ async function validateAuthentication(
 			}
 		}
 
-		// **FIX 2: Enhanced request configuration**
+		//  Enhanced request configuration**
 		const authStatusWithTimeout = async (): Promise<AuthStatus> => {
 			const controller = new AbortController();
 			const timeoutId = setTimeout(() => controller.abort(), 5000); // Reduced timeout
 
 			try {
-				// **FIX 3: Add proper headers and fetch configuration**
+				//  Add proper headers and fetch configuration**
 				const authStatus = await authSDK.getAuthStatus({
 					signal: controller.signal,
 					headers: {
@@ -598,7 +598,7 @@ async function validateAuthentication(
 						"X-Forwarded-For": req.headers.get("x-forwarded-for") || "",
 						"X-Real-IP": req.headers.get("x-real-ip") || "",
 					},
-					// **FIX 4: Add retry configuration**
+					// Add retry configuration**
 					cache: "no-cache",
 					keepalive: false,
 				});
@@ -610,7 +610,7 @@ async function validateAuthentication(
 			}
 		};
 
-		// **FIX 5: Enhanced retry logic with exponential backoff**
+		// Enhanced retry logic with exponential backoff**
 		let authStatus: AuthStatus;
 		let lastError: Error | null = null;
 		const maxRetries = config.maxRetries || 2; // Reduced retries
@@ -620,7 +620,7 @@ async function validateAuthentication(
 				debugLog(config, `Auth status attempt ${attempt}/${maxRetries}`);
 				authStatus = await authStatusWithTimeout();
 				break; // Success, exit retry loop
-			} catch (error) {
+			} catch (error: any) {
 				lastError = error as Error;
 				debugLog(config, `Auth status attempt ${attempt} failed:`, {
 					name: error.name,
@@ -628,7 +628,7 @@ async function validateAuthentication(
 					code: error.code,
 				});
 
-				// **FIX 6: More intelligent retry logic**
+				//  More intelligent retry logic**
 				if (attempt === maxRetries) {
 					// Last attempt failed - check if we can fall back to local tokens
 					if (hasAccessToken && !tokenInfo.accessToken.isExpired) {
@@ -1047,7 +1047,7 @@ export function createFrankAuthMiddleware(userConfig: MiddlewareConfig) {
 	}
 
 	if (!config.storageKeyPrefix) {
-		config.storageKeyPrefix = config.projectId || "frank_auth";
+		config.storageKeyPrefix = "frank_auth";
 	}
 
 	debugLog(config, "Frank Auth middleware initialized with config:", {

@@ -2,6 +2,7 @@ import {
 	AuthStorage,
 	ClientCookieContext,
 	type CookieContext,
+	type CookieOptions,
 	NextJSCookieContext,
 	type StorageManager,
 	createCookieStorage,
@@ -12,6 +13,7 @@ export const createAuthStorageForEnvironment = (
 	environment: "client" | "server",
 	prefix = "frank_auth_",
 	context?: any,
+	cookieOptions?: CookieOptions,
 ): AuthStorage => {
 	let storage: StorageManager;
 
@@ -26,6 +28,7 @@ export const createAuthStorageForEnvironment = (
 						secure: process.env.NODE_ENV === "production",
 						sameSite: "strict",
 						maxAge: 24 * 60 * 60, // 1 day
+						...cookieOptions,
 					},
 				});
 			} else {
@@ -44,7 +47,7 @@ export const createAuthStorageForEnvironment = (
 				storage = createCookieStorage(serverCookieContext, {
 					prefix,
 					cookieOptions: {
-						httpOnly: true,
+						httpOnly: false,
 						secure: process.env.NODE_ENV === "production",
 						sameSite: "strict",
 						maxAge: 7 * 24 * 60 * 60, // 7 days for server-side
@@ -72,7 +75,7 @@ export const SecureTokenStorage = {
 		const storage = createCookieStorage(cookieContext, {
 			prefix: "secure_",
 			cookieOptions: {
-				httpOnly: true,
+				httpOnly: false,
 				secure: true,
 				sameSite: "strict",
 				maxAge: ttl / 1000,
@@ -91,7 +94,7 @@ export const SecureTokenStorage = {
 		const storage = createCookieStorage(cookieContext, {
 			prefix: "secure_",
 			cookieOptions: {
-				httpOnly: true,
+				httpOnly: false,
 				secure: true,
 				sameSite: "strict",
 				maxAge: ttl / 1000,
@@ -121,18 +124,28 @@ export class HybridAuthStorage {
 	private readonly serverStorage?: AuthStorage;
 	private currentStorage: AuthStorage;
 
-	constructor(prefix?: string, serverContext?: { req: any; res: any }) {
+	constructor(
+		prefix?: string,
+		serverContext?: { req: any; res: any },
+		cookieOptions?: CookieOptions,
+	) {
 		if (serverContext) {
 			// Server-side: Use cookies with HTTP-only security
 			this.serverStorage = createAuthStorageForEnvironment(
 				"server",
 				prefix,
 				serverContext,
+				cookieOptions,
 			);
 			this.currentStorage = this.serverStorage;
 		} else if (typeof window !== "undefined") {
 			// Client-side: Use regular cookies (accessible to JS)
-			this.clientStorage = createAuthStorageForEnvironment("client");
+			this.clientStorage = createAuthStorageForEnvironment(
+				"client",
+				prefix,
+				undefined,
+				cookieOptions,
+			);
 			this.currentStorage = this.clientStorage;
 		} else {
 			// Fallback: Memory storage

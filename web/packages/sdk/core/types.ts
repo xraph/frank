@@ -1,7 +1,7 @@
 import type { Session, SessionInfo, User, UserType } from "@frank-auth/client";
 import type { FrankAuthError } from "./errors";
 import type { HybridAuthStorage } from "./helpers";
-import type { StorageManager, StorageType } from "./storage";
+import type { CookieOptions, StorageManager, StorageType } from "./storage";
 
 // Re-export types from the generated client
 export type {
@@ -63,6 +63,7 @@ export interface FrankAuthConfig {
 	storageManager?: StorageManager;
 	storage?: HybridAuthStorage;
 	// storageType?: StorageType;
+	cookieOptions?: CookieOptions;
 	/**
 	 * Enable debug mode
 	 * @default false

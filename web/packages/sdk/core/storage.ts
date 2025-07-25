@@ -239,7 +239,7 @@ export class StorageManager implements StorageAdapter {
 		};
 
 		if (options.ttl || this.config.ttl) {
-			item.expires = Date.now() + (options.ttl || this.config.ttl!);
+			item.expires = Date.now() + (options.ttl || this.config.ttl || 8000);
 		}
 
 		let serialized = JSON.stringify(item);
@@ -263,6 +263,24 @@ export class StorageManager implements StorageAdapter {
 		try {
 			let processed = data;
 
+			// Handle potential double URL encoding
+			if (processed.includes("%25")) {
+				try {
+					processed = decodeURIComponent(processed);
+				} catch (error) {
+					console.warn("Failed first URL decode:", error);
+				}
+			}
+
+			// Handle additional URL encoding
+			if (processed.includes("%")) {
+				try {
+					processed = decodeURIComponent(processed);
+				} catch (error) {
+					console.warn("Failed second URL decode:", error);
+				}
+			}
+
 			// Decrypt if needed
 			if (this.config.encryption) {
 				processed = this.decrypt(processed);
@@ -281,7 +299,9 @@ export class StorageManager implements StorageAdapter {
 			}
 
 			return item.value;
-		} catch {
+		} catch (error) {
+			console.error("------- deserialize error:", error);
+			console.error("------- failed data:", data);
 			return null;
 		}
 	}
@@ -333,7 +353,8 @@ export class StorageManager implements StorageAdapter {
 			const fullKey = this.createKey(key);
 			const data = this.storage.getItem(fullKey);
 			return this.deserialize<T>(data);
-		} catch {
+		} catch (error) {
+			console.error("------- get error:", error);
 			return null;
 		}
 	}
@@ -571,10 +592,27 @@ export class NextJSCookieContext implements CookieContext {
 	get(name: string): string | null {
 		const cookie = this.req.cookies.get(name);
 		if (cookie) {
-			return cookie?.value;
+			// FIX: Decode the cookie value like ClientCookieContext does
+			try {
+				return decodeURIComponent(cookie.value);
+			} catch (error) {
+				console.warn(`Failed to decode cookie ${name}:`, error);
+				return cookie.value; // Fallback to raw value
+			}
 		}
 
-		return this.req.cookies[name] || null;
+		// Fallback to direct cookie access
+		const directValue = this.req.cookies[name];
+		if (directValue) {
+			try {
+				return decodeURIComponent(directValue);
+			} catch (error) {
+				console.warn(`Failed to decode direct cookie ${name}:`, error);
+				return directValue;
+			}
+		}
+
+		return null;
 	}
 
 	set(name: string, value: string, options: CookieOptions = {}): void {
@@ -608,14 +646,25 @@ export class NextJSCookieContext implements CookieContext {
 
 		return all.reduce(
 			(previousValue, currentValue) => {
+				const decodedValue = this.decodeValue(currentValue.value);
 				return {
 					// biome-ignore lint/performance/noAccumulatingSpread: <explanation>
 					...previousValue,
-					[currentValue.name]: currentValue.value,
+					[currentValue.name]: decodedValue,
 				};
 			},
 			{} as Record<string, string>,
 		);
+	}
+
+	// Helper method to safely decode values
+	private decodeValue(value: string): string {
+		try {
+			return decodeURIComponent(value);
+		} catch (error) {
+			console.warn("Failed to decode cookie value:", error);
+			return value;
+		}
 	}
 
 	private serializeCookie(
