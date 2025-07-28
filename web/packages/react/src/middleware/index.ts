@@ -1,4 +1,3 @@
-// packages/react/src/middleware/index.ts
 /**
  * @frank-auth/react - Next.js Middleware Plugin
  *
@@ -30,7 +29,7 @@ export interface MiddlewareConfig
 
 	/**
 	 * Paths that are publicly accessible without authentication
-	 * @default ['/sign-in', '/sign-up', '/forgot-password']
+	 * @default []
 	 */
 	publicPaths?: string[];
 
@@ -39,6 +38,14 @@ export interface MiddlewareConfig
 	 * @default []
 	 */
 	privatePaths?: string[];
+
+	/**
+	 * Authentication paths that redirect authenticated users away
+	 * These paths are accessible to unauthenticated users but will
+	 * redirect authenticated users to afterSignInPath
+	 * @default ['/sign-in', '/sign-up', '/forgot-password', '/verify-email', '/reset-password']
+	 */
+	authPaths?: string[];
 
 	/**
 	 * Whether all paths are private by default (recommended)
@@ -241,14 +248,15 @@ const DEFAULT_MIDDLEWARE_CONFIG: Partial<MiddlewareConfig> = {
 	apiUrl: "http://localhost:8990",
 	sessionCookieName: "frank_sid",
 	storageKeyPrefix: "frank_auth_",
-	publicPaths: [
+	publicPaths: [],
+	privatePaths: [],
+	authPaths: [
 		"/sign-in",
 		"/sign-up",
 		"/forgot-password",
 		"/verify-email",
 		"/reset-password",
 	],
-	privatePaths: [],
 	skipApiCallOnNetworkError: false,
 	maxRetries: 2,
 	apiTimeout: 5000,
@@ -477,6 +485,7 @@ function createAuthSDK(
 		accessToken: hybridStorage.getAccessToken() ? "[PRESENT]" : "[MISSING]",
 		refreshToken: hybridStorage.getRefreshToken() ? "[PRESENT]" : "[MISSING]",
 		sessionId: hybridStorage.getSessionId() ? "[PRESENT]" : "[MISSING]",
+		remoteSessionCookie: req.cookies.get("frank_sid")?.value,
 		storageKeyPrefix: config.storageKeyPrefix,
 		userType: config.userType,
 		projectId: config.projectId,
@@ -504,7 +513,7 @@ function createAuthSDK(
 }
 
 /**
- * authentication validation using AuthSDK
+ * Authentication validation using AuthSDK
  */
 async function validateAuthentication(
 	req: NextRequest,
@@ -514,18 +523,24 @@ async function validateAuthentication(
 	try {
 		debugLog(config, "Validating authentication using AuthSDK");
 
-		// First check if we have tokens locally
+		// Check if we have tokens locally
 		const hasAccessToken = !!authSDK.authStorage.getAccessToken();
 		const hasRefreshToken = !!authSDK.authStorage.getRefreshToken();
 
-		debugLog(config, "Local token status:", {
+		// Check if we have session cookies
+		const sessionCookie = req.cookies.get(config.sessionCookieName);
+		const hasSessionCookie = !!sessionCookie?.value;
+
+		debugLog(config, "Authentication state:", {
 			hasAccessToken,
 			hasRefreshToken,
+			hasSessionCookie,
+			sessionCookieName: config.sessionCookieName,
 		});
 
-		// If no tokens at all, return unauthenticated immediately
-		if (!hasAccessToken && !hasRefreshToken) {
-			debugLog(config, "No tokens found, skipping API call");
+		// If no tokens AND no session cookie, return unauthenticated immediately
+		if (!hasAccessToken && !hasRefreshToken && !hasSessionCookie) {
+			debugLog(config, "No tokens or session cookies found, skipping API call");
 			return {
 				isAuthenticated: false,
 				user: null,
@@ -540,7 +555,7 @@ async function validateAuthentication(
 			};
 		}
 
-		// Get token expiration info
+		// Get token expiration info (will be empty if no tokens)
 		const tokenInfo = authSDK.getTokenExpirationInfo();
 
 		debugLog(config, "Token expiration info:", {
@@ -554,7 +569,7 @@ async function validateAuthentication(
 			},
 		});
 
-		// Skip API call if running in development mode with network issues**
+		// Skip API call if running in development mode with network issues
 		if (
 			config.skipApiCallOnNetworkError &&
 			process.env.NODE_ENV === "development"
@@ -564,8 +579,11 @@ async function validateAuthentication(
 				"Skipping API call due to development mode network configuration",
 			);
 
-			// Trust local tokens if they exist and aren't expired
-			if (hasAccessToken && !tokenInfo.accessToken.isExpired) {
+			// Trust local tokens if they exist and aren't expired, or trust session cookies
+			if (
+				(hasAccessToken && !tokenInfo.accessToken.isExpired) ||
+				hasSessionCookie
+			) {
 				return {
 					isAuthenticated: true,
 					user: null, // We don't have user data without API call
@@ -581,14 +599,19 @@ async function validateAuthentication(
 			}
 		}
 
-		//  Enhanced request configuration**
+		// Enhanced request configuration
 		const authStatusWithTimeout = async (): Promise<AuthStatus> => {
 			const controller = new AbortController();
-			const timeoutId = setTimeout(() => controller.abort(), 5000); // Reduced timeout
+			const timeoutId = setTimeout(() => controller.abort(), 5000);
+			const cookieHeader = req.cookies
+				.getAll()
+				.map((cookie) => `${cookie.name}=${cookie.value}`)
+				.join("; ");
 
 			try {
-				//  Add proper headers and fetch configuration**
+				// Add proper headers and fetch configuration
 				const authStatus = await authSDK.getAuthStatus({
+					credentials: "include",
 					signal: controller.signal,
 					headers: {
 						"User-Agent": "FrankAuth-Middleware/1.0",
@@ -597,8 +620,9 @@ async function validateAuthentication(
 						// Copy essential headers only
 						"X-Forwarded-For": req.headers.get("x-forwarded-for") || "",
 						"X-Real-IP": req.headers.get("x-real-ip") || "",
+						Cookie: cookieHeader,
 					},
-					// Add retry configuration**
+					// Add retry configuration
 					cache: "no-cache",
 					keepalive: false,
 				});
@@ -610,10 +634,10 @@ async function validateAuthentication(
 			}
 		};
 
-		// Enhanced retry logic with exponential backoff**
+		// Enhanced retry logic with exponential backoff
 		let authStatus: AuthStatus;
 		let lastError: Error | null = null;
-		const maxRetries = config.maxRetries || 2; // Reduced retries
+		const maxRetries = config.maxRetries || 2;
 
 		for (let attempt = 1; attempt <= maxRetries; attempt++) {
 			try {
@@ -628,13 +652,17 @@ async function validateAuthentication(
 					code: error.code,
 				});
 
-				//  More intelligent retry logic**
+				// More intelligent retry logic
 				if (attempt === maxRetries) {
-					// Last attempt failed - check if we can fall back to local tokens
-					if (hasAccessToken && !tokenInfo.accessToken.isExpired) {
+					// Last attempt failed - check if we can fall back to local tokens or session cookies
+					if (
+						config.fallbackToLocalTokens &&
+						((hasAccessToken && !tokenInfo.accessToken.isExpired) ||
+							hasSessionCookie)
+					) {
 						debugLog(
 							config,
-							"API failed but local token is valid, trusting local state",
+							"API failed but local token/session is valid, trusting local state",
 						);
 						return {
 							isAuthenticated: true,
@@ -689,7 +717,7 @@ async function validateAuthentication(
 			code: error.code,
 		});
 
-		// **FIX 7: Better error handling - don't mark tokens as expired on network errors**
+		// Better error handling - don't mark tokens as expired on network errors
 		const tokenInfo = authSDK.getTokenExpirationInfo();
 
 		return {
@@ -709,7 +737,7 @@ async function validateAuthentication(
 	}
 }
 
-//  Enhanced error type checking**
+// Enhanced error type checking
 function isRetryableError(error: any): boolean {
 	const retryableErrors = [
 		"NETWORK_ERROR",
@@ -816,7 +844,7 @@ async function processRequest(
 
 	// Determine path types
 	const isPublicPath = matchesPath(path, config.publicPaths);
-	const isAuthPath = path === config.signInPath || path === config.signUpPath;
+	const isAuthPath = matchesPath(path, config.authPaths);
 
 	// Determine if path is private based on configuration
 	let isPrivatePath: boolean;
@@ -901,14 +929,14 @@ async function handleAuthentication(
 				if (hookResult instanceof NextResponse) return hookResult;
 			}
 
-			// Redirect away from auth pages
+			// Redirect away from auth paths (sign-in, sign-up, etc.)
 			if (isAuthPath) {
 				const redirectTo =
 					req.nextUrl.searchParams.get("redirect_url") ||
 					config.afterSignInPath;
 				debugLog(
 					config,
-					`Redirecting authenticated user from auth page to: ${redirectTo}`,
+					`Redirecting authenticated user from auth path to: ${redirectTo}`,
 				);
 				const redirectResponse = NextResponse.redirect(
 					new URL(redirectTo, req.url),
@@ -955,7 +983,7 @@ async function handleAuthentication(
 			if (hookResult instanceof NextResponse) return hookResult;
 		}
 
-		// Allow access to public paths and auth pages
+		// Allow access to public paths and auth paths
 		if (isPublicPath || isAuthPath) {
 			debugLog(config, "Allowing access to public/auth path");
 			return response;
@@ -1053,6 +1081,7 @@ export function createFrankAuthMiddleware(userConfig: MiddlewareConfig) {
 	debugLog(config, "Frank Auth middleware initialized with config:", {
 		publicPaths: config.publicPaths,
 		privatePaths: config.privatePaths,
+		authPaths: config.authPaths,
 		allPathsPrivate: config.allPathsPrivate,
 		signInPath: config.signInPath,
 		enableOrgRouting: config.enableOrgRouting,
@@ -1109,9 +1138,18 @@ export async function checkPermission(
 			response,
 		);
 
+		const cookieHeader = req.cookies
+			.getAll()
+			.map((cookie) => `${cookie.name}=${cookie.value}`)
+			.join("; ");
+
 		// This would require implementing a permissions check method in AuthSDK
 		// For now, we'll return true if user is authenticated
-		const authStatus = await authSDK.getAuthStatus();
+		const authStatus = await authSDK.getAuthStatus({
+			headers: {
+				Cookie: cookieHeader,
+			},
+		});
 		return authStatus.isAuthenticated;
 	} catch {
 		return false;
@@ -1152,5 +1190,9 @@ export async function checkAuthStatus(
 		req,
 		response,
 	);
-	return validateAuthentication(authSDK, config as Required<MiddlewareConfig>);
+	return validateAuthentication(
+		req,
+		authSDK,
+		config as Required<MiddlewareConfig>,
+	);
 }
