@@ -1,3 +1,21 @@
+# [0.15.0](https://github.com/xraph/frank/compare/v0.14.0...v0.15.0) (2025-07-29)
+
+
+### Features
+
+* **components:** add foundational UI components to react package ([829e414](https://github.com/xraph/frank/commit/829e414012b502d9e996028736fe4f72b84ce9d6))
+
+
+
+# [0.14.0](https://github.com/xraph/frank/compare/v0.13.6...v0.14.0) (2025-07-28)
+
+
+### Features
+
+* **middleware:** enhance auth flow with session cookies support ([8f8db59](https://github.com/xraph/frank/commit/8f8db59c6b1b1263948f02302f2c3bcdc46ed5bf))
+
+
+
 ## [0.13.6](https://github.com/xraph/frank/compare/v0.13.5...v0.13.6) (2025-07-24)
 
 
@@ -13,8 +31,6 @@
 
 ### Bug Fixes
 
-* **auth:** comment out cookie domain validation logic ([1b21f02](https://github.com/xraph/frank/commit/1b21f02e656d2b805a4d9048ff4eb288e861f808))
-* **auth:** refine cookie domain resolution and remove debug logs ([ef39370](https://github.com/xraph/frank/commit/ef39370e615ebe201506d99f18c2b96e9e4f4365))
 * **routes:** add spacing for readability in setupPersonalRoutes function ([ea3df79](https://github.com/xraph/frank/commit/ea3df7935b7b146f0781ba055a0d9bb42199abc8))
 
 
