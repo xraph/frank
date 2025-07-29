@@ -10,10 +10,8 @@ import {useCallback, useMemo, useState} from 'react';
 import type {ChangePasswordRequest, User, UserProfileUpdateRequest, VerificationRequest,} from '@frank-auth/client';
 
 import {useAuth} from './use-auth';
-import {useConfig} from '../provider/config-provider';
 
 import type {AuthError} from '../provider/types';
-import {undefined} from "zod";
 
 // ============================================================================
 // User Hook Interface

@@ -1,3 +1,5 @@
-import {heroui} from "@heroui/react";
+import { heroui } from "@heroui/react";
 
-export default heroui();
+export default heroui({
+	prefix: "frank_hero_",
+});
