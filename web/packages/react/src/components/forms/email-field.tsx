@@ -8,16 +8,11 @@
 "use client";
 
 import type { FieldProps } from "@/components/forms/shared";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-	Chip,
-	Listbox,
-	ListboxItem,
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
-} from "@heroui/react";
+import { Button, Chip, Input } from "@/components/ui";
+import { Listbox, ListboxItem, Popover } from "@/components/ui";
+import { useTheme } from "@/theme/context";
+import type { StyledProps } from "@/theme/styled";
+import styled from "@emotion/styled";
 import { AnimatePresence, motion } from "framer-motion";
 import React from "react";
 import { useConfig } from "../../hooks/use-config";
@@ -111,6 +106,70 @@ export interface EmailValidation {
 	domain: string | null;
 	username: string | null;
 }
+
+// ============================================================================
+// Styled Components
+// ============================================================================
+
+// Fixed: Reduced gap from spacing[2] (0.5rem) to spacing[1] (0.25rem) for tighter spacing
+const EmailFieldContainer = styled.div<StyledProps>`
+  display: flex;
+  flex-direction: column;
+  gap: ${(props) => props.theme.spacing[1]};
+`;
+
+const PopoverContent = styled.div<StyledProps>`
+  padding: ${(props) => props.theme.spacing[1]};
+`;
+
+const DomainRestrictionsInfo = styled.div<StyledProps>`
+  font-size: ${(props) => props.theme.fontSizes.xs};
+  color: ${(props) => props.theme.colors.text.tertiary};
+`;
+
+const DomainLabel = styled.span<StyledProps>`
+  font-weight: ${(props) => props.theme.fontWeights.medium};
+`;
+
+const SuggestionsContainer = styled(motion.div)<StyledProps>`
+  display: flex;
+  flex-direction: column;
+  gap: ${(props) => props.theme.spacing[1]};
+`;
+
+const SuggestionsTitle = styled.div<StyledProps>`
+  font-size: ${(props) => props.theme.fontSizes.xs};
+  color: ${(props) => props.theme.colors.text.secondary};
+  font-weight: ${(props) => props.theme.fontWeights.medium};
+`;
+
+const SuggestionsButtons = styled.div<StyledProps>`
+  display: flex;
+  flex-wrap: wrap;
+  gap: ${(props) => props.theme.spacing[1]};
+`;
+
+const EmailIconSvg = styled.svg<StyledProps>`
+  width: ${(props) => props.theme.spacing[4]};
+  height: ${(props) => props.theme.spacing[4]};
+  color: ${(props) => props.theme.colors.text.quaternary};
+`;
+
+const VerificationIconSvg = styled.svg<StyledProps>`
+  width: ${(props) => props.theme.spacing[3]};
+  height: ${(props) => props.theme.spacing[3]};
+`;
+
+const PrimaryIconSvg = styled.svg<StyledProps>`
+  width: ${(props) => props.theme.spacing[4]};
+  height: ${(props) => props.theme.spacing[4]};
+  color: ${(props) => props.theme.colors.primary[500]};
+`;
+
+const SuggestionButton = styled(Button)<StyledProps>`
+  font-size: ${(props) => props.theme.fontSizes.xs};
+  height: ${(props) => props.theme.spacing[6]};
+`;
 
 // ============================================================================
 // Common Email Domains
@@ -264,6 +323,7 @@ export function EmailField({
 	startContent,
 	endContent,
 }: EmailFieldProps) {
+	const { theme } = useTheme();
 	const { components, organizationSettings } = useConfig();
 	const formField = useFormField(name);
 
@@ -434,7 +494,7 @@ export function EmailField({
 		if (showSuggestions && validation?.suggestions.length) {
 			setShowSuggestionPopover(true);
 		}
-	}, [onFocus]);
+	}, [onFocus, showSuggestions, validation]);
 
 	// Handle suggestion selection
 	const handleSuggestionSelect = React.useCallback(
@@ -456,8 +516,8 @@ export function EmailField({
 					color="success"
 					variant="flat"
 					startContent={
-						<svg
-							className="w-3 h-3"
+						<VerificationIconSvg
+							theme={theme}
 							fill="none"
 							stroke="currentColor"
 							viewBox="0 0 24 24"
@@ -468,7 +528,7 @@ export function EmailField({
 								strokeWidth={2}
 								d="M5 13l4 4L19 7"
 							/>
-						</svg>
+						</VerificationIconSvg>
 					}
 				>
 					Verified
@@ -497,12 +557,13 @@ export function EmailField({
 		currentValue,
 		validation,
 		onRequestVerification,
+		theme,
 	]);
 
 	// Email icon
 	const emailIcon = (
-		<svg
-			className="w-4 h-4 text-default-400"
+		<EmailIconSvg
+			theme={theme}
 			fill="none"
 			stroke="currentColor"
 			viewBox="0 0 24 24"
@@ -513,7 +574,7 @@ export function EmailField({
 				strokeWidth={2}
 				d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"
 			/>
-		</svg>
+		</EmailIconSvg>
 	);
 
 	const inputContent = (
@@ -532,7 +593,7 @@ export function EmailField({
 			disabled={disabled}
 			size={size}
 			radius={radius}
-			variant={variant}
+			variant="bordered"
 			autoFocus={autoFocus}
 			autoComplete={autoComplete}
 			description={description}
@@ -544,7 +605,7 @@ export function EmailField({
 	);
 
 	return (
-		<div className={`space-y-2 ${className}`}>
+		<EmailFieldContainer theme={theme} className={className}>
 			{/* Input with suggestion popover */}
 			{showSuggestions && validation?.suggestions.length ? (
 				<Popover
@@ -553,37 +614,39 @@ export function EmailField({
 					placement="bottom-start"
 					showArrow
 				>
-					<PopoverTrigger>{inputContent}</PopoverTrigger>
-					<PopoverContent className="p-1">
-						<Listbox
-							aria-label="Email suggestions"
-							onAction={(key) => handleSuggestionSelect(key as string)}
-						>
-							{validation.suggestions.map((suggestion, index) => (
-								<ListboxItem
-									key={suggestion}
-									value={suggestion}
-									startContent={
-										<svg
-											className="w-4 h-4 text-primary"
-											fill="none"
-											stroke="currentColor"
-											viewBox="0 0 24 24"
-										>
-											<path
-												strokeLinecap="round"
-												strokeLinejoin="round"
-												strokeWidth={2}
-												d="M13 10V3L4 14h7v7l9-11h-7z"
-											/>
-										</svg>
-									}
-								>
-									{suggestion}
-								</ListboxItem>
-							))}
-						</Listbox>
-					</PopoverContent>
+					<Popover.Trigger>{inputContent}</Popover.Trigger>
+					<Popover.Content>
+						<PopoverContent theme={theme}>
+							<Listbox
+								aria-label="Email suggestions"
+								onAction={(key) => handleSuggestionSelect(key as string)}
+							>
+								{validation.suggestions.map((suggestion, index) => (
+									<ListboxItem
+										key={suggestion}
+										value={suggestion}
+										startContent={
+											<PrimaryIconSvg
+												theme={theme}
+												fill="none"
+												stroke="currentColor"
+												viewBox="0 0 24 24"
+											>
+												<path
+													strokeLinecap="round"
+													strokeLinejoin="round"
+													strokeWidth={2}
+													d="M13 10V3L4 14h7v7l9-11h-7z"
+												/>
+											</PrimaryIconSvg>
+										}
+									>
+										{suggestion}
+									</ListboxItem>
+								))}
+							</Listbox>
+						</PopoverContent>
+					</Popover.Content>
 				</Popover>
 			) : (
 				inputContent
@@ -594,10 +657,10 @@ export function EmailField({
 
 			{/* Domain Restrictions Info */}
 			{effectiveAllowedDomains.length > 0 && (
-				<div className="text-xs text-default-500">
-					<span className="font-medium">Allowed domains:</span>{" "}
+				<DomainRestrictionsInfo theme={theme}>
+					<DomainLabel theme={theme}>Allowed domains:</DomainLabel>{" "}
 					{effectiveAllowedDomains.join(", ")}
-				</div>
+				</DomainRestrictionsInfo>
 			)}
 
 			{/* Suggestions (non-popover) */}
@@ -605,33 +668,31 @@ export function EmailField({
 				{!showSuggestionPopover &&
 					validation?.suggestions.length &&
 					isFocused && (
-						<motion.div
+						<SuggestionsContainer
+							theme={theme}
 							initial={{ opacity: 0, y: -10 }}
 							animate={{ opacity: 1, y: 0 }}
 							exit={{ opacity: 0, y: -10 }}
-							className="space-y-1"
 						>
-							<div className="text-xs text-default-600 font-medium">
-								Did you mean:
-							</div>
-							<div className="flex flex-wrap gap-1">
+							<SuggestionsTitle theme={theme}>Did you mean:</SuggestionsTitle>
+							<SuggestionsButtons theme={theme}>
 								{validation.suggestions.slice(0, 3).map((suggestion, index) => (
-									<Button
+									<SuggestionButton
 										key={index}
+										theme={theme}
 										size="sm"
 										variant="ghost"
 										color="primary"
-										onPress={() => handleSuggestionSelect(suggestion)}
-										className="text-xs h-6"
+										onClick={() => handleSuggestionSelect(suggestion)}
 									>
 										{suggestion}
-									</Button>
+									</SuggestionButton>
 								))}
-							</div>
-						</motion.div>
+							</SuggestionsButtons>
+						</SuggestionsContainer>
 					)}
 			</AnimatePresence>
-		</div>
+		</EmailFieldContainer>
 	);
 }
 
@@ -639,5 +700,4 @@ export function EmailField({
 // Export
 // ============================================================================
 
-// export const EmailField = React.memo(EmailFieldComponent);
 export default EmailField;

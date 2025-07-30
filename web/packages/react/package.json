@@ -1,6 +1,6 @@
 {
 	"name": "@frank-auth/react",
-	"version": "0.1.32",
+	"version": "0.1.33",
 	"description": "Flexible and customizable React UI components for Frank Authentication",
 	"keywords": [
 		"frank-auth",
@@ -24,9 +24,7 @@
 	"module": "dist/esm/index.js",
 	"types": "dist/types/index.d.ts",
 	"style": "dist/assets/styles/global.css",
-	"sideEffects": [
-		"**/*.css"
-	],
+	"sideEffects": ["**/*.css"],
 	"exports": {
 		".": {
 			"import": "./dist/esm/index.js",
@@ -63,12 +61,7 @@
 			"import": "./dist/assets/styles/global.css"
 		}
 	},
-	"files": [
-		"dist",
-		"src",
-		"README.md",
-		"CHANGELOG.md"
-	],
+	"files": ["dist", "src", "README.md", "CHANGELOG.md"],
 	"scripts": {
 		"build": "pnpm run clean:dist && vite build",
 		"build:watch": "vite build --watch",
@@ -88,6 +81,8 @@
 		"docs": "typedoc src/index.ts --out docs --theme minimal"
 	},
 	"dependencies": {
+		"@emotion/react": "^11.14.0",
+		"@emotion/styled": "^11.14.1",
 		"@frank-auth/client": "^0.2.9",
 		"@frank-auth/sdk": "^0.2.47",
 		"@heroicons/react": "^2.2.0",

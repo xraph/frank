@@ -6,7 +6,7 @@
 
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui";
 import {
 	ArrowRightOnRectangleIcon,
 	LockClosedIcon,
@@ -15,8 +15,8 @@ import {
 import type React from "react";
 import { useCallback } from "react";
 
-import { useAuth } from "../../../hooks/use-auth";
-import { useConfig } from "../../../hooks/use-config";
+import { useAuth } from "@/hooks";
+import { useConfig } from "@/hooks";
 import { SignInModal, useSignInModal } from "./sign-in-modal";
 
 // ============================================================================

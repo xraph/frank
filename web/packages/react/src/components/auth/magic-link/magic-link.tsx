@@ -1,508 +1,305 @@
+import { useTheme } from "@/theme/context";
+import { type StyledProps, getColorVariant } from "@/theme/styled";
+import { css } from "@emotion/react";
+import styled from "@emotion/styled";
+import React from "react";
 
-/**
- * @frank-auth/react - Magic Link Verification Components
- *
- * Components for handling magic link verification from email links,
- * with support for different verification types and redirect handling.
- */
-
-'use client';
-
-import React, {useCallback, useEffect, useMemo, useState} from 'react';
-import {Button as HButton, Divider, Link} from '@heroui/react';
-import {motion} from 'framer-motion';
-import {ArrowPathIcon, CheckCircleIcon, EnvelopeIcon, ExclamationTriangleIcon} from '@heroicons/react/24/outline';
-
-import {useMagicLink} from '../../../hooks/use-magic-link';
-import {useAuth} from '../../../hooks/use-auth';
-import {useConfig} from '../../../hooks/use-config';
-import FormWrapper from '../../forms/form-wrapper';
-import type {RadiusT, SizeT} from "@/types";
-
-// ============================================================================
-// Magic Link Verification Types
-// ============================================================================
-
-export interface MagicLinkVerifyProps {
-    /**
-     * Magic link token (if not in URL)
-     */
-    token?: string;
-
-    /**
-     * Verification type
-     */
-    type?: 'sign-in' | 'sign-up' | 'email-verification' | 'password-reset' | 'organization-invite';
-
-    /**
-     * Success callback
-     */
-    onSuccess?: (result: any) => void;
-
-    /**
-     * Error callback
-     */
-    onError?: (error: Error) => void;
-
-    /**
-     * Custom title
-     */
-    title?: string;
-
-    /**
-     * Custom subtitle
-     */
-    subtitle?: string;
-
-    /**
-     * Redirect URL after success
-     */
-    redirectUrl?: string;
-
-    /**
-     * Show resend option
-     */
-    showResend?: boolean;
-
-    /**
-     * Email for resend
-     */
-    email?: string;
-
-    /**
-     * Component variant
-     */
-    variant?: 'default' | 'card' | 'modal';
-
-    /**
-     * Size
-     */
-    size?: SizeT;
-
-    radius?: RadiusT;
-
-    /**
-     * Custom className
-     */
-    className?: string;
-
-    /**
-     * Auto-verify on mount
-     */
-    autoVerify?: boolean;
+export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
+	/** Badge variant */
+	variant?: "solid" | "flat" | "bordered" | "shadow" | "dot";
+	/** Badge color theme */
+	color?: "primary" | "secondary" | "success" | "warning" | "danger";
+	/** Badge size */
+	size?: "sm" | "md" | "lg";
+	/** Badge content */
+	content?: React.ReactNode | number | string;
+	/** Maximum count to display (shows count+ when exceeded) */
+	max?: number;
+	/** Show badge as dot without content */
+	isDot?: boolean;
+	/** Hide badge when content is 0 or empty */
+	showZero?: boolean;
+	/** Badge placement relative to children */
+	placement?: "top-right" | "top-left" | "bottom-right" | "bottom-left";
+	/** Disable badge */
+	isDisabled?: boolean;
+	/** Badge shape */
+	shape?: "rectangle" | "circle";
+	/** Custom class name */
+	className?: string;
+	/** Custom styles */
+	css?: any;
+	/** Children to wrap with badge */
+	children?: React.ReactNode;
 }
 
-// ============================================================================
-// Magic Link Verification Status Component
-// ============================================================================
+type StyledBadgeProps = StyledProps<BadgeProps>;
 
-const VerificationStatus = React.memo(({
-                                           status,
-                                           type,
-                                           error,
-                                           onRetry,
-                                           onResend,
-    size = 'md',
-    radius = 'md',
-                                       }: {
-    status: 'verifying' | 'success' | 'error' | 'expired';
-    type: string;
-    error?: string;
-    onRetry?: () => void;
-    onResend?: () => void;
-    size?: SizeT;
-    radius?: RadiusT;
-}) => {
-    const { components } = useConfig();
-    const Button = components.Button ?? HButton;
+const getBadgeVariantStyles = (props: StyledBadgeProps) => {
+	const { theme, variant = "solid", color = "primary", isDisabled } = props;
+	const baseColor = getColorVariant(theme, color, 500);
+	const lightColor = getColorVariant(theme, color, 50);
+	const darkColor = getColorVariant(theme, color, 700);
 
-    const getStatusContent = () => {
-        switch (status) {
-            case 'verifying':
-                return {
-                    icon: <ArrowPathIcon className="w-8 h-8 text-primary-600 animate-spin" />,
-                    title: 'Verifying...',
-                    subtitle: 'Please wait while we verify your magic link.',
-                    bgColor: 'bg-primary-100 dark:bg-primary-900/30',
-                };
+	if (isDisabled) {
+		return css`
+      opacity: 0.5;
+      cursor: not-allowed;
+    `;
+	}
 
-            case 'success':
-                return {
-                    icon: <CheckCircleIcon className="w-8 h-8 text-success-600" />,
-                    title: 'Verification Successful!',
-                    subtitle: getSuccessMessage(type),
-                    bgColor: 'bg-success-100 dark:bg-success-900/30',
-                };
+	switch (variant) {
+		case "solid":
+			return css`
+        background-color: ${baseColor};
+        color: ${theme.colors.text.inverse};
+        border: 1px solid transparent;
+      `;
 
-            case 'error':
-                return {
-                    icon: <ExclamationTriangleIcon className="w-8 h-8 text-danger-600" />,
-                    title: 'Verification Failed',
-                    subtitle: error || 'The magic link is invalid or has expired.',
-                    bgColor: 'bg-danger-100 dark:bg-danger-900/30',
-                };
+		case "flat":
+			return css`
+        background-color: ${getColorVariant(theme, color, 100)};
+        color: ${baseColor};
+        border: 1px solid transparent;
+      `;
 
-            case 'expired':
-                return {
-                    icon: <ExclamationTriangleIcon className="w-8 h-8 text-warning-600" />,
-                    title: 'Link Expired',
-                    subtitle: 'This magic link has expired. Please request a new one.',
-                    bgColor: 'bg-warning-100 dark:bg-warning-900/30',
-                };
+		case "bordered":
+			return css`
+        background-color: ${theme.colors.background.primary};
+        color: ${baseColor};
+        border: 1px solid ${baseColor};
+      `;
 
-            default:
-                return {
-                    icon: <EnvelopeIcon className="w-8 h-8 text-default-500" />,
-                    title: 'Magic Link',
-                    subtitle: 'Click the link in your email to continue.',
-                    bgColor: 'bg-default-100 dark:bg-default-900/30',
-                };
-        }
-    };
+		case "shadow":
+			return css`
+        background-color: ${baseColor};
+        color: ${theme.colors.text.inverse};
+        border: 1px solid transparent;
+        box-shadow: ${theme.shadows.sm};
+      `;
 
-    const getSuccessMessage = (type: string) => {
-        switch (type) {
-            case 'sign-in':
-                return 'You have been successfully signed in.';
-            case 'sign-up':
-                return 'Your account has been created and verified.';
-            case 'email-verification':
-                return 'Your email address has been verified.';
-            case 'password-reset':
-                return 'You can now reset your password.';
-            case 'organization-invite':
-                return 'Welcome to the organization!';
-            default:
-                return 'Verification completed successfully.';
-        }
-    };
+		case "dot":
+			return css`
+        background-color: ${baseColor};
+        border: 2px solid ${theme.colors.background.primary};
+        width: 8px;
+        height: 8px;
+        padding: 0;
+        min-width: 8px;
+      `;
 
-    const content = getStatusContent();
+		default:
+			return css``;
+	}
+};
 
-    return (
-        <div className="text-center space-y-4">
-            <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className={`mx-auto w-16 h-16 rounded-full flex items-center justify-center ${content.bgColor}`}
-            >
-                {content.icon}
-            </motion.div>
+const getBadgeSizeStyles = (props: StyledBadgeProps) => {
+	const { theme, size = "md", variant, shape = "rectangle" } = props;
 
-            <div>
-                <h3 className="text-xl font-semibold text-foreground mb-2">
-                    {content.title}
-                </h3>
-                <p className="text-default-500 text-sm">
-                    {content.subtitle}
-                </p>
-            </div>
+	if (variant === "dot") {
+		switch (size) {
+			case "sm":
+				return css`
+          width: 6px;
+          height: 6px;
+          min-width: 6px;
+        `;
+			case "md":
+				return css`
+          width: 8px;
+          height: 8px;
+          min-width: 8px;
+        `;
+			case "lg":
+				return css`
+          width: 10px;
+          height: 10px;
+          min-width: 10px;
+        `;
+		}
+	}
 
-            {status === 'error' && (
-                <div className="space-y-2">
-                    {onRetry && (
-                        <Button
-                            variant="bordered"
-                            size={size}
-                            radius={radius}
-                            onPress={onRetry}
-                        >
-                            Try Again
-                        </Button>
-                    )}
-                    {onResend && (
-                        <Button
-                            variant="light"
-                            size={size}
-                            radius={radius}
-                            onPress={onResend}
-                            startContent={<EnvelopeIcon className="w-4 h-4" />}
-                        >
-                            Resend Magic Link
-                        </Button>
-                    )}
-                </div>
-            )}
+	const isCircle = shape === "circle";
 
-            {status === 'expired' && onResend && (
-                <Button
-                    color="primary"
-                    onPress={onResend}
-                    size={size}
-                    radius={radius}
-                    startContent={<EnvelopeIcon className="w-4 h-4" />}
-                >
-                    Send New Magic Link
-                </Button>
-            )}
-        </div>
-    );
-});
+	switch (size) {
+		case "sm":
+			return css`
+        min-width: ${isCircle ? theme.spacing[4] : theme.spacing[4]};
+        height: ${theme.spacing[4]};
+        padding: ${isCircle ? "0" : `0 ${theme.spacing[1]}`};
+        font-size: ${theme.fontSizes.xs};
+      `;
+		case "md":
+			return css`
+        min-width: ${isCircle ? theme.spacing[5] : theme.spacing[5]};
+        height: ${theme.spacing[5]};
+        padding: ${isCircle ? "0" : `0 ${theme.spacing[2]}`};
+        font-size: ${theme.fontSizes.xs};
+      `;
+		case "lg":
+			return css`
+        min-width: ${isCircle ? theme.spacing[6] : theme.spacing[6]};
+        height: ${theme.spacing[6]};
+        padding: ${isCircle ? "0" : `0 ${theme.spacing[2]}`};
+        font-size: ${theme.fontSizes.sm};
+      `;
+		default:
+			return css``;
+	}
+};
 
-VerificationStatus.displayName = 'VerificationStatus';
+const getBadgeShapeStyles = (props: StyledBadgeProps) => {
+	const { theme, shape = "rectangle", variant } = props;
 
-// ============================================================================
-// Main Magic Link Verification Component
-// ============================================================================
+	if (variant === "dot") {
+		return css`border-radius: ${theme.borderRadius.full};`;
+	}
 
-export function MagicLinkVerify({
-                                    token,
-                                    type = 'sign-in',
-                                    onSuccess,
-                                    onError,
-                                    title,
-                                    subtitle,
-                                    redirectUrl,
-                                    showResend = true,
-                                    email,
-                                    variant = 'default',
-                                    size = 'md',
-                                    className = '',
-                                    autoVerify = true,
-                                }: MagicLinkVerifyProps) {
-    const {
-        verifyMagicLink,
-        verifyFromUrl,
-        sendMagicLink,
-        extractTokenFromUrl,
-        isLoading,
-        error,
-    } = useMagicLink();
+	switch (shape) {
+		case "circle":
+			return css`border-radius: ${theme.borderRadius.full};`;
+		case "rectangle":
+			return css`border-radius: ${theme.borderRadius.sm};`;
+		default:
+			return css`border-radius: ${theme.borderRadius.sm};`;
+	}
+};
 
-    const { components, linksPath } = useConfig();
-    const { reload } = useAuth();
+const StyledBadge = styled.span<StyledBadgeProps>`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  font-weight: ${(props) => props.theme.fontWeights.medium};
+  line-height: ${(props) => props.theme.lineHeights.tight};
+  white-space: nowrap;
+  user-select: none;
+  transition: all ${(props) => props.theme.transitions.normal};
+  box-sizing: border-box;
 
-    const Button = components.Button ?? HButton;
+  ${getBadgeVariantStyles}
+  ${getBadgeSizeStyles}
+  ${getBadgeShapeStyles}
 
-    const [verificationStatus, setVerificationStatus] = useState<'idle' | 'verifying' | 'success' | 'error' | 'expired'>('idle');
-    const [verificationError, setVerificationError] = useState<string | null>(null);
+  /* Custom CSS prop */
+  ${(props) => props.css}
+`;
 
-    // Extract token from URL or use provided token
-    const magicLinkToken = useMemo(() => {
-        return token || extractTokenFromUrl();
-    }, [token, extractTokenFromUrl]);
+const BadgeWrapper = styled.span<{ placement: string }>`
+  position: relative;
+  display: inline-flex;
 
-    // Auto-verify on mount if token is available
-    useEffect(() => {
-        if (autoVerify && magicLinkToken && verificationStatus === 'idle') {
-            handleVerify();
-        }
-    }, [autoVerify, magicLinkToken, verificationStatus]);
+  ${StyledBadge} {
+    position: absolute;
+    z-index: ${(props) => props.theme.zIndex.docked};
+    
+    ${(props) => {
+			switch (props.placement) {
+				case "top-right":
+					return css`
+            top: 0;
+            right: 0;
+            transform: translate(50%, -50%);
+          `;
+				case "top-left":
+					return css`
+            top: 0;
+            left: 0;
+            transform: translate(-50%, -50%);
+          `;
+				case "bottom-right":
+					return css`
+            bottom: 0;
+            right: 0;
+            transform: translate(50%, 50%);
+          `;
+				case "bottom-left":
+					return css`
+            bottom: 0;
+            left: 0;
+            transform: translate(-50%, 50%);
+          `;
+				default:
+					return css`
+            top: 0;
+            right: 0;
+            transform: translate(50%, -50%);
+          `;
+			}
+		}}
+  }
+`;
 
-    // Handle verification
-    const handleVerify = useCallback(async () => {
-        if (!magicLinkToken) {
-            setVerificationStatus('error');
-            setVerificationError('No verification token found.');
-            return;
-        }
+export const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(
+	(
+		{
+			children,
+			content,
+			variant = "solid",
+			color = "primary",
+			size = "md",
+			max = 99,
+			isDot = false,
+			showZero = false,
+			placement = "top-right",
+			isDisabled = false,
+			shape = "rectangle",
+			className,
+			css,
+			...props
+		},
+		ref,
+	) => {
+		const { theme } = useTheme();
 
-        try {
-            setVerificationStatus('verifying');
-            setVerificationError(null);
+		// Determine if badge should be shown
+		const shouldShowBadge = () => {
+			if (isDot) return true;
+			if (content === 0 || content === "0") return showZero;
+			return content !== undefined && content !== null && content !== "";
+		};
 
-            const result = await verifyMagicLink(magicLinkToken);
+		// Format badge content
+		const getBadgeContent = () => {
+			if (isDot || variant === "dot") return null;
 
-            if (result.success) {
-                setVerificationStatus('success');
+			if (typeof content === "number") {
+				return content > max ? `${max}+` : content.toString();
+			}
 
-                // Reload auth state to get updated user
-                await reload();
+			return content;
+		};
 
-                onSuccess?.(result);
+		const badgeProps = {
+			...props,
+			variant: isDot ? "dot" : variant,
+			color,
+			size,
+			shape: isDot ? "circle" : shape,
+			isDisabled,
+			className,
+			css,
+		};
 
-                // Handle redirects
-                if (redirectUrl) {
-                    setTimeout(() => {
-                        window.location.href = redirectUrl;
-                    }, 2000);
-                } else if (result.user) {
-                    // Default redirects based on verification type
-                    const defaultRedirects = {
-                        'sign-in': '/dashboard',
-                        'sign-up': '/welcome',
-                        'email-verification': '/dashboard',
-                        'password-reset': '/auth/reset-password',
-                        'organization-invite': '/organization/welcome',
-                    };
+		const badgeElement = shouldShowBadge() ? (
+			<StyledBadge theme={theme} ref={ref} {...badgeProps}>
+				{getBadgeContent()}
+			</StyledBadge>
+		) : null;
 
-                    const defaultRedirect = defaultRedirects[type as keyof typeof defaultRedirects];
-                    if (defaultRedirect) {
-                        setTimeout(() => {
-                            window.location.href = defaultRedirect;
-                        }, 2000);
-                    }
-                }
-            } else {
-                if (result.error?.includes('expired')) {
-                    setVerificationStatus('expired');
-                } else {
-                    setVerificationStatus('error');
-                }
-                setVerificationError(result.error || 'Verification failed');
-                onError?.(new Error(result.error || 'Verification failed'));
-            }
-        } catch (err) {
-            setVerificationStatus('error');
-            const errorMessage = err instanceof Error ? err.message : 'Verification failed';
-            setVerificationError(errorMessage);
-            onError?.(err instanceof Error ? err : new Error(errorMessage));
-        }
-    }, [magicLinkToken, verifyMagicLink, reload, onSuccess, onError, redirectUrl, type]);
+		// If no children, return just the badge
+		if (!children) {
+			return badgeElement;
+		}
 
-    // Handle resend
-    const handleResend = useCallback(async () => {
-        if (!email) {
-            console.warn('Cannot resend magic link: no email provided');
-            return;
-        }
+		// If children exist, wrap them with positioned badge
+		return (
+			<BadgeWrapper theme={theme} placement={placement}>
+				{children}
+				{badgeElement}
+			</BadgeWrapper>
+		);
+	},
+);
 
-        try {
-            await sendMagicLink(email, {
-                redirectUrl: redirectUrl || window.location.href,
-            });
-
-            // Reset status to show new verification UI
-            setVerificationStatus('idle');
-            setVerificationError(null);
-        } catch (err) {
-            console.error('Failed to resend magic link:', err);
-        }
-    }, [email, sendMagicLink, redirectUrl]);
-
-    // Form wrapper props
-    const formWrapperProps = useMemo(() => {
-        const getTitle = () => {
-            if (title) return title;
-
-            switch (type) {
-                case 'sign-in':
-                    return 'Magic Link Sign In';
-                case 'sign-up':
-                    return 'Verify Your Account';
-                case 'email-verification':
-                    return 'Verify Email Address';
-                case 'password-reset':
-                    return 'Reset Password Link';
-                case 'organization-invite':
-                    return 'Organization Invitation';
-                default:
-                    return 'Magic Link Verification';
-            }
-        };
-
-        const getSubtitle = () => {
-            if (subtitle) return subtitle;
-
-            if (verificationStatus === 'idle' && !magicLinkToken) {
-                return 'Click the magic link in your email to continue.';
-            }
-
-            return 'Verifying your magic link...';
-        };
-
-        return {
-            size,
-            variant: 'flat' as const,
-            className: `space-y-6 ${className}`,
-            title: getTitle(),
-            subtitle: getSubtitle(),
-            showCard: variant === 'card',
-        };
-    }, [title, subtitle, type, size, className, variant, verificationStatus, magicLinkToken]);
-
-    // Show verification status if we have a token or are in progress
-    if (magicLinkToken || verificationStatus !== 'idle') {
-        return (
-            <FormWrapper {...formWrapperProps}>
-                <VerificationStatus
-                    status={verificationStatus}
-                    type={type}
-                    error={verificationError}
-                    onRetry={handleVerify}
-                    onResend={showResend && email ? handleResend : undefined}
-                />
-
-                {verificationStatus === 'success' && redirectUrl && (
-                    <div className="text-center">
-                        <div className="flex items-center justify-center gap-2 text-sm text-default-500">
-                            <ArrowPathIcon className="w-4 h-4 animate-spin" />
-                            <span>Redirecting...</span>
-                        </div>
-                    </div>
-                )}
-            </FormWrapper>
-        );
-    }
-
-    // Show initial state if no token
-    return (
-        <FormWrapper {...formWrapperProps}>
-            <div className="text-center space-y-4">
-                <div className="mx-auto w-16 h-16 rounded-full bg-default-100 dark:bg-default-900/30 flex items-center justify-center">
-                    <EnvelopeIcon className="w-8 h-8 text-default-500" />
-                </div>
-
-                <div>
-                    <h3 className="text-xl font-semibold text-foreground mb-2">
-                        Check Your Email
-                    </h3>
-                    <p className="text-default-500 text-sm">
-                        We've sent a magic link to your email address. Click the link to continue.
-                    </p>
-                </div>
-
-                {showResend && email && (
-                    <div className="space-y-2">
-                        <p className="text-sm text-default-400">
-                            Didn't receive the email?
-                        </p>
-                        <Button
-                            variant="light"
-                            size="sm"
-                            onPress={handleResend}
-                            isLoading={isLoading}
-                            startContent={<EnvelopeIcon className="w-4 h-4" />}
-                        >
-                            Resend Magic Link
-                        </Button>
-                    </div>
-                )}
-
-                <Divider className="my-4" />
-
-                <div className="text-center">
-                    <Link href={linksPath?.signIn || '/auth/sign-in'} size="sm">
-                        Back to Sign In
-                    </Link>
-                </div>
-            </div>
-        </FormWrapper>
-    );
-}
-
-// ============================================================================
-// Magic Link Verification Variants
-// ============================================================================
-
-/**
- * Magic Link Verification Card
- */
-export function MagicLinkVerifyCard(props: Omit<MagicLinkVerifyProps, 'variant'>) {
-    return <MagicLinkVerify {...props} variant="card" />;
-}
-
-
-/**
- * Organization Invitation Verification
- */
-export function OrganizationInviteVerification(props: Omit<MagicLinkVerifyProps, 'type'>) {
-    return <MagicLinkVerify {...props} type="organization-invite" />;
-}
-
-
-// ============================================================================
-// Export
-// ============================================================================
-
-export default MagicLinkVerify;
+Badge.displayName = "Badge";

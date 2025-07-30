@@ -14,7 +14,6 @@
 /*---break---*/
 /*@plugin './hero.ts';*/
 /*@source '../../../../node_modules/@heroui/theme/dist!**!*.{js,ts,jsx,tsx}';*/
-@source "../../../../node_modules/@frank-auth/react/dist/**/*.{ts,tsx}";
 @source '../components/**/*.{js,ts,jsx,tsx}';
 
 @custom-variant dark (&:where(.dark, .dark *));
