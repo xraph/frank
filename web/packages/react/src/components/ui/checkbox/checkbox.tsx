@@ -6,114 +6,130 @@ import styled from "@emotion/styled";
 import React, { useState, useRef, useImperativeHandle } from "react";
 
 export interface CheckboxProps
-	extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "size"> {
-	/** Checkbox color theme */
-	color?: "primary" | "secondary" | "success" | "warning" | "danger";
-	/** Checkbox size */
-	size?: "sm" | "md" | "lg";
-	/** Checkbox radius */
-	radius?: "none" | "sm" | "md" | "lg" | "full";
-	/** Label text */
-	children?: React.ReactNode;
-	/** Description text */
-	description?: string;
-	/** Indeterminate state */
-	isIndeterminate?: boolean;
-	/** Invalid state */
-	isInvalid?: boolean;
-	/** Disabled state */
-	isDisabled?: boolean;
-	/** Required field */
-	isRequired?: boolean;
-	/** Custom class name */
-	className?: string;
-	/** Custom styles */
-	css?: any;
-	/** Icon for checked state */
-	icon?: React.ReactNode;
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "size"> {
+  /** Checkbox color theme */
+  color?: "primary" | "secondary" | "success" | "warning" | "danger";
+  /** Checkbox size */
+  size?: "sm" | "md" | "lg";
+  /** Checkbox radius */
+  radius?: "none" | "sm" | "md" | "lg" | "full";
+  /** Label text */
+  children?: React.ReactNode;
+  /** Description text */
+  description?: string;
+  /** Indeterminate state */
+  isIndeterminate?: boolean;
+  /** Invalid state */
+  isInvalid?: boolean;
+  /** Disabled state */
+  isDisabled?: boolean;
+  /** Required field */
+  isRequired?: boolean;
+  /** Custom class name */
+  className?: string;
+  /** Custom styles */
+  css?: any;
+  /** Icon for checked state */
+  icon?: React.ReactNode;
+  /** Alias for checked prop */
+  isSelected?: boolean;
+  /** Alias for onChange that receives only the boolean value */
+  onValueChange?: (checked: boolean) => void;
 }
 
 type StyledCheckboxProps = StyledProps<CheckboxProps>;
 
 const getCheckboxSizeStyles = (props: StyledCheckboxProps) => {
-	const { size = "md" } = props;
+  const { size = "md" } = props;
 
-	switch (size) {
-		case "sm":
-			return css`
+  switch (size) {
+    case "sm":
+      return css`
         width: 16px;
         height: 16px;
       `;
-		case "md":
-			return css`
+    case "md":
+      return css`
         width: 20px;
         height: 20px;
       `;
-		case "lg":
-			return css`
+    case "lg":
+      return css`
         width: 24px;
         height: 24px;
       `;
-		default:
-			return css`
+    default:
+      return css`
         width: 20px;
         height: 20px;
       `;
-	}
+  }
 };
 
 const getCheckboxRadiusStyles = (props: StyledCheckboxProps) => {
-	const { theme, radius = "sm" } = props;
+  const { theme, radius = "sm" } = props;
 
-	switch (radius) {
-		case "none":
-			return css`border-radius: ${theme.borderRadius.none};`;
-		case "sm":
-			return css`border-radius: ${theme.borderRadius.sm};`;
-		case "md":
-			return css`border-radius: ${theme.borderRadius.md};`;
-		case "lg":
-			return css`border-radius: ${theme.borderRadius.lg};`;
-		case "full":
-			return css`border-radius: ${theme.borderRadius.full};`;
-		default:
-			return css`border-radius: ${theme.borderRadius.sm};`;
-	}
+  switch (radius) {
+    case "none":
+      return css`
+        border-radius: ${theme.borderRadius.none};
+      `;
+    case "sm":
+      return css`
+        border-radius: ${theme.borderRadius.sm};
+      `;
+    case "md":
+      return css`
+        border-radius: ${theme.borderRadius.md};
+      `;
+    case "lg":
+      return css`
+        border-radius: ${theme.borderRadius.lg};
+      `;
+    case "full":
+      return css`
+        border-radius: ${theme.borderRadius.full};
+      `;
+    default:
+      return css`
+        border-radius: ${theme.borderRadius.sm};
+      `;
+  }
 };
 
 const getCheckboxColorStyles = (
-	props: StyledCheckboxProps & {
-		isChecked: boolean;
-		isIndeterminate: boolean;
-		isFocused: boolean;
-	},
+  props: StyledCheckboxProps & {
+    isChecked: boolean;
+    isIndeterminate: boolean;
+    isFocused: boolean;
+  },
 ) => {
-	const {
-		theme,
-		color = "primary",
-		isInvalid,
-		isDisabled,
-		isChecked,
-		isIndeterminate,
-		isFocused,
-	} = props;
-	const baseColor = getColorVariant(theme, color, 500);
-	const hoverColor = getColorVariant(theme, color, 600);
-	const errorColor = theme.colors.danger[500];
+  const {
+    theme,
+    color = "primary",
+    isInvalid,
+    isDisabled,
+    isChecked,
+    isIndeterminate,
+    isFocused,
+  } = props;
+  const baseColor = getColorVariant(theme, color, 500);
+  const hoverColor = getColorVariant(theme, color, 600);
+  const errorColor = theme.colors.danger[500];
 
-	const activeColor = isInvalid ? errorColor : baseColor;
+  const activeColor = isInvalid ? errorColor : baseColor;
 
-	if (isDisabled) {
-		return css`
+  if (isDisabled) {
+    return css`
       opacity: 0.5;
       cursor: not-allowed;
       background-color: ${theme.colors.neutral[200]};
       border-color: ${theme.colors.neutral[300]};
     `;
-	}
+  }
 
-	if (isChecked || isIndeterminate) {
-		return css`
+  if (isChecked || isIndeterminate) {
+    return css`
       background-color: ${activeColor};
       border-color: ${activeColor};
       color: ${theme.colors.text.inverse};
@@ -123,9 +139,9 @@ const getCheckboxColorStyles = (
         border-color: ${isInvalid ? errorColor : hoverColor};
       }
     `;
-	}
+  }
 
-	return css`
+  return css`
     background-color: ${theme.colors.background.primary};
     border-color: ${isInvalid ? errorColor : theme.colors.border.primary};
     color: transparent;
@@ -134,13 +150,11 @@ const getCheckboxColorStyles = (
       border-color: ${isInvalid ? errorColor : theme.colors.border.secondary};
     }
 
-    ${
-			isFocused &&
-			css`
-        border-color: ${activeColor};
-        box-shadow: 0 0 0 2px ${activeColor}20;
-      `
-		}
+    ${isFocused &&
+    css`
+      border-color: ${activeColor};
+      box-shadow: 0 0 0 2px ${activeColor}20;
+    `}
   `;
 };
 
@@ -166,11 +180,11 @@ const HiddenInput = styled.input`
 
 // Updated wrapper with better vertical alignment
 const CheckboxWrapper = styled.div<
-	StyledCheckboxProps & {
-		isChecked: boolean;
-		isIndeterminate: boolean;
-		isFocused: boolean;
-	}
+  StyledCheckboxProps & {
+    isChecked: boolean;
+    isIndeterminate: boolean;
+    isFocused: boolean;
+  }
 >`
   position: relative;
   display: inline-flex;
@@ -182,17 +196,17 @@ const CheckboxWrapper = styled.div<
 
   /* Improved alignment with text baseline */
   margin-top: ${(props) => {
-		switch (props.size) {
-			case "sm":
-				return "1px"; // Small offset for sm size
-			case "md":
-				return "2px"; // Medium offset for md size
-			case "lg":
-				return "3px"; // Larger offset for lg size
-			default:
-				return "2px";
-		}
-	}};
+    switch (props.size) {
+      case "sm":
+        return "1px"; // Small offset for sm size
+      case "md":
+        return "2px"; // Medium offset for md size
+      case "lg":
+        return "3px"; // Larger offset for lg size
+      default:
+        return "2px";
+    }
+  }};
 
   ${getCheckboxSizeStyles}
   ${getCheckboxRadiusStyles}
@@ -203,58 +217,58 @@ const CheckboxWrapper = styled.div<
 `;
 
 const CheckIcon = () => (
-	<svg
-		width="100%"
-		height="100%"
-		viewBox="0 0 24 24"
-		fill="none"
-		stroke="currentColor"
-		strokeWidth="3"
-		strokeLinecap="round"
-		strokeLinejoin="round"
-		aria-hidden="true"
-	>
-		<polyline points="20,6 9,17 4,12" />
-	</svg>
+  <svg
+    width="100%"
+    height="100%"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="3"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <polyline points="20,6 9,17 4,12" />
+  </svg>
 );
 
 const IndeterminateIcon = () => (
-	<svg
-		width="100%"
-		height="100%"
-		viewBox="0 0 24 24"
-		fill="none"
-		stroke="currentColor"
-		strokeWidth="3"
-		strokeLinecap="round"
-		strokeLinejoin="round"
-		aria-hidden="true"
-	>
-		<line x1="5" y1="12" x2="19" y2="12" />
-	</svg>
+  <svg
+    width="100%"
+    height="100%"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="3"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <line x1="5" y1="12" x2="19" y2="12" />
+  </svg>
 );
 
 const IconWrapper = styled.div<{ size?: "sm" | "md" | "lg" }>`
   width: ${(props) => {
-		switch (props.size) {
-			case "sm":
-				return "10px";
-			case "lg":
-				return "16px";
-			default:
-				return "12px";
-		}
-	}};
+    switch (props.size) {
+      case "sm":
+        return "10px";
+      case "lg":
+        return "16px";
+      default:
+        return "12px";
+    }
+  }};
   height: ${(props) => {
-		switch (props.size) {
-			case "sm":
-				return "10px";
-			case "lg":
-				return "16px";
-			default:
-				return "12px";
-		}
-	}};
+    switch (props.size) {
+      case "sm":
+        return "10px";
+      case "lg":
+        return "16px";
+      default:
+        return "12px";
+    }
+  }};
 `;
 
 // Updated label content with better line height
@@ -267,39 +281,39 @@ const LabelContent = styled.div<{ theme: Theme }>`
 
 // Updated label text with proper line height for alignment
 const LabelText = styled.span<{
-	size?: "sm" | "md" | "lg";
-	isRequired?: boolean;
-	theme: Theme;
+  size?: "sm" | "md" | "lg";
+  isRequired?: boolean;
+  theme: Theme;
 }>`
   color: ${(props) => props.theme.colors.text.primary};
   font-size: ${(props) => {
-		switch (props.size) {
-			case "sm":
-				return props.theme.fontSizes.sm;
-			case "lg":
-				return props.theme.fontSizes.lg;
-			default:
-				return props.theme.fontSizes.base;
-		}
-	}};
+    switch (props.size) {
+      case "sm":
+        return props.theme.fontSizes.sm;
+      case "lg":
+        return props.theme.fontSizes.lg;
+      default:
+        return props.theme.fontSizes.base;
+    }
+  }};
   font-weight: ${(props) => props.theme.fontWeights.medium};
   line-height: ${(props) => {
-		switch (props.size) {
-			case "sm":
-				return "1.25"; // Tighter line height for small
-			case "lg":
-				return "1.4"; // More relaxed for large
-			default:
-				return "1.5"; // Standard line height
-		}
-	}};
+    switch (props.size) {
+      case "sm":
+        return "1.25"; // Tighter line height for small
+      case "lg":
+        return "1.4"; // More relaxed for large
+      default:
+        return "1.5"; // Standard line height
+    }
+  }};
   margin: 0; /* Remove default margins */
 
   ${(props) =>
-		props.isRequired &&
-		css`
+    props.isRequired &&
+    css`
       &::after {
-        content: ' *';
+        content: " *";
         color: ${props.theme.colors.danger[500]};
       }
     `}
@@ -309,128 +323,144 @@ const LabelText = styled.span<{
 const Description = styled.span<{ size?: "sm" | "md" | "lg"; theme: Theme }>`
   color: ${(props) => props.theme.colors.text.secondary};
   font-size: ${(props) => {
-		switch (props.size) {
-			case "sm":
-				return props.theme.fontSizes.xs;
-			case "lg":
-				return props.theme.fontSizes.sm;
-			default:
-				return props.theme.fontSizes.sm;
-		}
-	}};
+    switch (props.size) {
+      case "sm":
+        return props.theme.fontSizes.xs;
+      case "lg":
+        return props.theme.fontSizes.sm;
+      default:
+        return props.theme.fontSizes.sm;
+    }
+  }};
   line-height: ${(props) => {
-		switch (props.size) {
-			case "sm":
-				return "1.3";
-			case "lg":
-				return "1.4";
-			default:
-				return "1.4";
-		}
-	}};
+    switch (props.size) {
+      case "sm":
+        return "1.3";
+      case "lg":
+        return "1.4";
+      default:
+        return "1.4";
+    }
+  }};
   margin: 0; /* Remove default margins */
 `;
 
 export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
-	(
-		{
-			children,
-			color = "primary",
-			size = "md",
-			radius = "sm",
-			description,
-			isIndeterminate = false,
-			isInvalid = false,
-			isDisabled = false,
-			isRequired = false,
-			className,
-			css,
-			icon,
-			checked,
-			defaultChecked,
-			onChange,
-			onFocus,
-			onBlur,
-			...props
-		},
-		ref,
-	) => {
-		const { theme } = useTheme();
-		const [isChecked, setIsChecked] = useState(defaultChecked || false);
-		const [isFocused, setIsFocused] = useState(false);
-		const inputRef = useRef<HTMLInputElement>(null);
+  (
+    {
+      children,
+      color = "primary",
+      size = "md",
+      radius = "sm",
+      description,
+      isIndeterminate = false,
+      isInvalid = false,
+      isDisabled = false,
+      isRequired = false,
+      className,
+      css,
+      icon,
+      checked,
+      defaultChecked,
+      onChange,
+      onFocus,
+      onBlur,
+      isSelected,
+      onValueChange,
+      ...props
+    },
+    ref,
+  ) => {
+    const { theme } = useTheme();
+    const [isChecked, setIsChecked] = useState(defaultChecked || false);
+    const [isFocused, setIsFocused] = useState(false);
+    const inputRef = useRef<HTMLInputElement>(null);
 
-		useImperativeHandle(ref, () => inputRef.current!);
+    useImperativeHandle(ref, () => inputRef.current!);
 
-		const controlledChecked = checked !== undefined ? checked : isChecked;
+    // Support both checked/isSelected props (isSelected takes precedence)
+    const controlledChecked =
+      isSelected !== undefined
+        ? isSelected
+        : checked !== undefined
+          ? checked
+          : isChecked;
 
-		const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-			if (checked === undefined) {
-				setIsChecked(e.target.checked);
-			}
-			onChange?.(e);
-		};
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const newChecked = e.target.checked;
 
-		const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-			setIsFocused(true);
-			onFocus?.(e);
-		};
+      // Update internal state if not controlled
+      if (checked === undefined && isSelected === undefined) {
+        setIsChecked(newChecked);
+      }
 
-		const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-			setIsFocused(false);
-			onBlur?.(e);
-		};
+      // Call the appropriate callback
+      if (onValueChange) {
+        onValueChange(newChecked);
+      }
+      onChange?.(e);
+    };
 
-		const checkboxProps = {
-			color,
-			size,
-			radius,
-			isInvalid,
-			isDisabled,
-			isChecked: controlledChecked,
-			isIndeterminate,
-			isFocused,
-			className,
-			css,
-		};
+    const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+      setIsFocused(true);
+      onFocus?.(e);
+    };
 
-		return (
-			<CheckboxContainer theme={theme} isDisabled={isDisabled}>
-				<CheckboxWrapper theme={theme} {...checkboxProps}>
-					<HiddenInput
-						ref={inputRef}
-						type="checkbox"
-						checked={controlledChecked}
-						disabled={isDisabled}
-						onChange={handleChange}
-						onFocus={handleFocus}
-						onBlur={handleBlur}
-						{...props}
-					/>
-					{(controlledChecked || isIndeterminate) && (
-						<IconWrapper size={size}>
-							{icon ||
-								(isIndeterminate ? <IndeterminateIcon /> : <CheckIcon />)}
-						</IconWrapper>
-					)}
-				</CheckboxWrapper>
-				{(children || description) && (
-					<LabelContent theme={theme}>
-						{children && (
-							<LabelText theme={theme} size={size} isRequired={isRequired}>
-								{children}
-							</LabelText>
-						)}
-						{description && (
-							<Description theme={theme} size={size}>
-								{description}
-							</Description>
-						)}
-					</LabelContent>
-				)}
-			</CheckboxContainer>
-		);
-	},
+    const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+      setIsFocused(false);
+      onBlur?.(e);
+    };
+
+    const checkboxProps = {
+      color,
+      size,
+      radius,
+      isInvalid,
+      isDisabled,
+      isChecked: controlledChecked,
+      isIndeterminate,
+      isFocused,
+      className,
+      css,
+    };
+
+    return (
+      <CheckboxContainer theme={theme} isDisabled={isDisabled}>
+        <CheckboxWrapper theme={theme} {...checkboxProps}>
+          <HiddenInput
+            ref={inputRef}
+            type="checkbox"
+            checked={controlledChecked}
+            disabled={isDisabled}
+            onChange={handleChange}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
+            {...props}
+          />
+          {(controlledChecked || isIndeterminate) && (
+            <IconWrapper size={size}>
+              {icon ||
+                (isIndeterminate ? <IndeterminateIcon /> : <CheckIcon />)}
+            </IconWrapper>
+          )}
+        </CheckboxWrapper>
+        {(children || description) && (
+          <LabelContent theme={theme}>
+            {children && (
+              <LabelText theme={theme} size={size} isRequired={isRequired}>
+                {children}
+              </LabelText>
+            )}
+            {description && (
+              <Description theme={theme} size={size}>
+                {description}
+              </Description>
+            )}
+          </LabelContent>
+        )}
+      </CheckboxContainer>
+    );
+  },
 );
 
 Checkbox.displayName = "Checkbox";

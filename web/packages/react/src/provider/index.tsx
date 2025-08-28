@@ -11,6 +11,8 @@
 // Provider Components
 // ============================================================================
 
+import type { Theme, ThemeMode } from "@/theme/theme";
+
 export { AuthProvider, useAuth, useAuthGuard } from "./auth-provider";
 import { HeroUIProvider } from "@heroui/react";
 import React from "react";
@@ -108,6 +110,12 @@ export interface FrankAuthProviderProps {
 	onSignOut?: () => void;
 	onConfigChange?: (config: FrankAuthUIConfig) => void;
 	onThemeChange?: (theme: any) => void;
+
+	defaultMode?: ThemeMode;
+	customTheme?: Partial<Theme>;
+	enableSystem?: boolean;
+	enableLocalStorage?: boolean;
+	storageKey?: string;
 }
 
 /**
@@ -138,6 +146,12 @@ export function FrankAuthProvider({
 	onSignOut,
 	onConfigChange,
 	onThemeChange,
+
+	customTheme,
+	enableSystem,
+	enableLocalStorage,
+	defaultMode = "light",
+	storageKey,
 }: FrankAuthProviderProps) {
 	// Validate required config
 	if (!config.publishableKey) {
@@ -151,7 +165,13 @@ export function FrankAuthProvider({
 	return (
 		<HeroUIProvider>
 			<ConfigProvider config={config} onConfigChange={onConfigChange}>
-				<UIProvider>
+				<UIProvider
+					customTheme={customTheme}
+					enableSystem={enableSystem}
+					enableLocalStorage={enableLocalStorage}
+					defaultMode={defaultMode}
+					storageKey={storageKey}
+				>
 					<ThemeProvider
 						theme={config.theme}
 						mode={config.theme?.mode}
