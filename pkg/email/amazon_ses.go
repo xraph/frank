@@ -193,7 +193,7 @@ func (s *AmazonSESSender) sendWithAttachments(ctx context.Context, email Email) 
 		rawMessage.WriteString(fmt.Sprintf("%s: %s\r\n", key, value))
 	}
 
-	// Start multipart message
+	// OnStart multipart message
 	rawMessage.WriteString("\r\n")
 	rawMessage.WriteString(fmt.Sprintf("--%s\r\n", boundary))
 

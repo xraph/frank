@@ -242,7 +242,7 @@ type PlatformOverviewOutput = model.Output[*PlatformOverview]
 
 type PlatformStatisticsInput struct {
 	Period    string                         `query:"period" example:"30d" doc:"Statistics period (7d, 30d, 90d, 1y)"`
-	StartDate model.OptionalParam[time.Time] `query:"startDate" example:"2023-01-01T00:00:00Z" doc:"Start date for custom period"`
+	StartDate model.OptionalParam[time.Time] `query:"startDate" example:"2023-01-01T00:00:00Z" doc:"OnStart date for custom period"`
 	EndDate   model.OptionalParam[time.Time] `query:"endDate" example:"2023-01-31T23:59:59Z" doc:"End date for custom period"`
 }
 type PlatformStatisticsOutput = model.Output[*PlatformStatistics]
@@ -250,7 +250,7 @@ type PlatformStatisticsOutput = model.Output[*PlatformStatistics]
 type SystemPlatformMetricsInput struct {
 	Interval    string                         `query:"interval" example:"1h" doc:"Metrics interval (5m, 15m, 1h, 1d)"`
 	MetricTypes []string                       `query:"metrics" example:"cpu,memory,requests" doc:"Metric types to include"`
-	StartDate   model.OptionalParam[time.Time] `query:"startDate" example:"2023-01-01T00:00:00Z" doc:"Start date"`
+	StartDate   model.OptionalParam[time.Time] `query:"startDate" example:"2023-01-01T00:00:00Z" doc:"OnStart date"`
 	EndDate     model.OptionalParam[time.Time] `query:"endDate" example:"2023-01-01T23:59:59Z" doc:"End date"`
 }
 type SystemPlatformMetricsOutput = model.Output[*SystemPlatformMetrics]
@@ -1132,7 +1132,7 @@ type SystemPlatformMetrics struct {
 }
 
 type TimeRange struct {
-	Start time.Time `json:"start" example:"2023-01-01T00:00:00Z" doc:"Start time"`
+	Start time.Time `json:"start" example:"2023-01-01T00:00:00Z" doc:"OnStart time"`
 	End   time.Time `json:"end" example:"2023-01-01T23:59:59Z" doc:"End time"`
 }
 

@@ -1337,7 +1337,7 @@ func (s *service) ExportAPIKeyData(ctx context.Context, req *model.APIKeyExportR
 	exportID := xid.New()
 	downloadURL := fmt.Sprintf("/api/v1/exports/%s", exportID.String())
 
-	// Start export process (implementation would depend on your export system)
+	// OnStart export process (implementation would depend on your export system)
 	// For now, return a mock response
 	return &model.APIKeyExportResponse{
 		ExportID:    exportID,

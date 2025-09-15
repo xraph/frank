@@ -67,7 +67,7 @@ func main() {
 		}
 
 		hooks.OnStart(func() {
-			// Start your server here
+			// OnStart your server here
 			err = apiServer.StartWithOutChan()
 			if err != nil {
 				cli.app.DI().Logger().Fatalf("Failed to start api server: %v", err)
@@ -91,7 +91,7 @@ func main() {
 
 	cli.Root().AddCommand(&cobra.Command{
 		Use:   "start",
-		Short: "Start the server",
+		Short: "OnStart the server",
 		Run:   server2.StartCMD(apiServer),
 	})
 
@@ -199,7 +199,7 @@ func (cli *FrankCLI) initialize(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to initialize container: %w", err)
 	}
 
-	// Start the container
+	// OnStart the container
 	if err := cli.container.Start(cli.ctx); err != nil {
 		cli.logger.Error("Failed to start container", zap.Error(err))
 		return fmt.Errorf("failed to start container: %w", err)

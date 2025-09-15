@@ -1450,7 +1450,7 @@ func (s *service) GetOrganizationBilling(ctx context.Context, orgID xid.ID) (*mo
 		SubscriptionID:     org.SubscriptionID,
 		Plan:               org.Plan,
 		Status:             org.SubscriptionStatus.String(),
-		CurrentPeriodStart: time.Now().Truncate(24 * time.Hour), // Start of current period
+		CurrentPeriodStart: time.Now().Truncate(24 * time.Hour), // OnStart of current period
 		CurrentPeriodEnd:   time.Now().AddDate(0, 1, 0),         // End of current period
 		Amount:             s.getPlanAmount(org.Plan),
 		Currency:           "usd",

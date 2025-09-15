@@ -1379,7 +1379,7 @@ type GetAuditTrailInput struct {
 	Resource       model.OptionalParam[string]    `query:"resource" doc:"Filter by resource type"`
 	Status         model.OptionalParam[string]    `query:"status" doc:"Filter by status"`
 	RiskLevel      model.OptionalParam[string]    `query:"riskLevel" doc:"Filter by risk level"`
-	StartDate      model.OptionalParam[time.Time] `query:"startDate" doc:"Start date (ISO 8601)"`
+	StartDate      model.OptionalParam[time.Time] `query:"startDate" doc:"OnStart date (ISO 8601)"`
 	EndDate        model.OptionalParam[time.Time] `query:"endDate" doc:"End date (ISO 8601)"`
 	Search         model.OptionalParam[string]    `query:"search" doc:"Search audit logs"`
 }

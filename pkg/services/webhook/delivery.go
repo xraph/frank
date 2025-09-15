@@ -39,7 +39,7 @@ type DeliveryService interface {
 	GetQueueSize(ctx context.Context) (int, error)
 	PurgeQueue(ctx context.Context, webhookID *xid.ID) error
 
-	// Start/Stop processing
+	// Start/OnStop processing
 	Start(ctx context.Context) error
 	Stop(ctx context.Context) error
 }
@@ -136,7 +136,7 @@ func (s *deliveryService) Start(ctx context.Context) error {
 
 	s.logger.Info("Starting webhook delivery service", logging.Int("workers", s.workers))
 
-	// Start worker goroutines
+	// OnStart worker goroutines
 	for i := 0; i < s.workers; i++ {
 		s.wg.Add(1)
 		go s.worker(ctx, i)

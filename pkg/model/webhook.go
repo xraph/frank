@@ -122,7 +122,7 @@ type WebhookEventListRequest struct {
 	EventType  string                   `json:"eventType,omitempty" example:"user.created" doc:"Filter by event type" query:"eventType"`
 	Delivered  OptionalParam[bool]      `json:"delivered,omitempty" example:"true" doc:"Filter by delivery status" query:"delivered"`
 	StatusCode OptionalParam[int]       `json:"statusCode,omitempty" example:"200" doc:"Filter by status code" query:"statusCode"`
-	StartDate  OptionalParam[time.Time] `json:"startDate,omitempty" example:"2023-01-01T00:00:00Z" doc:"Start date" query:"startDate"`
+	StartDate  OptionalParam[time.Time] `json:"startDate,omitempty" example:"2023-01-01T00:00:00Z" doc:"OnStart date" query:"startDate"`
 	EndDate    OptionalParam[time.Time] `json:"endDate,omitempty" example:"2023-01-31T23:59:59Z" doc:"End date" query:"endDate"`
 	HasError   OptionalParam[bool]      `json:"hasError,omitempty" example:"false" doc:"Filter events with errors" query:"hasError"`
 }
@@ -217,7 +217,7 @@ type BulkWebhookOperationResponse struct {
 type WebhookDeliveryRetryRequest struct {
 	WebhookID  *xid.ID    `json:"webhookId,omitempty" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"Specific webhook ID"`
 	EventType  string     `json:"eventType,omitempty" example:"user.created" doc:"Filter by event type"`
-	StartDate  *time.Time `json:"startDate,omitempty" example:"2023-01-01T00:00:00Z" doc:"Start date for failed events"`
+	StartDate  *time.Time `json:"startDate,omitempty" example:"2023-01-01T00:00:00Z" doc:"OnStart date for failed events"`
 	EndDate    *time.Time `json:"endDate,omitempty" example:"2023-01-01T23:59:59Z" doc:"End date for failed events"`
 	MaxRetries int        `json:"maxRetries,omitempty" example:"3" doc:"Maximum retries per event"`
 }
@@ -255,7 +255,7 @@ type UpdateWebhookSecurityRequest struct {
 type WebhookExportRequest struct {
 	WebhookIDs       []xid.ID   `json:"webhookIds,omitempty" example:"[\"01FZS6TV7KP869DR7RXNEHXQKX\"]" doc:"Specific webhook IDs"`
 	OrganizationID   *xid.ID    `json:"organizationId,omitempty" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"Organization ID"`
-	StartDate        *time.Time `json:"startDate,omitempty" example:"2023-01-01T00:00:00Z" doc:"Start date"`
+	StartDate        *time.Time `json:"startDate,omitempty" example:"2023-01-01T00:00:00Z" doc:"OnStart date"`
 	EndDate          *time.Time `json:"endDate,omitempty" example:"2023-01-31T23:59:59Z" doc:"End date"`
 	Format           string     `json:"format" example:"json" doc:"Export format (json, csv)"`
 	IncludeEvents    bool       `json:"includeEvents" example:"true" doc:"Include event data"`

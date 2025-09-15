@@ -247,7 +247,7 @@ type MFAActivityRequest struct {
 	Method    string                   `json:"method,omitempty" example:"totp" doc:"Filter by method type" query:"method"`
 	Action    string                   `json:"action,omitempty" example:"verify" doc:"Filter by action type" query:"action"`
 	Success   OptionalParam[bool]      `json:"success,omitempty" example:"true" doc:"Filter by success status" query:"success"`
-	StartDate OptionalParam[time.Time] `json:"startDate,omitempty" example:"2023-01-01T00:00:00Z" doc:"Start date" query:"startDate"`
+	StartDate OptionalParam[time.Time] `json:"startDate,omitempty" example:"2023-01-01T00:00:00Z" doc:"OnStart date" query:"startDate"`
 	EndDate   OptionalParam[time.Time] `json:"endDate,omitempty" example:"2023-01-31T23:59:59Z" doc:"End date" query:"endDate"`
 }
 
@@ -332,7 +332,7 @@ type MFARecoveryResponse struct {
 type MFAExportRequest struct {
 	UserID          *xid.ID    `json:"userId,omitempty" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"Filter by user"`
 	Method          string     `json:"method,omitempty" example:"totp" doc:"Filter by method type"`
-	StartDate       *time.Time `json:"startDate,omitempty" example:"2023-01-01T00:00:00Z" doc:"Start date"`
+	StartDate       *time.Time `json:"startDate,omitempty" example:"2023-01-01T00:00:00Z" doc:"OnStart date"`
 	EndDate         *time.Time `json:"endDate,omitempty" example:"2023-01-31T23:59:59Z" doc:"End date"`
 	Format          string     `json:"format" example:"json" doc:"Export format (json, csv)"`
 	IncludeActivity bool       `json:"includeActivity" example:"true" doc:"Include activity data"`

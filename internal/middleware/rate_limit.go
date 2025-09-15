@@ -126,7 +126,7 @@ func NewInMemoryStore(logger logging.Logger) *InMemoryStore {
 		logger:          logger,
 	}
 
-	// Start cleanup goroutine
+	// OnStart cleanup goroutine
 	go store.cleanup()
 
 	return store
@@ -754,7 +754,7 @@ func generateRateLimitKey(r *http.Request, config *RateLimitConfig) string {
 func getRateLimitInfo(ctx context.Context, key string, config *RateLimitConfig) *RateLimitInfo {
 	info := &RateLimitInfo{
 		Limit:     int(config.RequestsPerSecond * 60), // Per minute
-		Remaining: int(config.RequestsPerSecond * 60), // Start with full limit
+		Remaining: int(config.RequestsPerSecond * 60), // OnStart with full limit
 		Reset:     time.Now().Add(time.Minute).Unix(),
 		ResetTime: time.Now().Add(time.Minute),
 		Strategy:  config.Strategy,

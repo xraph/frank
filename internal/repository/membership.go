@@ -685,7 +685,7 @@ func (r *membershipRepository) SetPrimaryContact(ctx context.Context, id xid.ID)
 		return err
 	}
 
-	// Start a transaction to ensure atomicity
+	// OnStart a transaction to ensure atomicity
 	tx, err := r.client.Tx(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to start transaction: %w", err)

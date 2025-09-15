@@ -208,7 +208,7 @@ type MembershipActivityRequest struct {
 	MembershipID OptionalParam[xid.ID]    `json:"membershipId,omitempty" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"Filter by membership" query:"membershipId"`
 	UserID       OptionalParam[xid.ID]    `json:"userId,omitempty" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"Filter by user" query:"userId"`
 	Actions      []string                 `json:"actions,omitempty" example:"[\"invited\", \"joined\", \"role_changed\"]" doc:"Filter by actions" query:"actions"`
-	StartDate    OptionalParam[time.Time] `json:"startDate,omitempty" example:"2023-01-01T00:00:00Z" doc:"Start date" query:"startDate"`
+	StartDate    OptionalParam[time.Time] `json:"startDate,omitempty" example:"2023-01-01T00:00:00Z" doc:"OnStart date" query:"startDate"`
 	EndDate      OptionalParam[time.Time] `json:"endDate,omitempty" example:"2023-01-31T23:59:59Z" doc:"End date" query:"endDate"`
 }
 

@@ -384,7 +384,7 @@ Tenant ID: {{your_tenant_id}}</div>
 3. Click "Import" → "From URL"
 4. Paste the OpenAPI URL: ` + openAPIURL + `
 5. Configure import settings and click "Import"
-6. Start designing, testing, and documenting!</div>
+6. OnStart designing, testing, and documenting!</div>
 		</div>
 		
 		<p style="text-align: center; color: #718096; font-size: 0.9rem; margin-top: 2rem;">

@@ -398,7 +398,7 @@ func (s *providerCatalogService) validateRequiredConfig(template *model.Provider
 
 // mergeConfigs merges template config with user config, prioritizing user config
 func (s *providerCatalogService) mergeConfigs(templateConfig, userConfig map[string]any) map[string]any {
-	// Start with a copy of template config
+	// OnStart with a copy of template config
 	merged := make(map[string]any)
 
 	// Copy template config

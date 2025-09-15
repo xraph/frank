@@ -448,7 +448,7 @@ func registerInitiateSSOLogin(api huma.API, ssoCtrl *ssoController) {
 		Method:        http.MethodPost,
 		Path:          "/auth/sso/login",
 		Summary:       "Initiate SSO login",
-		Description:   "Start the SSO authentication flow",
+		Description:   "OnStart the SSO authentication flow",
 		Tags:          []string{"SSO"},
 		DefaultStatus: 200,
 		Responses:     model.MergeErrorResponses(map[string]*huma.Response{}, true, model.NotFoundError("Provider not found")),

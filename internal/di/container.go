@@ -663,7 +663,7 @@ func (c *container) Start(ctx context.Context) error {
 		return fmt.Errorf("failed to seed provider catalog: %w", err)
 	}
 
-	// Start services that need lifecycle management
+	// OnStart services that need lifecycle management
 	if starter, ok := c.webhookService.(interface{ Start(context.Context) error }); ok {
 		if err := starter.Start(ctx); err != nil {
 			return fmt.Errorf("failed to start webhook service: %w", err)
@@ -688,7 +688,7 @@ func (c *container) Stop(ctx context.Context) error {
 
 	c.logger.Info("Stopping application container")
 
-	// Stop services in reverse order
+	// OnStop services in reverse order
 	if stopper, ok := c.auditService.(interface{ Stop(context.Context) error }); ok {
 		if err := stopper.Stop(ctx); err != nil {
 			c.logger.Error("failed to stop audit service", logging.Error(err))

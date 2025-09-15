@@ -172,7 +172,7 @@ type PasskeyActivityRequest struct {
 	UserID    OptionalParam[xid.ID]    `json:"userId,omitempty" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"Filter by user" query:"userId"`
 	Action    string                   `json:"action,omitempty" example:"authentication" doc:"Filter by action type" query:"action"`
 	Success   OptionalParam[bool]      `json:"success,omitempty" example:"true" doc:"Filter by success status" query:"success"`
-	StartDate OptionalParam[time.Time] `json:"startDate,omitempty" example:"2023-01-01T00:00:00Z" doc:"Start date" query:"startDate"`
+	StartDate OptionalParam[time.Time] `json:"startDate,omitempty" example:"2023-01-01T00:00:00Z" doc:"OnStart date" query:"startDate"`
 	EndDate   OptionalParam[time.Time] `json:"endDate,omitempty" example:"2023-01-31T23:59:59Z" doc:"End date" query:"endDate"`
 }
 
@@ -240,7 +240,7 @@ type PasskeyDiscoveryResponse struct {
 // PasskeyExportRequest represents a request to export passkey data
 type PasskeyExportRequest struct {
 	UserID          *xid.ID    `json:"userId,omitempty" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"Filter by user"`
-	StartDate       *time.Time `json:"startDate,omitempty" example:"2023-01-01T00:00:00Z" doc:"Start date"`
+	StartDate       *time.Time `json:"startDate,omitempty" example:"2023-01-01T00:00:00Z" doc:"OnStart date"`
 	EndDate         *time.Time `json:"endDate,omitempty" example:"2023-01-31T23:59:59Z" doc:"End date"`
 	Format          string     `json:"format" example:"json" doc:"Export format (json, csv)"`
 	IncludeActivity bool       `json:"includeActivity" example:"true" doc:"Include activity data"`

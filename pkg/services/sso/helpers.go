@@ -14,7 +14,7 @@ func NewConfigMerger() *ConfigMerger {
 
 // MergeConfigs merges template config with user config, prioritizing user config
 func (m *ConfigMerger) MergeConfigs(templateConfig, userConfig map[string]any) map[string]any {
-	// Start with a copy of template config
+	// OnStart with a copy of template config
 	merged := make(map[string]any)
 
 	// Copy template config

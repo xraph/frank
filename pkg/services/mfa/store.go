@@ -77,7 +77,7 @@ func NewInMemorySessionStore() SessionStore {
 		sessions: make(map[string]*model.PendingMFALogin),
 	}
 
-	// Start cleanup goroutine
+	// OnStart cleanup goroutine
 	go store.cleanup()
 
 	return store

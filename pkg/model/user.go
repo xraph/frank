@@ -231,7 +231,7 @@ type BulkUserOperationResponse struct {
 
 // UserActivityRequest represents a request for user activity
 type UserActivityRequest struct {
-	StartDate *time.Time `json:"startDate,omitempty" example:"2023-01-01T00:00:00Z" doc:"Start date for activity"`
+	StartDate *time.Time `json:"startDate,omitempty" example:"2023-01-01T00:00:00Z" doc:"OnStart date for activity"`
 	EndDate   *time.Time `json:"endDate,omitempty" example:"2023-01-31T23:59:59Z" doc:"End date for activity"`
 	Limit     int        `json:"limit,omitempty" example:"50" doc:"Maximum number of results"`
 	Offset    int        `json:"offset,omitempty" example:"0" doc:"Number of results to skip"`

@@ -295,7 +295,7 @@ type ProviderMarketplaceResponse = Output[ProviderMarketplace]
 
 // ProviderAnalyticsParams represents parameters for provider analytics
 type ProviderAnalyticsParams struct {
-	StartDate OptionalParam[time.Time] `json:"startDate,omitempty" query:"startDate" doc:"Start date for analytics"`
+	StartDate OptionalParam[time.Time] `json:"startDate,omitempty" query:"startDate" doc:"OnStart date for analytics"`
 	EndDate   OptionalParam[time.Time] `json:"endDate,omitempty" query:"endDate" doc:"End date for analytics"`
 	Interval  string                   `json:"interval,omitempty" query:"interval" example:"day" doc:"Analytics interval (hour, day, week, month)"`
 }

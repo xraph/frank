@@ -324,7 +324,7 @@ func (s *samlService) ValidateSAMLResponse(response *SAMLResponse, provider *mod
 // extractSAMLConfig extracts SAML configuration from provider config
 // extractSAMLConfig extracts SAML configuration from provider config
 func (s *samlService) extractSAMLConfig(config model.IdentityProviderConfig) (*SAMLConfig, error) {
-	// Start with default configuration
+	// OnStart with default configuration
 	samlConfig := DefaultSAMLConfig()
 
 	// Map from IdentityProviderConfig to SAMLConfig

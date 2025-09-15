@@ -512,7 +512,7 @@ func (s *billingService) StartTrial(ctx context.Context, organizationID xid.ID, 
 		return nil, errors.New(errors.CodeBadRequest, "Invalid plan ID")
 	}
 
-	// Start trial
+	// OnStart trial
 	trialEnd := time.Now().Add(duration)
 	err = s.organizationRepo.StartTrial(ctx, organizationID, &trialEnd)
 	if err != nil {

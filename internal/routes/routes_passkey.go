@@ -435,7 +435,7 @@ func registerBeginRegistration(api huma.API, passkeyCtrl *passkeyController) {
 		Method:        http.MethodPost,
 		Path:          "/passkeys/registration/begin",
 		Summary:       "Begin passkey registration",
-		Description:   "Start the WebAuthn passkey registration process",
+		Description:   "OnStart the WebAuthn passkey registration process",
 		Tags:          []string{"Passkeys"},
 		DefaultStatus: 200,
 		Responses: model.MergeErrorResponses(map[string]*huma.Response{
@@ -472,7 +472,7 @@ func registerBeginAuthentication(api huma.API, passkeyCtrl *passkeyController) {
 		Method:        http.MethodPost,
 		Path:          "/passkeys/authentication/begin",
 		Summary:       "Begin passkey authentication",
-		Description:   "Start the WebAuthn passkey authentication process",
+		Description:   "OnStart the WebAuthn passkey authentication process",
 		Tags:          []string{"Passkeys"},
 		DefaultStatus: 200,
 		Responses: model.MergeErrorResponses(map[string]*huma.Response{

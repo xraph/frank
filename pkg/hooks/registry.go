@@ -219,7 +219,7 @@ func (hr *hookRegistry) ExecuteWithContext(ctx context.Context, hookType HookTyp
 			hookCtx.Data = hookResult.Data
 		}
 
-		// Stop execution if requested
+		// OnStop execution if requested
 		if hookResult.ShouldStop {
 			break
 		}

@@ -13,7 +13,7 @@ func StartCMD(server *Server) func(cmd *cobra.Command, args []string) {
 func NewStartCMD(server *Server, banner *BannerConfig) *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "start",
-		Short: "Start the server",
+		Short: "OnStart the server",
 		Run:   StartCMD(server),
 	}
 

@@ -144,7 +144,7 @@ func NewRateLimiter(config RateLimiterConfig, storage RateLimitStorage, logger l
 		rl.orgLimits[orgID] = &limits
 	}
 
-	// Start cleanup routine if configured
+	// OnStart cleanup routine if configured
 	if config.CleanupInterval > 0 {
 		go rl.cleanupRoutine()
 	}

@@ -194,7 +194,7 @@ func NewCustomFileHandler(rootDir http.FileSystem, logger logging.Logger, config
 		go h.preloadCriticalAssets()
 	}
 
-	// Start periodic cache maintenance
+	// OnStart periodic cache maintenance
 	go h.startCacheMaintenance()
 
 	return h

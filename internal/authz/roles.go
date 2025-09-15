@@ -460,7 +460,7 @@ var SelfAccessPermissions = []Permission{
 
 // getInheritedPermissions recursively gets all permissions for a role including inherited permissions
 func getInheritedPermissions(role model.RoleName, inheritance RoleInheritance, basePerms RolePermissions) []Permission {
-	// Start with self-access permissions that all users get
+	// OnStart with self-access permissions that all users get
 	allPermissions := make([]Permission, len(SelfAccessPermissions))
 	copy(allPermissions, SelfAccessPermissions)
 
@@ -587,7 +587,7 @@ func IsRoleHigherThan(role1, role2 model.RoleName) bool {
 
 // CreateCustomRolePermissions creates a new role permissions map with custom settings
 func CreateCustomRolePermissions(customizations map[model.RoleName][]Permission) RolePermissions {
-	// Start with the default permissions
+	// OnStart with the default permissions
 	customRolePermissions := make(RolePermissions)
 
 	// Copy default permissions

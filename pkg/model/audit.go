@@ -78,7 +78,7 @@ type AuditLogListRequest struct {
 	Status         string                   `json:"status,omitempty" example:"success" doc:"Filter by status" query:"status"`
 	RiskLevel      string                   `json:"riskLevel,omitempty" example:"high" doc:"Filter by risk level" query:"riskLevel"`
 	Source         string                   `json:"source,omitempty" example:"web" doc:"Filter by source" query:"source"`
-	StartDate      OptionalParam[time.Time] `json:"startDate,omitempty" example:"2023-01-01T00:00:00Z" doc:"Start date" query:"startDate"`
+	StartDate      OptionalParam[time.Time] `json:"startDate,omitempty" example:"2023-01-01T00:00:00Z" doc:"OnStart date" query:"startDate"`
 	EndDate        OptionalParam[time.Time] `json:"endDate,omitempty" example:"2023-01-31T23:59:59Z" doc:"End date" query:"endDate"`
 	IPAddress      string                   `json:"ipAddress,omitempty" example:"192.168.1.1" doc:"Filter by IP address" query:"ipAddress"`
 	Search         string                   `json:"search,omitempty" example:"login" doc:"Search in action/details" query:"search"`
@@ -185,7 +185,7 @@ type AuditAlertListResponse = PaginatedOutput[AuditAlert]
 type AuditExportRequest struct {
 	OrganizationID *xid.ID   `json:"organizationId,omitempty" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"Filter by organization"`
 	UserID         *xid.ID   `json:"userId,omitempty" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"Filter by user"`
-	StartDate      time.Time `json:"startDate" example:"2023-01-01T00:00:00Z" doc:"Start date"`
+	StartDate      time.Time `json:"startDate" example:"2023-01-01T00:00:00Z" doc:"OnStart date"`
 	EndDate        time.Time `json:"endDate" example:"2023-01-31T23:59:59Z" doc:"End date"`
 	Actions        []string  `json:"actions,omitempty" example:"[\"user.login\", \"user.logout\"]" doc:"Filter by actions"`
 	Resources      []string  `json:"resources,omitempty" example:"[\"user\", \"organization\"]" doc:"Filter by resources"`
@@ -296,7 +296,7 @@ type AuditSearchRequest struct {
 	RiskLevels     []string                 `json:"riskLevels,omitempty" example:"[\"high\", \"critical\"]" doc:"Filter by risk levels" query:"riskLevels"`
 	IPAddresses    []string                 `json:"ipAddresses,omitempty" example:"[\"192.168.1.1\"]" doc:"Filter by IP addresses" query:"ipAddresses"`
 	UserAgents     []string                 `json:"userAgents,omitempty" example:"[\"Mozilla/5.0\"]" doc:"Filter by user agents" query:"userAgents"`
-	StartDate      OptionalParam[time.Time] `json:"startDate,omitempty" example:"2023-01-01T00:00:00Z" doc:"Start date" query:"startDate"`
+	StartDate      OptionalParam[time.Time] `json:"startDate,omitempty" example:"2023-01-01T00:00:00Z" doc:"OnStart date" query:"startDate"`
 	EndDate        OptionalParam[time.Time] `json:"endDate,omitempty" example:"2023-01-31T23:59:59Z" doc:"End date" query:"endDate"`
 	HasChanges     *bool                    `json:"hasChanges,omitempty" example:"true" doc:"Filter events with field changes" query:"hasChanges"`
 	HasErrors      *bool                    `json:"hasErrors,omitempty" example:"true" doc:"Filter events with errors" query:"hasErrors"`

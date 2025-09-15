@@ -49,7 +49,7 @@ func (s *Server) Start() chan error {
 
 	serverErrors := make(chan error, 1)
 
-	// Start server in a goroutine
+	// OnStart server in a goroutine
 	go func() {
 		s.logger.Info("Starting HTTP server",
 			logging.String("address", s.server.Addr),
@@ -138,7 +138,7 @@ func (s *Server) WaitForSignal(serverErrors chan error) {
 		log.Fatalf("Server error: %v", err)
 	case sig = <-sigChan:
 		s.logger.Info("Received signal", logging.String("signal", sig.String()))
-		// Stop server
+		// OnStop server
 		if err := s.Stop(); err != nil {
 			s.logger.Error("Error stopping server", logging.Error(err))
 		}

@@ -246,7 +246,7 @@ type APIKeyActivityRequest struct {
 	Endpoint   string                   `json:"endpoint,omitempty" example:"/api/v1/users" doc:"Filter by endpoint" query:"endpoint"`
 	Method     string                   `json:"method,omitempty" example:"GET" doc:"Filter by HTTP method" query:"method"`
 	Success    OptionalParam[bool]      `json:"success,omitempty" example:"true" doc:"Filter by success status" query:"success"`
-	StartDate  OptionalParam[time.Time] `json:"startDate,omitempty" example:"2023-01-01T00:00:00Z" doc:"Start date" query:"startDate"`
+	StartDate  OptionalParam[time.Time] `json:"startDate,omitempty" example:"2023-01-01T00:00:00Z" doc:"OnStart date" query:"startDate"`
 	EndDate    OptionalParam[time.Time] `json:"endDate,omitempty" example:"2023-01-31T23:59:59Z" doc:"End date" query:"endDate"`
 	IPAddress  string                   `json:"ipAddress,omitempty" example:"192.168.1.1" doc:"Filter by IP address" query:"ipAddress"`
 	StatusCode int                      `json:"statusCode,omitempty" example:"200" doc:"Filter by status code" query:"statusCode"`
@@ -259,7 +259,7 @@ type APIKeyActivityResponse = PaginatedOutput[APIKeyActivity]
 type APIKeyExportRequest struct {
 	KeyIDs          []xid.ID   `json:"keyIds,omitempty" example:"[\"01FZS6TV7KP869DR7RXNEHXQKX\"]" doc:"Specific key IDs to export"`
 	OrganizationID  *xid.ID    `json:"organizationId,omitempty" example:"01FZS6TV7KP869DR7RXNEHXQKX" doc:"Export keys for organization"`
-	StartDate       *time.Time `json:"startDate,omitempty" example:"2023-01-01T00:00:00Z" doc:"Start date for activity"`
+	StartDate       *time.Time `json:"startDate,omitempty" example:"2023-01-01T00:00:00Z" doc:"OnStart date for activity"`
 	EndDate         *time.Time `json:"endDate,omitempty" example:"2023-01-31T23:59:59Z" doc:"End date for activity"`
 	Format          string     `json:"format" example:"json" doc:"Export format (json, csv)"`
 	IncludeActivity bool       `json:"includeActivity" example:"true" doc:"Include activity data"`
