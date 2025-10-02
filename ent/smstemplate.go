@@ -13,9 +13,9 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/rs/xid"
 	"github.com/xraph/frank/ent/organization"
 	"github.com/xraph/frank/ent/smstemplate"
-	"github.com/rs/xid"
 )
 
 // SMSTemplate is the model entity for the SMSTemplate schema.

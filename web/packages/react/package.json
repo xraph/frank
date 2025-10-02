@@ -1,6 +1,6 @@
 {
 	"name": "@frank-auth/react",
-	"version": "0.1.36",
+	"version": "0.1.37",
 	"description": "Flexible and customizable React UI components for Frank Authentication",
 	"keywords": [
 		"frank-auth",
@@ -83,7 +83,7 @@
 		"@emotion/react": "^11.14.0",
 		"@emotion/styled": "^11.14.1",
 		"@frank-auth/client": "^0.2.9",
-		"@frank-auth/sdk": "^0.2.47",
+		"@frank-auth/sdk": "^0.2.48",
 		"@heroicons/react": "^2.2.0",
 		"@heroui/react": "^2.8.2",
 		"@heroui/ripple": "^2.2.18",

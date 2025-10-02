@@ -15,11 +15,11 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/rs/xid"
 	"github.com/xraph/frank/ent/oauthauthorization"
 	"github.com/xraph/frank/ent/oauthclient"
 	"github.com/xraph/frank/ent/oauthscope"
 	"github.com/xraph/frank/ent/user"
-	"github.com/rs/xid"
 )
 
 // OAuthAuthorizationCreate is the builder for creating a OAuthAuthorization entity.

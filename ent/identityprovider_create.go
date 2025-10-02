@@ -15,10 +15,10 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/rs/xid"
 	"github.com/xraph/frank/ent/identityprovider"
 	"github.com/xraph/frank/ent/organization"
 	"github.com/xraph/frank/ent/organizationprovider"
-	"github.com/rs/xid"
 )
 
 // IdentityProviderCreate is the builder for creating a IdentityProvider entity.

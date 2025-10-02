@@ -337,6 +337,8 @@ type Pagination struct {
 	EndCursor *string `json:"endCursor" xml:"endCursor"`
 	// Total number of items
 	TotalCount int `json:"totalCount" xml:"totalCount" example:"100" doc:"Total number of documents"`
+	Limit      int `json:"limit" xml:"limit"`
+	Offset     int `json:"offset" xml:"offset"`
 
 	CurrentPage int `json:"currentPage" xml:"currentPage"`
 	TotalPages  int `json:"totalPages" xml:"totalPages"`

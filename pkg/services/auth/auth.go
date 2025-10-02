@@ -1587,10 +1587,10 @@ func (s *authService) ResendVerification(ctx context.Context, req model.ResendVe
 	if err != nil {
 		s.logger.Error("failed to check recent verifications", logging.Error(err))
 	} else if len(existingVerifications.Data) >= 3 {
-		return &model.ResendVerificationResponse{
-			Success: false,
-			Message: "Too many verification attempts. Please wait before requesting another verification",
-		}, nil
+		// return &model.ResendVerificationResponse{
+		// 	Success: false,
+		// 	Message: "Too many verification attempts. Please wait before requesting another verification",
+		// }, nil
 	}
 
 	// Invalidate existing unused verifications of the same type

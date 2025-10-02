@@ -15,9 +15,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/rs/xid"
 	"github.com/xraph/frank/ent/permission"
 	"github.com/xraph/frank/ent/permissiondependency"
-	"github.com/rs/xid"
 )
 
 // PermissionDependencyCreate is the builder for creating a PermissionDependency entity.

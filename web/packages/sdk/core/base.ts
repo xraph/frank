@@ -1427,12 +1427,14 @@ export class BaseSDK {
 
 		const pubKeyEnv = config.publishableKey.startsWith("pk_test_")
 			? "test"
-			: config.publishableKey.startsWith("pk_live_")
+			: config.publishableKey.startsWith("pk_live_") ||
+					config.publishableKey.startsWith("pk_standalone_")
 				? "live"
 				: "unknown";
 		const secretKeyEnv = config.secretKey.startsWith("sk_test_")
 			? "test"
-			: config.secretKey.startsWith("sk_live_")
+			: config.secretKey.startsWith("sk_live_") ||
+					config.secretKey.startsWith("sk_standalone_")
 				? "live"
 				: "unknown";
 

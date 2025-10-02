@@ -414,6 +414,9 @@ func (s *service) GetOrganizationBySlug(ctx context.Context, slug string) (*mode
 		if ent.IsNotFound(err) {
 			return nil, errors.New(errors.CodeNotFound, "organization not found")
 		}
+		if errors.IsNotFound(err) {
+			return nil, err
+		}
 		return nil, errors.Wrap(err, errors.CodeInternalServer, "failed to get organization by slug")
 	}
 

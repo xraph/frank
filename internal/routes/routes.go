@@ -63,7 +63,7 @@ func NewRouterWithOptions(di di.Container, existingRouter chi.Router, opts *serv
 		setupMiddleware(r, di, logger)
 	} else {
 		logger.Info("Using existing Chi router", logging.String("base_path", opts.BasePath))
-		setupSharedMiddleware(r)
+		setupSharedMiddleware(di, r)
 	}
 
 	// Create Huma API configuration
@@ -182,7 +182,7 @@ func setupMiddleware(r chi.Router, di di.Container, logger logging.Logger) {
 		r.Use(customMiddleware.DevelopmentLogging(logger))
 	}
 
-	setupSharedMiddleware(r)
+	setupSharedMiddleware(di, r)
 
 	// Rate limiting with configuration
 	if di.Config().Security.RateLimitEnabled {
@@ -224,10 +224,18 @@ func setupMiddleware(r chi.Router, di di.Container, logger logging.Logger) {
 }
 
 // setupMiddleware configures all Chi middleware for the router
-func setupSharedMiddleware(r chi.Router) {
+func setupSharedMiddleware(di di.Container, r chi.Router) {
 	// Security and request enhancement middleware
 	r.Use(customMiddleware.AddRequestInfo())
 	r.Use(customMiddleware.AddHeader())
+	if di.IsStandaloneMode() {
+		r.Use(func(next http.Handler) http.Handler {
+			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				ctx := di.InjectStandaloneContext(r.Context())
+				next.ServeHTTP(w, r.WithContext(ctx))
+			})
+		})
+	}
 }
 
 // createHumaAPI creates and configures the Huma API instance

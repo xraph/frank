@@ -13,9 +13,9 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/rs/xid"
 	"github.com/xraph/frank/ent/session"
 	"github.com/xraph/frank/ent/user"
-	"github.com/rs/xid"
 )
 
 // Session is the model entity for the Session schema.

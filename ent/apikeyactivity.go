@@ -13,9 +13,9 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/rs/xid"
 	"github.com/xraph/frank/ent/apikey"
 	"github.com/xraph/frank/ent/apikeyactivity"
-	"github.com/rs/xid"
 )
 
 // ApiKeyActivity is the model entity for the ApiKeyActivity schema.

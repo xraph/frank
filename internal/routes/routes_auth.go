@@ -2,6 +2,7 @@ package routes
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -958,6 +959,8 @@ func (c *authController) unifiedRegistrationHandler(ctx context.Context, input *
 		input.Body.OrganizationID = orgID
 	}
 
+	fmt.Println("orgID", orgID)
+
 	// Process registration based on detected flow
 	switch flow {
 	case contexts.RegistrationFlowOrganization:
@@ -1332,7 +1335,7 @@ func (c *authController) handleEndUserRegistration(ctx context.Context, input *R
 	}
 
 	if orgID == nil {
-		return nil, errors.New(errors.CodeBadRequest, "organization context is required for end user registration 3")
+		return nil, errors.New(errors.CodeBadRequest, "organization context is required for end user registration")
 	}
 
 	auditEvent := audit.AuditEvent{
@@ -1354,6 +1357,8 @@ func (c *authController) handleEndUserRegistration(ctx context.Context, input *R
 	input.Body.OrganizationID = orgID
 
 	authSvc := c.di.Auth()
+
+	fmt.Println("orgID 2", orgID)
 	response, err := authSvc.Register(ctx, input.Body)
 	if err != nil {
 		return nil, err

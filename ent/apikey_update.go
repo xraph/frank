@@ -15,6 +15,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
+	"github.com/rs/xid"
 	"github.com/xraph/frank/ent/apikey"
 	"github.com/xraph/frank/ent/apikeyactivity"
 	"github.com/xraph/frank/ent/organization"
@@ -22,7 +23,6 @@ import (
 	"github.com/xraph/frank/ent/user"
 	"github.com/xraph/frank/pkg/common"
 	"github.com/xraph/frank/pkg/model"
-	"github.com/rs/xid"
 )
 
 // ApiKeyUpdate is the builder for updating ApiKey entities.

@@ -102,7 +102,7 @@ const ErrorContainer = styled(motion.div)<
 				`;
 			default:
 				// Fixed: Removed margin-top since parent container handles spacing with gap
-				return ``;
+				return "";
 		}
 	}}
 `;

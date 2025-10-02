@@ -15,13 +15,13 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/rs/xid"
 	"github.com/xraph/frank/ent/apikey"
 	"github.com/xraph/frank/ent/apikeyactivity"
 	"github.com/xraph/frank/ent/organization"
 	"github.com/xraph/frank/ent/user"
 	"github.com/xraph/frank/pkg/common"
 	"github.com/xraph/frank/pkg/model"
-	"github.com/rs/xid"
 )
 
 // ApiKeyCreate is the builder for creating a ApiKey entity.

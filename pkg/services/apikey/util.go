@@ -23,6 +23,9 @@ func (s *service) validatePermissions(ctx context.Context, permissions []string)
 	var nonExistentPermissions []string
 
 	for _, permissionName := range permissions {
+		if permissionName == "*" {
+			continue
+		}
 		// Check if permission exists in the system
 		permission, err := s.rbacService.GetPermissionByName(ctx, permissionName)
 		if err != nil {
@@ -109,7 +112,7 @@ func (s *service) isPermissionApplicableForAPIKey(permission *model.Permission) 
 	return true
 }
 
-func (s *service) validateCreateRequest(ctx context.Context, req *model.CreateAPIKeyRequest) error {
+func (s *service) validateCreateRequest(ctx context.Context, req *model.CreateAPIKeyRequest, systemMode bool) error {
 	if req.Name == "" {
 		return errors.New(errors.CodeBadRequest, "API key name is required")
 	}
@@ -163,6 +166,15 @@ func (s *service) validateCreateRequest(ctx context.Context, req *model.CreateAP
 		}
 	}
 
+	// Additional validation for permissions scope
+	if len(req.Permissions) > 50 {
+		return errors.New(errors.CodeBadRequest, "too many permissions (max 50)")
+	}
+
+	if systemMode {
+		return nil
+	}
+
 	// Validate that user has permission to create API keys
 	userID, organizationID, err := s.getContextInfo(ctx)
 	if err != nil {
@@ -178,13 +190,8 @@ func (s *service) validateCreateRequest(ctx context.Context, req *model.CreateAP
 	// 	return errors.New(errors.CodeForbidden, "insufficient permissions to create API keys")
 	// }
 
-	// Additional validation for permissions scope
-	if len(req.Permissions) > 50 {
-		return errors.New(errors.CodeBadRequest, "too many permissions (max 50)")
-	}
-
 	// Validate that the requested permissions don't exceed user's own permissions
-	if err := s.validateUserCanGrantPermissions(ctx, *userID, *organizationID, req.Permissions); err != nil {
+	if err = s.validateUserCanGrantPermissions(ctx, *userID, *organizationID, req.Permissions); err != nil {
 		return err
 	}
 

@@ -14,6 +14,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/rs/xid"
 	"github.com/xraph/frank/ent/activity"
 	"github.com/xraph/frank/ent/apikey"
 	"github.com/xraph/frank/ent/audit"
@@ -31,7 +32,6 @@ import (
 	"github.com/xraph/frank/ent/userrole"
 	"github.com/xraph/frank/ent/verification"
 	"github.com/xraph/frank/pkg/model"
-	"github.com/rs/xid"
 )
 
 // UserUpdate is the builder for updating User entities.

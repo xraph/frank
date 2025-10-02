@@ -238,6 +238,17 @@ func (tm *TenantMiddleware) HumaMiddleware() func(huma.Context, func(huma.Contex
 		path := ctx.URL().Path
 		method := r.Method
 
+		// Check for standalone mode first
+		if tm.isStandaloneMode(rctx) {
+			if standaloneTenant := tm.getStandaloneTenant(rctx); standaloneTenant != nil {
+				ctx = tm.setTenantContextHuma(ctx, standaloneTenant)
+				tm.logger.Debug("Standalone mode: tenant context auto-injected",
+					logging.String("orgId", standaloneTenant.Organization.ID.String()))
+			}
+			next(ctx)
+			return
+		}
+
 		// Debug logging if enabled
 		if tm.config.DebugPathMatching && tm.config.Logger != nil {
 			tm.config.Logger.Debug("Tenant middleware path checking",
@@ -466,6 +477,13 @@ func (tm *TenantMiddleware) RequireFeatureHuma(feature string) func(huma.Context
 func (tm *TenantMiddleware) TenantIsolationHuma() func(huma.Context, func(huma.Context)) {
 	return func(ctx huma.Context, next func(huma.Context)) {
 		rctx := ctx.Context()
+
+		// Skip isolation in standalone mode
+		if tm.isStandaloneMode(rctx) {
+			next(ctx)
+			return
+		}
+
 		tenant := GetTenantFromContext(rctx)
 		currentUser := GetUserFromContext(rctx)
 
@@ -700,6 +718,28 @@ func (tm *TenantMiddleware) loadTenantFeatures(org *ent.Organization) []string {
 	}
 
 	return features
+}
+
+// isStandaloneMode checks if running in standalone mode
+func (tm *TenantMiddleware) isStandaloneMode(ctx context.Context) bool {
+	if standalone, ok := ctx.Value(contexts2.StandaloneModeKey).(bool); ok && standalone {
+		return true
+	}
+	return false
+}
+
+// getStandaloneTenant gets the standalone tenant context
+func (tm *TenantMiddleware) getStandaloneTenant(ctx context.Context) *TenantContext {
+	if orgID, ok := ctx.Value(contexts2.StandaloneOrganizationIDKey).(xid.ID); ok {
+		// Load the standalone organization as tenant
+		tenant, err := tm.loadTenantByID(ctx, orgID)
+		if err != nil {
+			tm.logger.Warn("Failed to load standalone tenant", logging.Error(err))
+			return nil
+		}
+		return tenant
+	}
+	return nil
 }
 
 // Validation methods

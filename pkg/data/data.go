@@ -2,6 +2,7 @@ package data
 
 import (
 	"context"
+	"fmt"
 
 	entsql "entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/schema"
@@ -19,6 +20,7 @@ import (
 type Clients struct {
 	dbDriver *entsql.Driver
 	DB       *ent.Client
+	Bun      *DB
 	Redis    redis.UniversalClient
 	cfg      *config.Config
 	log      logging.Logger
@@ -34,8 +36,15 @@ func NewClients(
 ) *Clients {
 	db, drv := newSqlServer(drv, cfg)
 
+	bdb, err := New(cfg, nil, nil)
+	if err != nil {
+		fmt.Println("failed to initialize database ", err)
+		log.Fatalf("failed to initialize database: %v", err)
+	}
+
 	return &Clients{
 		DB:       db,
+		Bun:      bdb,
 		Redis:    redis,
 		cfg:      cfg,
 		log:      log,

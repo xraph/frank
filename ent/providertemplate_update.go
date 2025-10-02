@@ -15,10 +15,10 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
+	"github.com/rs/xid"
 	"github.com/xraph/frank/ent/organizationprovider"
 	"github.com/xraph/frank/ent/predicate"
 	"github.com/xraph/frank/ent/providertemplate"
-	"github.com/rs/xid"
 )
 
 // ProviderTemplateUpdate is the builder for updating ProviderTemplate entities.

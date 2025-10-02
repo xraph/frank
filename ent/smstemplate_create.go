@@ -15,9 +15,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/rs/xid"
 	"github.com/xraph/frank/ent/organization"
 	"github.com/xraph/frank/ent/smstemplate"
-	"github.com/rs/xid"
 )
 
 // SMSTemplateCreate is the builder for creating a SMSTemplate entity.

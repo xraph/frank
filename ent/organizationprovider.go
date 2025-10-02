@@ -13,11 +13,11 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/rs/xid"
 	"github.com/xraph/frank/ent/identityprovider"
 	"github.com/xraph/frank/ent/organization"
 	"github.com/xraph/frank/ent/organizationprovider"
 	"github.com/xraph/frank/ent/providertemplate"
-	"github.com/rs/xid"
 )
 
 // OrganizationProvider is the model entity for the OrganizationProvider schema.

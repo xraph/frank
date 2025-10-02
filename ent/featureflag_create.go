@@ -15,9 +15,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/rs/xid"
 	"github.com/xraph/frank/ent/featureflag"
 	"github.com/xraph/frank/ent/organizationfeature"
-	"github.com/rs/xid"
 )
 
 // FeatureFlagCreate is the builder for creating a FeatureFlag entity.

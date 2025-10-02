@@ -13,9 +13,9 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/rs/xid"
 	"github.com/xraph/frank/ent/identityprovider"
 	"github.com/xraph/frank/ent/organization"
-	"github.com/rs/xid"
 )
 
 // IdentityProvider is the model entity for the IdentityProvider schema.

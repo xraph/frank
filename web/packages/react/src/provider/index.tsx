@@ -113,7 +113,7 @@ export interface FrankAuthProviderProps {
 
 	defaultMode?: ThemeMode;
 	customTheme?: Partial<Theme>;
-	enableSystem?: boolean;
+	enableSystemTheme?: boolean;
 	enableLocalStorage?: boolean;
 	storageKey?: string;
 }
@@ -146,9 +146,8 @@ export function FrankAuthProvider({
 	onSignOut,
 	onConfigChange,
 	onThemeChange,
-
 	customTheme,
-	enableSystem,
+	enableSystemTheme = true,
 	enableLocalStorage,
 	defaultMode = "light",
 	storageKey,
@@ -167,7 +166,7 @@ export function FrankAuthProvider({
 			<ConfigProvider config={config} onConfigChange={onConfigChange}>
 				<UIProvider
 					customTheme={customTheme}
-					enableSystem={enableSystem}
+					enableSystem={enableSystemTheme}
 					enableLocalStorage={enableLocalStorage}
 					defaultMode={defaultMode}
 					storageKey={storageKey}

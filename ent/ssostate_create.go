@@ -15,8 +15,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/xraph/frank/ent/ssostate"
 	"github.com/rs/xid"
+	"github.com/xraph/frank/ent/ssostate"
 )
 
 // SSOStateCreate is the builder for creating a SSOState entity.

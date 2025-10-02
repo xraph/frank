@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	"github.com/redis/go-redis/v9"
+	standalone "github.com/xraph/frank/internal/standlone"
+	"github.com/xraph/frank/pkg/contexts"
 	"github.com/xraph/frank/pkg/validation"
 
 	"github.com/xraph/frank/config"
@@ -87,6 +89,11 @@ type Container interface {
 	OIDCService() sso2.OIDCService
 	RoleSeeder() *rbac2.RBACSeeder
 
+	StandaloneManager() *standalone.Manager
+	StandaloneContext() *standalone.Context
+	IsStandaloneMode() bool
+	InjectStandaloneContext(ctx context.Context) context.Context
+
 	Hooks() hooks.Hooks
 
 	// Utilities
@@ -160,6 +167,9 @@ type container struct {
 	resourceDiscoveryService  *rbac2.ResourceDiscoveryService
 	rbacConditionalEngine     *rbac2.ConditionalPermissionEngine
 	roleSeeder                *rbac2.RBACSeeder
+
+	standaloneManager *standalone.Manager
+	standaloneContext *standalone.Context
 
 	// Internal state
 	started bool
@@ -512,6 +522,17 @@ func (c *container) initServices() error {
 		c.logger,
 	)
 
+	// Initialize standalone manager
+	if c.config.Standalone.Enabled {
+		c.logger.Info("Standalone mode is enabled")
+		c.standaloneManager = standalone.NewManager(
+			c.config,
+			c.organizationService,
+			c.apikeyService,
+			c.logger,
+		)
+	}
+
 	c.logger.Info("All services initialized successfully")
 	return nil
 }
@@ -648,6 +669,37 @@ func (c *container) PermissionService() rbac2.PermissionService {
 	return c.permissionService
 }
 
+func (c *container) StandaloneManager() *standalone.Manager {
+	return c.standaloneManager
+}
+
+func (c *container) StandaloneContext() *standalone.Context {
+	return c.standaloneContext
+}
+
+func (c *container) IsStandaloneMode() bool {
+	return c.config.Standalone.Enabled
+}
+
+func (c *container) InjectStandaloneContext(ctx context.Context) context.Context {
+	if !c.IsStandaloneMode() {
+		return ctx
+	}
+
+	standaloneCtx := c.StandaloneContext()
+	if standaloneCtx == nil {
+		return ctx
+	}
+
+	// Inject standalone mode flag
+	ctx = context.WithValue(ctx, contexts.StandaloneModeKey, true)
+
+	// Inject standalone organization ID
+	ctx = context.WithValue(ctx, contexts.StandaloneOrganizationIDKey, standaloneCtx.Organization.ID)
+
+	return ctx
+}
+
 func (c *container) Start(ctx context.Context) error {
 	if c.started {
 		return fmt.Errorf("container already started")
@@ -656,6 +708,26 @@ func (c *container) Start(ctx context.Context) error {
 	c.roleSeeder.SeedRBACData(ctx)
 
 	c.logger.Info("Starting application container")
+
+	// Initialize standalone mode if enabled
+	if c.config.Standalone.Enabled {
+		c.logger.Info("Initializing standalone mode resources")
+		standaloneCtx, err := c.standaloneManager.Initialize(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to initialize standalone mode: %w", err)
+		}
+		c.standaloneContext = standaloneCtx
+
+		// Log the credentials (only in development)
+		if c.config.App.Environment == "development" {
+			c.logger.Warn("=== STANDALONE MODE CREDENTIALS ===")
+			c.logger.Warn("Public Key: " + standaloneCtx.PublicKey)
+			c.logger.Warn("Secret Key: " + standaloneCtx.SecretKey)
+			c.logger.Warn("Organization: " + standaloneCtx.Organization.Name)
+			c.logger.Warn("Organization ID: " + standaloneCtx.Organization.ID.String())
+			c.logger.Warn("===================================")
+		}
+	}
 
 	c.logger.Info("Initializing email templates")
 	err := c.providerCatalogService.SeedProviderCatalog(ctx)

@@ -8,6 +8,7 @@ package ent
 import (
 	"time"
 
+	"github.com/rs/xid"
 	"github.com/xraph/frank/ent/activity"
 	"github.com/xraph/frank/ent/apikey"
 	"github.com/xraph/frank/ent/apikeyactivity"
@@ -39,7 +40,6 @@ import (
 	"github.com/xraph/frank/ent/verification"
 	"github.com/xraph/frank/ent/webhook"
 	"github.com/xraph/frank/ent/webhookevent"
-	"github.com/rs/xid"
 )
 
 // The init function reads all schema descriptors with runtime code

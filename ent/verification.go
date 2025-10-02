@@ -13,9 +13,9 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/rs/xid"
 	"github.com/xraph/frank/ent/user"
 	"github.com/xraph/frank/ent/verification"
-	"github.com/rs/xid"
 )
 
 // Verification is the model entity for the Verification schema.

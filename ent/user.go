@@ -13,10 +13,10 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/rs/xid"
 	"github.com/xraph/frank/ent/organization"
 	"github.com/xraph/frank/ent/user"
 	"github.com/xraph/frank/pkg/model"
-	"github.com/rs/xid"
 )
 
 // User is the model entity for the User schema.

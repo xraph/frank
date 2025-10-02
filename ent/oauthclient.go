@@ -13,9 +13,9 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/rs/xid"
 	"github.com/xraph/frank/ent/oauthclient"
 	"github.com/xraph/frank/ent/organization"
-	"github.com/rs/xid"
 )
 
 // OAuthClient is the model entity for the OAuthClient schema.

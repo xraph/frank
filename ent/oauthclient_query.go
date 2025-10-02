@@ -16,13 +16,13 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/rs/xid"
 	"github.com/xraph/frank/ent/oauthauthorization"
 	"github.com/xraph/frank/ent/oauthclient"
 	"github.com/xraph/frank/ent/oauthscope"
 	"github.com/xraph/frank/ent/oauthtoken"
 	"github.com/xraph/frank/ent/organization"
 	"github.com/xraph/frank/ent/predicate"
-	"github.com/rs/xid"
 )
 
 // OAuthClientQuery is the builder for querying OAuthClient entities.

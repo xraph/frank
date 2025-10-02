@@ -14,10 +14,10 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/rs/xid"
 	"github.com/xraph/frank/ent/emailtemplate"
 	"github.com/xraph/frank/ent/organization"
 	"github.com/xraph/frank/ent/predicate"
-	"github.com/rs/xid"
 )
 
 // EmailTemplateUpdate is the builder for updating EmailTemplate entities.

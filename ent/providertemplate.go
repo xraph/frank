@@ -13,8 +13,8 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/xraph/frank/ent/providertemplate"
 	"github.com/rs/xid"
+	"github.com/xraph/frank/ent/providertemplate"
 )
 
 // ProviderTemplate is the model entity for the ProviderTemplate schema.

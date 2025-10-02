@@ -13,9 +13,9 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/rs/xid"
 	"github.com/xraph/frank/ent/permission"
 	"github.com/xraph/frank/pkg/model"
-	"github.com/rs/xid"
 )
 
 // Permission is the model entity for the Permission schema.

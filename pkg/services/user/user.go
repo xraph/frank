@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/base64"
+	"fmt"
 	"strings"
 	"time"
 
@@ -114,7 +115,11 @@ func NewService(
 
 // CreateUser creates a new user
 func (s *service) CreateUser(ctx context.Context, req model.CreateUserRequest) (*model.User, error) {
-	s.logger.Info("Creating new user", logging.String("email", req.Email), logging.String("user_type", string(req.UserType)))
+	s.logger.Info("Creating new user",
+		logging.String("email", req.Email),
+		logging.String("user_type", string(req.UserType)),
+		logging.Any("organization_id", req.OrganizationID),
+	)
 
 	// Execute before user create hooks
 	hookCtx := s.buildHookContext(ctx, nil, req.OrganizationID)
@@ -180,6 +185,8 @@ func (s *service) CreateUser(ctx context.Context, req model.CreateUserRequest) (
 		Active:           true,
 		Blocked:          false,
 	}
+
+	fmt.Printf("input: %+v\n", input)
 
 	// Create user
 	entUser, err := s.userRepo.Create(ctx, input)

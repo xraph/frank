@@ -69,42 +69,234 @@ build-migrate: ## Build migration tool
 	@go build -o bin/$(MIGRATE_BINARY_NAME) $(MIGRATE_MAIN_PATH)/main.go
 	@echo "✅ Migration tool built: bin/$(MIGRATE_BINARY_NAME)"
 
-# Migration Management (entgo versioned migrations)
-migrate-help: ## Show migration help
-	@echo "📚 Frank Auth Migration Commands:"
+
+# Migration State Synchronization Commands
+migrate-sync: ## Synchronize migration state with database schema
+	@echo "🔄 Synchronizing migration state..."
+	@./scripts/migrate.sh --env $(MIGRATION_ENV) sync
+	@echo "✅ Migration state synchronized"
+
+migrate-sync-dry: ## Show what migration sync would do (dry run)
+	@echo "🔍 Analyzing migration synchronization plan..."
+	@./scripts/migrate.sh --env $(MIGRATION_ENV) --dry-run sync
+
+migrate-sync-force: ## Force synchronize migration state (use with caution)
+	@echo "⚠️  Force synchronizing migration state..."
+	@read -p "This will force synchronization of migration state. Continue? (y/N): " confirm; \
+	if [ "$$confirm" = "y" ] || [ "$$confirm" = "Y" ]; then \
+		./scripts/migrate.sh --env $(MIGRATION_ENV) --force --create-missing --update-existing sync; \
+		echo "✅ Force synchronization completed"; \
+	else \
+		echo "❌ Force synchronization cancelled"; \
+	fi
+
+migrate-analyze: ## Analyze current database state and migration status
+	@echo "🔍 Analyzing database migration state..."
+	@./scripts/migrate.sh --env $(MIGRATION_ENV) analyze
+
+migrate-analyze-json: ## Analyze database state and output as JSON
+	@echo "🔍 Analyzing database migration state (JSON output)..."
+	@./scripts/migrate.sh --env $(MIGRATION_ENV) --output json analyze
+
+migrate-repair: ## Repair corrupted migration state
+	@echo "🔧 Repairing migration state..."
+	@echo "⚠️  This will attempt to fix corrupted migration state"
+	@read -p "Continue with migration repair? (y/N): " confirm; \
+	if [ "$$confirm" = "y" ] || [ "$$confirm" = "Y" ]; then \
+		./scripts/migrate.sh --env $(MIGRATION_ENV) repair; \
+		echo "✅ Migration state repair completed"; \
+	else \
+		echo "❌ Migration repair cancelled"; \
+	fi
+
+migrate-repair-force: ## Force repair migration state without confirmation
+	@echo "🔧 Force repairing migration state..."
+	@./scripts/migrate.sh --env $(MIGRATION_ENV) --yes --force repair
+	@echo "✅ Force migration repair completed"
+
+# Migration Troubleshooting Commands
+migrate-check-state: ## Check for migration state inconsistencies
+	@echo "🔍 Checking migration state consistency..."
+	@./scripts/migrate.sh --env $(MIGRATION_ENV) analyze | grep -E "(Error|Warning|Inconsistent)" || echo "✅ No obvious state issues detected"
+
+migrate-fix-format-change: ## Fix migration state after format change
+	@echo "🔄 Fixing migration state after format change..."
+	@echo "This will:"
+	@echo "  1. Analyze current database state"
+	@echo "  2. Identify missing migration entries"
+	@echo "  3. Synchronize state with actual schema"
+	@echo ""
+	@read -p "Continue with format change fix? (y/N): " confirm; \
+	if [ "$$confirm" = "y" ] || [ "$$confirm" = "Y" ]; then \
+		echo "📊 Step 1: Analyzing current state..."; \
+		./scripts/migrate.sh --env $(MIGRATION_ENV) analyze; \
+		echo ""; \
+		echo "🔄 Step 2: Running sync (dry run)..."; \
+		./scripts/migrate.sh --env $(MIGRATION_ENV) --dry-run --create-missing sync; \
+		echo ""; \
+		read -p "Apply the synchronization plan above? (y/N): " apply; \
+		if [ "$$apply" = "y" ] || [ "$$apply" = "Y" ]; then \
+			echo "🚀 Step 3: Applying synchronization..."; \
+			./scripts/migrate.sh --env $(MIGRATION_ENV) --create-missing sync; \
+			echo "✅ Format change fix completed"; \
+		else \
+			echo "❌ Synchronization cancelled"; \
+		fi; \
+	else \
+		echo "❌ Format change fix cancelled"; \
+	fi
+
+# Enhanced Migration Commands with Sync Support
+migrate-up-safe: ## Apply migrations with safety checks
+	@echo "🔍 Pre-migration analysis..."
+	@./scripts/migrate.sh --env $(MIGRATION_ENV) analyze
+	@echo ""
+	@read -p "Proceed with migration? (y/N): " confirm; \
+	if [ "$$confirm" = "y" ] || [ "$$confirm" = "Y" ]; then \
+		./scripts/migrate.sh --env $(MIGRATION_ENV) migrate; \
+		echo "🔍 Post-migration analysis..."; \
+		./scripts/migrate.sh --env $(MIGRATION_ENV) analyze; \
+	else \
+		echo "❌ Migration cancelled"; \
+	fi
+
+migrate-rollback-safe: ## Rollback migrations with safety checks
+	@echo "🔍 Pre-rollback analysis..."
+	@./scripts/migrate.sh --env $(MIGRATION_ENV) analyze
+	@echo ""
+	@STEPS=${steps:-1}; \
+	echo "⚠️  WARNING: Rolling back $$STEPS migration(s)"; \
+	read -p "Continue with rollback? (y/N): " confirm; \
+	if [ "$$confirm" = "y" ] || [ "$$confirm" = "Y" ]; then \
+		./scripts/migrate.sh --env $(MIGRATION_ENV) rollback --steps $$STEPS; \
+		echo "🔍 Post-rollback analysis..."; \
+		./scripts/migrate.sh --env $(MIGRATION_ENV) analyze; \
+	else \
+		echo "❌ Rollback cancelled"; \
+	fi
+
+# Development workflow with sync
+migrate-dev-reset: ## Reset development database and resync (DANGEROUS)
+	@echo "🚨 DEVELOPMENT DATABASE RESET 🚨"
+	@echo "This will:"
+	@echo "  1. Drop all tables"
+	@echo "  2. Re-run all migrations"
+	@echo "  3. Seed with default data"
+	@echo "  4. Synchronize state"
+	@echo ""
+	@read -p "Are you sure? This will DELETE ALL DATA! (type 'dev-reset' to confirm): " confirm; \
+	if [ "$$confirm" = "dev-reset" ]; then \
+		echo "🗑️  Dropping tables..."; \
+		./scripts/migrate.sh --env development drop --yes || true; \
+		echo "⬆️  Running migrations..."; \
+		./scripts/migrate.sh --env development migrate; \
+		echo "🌱 Seeding database..."; \
+		./scripts/migrate.sh --env development seed; \
+		echo "🔄 Synchronizing state..."; \
+		./scripts/migrate.sh --env development sync; \
+		echo "✅ Development database reset completed"; \
+	else \
+		echo "❌ Reset cancelled"; \
+	fi
+
+# Environment-specific sync commands
+migrate-sync-dev: ## Sync migration state in development
+	@MIGRATION_ENV=development $(MAKE) migrate-sync
+
+migrate-sync-test: ## Sync migration state in test environment
+	@MIGRATION_ENV=testing $(MAKE) migrate-sync
+
+migrate-sync-staging: ## Sync migration state in staging
+	@MIGRATION_ENV=staging $(MAKE) migrate-sync
+
+migrate-sync-prod: ## Sync migration state in production (with extra confirmation)
+	@echo "🚨 PRODUCTION MIGRATION SYNC WARNING 🚨"
+	@echo "You are about to synchronize migration state in PRODUCTION!"
+	@echo "Make sure you have:"
+	@echo "  ✅ Backed up the database"
+	@echo "  ✅ Tested sync in staging"
+	@echo "  ✅ Analyzed the sync plan"
+	@echo "  ✅ Have a rollback plan ready"
+	@echo ""
+	@read -p "Proceed with production migration sync? Type 'SYNC-PROD' to confirm: " confirm; \
+	if [ "$confirm" = "SYNC-PROD" ]; then \
+		echo "🔍 Analyzing production state..."; \
+		MIGRATION_ENV=production $(MAKE) migrate-analyze; \
+		echo ""; \
+		read -p "Continue with sync? Type 'YES' to confirm: " final; \
+		if [ "$final" = "YES" ]; then \
+			echo "🚀 Running production migration sync..."; \
+			MIGRATION_ENV=production $(MAKE) migrate-sync; \
+		else \
+			echo "❌ Production sync cancelled at final confirmation"; \
+		fi; \
+	else \
+		echo "❌ Production sync cancelled"; \
+	fi
+
+# Updated help with sync commands
+migrate-help: ## Show enhanced migration help including sync commands
+	@echo "📚 Enhanced Migration Management with Sync Support"
 	@echo ""
 	@echo "🔧 Basic Operations:"
-	@echo "  make migrate-create name=add_users       # Create new migration"
-	@echo "  make migrate-up                          # Apply all pending migrations"
-	@echo "  make migrate-down                        # Rollback last migration"
-	@echo "  make migrate-status                      # Show migration status"
+	@echo "  make migrate-up                      # Apply all pending migrations"
+	@echo "  make migrate-down                    # Rollback last migration"
+	@echo "  make migrate-status                  # Show migration status"
+	@echo "  make migrate-create name=migration   # Create new migration"
 	@echo ""
-	@echo "🎯 Advanced Operations:"
-	@echo "  make migrate-to version=20231201120001   # Migrate to specific version"
-	@echo "  make migrate-rollback steps=3            # Rollback N migrations (default: 1)"
-	@echo "  make migrate-seed                        # Seed database with default data"
-	@echo "  make migrate-seed file=custom.sql        # Seed with custom file"
-	@echo "  make migrate-validate                    # Validate schema integrity"
+	@echo "🔄 Synchronization Operations:"
+	@echo "  make migrate-sync                    # Sync migration state with schema"
+	@echo "  make migrate-sync-dry                # Show what sync would do"
+	@echo "  make migrate-sync-force              # Force sync (dangerous)"
+	@echo "  make migrate-analyze                 # Analyze database state"
+	@echo "  make migrate-analyze-json            # Analyze state (JSON output)"
+	@echo "  make migrate-repair                  # Repair corrupted state"
 	@echo ""
-	@echo "🏢 Multi-tenant & Environment:"
-	@echo "  make migrate-up env=staging            # Run in staging environment"
-	@echo "  make migrate-seed tenant=01FZS6TV...   # Tenant-specific seeding"
+	@echo "🩹 Troubleshooting:"
+	@echo "  make migrate-check-state             # Check for inconsistencies"
+	@echo "  make migrate-fix-format-change       # Fix state after format change"
+	@echo "  make migrate-repair-force            # Force repair without prompts"
 	@echo ""
-	@echo "⚠️  Dangerous Operations:"
-	@echo "  make migrate-reset                     # Reset database (DANGEROUS)"
-	@echo "  make migrate-drop                      # Drop all tables (DANGEROUS)"
-	@echo "  make migrate-force-unlock              # Force unlock migration lock"
+	@echo "🛡️  Safe Operations:"
+	@echo "  make migrate-up-safe                 # Migrate with pre/post analysis"
+	@echo "  make migrate-rollback-safe           # Rollback with safety checks"
 	@echo ""
-	@echo "🔍 Debugging:"
-	@echo "  make migrate-dry-run                   # Dry run migrations"
-	@echo "  make migrate-version                   # Show current version"
+	@echo "🏢 Environment-Specific Sync:"
+	@echo "  make migrate-sync-dev                # Sync in development"
+	@echo "  make migrate-sync-staging            # Sync in staging"
+	@echo "  make migrate-sync-prod               # Sync in production (with extra safety)"
 	@echo ""
-	@echo "💡 Examples:"
-	@echo "  make migrate-create name=\"add_user_preferences\""
-	@echo "  make migrate-rollback steps=2"
-	@echo "  make migrate-to version=20231201120001"
-	@echo "  make migrate-seed file=custom_seed.sql"
-	@echo "  make migrate-seed env=staging"
+	@echo "⚡ Quick Fixes:"
+	@echo "  # Schema exists but migrations not tracked:"
+	@echo "  make migrate-sync-force"
+	@echo ""
+	@echo "  # After migration format change:"
+	@echo "  make migrate-fix-format-change"
+	@echo ""
+	@echo "  # Corrupted migration state:"
+	@echo "  make migrate-repair"
+	@echo ""
+	@echo "  # Reset development environment:"
+	@echo "  make migrate-dev-reset"
+	@echo ""
+	@echo "🎯 Common Scenarios:"
+	@echo ""
+	@echo "  📋 Moving from old to new migration format:"
+	@echo "    1. make migrate-analyze"
+	@echo "    2. make migrate-sync-dry"
+	@echo "    3. make migrate-sync"
+	@echo ""
+	@echo "  🔧 Database exists but no migration history:"
+	@echo "    1. make migrate-analyze"
+	@echo "    2. make migrate-sync-force"
+	@echo ""
+	@echo "  ⚠️  Dirty/corrupted migration state:"
+	@echo "    1. make migrate-check-state"
+	@echo "    2. make migrate-repair"
+	@echo ""
+	@echo "  🧪 Setting up clean development environment:"
+	@echo "    make migrate-dev-reset"
+
 
 migrate-create: ## Create new migration (usage: make migrate-create name=migration_name)
 	@if [ -z "$(name)" ]; then \
@@ -116,10 +308,13 @@ migrate-create: ## Create new migration (usage: make migrate-create name=migrati
 	@go run -mod=mod ent/migrate/main.go "$(name)"
 	@echo "✅ Migration created successfully"
 	@echo "📁 Check migrations/ for generated files"
+	@echo "💡 Run 'make migrate-analyze' to check state after applying"
 
-migrate-up: ## Apply all pending migrations
+migrate-up: ## Apply all pending migrations with post-sync check
 	@echo "⬆️  Applying database migrations..."
 	@./scripts/migrate.sh --env $(MIGRATION_ENV) migrate
+	@echo "🔍 Checking migration state consistency..."
+	@./scripts/migrate.sh --env $(MIGRATION_ENV) analyze | grep -E "(Warning|Error)" || echo "✅ Migration state looks good"
 	@echo "✅ Migrations applied successfully"
 
 migrate-down: ## Rollback last migration
@@ -248,7 +443,8 @@ migrate-docker: ## Run migrations using Docker
 
 migrate-docker-build: ## Build migration Docker image
 	@echo "🐳 Building migration Docker image..."
-	@docker build -f docker/Dockerfile.migrate -t frank-migrate:latest .
+	@docker build -f docker/Dockerfile.migrate -t wakflo-migrate:latest .
+
 
 db-generate:
 	@echo "💻 Generating ent schema for database."

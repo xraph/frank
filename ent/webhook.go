@@ -13,10 +13,10 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/rs/xid"
 	"github.com/xraph/frank/ent/organization"
 	"github.com/xraph/frank/ent/webhook"
 	"github.com/xraph/frank/pkg/model"
-	"github.com/rs/xid"
 )
 
 // Webhook is the model entity for the Webhook schema.

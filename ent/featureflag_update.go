@@ -14,10 +14,10 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/rs/xid"
 	"github.com/xraph/frank/ent/featureflag"
 	"github.com/xraph/frank/ent/organizationfeature"
 	"github.com/xraph/frank/ent/predicate"
-	"github.com/rs/xid"
 )
 
 // FeatureFlagUpdate is the builder for updating FeatureFlag entities.

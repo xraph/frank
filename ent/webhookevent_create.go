@@ -15,9 +15,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/rs/xid"
 	"github.com/xraph/frank/ent/webhook"
 	"github.com/xraph/frank/ent/webhookevent"
-	"github.com/rs/xid"
 )
 
 // WebhookEventCreate is the builder for creating a WebhookEvent entity.

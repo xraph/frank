@@ -12,8 +12,8 @@ import (
 	"log"
 	"reflect"
 
-	"github.com/xraph/frank/ent/migrate"
 	"github.com/rs/xid"
+	"github.com/xraph/frank/ent/migrate"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect"

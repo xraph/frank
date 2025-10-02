@@ -15,9 +15,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/rs/xid"
 	"github.com/xraph/frank/ent/apikey"
 	"github.com/xraph/frank/ent/apikeyactivity"
-	"github.com/rs/xid"
 )
 
 // ApiKeyActivityCreate is the builder for creating a ApiKeyActivity entity.

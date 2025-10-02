@@ -13,10 +13,10 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/rs/xid"
 	"github.com/xraph/frank/ent/oauthauthorization"
 	"github.com/xraph/frank/ent/oauthclient"
 	"github.com/xraph/frank/ent/user"
-	"github.com/rs/xid"
 )
 
 // OAuthAuthorization is the model entity for the OAuthAuthorization schema.

@@ -12,8 +12,8 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/xraph/frank/ent/oauthscope"
 	"github.com/rs/xid"
+	"github.com/xraph/frank/ent/oauthscope"
 )
 
 // OAuthScope is the model entity for the OAuthScope schema.

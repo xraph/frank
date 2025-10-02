@@ -15,12 +15,12 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
+	"github.com/rs/xid"
 	"github.com/xraph/frank/ent/oauthclient"
 	"github.com/xraph/frank/ent/oauthscope"
 	"github.com/xraph/frank/ent/oauthtoken"
 	"github.com/xraph/frank/ent/predicate"
 	"github.com/xraph/frank/ent/user"
-	"github.com/rs/xid"
 )
 
 // OAuthTokenUpdate is the builder for updating OAuthToken entities.

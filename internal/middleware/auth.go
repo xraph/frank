@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -129,8 +128,6 @@ func (m *AuthMiddleware) RequireAuth() func(http.Handler) http.Handler {
 					authenticated = true
 				}
 			}
-
-			fmt.Println("Auth Middleware authenticated", authenticated)
 
 			if !authenticated {
 				m.respondUnauthorized(w, r, "authentication required")
@@ -464,6 +461,11 @@ func (m *AuthMiddleware) setAuthenticationContextHuma(ctx huma.Context, authCtx 
 	}
 
 	return ctx
+}
+
+// isStandaloneMode checks if the application is running in standalone mode
+func (m *AuthMiddleware) isStandaloneMode() bool {
+	return m.config.Standalone.Enabled
 }
 
 // setAPIKeyOnlyContext sets only the API key context without user context
@@ -912,8 +914,87 @@ func (m *AuthMiddleware) allowReadonlyOpsForAuthRoutes(path string) bool {
 	return false
 }
 
+// authenticateStandaloneAPIKey handles standalone mode API key authentication
+func (m *AuthMiddleware) authenticateStandaloneAPIKey(ctx context.Context, r *http.Request) (*APIKeyContext, *UserContext, error) {
+	keyValue, keyType, err := m.extractAPIKey(r)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Validate key format and determine environment
+	if !m.isValidAPIKeyFormat(keyValue) {
+		return nil, nil, errors.New(errors.CodeUnauthorized, "invalid API key format")
+	}
+
+	// For public keys, only allow read operations
+	if keyType == "public" && !m.isReadOnlyOperation(r.Method) && !m.allowReadonlyOpsForAuthRoutes(r.URL.Path) {
+		return nil, nil, errors.New(errors.CodeForbidden, "public keys can only be used for read operations")
+	}
+
+	// Validate key format
+	if !m.isStandaloneKey(keyValue) {
+		return nil, nil, errors.New(errors.CodeUnauthorized, "invalid standalone key format")
+	}
+
+	// Get standalone context from DI container
+	if !m.di.IsStandaloneMode() {
+		return nil, nil, errors.New(errors.CodeUnauthorized, "standalone mode not enabled")
+	}
+
+	standaloneCtx := m.di.StandaloneContext()
+	if standaloneCtx == nil {
+		return nil, nil, errors.New(errors.CodeInternalServer, "standalone context not initialized")
+	}
+
+	// Verify public key matches
+	if (keyType == "public" && keyValue != standaloneCtx.PublicKey) || (keyType == "secret" && keyValue != standaloneCtx.SecretKey) {
+		return nil, nil, errors.New(errors.CodeUnauthorized, "invalid standalone public key")
+	}
+
+	// Update last used timestamp
+	go func() {
+		_ = m.apiKeyRepo.UpdateLastUsed(context.Background(), standaloneCtx.APIKey.ID)
+	}()
+
+	// Create API key context
+	apiKeyCtx := &APIKeyContext{
+		ID:             standaloneCtx.APIKey.ID,
+		Name:           standaloneCtx.APIKey.Name,
+		Type:           standaloneCtx.APIKey.Type,
+		OrganizationID: &standaloneCtx.Organization.ID,
+		Permissions:    standaloneCtx.APIKey.Permissions,
+		Scopes:         standaloneCtx.APIKey.Scopes,
+		Environment:    standaloneCtx.APIKey.Environment,
+		PublicKey:      standaloneCtx.APIKey.PublicKey,
+		KeyType:        "standalone",
+	}
+
+	m.logger.Debug("Standalone API key authenticated",
+		logging.String("keyValue", keyValue),
+		logging.String("orgId", standaloneCtx.Organization.ID.String()))
+
+	// Return API key context without user context (like client keys)
+	// This allows the API to work without requiring user authentication
+	return apiKeyCtx, nil, nil
+}
+
+// isStandaloneKey checks if a key is a standalone key
+func (m *AuthMiddleware) isStandaloneKey(key string) bool {
+	return strings.HasPrefix(key, "pk_standalone_") || strings.HasPrefix(key, "sk_standalone_")
+}
+
 // authenticateAPIKey handles both public and secret API key authentication
 func (m *AuthMiddleware) authenticateAPIKey(ctx context.Context, r *http.Request) (*APIKeyContext, *UserContext, error) {
+	// Check for standalone mode first
+	if m.isStandaloneMode() {
+		// Try standalone authentication
+		if apiKeyCtx, userCtx, err := m.authenticateStandaloneAPIKey(ctx, r); err == nil {
+			return apiKeyCtx, userCtx, nil
+		}
+
+		// If standalone auth fails, fall through to normal auth
+	}
+
 	keyValue, keyType, err := m.extractAPIKey(r)
 	if err != nil {
 		return nil, nil, err
@@ -1109,11 +1190,11 @@ func (m *AuthMiddleware) isValidAPIKeyFormat(key string) bool {
 }
 
 func (m *AuthMiddleware) isPublicKey(key string) bool {
-	return strings.HasPrefix(key, "pk_test_") || strings.HasPrefix(key, "pk_live_")
+	return strings.HasPrefix(key, "pk_test_") || strings.HasPrefix(key, "pk_live_") || strings.HasPrefix(key, "pk_standalone_")
 }
 
 func (m *AuthMiddleware) isSecretKey(key string) bool {
-	return strings.HasPrefix(key, "sk_test_") || strings.HasPrefix(key, "sk_live_")
+	return strings.HasPrefix(key, "sk_test_") || strings.HasPrefix(key, "sk_live_") || strings.HasPrefix(key, "sk_standalone_")
 }
 
 func (m *AuthMiddleware) isLegacyKey(key string) bool {
@@ -1124,7 +1205,7 @@ func (m *AuthMiddleware) getKeyEnvironment(key string) model.Environment {
 	switch {
 	case strings.HasPrefix(key, "pk_test_") || strings.HasPrefix(key, "sk_test_"):
 		return model.EnvironmentTest
-	case strings.HasPrefix(key, "pk_live_") || strings.HasPrefix(key, "sk_live_"):
+	case strings.HasPrefix(key, "pk_live_") || strings.HasPrefix(key, "pk_standalone_") || strings.HasPrefix(key, "sk_live_") || strings.HasPrefix(key, "sk_standalone_"):
 		return model.EnvironmentLive
 	case strings.HasPrefix(key, "frank_sk_"):
 		return model.EnvironmentTest // Default for legacy keys

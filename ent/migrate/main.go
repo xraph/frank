@@ -4,14 +4,16 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 
+	atlas "ariga.io/atlas/sql/migrate"
+	"ariga.io/atlas/sql/sqltool"
 	"github.com/xraph/frank/config"
 	"github.com/xraph/frank/ent"
 	"github.com/xraph/frank/ent/migrate"
 
-	"ariga.io/atlas/sql/sqltool"
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql/schema"
 	_ "github.com/go-sql-driver/mysql"
@@ -29,7 +31,7 @@ func main() {
 	}
 
 	// Create a local migration directory able to understand golang-migrate migration file format for replay.
-	dir, err := sqltool.NewGolangMigrateDir("migrations")
+	dir, err := atlas.NewLocalDir("migrations")
 	if err != nil {
 		log.Fatalf("failed creating atlas migration directory: %v", err)
 	}
@@ -66,8 +68,7 @@ func main() {
 	}
 
 	migrationName := os.Args[1]
-	// forceMode := len(os.Args) > 2 && os.Args[2] == "--force"
-	forceMode := true
+	forceMode := len(os.Args) > 2 && os.Args[2] == "--force"
 
 	if forceMode {
 		log.Println("WARNING: Force mode enabled. This will generate migration against existing database state.")
@@ -94,23 +95,6 @@ func main() {
 		}
 		defer client.Close()
 
-		// Check if this is the first migration
-		if isFirstMigration(dir) {
-			log.Println("No existing migrations found. Creating baseline migration...")
-
-			// Apply current schema to get to known state
-			err = client.Schema.Create(ctx,
-				schema.WithDropIndex(true),
-				schema.WithDropColumn(true),
-				schema.WithGlobalUniqueID(true),
-			)
-			if err != nil {
-				log.Fatalf("failed creating baseline schema: %v", err)
-			}
-
-			log.Println("Baseline schema applied. Now generating migration...")
-		}
-
 		// Now generate the migration
 		opts := []schema.MigrateOption{
 			schema.WithDir(dir),
@@ -120,6 +104,7 @@ func main() {
 		}
 
 		log.Printf("Generating migration '%s' for %s database", migrationName, cfg.Database.Driver)
+		fmt.Printf("Database URL: %s\n", databaseURL)
 		log.Printf("Database URL: %s", maskPassword(databaseURL))
 
 		err = migrate.NamedDiff(ctx, databaseURL, migrationName, opts...)

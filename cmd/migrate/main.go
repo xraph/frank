@@ -1,11 +1,12 @@
 // Package main provides a command-line interface for managing database migrations
 // in the Frank Auth SaaS platform using entgo's versioned migrations with Atlas support.
-// This tool handles entgo schema migrations, data seeding, and database management operations
-// for the multi-tenant authentication system.
+// Enhanced with migration state synchronization capabilities for handling format changes.
 package main
 
 import (
 	"context"
+	"database/sql"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
@@ -37,12 +38,16 @@ const (
 	cmdVersion     = "version"
 	cmdForceUnlock = "force-unlock"
 	cmdDrop        = "drop"
+	// New synchronization commands
+	cmdSync    = "sync"
+	cmdAnalyze = "analyze"
+	cmdRepair  = "repair"
 
 	// Default timeout for migration operations
 	defaultTimeout = 5 * time.Minute
 
 	// Migration directory
-	migrationDir = "migrations"
+	migrationDir = "../migrations"
 )
 
 // CLI represents the migration command-line interface
@@ -50,6 +55,7 @@ type CLI struct {
 	config      *config.Config
 	logger      logging.Logger
 	migrator    *migration.Migrator
+	syncer      *migration.MigrationSyncer
 	dataClients *data.Clients
 	migrate     *migrate.Migrate
 }
@@ -69,6 +75,11 @@ var (
 	tenantID    = flag.String("tenant", "", "Tenant ID for tenant-specific operations")
 	skipConfirm = flag.Bool("yes", false, "Skip confirmation prompts")
 	migrateDir  = flag.String("migrate-dir", migrationDir, "Migration directory path")
+	// New sync flags
+	createMissing  = flag.Bool("create-missing", false, "Create missing migration entries")
+	updateExisting = flag.Bool("update-existing", false, "Update existing migration entries")
+	skipValidation = flag.Bool("skip-validation", false, "Skip schema validation during sync")
+	outputFormat   = flag.String("output", "text", "Output format (text, json)")
 )
 
 func main() {
@@ -116,10 +127,8 @@ func newCLI() (*CLI, error) {
 	}
 
 	logger := logging.NewLogger(&logging.LoggerConfig{
-		Level:       logLevel,
-		Environment: cfg.App.Environment,
-		// Output:      "stdout",
-		// Format:      "text", // Use text format for CLI
+		Level: logLevel,
+		// Environment: cfg.Environment,
 	})
 
 	// Initialize data clients
@@ -137,21 +146,23 @@ func newCLI() (*CLI, error) {
 		logger.Warn("Failed to initialize golang-migrate, some operations may not be available", logging.Error(err))
 	}
 
+	// Initialize migration syncer
+	syncer := migration.NewMigrationSyncer(dataClients, logger, migrateInstance)
+
 	return &CLI{
 		config:      cfg,
 		logger:      logger,
 		migrator:    migrator,
+		syncer:      syncer,
 		dataClients: dataClients,
 		migrate:     migrateInstance,
 	}, nil
 }
 
 // initializeGolangMigrate initializes the golang-migrate instance
+// Enhanced to automatically create public schema if it doesn't exist
 func initializeGolangMigrate(cfg *config.Config) (*migrate.Migrate, error) {
-	// Build source URL for migration files
-	sourceURL := fmt.Sprintf("file://%s", *migrateDir)
-
-	// Build database URL
+	// Build database URL first
 	var databaseURL string
 	switch cfg.Database.Driver {
 	case "postgres":
@@ -167,6 +178,12 @@ func initializeGolangMigrate(cfg *config.Config) (*migrate.Migrate, error) {
 				cfg.Database.SSLMode,
 			)
 		}
+
+		// For PostgreSQL, ensure public schema exists before initializing migrate
+		if err := ensurePublicSchemaExists(cfg); err != nil {
+			return nil, fmt.Errorf("failed to ensure public schema exists: %w", err)
+		}
+
 	case "mysql":
 		if cfg.Database.DSN != "" {
 			databaseURL = "mysql://" + cfg.Database.DSN
@@ -185,6 +202,9 @@ func initializeGolangMigrate(cfg *config.Config) (*migrate.Migrate, error) {
 		return nil, fmt.Errorf("unsupported database driver: %s", cfg.Database.Driver)
 	}
 
+	// Build source URL for migration files
+	sourceURL := fmt.Sprintf("file://%s", *migrateDir)
+
 	// Create migrate instance
 	m, err := migrate.New(sourceURL, databaseURL)
 	if err != nil {
@@ -192,6 +212,76 @@ func initializeGolangMigrate(cfg *config.Config) (*migrate.Migrate, error) {
 	}
 
 	return m, nil
+}
+
+// ensurePublicSchemaExists ensures the public schema exists for PostgreSQL databases
+func ensurePublicSchemaExists(cfg *config.Config) error {
+	if cfg.Database.Driver != "postgres" {
+		return nil // Only needed for PostgreSQL
+	}
+
+	// Build connection string without specifying search_path
+	var connStr string
+	if cfg.Database.DSN != "" {
+		connStr = cfg.Database.DSN
+	} else {
+		connStr = fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
+			cfg.Database.Host,
+			cfg.Database.Port,
+			cfg.Database.User,
+			cfg.Database.Password,
+			cfg.Database.Database,
+			cfg.Database.SSLMode,
+		)
+	}
+
+	// Open direct database connection
+	db, err := sql.Open("postgres", connStr)
+	if err != nil {
+		return fmt.Errorf("failed to open database connection: %w", err)
+	}
+	defer db.Close()
+
+	// Test the connection
+	if err := db.Ping(); err != nil {
+		return fmt.Errorf("failed to ping database: %w", err)
+	}
+
+	// Check if public schema exists
+	var schemaExists bool
+	checkQuery := "SELECT EXISTS(SELECT 1 FROM information_schema.schemata WHERE schema_name = 'public')"
+
+	err = db.QueryRow(checkQuery).Scan(&schemaExists)
+	if err != nil {
+		return fmt.Errorf("failed to check if public schema exists: %w", err)
+	}
+
+	if !schemaExists {
+		fmt.Println("ℹ️  Public schema not found, creating it...")
+
+		// Create public schema
+		createSchemaQuery := "CREATE SCHEMA IF NOT EXISTS public"
+		if _, err := db.Exec(createSchemaQuery); err != nil {
+			return fmt.Errorf("failed to create public schema: %w", err)
+		}
+
+		// Grant permissions on public schema
+		grantQueries := []string{
+			fmt.Sprintf("GRANT ALL ON SCHEMA public TO %s", cfg.Database.User),
+			"GRANT ALL ON SCHEMA public TO public",
+		}
+
+		for _, query := range grantQueries {
+			if _, err := db.Exec(query); err != nil {
+				// Log warning but don't fail - permissions might already exist
+				fmt.Printf("⚠️  Warning: failed to grant permissions: %v\n", err)
+			}
+		}
+
+		fmt.Println("✅ Public schema created successfully")
+	}
+
+	return nil
 }
 
 // loadConfig loads configuration from file or environment
@@ -249,9 +339,244 @@ func (c *CLI) executeCommand(ctx context.Context, command string, args []string)
 		return c.handleForceUnlock(ctx)
 	case cmdDrop:
 		return c.handleDrop(ctx)
+	// New synchronization commands
+	case cmdSync:
+		return c.handleSync(ctx)
+	case cmdAnalyze:
+		return c.handleAnalyze(ctx)
+	case cmdRepair:
+		return c.handleRepair(ctx)
 	default:
 		return fmt.Errorf("unknown command: %s", command)
 	}
+}
+
+// handleSync handles the sync command for migration state synchronization
+func (c *CLI) handleSync(ctx context.Context) error {
+	if c.syncer == nil {
+		return fmt.Errorf("migration syncer not available")
+	}
+
+	c.logger.Info("Starting migration state synchronization")
+
+	opts := migration.SyncOptions{
+		DryRun:         *dryRun,
+		Force:          *force,
+		SkipValidation: *skipValidation,
+		CreateMissing:  *createMissing,
+		UpdateExisting: *updateExisting,
+	}
+
+	if *version != "" {
+		targetVersion, parseErr := parseVersion(*version)
+		if parseErr != nil {
+			return fmt.Errorf("invalid version format: %w", parseErr)
+		}
+		opts.TargetVersion = &targetVersion
+	}
+
+	result, err := c.syncer.SyncMigrationState(ctx, opts)
+	if err != nil {
+		return fmt.Errorf("migration sync failed: %w", err)
+	}
+
+	// Output results
+	if err := c.outputSyncResult(result); err != nil {
+		return fmt.Errorf("failed to output sync result: %w", err)
+	}
+
+	if !result.Success {
+		return fmt.Errorf("migration sync completed with errors")
+	}
+
+	c.logger.Info("Migration state synchronization completed successfully")
+	return nil
+}
+
+// handleAnalyze handles the analyze command for database state analysis
+func (c *CLI) handleAnalyze(ctx context.Context) error {
+	if c.syncer == nil {
+		return fmt.Errorf("migration syncer not available")
+	}
+
+	c.logger.Info("Analyzing database state")
+
+	// Create a sync with dry-run to get analysis
+	opts := migration.SyncOptions{
+		DryRun:         true,
+		SkipValidation: *skipValidation,
+	}
+
+	result, err := c.syncer.SyncMigrationState(ctx, opts)
+	if err != nil {
+		return fmt.Errorf("database analysis failed: %w", err)
+	}
+
+	// Output analysis results
+	if err := c.outputAnalysisResult(result); err != nil {
+		return fmt.Errorf("failed to output analysis result: %w", err)
+	}
+
+	c.logger.Info("Database state analysis completed")
+	return nil
+}
+
+// handleRepair handles the repair command for fixing corrupted migration state
+func (c *CLI) handleRepair(ctx context.Context) error {
+	if c.syncer == nil {
+		return fmt.Errorf("migration syncer not available")
+	}
+
+	if !*skipConfirm && !*force {
+		if !confirmRepair() {
+			fmt.Println("Repair cancelled")
+			return nil
+		}
+	}
+
+	c.logger.Info("Starting migration state repair")
+
+	if *dryRun {
+		fmt.Println("DRY RUN: Would repair migration state")
+		return nil
+	}
+
+	err := c.syncer.RepairMigrationState(ctx, *force)
+	if err != nil {
+		return fmt.Errorf("migration repair failed: %w", err)
+	}
+
+	fmt.Println("✓ Migration state repaired successfully")
+	c.logger.Info("Migration state repair completed successfully")
+	return nil
+}
+
+// Output formatting methods
+
+func (c *CLI) outputSyncResult(result *migration.SyncResult) error {
+	switch *outputFormat {
+	case "json":
+		return c.outputSyncResultJSON(result)
+	default:
+		return c.outputSyncResultText(result)
+	}
+}
+
+func (c *CLI) outputSyncResultText(result *migration.SyncResult) error {
+	fmt.Printf("Migration Synchronization Result\n")
+	fmt.Printf("=================================\n")
+	fmt.Printf("Success:         %t\n", result.Success)
+	fmt.Printf("Current Version: %d\n", result.CurrentVersion)
+	fmt.Printf("Target Version:  %d\n", result.TargetVersion)
+	fmt.Printf("Duration:        %v\n", result.Duration)
+
+	if len(result.SyncedMigrations) > 0 {
+		fmt.Printf("\nSynced Migrations:\n")
+		for _, mig := range result.SyncedMigrations {
+			status := "✓"
+			if mig.Status == migration.SyncStatusFailed {
+				status = "✗"
+			} else if mig.Status == migration.SyncStatusSkipped {
+				status = "⊝"
+			}
+			fmt.Printf("  %s %05d - %s (%s)\n", status, mig.Version, mig.Name, mig.Action)
+			if mig.Error != "" {
+				fmt.Printf("      Error: %s\n", mig.Error)
+			}
+		}
+	}
+
+	if len(result.SkippedMigrations) > 0 {
+		fmt.Printf("\nSkipped Migrations:\n")
+		for _, migration := range result.SkippedMigrations {
+			fmt.Printf("  ⊝ %05d - %s (skipped)\n", migration.Version, migration.Name)
+			if migration.Error != "" {
+				fmt.Printf("      Reason: %s\n", migration.Error)
+			}
+		}
+	}
+
+	if len(result.Errors) > 0 {
+		fmt.Printf("\nErrors:\n")
+		for _, err := range result.Errors {
+			fmt.Printf("  ✗ %s\n", err)
+		}
+	}
+
+	return nil
+}
+
+func (c *CLI) outputSyncResultJSON(result *migration.SyncResult) error {
+	encoder := json.NewEncoder(os.Stdout)
+	encoder.SetIndent("", "  ")
+	return encoder.Encode(result)
+}
+
+func (c *CLI) outputAnalysisResult(result *migration.SyncResult) error {
+	switch *outputFormat {
+	case "json":
+		return c.outputAnalysisResultJSON(result)
+	default:
+		return c.outputAnalysisResultText(result)
+	}
+}
+
+func (c *CLI) outputAnalysisResultText(result *migration.SyncResult) error {
+	fmt.Printf("Database State Analysis\n")
+	fmt.Printf("=======================\n")
+
+	if result.DatabaseState != nil {
+		state := result.DatabaseState
+		fmt.Printf("Current Version: %d\n", state.Version)
+		fmt.Printf("Dirty State:     %t\n", state.Dirty)
+		fmt.Printf("Tables:          %d\n", len(state.Tables))
+		fmt.Printf("Indexes:         %d\n", len(state.Indexes))
+		fmt.Printf("Constraints:     %d\n", len(state.Constraints))
+		fmt.Printf("Migrations:      %d\n", len(state.Migrations))
+		fmt.Printf("Last Updated:    %v\n", state.LastUpdated.Format(time.RFC3339))
+
+		if len(state.Tables) > 0 {
+			fmt.Printf("\nTables:\n")
+			for _, table := range state.Tables {
+				fmt.Printf("  • %s (%d columns)\n", table.Name, len(table.Columns))
+			}
+		}
+
+		if len(state.Migrations) > 0 {
+			fmt.Printf("\nApplied Migrations:\n")
+			for _, migration := range state.Migrations {
+				status := "✓"
+				if migration.Dirty {
+					status = "⚠"
+				}
+				fmt.Printf("  %s %05d (applied: %v)\n", status, migration.Version, migration.AppliedAt.Format("2006-01-02 15:04:05"))
+			}
+		}
+	}
+
+	// Show what would be synchronized
+	if len(result.SyncedMigrations) > 0 || len(result.SkippedMigrations) > 0 {
+		fmt.Printf("\nSynchronization Plan:\n")
+		allMigrations := append(result.SyncedMigrations, result.SkippedMigrations...)
+		for _, mig := range allMigrations {
+			action := string(mig.Action)
+			if mig.Action == migration.SyncActionSkip {
+				action = "skip"
+			}
+			fmt.Printf("  • %05d - %s (%s)\n", mig.Version, mig.Name, action)
+			if mig.Error != "" {
+				fmt.Printf("      Note: %s\n", mig.Error)
+			}
+		}
+	}
+
+	return nil
+}
+
+func (c *CLI) outputAnalysisResultJSON(result *migration.SyncResult) error {
+	encoder := json.NewEncoder(os.Stdout)
+	encoder.SetIndent("", "  ")
+	return encoder.Encode(result)
 }
 
 // handleMigrate handles the migrate command
@@ -269,14 +594,12 @@ func (c *CLI) handleMigrate(ctx context.Context) error {
 
 	var err error
 	if *version != "" {
-		// Migrate to specific version
 		targetVersion, parseErr := parseVersion(*version)
 		if parseErr != nil {
 			return fmt.Errorf("invalid version format: %w", parseErr)
 		}
 		err = c.migrate.Migrate(targetVersion)
 	} else {
-		// Migrate to latest
 		err = c.migrate.Up()
 	}
 
@@ -618,10 +941,16 @@ func confirmDrop() bool {
 	fmt.Scanln(&response)
 	return response == "yes"
 }
+func confirmRepair() bool {
+	fmt.Print("This will attempt to repair the migration state. This may clear dirty flags and unlock migrations. Continue? (y/N): ")
+	var response string
+	fmt.Scanln(&response)
+	return strings.ToLower(response) == "y" || strings.ToLower(response) == "yes"
+}
 
-// printUsage prints command usage information
+// Updated usage function
 func printUsage() {
-	fmt.Printf(`Frank Auth SaaS - Database Migration Tool (entgo versioned migrations)
+	fmt.Printf(`Frank Auth SaaS - Enhanced Database Migration Tool
 
 Usage: %s [flags] <command> [command-flags]
 
@@ -637,6 +966,11 @@ Commands:
   force-unlock Remove migration lock (use with caution)
   drop         Drop all database tables
 
+Synchronization Commands:
+  sync         Synchronize migration state with database schema
+  analyze      Analyze current database state and migration status
+  repair       Repair corrupted migration state
+
 Global Flags:
   --config PATH       Path to configuration file
   --env ENV          Environment (development, staging, production)
@@ -645,36 +979,42 @@ Global Flags:
   --timeout DURATION Timeout for migration operations (default: 5m)
   --verbose          Enable verbose logging
   --yes              Skip confirmation prompts
-  --migrate-dir PATH Migration directory path (default: ent/migrate/migrations)
+  --migrate-dir PATH Migration directory path (default: migrations)
+  --output FORMAT    Output format: text, json (default: text)
 
 Migration Flags:
-  --version VERSION  Target migration version
-  --steps N          Number of steps to rollback
-  --name NAME        Name for new migration
-  --seed-file PATH   Path to seed data file
-  --tenant ID        Tenant ID for tenant-specific operations
+  --version VERSION     Target migration version
+  --steps N            Number of steps to rollback
+  --name NAME          Name for new migration
+  --seed-file PATH     Path to seed data file
+  --tenant ID          Tenant ID for tenant-specific operations
+
+Sync Flags:
+  --create-missing     Create missing migration entries during sync
+  --update-existing    Update existing migration entries during sync
+  --skip-validation    Skip schema validation during sync
 
 Examples:
   # Apply all pending migrations
   %s migrate
 
+  # Analyze current database state
+  %s analyze
+
+  # Synchronize migration state (dry run)
+  %s --dry-run sync
+
+  # Force synchronize with missing migrations
+  %s --force --create-missing sync
+
+  # Repair corrupted migration state
+  %s repair
+
+  # Check what sync would do without applying
+  %s --dry-run --output json sync
+
   # Create a new migration (runs entgo generator)
   %s --name "add_user_preferences" create
-
-  # Check migration status
-  %s status
-
-  # Rollback last 3 migrations
-  %s --steps 3 rollback
-
-  # Migrate to specific version
-  %s --version 20231201120000 migrate
-
-  # Seed database with initial data
-  %s seed
-
-  # Dry run migration to see what would happen
-  %s --dry-run migrate
 
 Environment Variables:
   DATABASE_URL       Database connection string
@@ -682,10 +1022,15 @@ Environment Variables:
   ENVIRONMENT        Application environment
   LOG_LEVEL          Logging level (debug, info, warn, error)
 
-Migration Files:
-  Migrations are stored in %s/ directory
-  Files follow golang-migrate format: {version}_{name}.up.sql and {version}_{name}.down.sql
-  Use 'create' command to generate new migrations using entgo's Atlas integration
+Migration State Synchronization:
+  The sync command helps resolve issues when:
+  - Migration files have been reformatted or restructured
+  - Database schema exists but migration history is incomplete
+  - Migration state is corrupted or inconsistent
+  - Moving between different migration tools or formats
 
-`, filepath.Base(os.Args[0]), filepath.Base(os.Args[0]), filepath.Base(os.Args[0]), filepath.Base(os.Args[0]), filepath.Base(os.Args[0]), filepath.Base(os.Args[0]), filepath.Base(os.Args[0]), filepath.Base(os.Args[0]), *migrateDir)
+  Use 'analyze' to inspect current state before running 'sync'.
+  Always run with --dry-run first to see what changes would be made.
+
+`, filepath.Base(os.Args[0]), filepath.Base(os.Args[0]), filepath.Base(os.Args[0]), filepath.Base(os.Args[0]), filepath.Base(os.Args[0]), filepath.Base(os.Args[0]), filepath.Base(os.Args[0]), filepath.Base(os.Args[0]))
 }

@@ -159,9 +159,15 @@ func (r *userRepository) Create(ctx context.Context, input CreateUserInput) (*en
 	}
 	if input.OrganizationID != nil {
 		create.SetOrganizationID(*input.OrganizationID)
+		if input.PrimaryOrganizationID == nil {
+			create.SetPrimaryOrganizationID(*input.OrganizationID)
+		}
 	}
 	if input.PrimaryOrganizationID != nil {
 		create.SetPrimaryOrganizationID(*input.PrimaryOrganizationID)
+		if input.OrganizationID == nil {
+			create.SetOrganizationID(*input.PrimaryOrganizationID)
+		}
 	}
 	if input.ExternalID != nil {
 		create.SetExternalID(*input.ExternalID)
@@ -188,6 +194,7 @@ func (r *userRepository) Create(ctx context.Context, input CreateUserInput) (*en
 	u, err := create.Save(ctx)
 	if err != nil {
 		if ent.IsConstraintError(err) {
+			fmt.Println(err)
 			return nil, errors.New(errors.CodeConflict, "User with this email already exists")
 		}
 		return nil, errors.Wrap(err, errors.CodeDatabaseError, "failed to create user")

@@ -15,9 +15,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/rs/xid"
 	"github.com/xraph/frank/ent/predicate"
 	"github.com/xraph/frank/ent/ssostate"
-	"github.com/rs/xid"
 )
 
 // SSOStateQuery is the builder for querying SSOState entities.

@@ -12,9 +12,9 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/rs/xid"
 	"github.com/xraph/frank/ent/permission"
 	"github.com/xraph/frank/ent/permissiondependency"
-	"github.com/rs/xid"
 )
 
 // PermissionDependency is the model entity for the PermissionDependency schema.

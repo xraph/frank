@@ -15,9 +15,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/rs/xid"
 	"github.com/xraph/frank/ent/emailtemplate"
 	"github.com/xraph/frank/ent/organization"
-	"github.com/rs/xid"
 )
 
 // EmailTemplateCreate is the builder for creating a EmailTemplate entity.

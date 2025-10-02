@@ -26,6 +26,7 @@ import (
 type Service interface {
 	// Core CRUD operations
 	CreateAPIKey(ctx context.Context, req *model.CreateAPIKeyRequest) (*model.CreateAPIKeyResponse, error)
+	CreateAPIKeyWithKeys(ctx context.Context, req *model.CreateAPIKeyRequest, publicKey, secretKey string) (*model.CreateAPIKeyResponse, error)
 	GetAPIKey(ctx context.Context, keyID xid.ID, opts *GetOptions) (*model.APIKey, error)
 	GetAPIKeyByPublicKey(ctx context.Context, publicKey string) (*model.APIKey, error)
 	GetAPIKeyBySecretKey(ctx context.Context, secretKey string) (*model.APIKey, error)
@@ -92,7 +93,7 @@ func NewService(
 // CreateAPIKey creates a new API key with both public and secret keys
 func (s *service) CreateAPIKey(ctx context.Context, req *model.CreateAPIKeyRequest) (*model.CreateAPIKeyResponse, error) {
 	// Validate request
-	if err := s.validateCreateRequest(ctx, req); err != nil {
+	if err := s.validateCreateRequest(ctx, req, false); err != nil {
 		return nil, err
 	}
 
@@ -205,6 +206,189 @@ func (s *service) CreateAPIKey(ctx context.Context, req *model.CreateAPIKeyReque
 		"public_key":  publicKey,
 	}); err != nil {
 		s.logger.Warn("Failed to log API key creation", logging.Error(err))
+	}
+
+	response := &model.CreateAPIKeyResponse{
+		APIKey:    *convertEntToApiKeyDTO(keyModel),
+		PublicKey: publicKey,
+		SecretKey: secretKey,
+		Warning:   "Store the secret key securely. It will not be shown again.",
+	}
+
+	// Remove sensitive data from the response
+	response.APIKey.HashedSecretKey = ""
+	response.APIKey.SecretKey = ""
+
+	return response, nil
+}
+
+// CreateAPIKeyWithKeys creates a new API key with predefined public and secret keys
+// This is primarily used for standalone mode or migration scenarios where specific keys must be used
+func (s *service) CreateAPIKeyWithKeys(
+	ctx context.Context,
+	req *model.CreateAPIKeyRequest,
+	publicKey, secretKey string,
+) (*model.CreateAPIKeyResponse, error) {
+	s.logger.Info("Creating API key with predefined keys",
+		logging.String("name", req.Name),
+		logging.String("publicKey", publicKey),
+	)
+
+	// Validate request
+	if err := s.validateCreateRequest(ctx, req, true); err != nil {
+		return nil, err
+	}
+
+	// Validate provided keys
+	if publicKey == "" || secretKey == "" {
+		return nil, errors.New(errors.CodeBadRequest, "both public_key and secret_key must be provided")
+	}
+
+	// Validate key format
+	if err := s.validateKeyFormat(publicKey, secretKey); err != nil {
+		return nil, errors.Newf(errors.CodeBadRequest, "invalid key format: %v", err)
+	}
+
+	// Check if public key already exists
+	existingKey, err := s.repo.APIKey().GetByPublicKey(ctx, publicKey)
+	if err != nil && !errors.IsNotFound(err) {
+		return nil, errors.Newf(errors.CodeInternalServer, "failed to check existing key: %v", err)
+	}
+	if existingKey != nil {
+		return nil, errors.New(errors.CodeConflict, "public key already exists")
+	}
+
+	// Set defaults
+	if req.Type == "" {
+		req.Type = model.APIKeyTypeServer
+	}
+	if req.Environment == "" {
+		req.Environment = model.EnvironmentLive
+	}
+
+	// Validate permissions exist and are applicable
+	if err := s.validatePermissions(ctx, req.Permissions); err != nil {
+		return nil, errors.Newf(errors.CodeInvalidInput, "invalid permissions: %v", err)
+	}
+
+	// Hash the secret key
+	hashedSecretKey, err := s.hashAPIKey(secretKey)
+	if err != nil {
+		return nil, errors.Newf(errors.CodeInternalServer, "failed to hash secret key: %v", err)
+	}
+
+	// Get current user and organization from context
+	// For standalone mode, these might not exist, so we handle that gracefully
+	userID, organizationID, err := s.getContextInfo(ctx)
+	if err != nil {
+		fmt.Println("Error getting context info", err)
+		// Check if organization ID is in metadata (for standalone mode)
+		if req.Metadata != nil {
+			if orgIDStr, ok := req.Metadata["organization_id"].(string); ok {
+				if parsedOrgID, err := xid.FromString(orgIDStr); err == nil {
+					organizationID = &parsedOrgID
+				}
+			}
+		}
+
+		// If still no organization ID, this is likely standalone mode with system user
+		if organizationID == nil {
+			s.logger.Warn("No organization found in context for CreateAPIKeyWithKeys, using nil (standalone mode)")
+			nilOrgID := xid.NilID()
+			organizationID = &nilOrgID
+		}
+
+		// System user for standalone operations
+		nilUserID := xid.NilID()
+		userID = &nilUserID
+
+		s.logger.Info("Creating API key in standalone/system mode",
+			logging.String("org_id", organizationID.String()),
+		)
+	}
+
+	// Set default rate limits if not provided
+	if req.RateLimits == nil {
+		req.RateLimits = &model.APIKeyRateLimits{
+			RequestsPerMinute: DefaultRequestsPerMinute,
+			RequestsPerHour:   DefaultRequestsPerHour,
+			RequestsPerDay:    DefaultRequestsPerDay,
+			BurstLimit:        DefaultBurstLimit,
+		}
+	}
+
+	// Create API key model with predefined keys
+	createReq := repository.CreateApiKeyInput{
+		Name:            req.Name,
+		PublicKey:       publicKey,
+		SecretKey:       secretKey,
+		HashedSecretKey: hashedSecretKey,
+		UserID:          *userID,
+		OrganizationID:  *organizationID,
+		Type:            req.Type,
+		Environment:     req.Environment,
+		Active:          true,
+		Permissions:     req.Permissions,
+		Scopes:          req.Scopes,
+		Metadata:        req.Metadata,
+		ExpiresAt:       req.ExpiresAt,
+		IPWhitelist:     req.IPWhitelist,
+		RateLimits:      req.RateLimits,
+	}
+
+	// Save to database
+	keyModel, err := s.repo.APIKey().Create(ctx, createReq)
+	if err != nil {
+		return nil, errors.Newf(errors.CodeInternalServer, "failed to create API key: %v", err)
+	}
+
+	// Audit the action (only if audit service exists)
+	if s.auditService != nil && organizationID != nil && !organizationID.IsNil() {
+		auditReq := audit.AuditEvent{
+			OrganizationID: organizationID,
+			UserID:         userID,
+			Action:         "apikey.create_with_keys",
+			Resource:       "apikey",
+			ResourceID:     &keyModel.ID,
+			Status:         "success",
+			Details: map[string]interface{}{
+				"name":        req.Name,
+				"type":        req.Type,
+				"environment": req.Environment,
+				"permissions": req.Permissions,
+				"scopes":      req.Scopes,
+				"public_key":  publicKey,
+				"predefined":  true,
+				"standalone":  req.Metadata != nil && req.Metadata["standalone"] == true,
+			},
+			RiskLevel: "high", // Higher risk since using predefined keys
+			Tags:      []string{"apikey", "security", "standalone"},
+		}
+
+		if err := s.auditService.LogEvent(ctx, auditReq); err != nil {
+			s.logger.Warn("failed to create audit log", logging.Error(err))
+		}
+	}
+
+	s.logger.Info("API key created successfully with predefined keys",
+		logging.String("keyId", keyModel.ID.String()),
+		logging.String("name", req.Name),
+		logging.String("type", string(req.Type)),
+		logging.String("environment", string(req.Environment)),
+		logging.String("publicKey", publicKey),
+	)
+
+	// Log the creation (only if we have valid org)
+	if organizationID != nil && !organizationID.IsNil() {
+		if err = s.logAPIKeyEvent(ctx, keyModel.ID, "api_key_created_with_keys", map[string]interface{}{
+			"key_name":    req.Name,
+			"key_type":    req.Type,
+			"environment": req.Environment,
+			"public_key":  publicKey,
+			"predefined":  true,
+		}); err != nil {
+			s.logger.Warn("Failed to log API key creation", logging.Error(err))
+		}
 	}
 
 	response := &model.CreateAPIKeyResponse{
@@ -559,6 +743,59 @@ func (s *service) RotateAPIKey(ctx context.Context, keyID xid.ID, req *model.Rot
 		ExpiresAt:    newAPIKey.ExpiresAt,
 		Warning:      "Update your applications with the new secret key. Old key will be deactivated.",
 	}, nil
+}
+
+// validateKeyFormat validates the format of public and secret keys
+func (s *service) validateKeyFormat(publicKey, secretKey string) error {
+	// Public key validation
+	if len(publicKey) < 16 {
+		return fmt.Errorf("public key too short (minimum 16 characters)")
+	}
+	if len(publicKey) > 128 {
+		return fmt.Errorf("public key too long (maximum 128 characters)")
+	}
+
+	// Secret key validation
+	if len(secretKey) < 32 {
+		return fmt.Errorf("secret key too short (minimum 32 characters)")
+	}
+	if len(secretKey) > 256 {
+		return fmt.Errorf("secret key too long (maximum 256 characters)")
+	}
+
+	// Check for valid prefixes (optional but recommended)
+	validPublicPrefixes := []string{"pk_", "public_"}
+	validSecretPrefixes := []string{"sk_", "secret_"}
+
+	hasValidPublicPrefix := false
+	for _, prefix := range validPublicPrefixes {
+		if len(publicKey) >= len(prefix) && publicKey[:len(prefix)] == prefix {
+			hasValidPublicPrefix = true
+			break
+		}
+	}
+
+	hasValidSecretPrefix := false
+	for _, prefix := range validSecretPrefixes {
+		if len(secretKey) >= len(prefix) && secretKey[:len(prefix)] == prefix {
+			hasValidSecretPrefix = true
+			break
+		}
+	}
+
+	if !hasValidPublicPrefix {
+		s.logger.Warn("Public key does not have a standard prefix (pk_ or public_)")
+	}
+	if !hasValidSecretPrefix {
+		s.logger.Warn("Secret key does not have a standard prefix (sk_ or secret_)")
+	}
+
+	// Ensure keys are different
+	if publicKey == secretKey {
+		return fmt.Errorf("public key and secret key must be different")
+	}
+
+	return nil
 }
 
 // generateAPIKeyPair generates a public/secret key pair
@@ -1422,8 +1659,9 @@ func (s *service) CheckAPIKeyPermissions(ctx context.Context, keyID xid.ID, requ
 func (s *service) getContextInfo(ctx context.Context) (*xid.ID, *xid.ID, error) {
 	userId := contexts2.GetUserIDFromContext(ctx)
 	orgId := contexts.GetOrganizationIDFromContext(ctx)
+
 	if userId == nil || orgId == nil {
-		return nil, nil, errors.New(errors.CodeUnauthorized, "user and organization not found in context")
+		return userId, orgId, errors.New(errors.CodeUnauthorized, "user and organization not found in context")
 	}
 	return userId, orgId, nil
 }

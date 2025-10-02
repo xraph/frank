@@ -13,9 +13,9 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/rs/xid"
 	"github.com/xraph/frank/ent/webhook"
 	"github.com/xraph/frank/ent/webhookevent"
-	"github.com/rs/xid"
 )
 
 // WebhookEvent is the model entity for the WebhookEvent schema.

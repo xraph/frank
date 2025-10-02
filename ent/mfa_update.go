@@ -15,10 +15,10 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
+	"github.com/rs/xid"
 	"github.com/xraph/frank/ent/mfa"
 	"github.com/xraph/frank/ent/predicate"
 	"github.com/xraph/frank/ent/user"
-	"github.com/rs/xid"
 )
 
 // MFAUpdate is the builder for updating MFA entities.

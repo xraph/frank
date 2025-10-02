@@ -1947,11 +1947,6 @@ var (
 		},
 		Indexes: []*schema.Index{
 			{
-				Name:    "user_user_type_email",
-				Unique:  true,
-				Columns: []*schema.Column{UsersColumns[19], UsersColumns[3]},
-			},
-			{
 				Name:    "user_organization_id_user_type_email",
 				Unique:  true,
 				Columns: []*schema.Column{UsersColumns[31], UsersColumns[19], UsersColumns[3]},

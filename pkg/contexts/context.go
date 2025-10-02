@@ -36,6 +36,13 @@ const (
 	DetectedOrganizationIDKey contextKey = "detected_organization_id"
 )
 
+// Standalone mode context keys
+const (
+	StandaloneModeKey           contextKey = "standalone_mode"
+	StandaloneOrganizationIDKey contextKey = "standalone_organization_id"
+	StandaloneAPIKeyKey         contextKey = "standalone_api_key"
+)
+
 // Request context keys
 const (
 	RequestIDContextKey   contextKey = "request_id"

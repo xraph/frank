@@ -15,12 +15,12 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/rs/xid"
 	"github.com/xraph/frank/ent/membership"
 	"github.com/xraph/frank/ent/organization"
 	"github.com/xraph/frank/ent/predicate"
 	"github.com/xraph/frank/ent/role"
 	"github.com/xraph/frank/ent/user"
-	"github.com/rs/xid"
 )
 
 // MembershipQuery is the builder for querying Membership entities.

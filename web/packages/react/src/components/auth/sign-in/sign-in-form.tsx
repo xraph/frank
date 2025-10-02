@@ -16,14 +16,21 @@ import { motion } from "framer-motion";
 import React, { useCallback, useMemo, useState } from "react";
 
 import EmailField from "@/components/forms/email-field";
+import FieldError from "@/components/forms/field-error";
 import FormWrapper from "@/components/forms/form-wrapper";
 import PasswordField from "@/components/forms/password-field";
-import { useAuth } from "@/hooks";
-import { useConfig } from "@/hooks";
-import { useMagicLink } from "@/hooks";
-import { useOAuth } from "@/hooks";
-import { usePasskeys } from "@/hooks";
+import {
+	useAuth,
+	useConfig,
+	useMagicLink,
+	useOAuth,
+	usePasskeys,
+} from "@/hooks";
 import type { RadiusT, SizeT } from "@/types";
+import type {
+	ResendVerificationRequest,
+	ResendVerificationResponse,
+} from "@frank-auth/client";
 
 // ============================================================================
 // Sign In Form Types
@@ -162,6 +169,9 @@ interface SignInState {
 		email?: string;
 		requiresEmailVerification?: boolean;
 		magicLinkSent?: boolean;
+		resendVerification?: (
+			request: ResendVerificationRequest,
+		) => Promise<ResendVerificationResponse>;
 	};
 }
 
@@ -235,6 +245,7 @@ const SuccessMessage = React.memo(
 		successData?: any;
 		redirectUrl?: string;
 	}) => {
+		const [isLoading, setIsLoading] = useState(false);
 		const { components } = useConfig();
 		const Button = components.Button ?? HeroButton;
 
@@ -319,7 +330,28 @@ const SuccessMessage = React.memo(
 						icon: (
 							<EnvelopeIcon className="w-8 h-8 text-warning-600 dark:text-warning-400" />
 						),
-						extraButton: <Button size="sm">Resend Email</Button>,
+						extraButton: (
+							<Button
+								isLoading={isLoading}
+								onClick={async () => {
+									setIsLoading(true);
+									successData
+										.resendVerification({
+											email: successData.email,
+											type: "email",
+										})
+										.then(() => {
+											// todo: toast message
+										})
+										.finally(() => {
+											setIsLoading(false);
+										});
+								}}
+								size="sm"
+							>
+								Resend Email
+							</Button>
+						),
 					};
 
 				case "magic-link-sent":
@@ -327,6 +359,7 @@ const SuccessMessage = React.memo(
 						title: "Magic link sent!",
 						subtitle: `Check your email at ${successData?.email} and click the link to sign in.`,
 						icon: (
+							// biome-ignore lint/a11y/noSvgWithoutTitle: <explanation>
 							<svg
 								className="w-8 h-8 text-primary-600 dark:text-primary-400"
 								fill="none"
@@ -779,7 +812,8 @@ export function SignInForm({
 	footer,
 	header,
 }: SignInFormProps) {
-	const { signIn, isLoading, organizationMemberships } = useAuth();
+	const { signIn, isLoading, organizationMemberships, resendVerification } =
+		useAuth();
 	const {
 		features,
 		organizationSettings,
@@ -862,7 +896,6 @@ export function SignInForm({
 					return features.passkeys;
 				case "sso":
 					return features.sso;
-				case "password":
 				default:
 					return true;
 			}
@@ -960,7 +993,7 @@ export function SignInForm({
 						...prev,
 						step: "success",
 						successType: "email-verification-required",
-						successData: { email: state.email },
+						successData: { email: state.email, resendVerification },
 					}));
 					onSuccess?.(result);
 					return;
@@ -1284,8 +1317,8 @@ export function SignInForm({
 
 					{/* Error Display */}
 					{formError && (
-						<div className="text-danger-600 text-sm bg-danger-50 dark:bg-danger-900/20 rounded-lg p-3">
-							{formError}
+						<div className="rounded-lg">
+							<FieldError error={formError} />
 						</div>
 					)}
 

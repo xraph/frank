@@ -13,10 +13,10 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/rs/xid"
 	"github.com/xraph/frank/ent/oauthclient"
 	"github.com/xraph/frank/ent/oauthtoken"
 	"github.com/xraph/frank/ent/user"
-	"github.com/rs/xid"
 )
 
 // OAuthToken is the model entity for the OAuthToken schema.

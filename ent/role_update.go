@@ -15,6 +15,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
+	"github.com/rs/xid"
 	"github.com/xraph/frank/ent/membership"
 	"github.com/xraph/frank/ent/organization"
 	"github.com/xraph/frank/ent/permission"
@@ -23,7 +24,6 @@ import (
 	"github.com/xraph/frank/ent/user"
 	"github.com/xraph/frank/ent/userrole"
 	"github.com/xraph/frank/pkg/model"
-	"github.com/rs/xid"
 )
 
 // RoleUpdate is the builder for updating Role entities.

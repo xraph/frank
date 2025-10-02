@@ -322,6 +322,17 @@ func (ocm *OrganizationContextMiddleware) RequireOrganizationForUserTypeHuma(isP
 		rctx := ctx.Context()
 		r := contexts.GetRequestFromContext(rctx)
 
+		// Skip for standalone mode
+		if ocm.isStandaloneMode(rctx) {
+			if standaloneOrgID := ocm.getStandaloneOrganization(rctx); standaloneOrgID != nil {
+				ctx = huma.WithValue(ctx, contexts.OrganizationIDContextKey, *standaloneOrgID)
+				ocm.logger.Debug("Standalone mode: organization context auto-injected",
+					logging.String("orgId", standaloneOrgID.String()))
+			}
+			next(ctx)
+			return
+		}
+
 		// Skip for certain paths
 		if ocm.shouldSkipPath(ctx.URL().Path) {
 			next(ctx)
@@ -407,6 +418,23 @@ func (ocm *OrganizationContextMiddleware) OptionalOrganizationContextHuma() func
 	}
 }
 
+// isStandaloneMode checks if running in standalone mode
+func (ocm *OrganizationContextMiddleware) isStandaloneMode(ctx context.Context) bool {
+	// Check if standalone mode is enabled via context or config
+	if standalone, ok := ctx.Value(contexts.StandaloneModeKey).(bool); ok && standalone {
+		return true
+	}
+	return false
+}
+
+// getStandaloneOrganization gets the standalone organization context
+func (ocm *OrganizationContextMiddleware) getStandaloneOrganization(ctx context.Context) *xid.ID {
+	if orgID, ok := ctx.Value(contexts.StandaloneOrganizationIDKey).(xid.ID); ok {
+		return &orgID
+	}
+	return nil
+}
+
 // detectUserType detects user type from various request sources
 func (ocm *OrganizationContextMiddleware) detectUserType(ctx context.Context, r *http.Request) model.UserType {
 	// 1. From authenticated user context
@@ -478,6 +506,11 @@ func (ocm *OrganizationContextMiddleware) detectUserType(ctx context.Context, r 
 
 // validateOrganizationContext validates organization context
 func (ocm *OrganizationContextMiddleware) validateOrganizationContext(ctx context.Context, orgID xid.ID, userType model.UserType, allowMissing bool) error {
+	// Skip validation in standalone mode
+	if ocm.isStandaloneMode(ctx) {
+		return nil
+	}
+
 	org, err := ocm.orgRepo.GetByID(ctx, orgID)
 	if err != nil {
 		if allowMissing && userType != model.UserTypeEndUser {

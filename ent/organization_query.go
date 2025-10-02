@@ -16,6 +16,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/rs/xid"
 	"github.com/xraph/frank/ent/activity"
 	"github.com/xraph/frank/ent/apikey"
 	"github.com/xraph/frank/ent/audit"
@@ -33,7 +34,6 @@ import (
 	"github.com/xraph/frank/ent/userpermission"
 	"github.com/xraph/frank/ent/userrole"
 	"github.com/xraph/frank/ent/webhook"
-	"github.com/rs/xid"
 )
 
 // OrganizationQuery is the builder for querying Organization entities.

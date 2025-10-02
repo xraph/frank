@@ -13,9 +13,9 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/rs/xid"
 	"github.com/xraph/frank/ent/emailtemplate"
 	"github.com/xraph/frank/ent/organization"
-	"github.com/rs/xid"
 )
 
 // EmailTemplate is the model entity for the EmailTemplate schema.

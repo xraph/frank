@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/caarlos0/env/v6"
-
 	"github.com/spf13/viper"
 )
 
@@ -43,6 +42,7 @@ type Config struct {
 	Templates    TemplatesConfig    `json:"templates" yaml:"templates" mapstructure:"templates"`
 	Monitoring   MonitoringConfig   `json:"monitoring" yaml:"monitoring" mapstructure:"monitoring"`
 	Organization OrganizationConfig `json:"organization" yaml:"organization" mapstructure:"organization"`
+	Standalone   StandaloneConfig   `son:"standalone" yaml:"standalone"  mapstructure:",squash"`
 }
 
 func (c *Config) GetServerAddress() string {
@@ -125,21 +125,29 @@ type TLSConfig struct {
 
 // DatabaseConfig represents database-specific configuration
 type DatabaseConfig struct {
-	Driver        string        `json:"driver" yaml:"driver" mapstructure:"driver" env:"DATABASE_DRIVER" envDefault:"postgres"`
-	URL           string        `json:"url" yaml:"url" mapstructure:"url" env:"DATABASE_URL"`
-	Host          string        `json:"host" yaml:"host" mapstructure:"host" env:"DATABASE_HOST" envDefault:"localhost"`
-	Port          int           `json:"port" yaml:"port" mapstructure:"port" env:"DATABASE_PORT" envDefault:"5432"`
-	User          string        `json:"user" yaml:"username" mapstructure:"user" env:"DATABASE_USER" envDefault:"postgres"`
-	Password      string        `json:"password" yaml:"password" mapstructure:"password" env:"DATABASE_PASSWORD" envDefault:"postgres"`
-	Database      string        `json:"database" yaml:"database" mapstructure:"database" env:"DATABASE_NAME" envDefault:"frank"`
-	SSLMode       string        `json:"ssl_mode" yaml:"ssl_mode" mapstructure:"ssl_mode" env:"DATABASE_SSL_MODE" envDefault:"disable"`
-	MaxOpenConns  int           `json:"max_open_conns" yaml:"max_open_conns" mapstructure:"max_open_conns" env:"DATABASE_MAX_OPEN_CONNS" envDefault:"25"`
-	MaxIdleConns  int           `json:"max_idle_conns" yaml:"max_idle_conns" mapstructure:"max_idle_conns" env:"DATABASE_MAX_IDLE_CONNS" envDefault:"25"`
-	ConnMaxLife   time.Duration `json:"conn_max_life" yaml:"conn_max_life" mapstructure:"conn_max_life" env:"DATABASE_CONN_MAX_LIFE" envDefault:"5m"`
-	DSN           string        `json:"dsn" yaml:"-" mapstructure:"dsn" env:"DATABASE_DSN"`
-	AutoMigrate   bool          `json:"auto_migrate" yaml:"auto_migrate" mapstructure:"auto_migrate" env:"DATABASE_AUTO_MIGRATE" envDefault:"false"`
-	LogSQL        bool          `json:"log_sql" yaml:"log_sql" mapstructure:"log_sql" env:"DATABASE_LOG_SQL" envDefault:"false"`
-	MigrationsDir string        `json:"migrations_dir" yaml:"migrations_dir" mapstructure:"migrations_dir" env:"DATABASE_MIGRATIONS_DIR" envDefault:"./migrations"`
+	Driver              string        `json:"driver" yaml:"driver" mapstructure:"driver" env:"DATABASE_DRIVER" envDefault:"postgres"`
+	URL                 string        `json:"url" yaml:"url" mapstructure:"url" env:"DATABASE_URL"`
+	Host                string        `json:"host" yaml:"host" mapstructure:"host" env:"DATABASE_HOST" envDefault:"localhost"`
+	Port                int           `json:"port" yaml:"port" mapstructure:"port" env:"DATABASE_PORT" envDefault:"5432"`
+	User                string        `json:"user" yaml:"username" mapstructure:"user" env:"DATABASE_USER" envDefault:"postgres"`
+	Password            string        `json:"password" yaml:"password" mapstructure:"password" env:"DATABASE_PASSWORD" envDefault:"postgres"`
+	Database            string        `json:"database" yaml:"database" mapstructure:"database" env:"DATABASE_NAME" envDefault:"frank"`
+	SSLMode             string        `json:"ssl_mode" yaml:"ssl_mode" mapstructure:"ssl_mode" env:"DATABASE_SSL_MODE" envDefault:"disable"`
+	MaxOpenConns        int           `json:"max_open_conns" yaml:"max_open_conns" mapstructure:"max_open_conns" env:"DATABASE_MAX_OPEN_CONNS" envDefault:"25"`
+	MaxIdleConns        int           `json:"max_idle_conns" yaml:"max_idle_conns" mapstructure:"max_idle_conns" env:"DATABASE_MAX_IDLE_CONNS" envDefault:"25"`
+	ConnMaxLife         time.Duration `json:"conn_max_life" yaml:"conn_max_life" mapstructure:"conn_max_life" env:"DATABASE_CONN_MAX_LIFE" envDefault:"5m"`
+	ConnMaxIdle         time.Duration `json:"conn_max_idle" yaml:"conn_max_idle" mapstructure:"conn_max_idle" env:"DATABASE_CONN_MAX_IDLE" envDefault:"5m"`
+	ConnectTimeout      time.Duration `json:"connect_timeout" yaml:"connect_timeout" mapstructure:"connect_timeout" env:"DATABASE_CONNECT_TIMEOUT" envDefault:"30s"`
+	DSN                 string        `json:"dsn" yaml:"-" mapstructure:"dsn" env:"DATABASE_DSN"`
+	AutoMigrate         bool          `json:"auto_migrate" yaml:"auto_migrate" mapstructure:"auto_migrate" env:"DATABASE_AUTO_MIGRATE" envDefault:"false"`
+	LogSQL              bool          `json:"log_sql" yaml:"log_sql" mapstructure:"log_sql" env:"DATABASE_LOG_SQL" envDefault:"false"`
+	MigrationsDir       string        `json:"migrations_dir" yaml:"migrations_dir" mapstructure:"migrations_dir" env:"DATABASE_MIGRATIONS_DIR" envDefault:"./migrations"`
+	MaxRetries          int           `json:"max_retries" yaml:"max_retries" mapstructure:"max_retries" env:"DATABASE_MAX_RETRIES" envDefault:"10"`
+	RetryDelay          time.Duration `json:"retry_delay" yaml:"retry_delay" mapstructure:"retry_delay" env:"DATABASE_RETRY_DELAY" envDefault:"1s"`
+	EnableTracing       bool          `json:"enable_tracing" yaml:"enable_tracing" mapstructure:"enable_tracing" env:"DATABASE_ENABLE_TRACING" envDefault:"false"`
+	EnableMetrics       bool          `json:"enable_metrics" yaml:"enable_metrics" mapstructure:"enable_metrics" env:"DATABASE_ENABLE_METRICS" envDefault:"false"`
+	HealthCheckInterval time.Duration `json:"health_check_interval" yaml:"health_check_interval" mapstructure:"health_check_interval" env:"DATABASE_HEALTH_CHECK_INTERVAL" envDefault:"10s"`
+	PingTimeout         time.Duration `json:"ping_timeout" yaml:"ping_timeout" mapstructure:"ping_timeout" env:"DATABASE_PING_TIMEOUT" envDefault:"10s"`
 }
 
 func (d *DatabaseConfig) GetAddress() string {
@@ -614,6 +622,16 @@ type MonitoringConfig struct {
 	TracingEndpoint   string  `json:"tracing_endpoint" yaml:"tracing_endpoint" mapstructure:"tracing_endpoint" env:"MONITORING_TRACING_ENDPOINT"`
 	HealthCheckPath   string  `json:"health_check_path" yaml:"health_check_path" mapstructure:"health_check_path" env:"MONITORING_HEALTH_CHECK_PATH" envDefault:"/health"`
 	ReadinessPath     string  `json:"readiness_path" yaml:"readiness_path" mapstructure:"readiness_path" env:"MONITORING_READINESS_PATH" envDefault:"/ready"`
+}
+
+// StandaloneConfig struct after other config structs
+type StandaloneConfig struct {
+	Enabled          bool   `json:"enabled" yaml:"enabled" mapstructure:"enabled" env:"STANDALONE_ENABLED" envDefault:"false"`
+	OrganizationName string `json:"organization_name" yaml:"organization_name" mapstructure:"organization_name" env:"STANDALONE_ORG_NAME" envDefault:"Default Organization"`
+	OrganizationSlug string `json:"organization_slug" yaml:"organization_slug" mapstructure:"organization_slug" env:"STANDALONE_ORG_SLUG" envDefault:"default"`
+	PublicKey        string `json:"public_key" yaml:"public_key" mapstructure:"public_key" env:"STANDALONE_PUBLIC_KEY"`
+	SecretKey        string `json:"secret_key" yaml:"secret_key" mapstructure:"secret_key" env:"STANDALONE_SECRET_KEY"`
+	AutoGenerate     bool   `json:"auto_generate" yaml:"auto_generate" mapstructure:"auto_generate" env:"STANDALONE_AUTO_GENERATE" envDefault:"true"`
 }
 
 // Load loads the configuration from environment variables, config files, and defaults

@@ -162,8 +162,8 @@ func (User) Edges() []ent.Edge {
 func (User) Indexes() []ent.Index {
 	return []ent.Index{
 		// Composite uniqueness - will need application-level validation
-		index.Fields("user_type", "email").
-			Unique(),
+		// index.Fields("user_type", "email").
+		// 	Unique(),
 		// Comment("Ensures email uniqueness per user type"),
 
 		index.Fields("organization_id", "user_type", "email").

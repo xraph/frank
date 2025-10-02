@@ -16,12 +16,12 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/rs/xid"
 	"github.com/xraph/frank/ent/permission"
 	"github.com/xraph/frank/ent/permissiondependency"
 	"github.com/xraph/frank/ent/predicate"
 	"github.com/xraph/frank/ent/role"
 	"github.com/xraph/frank/ent/userpermission"
-	"github.com/rs/xid"
 )
 
 // PermissionQuery is the builder for querying Permission entities.

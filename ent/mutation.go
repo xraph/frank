@@ -14,6 +14,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/rs/xid"
 	"github.com/xraph/frank/ent/activity"
 	"github.com/xraph/frank/ent/apikey"
 	"github.com/xraph/frank/ent/apikeyactivity"
@@ -47,7 +48,6 @@ import (
 	"github.com/xraph/frank/ent/webhookevent"
 	"github.com/xraph/frank/pkg/common"
 	"github.com/xraph/frank/pkg/model"
-	"github.com/rs/xid"
 )
 
 const (

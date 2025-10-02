@@ -15,9 +15,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/rs/xid"
 	"github.com/xraph/frank/ent/mfa"
 	"github.com/xraph/frank/ent/user"
-	"github.com/rs/xid"
 )
 
 // MFACreate is the builder for creating a MFA entity.
